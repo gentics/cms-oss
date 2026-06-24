@@ -1,70 +1,67 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
-import { Platform } from 'react-native';
-import baseTheme, { baseStyles } from '../styles/common/common-style';
-import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
-import RendererScreen from './RendererScreen';
-import { IFeatures, IFormFlowData, ISummaryDetailsUser } from '../types/interfaces';
-import { RestService } from '../services/RestService';
+import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
 import {
   LoadingScreen,
 } from '@andp/core/src/components/LoadingComponents';
 import { initI18n } from '@andp/core/src/services/i18n';
-import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import theme from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
 import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
 import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
-import { TFunction } from 'i18next';
-import theme from '@andp/core/src/styles/theme';
-import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
+import { RestService } from '../services/RestService';
+import { baseStyles } from '../styles/common/common-style';
+import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
+import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
+import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
+import RendererScreen from './RendererScreen';
+import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
 
 const FormgenScreen: React.FC<{
   formId: string;
   config: IFormFlowData;
   isLoggedIn: boolean;
   apiToken: string;
-  culture: string;
+  language: string;
   businessObjectId: string;
   devMode: boolean;
   mockForm: boolean;
   endpoint: string;
   translationUrl?: string; // for loading translations inside webroot of mesh plugin (for example boxed solution)
   successContent?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
   features?: IFeatures;
   t?: TFunction;
   detailUrl?: string;
   hasDetail?: boolean;
   pluginName: string;
+  isFormgridPreview?: boolean;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewPageIndex?: number;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
   const [loadFeatureError, setLoadFeatureError] = useState<boolean>(false);
   const isWeb = Platform.OS === 'web';
-  const [t, setT] = useState<any>();
+  const [t, setT] = useState<TFunction>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const pluginName = props.pluginName as PluginNameEnum;
+  const pluginName = (props.pluginName) as PluginNameEnum;
 
   const restService = new RestService(props.endpoint, pluginName, props.apiToken);
 
-
   useEffect(() => {
-    if(pluginName == PluginNameEnum.ACTA_NOVA){
-      const fetchFeatures = async () => {
-        const response = await restService.ANLoadFeaturesAsync();
-        if (response.success) {
-          const features = response.responseData;
-          if (features != null) {
-            setFeatures(features);
-          } else {
-            setLoadFeatureError(true);
-            setError('Server not responding: Features not available');
-          }
-        }
-      };
-    const fetchMockFeatures = async () => {
-      if (__DEV__) {
-        const response = await fetchMockDefaultFeatures();
-        const features = response;
+    if (pluginName !== PluginNameEnum.ACTA_NOVA) {
+      return;
+    }
+
+    const fetchFeatures = async () => {
+      const response = await restService.ANLoadFeaturesAsync();
+      if (response.success) {
+        const features = response.responseData;
         if (features != null) {
           setFeatures(features);
         } else {
@@ -74,54 +71,72 @@ const FormgenScreen: React.FC<{
       }
     };
 
-    if(props.features != null){
+    const fetchMockFeatures = async () => {
+      if (__DEV__ || props.isFormgridPreview) {
+        const response = await fetchMockDefaultFeatures();
+        const features = response;
+        if (features != null) {
+          setFeatures(features);
+        } else {
+          setLoadFeatureError(true);
+          setError('Server not responding: Features not available');
+        }
+      }
+    };
+
+    if (props.features != null) {
       setFeatures(props.features);
-    }else if (props.mockForm) {
+    } else if (props.mockForm || props.isFormgridPreview) {
       fetchMockFeatures();
-    } else {
+    } else if (!props.isFormgridPreview) {
       fetchFeatures();
-    }
     }
   }, []);
 
   useEffect(() => {
-    if(props.t == null || props.t == undefined){
-      let mounted = true;
-      (async () => {
-        try {
-          const i18nInstance = await initI18n(
-            props.endpoint,
-            props.formId,
-            props.pluginName,
-            props.translationUrl,
-            false,
-            props.culture
-          );
-          await i18nInstance.changeLanguage(props.culture);
-          if (mounted) {
-            setT(() => i18nInstance.t.bind(i18nInstance));
-            setLoading(false);
-          }
-        } catch (err: any) {
-          console.error('i18n init error:', err);
-          if (mounted) {
-            setError('Translations could not be loaded: ' + err.toString());
-            setLoading(false);
-          }
-        }
-      })();
-      return () => {
-        mounted = false;
-      };
-    }else{
+    if (props.t != null) {
       setT(() => props.t);
       setLoading(false);
+      return;
     }
-    
+
+    let mounted = true;
+    (async () => {
+      try {
+        const i18nInstance = await initI18n(
+          props.endpoint,
+          props.formId,
+          props.pluginName,
+          props.translationUrl,
+          false,
+          props.previewInformation,
+          props.language
+        );
+        await i18nInstance.changeLanguage(props.language);
+        if (mounted) {
+          setT(() => i18nInstance.t.bind(i18nInstance));
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('i18n init error:', err);
+        if (mounted) {
+          setError('Translations could not be loaded: ' + err.toString());
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [props.endpoint, props.translationUrl]);
 
   useEffect(() => {
-    if (!loading && isWeb) {
+    if (loading || !isWeb) {
+      return;
+    }
+
+    if (!props.isFormgridPreview) {
       const loader = document.getElementById('bcLoader');
       if (loader) {
         loader.style.opacity = '0';
@@ -129,6 +144,8 @@ const FormgenScreen: React.FC<{
           loader.style.display = 'none';
         }, 500);
       }
+    } else if (props.previewFormData?.schema != null && props.previewFormData.uiSchema != null) {
+      sendPreviewLoadedEvent();
     }
   }, [loading, isWeb]);
 
@@ -168,7 +185,6 @@ const FormgenScreen: React.FC<{
       />
     );
   }
-
   const showRenderScreen = () => {
     if(pluginName == PluginNameEnum.ACTA_NOVA && features && props.config && t){
       return true; 
@@ -176,18 +192,22 @@ const FormgenScreen: React.FC<{
     if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
         return true;
     }
+    if (props.isFormgridPreview) {
+      return props.previewFormData?.uiSchema != null
+        && props.previewFormData?.schema != null;
+    }
     return false;
   }
   
   if (showRenderScreen()) {
     return (
       <Suspense fallback={<LoadingScreen />}>
-        <RendererScreen
-          features={features}
+        {t && <RendererScreen
+          features={features as IFeatures}
           formId={props.formId}
           businessObjectId={props.businessObjectId}
           config={props.config}
-          culture={props.culture}
+          language={props.language}
           apiToken={props.apiToken}
           isLoggedIn={props.isLoggedIn}
           devMode={props.devMode}
@@ -200,7 +220,13 @@ const FormgenScreen: React.FC<{
           detailUrl={props.detailUrl}
           hasDetail={props.hasDetail}
           pluginName={pluginName}
-        />
+          successContent={props.successContent}
+          isFormgridPreview={props.isFormgridPreview}
+          previewFormData={props.previewFormData}
+          previewInformation={props.previewInformation}
+          previewSelectedElement={props.previewSelectedElement}
+          previewPageIndex={props.previewPageIndex}
+        />}
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}
       </Suspense>
     );

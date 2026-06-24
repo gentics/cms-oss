@@ -32,7 +32,7 @@ function CmsContainerElement(props: IFormComponentAttributes) {
       <ElementRenderer
         {...props}
         elements={props.elements}
-        jsonpath={props.jsonpath}
+        jsonpath={""} //otherwise sub-element values are fetched with jsonpath and parent jsonpath --> wrong for CMS forms data structure
         parentId={props.id}
         isAggregate={true}
       />
@@ -49,14 +49,10 @@ CmsContainerElement.validate = function (
   formGridOptions?: IFormGridOptions,
   localValue?: any,
 ): CommonValidation {
-  return validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
+  return {
+    isValid: true,
+    errorMessage: '',
+  };
 };
 
 CmsContainerElement.getSummaryValue = function () {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TextInput, Platform } from 'react-native';
+import { View, TextInput, Text, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,6 +9,7 @@ import { TFunction } from 'i18next';
 import { FormState, IFormComponentAttributes, UIState } from '../../../../types/interfaces';
 import { FormElementWrapper } from '../../helper/FormElementWrapper';
 import { inputElementTheme } from '@andp/core/src/styles/theme';
+import { previewPointerEvents } from '../../../../utils/Utils';
 
 // ─── Utility functions ────────────────────────────────────────────────────────
 
@@ -150,6 +151,13 @@ interface SharedInputComponentProps {
   renderNumberAddon?: () => React.ReactNode;
   needSpace?: boolean;
 
+  // Unit-Badge
+  unitText?: string;
+  unitBadgeWidth?: number;
+  isUnitLeft?: boolean;
+  isUnitRight?: boolean;
+  onUnitLayout?: (width: number) => void;
+
   // Refs & Styles
   elementRef: React.RefObject<TextInput | null>;
   styles: any;
@@ -163,8 +171,19 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
     textAlign = 'left', numberOfLines = 1, height, isFocused,
     labeltext, onChangeText, onNumberChangeText, onFocus, onBlur, onContentSizeChange, onNumberKeyPress,
     renderNumberAddon, needSpace = false,
+    unitText = '', unitBadgeWidth = 0, isUnitLeft = false, isUnitRight = false, onUnitLayout,
     elementRef, styles, t,
   } = props;
+
+  const activeInputBorderWidth = isFocused && editable
+    ? inputElementTheme.focused.borderWidth
+    : inputElementTheme.borderWidth;
+  const unitBadgeRightOffset =
+    inputElementTheme.paddingLeft
+    + (needSpace ? inputElementTheme.numberButtons.width + inputElementTheme.unitBadge.gap : 0)
+    + (showFilledIcon ? inputElementTheme.isFilledIcon.width : 0);
+  const unitBadgeRightPadding =
+    unitBadgeRightOffset + unitBadgeWidth + inputElementTheme.unitBadge.gap - activeInputBorderWidth;
 
   const { placeholderAnimatedStyle, placeholderTextAnimatedStyle, handleAnimationForFocus, handleAnimationForBlur } =
     useInputAnimation(value, styles);
@@ -195,14 +214,15 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
         hideLoading={true}
         jsonPath={formComponentAttributes.jsonpath}
         objectId={formComponentAttributes.id}
+        selectedElementId={formComponentAttributes.selectedElementId}
       >
         <View
           style={[
-            Platform.OS === 'web' && !editable && ({ cursor: 'not-allowed' } as any),
+            Platform.OS === 'web' && (!editable || formState.isFormgridPreview) && ({ cursor: 'not-allowed' } as any),
           ]}
         >
           {isInputAllowed && (
-            <View pointerEvents={!editable ? 'none' : 'auto'}>
+            <View pointerEvents={previewPointerEvents(!editable || formState.isFormgridPreview)}>
               <Animated.View
                 pointerEvents="none"
                 style={[
@@ -282,10 +302,11 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
         hideLoading={true}
         jsonPath={formComponentAttributes.jsonpath}
         objectId={formComponentAttributes.id}
+        selectedElementId={formComponentAttributes.selectedElementId}
       >
         <View
           style={
-            Platform.OS === 'web' && !editable && ({ cursor: 'not-allowed' } as any)
+            Platform.OS === 'web' && (!editable || formState.isFormgridPreview) && ({ cursor: 'not-allowed' } as any)
           }
         >
           {isInputAllowed && (
@@ -327,6 +348,16 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
                   !editable && styles.disabledInput,
                   needSpace && styles.inputNumberWithSpace,
                   { textAlign },
+                  isUnitLeft && unitBadgeWidth > 0 && {
+                    paddingLeft:
+                      inputElementTheme.paddingLeft
+                      + unitBadgeWidth
+                      + inputElementTheme.unitBadge.gap
+                      - activeInputBorderWidth,
+                  },
+                  isUnitRight && unitBadgeWidth > 0 && {
+                    paddingRight: unitBadgeRightPadding,
+                  },
                 ]}
                 accessible={true}
                 accessibilityRole="text"
@@ -344,6 +375,36 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
                   ? { 'aria-invalid': !!localErrorMsg, 'aria-haspopup': 'false', 'aria-expanded': isFocused }
                   : {})}
               />
+              {isUnitLeft && (
+                <View
+                  pointerEvents="none"
+                  onLayout={(e) => onUnitLayout?.(e.nativeEvent.layout.width)}
+                  style={[
+                    styles.unitBadge,
+                    styles.unitBadgeLeft,
+                    error && editable && styles.unitBadgeError,
+                  ]}
+                >
+                  <Text style={[styles.unitBadgeText, error && editable && styles.unitBadgeTextError]}>
+                    {unitText}
+                  </Text>
+                </View>
+              )}
+              {isUnitRight && (
+                <View
+                  pointerEvents="none"
+                  onLayout={(e) => onUnitLayout?.(e.nativeEvent.layout.width)}
+                  style={[
+                    styles.unitBadge,
+                    error && editable && styles.unitBadgeError,
+                    { right: unitBadgeRightOffset },
+                  ]}
+                >
+                  <Text style={[styles.unitBadgeText, error && editable && styles.unitBadgeTextError]}>
+                    {unitText}
+                  </Text>
+                </View>
+              )}
               {renderNumberAddon?.()}
             </>
           )}
@@ -367,10 +428,11 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
       hideLoading={true}
       jsonPath={formComponentAttributes.jsonpath}
       objectId={formComponentAttributes.id}
+      selectedElementId={formComponentAttributes.selectedElementId}
     >
       <View
         style={[
-          Platform.OS === 'web' && !editable && ({ cursor: 'not-allowed' } as any),
+          Platform.OS === 'web' && (!editable || formState.isFormgridPreview) && ({ cursor: 'not-allowed' } as any),
         ]}
       >
         {isInputAllowed && (
@@ -396,7 +458,7 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
               </Animated.Text>
             </Animated.View>
             <TextInput
-              pointerEvents={!editable ? 'none' : 'auto'}
+              pointerEvents={previewPointerEvents(!editable || formState.isFormgridPreview)}
               ref={elementRef}
               value={value}
               editable={editable}

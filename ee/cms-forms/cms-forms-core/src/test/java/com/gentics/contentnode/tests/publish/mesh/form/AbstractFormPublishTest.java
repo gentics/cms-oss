@@ -43,6 +43,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
@@ -302,20 +303,28 @@ public abstract class AbstractFormPublishTest {
 	/**
 	 * Post some data to a form
 	 * @param projectName project name
+	 * @param pluginName plugin name
 	 * @param formUuid form uuid
 	 * @param data data as key/value pairs
 	 * @throws IOException
 	 */
 	@SafeVarargs
-	protected final void postFormData(String projectName, String formUuid, Pair<String, String>...data) throws IOException {
-		Builder bodyBuilder = new FormBody.Builder();
+	protected final void postFormData(String projectName, String pluginName, String formUuid, Pair<String, String>...data) throws IOException {
+		ObjectNode dataObject = mapper.createObjectNode();
+		dataObject.put("formID", formUuid);
+		dataObject.put("hasValidationErrors", false);
+		ObjectNode properties = dataObject.withObjectProperty("properties");
 		for (Pair<String, String> pair : data) {
-			bodyBuilder.add(pair.getKey(), pair.getValue());
+			properties.withObjectProperty(pair.getKey()).put("value", pair.getValue());
 		}
 
-		Request request = new Request.Builder().url("http://" + mesh.getContainerIpAddress() + ":" + mesh.getMappedPort(8080) + "/api/v1/"
-				+ projectName + "/plugins/forms/forms/" + formUuid + "/data")
-			.post(bodyBuilder.build())
+		Builder bodyBuilder = new FormBody.Builder();
+		bodyBuilder.add("formdata", dataObject.toString());
+
+		Request request = new Request.Builder()
+				.url("http://" + mesh.getContainerIpAddress() + ":" + mesh.getMappedPort(8080) + "/api/v1/"
+						+ projectName + "/plugins/" + pluginName + "/form/" + formUuid + "/submit?lang=en")
+				.post(bodyBuilder.build())
 			.build();
 		try (Response response = okHttpClient.newCall(request).execute()) {
 			assertThat(response.isSuccessful()).as("POSTing data succeeded (response code is " + response.code() + ")")
@@ -338,7 +347,9 @@ public abstract class AbstractFormPublishTest {
 		expected.get()
 			.put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId()))
 			.put("cms_id", form.getId())
-			.put("type", form.getFormType());
+			.put("type", form.getFormType())
+			.put("name", form.getName())
+			.put("submitOnce", FormConfigProvider.getConfig().get(form.getFormType()).submitOnce);
 
 		operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, "en", true,
 				response -> {

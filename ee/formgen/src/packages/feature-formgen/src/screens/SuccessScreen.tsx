@@ -22,7 +22,7 @@ import CustomRenderHTML from '@andp/core/src/components/CustomRenderHTML';
 import { successStyles as cusotmSuccessStyles } from '../styles/custom/custom-style';
 import { successStyles } from '../styles/common/common-style';
 
-interface SuccessScreenProps {
+export interface SuccessScreenProps {
   formState: FormState;
   uiState: UIState;
   t: any;
@@ -32,6 +32,18 @@ interface SuccessScreenProps {
   updateState: () => void;
   successContent?: string;
 }
+
+// Resolve the redirect target for the current language, falling back to the
+// short culture code (e.g. "de-AT" -> "de") and finally the first entry.
+// only for CMS forms
+export const resolveSuccessUrl = (
+  formState: FormState,
+): string | undefined => {
+  const urls = formState?.successUrl;
+  if (!urls) return undefined;
+  const culture = formState?.culture ?? '';
+  return urls[culture] ?? urls[culture.split('-')[0]] ?? Object.values(urls)[0];
+};
 
 const { width } = Dimensions.get('window');
 
@@ -48,6 +60,40 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
     if (props.uiState?.andpNavigation?.previous) {
       props.uiState.andpNavigation.previous();
     }
+  };
+
+  const successUrl = useMemo(
+    () => resolveSuccessUrl(props.formState),
+    [props.formState?.successUrl, props.formState?.culture],
+  );
+
+  const handleSuccessUrl = () => {
+    if (!successUrl) return;
+    if (Platform.OS === 'web') {
+      window.open(successUrl, '_self')?.focus();
+    }
+  };
+
+  const renderSuccessUrlButton = () => {
+    if (!successUrl) return null;
+    return (
+      <AndpButton
+        title={t('form_success_redirect')}
+        onPress={handleSuccessUrl}
+        wrapperStyle={[
+          styles.buttonWrapper,
+          breakPoints.maximumSm && styles.buttonWrapperScreenMaxSmall,
+          styles.primaryWrapper,
+          { alignSelf: 'center', marginBottom: 24, flexGrow: 0, width: 'auto', minWidth: 180, marginTop: 20 },
+        ]}
+        type="primary"
+        buttonStyle={[
+          styles.primaryButton,
+          { width: '100%', minWidth: 180 }
+        ]}
+        textStyle={[styles.primaryButtonText]}
+      />
+    );
   };
 
   useEffect(() => {
@@ -146,6 +192,7 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
               <AndpIcon name="checkMark" style={styles.successIcon} />
             </View>
           </Animated.View>
+          {renderSuccessUrlButton()}
         </View>
         {Platform.OS != 'web' ? (
           <AndpButton
@@ -155,10 +202,13 @@ const SuccessScreen: React.FC<SuccessScreenProps> = (props) => {
               styles.buttonWrapper,
               breakPoints.maximumSm && styles.buttonWrapperScreenMaxSmall,
               styles.primaryWrapper,
-              { alignSelf: 'center', marginBottom: 24, flexGrow: 0 },
+              { alignSelf: 'center', marginBottom: 24, flexGrow: 0, width: 'auto', minWidth: 180 },
             ]}
             type={'primary'}
-            buttonStyle={[styles.primaryButton]}
+            buttonStyle={[
+              styles.primaryButton,
+              { width: '100%', minWidth: 180 }
+            ]}
             textStyle={[styles.primaryButtonText]}
           />
         ) : null}

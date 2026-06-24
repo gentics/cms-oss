@@ -1,11 +1,9 @@
-import { TFunction } from 'i18next';
 import {
   ApiResponse,
   CommonValidation,
   FormState,
   IData,
   IDataAggregationListEntry,
-  IDataFieldProperties,
   IErrorMessage,
   IFormElement,
   IFormGridOptions,
@@ -19,11 +17,54 @@ import * as mockFormularUtils from '../utils/MockFormularUtils';
 import JsonPath from 'jsonpath';
 import memoize from 'memoizee';
 import { RestService } from '../services/RestService';
+import { CaptchaService } from '../services/CaptchaService';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { OverlayTypeEnum } from '../custom/OverlayTypes';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
 import { postLoadValidation, preLoadValidation } from '../custom/HooksUtils';
 import { InvalidValidationResponse } from '../exceptions/InvalidValidationResponse';
+
+
+/**
+ * Hardcoded E-Mail-Format-Prüfung für usermail-Felder.
+ * Folgt der gleichen updateErrorMessages/localValue-Semantik wie der
+ * regexValidation-Case in commonValidate (siehe unten), damit Live- und
+ * Gesamtvalidierung konsistent sind. Leere Werte werden übersprungen
+ * (required-Check übernimmt commonValidate).
+ */
+export function validateEmail(
+  formState: FormState,
+  jsonpath: string,
+  id: string,
+  updateErrorMessages: boolean,
+  localValue?: any,
+): CommonValidation {
+// pragmatisches Standard-Muster: local@domain.tld
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const elementState = utils.getElementByIdOrJsonPath(
+    formState.data,
+    jsonpath,
+    id,
+  );
+  if (elementState == null) return { isValid: true, errorMessage: '' };
+
+  const value =
+    localValue == null ? utils.getValue(formState, jsonpath, id) : localValue;
+
+  if (value != null && value.length > 0 && !EMAIL_REGEX.test(value)) {
+    const errorMessage = i18n.t('form_invalidEmailError');
+    if (updateErrorMessages) {
+      if (localValue == undefined || localValue == null) {
+        elementState.validationMessage = errorMessage;
+        utils.setStateElementByJsonpath(formState.data, jsonpath, elementState);
+      } else {
+        return { isValid: false, errorMessage };
+      }
+    }
+    return { isValid: false, errorMessage };
+  }
+  return { isValid: true, errorMessage: '' };
+}
 
 export function commonValidate(
   formState: FormState,
@@ -85,9 +126,15 @@ export function commonValidate(
     const isBooleanType = schemaState.type === 'boolean';
 
     if (isBooleanType) {
-      // Default-Checkbox: mandatory only true/'True' valid
+      // Default-Checkbox: mandatory only true/'True' valid, or storedValue for CMS boolean
       if (isDefaultCheckbox) {
-        if (value !== true && value !== 'True' && value !== 'true') {
+        const isCmsPlugin = formState.pluginName === 'forms';
+
+        const isInvalid = isCmsPlugin
+          ? value !== utils.getBooleanStoredValue(formGridOptions)
+          : value !== true && value !== 'True' && value !== 'true'; // ActaNova plugin
+
+        if (isInvalid) {
           const errorMsg = i18n.t('form_notFilledError');
           if (updateErrorMessages) {
             if (localValue == null) {
@@ -341,23 +388,6 @@ export function validateField(
   formGridOptions?: IFormGridOptions,
   localValue?: any,
 ): CommonValidation {
-  // For Custom-FormGrid-Elements, which are not in state.data.properties & state.schema.properties
-  if (
-    formGridOptions &&
-    formGridOptions.type &&
-    formGridOptions.type !== 'formgridText' &&
-    formGridOptions.type !== 'formgridSpacer'
-  ) {
-    return getElementTypeByPlugin(formGridOptions.type.toLowerCase(), formState.pluginName).validate(
-      formState,
-      jsonpath,
-      id,
-      updateErrorMessages,
-      i18n.t,
-      formGridOptions,
-      localValue,
-    );
-  }
 
   const elemState = utils.getElementByIdOrJsonPath(
     formState.data,
@@ -370,10 +400,23 @@ export function validateField(
     return { isValid: false, errorMessage: elemState.validationMessage };
   }
 
-  // do not validate invisible fields and readonly fields
-  if (!elemState?.visible || !elemState?.editable) {
+  // do not validate invisible fields, readonly fields, non edtiable, hidden
+  if (!elemState || elemState.visible === false || elemState.editable === false || formGridOptions?.hidden === true) {
     return { isValid: true, errorMessage: '' };
   }
+
+  // or cms-elements which are invisible because of a condition
+  if (typeof elemState.visible === 'undefined') {
+    // if visible is not set in data, evaluate condition as fallback
+    if (formGridOptions?.condition) {
+      let isVisible = utils.evaluateCmsCondition(formState, formGridOptions.condition);
+      if(!isVisible){
+          return { isValid: true, errorMessage: '' };
+      }
+    }
+  }
+
+
 
   if (
     updateErrorMessages &&
@@ -385,10 +428,17 @@ export function validateField(
     utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
   }
 
-  const elementType = schemaState.type.toLowerCase();
+  let elementType = schemaState.type.toLowerCase();
   let result: CommonValidation = { isValid: true, errorMessage: '' };
+  
+  //if formgridoptions overrides type (andp forms) or for cms forms - the type of formgridoptions is used instead of schema element type
+  if(formGridOptions?.type) {
+    elementType = formGridOptions.type.toLocaleLowerCase();
+  }
+
+
   if (getElementTypeByPlugin(elementType, formState.pluginName)) {
-    result = getElementTypeByPlugin(schemaState.type.toLowerCase(), formState.pluginName).validate(
+    result = getElementTypeByPlugin(elementType, formState.pluginName).validate(
       formState,
       jsonpath,
       id,
@@ -410,12 +460,14 @@ export const isPageValid = (
   if (typeof formState.form.pages != 'undefined') {
     for (const [key, value] of Object.entries(formState.form.pages)) {
       if (parseInt(key) === pageNumber) {
-        return areSubElementsValid(
+        const areFieldsValid = areSubElementsValid(
           formState,
           value.elements,
           updateErrorMessages,
           mockForm,
         );
+        const captchaValid = isCaptchaValid();
+        return areFieldsValid && captchaValid;
       }
     }
   }
@@ -465,10 +517,26 @@ export function areSubElementsValid(
         }
       }
 
+      //if it's a container element, and it's visible (condition), check sub elements (CMS Container structure)
+      //container elements are not part of data structure
+      if (["container", "conditionalcontainer"].includes(obj.type)) {
+        if (obj?.formGridOptions?.condition) {
+          let isVisible = utils.evaluateCmsCondition(formState, obj.formGridOptions.condition);
+          if(isVisible){
+            let containerValid = areSubElementsValid(formState, obj.elements, updateErrorMessages, mockForm);
+            //if any container subElement is invalid - report invalid
+            if(!containerValid) {
+              valid = false;
+            }
+          }
+        } 
+      }       
+
+
       // eslint-disable-next-line
       res.forEach((foundElem: any) => {
         // do not check items or its children which are not visible
-        if (!foundElem?.value?.visible) {
+        if (foundElem?.value?.visible === false) {
           return true;
         }
         // TODO add more abort scenarios
@@ -504,6 +572,7 @@ export function areSubElementsValid(
             }
           }
         } else {
+          //check validation for field plain field
           if (
             !isFieldValid(
               formState,
@@ -515,7 +584,9 @@ export function areSubElementsValid(
           ) {
             valid = false;
           }
-          // only run for aggregate
+
+
+          // only run for aggregate, they have more complex data structure (nested data)
           if (obj.type === 'aggregate') {
             const dataField = formState.data.properties?.[obj.id];
             // on aggregate lists there will be no value but a values property (plural)
@@ -682,7 +753,16 @@ const loadValidation = async (
     // Pause for 1 second (simulate network latency)
     await new Promise((resolve) => setTimeout(resolve, 1000));
   } else {
-    apiResponse = await restService.validationRequest(formState.data);
+    // For CMS forms, attach the effective visibility per field so the plugin skips invisible
+    // fields during validation (clone to avoid mutating the React state).
+    const dataToValidate: IData = JSON.parse(JSON.stringify(formState.data));
+    utils.applyCmsVisibility(
+      dataToValidate,
+      formState.form,
+      formState.pluginName,
+      formState,
+    );
+    apiResponse = await restService.validationRequest(dataToValidate);
   }
   utils.endANRequest(uiState, updateState);
 
@@ -767,11 +847,7 @@ export const handleValidation = (
       prevFieldState: any,
       isUpdateOnChange: boolean,
     ) => {
-      if (fieldState?.csvUpload) {
-        return;
-      }
-
-      if (!isUpdateOnChange) {
+      if (!isUpdateOnChange && fieldState) {
         delete fieldState.validationMessage;
       }
       if (
@@ -794,11 +870,25 @@ export const handleValidation = (
      * Recursively walk through aggregates / containers and apply the clearing rule.
      */
     const clearValidationForField = (
-      field: any,
+      field: IFormElement,
       isUpdateOnChange: boolean,
     ): void => {
       const fieldState = formState.data?.properties?.[field.id];      
       const prevFieldState = previousData?.properties?.[field.id];
+
+      if(field.elements){
+        field.elements.forEach((containerSubElement) => {
+          const fieldState = formState.data?.properties?.[containerSubElement.id];
+          const prevFieldState = previousData?.properties?.[containerSubElement.id];
+
+          maybeClearValidationMessage(
+            fieldState,
+            prevFieldState,
+            isUpdateOnChange,
+          );
+        });
+      }
+
       if (!fieldState) return;
 
       // Simple field
@@ -831,8 +921,15 @@ export const handleValidation = (
         }
       };
 
-      walkEntries(fieldState, prevFieldState);
+      //iterate through aggregat with aggregate data structure
+      if(field.type.toLowerCase() === "aggregate"){
+        walkEntries(fieldState, prevFieldState);
+        return;
+      }
+
+      
     };
+
 
     // ---------- 5. Page‑aware clearing ----------
     const isUpdateOnChange =
@@ -843,7 +940,7 @@ export const handleValidation = (
           ? idx >= uiState.currentPage // löscht ab der aktuellen Seite ( >= ) einschließlich dieser Seite.
           : idx > uiState.currentPage; // löscht erst ab der nächsten Seite ( > ), die aktuelle bleibt unberührt.
         if (shouldClear) {
-          page.elements?.forEach((field: any) => 
+          page.elements?.forEach((field: IFormElement) => 
             clearValidationForField(field, isUpdateOnChange),
           );
         }
@@ -857,6 +954,7 @@ export const handleValidation = (
       errorMessages = utils.getErrorMessages(
         formState.data.properties,
         formState.form.pages,
+        formState.pluginName,
       ) as IErrorMessage[];
     }
 
@@ -897,4 +995,20 @@ export function needsANValidation(
     return true;
   }
   return false;
+}
+
+export function isCaptchaValid(): boolean {
+  if (!CaptchaService.isActive()) {
+    CaptchaService.setError(false);
+    return true;
+  }
+  // Invisible mode (reCAPTCHA): token is produced by `execute()` right before
+  // the request is sent — don't gate form-level validation on its presence here.
+  if (CaptchaService.hasExecute()) {
+    CaptchaService.setError(false);
+    return true;
+  }
+  const solved = CaptchaService.getToken() != null;
+  CaptchaService.setError(!solved);
+  return solved;
 }

@@ -22,6 +22,7 @@ import {
   IForm,
   IFirstErrorElementInfo,
   IFormGridOptions,
+  ICmsCondition,
 } from '../types/interfaces';
 import JsonPath from 'jsonpath';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
@@ -32,6 +33,7 @@ import { FormGridElementTypes } from '../custom/ElementTypes';
 import { Platform } from 'react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
 export function isFeatureActive(
   featureName: string,
@@ -167,6 +169,105 @@ export function getVisible(formState: FormState, jsonpath: string) {
   }
   //@TODO check default visibility
   return true;
+}
+
+/**
+ * Evaluates a CMS field/container condition against the current form data.
+ * A condition is met when the referenced control's value equals the expected value.
+ * Shared by ElementRenderer, validation and the visibility computation for the request payload.
+ */
+export function evaluateCmsCondition(
+  formState: FormState,
+  condition: ICmsCondition,
+): boolean {
+  const referencedValue =
+    formState.data.properties?.[condition.source.control]?.value;
+  return referencedValue === condition.equals;
+}
+
+/**
+ * Recursively walks the uiSchema elements and writes the effective visibility state of each
+ * CMS field into data.properties[id].visible. A field is visible only when its own condition is
+ * met (and it isn't hidden) AND every ancestor container is visible.
+ * Container elements are not part of the data structure, so no flag is written for them.
+ */
+function applyCmsVisibilityToElements(
+  elements: IFormElement[] | undefined,
+  parentVisible: boolean,
+  data: IData,
+  formState: FormState,
+): void {
+  if (!elements) return;
+  for (const obj of elements) {
+    // A container ("container"/"conditionalcontainer") is part of the uiSchema but NOT of
+    // data.properties, so it gets no flag of its own. Instead it gates its children: if the
+    // container is hidden by its condition, every field inside it must also count as invisible.
+    // We pass the combined visibility (parent AND container condition) down and recurse, so
+    // nested containers are handled correctly.
+    if (['container', 'conditionalcontainer'].includes(obj.type)) {
+      const containerVisible =
+        parentVisible &&
+        (obj.formGridOptions?.condition
+          ? evaluateCmsCondition(formState, obj.formGridOptions.condition)
+          : true);
+      applyCmsVisibilityToElements(
+        obj.elements,
+        containerVisible,
+        data,
+        formState,
+      );
+      continue;
+    }
+
+    // Only real input fields have a value in data.properties. Layout-only elements
+    // (text/spacer) and elements without a formGrid type are skipped - they are never validated.
+    const type = obj.formGridOptions?.type;
+    if (!type || type === 'formgridText' || type === 'formgridSpacer') {
+      continue;
+    }
+
+    // Determine the field's own visibility:
+    // - hidden === true   -> always invisible
+    // - has a condition   -> visible only when the condition is met
+    // - otherwise         -> visible by default
+    const fieldVisible =
+      obj.formGridOptions?.hidden === true
+        ? false
+        : obj.formGridOptions?.condition
+        ? evaluateCmsCondition(formState, obj.formGridOptions.condition)
+        : true;
+    // Effective visibility = field is visible AND all of its ancestor containers are visible.
+    const effectiveVisible = parentVisible && fieldVisible;
+
+    // Write the flag back explicitly (true AND false). The plugin skips validation for
+    // visible === false; visible fields must keep visible === true so they are not accidentally
+    // suppressed. Preserve any existing property data (value, ...) and only set/overwrite visible.
+    if (data.properties == null) {
+      data.properties = {};
+    }
+    const existing = data.properties[obj.id];
+    data.properties[obj.id] = {
+      ...(existing ?? { value: '' }),
+      visible: effectiveVisible,
+    };
+  }
+}
+
+/**
+ * Sets the effective `visible` flag on every CMS field in `data.properties`, so the Forms plugin
+ * can skip validating fields the user cannot see. No-op for non-CMS forms (ActaNova sets `visible`
+ * itself). Operates on the passed-in `data` object - callers must pass a clone, not the React state.
+ */
+export function applyCmsVisibility(
+  data: IData,
+  form: IForm,
+  pluginName: PluginNameEnum,
+  formState: FormState,
+): void {
+  if (pluginName !== PluginNameEnum.CMS_FORMS || !form.pages) return;
+  for (const page of form.pages) {
+    applyCmsVisibilityToElements(page.elements, true, data, formState);
+  }
 }
 
 export function getCreatable(formState: FormState, jsonpath: string) {
@@ -322,11 +423,21 @@ export function listAddElement(
   updateState(StatesToUpdateEnum.FormState);
 }
 
-export function getValue(formState: FormState, jsonpath: string, id?: string) {
-  const elemState = getElementByIdOrJsonPath(formState.data, jsonpath, id);
+export function getValue(
+  formState: FormState,
+  jsonpath: string,
+  id?: string,
+  elemState?: ReturnType<typeof getElementByIdOrJsonPath>,
+) {
+  // Allow callers to pass an already resolved elemState to avoid a redundant
+  // getElementByIdOrJsonPath lookup; fall back to resolving it when not provided.
+  elemState =
+    elemState !== undefined
+      ? elemState
+      : getElementByIdOrJsonPath(formState.data, jsonpath, id);
   if (elemState) {
     if (elemState.values) {
-      return elemState.values;
+      return elemState.values;  
     }
     // Do not use if(elemState.value) because 0 and false are falsy values 
     if (elemState.value !== undefined && elemState.value !== null) {
@@ -469,18 +580,25 @@ export function isListElement(schema: ISchema, id: string): boolean {
 export function getPossibleValues(
   data: IData,
   jsonpath: string,
+  pluginName: PluginNameEnum,
   id?: string,
 ): IPossibleValue[] {
   const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
+  // CMS: possibleValues direkt am Feld
+  if (pluginName == PluginNameEnum.CMS_FORMS && elementState?.possibleValues && elementState.possibleValues.length > 0) {
+    return elementState.possibleValues;
+  }
+  // AN: possibleValueSetID → possibleValueSets
   if (
+    pluginName == PluginNameEnum.ACTA_NOVA &&
     data.possibleValueSets != null &&
     elementState?.possibleValueSetID != null
   ) {
-    let possibleValues = data.possibleValueSets.find(
+    const set = data.possibleValueSets.find(
       (i) => i.possibleValueSetID === elementState?.possibleValueSetID,
     );
-    if (possibleValues) {
-      return possibleValues.possibleValues;
+    if (set) {
+      return set.possibleValues;
     }
   }
   return [];
@@ -587,7 +705,17 @@ export function getBinaryURL(formid: string, binaryValue: string, businessObject
   return url;
 }
 
-
+/**
+ * retrieves and returnes the stored value of a given formGridnOption. If storedValue is
+ * empty it returns the default Value 'X'
+ *
+ * @param {IFormGridOptions} formgridOptions
+ * @returns {string} storedValue
+ */
+export function getBooleanStoredValue(formgridOptions?: IFormGridOptions): string {
+  if (!formgridOptions?.storedValue) return 'X'
+  return formgridOptions.storedValue;
+}
 
 export function removeValue(formState: FormState, jsonpath: string) {
   const elementState = getElementByJsonPath(formState.data, jsonpath);
@@ -624,10 +752,10 @@ export function setANFieldLoadError(
     elementState.ANFieldLoadError = error;
   }
 }
-
 export function getErrorMessages(
   properties: IDataFields,
   pages: IFormPage[] = [],
+  pluginName: PluginNameEnum,
   pageNumberParent?: number,
   aggregateID?: string,
   subAggregateID?: string,
@@ -644,8 +772,9 @@ export function getErrorMessages(
       } else {
         pageNumber = getPageNumberFromElementId(key, pages);
       }
-      // is there an error on the current element (only relevant if element is visible)
-      if (value.validationMessage && value.visible) {
+      // is there an error on the current element (only relevant if element is visible for forms plugin)
+      const isVisible = pluginName === PluginNameEnum.ACTA_NOVA ? value.visible : true;
+      if (value.validationMessage && isVisible) {
         errorMessages.push({
           validationMessage: value.validationMessage,
           pageNumber,
@@ -653,8 +782,9 @@ export function getErrorMessages(
           }
         });
       }
-      // check if there are subelements (aggregate) (only relevant if element is visible)
-      if ((value.properties || value.value) && value.visible) {
+      // check if there are subelements (aggregate) (only relevant if element is visible for forms plugin)
+      const isSubVisible = pluginName === PluginNameEnum.ACTA_NOVA ? value.visible : true;
+      if ((value.properties || value.value) && isSubVisible) {
         // Keep the aggregate ID stable: if we already know the parent aggregate (e.g. 70C581CE-...), use it;
         // otherwise fall back to the current key.
         const nextAggregateID = aggregateID ?? key;
@@ -682,10 +812,11 @@ export function getErrorMessages(
             getErrorMessages(
               value.properties,
               pages,
+              pluginName,
               pageNumber,
               nextAggregateID,
               nextSubAggregateID,
-              nextSubAggregateSortIndex
+              nextSubAggregateSortIndex,
             ),
           );
         } else {
@@ -693,10 +824,11 @@ export function getErrorMessages(
             getErrorMessages(
               value.value,
               pages,
+              pluginName,
               pageNumber,
               nextAggregateID,
               nextSubAggregateID,
-              nextSubAggregateSortIndex
+              nextSubAggregateSortIndex,
             ),
           );
         }
@@ -711,7 +843,7 @@ export function getErrorMessages(
           const rowId = subAggregat?.id as string | undefined;
           const rowSortIndex = typeof subAggregat?.sortIndex === 'number' ? subAggregat.sortIndex : index;
           errorMessages = errorMessages.concat(
-            getErrorMessages(subAggregat, pages, pageNumber, nextAggregateID, rowId, rowSortIndex),
+            getErrorMessages(subAggregat, pages, pluginName, pageNumber, nextAggregateID, rowId, rowSortIndex),
           );
         }
       }
@@ -816,7 +948,10 @@ export const endANRequest = (
 
 export const prepareDataForSave = (formState: FormState, uploadBinaries: boolean): FormData => {
   var data = new FormData();
-  data.append('formdata', JSON.stringify(formState.data));
+  // For CMS forms, send the effective visibility state per field (clone to avoid mutating state).
+  const dataToSave: IData = JSON.parse(JSON.stringify(formState.data));
+  applyCmsVisibility(dataToSave, formState.form, formState.pluginName, formState);
+  data.append('formdata', JSON.stringify(dataToSave));
   if (formState.fileUploads != null && uploadBinaries) {
     for (let [schemaID, jsonpaths] of Object.entries(formState.fileUploads)) {
       let jsonpathsObject: object = {};
@@ -881,3 +1016,16 @@ export const isTouchOnlyDevice = (): boolean => {
 
   return isTouchPrimary && hasTouchPoints;
 };
+
+/**
+ * Liefert den passenden `pointerEvents`-Wert für eine View je nach Preview-Modus.
+ * Funktion existiert um mehrfachen identischen code zu reduzieren.
+ *
+ * Im Formgrid-Preview (Form ist im Angular-Editor eingebettet) sollen Form-Inputs
+ * nicht auf Klicks/Tastatur reagieren — sie sind reine Vorschau.
+ *
+ * @param preview `true` im Formgrid-Preview-Modus, sonst `false`/undefined
+ * @returns `'none'` (blockiert Interaktion) oder `'auto'` (normales Verhalten)
+ */
+export const previewPointerEvents = (preview?: boolean): 'none' | 'auto' =>
+  preview ? 'none' : 'auto';

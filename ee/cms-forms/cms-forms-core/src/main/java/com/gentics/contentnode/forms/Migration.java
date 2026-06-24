@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +36,12 @@ import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
+import com.gentics.contentnode.rest.model.formtype.Blocks;
 import com.gentics.contentnode.rest.model.formtype.BooleanSetting;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
+import com.gentics.contentnode.rest.model.formtype.FormFlows;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.rest.model.formtype.NumberSetting;
 import com.gentics.contentnode.rest.model.formtype.OptionsSetting;
@@ -67,6 +69,21 @@ public class Migration {
 	public final static String FORMGEN_TRANSLATIONS_FILENAME = "formgen_translations.yml";
 
 	/**
+	 * Name of the file containing the flows, that are added to the migrated form types
+	 */
+	public final static String FLOWS_FILENAME = "flows.yml";
+
+	/**
+	 * Name of the file containing the blocks, that are added to the migrated form types
+	 */
+	public final static String BLOCKS_FILENAME = "blocks.yml";
+
+	/**
+	 * Name of the file containing the controls, that are added to the migrated form types
+	 */
+	public final static String CONTROLS_FILENAME = "controls.yml";
+
+	/**
 	 * Known types
 	 */
 	protected final static List<String> FORM_TYPES = Arrays.asList("generic", "poll");
@@ -74,8 +91,16 @@ public class Migration {
 	/**
 	 * List of unmigrated properties (properties, which are standard)
 	 */
-	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList("label", "description", "mandatory",
-			"validation", "select_type", "element_to_check", "value_to_check");
+	protected final static List<String> UNMIGRATED_PROPERTIES = Arrays.asList(
+		"label",
+		"description",
+		"mandatory",
+		"validation",
+		"select_type",
+		"element_to_check",
+		"value_to_check",
+		// The checked value will be handled by the custom checkbox migrators.
+		"checked");
 
 	/**
 	 * List of unmigrated properties per element type ID
@@ -84,7 +109,9 @@ public class Migration {
 			"string", Arrays.asList("minVal", "maxVal"),
 			"datetime", Arrays.asList("minVal", "maxVal", "maxCharCount"),
 			"time", Arrays.asList("minVal", "maxVal", "maxCharCount"),
-			"number", Arrays.asList("maxCharCount"));
+			"number", Arrays.asList("maxCharCount"),
+			// The default value for boolean elements will behandled by the custom checkbox migrations.
+			"boolean", Arrays.asList("value"));
 
 	/**
 	 * Map of property id to propertyPath settings
@@ -92,24 +119,27 @@ public class Migration {
 	protected final static Map<String, String> PROPERTY_PATH_MAP = Map.of(
 			"minValue", "validation.minValue",
 			"maxValue", "validation.maxValue",
-			"maxLength", "validation.maxLength");
+			"maxLength", "validation.maxLength",
+			"maxFilesize", "validation.binary.maxFilesize",
+			"allowedTypes", "validation.binary.allowedTypes");
 
 	/**
 	 * Migration map for property ids
 	 */
 	public final static Map<String, String> PROPERTY_MIGRATION_MAP = Map.of(
 			"additional_element", "customOption",
-			"max_filesize", "maxFileSize",
+			"max_filesize", "maxFilesize",
 			"options", "selectOptions",
 			"value", "defaultValue",
 			"minVal", "minValue",
 			"maxVal", "maxValue",
-			"maxCharCount", "maxLength");
+			"maxCharCount", "maxLength",
+			"allowedFiletypes", "allowedTypes");
 
 	/**
 	 * List of property ids, which are backend properties (have the backend flag set)
 	 */
-	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFileSize", "allowedFiletypes",
+	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFilesize", "allowedTypes",
 			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions");
 
 	/**
@@ -213,6 +243,21 @@ public class Migration {
 	 * FormGen translations
 	 */
 	protected FormGenTranslations formGenTranslations;
+
+	/**
+	 * Default Flows
+	 */
+	protected FormFlows flows;
+
+	/**
+	 * Default Blocks
+	 */
+	protected Blocks blocks;
+
+	/**
+	 * Default Controls
+	 */
+	protected Controls controls;
 
 	/**
 	 * Main method
@@ -344,6 +389,21 @@ public class Migration {
 			formGenTranslations = yamlMapper.readValue(in, FormGenTranslations.class);
 		}
 
+		// read flows
+		try (InputStream in = getClass().getResourceAsStream(FLOWS_FILENAME)) {
+			flows = yamlMapper.readValue(in, FormFlows.class);
+		}
+
+		// read blocks
+		try (InputStream in = getClass().getResourceAsStream(BLOCKS_FILENAME)) {
+			blocks = yamlMapper.readValue(in, Blocks.class);
+		}
+
+		// read blocks
+		try (InputStream in = getClass().getResourceAsStream(CONTROLS_FILENAME)) {
+			controls = yamlMapper.readValue(in, Controls.class);
+		}
+
 		for (String formType : FORM_TYPES) {
 			String fileName = CONFIG_FILENAMES.get(formType);
 			File configFile = new File(uiConfPath, fileName);
@@ -394,8 +454,8 @@ public class Migration {
 				.flatMap(formProperties -> formProperties.optional("template_context_options"))
 				.ifPresent(templateContextOptions -> out.templateOptions = toSelectOptions(templateContextOptions));
 
-		out.blocks = new HashMap<>();
-		out.controls = new HashMap<>();
+		out.blocks = new Blocks(blocks);
+		out.controls = new Controls(controls);
 
 		// controls/blocks
 		config.optional("elements").filter(elements -> elements.isArray())
@@ -418,6 +478,8 @@ public class Migration {
 						});
 					});
 				});
+
+		out.flows = flows;
 
 		return out;
 	}

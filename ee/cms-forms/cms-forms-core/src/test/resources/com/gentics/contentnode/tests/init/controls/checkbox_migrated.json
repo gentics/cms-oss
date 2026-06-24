@@ -17,8 +17,9 @@
                 "mandatory": true,
                 "isList": false,
                 "name": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
+                "value": "X",
                 "formGridOptions": {
-                    "defaultValue": "X"
+                    "defaultValue": true
                 }
             }
         }
@@ -44,7 +45,7 @@
                         },
 						"description": {},
                         "formGridOptions": {
-                            "checked": true
+                            "storedValue": "X"
                         }
 					}
                 ]

@@ -30,6 +30,7 @@ function ANDebugElement(props: IFormComponentAttributes) {
       localErrorMsg={props.error}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View>
         <AndpText style={{ fontSize: 18, fontWeight: 'bold' }}>Type: {type}</AndpText>

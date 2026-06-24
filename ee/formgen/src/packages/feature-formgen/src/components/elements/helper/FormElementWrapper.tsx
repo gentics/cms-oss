@@ -1,4 +1,11 @@
-import React, { ReactNode, useMemo, useState, useRef } from 'react';
+import React, {
+  ReactNode,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 import {
   View,
   TouchableOpacity,
@@ -17,7 +24,7 @@ import {
   FormElementLoader,
   FormElementAnFieldLoadError,
 } from './UtilComponents';
-import { getI18nText } from '../../../utils/Utils';
+import { getI18nText, previewPointerEvents } from '../../../utils/Utils';
 import * as mockFormularUtils from '../../../utils/MockFormularUtils';
 import AndpIcon from '@andp/core/src/components/AndpIcon';
 import AndpText from '@andp/core/src/components/AndpText';
@@ -27,8 +34,9 @@ import {
 } from '../../../styles/common/common-style';
 import { formElementWrapperStyles as customFormElementWrapperStyles } from '../../../styles/custom/custom-style';
 import { mergeStyles } from '@andp/core/src/AndpUtils';
-import { formElementWrapperTheme } from '@andp/core/src/styles/theme';
+import theme, { formElementWrapperTheme } from '@andp/core/src/styles/theme';
 import CustomTooltip from './CustomTooltip';
+import {sendPreviewSelectedElementEvent} from './formgridPreviewBridge';
 if (Platform.OS === 'web') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('../../../styles/custom/custom-style.css');
@@ -65,6 +73,7 @@ export interface FormElementWrapperProps {
   isSmallerWarning?: boolean;
   jsonPath: string;
   objectId: string;
+  selectedElementId?: string;
 }
 
 export function FormElementWrapper(props: FormElementWrapperProps) {
@@ -77,6 +86,50 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
   const { width } = useWindowDimensions();
   const [isHovering, setIsHovering] = useState(false);
   const reopenRequiresLeaveRef = useRef(false);
+
+  // Hover/selection visuals for Formgrid preview
+  const [isWrapperHovering, setIsWrapperHovering] = useState(false);
+  const [isWrapperPressed, setIsWrapperPressed] = useState(false);
+  const isPreview = !!props.formState?.isFormgridPreview;
+  const isSelected = !!props.selectedElementId && props.selectedElementId === props.objectId;
+  const hasAutoScrolledToSelectionRef = useRef(false);
+  const wrapperRef = useRef<any>(null);
+
+  const handleWrapperHoverIn = useCallback(() => {
+    if (!isPreview) return;
+    setIsWrapperHovering(true);
+  }, [isPreview]);
+
+  const handleWrapperHoverOut = useCallback(() => {
+    if (!isPreview) return;
+    setIsWrapperHovering(false);
+  }, [isPreview]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    if (!isPreview || !isSelected) return;
+
+    // Only on init/start for the selected element
+    if (hasAutoScrolledToSelectionRef.current) return;
+    hasAutoScrolledToSelectionRef.current = true;
+
+    const scrollElIntoView = () => {
+      const el =
+        wrapperRef.current ||
+        document.querySelector(`[data-formgen-element-id="${props.objectId}"]`);
+
+      (el as any)?.scrollIntoView?.({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
+    };
+
+    // Defer to ensure layout is committed
+    requestAnimationFrame(() => {
+      setTimeout(scrollElIntoView, 0);
+    });
+  }, [isPreview, isSelected, props.objectId]);
 
   const styles = useMemo(
     () => mergeStyles(formElementWrapperStyles, customFormElementWrapperStyles),
@@ -107,6 +160,17 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
       formComponentAttributes?.id,
     );
   }
+
+  //formgrid
+  const handleSelectPointerDown = (e: any) => {
+    if (Platform.OS !== 'web') return;
+    
+    setIsWrapperPressed(true);
+    // Ensure selection event fires even if something inside prevents default later
+    e?.stopPropagation?.();
+
+    sendPreviewSelectedElementEvent(props.objectId);
+  };
 
   const hasIcons = !!(
     (loading && !props.hideLoading) ||
@@ -216,9 +280,11 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
     return false;
   };
 
-  return (
-    <View style={styles.wrapper}>
-      <View style={styles.formGroup}>
+  const wrapperInner = (
+    <>
+      <View style={styles.formGroup}
+
+      pointerEvents={previewPointerEvents(props.formState.isFormgridPreview)}>
         {fieldWithBasicTopComponents()}
         {Platform.OS === 'web' ? (
           <div
@@ -226,6 +292,7 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
             className={`${props.objectId} ${camelToKebab(
               props.formComponentAttributes?.elemTypeString,
             )}-element ${props.formComponentAttributes?.editable ? 'editable' : 'disabled'}`}
+
           >
             {props.children}
           </div>
@@ -235,7 +302,8 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
         {fieldWithBasicBottomComponents()}
       </View>
       {showTooltipIcon() && (
-        <View style={styles.tooltipContainer}><CustomTooltip
+        <View style={styles.tooltipContainer}
+        pointerEvents={previewPointerEvents(props.formState.isFormgridPreview)}><CustomTooltip
           isVisible={isHovering}
           placement={width < 770 ? 'left' : 'bottom'}
           onClose={() => setIsHovering(false)}
@@ -271,6 +339,50 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
           }
         </CustomTooltip></View>
       )}
+    </>
+  );
+
+  const previewWebInteractionProps =
+    isPreview && Platform.OS === 'web'
+      ? ({
+          'data-formgen-element-id': props.objectId,
+          onMouseEnter: handleWrapperHoverIn,
+          onMouseLeave: () => {
+            handleWrapperHoverOut();
+            setIsWrapperPressed(false);
+          },
+          onPointerDown: (e: any) => handleSelectPointerDown(e),
+          onPointerUp: () => setIsWrapperPressed(false),
+          onPointerCancel: () => setIsWrapperPressed(false),
+        } as any)
+      : {};
+
+  return (
+    <View
+      ref={wrapperRef}
+      style={[
+        styles.wrapper,
+        isPreview && Platform.OS === 'web' && {
+          transitionProperty: 'transform, box-shadow, border-color, background-color',
+          transitionDuration: '140ms',
+          transitionTimingFunction: 'ease-out',
+        } as any,
+        isPreview && (isWrapperHovering || isWrapperPressed) && {
+          transform: [{ scale: isWrapperPressed ? 0.995 : 1.01 }],
+          backgroundColor: 'rgba(37, 99, 235, 0.06)',
+          borderColor: 'rgba(37, 99, 235, 0.55)',
+          borderWidth: 1,
+          boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+        } as any,
+        isSelected && {
+          borderColor: theme.colors.textAccent,
+          borderWidth: 2,
+          borderStyle: "dashed",
+        },
+      ]}
+      {...previewWebInteractionProps}
+    >
+      {wrapperInner}
     </View>
   );
 }

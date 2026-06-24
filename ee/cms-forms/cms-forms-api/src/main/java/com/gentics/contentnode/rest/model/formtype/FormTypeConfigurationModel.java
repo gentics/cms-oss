@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The configuration for a single form type
  */
-@JsonIgnoreProperties({"pluginConfiguration", "formGenTranslations"})
+@JsonIgnoreProperties({"pluginConfiguration", "formGenTranslations", "languageMapping"})
 public class FormTypeConfigurationModel implements Serializable {
 	private static final long serialVersionUID = -8486198177336031697L;
 
@@ -54,19 +54,25 @@ public class FormTypeConfigurationModel implements Serializable {
 	 * All available controls, where the key is the ID of the control
 	 */
 	@JsonProperty
-	public Map<String, ControlConfig> controls;
+	public Controls controls;
 
 	/**
 	 * All available blocks, where the key is the ID of the block
 	 */
 	@JsonProperty
-	public Map<String, BlockConfig> blocks;
+	public Blocks blocks;
 
 	/**
 	 * Options which can be selected for user reference information
 	 */
 	@JsonProperty
 	public List<SelectOption> userOptions;
+
+	/**
+	 * Options which captcha variations are available to use.
+	 */
+	@JsonProperty
+	public List<SelectOption> captchaOptions;
 
 	/**
 	 * Which styling variations the form-type has
@@ -90,5 +96,5 @@ public class FormTypeConfigurationModel implements Serializable {
 	 * Definition of all available FormFlows for this formtypeconfig
 	 */
 	@JsonProperty
-	public List<FormFlow> flows;
+	public FormFlows flows;
 }

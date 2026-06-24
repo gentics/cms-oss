@@ -4,10 +4,8 @@ import {
   FormState,
   IFormGridOptions,
   IFormComponentAttributes,
-  IDataFieldProperties,
   SummaryOptions,
   IBinary,
-  CommonValidation,
   IBinaryFile,
   BinarySource,
 } from '../../../../types/interfaces';
@@ -15,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { binaryElementStyles } from '../../../../styles/common/common-style.native';
 import { binaryElementStyles as customBinaryElementStyles } from '../../../../styles/custom/custom-style.native';
 import { TFunction } from 'i18next';
-import * as validationUtils from '../../../../utils/ValidationUtils';
+import * as BinaryValidationUtils from '../../../../utils/BinaryValidationUtils';
 import * as formEventsUtils from '../../../../utils/FormEventsUtils';
 import * as utils from '../../../../utils/Utils';
 import { SummaryElement } from '../../helper/SummaryElement';
@@ -122,24 +120,25 @@ function BinaryElement(props: IFormComponentAttributes) {
     name?.split('.').pop()?.toLowerCase() ?? '';
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value) return 'local';
-    if (String(b.value).startsWith('mesh:')) return 'mesh';
-    if (String(b.value).startsWith('mesh(not uploaded yet)')) return 'local';
-    return 'actanova';
+    if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
+    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
+    return BinarySource.LOCAL;
   };
 
   const makeBinaryFromFile = (
-    file: { name: string; size?: number | null; uri?: string }
+    file: { name: string; size?: number | null; uri?: string, type: string }
   ): IBinary => ({
     fileName: file.name,
-    type: readExt(file.name),
+    type: file.type,
+    ext : readExt(file.name),
     uri: file.uri || '',
     value: '',
     size: file.size ?? undefined,
   });
 
   const toIBinaryFileFromServer = (formFile: IBinary): BinaryFileWithUid => {
-    const fileType = readExt(formFile.fileName || '');
+    const fileExt = readExt(formFile.fileName || '');
     const source = classifySource(formFile);
     const withUri: IBinary = {
       ...formFile,
@@ -153,13 +152,15 @@ function BinaryElement(props: IFormComponentAttributes) {
             200,
           )
           : formFile.uri,
-      type: fileType,
+      ext: fileExt,
+      type: formFile.type ?? '',
     };
     return {
       binary: withUri,
       file: null,
       source,
-      fileType,
+      fileExt: fileExt,
+      mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };
   };
@@ -182,8 +183,16 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
+      // allValueNames includes both server-confirmed entries and local placeholders
+      // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
+      // props.value — e.g. because the upload failed and the state was rolled back —
+      // the card is removed from the UI automatically.
+      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
       let remainingLocals = prev.filter(
-        (x) => x.source === 'local' && !serverNames.has(x.binary.fileName),
+        (x) =>
+          x.source === BinarySource.LOCAL &&
+          !serverNames.has(x.binary.fileName) &&
+          allValueNames.has(x.binary.fileName),
       );
 
       // Single-file upload: keep at most one local file (the most recent)
@@ -224,7 +233,7 @@ function BinaryElement(props: IFormComponentAttributes) {
     let binaryLink = '';
 
     // Mesh file => build URL from value
-    if (item.source === 'mesh') {
+    if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,
         item.binary.value,
@@ -232,7 +241,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       );
     }
     // Local file => use local URI (from picker)
-    else if (item.source === 'local') {
+    else if (item.source === BinarySource.LOCAL) {
       binaryLink = item.binary.uri || '';
     }
     // Server / generic case => fall back to binary.uri if set by toIBinaryFileFromServer
@@ -353,10 +362,10 @@ function BinaryElement(props: IFormComponentAttributes) {
 
               const fileObjs: any[] = [];
 
-              assets.forEach((asset) => {
+              assets.forEach((asset: DocumentPickerAsset) => {
                 // Web: expo-document-picker exposes a real File instance
-                if ((asset as any).file) {
-                  fileObjs.push((asset as any).file);
+                if (asset.file) {
+                  fileObjs.push(asset.file);
                   return;
                 }
 
@@ -394,8 +403,9 @@ function BinaryElement(props: IFormComponentAttributes) {
                 const additions: BinaryFileWithUid[] = filesToAdd.map((f: any) => ({
                   binary: makeBinaryFromFile(f),
                   file: f,
-                  source: 'local',
-                  fileType: readExt(f.name),
+                  source: BinarySource.LOCAL,
+                  fileExt: readExt(f.name),
+                  mimeType: f.type,
                   uid: uuidv4(),
                 }));
 
@@ -429,87 +439,8 @@ function BinaryElement(props: IFormComponentAttributes) {
   );
 }
 
-BinaryElement.validate = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  formGridOptions?: IFormGridOptions,
-  localValue?: any,
-): CommonValidation {
-  const commonResult: CommonValidation = validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
-  if (!commonResult.isValid) return commonResult;
-
-  const binaryIsValid = BinaryElement.validateBinary(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    t,
-    formGridOptions?.fileExtensionsNotAllowed,
-  );
-
-  if (!binaryIsValid) {
-    const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-    return { isValid: false, errorMessage: elemState?.validationMessage };
-  }
-
-  return { isValid: true };
-};
-
-BinaryElement.validateBinary = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-): boolean {
-  const value = utils.getValue(state, jsonpath, id);
-  const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-
-  if (
-    elemState &&
-    (value.fileName || (Array.isArray(value) && value[0]?.fileName))
-  ) {
-    if (
-      !BinaryElement.hasAllowedFileExtension(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-        fileExtensionsNotAllowed,
-      )
-    ) {
-      return false;
-    }
-
-    if (
-      !hasAllowedUploadSize(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-      )
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-};
+BinaryElement.validateBinary = BinaryValidationUtils.validateBinary;
+BinaryElement.validate = BinaryValidationUtils.validate;
 
 BinaryElement.getSummaryValue = function (
   state: FormState,
@@ -578,121 +509,6 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
     <AndpText style={styles.fileListItemText}>{fileObject.fileName}</AndpText>
   );
 };
-
-function isActaNovaFile(file: IBinary) {
-  if (
-    !file.value ||
-    file.value === '' ||
-    file.value.startsWith('mesh:') ||
-    file.value.startsWith('mesh(not uploaded yet):')
-  ) {
-    return false;
-  }
-  return true;
-}
-
-BinaryElement.hasAllowedFileExtension = function (
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-) {
-  const fileExtensionsAllowedDefault =
-    formState.features?.feature_upload_constraints
-      ?.fileExtensionsAllowed || [];
-
-  const allowedExtensions = fileExtensionsNotAllowed
-    ? fileExtensionsAllowedDefault.filter(
-      (ext) => fileExtensionsNotAllowed.indexOf(ext) === -1,
-    )
-    : fileExtensionsAllowedDefault;
-
-  let hasAllowedExtension = true;
-
-  const files: IBinary[] = Array.isArray(value) ? value : [value];
-
-  for (const file of files) {
-    if (isActaNovaFile(file)) continue;
-
-    const fileExt = file.fileName
-      .split('.')
-      .pop()
-      ?.toLowerCase();
-
-    if (!allowedExtensions.some((ext) => ext.toLowerCase() === fileExt)) {
-      hasAllowedExtension = false;
-      break;
-    }
-  }
-
-  if (!hasAllowedExtension && updateErrorMessages) {
-    elemState.validationMessage = `${t('form_fileTypeError')} ${allowedExtensions.join(', ')}`;
-    utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-  }
-
-  return hasAllowedExtension;
-};
-
-function hasAllowedUploadSize(
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-) {
-  const maxSingleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizePerFile ??
-    5_242_880;
-
-  const maxMultipleUploadSizeByte =
-    formState.features?.feature_upload_constraints?.maxSizeOverall ??
-    20_971_520;
-
-  const byteToMBFactor = 1_048_576;
-  const maxSingleUploadSizeMB = Math.floor(
-    maxSingleUploadSizeByte / byteToMBFactor,
-  );
-  const maxMultipleUploadSizeMB = Math.floor(
-    maxMultipleUploadSizeByte / byteToMBFactor,
-  );
-
-  const files: IBinary[] = Array.isArray(value) ? value : [value];
-  let sumSizes = 0;
-
-  for (const file of files) {
-    if (isActaNovaFile(file)) continue;
-
-    if (file.size) {
-      sumSizes += file.size;
-      if (file.size > maxSingleUploadSizeByte) {
-        if (updateErrorMessages) {
-          elemState.validationMessage = `${t(
-            'form_maxFileUploadSizeSingleError',
-          ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${file.fileName
-            }`;
-          utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-        }
-        return false;
-      }
-    }
-  }
-
-  if (sumSizes > maxMultipleUploadSizeByte) {
-    if (updateErrorMessages) {
-      elemState.validationMessage = `${t(
-        'form_maxFileUploadSizeMultipleError',
-      )}: ${maxMultipleUploadSizeMB} MB`;
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    }
-    return false;
-  }
-
-  return true;
-}
 
 export default BinaryElement;
 

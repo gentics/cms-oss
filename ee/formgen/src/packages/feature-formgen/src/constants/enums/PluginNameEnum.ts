@@ -1,4 +1,5 @@
+/** @deprecated Do not hardcore any specific logic based on plugin names. */
 export enum PluginNameEnum {
-  CMS_FORMS = 'cms-forms',
+  CMS_FORMS = 'forms',
   ACTA_NOVA = 'acta-nova',
 }

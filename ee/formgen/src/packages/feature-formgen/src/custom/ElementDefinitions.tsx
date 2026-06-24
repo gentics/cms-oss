@@ -1,5 +1,4 @@
 export {default as ANDebugElement} from '../components/elements/an/ANDebugElement';
-export {default as TextElement} from '../components/elements/shared/TextElement';
 export {default as ANInputElement} from '../components/elements/an/ANInputElement';
 export {default as ANBooleanElement} from '../components/elements/an/ANBooleanElement';
 export {default as ANDropDownCatalogElement} from '../components/elements/an/ANDropDownCatalogElement';
@@ -13,7 +12,7 @@ export {default as ANAggregateElement} from '../components/elements/an/ANAggrega
 export {default as FormGridTextElement} from '../components/elements/shared/FormGridTextElement';
 export {default as FormGridImageElement} from '../components/elements/shared/FormGridImageElement';
 export {default as InputElement} from '../components/elements/shared/InputElement';
-export {default as BooleanElement} from '../components/elements/shared/BooleanElement';
 export {default as CmsContainerElement} from '../components/elements/cms/CmsContainerElement';
-export {default as CmsRecaptchaElement} from '../components/elements/cms/CmsRecaptchaElement';
-export {default as SelectElement} from '../components/elements/shared/SelectElement';
+export {default as CMSBooleanElement} from '../components/elements/cms/CMSBooleanElement';
+export {default as CmsUserMailElement} from '../components/elements/cms/CmsUserMailElement';
+export {default as CatalogElement} from '../components/elements/shared/CatalogElement';

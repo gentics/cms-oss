@@ -1,0 +1,103 @@
+diff --git a/node_modules/react-native-render-html/src/elements/IMGElement.tsx b/node_modules/react-native-render-html/src/elements/IMGElement.tsx
+index 573e7c1..b3a6741 100644
+--- a/node_modules/react-native-render-html/src/elements/IMGElement.tsx
++++ b/node_modules/react-native-render-html/src/elements/IMGElement.tsx
+@@ -6,7 +6,7 @@ import IMGElementContainer from './IMGElementContainer';
+ import IMGElementContentLoading from './IMGElementContentLoading';
+ import IMGElementContentError from './IMGElementContentError';
+ import type { IMGElementProps } from './img-types';
+-import defaultImageInitialDimensions from './defaultInitialImageDimensions';
++import defaultImageInitialDimensions from 'react-native-render-html/src/elements/defaultInitialImageDimensions';
+ 
+ export type { IMGElementProps } from './img-types';
+ 
+@@ -16,15 +16,22 @@ function identity(arg: any) {
+ 
+ /**
+  * A component to render images based on an internal loading state.
+- *
+- * @remarks This component will attempt to draw a box of paint dimensions
+- * before retrieving the physical dimensions of the image to avoid layout
+- * shifts. See also {@link useIMGElementState}, {@link IMGElementContainer},
+- * {@link IMGElementContentSuccess}, {@link IMGElementContentLoading}
+- * and {@link IMGElementContentError} for customization.
+  */
+-function IMGElement(props: IMGElementProps): ReactElement {
+-  const state = useIMGElementState(props);
++function IMGElement({
++  enableExperimentalPercentWidth = false,
++  computeMaxWidth = identity,
++  initialDimensions = defaultImageInitialDimensions,
++  style = {},
++  ...props
++}: IMGElementProps): ReactElement {
++  const combinedProps = {
++    enableExperimentalPercentWidth,
++    computeMaxWidth,
++    initialDimensions,
++    style,
++    ...props,
++  };
++  const state = useIMGElementState(combinedProps);
+   let content: ReactNode;
+   if (state.type === 'success') {
+     content = React.createElement(IMGElementContentSuccess, state);
+@@ -38,18 +45,14 @@ function IMGElement(props: IMGElementProps): ReactElement {
+       testID={props.testID}
+       {...props.containerProps}
+       onPress={props.onPress}
+-      style={state.containerStyle}>
++      style={state.containerStyle}
++    >
+       {content}
+     </IMGElementContainer>
+   );
+ }
+ 
+-const imgDimensionsType = PropTypes.shape({
+-  width: PropTypes.number,
+-  height: PropTypes.number
+-});
+-
+-const propTypes: Record<keyof IMGElementProps, any> = {
++IMGElement.propTypes = {
+   source: PropTypes.object.isRequired,
+   alt: PropTypes.string,
+   altColor: PropTypes.string,
+@@ -59,27 +62,18 @@ const propTypes: Record<keyof IMGElementProps, any> = {
+   computeMaxWidth: PropTypes.func.isRequired,
+   contentWidth: PropTypes.number,
+   enableExperimentalPercentWidth: PropTypes.bool,
+-  initialDimensions: imgDimensionsType,
++  initialDimensions: PropTypes.shape({
++    width: PropTypes.number,
++    height: PropTypes.number
++  }),
+   onPress: PropTypes.func,
+   testID: PropTypes.string,
+   objectFit: PropTypes.string,
+-  cachedNaturalDimensions: imgDimensionsType,
++  cachedNaturalDimensions: PropTypes.shape({
++    width: PropTypes.number,
++    height: PropTypes.number
++  }),
+   containerProps: PropTypes.object
+ };
+ 
+-/**
+- * @ignore
+- */
+-IMGElement.propTypes = propTypes;
+-
+-/**
+- * @ignore
+- */
+-IMGElement.defaultProps = {
+-  enableExperimentalPercentWidth: false,
+-  computeMaxWidth: identity,
+-  imagesInitialDimensions: defaultImageInitialDimensions,
+-  style: {}
+-};
+-
+ export default IMGElement;
+\ No newline at end of file

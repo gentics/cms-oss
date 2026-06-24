@@ -1,75 +1,96 @@
+import AndpIcon from '@andp/core/src/components/AndpIcon';
+import AndpText from '@andp/core/src/components/AndpText';
+import { useMicroAppSDK } from '@andp/core/src/sdk/MicroAppSDK';
+import i18n from '@andp/core/src/services/i18n';
+import theme, { expertSearchTableTheme } from '@andp/core/src/styles/theme';
+import { TFunction } from 'i18next';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  ScrollView,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  Modal,
-  TouchableOpacity,
   BackHandler,
-  UIManager,
   findNodeHandle,
-  InteractionManager,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  UIManager,
+  useWindowDimensions,
+  View
 } from 'react-native';
-import FormProgressScreenPart from './screen-parts/FormProgress';
-import StickyLayerScreenPart from './screen-parts/StickyLayer';
-import ErrorBlockScreenPart from './screen-parts/ErrorBlockScreenPart';
+import { Host } from 'react-native-portalize';
+import CMSFormCaptcha from '../components/elements/cms/CmsCaptcha/CMSFormCaptcha';
+import { IMockFormTypeEnum } from '../constants/enums/IMockFormTypeEnum';
+import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
+import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
+import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
+import { postInitForm, preInitForm } from '../custom/HooksUtils';
+import { OverlayTypeEnum, overlayTypes } from '../custom/OverlayTypes';
+import { ScreenComponents } from '../custom/ScreenComponents';
+import { CaptchaService } from '../services/CaptchaService';
+import { RestService } from '../services/RestService';
+import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
   FormState,
   IData,
+  IDataFields,
   IElementBeingFocusedInfo,
   IElementIdentifier,
   IErrorMessage,
   IFeatures,
+  IForm,
   IFormComponentAttributes,
   IFormFlowClass,
   IFormFlowData,
   IFormFlowSteps,
+  IFormPage,
   IOverlayLeaveExtraProps,
   IPossibleValue,
   IReportResult,
+  ISchema,
   ISchemaFieldProperties,
   ISummaryDetailsUser,
+  SummaryOptions,
   UIState,
 } from '../types/interfaces';
-import { RestService } from '../services/RestService';
-import { ScreenComponents } from '../custom/ScreenComponents';
-import ReadOnlyFormScreen from './ReadOnlyFormScreen';
+import * as formEventsUtils from '../utils/FormEventsUtils';
+import * as mockFormularUtils from '../utils/MockFormularUtils';
+import * as overlayUtils from '../utils/OverlayUtils';
+import { changeToPage } from '../utils/UiUtils';
+import * as utils from '../utils/Utils';
 import {
   endANRequest,
+  getFeatureActive,
   setNormalizedSchema,
   startANRequest,
 } from '../utils/Utils';
 import * as validationUtils from '../utils/ValidationUtils';
-import i18n from '@andp/core/src/services/i18n';
-import * as overlayUtils from '../utils/OverlayUtils';
-import * as formEventsUtils from '../utils/FormEventsUtils';
-import * as utils from '../utils/Utils';
-import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
 import { isPageValid } from '../utils/ValidationUtils';
-import { TFunction } from 'i18next';
-import * as mockFormularUtils from '../utils/MockFormularUtils';
-import { OverlayTypeEnum, overlayTypes } from '../custom/OverlayTypes';
-import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
-import { postInitForm, preInitForm } from '../custom/HooksUtils';
-import { IMockFormTypeEnum } from '../constants/enums/IMockFormTypeEnum';
-import AndpText from '@andp/core/src/components/AndpText';
-import AndpIcon from '@andp/core/src/components/AndpIcon';
-import theme, { expertSearchTableTheme } from '@andp/core/src/styles/theme';
-import { Host } from 'react-native-portalize';
-import { useMicroAppSDK } from '@andp/core/src/sdk/MicroAppSDK';
-import { ButtonProvider } from "./essentials/ButtonProvider";
-import { useFormMirrorStore } from '../state/useFormMirrorState';
-import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
+import { ButtonProvider } from './essentials/ButtonProvider';
+import { ElementRenderer } from './essentials/ElementRenderer';
+import ReadOnlyFormScreen from './ReadOnlyFormScreen';
+import ErrorBlockScreenPart from './screen-parts/ErrorBlockScreenPart';
+import FormProgressScreenPart from './screen-parts/FormProgress';
+import StickyLayerScreenPart from './screen-parts/StickyLayer';
+import { sendPreviewPageChangeEvent } from '../components/elements/helper/formgridPreviewBridge';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
+
+interface FormResponseBody {
+  uiSchema: IForm;
+  schema: ISchema;
+  flowId: string;
+  flows: IFormFlowSteps[];
+  data?: IData;
+  captchaConfig?: any;
+  successUrl?: { [language: string]: string };
+}
 
 const RendererScreen: React.FC<{
   formId: string;
   businessObjectId: string;
   config: IFormFlowData;
-  features?: IFeatures;
-  culture: string;
+  features: IFeatures;
+  language: string;
   isLoggedIn: boolean;
   apiToken: string;
   devMode: boolean;
@@ -78,25 +99,61 @@ const RendererScreen: React.FC<{
   endpoint: string;
   translationUrl?: string;
   successContent?: string;
-  prefillContent?: string;
+  prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
   detailUrl?: string;
   hasDetail?: boolean;
   pluginName: PluginNameEnum;
+  isFormgridPreview?: boolean;
+  previewFormData?: PreviewFormData;
+  previewInformation?: PreviewInformation;
+  previewSelectedElement?: string;
+  previewPageIndex?: number;
 }> = (props) => {
   // Nutze useWindowDimensions, um die Bildschirmbreite zu ermitteln
   const { width, height } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const containerWidth = width < 770 ? '95%' : '80%';
-  const {
-    andpNavigation,
-    andpSharedFunctions,
-    andpSharedProps
-  } = Platform.OS != "web" ? useMicroAppSDK() : {};
+  const { andpNavigation, andpSharedFunctions, andpSharedProps } =
+    Platform.OS != 'web' ? useMicroAppSDK() : {};
   const isMobile = Platform.OS !== 'web';
   const scrollableExpersearchTable = expertSearchTableTheme.table.scrollable;
 
+  function getCorrectANCulture(lng: string, features: IFeatures): string {
+    // If full culture is already provided (e.g. "de-AT"), just return it
+    if (lng && lng.length > 2) return lng;
 
+    // Otherwise, resolve the best matching locale from feature_languages
+    let locales: string[] = [];
+    const lngFeature = getFeatureActive('feature_languages', features);
+
+    if (lngFeature?.languages && Array.isArray(lngFeature.languages)) {
+      locales = lngFeature.languages as string[];
+    } else {
+      // sensible defaults
+      locales = ['en-AT', 'de-AT'];
+    }
+
+    let localeLng: string | null = null;
+    for (const locale of locales) {
+      if (locale.startsWith(lng)) {
+        localeLng = locale;
+      }
+    }
+
+    if (localeLng == null) {
+      console.warn(
+        'There is no locale in the list of available languages (' +
+        locales.toString() +
+        ') for the current language (' +
+        lng +
+        ')',
+      );
+      localeLng = lng; // fallback to short language
+    }
+
+    return localeLng;
+  }
 
   // Initialer Zustand
   const initialFormState: FormState = {
@@ -117,20 +174,21 @@ const RendererScreen: React.FC<{
     t: ((key: string) => key) as TFunction<'translation', undefined>,
     submitted: false,
     handleFocusError: handleFocusError,
-    expertMultipleHandler: () => { },
+    expertMultipleHandler: () => {},
     expertSearchCheckMarkCount: 0,
     errorOpenSubAggNonce: 0,
     isLoggedIn: props.isLoggedIn,
     detailUrl: props.detailUrl,
     hasDetail: props.hasDetail,
-    pluginName: props.pluginName as PluginNameEnum
+    pluginName: props.pluginName as PluginNameEnum,
+    captchaConfig: undefined,
   };
 
   // Initialer Zustand
   const initialUIState: UIState = {
     flowPageIndex: 0,
     flowList: [],
-    currentPage: 0,
+    currentPage: props.previewPageIndex ?? 0,
     lastPage: 0,
     initDone: false,
     loading: false,
@@ -144,7 +202,11 @@ const RendererScreen: React.FC<{
     isMockForm: props.mockForm,
     isDevMode: props.devMode,
     andpNavigation: andpNavigation,
-    linkCallback: Platform.OS != "web" && andpSharedFunctions != undefined ? (link: string, isForm?: boolean) => andpSharedFunctions.get("services.linkCallback")?.(link,isForm) : () => { }
+    linkCallback:
+      Platform.OS != 'web' && andpSharedFunctions != undefined
+        ? (link: string, isForm?: boolean) =>
+            andpSharedFunctions.get('services.linkCallback')?.(link, isForm)
+        : () => {},
   };
 
   //i18n.changeLanguage(props.culture.split('-')[0]);
@@ -169,14 +231,15 @@ const RendererScreen: React.FC<{
     clicked: false,
   });
 
-  const currentPage = uiState.currentPage;
-  const uiSchema = formState.form;
+  const currentPage = props.previewPageIndex ?? uiState.currentPage;
+  const uiSchema: IForm = formState.form;
   const lastPage = uiState.lastPage;
-  let initialFullCulture = undefined;
+  let initialFullCulture = getCorrectANCulture(props.language, props.features);
   if(props.pluginName == PluginNameEnum.ACTA_NOVA){
-    initialFullCulture = utils.getCorrectANCulture(props.culture, props.features!);
+    initialFullCulture = utils.getCorrectANCulture(props.language, props.features!);
   }
-  let restService = new RestService(props.endpoint, props.pluginName, props.apiToken, initialFullCulture);
+
+  let restService = new RestService(props.endpoint, props.pluginName, props.apiToken, initialFullCulture, props.language);
 
   // Verwende den ComponentType-Typ für FlowPage, um sicherzustellen, dass TypeScript den Typ korrekt erkennt
   const [flowPageReactClass, setFlowPageReactClass] = useState<string>('');
@@ -199,7 +262,7 @@ const RendererScreen: React.FC<{
   // // ExpertSearch
   const [hasSearched, setHasSearched] = useState<boolean>(false);
 
-    /**
+  /**
    * Holds the heavy expert search result payload separately from the
    * global FormState. Keeping this data out of FormState prevents large
    * result sets from triggering unnecessary re-renders and shallow copies
@@ -219,7 +282,7 @@ const RendererScreen: React.FC<{
   const printRef = useRef(null);
   const currentScrollYRef = useRef(0);
 
-const scrollToElement = (elementRef?: any) => {
+  const scrollToElement = (elementRef?: any) => {
     if (!scrollViewRef.current) return;
 
     // Bestimme das zu scrollende Element: entweder das übergebene elementRef oder, falls nicht vorhanden, den errorBlockRef
@@ -234,86 +297,84 @@ const scrollToElement = (elementRef?: any) => {
     if (refToScrollTo) {
       // Check if measureLayout is a function before calling it.
       // Check if measureLayout is a function before calling it.
-        if (Platform.OS === 'web') {
-           if (typeof refToScrollTo.current.measureLayout === 'function') {
-             // Web specific fallback or standard behavior
-             // On web, getInnerViewNode might be required or just the ref
-             const relativeNode = scrollViewRef.current.getInnerViewNode ? scrollViewRef.current.getInnerViewNode() : scrollViewRef.current;
-             refToScrollTo.current.measureLayout(
-               relativeNode,
-               (x: number, y: number) => {
-                 const offset = height * 0.1; 
-                 const scrollToY = y - offset < 0 ? 0 : y - offset;
-                 scrollViewRef.current?.scrollTo({
-                   x: 0,
-                   y: scrollToY,
-                   animated: true,
-                 });
-               },
-               (error: any) => {
-                 console.error('Error measuring layout on web:', error);
-               }
-             );
-           }
-        } else {
-          try {
-            const targetHandle = findNodeHandle(refToScrollTo.current);
-            const scrollViewHandle = findNodeHandle(scrollViewRef.current);
-            if (targetHandle && scrollViewHandle) {
-              UIManager.measureLayout(
-                targetHandle,
-                scrollViewHandle,
-                (error: any) => {
-                  console.error('Error measuring layout:', error);
-                },
-                (x: number, y: number, width: number, height: number) => {
-                  const offset = height * 0.1; // 10% of the screen height
-                  const scrollToY = y - offset < 0 ? 0 : y - offset;
-                  scrollViewRef.current?.scrollTo({
-                    x: 0,
-                    y: scrollToY,
-                    animated: true,
-                  });
-                }
-              );
-            } else {
-               // Fallback
-               scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
-            }
-          } catch (e) {
-             console.error("Error in native measureLayout", e);
-             scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
-          }
+      if (Platform.OS === 'web') {
+        if (typeof refToScrollTo.current.measureLayout === 'function') {
+          // Web specific fallback or standard behavior
+          // On web, getInnerViewNode might be required or just the ref
+          const relativeNode = scrollViewRef.current.getInnerViewNode
+            ? scrollViewRef.current.getInnerViewNode()
+            : scrollViewRef.current;
+          refToScrollTo.current.measureLayout(
+            relativeNode,
+            (x: number, y: number) => {
+              const offset = height * 0.1;
+              const scrollToY = y - offset < 0 ? 0 : y - offset;
+              scrollViewRef.current?.scrollTo({
+                x: 0,
+                y: scrollToY,
+                animated: true,
+              });
+            },
+            (error: any) => {
+              console.error('Error measuring layout on web:', error);
+            },
+          );
         }
-    } else {
-        // Fallback: if measureLayout is not available, scroll to top
-        scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+      } else {
+        try {
+          const targetHandle = findNodeHandle(refToScrollTo.current);
+          const scrollViewHandle = findNodeHandle(scrollViewRef.current);
+          if (targetHandle && scrollViewHandle) {
+            UIManager.measureLayout(
+              targetHandle,
+              scrollViewHandle,
+              (error: any) => {
+                console.error('Error measuring layout:', error);
+              },
+              (x: number, y: number, width: number, height: number) => {
+                const offset = height * 0.1; // 10% of the screen height
+                const scrollToY = y - offset < 0 ? 0 : y - offset;
+                scrollViewRef.current?.scrollTo({
+                  x: 0,
+                  y: scrollToY,
+                  animated: true,
+                });
+              },
+            );
+          } else {
+            // Fallback
+            scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+          }
+        } catch (e) {
+          console.error('Error in native measureLayout', e);
+          scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+        }
       }
-
+    } else {
+      // Fallback: if measureLayout is not available, scroll to top
+      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+    }
   };
-
 
   let FlowPage = ScreenComponents[flowPageReactClass];
   let OverlayComponent;
   //if mock => mockType
-  if (props.mockForm) {
-    useEffect(() => {
+  useEffect(() => {
+    if (props.mockForm) {
       const selectedPluginName = formState.pluginName;
 
       Object.assign(formState, initialFormState);
       Object.assign(uiState, initialUIState);
-
       // Preserve the plugin selection made in the mock selector.
       formState.pluginName = selectedPluginName;
+    }
 
-      handleInitFormHooks(uiState, formState);
+    handleInitFormHooks(uiState, formState);
+
+    if (props.mockForm) {
       updateState(StatesToUpdateEnum.ALL);
-    }, [mockFormType]);
-  } else {
-    useEffect(() => {
-      handleInitFormHooks(uiState, formState);
-    }, []);
-  }
+    }
+  }, [mockFormType, props.previewFormData]);
 
   useEffect(() => {
     if (
@@ -337,34 +398,63 @@ const scrollToElement = (elementRef?: any) => {
         setFlowPageObj(uiState.flowList.find((x) => x.reactClass === newComp));
       }
     }
-  }, [uiState.initDone, uiState.flowPageIndex, uiState.currentPage]);
+  }, [uiState.initDone, uiState.flowPageIndex, currentPage]);
 
-  if (!isWeb) {
-    // Is used for android back-button (digital or hardware) -> it should trigger leaveOverlay
-    useEffect(() => {
-      const onBackPress = () => {
-        triggerLeaveOverlay({link: ''});
-        return true;
-      }
+  // Android back-button (digital or hardware) -> triggers leaveOverlay
+  useEffect(() => {
+    if (isWeb) return;
+    const onBackPress = () => {
+      triggerLeaveOverlay({  link: ''  });
+      return true;
+    };;
 
-      const subscription = BackHandler.addEventListener(
-        'hardwareBackPress',
-        onBackPress
-      );
-  
-      return () => subscription.remove();
-    }, []);
-  }else{
-    useEffect(() => {
-      if (clickedLinkOutside.clicked == true) {
-        triggerLeaveOverlay(clickedLinkOutside.overlayLeaveExtraProps);
-      }
-    }, [clickedLinkOutside]);
-  }
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
 
-
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
+    if (!isWeb) return;
+    if (clickedLinkOutside.clicked == true) {
+      triggerLeaveOverlay(clickedLinkOutside.overlayLeaveExtraProps);
+    }
+  }, [clickedLinkOutside]);
+
+  /**
+   * Scrolls the form back to the top whenever the user navigates to a new page.
+   *
+   * Why the platform split?
+   * - On **web**, using ScrollView's `scrollTo()` with `animated: false` can still
+   *   trigger a visible scroll animation because the browser respects the CSS
+   *   `scroll-behavior: smooth` property. To bypass this, we directly set
+   *   `scrollTop = 0` on the underlying DOM node — which is always instant.
+   * - On **native** (iOS/Android), `scrollTo()` with `animated: false` works as
+   *   expected and jumps to the top immediately without any transition.
+   */
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      try {
+        // getInnerViewNode() returns the inner content wrapper of the ScrollView.
+        // Its parentNode is the actual scrollable DOM element.
+        const scrollNode = (scrollViewRef.current as any)?.getInnerViewNode?.()?.parentNode;
+        if (scrollNode && scrollNode.scrollTop > 0) scrollNode.scrollTop = 0;
+        else window.scrollTo({top: 0, left: 0, behavior: 'instant'});
+      } catch (e) {
+        // Fallback: if DOM access fails for any reason, use the standard RN method.
+        // This may animate on web depending on CSS scroll-behavior, but is better than nothing.
+        console.warn('RendererScreen: Could not access ScrollView DOM node for instant scroll reset. Falling back to animated scroll.', e);
+        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+      }
+    } else {
+      scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: false });
+    }
+  }, [uiState.flowPageIndex, currentPage]);
+
+  useEffect(() => {
+    if (props.isFormgridPreview) return;
     if (
       (!uiState.overlayState ||
         uiState.overlayState.overlayType === OverlayTypeEnum.NONE) &&
@@ -379,7 +469,6 @@ const scrollToElement = (elementRef?: any) => {
       );
     }
   }, [uiState.overlayState, formState.data.preconditions]);
-
 
   /**
    * Ziel: Full-Screen-Loading-Overlay nur anzeigen, wenn die normalen Inhalte (FlowPage) noch nicht geladen bzw. angezeigt werden können.
@@ -406,7 +495,7 @@ const scrollToElement = (elementRef?: any) => {
     //     uiSchema.pages?.length! > 0)
     // );
 
-    if (!uiState.initDone) {
+    if (!uiState.initDone && !props.isFormgridPreview) {
       overlayUtils.setOverlay(
         uiState,
         formState,
@@ -433,6 +522,11 @@ const scrollToElement = (elementRef?: any) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (i18n) {
+      handleChangeLanguage(props.language);
+    }
+  }, [props.language]);
 
   const _updateFormState = () => {
     // Always clone the current local formState so React can detect the change
@@ -465,7 +559,12 @@ const scrollToElement = (elementRef?: any) => {
     }
   };
 
-  const handleInitFormHooks = async (uiState: UIState, formState: FormState , data?: any, newFormId?: string) => {
+  const handleInitFormHooks = async (
+    uiState: UIState,
+    formState: FormState,
+    data?: any,
+    newFormId?: string,
+  ) => {
     await preInitForm(uiState, formState, newFormId);
     const response: ApiResponse = await initForm(data, newFormId);
     await postInitForm(uiState, formState, response, newFormId);
@@ -505,96 +604,101 @@ const scrollToElement = (elementRef?: any) => {
     if (Platform.OS !== 'web') {
       return data;
     }
-    if (Platform.OS === 'web' &&
-      (
-        utils.isFeatureActive('feature_prefill', formState.features)) ||
-      new URLSearchParams(window.location.search).get('feature_prefill') !==
-      null
+    if (
+      !utils.isFeatureActive('feature_prefill', formState.features)
+      && !(new URLSearchParams(window.location.search).has('feature_prefill'))
     ) {
-      const prefillText = props.prefillContent;
-      if (prefillText) {
-        try {
-          const preFill = JSON.parse(prefillText.trim());
-          //only prefill if form was not saved before (no savedPageIndex available)
-          if (typeof data.savedPageIndex === 'undefined') {
-            for (const [key, value] of Object.entries(preFill)) {
-              const fieldToPrefill = data?.properties?.[key];
-              const isMultiSelect = Array.isArray(value);
-              // check if the field to be prefilled exists
-              // check if the value to be prefilled is a string
-              // on catalog fields, arrays are also allowed
-              if (
-                fieldToPrefill &&
-                (typeof value === 'string' ||
-                  (fieldToPrefill.possibleValues && isMultiSelect))
-              ) {
-                //only prefill if field is empty / not available
-                if (
-                  !(fieldToPrefill as Object).hasOwnProperty('value') ||
-                  fieldToPrefill?.value === ''
-                ) {
-                  // special handling for catalog fields:
-                  if (
-                    fieldToPrefill.possibleValues ||
-                    fieldToPrefill.possibleValueSetID
-                  ) {
-                    //get possible values of field
-                    let possibleValues: IPossibleValue[] = [];
-                    //backwards compatibility, old possibleValues, remove in next version
-                    if (
-                      fieldToPrefill.possibleValues &&
-                      fieldToPrefill.possibleValues.length > 0
-                    ) {
-                      possibleValues = fieldToPrefill.possibleValues;
-                    } else if (
-                      data.possibleValueSets &&
-                      fieldToPrefill.possibleValueSetID
-                    ) {
-                      const possibleValueSet = data.possibleValueSets.find(
-                        (i) =>
-                          i.possibleValueSetID ===
-                          fieldToPrefill.possibleValueSetID,
-                      );
-                      if (possibleValueSet?.possibleValues) {
-                        possibleValues = possibleValueSet.possibleValues;
-                      }
-                    }
+      return data;
+    }
 
-                    const catalogValueToPrefill =
-                      // multi select?
-                      isMultiSelect
-                        ? // get all possible values with matching identifiers
-                        possibleValues.filter((possibleValue) =>
-                          (value as IPossibleValue[]).some(
-                            (v) => v.identifier === possibleValue.identifier,
-                          ),
-                        )
-                        : // get first matching value by identifier
-                        possibleValues.find(
-                          (possibleValue) =>
-                            possibleValue.identifier === value,
-                        );
-                    if (catalogValueToPrefill) {
-                      // multi select fields expect the property `values`, while single select fields expect the property `value`
-                      if (isMultiSelect) {
-                        fieldToPrefill.values = catalogValueToPrefill;
-                        delete fieldToPrefill.oldValue;
-                      } else {
-                        fieldToPrefill.value = catalogValueToPrefill;
-                      }
-                    }
-                  } else {
-                    // usage of not-null assertion operator "!" because we just checked for its existence
-                    fieldToPrefill!.value = value;
-                  }
-                }
-              }
-            }
+    try {
+      const preFill = props.prefillContent || data.properties || {};
+      //only prefill if form was not saved before (no savedPageIndex available)
+      if (typeof data.savedPageIndex !== 'undefined') {
+        return data;
+      }
+
+      for (const [key, value] of Object.entries(preFill)) {
+        const fieldToPrefill = data?.properties?.[key];
+        const isMultiSelect = Array.isArray(value);
+
+        // check if the field to be prefilled exists
+        // check if the value to be prefilled is a string
+        // on catalog fields, arrays are also allowed
+        if (
+          !(fieldToPrefill &&
+          (typeof value === 'string' ||
+            (fieldToPrefill.possibleValues && isMultiSelect))
+        )) {
+          continue;
+        }
+
+        //only prefill if field is empty / not available
+        if (
+          !(!(fieldToPrefill as Object).hasOwnProperty('value') ||
+          fieldToPrefill?.value === '')
+        ) {
+          continue;
+        }
+
+        // special handling for non-catalog fields:
+        if (
+          !(fieldToPrefill.possibleValues ||
+          fieldToPrefill.possibleValueSetID)
+        ) {
+          // usage of not-null assertion operator "!" because we just checked for its existence
+          fieldToPrefill!.value = value;
+          continue;
+        }
+
+        //get possible values of field
+        let possibleValues: IPossibleValue[] = [];
+        //backwards compatibility, old possibleValues, remove in next version
+        if (
+          fieldToPrefill.possibleValues &&
+          fieldToPrefill.possibleValues.length > 0
+        ) {
+          possibleValues = fieldToPrefill.possibleValues;
+        } else if (
+          data.possibleValueSets &&
+          fieldToPrefill.possibleValueSetID
+        ) {
+          const possibleValueSet = data.possibleValueSets.find(
+            (i) =>
+              i.possibleValueSetID ===
+              fieldToPrefill.possibleValueSetID,
+          );
+          if (possibleValueSet?.possibleValues) {
+            possibleValues = possibleValueSet.possibleValues;
           }
-        } catch (error) {
-          console.error('Parsing prefill json failed');
+        }
+
+        const catalogValueToPrefill =
+          // multi select?
+          isMultiSelect
+            ? // get all possible values with matching identifiers
+              possibleValues.filter((possibleValue) =>
+                (value as IPossibleValue[]).some(
+                  (v) => v.identifier === possibleValue.identifier,
+                ),
+              )
+            : // get first matching value by identifier
+              possibleValues.find(
+                (possibleValue) =>
+                  possibleValue.identifier === value,
+              );
+        if (catalogValueToPrefill) {
+          // multi select fields expect the property `values`, while single select fields expect the property `value`
+          if (isMultiSelect) {
+            fieldToPrefill.values = catalogValueToPrefill;
+            delete fieldToPrefill.oldValue;
+          } else {
+            fieldToPrefill.value = catalogValueToPrefill;
+          }
         }
       }
+    } catch (error) {
+      console.error('Parsing prefill json failed');
     }
 
     return data;
@@ -620,8 +724,27 @@ const scrollToElement = (elementRef?: any) => {
     return missingFormFlowResponse;
   };
 
+  const applyFormFlow = (responseBody: FormResponseBody | null): ApiResponse | null => {
+    const flowStepsList: IFormFlowSteps[] | undefined = responseBody?.flows;
+    if (!flowStepsList || flowStepsList.length === 0) {
+      return handleMissingFormFlow();
+    }
+
+    //use defined flow, or first flow in list
+    const flowId = responseBody!.flowId;
+    const matchingFlow = flowId
+      ? flowStepsList?.find((x: IFormFlowSteps) => x.id === flowId)
+      : flowStepsList?.[0];
+   
+    uiState.flowList = matchingFlow ? matchingFlow.steps : [];
+    return null;
+  };
+
   // TODO v8.2 ist setNormalizedSchema notwendig ?????
-  const initForm = async (data?: any, newFormId?: string): Promise<ApiResponse> => {
+  const initForm = async (
+    data?: any,
+    newFormId?: string,
+  ): Promise<ApiResponse> => {
     if (newFormId) {
       //redirect to new form
       //revert all state to initial state
@@ -631,25 +754,31 @@ const scrollToElement = (elementRef?: any) => {
       setReportResult(null);
       setHasSearched(false);
     }
-
-    const formId = newFormId ? newFormId : data && data.data && data.data.formID ? data.data.formID : props.formId;
+    
+    const formId = newFormId
+      ? newFormId
+      : data && data.data && data.data.formID
+        ? data.data.formID
+        : props.formId;
     const features = props.features;
-    const culture = props.culture;
     const isLoggedIn = props.isLoggedIn;
     const businessObjectId = props.businessObjectId;
     let requestInitializeData = undefined;
 
-    if (Platform.OS == "web") {
+    if (Platform.OS == 'web') {
       const localStorageFormId = localStorage.getItem('formID');
-      const localStorageInitializedData = localStorage.getItem('initializeData');
+      const localStorageInitializedData =
+        localStorage.getItem('initializeData');
       if (localStorageInitializedData && formId === localStorageFormId) {
         requestInitializeData = localStorageInitializedData;
         localStorage.removeItem('initializeData');
         localStorage.removeItem('formID');
       }
-    }else{
+    } else {
       const localStorageFormId = andpSharedProps?.get('formgen.formID');
-      const localStorageInitializedData = andpSharedProps?.get('formgen.initializeData');
+      const localStorageInitializedData = andpSharedProps?.get(
+        'formgen.initializeData',
+      );
       if (localStorageInitializedData && formId === localStorageFormId) {
         requestInitializeData = localStorageInitializedData;
         andpSharedProps?.removeItem?.('formgen.initializeData');
@@ -668,21 +797,13 @@ const scrollToElement = (elementRef?: any) => {
       formState.features = features;
     }
 
-    // fallback to german
-    if (culture === '') {
-      formState.culture = 'de';
-    } else {
-      formState.culture = culture;
-    }
-
     formState.t = t;
+    formState.isFormgridPreview = props.isFormgridPreview;
 
     handleChangeLanguage(formState.culture);
 
     formState.businessObjectID = businessObjectId;
     updateState(StatesToUpdateEnum.ALL);
-
-    
 
     if (isLoggedIn) {
       // intercept clicks on links away from the form and present the overlayLeave
@@ -715,27 +836,16 @@ const scrollToElement = (elementRef?: any) => {
       }
     }
 
-    let loadMockForm = props.mockForm;
-
     // 1) Data provided directly
     if (data) {
       formState.form = data.uiSchema;
-      const FlowStepsList = data?.uiSchema?.formFlow;
-      if (!FlowStepsList || FlowStepsList.length === 0) {
-        return handleMissingFormFlow();
-      }
+      const missingFlowResponse1 = applyFormFlow(data);
+      if (missingFlowResponse1) return missingFlowResponse1;
       formState.data = getPrefillData(data.data);
       formState.schema = data.schema;
+      formState.captchaConfig = data.captchaConfig;
+      formState.successUrl = data.successUrl;
       uiState.lastPage = data.uiSchema.pages.length;
-      const formFlowStepsTemplateKey = data.uiSchema.formFlowKey
-        ? data.uiSchema.formFlowKey
-        : FlowStepsList[0].key;
-      const findElementWithKey = FlowStepsList.find(
-        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-      );
-      uiState.flowList = findElementWithKey
-        ? findElementWithKey.formFlowSteps
-        : [];
 
       if (data.schema.formType) {
         uiState.isReadOnlyForm = data.schema.formType === 'readonlyform';
@@ -752,10 +862,20 @@ const scrollToElement = (elementRef?: any) => {
     }
 
     // 2) Real API load
-    if (!loadMockForm) {
-      const apiResponse = await restService.loadFormAsync(formId, businessObjectId, requestInitializeData);
+    if (!props.mockForm && !props.isFormgridPreview) {
+      const apiResponse = await restService.loadFormAsync(
+        formId,
+        businessObjectId,
+        requestInitializeData,
+      );
       if (!apiResponse.success) {
-        overlayUtils.setOverlay(uiState, formState, OverlayTypeEnum.LOAD_FORM, updateState, { response: apiResponse });
+        overlayUtils.setOverlay(
+          uiState,
+          formState,
+          OverlayTypeEnum.LOAD_FORM,
+          updateState,
+          { response: apiResponse },
+        );
         return apiResponse;
       }
 
@@ -763,20 +883,11 @@ const scrollToElement = (elementRef?: any) => {
       formState.form = responseBody.uiSchema;
       formState.data = getPrefillData(responseBody.data);
       formState.schema = responseBody.schema;
+      formState.captchaConfig = responseBody.captchaConfig;
+      formState.successUrl = responseBody.successUrl;
       uiState.lastPage = responseBody.uiSchema.pages.length;
-      const FlowStepsList = responseBody.uiSchema?.formFlow;
-      if (!FlowStepsList || FlowStepsList.length === 0) {
-        return handleMissingFormFlow();
-      }
-      let formFlowStepsTemplateKey = formState.form.formFlowKey
-        ? formState.form.formFlowKey
-        : FlowStepsList[0].key;
-      const findElementWithKey = FlowStepsList.find(
-        (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-      );
-      uiState.flowList = findElementWithKey
-        ? findElementWithKey.formFlowSteps
-        : [];
+      const missingFlowResponse2 = applyFormFlow(responseBody);
+      if (missingFlowResponse2) return missingFlowResponse2;
       if (
         formState.data.savedPageIndex != null &&
         uiState.lastPage >= formState.data.savedPageIndex
@@ -796,10 +907,7 @@ const scrollToElement = (elementRef?: any) => {
 
       // delete initial ErrorMessages
       formState.data.hasValidationErrors = false;
-      Object.entries(formState.data.properties || {}).map(function ([
-        k,
-        v,
-      ]) {
+      Object.entries(formState.data.properties || {}).map(function ([k, v]) {
         if (v?.validationMessage && v.validationMessage !== '') {
           v.validationMessage = '';
         }
@@ -849,30 +957,42 @@ const scrollToElement = (elementRef?: any) => {
     }
 
     // 3) Mock load
-    const mockResponseBody = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
-    const responseBody = mockResponseBody;
-    formState.form = responseBody.uiSchema;
-    formState.data = responseBody.data;
-    formState.schema = responseBody.schema;
-    uiState.lastPage = responseBody.uiSchema.pages.length;
-    const FlowStepsList = responseBody.uiSchema?.formFlow;
-    if (!FlowStepsList || FlowStepsList.length === 0) {
-      return handleMissingFormFlow();
+    let responseBody: FormResponseBody | null = null;
+    if (props.isFormgridPreview && props.previewFormData != null) {
+      formState.form = props.previewFormData.uiSchema;
+      formState.data = { formID: props.formId, properties: props.prefillContent };
+      formState.schema = props.previewFormData.schema;
+      // Preview does not have a captcha
+      formState.captchaConfig = undefined;
+      responseBody = {
+        schema: props.previewFormData.schema,
+        uiSchema: props.previewFormData.uiSchema,
+        captchaConfig: null,
+        flows: props.previewInformation!.flows || [],
+        flowId: props.previewInformation!.flowId,
+      };
+    } else {
+      const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
+      if (mockJSON) {
+        responseBody = mockJSON;
+        formState.form = responseBody!.uiSchema;
+        formState.data = responseBody!.data!;
+        formState.schema = responseBody!.schema;
+        formState.successUrl = responseBody!.successUrl;
+        formState.captchaConfig = responseBody!.captchaConfig;
+      }
     }
-
-    let formFlowStepsTemplateKey = formState.form.formFlowKey
-      ? formState.form.formFlowKey
-      : FlowStepsList[0].key;
-
-    const findElementWithKey = FlowStepsList.find(
-      (x: IFormFlowSteps) => x.key == formFlowStepsTemplateKey,
-    );
-    uiState.flowList = findElementWithKey
-      ? findElementWithKey.formFlowSteps
-      : [];
-    if (responseBody.schema.formType) {
-      uiState.isReadOnlyForm =
-        responseBody.schema.formType === 'readonlyform';
+    if (formState?.form?.pages) {
+      uiState.lastPage = formState.form.pages.length;
+    } else {
+      uiState.lastPage = 0;
+    }
+    const missingFlowResponse3 = applyFormFlow(responseBody);
+    if (missingFlowResponse3) {
+      return missingFlowResponse3;
+    }
+    if (responseBody?.schema.formType) {
+      uiState.isReadOnlyForm = responseBody.schema.formType === 'readonlyform';
       uiState.isExpertSearch =
         responseBody.schema.formType === 'searchform' ||
         responseBody.schema.formType === 'report'; // Not sure yet TODO
@@ -892,8 +1012,11 @@ const scrollToElement = (elementRef?: any) => {
   const redirectFormCheck = (formState: FormState) => {
     //check if it's a redirectForm and a redirect should be done immediately
     if (
-      formState.schema.formType === "redirectForm" && formState.data && formState.data.formControls && formState.data.formControls.button &&
-      formState.data.formControls?.button?.targetUrl !== ""
+      formState.schema.formType === 'redirectForm' &&
+      formState.data &&
+      formState.data.formControls &&
+      formState.data.formControls.button &&
+      formState.data.formControls?.button?.targetUrl !== ''
     ) {
       overlayUtils.setOverlay(
         uiState,
@@ -901,14 +1024,13 @@ const scrollToElement = (elementRef?: any) => {
         OverlayTypeEnum.FULL_SCREEN_LOADING,
         updateState,
         {
-          loadingText:
-            IOverlayFullScreenTextEnum.Redirect,
+          loadingText: IOverlayFullScreenTextEnum.Redirect,
         },
       );
 
       utils.redirectFormRedirect(formState.data);
     }
-  }
+  };
 
   const triggerLeaveOverlay = (
     overlayLeaveExtraProps: IOverlayLeaveExtraProps,
@@ -922,24 +1044,17 @@ const scrollToElement = (elementRef?: any) => {
     );
   };
 
-  
+  useEffect(() => {
+    if (!props.isFormgridPreview) return;
+    if (props.previewPageIndex == null || props.previewPageIndex < 0) return;
+    if (!uiState.initDone) return;
+    if (uiState.currentPage === props.previewPageIndex) return;
+    changeToPage(uiState, props.previewPageIndex, updateState, true);
+  }, [props.isFormgridPreview, props.previewPageIndex, uiState.initDone, uiState.currentPage]);
+
 
   useEffect(() => {
-    if (
-      formState.deleted &&
-      uiState.overlayState.overlayType == OverlayTypeEnum.NONE
-    ) {
-      formState.deleted = false;
-      overlayUtils.setOverlay(
-        uiState,
-        formState,
-        OverlayTypeEnum.UPDATE_OCCURRED,
-        updateState,
-      );
-    }
-  }, [formState.deleted, updateState]);
-
-  useEffect(() => {
+    if (props.isFormgridPreview) return;
     if (
       formState.onBoardingFeatureActivated &&
       uiState.overlayState.overlayType == OverlayTypeEnum.NONE
@@ -952,20 +1067,43 @@ const scrollToElement = (elementRef?: any) => {
         updateState,
       );
     }
-  }, [formState.deleted, updateState]);
+  }, [
+    props.isFormgridPreview,
+    formState.onBoardingFeatureActivated,
+    updateState,
+  ]);
 
-  function handleChangeLanguage(lng: any) {
-    i18n.changeLanguage(lng);
-    if (lng.length > 2) {
-      formState.culture = lng;
-      restService.setFullCulture(lng);
-    } else {
-      if (props.pluginName == PluginNameEnum.ACTA_NOVA) {
-        const resolved = utils.getCorrectANCulture(lng, formState.features);
-        formState.culture = resolved;
-        restService.setFullCulture(resolved);
-      }      
+  useEffect(() => {
+    if (props.isFormgridPreview) return;
+    if (
+      formState.deleted &&
+      uiState.overlayState.overlayType == OverlayTypeEnum.NONE
+    ) {
+      formState.deleted = false;
+      overlayUtils.setOverlay(
+        uiState,
+        formState,
+        OverlayTypeEnum.UPDATE_OCCURRED,
+        updateState,
+      );
     }
+  }, [props.isFormgridPreview, formState.deleted, updateState]);
+
+  function handleChangeLanguage(language: string) {
+    // fallback to german
+    if (language === '') {
+      language = 'de';
+    }
+
+    i18n.changeLanguage(language);
+    let culture = language;
+    if (language.length <= 2) {
+      culture = utils.getCorrectANCulture(language, formState.features);
+    }
+
+    formState.culture = culture;
+    restService.setFullCulture(culture);
+
     updateState(StatesToUpdateEnum.ALL);
   }
 
@@ -996,9 +1134,7 @@ const scrollToElement = (elementRef?: any) => {
     updateState(StatesToUpdateEnum.UIState);
     // TODO v8.2 Considering whether to only one fullscreen overlay for the whole aciton
 
-    //load mock form
-    let loadMockForm = props.mockForm;
-    if (loadMockForm) {
+    if (props.mockForm) {
       await formEventsUtils.loadDialogForm(
         uiState,
         formState,
@@ -1041,7 +1177,7 @@ const scrollToElement = (elementRef?: any) => {
           createAfterIndex,
           props.mockForm,
         ),
-      () => { },
+      () => {},
       showError,
     );
   };
@@ -1125,7 +1261,7 @@ const scrollToElement = (elementRef?: any) => {
         formState,
         OverlayTypeEnum.DEFAULT_ERRORS,
         updateState,
-        { response: errorResponse }
+        { response: errorResponse },
       );
     };
     if (isRedirect) {
@@ -1135,8 +1271,7 @@ const scrollToElement = (elementRef?: any) => {
         OverlayTypeEnum.FULL_SCREEN_LOADING,
         updateState,
         {
-          loadingText:
-            IOverlayFullScreenTextEnum.Redirect,
+          loadingText: IOverlayFullScreenTextEnum.Redirect,
         },
       );
     } else {
@@ -1151,7 +1286,7 @@ const scrollToElement = (elementRef?: any) => {
     }
 
     if (!uiState.isMockForm) {
-      let apiResponse = await restService.ANCancelFormANRequest(formState);
+      let apiResponse = await restService.cancelFormRequest(formState);
 
       if (!apiResponse.success) {
         endANRequest(uiState, updateState);
@@ -1163,9 +1298,8 @@ const scrollToElement = (elementRef?: any) => {
       setTimeout(() => {
         if (!isRedirect) endANRequest(uiState, updateState);
         callback();
-      }, 1000) // MockTimeout
+      }, 1000); // MockTimeout
     }
-
   };
 
   // Dropdowns - ANDP-420
@@ -1190,11 +1324,15 @@ const scrollToElement = (elementRef?: any) => {
             );
             const returnedElement = utils.getElementByJsonPath(json, jsonPath);
             //const possibleValues = utils.getPossibleValues(json, jsonPath);
-            let possibleValues: IPossibleValue[] = returnedElement ? returnedElement.possibleValues! : [];
+            let possibleValues: IPossibleValue[] = returnedElement
+              ? returnedElement.possibleValues!
+              : [];
 
             if (returnedElement?.possibleValueSetID) {
               json.possibleValueSets.forEach((x: any) => {
-                if (returnedElement.possibleValueSetID === x.possibleValueSetID) {
+                if (
+                  returnedElement.possibleValueSetID === x.possibleValueSetID
+                ) {
                   possibleValues = x.possibleValues;
                 }
               });
@@ -1267,7 +1405,7 @@ const scrollToElement = (elementRef?: any) => {
               jsonPath,
             );
             const returnedElement = utils.getElementByJsonPath(json, jsonPath);
-            const possibleValues = utils.getPossibleValues(json, jsonPath);
+            const possibleValues = utils.getPossibleValues(json, jsonPath, props.pluginName);
             if (
               elementToChange &&
               returnedElement &&
@@ -1377,7 +1515,7 @@ const scrollToElement = (elementRef?: any) => {
         },
         formState,
         jsonPath,
-        uiState.isMockForm
+        uiState.isMockForm,
       );
     }
   }
@@ -1481,8 +1619,8 @@ const scrollToElement = (elementRef?: any) => {
       true,
     ); // disableThreshold for ExpertSearch
     updateState(StatesToUpdateEnum.UIState);
-    
-    if (isPageValid(formState, true, uiState.currentPage, props.mockForm)) {
+
+    if (!uiSchema.pages?.length || isPageValid(formState, true, uiState.currentPage, props.mockForm)) {
       if (!props.mockForm) {
         restService.ANcallExpertSearch(
           formState,
@@ -1490,7 +1628,7 @@ const scrollToElement = (elementRef?: any) => {
             if (!hasSearched) setHasSearched(true);
             if (jsonData.formID) {
               const data: IData = jsonData;
-      
+
               // Detach the potentially large expert search result from the
               // form data and store it in a dedicated state slice. This keeps
               // the global FormState lightweight and avoids unnecessary
@@ -1498,7 +1636,7 @@ const scrollToElement = (elementRef?: any) => {
               const nextReportResult = data.reportResult;
               data.reportResult = undefined;
               setReportResult(nextReportResult ?? null);
-      
+
               formState.data = data;
               //disableLoadingState();
               utils.endANRequest(uiState, updateState);
@@ -1516,11 +1654,10 @@ const scrollToElement = (elementRef?: any) => {
       } else {
         mockFormularUtils.fetchFakeExpertSearchData(function (jsonData: IData) {
           setTimeout(() => {
-            console.log('2 seconds mock loading');
             if (!hasSearched) setHasSearched(true);
             if (jsonData.formID) {
               const data: IData = jsonData;
-      
+
               // Detach the potentially large expert search result from the
               // form data and store it in a dedicated state slice. This keeps
               // the global FormState lightweight and avoids unnecessary
@@ -1528,7 +1665,7 @@ const scrollToElement = (elementRef?: any) => {
               const nextReportResult = data.reportResult;
               data.reportResult = undefined;
               setReportResult(nextReportResult ?? null);
-      
+
               formState.data = data;
               //disableLoadingState();
               utils.endANRequest(uiState, updateState);
@@ -1553,7 +1690,6 @@ const scrollToElement = (elementRef?: any) => {
       //errorFunc(null);
       //callbackOverlay();
     }
-
   }
 
   function handleExpertExcelDownload() {
@@ -1578,22 +1714,27 @@ const scrollToElement = (elementRef?: any) => {
         //disableLoadingState();
         utils.endANRequest(uiState, updateState);
       };
-      restService.ANCallExpertExcelDownload(formState, ok, (data: IData) => {
-        // if validationError true
-        utils.endANRequest(uiState, updateState);
-        formState.data = data;
-        uiState.showErrorBlockOnInvalid = true;
-        updateState(StatesToUpdateEnum.ALL);
-      }, (request: ApiResponse) => {
-        // on exception
-        overlayUtils.setOverlay(
-          uiState,
-          formState,
-          OverlayTypeEnum.EXPERT_SEARCH_TRIGGER_ENDPOINT,
-          updateState,
-          { response: request }
-        );
-      });
+      restService.ANCallExpertExcelDownload(
+        formState,
+        ok,
+        (data: IData) => {
+          // if validationError true
+          utils.endANRequest(uiState, updateState);
+          formState.data = data;
+          uiState.showErrorBlockOnInvalid = true;
+          updateState(StatesToUpdateEnum.ALL);
+        },
+        (request: ApiResponse) => {
+          // on exception
+          overlayUtils.setOverlay(
+            uiState,
+            formState,
+            OverlayTypeEnum.EXPERT_SEARCH_TRIGGER_ENDPOINT,
+            updateState,
+            { response: request },
+          );
+        },
+      );
     } else {
       formState.data.hasValidationErrors = true;
       uiState.showErrorBlockOnInvalid = true;
@@ -1604,15 +1745,17 @@ const scrollToElement = (elementRef?: any) => {
 
   const getRawErrorMessages = (): IErrorMessage[] => {
     let errorMessages: IErrorMessage[] = [];
+    if (props.isFormgridPreview) return [];
 
     if (formState.data.hasValidationErrors && formState.data.properties) {
       errorMessages = utils.getErrorMessages(
         formState.data.properties,
         formState.form.pages,
+        formState.pluginName,
       );
     }
     return errorMessages;
-  }
+  };
 
   const getErrorMessages = () => {
     let errorMessages: IErrorMessage[] = getRawErrorMessages();
@@ -1633,7 +1776,7 @@ const scrollToElement = (elementRef?: any) => {
     elementProps: IFormComponentAttributes,
     elementRef: React.RefObject<any>,
   ): void => {
-    // 0) Fokus aufheben wenn dieses Element kein Fehler mehr hat
+    // 0) Fokus aufheben wenn dieses Element kein  fFehler mehr hat
     if (
       elementBeingFocused.current &&
       elementBeingFocused.current.elementID === elementProps.id &&
@@ -1678,8 +1821,6 @@ const scrollToElement = (elementRef?: any) => {
 
     const currentFocus = elementBeingFocused.current;
 
-
-
     // b) Sub-Feld darf Aggregat-Container-Fokus ersetzen oder ersten Fokus setzen
     if (isTargetSubField && hasError && elementRef?.current) {
       const extractSubAggSortIndex = (p?: string | null): number => {
@@ -1693,7 +1834,8 @@ const scrollToElement = (elementRef?: any) => {
         currentFocus &&
         currentFocus.isSubAggregateElement === true &&
         currentFocus.parentAggregateID === info.aggregateID &&
-        currentFocus.insideSubaggregatIndex < elementProps.insideSubaggregatIndex!
+        currentFocus.insideSubaggregatIndex <
+          elementProps.insideSubaggregatIndex!
       ) {
         return;
       }
@@ -1703,7 +1845,7 @@ const scrollToElement = (elementRef?: any) => {
         isSubAggregateElement: true,
         parentAggregateID: info.aggregateID,
         jsonPath: elementProps.jsonpath,
-        insideSubaggregatIndex: elementProps.insideSubaggregatIndex
+        insideSubaggregatIndex: elementProps.insideSubaggregatIndex,
       });
       // }
       return;
@@ -1724,9 +1866,8 @@ const scrollToElement = (elementRef?: any) => {
     }
   };
 
-  
-
   useEffect(() => {
+    if (props.isFormgridPreview) return;
     if (
       props.isLoggedIn &&
       !uiState.isReadOnlyForm &&
@@ -1737,7 +1878,6 @@ const scrollToElement = (elementRef?: any) => {
       const autoSave = () => {
         const nowRounded = Math.floor(Date.now() / 1000);
         if (nowRounded % 6 === 0) {
-          console.log(nowRounded);
           if (
             formState.submitted || //TODO v8.2 (global as any).submitted better option?
             uiState.overlayState.overlayType != OverlayTypeEnum.NONE ||
@@ -1766,7 +1906,8 @@ const scrollToElement = (elementRef?: any) => {
       const intervalId = setInterval(autoSave, 1000);
       return () => clearInterval(intervalId);
     }
-  }, [formState.data, uiState.currentPage, uiState.overlayState]);
+  }, [formState.data, currentPage, uiState.overlayState]);
+
   /**
    * Attempts to scroll to the first error element and set focus on it.
    *
@@ -1792,6 +1933,12 @@ const scrollToElement = (elementRef?: any) => {
           firstErrorElementRef.current = null;
         }, 500);
       }
+    } else if (CaptchaService.hasError()) {
+      // Fallback: no field-level error, but captcha is unsolved → scroll to widget.
+      const captchaRef = CaptchaService.getRef();
+      if (captchaRef?.current) {
+        scrollToElement(captchaRef);
+      }
     } else {
       // Reset the first error element reference so it can be set anew on the next validation.
       firstErrorElementRef.current = null;
@@ -1809,6 +1956,10 @@ const scrollToElement = (elementRef?: any) => {
     } else if (pageNum < 0) {
       console.log('Cannot change to a negative page index.');
     }
+
+    if (props.isFormgridPreview) {
+      sendPreviewPageChangeEvent(pageNum);
+    }
     updateState(StatesToUpdateEnum.UIState);
   };
 
@@ -1816,19 +1967,71 @@ const scrollToElement = (elementRef?: any) => {
 
   const rawErrorMsgs = useMemo(() => getRawErrorMessages(), [formState]);
 
-
   if (rawErrorMsgs && rawErrorMsgs.length > 0) {
-    firstErrorElementInfo.current = utils.findVisuallyFirstErrorElement(rawErrorMsgs, formState.form);
-
+    firstErrorElementInfo.current = utils.findVisuallyFirstErrorElement(
+      rawErrorMsgs,
+      formState.form,
+    );
   } else {
     firstErrorElementInfo.current = null;
+  }
+
+  if (props.isFormgridPreview && uiSchema !== undefined && uiSchema !== null && uiSchema.pages?.length! > 0) {
+    const currentFormPageUiSchema: IFormPage | undefined =
+      formState.form?.pages![uiState.currentPage];
+    const elements = currentFormPageUiSchema.elements;
+    return (
+      <><Host>
+        <ScrollView
+          style={[
+            localStyles.scrollView,
+            // @ts-ignore
+            Platform.OS == "web" && !scrollableExpersearchTable ? { overflow: 'auto' } : null,
+            Platform.OS === 'web' &&
+                          formState.isFormgridPreview &&
+                          ({ cursor: 'not-allowed' } as any),
+          ]}
+          scrollEnabled={true}
+
+          ref={scrollViewRef}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
+          <FormProgressScreenPart
+            updateState={updateState}
+            restService={restService}
+            handlePageChange={handlePageChange}
+            currentPage={currentPage}
+            formState={formState}
+            uiState={uiState}
+            handleFormCancel={handleFormCancel}
+            errorMsgs={uniqueErrorMsgs}
+          />
+          <ElementRenderer
+            {...props}
+            summary={SummaryOptions.No}
+            elements={elements}
+            parentId=""
+            jsonpath=""
+            t={props.t}
+            uiState={uiState}
+            formState={formState}
+            restService={restService}
+            updateState={updateState}
+            isLoggedIn={props.isLoggedIn}
+            handleSearch={handleSearch}
+            handleExpertSearch={handleExpertSearch}
+            selectedElementId={props.previewSelectedElement}
+          />
+        </ScrollView>
+      </Host></>)
   }
 
   let renderScreen = <></>;
   if (FlowPage && uiState.isReadOnlyForm) {
     renderScreen = (
       <View style={{ flex: 1 }}>
-        {Platform.OS != "web" ? (
+        {Platform.OS != 'web' ? (
           <FormProgressScreenPart
             updateState={updateState}
             restService={restService}
@@ -1864,12 +2067,12 @@ const scrollToElement = (elementRef?: any) => {
     FlowPage &&
     uiSchema !== undefined &&
     uiSchema !== null &&
-    uiSchema.pages?.length! > 0 &&
     !uiState.isReadOnlyForm
   ) {
+    const hasPages = !!uiSchema.pages?.length;
     renderScreen = (
       <>
-        {Platform.OS != "web" ? (
+        {Platform.OS != 'web' ? (
           <FormProgressScreenPart
             updateState={updateState}
             restService={restService}
@@ -1885,27 +2088,31 @@ const scrollToElement = (elementRef?: any) => {
           style={[
             localStyles.scrollView,
             // @ts-ignore
-            Platform.OS == "web" && !scrollableExpersearchTable ? { overflow: 'auto' } : null,
+            Platform.OS == 'web' && !scrollableExpersearchTable
+              ? { overflow: 'auto' }
+              : null,
           ]}
           scrollEnabled={true}
-
           ref={scrollViewRef}
           scrollEventThrottle={16}
           contentContainerStyle={{ flexGrow: 1 }}
         >
-          {Platform.OS == "web" && flowPageReactClass !== 'SuccessScreen' ? (
-          <FormProgressScreenPart
-            updateState={updateState}
-            restService={restService}
-            handlePageChange={handlePageChange}
-            currentPage={currentPage}
-            formState={formState}
-            uiState={uiState}
-            handleFormCancel={handleFormCancel}
-            errorMsgs={uniqueErrorMsgs}
-          />
-        ) : null}
-          {Platform.OS === "web" &&
+          {Platform.OS == 'web' &&
+          flowPageReactClass !== 'SuccessScreen' &&
+          uiSchema.pages?.length! > 0 &&
+          hasPages ? (
+            <FormProgressScreenPart
+              updateState={updateState}
+              restService={restService}
+              handlePageChange={handlePageChange}
+              currentPage={currentPage}
+              formState={formState}
+              uiState={uiState}
+              handleFormCancel={handleFormCancel}
+              errorMsgs={uniqueErrorMsgs}
+            />
+          ) : null}
+          {Platform.OS === 'web' &&
             formState.data.hasValidationErrors &&
             uiState.showErrorBlockOnInvalid && (
               <View ref={errorBlockRef}>
@@ -1947,13 +2154,17 @@ const scrollToElement = (elementRef?: any) => {
             rawErrorMsgs={rawErrorMsgs}
             reportResult={reportResult}
           ></FlowPage>
+          {/* {flowPageReactClass !== 'SuccessScreen' && (
+            <CMSFormCaptcha
+              formState={formState}
+            />
+          )} */}
         </ScrollView>
         <StickyLayerScreenPart
           updateState={updateState}
           flowObj={flowPageObj}
           formState={formState}
           uiState={uiState}
-          handlePageChange={handlePageChange}
           t={t}
           screenType={flowPageReactClass}
           restService={restService}
@@ -1982,7 +2193,7 @@ const scrollToElement = (elementRef?: any) => {
   ) {
     OverlayComponent = overlayTypes[uiState.overlayState.overlayType];
   }
-  return (
+  return !props.isFormgridPreview ? (
     <>
       {OverlayComponent && (
         <OverlayComponent
@@ -1997,7 +2208,12 @@ const scrollToElement = (elementRef?: any) => {
       )}
       {props.mockForm && (
         <>
-          <View style={[!isMobile && localStyles.overlayButtonContainer, isMobile && localStyles.mobileOverlayButtonContainer]}>
+          <View
+            style={[
+              !isMobile && localStyles.overlayButtonContainer,
+              isMobile && localStyles.mobileOverlayButtonContainer,
+            ]}
+          >
             <TouchableOpacity
               onPress={() => {
                 overlayUtils.setOverlay(
@@ -2089,11 +2305,11 @@ const scrollToElement = (elementRef?: any) => {
           </Modal>
         </>
       )}
-      <ButtonProvider definitions={flowPageObj?.buttonDefinition}>
-        {Platform.OS == "web" ? <Host>{renderScreen}</Host> : renderScreen}
+      <ButtonProvider definitions={flowPageObj?.buttons}>
+        {Platform.OS == 'web' ? <Host>{renderScreen}</Host> : renderScreen}
       </ButtonProvider>
     </>
-  );
+  ) : <></>;
 };
 const localStyles = StyleSheet.create({
   modalOverlay: {
@@ -2187,4 +2403,3 @@ const localStyles = StyleSheet.create({
 });
 
 export default RendererScreen;
-

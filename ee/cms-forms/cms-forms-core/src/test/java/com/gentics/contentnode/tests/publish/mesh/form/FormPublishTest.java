@@ -657,7 +657,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		String projectName = supply(() -> MeshPublisher.getMeshProjectName(node));
 
 		// POST some data
-		postFormData(projectName, meshUuid, Pair.of("formpage1", "1"));
+		postFormData(projectName, pluginName, meshUuid, Pair.of("b0bac784_007f_4831_9098_987aa7828ff8", "Blubb"));
 
 		// delete the form in the CMS
 		consume(f -> f.delete(true), form);
@@ -816,8 +816,8 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), page, true,
 				nodeResponse -> {
 					assertThat(nodeResponse.getFields().getStringField("content").getString())
-							.isEqualTo(String.format("<eval>{ renderForm \"%s\" language=data.node.language }</eval>",
-									MeshPublisher.getMeshUuid(form)));
+							.isEqualTo(String.format("<eval>{ renderForm \"%s\" pluginName=\"%s\" language=data.node.language }</eval>",
+									MeshPublisher.getMeshUuid(form), pluginName));
 				}));
 
 		// take form offline

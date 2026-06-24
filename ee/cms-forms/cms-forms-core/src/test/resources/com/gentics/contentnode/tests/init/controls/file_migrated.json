@@ -13,16 +13,15 @@
             "file_85f0431b_ecfd_40a6_b87d_26255767d335": {
                 "type": "binary",
                 "updateOnChange": false,
-                "validation": {},
+                "validation": {
+                    "binary": {
+                        "maxFilesize": 20.0,
+                        "allowedTypes": ["image"]
+                    }
+                },
                 "mandatory": false,
                 "isList": false,
-                "name": "file_85f0431b_ecfd_40a6_b87d_26255767d335",
-                "formGridOptions": {
-                    "maxFileSize": 20.0,
-                    "allowedFiletypes": [
-                        "image"
-                    ]
-                }
+                "name": "file_85f0431b_ecfd_40a6_b87d_26255767d335"
             }
         }
     },

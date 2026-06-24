@@ -55,6 +55,7 @@ function InputElement(props: IFormComponentAttributes) {
   const [isFocused, setIsFocused] = useState(false);
   const [lastHandleChangeValue, setLastHandleChangeValue] = useState(props.value);
   const [isFilled, setIsFilled] = useState(props.value !== undefined && props.value !== null && props.value !== '');
+  const [unitBadgeWidth, setUnitBadgeWidth] = useState(0);
 
   let labeltext =
     utils.getI18nText(props.formState, props.label) +
@@ -182,6 +183,15 @@ function InputElement(props: IFormComponentAttributes) {
   const textAlign: 'left' | 'center' | 'right' =
     alignment === 'center' || alignment === 'right' ? alignment : 'left';
 
+  const unitText: string =
+    isNumber && schema.unit
+      ? utils.getI18nText(props.formState, schema.unit) ?? ''
+      : '';
+  const hasUnit = unitText.length > 0;
+  const alignmentUnit = props.formGridOptions?.alignmentUnit ?? 'left';
+  const isUnitLeft = localValue != null && localValue !== '' && hasUnit && alignmentUnit === 'left';
+  const isUnitRight = localValue != null && localValue !== '' && hasUnit && alignmentUnit === 'right';
+
   return (
     <SharedInputComponent
       formState={formState}
@@ -213,6 +223,11 @@ function InputElement(props: IFormComponentAttributes) {
       elementRef={elementRef}
       styles={styles}
       t={t}
+      unitText={unitText}
+      unitBadgeWidth={unitBadgeWidth}
+      isUnitLeft={isUnitLeft}
+      isUnitRight={isUnitRight}
+      onUnitLayout={setUnitBadgeWidth}
     />
   );
 }

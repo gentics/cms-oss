@@ -161,8 +161,8 @@
     "andp_settings_biometric": "Biometric Login",
     "andp_settings_biometric_toggle_of_title": "Confirm / Cancle",
     "andp_settings_biometric_toggle_of_message":"This action will log you out",
-    "andp_settings_biometric_description": "Use Face ID/Touch ID to securely access your account without entering your password. This requires stored biometric data on your device.",
-    "andp_settings_notification_description": "Receive notifications about new incoming messages to stay up to date.",
+    "andp_settings_biometric_description": "Verwenden Sie Face ID/Touch ID, um sicher auf Ihr Konto zuzugreifen, ohne Ihr Passwort einzugeben. Dies erfordert gespeicherte biometrische Daten auf Ihrem Gerät",
+    "andp_settings_notification_description": "Erhalten Sie Benachrichtigungen über neue Nachrichten die einkommen, damit Sie immer auf dem Laufenden bleiben.",
     "andp_app_profile_firstName": "First name",
     "andp_app_profile_lastName": "Last name",
     "andp_app_profile_email": "Email",
@@ -200,5 +200,5 @@
     "enable_biometric_login_title": "Enable Biometric Login",
     "enable_biometric_login_description": "Your device supports biometric authentication. Enable it to log in faster and more securely.{\"\n\"}{\"\n\"} You will no longer need to enter your username and password when opening the App.",
     "enable_biometric_login_button": "Enable"
-  
+
 }

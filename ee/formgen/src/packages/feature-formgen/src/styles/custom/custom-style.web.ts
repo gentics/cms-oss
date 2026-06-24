@@ -120,6 +120,7 @@ const aggregateElementStyles = StyleSheet.create({
   aggDeleteButtonMobileContent: {},
   // -----------------------------
   // ------ Aggregate Add Button -----
+  aggAddButtonContainer: {},
   aggAddButton: {},
   aggAddButtonOnHover: {},
   aggAddButtonContent: {},
@@ -189,10 +190,6 @@ const aggregateElementStyles = StyleSheet.create({
   //| /////////////////////////////// |
   //+---------------------------------+
 
-  aggVarAddButtonContainer: {},
-  aggVarAddButtonMobile: {},
-  aggVarAddButton: {},
-
   // ------- Pagination Styles -------
   paginationContainer: {},
   pageItem: {},
@@ -224,6 +221,7 @@ const dateTimeElementStyles = StyleSheet.create({
   errorDatePickerInput: {},
   datePickerInputText: {},
   datePickerLabel: {},
+  datePickerLabelActive: {},
   errorDatePickerLabel: {},
 });
 
@@ -388,6 +386,11 @@ const inputElementStyles = StyleSheet.create({
   numberBtns: {},
   numberBtnUp: {},
   numberBtnDown: {},
+  unitBadge: {},
+  unitBadgeError: {},
+  unitBadgeLeft: {},
+  unitBadgeText: {},
+  unitBadgeTextError: {},
   inputAreaFocused: {},
   textarea: {},
 });

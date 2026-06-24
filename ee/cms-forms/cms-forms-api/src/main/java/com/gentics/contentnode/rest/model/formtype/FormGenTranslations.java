@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Model for formGen translations
  */
-public class FormGenTranslations extends LinkedHashMap<String, Map<String, String>> {
+public class FormGenTranslations extends LinkedHashMap<String, Map<String, String>> implements Cloneable {
 	private static final long serialVersionUID = -2315418348370311821L;
 
 	/**
@@ -15,14 +15,7 @@ public class FormGenTranslations extends LinkedHashMap<String, Map<String, Strin
 	 * @return probably overwritten copy
 	 */
 	public FormGenTranslations overwrite(FormGenTranslations other) {
-		FormGenTranslations copy = new FormGenTranslations();
-
-		// create a copy of this
-		for (Map.Entry<String, Map<String, String>> entry : entrySet()) {
-			String key = entry.getKey();
-			Map<String, String> translations = new LinkedHashMap<String, String>(entry.getValue());
-			copy.put(key, translations);
-		}
+		FormGenTranslations copy = clone();
 
 		// overwrite with translations from the other
 		if (other != null) {
@@ -30,6 +23,20 @@ public class FormGenTranslations extends LinkedHashMap<String, Map<String, Strin
 				String key = entry.getKey();
 				copy.computeIfAbsent(key, k -> new LinkedHashMap<>()).putAll(entry.getValue());
 			}
+		}
+
+		return copy;
+	}
+
+	@Override
+	public FormGenTranslations clone() {
+		FormGenTranslations copy = new FormGenTranslations();
+
+		// create a copy of this
+		for (Map.Entry<String, Map<String, String>> entry : entrySet()) {
+			String key = entry.getKey();
+			Map<String, String> translations = new LinkedHashMap<String, String>(entry.getValue());
+			copy.put(key, translations);
 		}
 
 		return copy;

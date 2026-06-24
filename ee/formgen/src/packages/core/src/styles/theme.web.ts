@@ -238,6 +238,13 @@ export const inputElementTheme: IInputElementTheme = {
     iconColor: theme.colors.textPrimary,
     iconSize: 12,
   },
+  unitBadge: {
+    gap: 4,
+    paddingHorizontal: 6,
+  },
+  isFilledIcon: {
+    width: 30,
+  },
 };
 
 export const formElementWrapperTheme: IFormElementWrapperTheme = {

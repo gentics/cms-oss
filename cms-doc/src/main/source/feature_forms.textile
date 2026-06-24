@@ -21,6 +21,59 @@ feature:
 Each form is based on a form type, which must also be configured.
 For each of these types, a list of available form fields and their properties must be created.
 
+h4. General configuration
+
+|_. Field |_. Type |_. Required |_. Description |
+| +nameI18n+ | translation map | required | Human-readable name of the form type, keyed by language code. |
+| +pluginName+ | string | required | Name of the Gentics Mesh plugin that handles submissions for this form type. |
+| +descriptionI18n+ | translation map | optional | Optional description of the form type, keyed by language code. |
+| +submitOnce+ | boolean | optional | If +true+, the form can only be submitted once per user. Intended for polls and surveys. |
+| +external+ | boolean | optional | If +true+, the form is treated as an external form and not a Gentics Mesh Forms Plugin form. |
+| +controls+ | map of control configs | required | Defines all available input controls for this form type. The map key is the control ID used to reference the control in form definitions. See controls table below. |
+| +blocks+ | map of block configs | optional | Defines all available layout and structural blocks for this form type. The map key is the block ID. See blocks table below. |
+| +captchaOptions+ | list of select options | optional | Defines which captcha types are available for this form type. Each option has a +value+ key and a +labelI18n+ translation map. |
+| +templateOptions+ | list of select options | optional | Defines available styling variations (themes) for the form type. Each option has a +value+ key and a +labelI18n+ translation map. |
+| +userEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
+| +adminEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the notification email sent to the administrator when a user submits the form. |
+| +flows+ | list of flow configs | optional | Defines the available form flows for this type. A flow controls the sequence of screens (e.g. form, summary, success) presented to the user. The first entry is used as the default. Each flow has an +id+, +labelI18n+, +nameTranslationKey+, and a list of +steps+. Each step defines a +reactClass+ (the screen component), navigation +buttons+, and optional +variables+ passed to the component. |
+| +pluginConfiguration+ | object | optional | Arbitrary configuration object passed to the Mesh plugin to configure type-specific behaviour. Structure depends on the plugin. |
+
+h4. Available control types
+
+|_. Control |_. Setting types used |_. Aggregate |_. Description |
+| +string+ | +translation+, +string+, +number+, +select+ | no | Single-line text input. Supports a placeholder, default value, maximum character length, and an optional regex-based validator. |
+| +number+ | +translation+, +string+, +number+ | no | Integer/numeric input. Supports a placeholder, default value, and minimum and maximum value constraints. |
+| +datetime+ | +translation+, +string+ | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder and default value. |
+| +time+ | +translation+, +string+ | no | Time input in +HH:MM+ format. Supports a placeholder and default value. |
+| +boolean+ | +string+, +boolean+ | no | Checkbox control. Configures the value stored when checked and the default checked state. |
+| +catalog+ | +options+, +boolean+ | no | Selection control (dropdown or radio buttons). Editors define the available options as key-value pairs. An additional free-text option can optionally be enabled. |
+| +binary+ | +translation+, +number+, +boolean+, +select+ | no | File upload control. Configures a tooltip, maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
+| +usermail+ | +translation+, +number+, +select+ | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, tooltip, maximum length, email subject, and email template. |
+
+h4. Available block types
+
+|_. Block |_. Setting types used |_. Container |_. Description |
+| +spacer+ | — | no | Adds visual spacing between form elements. No configurable settings. |
+| +conditionalcontainer+ | — | yes | A container whose contents are only shown when the configured control has a specific value. |
+| +sectionheadline+ | +translation+ | no | A headline element for grouping form sections visually. The text setting supports rich content. |
+| +text+ | +translation+ | no | A free text block for displaying explanatory text between form fields. The text setting supports rich content. |
+| +group+ | — | yes | A generic container for grouping related form elements. |
+
+NOTE: All setting types share the following common properties: +id+ (required), +labelI18n+ (required), +descriptionI18n+ (optional), +required+ (optional, defaults to +false+), +backend+ (optional, only valid on control settings — if +true+ the setting is not forwarded to the form renderer), +propertyPath+ (optional, maps the value to a property path in the backend data model).
+
+h4. Control and block settings
+
+|_. Type |_. Value |_. Type-specific properties |_. Description |
+| +string+ | string | +richContent+ (boolean, optional), +multiline+ (boolean, optional), +multiple+ (boolean, optional) | A text input. +richContent+ enables rich text editing, +multiline+ renders a textarea, +multiple+ allows entering more than one value. |
+| +translation+ | translation map | +richContent+ (boolean, optional), +multiline+ (boolean, optional) | A text input that can be filled per language. Supports the same +richContent+ and +multiline+ flags as +string+. |
+| +number+ | number (float) | — | Accepts any numeric value including decimals. |
+| +integer+ | number (integer) | — | Accepts whole numbers only. |
+| +boolean+ | boolean | — | A checkbox that yields +true+ or +false+. |
+| +date+ | ISO date string | +allowTime+ (boolean, optional) | A date picker. Set +allowTime: true+ to also allow time selection. |
+| +select+ | string (one of options) | +options+ (list, required), +multiple+ (boolean, optional) | A dropdown with a fixed list of options defined in the configuration. Set +multiple: true+ to allow selecting more than one value. |
+| +options+ | list of key-value pairs | +multiple+ (boolean or +"editable"+, optional) | Lets the form editor define the selectable options at authoring time. Set +multiple: true+ for multi-select, +false+ for single-select, or +"editable"+ to let the editor decide. |
+| +reference+ | CMS object reference | +referenceTypes+ (list, required), +publishAs+ (required: +content+, +url+, or +meshlink+), +multiple+ (boolean, optional) | A picker for referencing CMS objects (pages, files, or images). |
+
 NOTE: These are examples - you can and should adapt these configurations to your needs.
 
 <shell filename="conf/forms.yml">
@@ -35,36 +88,15 @@ forms:
       external: false
       submitOnce: false
       controls:
-        input:
+        number:
           labelI18n:
-            de: "Eingabefeld"
-            en: "Input Field"
+            de: "Zahl (Integer)"
+            en: "Number (Integer)"
           descriptionI18n:
             de: "Allgemeines Eingabefeld für mehrere Datentypen."
             en: "Generic input field for multiple data types."
           settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für dieses Eingabefeld."
-              en: "Label for this input field."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieses Eingabefeld ist verpflichtend."
-              en: "This input field is mandatory."
-            required: false
-            backend: false
-          - type: "string"
+          - type: "translation"
             id: "placeholder"
             labelI18n:
               de: "Platzhalter"
@@ -74,51 +106,12 @@ forms:
               en: "Placeholder for this input field."
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
-          - type: "select"
-            id: "validation"
-            labelI18n:
-              de: "Validator"
-              en: "Validator"
-            options:
-            - value: "number"
-              labelI18n:
-                de: "Zahl (Integer)"
-                en: "Number (Integer)"
-            - value: "telephone"
-              labelI18n:
-                de: "Telefonnummer (nur Ziffern, und Leerzeichen)"
-                en: "Telephone (only numbers, and spaces)"
-            - value: "socialsecurity"
-              labelI18n:
-                de: "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes\
-                  \ Datum)"
-                en: "Social Security Number (only numbers 10 digits, last 6 digits\
-                  \ denote past date)"
-            - value: "date"
-              labelI18n:
-                de: "Datum (Format: yyyy-MM-dd)"
-                en: "Date (format: yyyy-MM-dd)"
-            - value: "datepicker"
-              labelI18n:
-                de: "Datum (Format: DD.MM.YYYY)"
-                en: "Date (format: DD.MM.YYYY)"
-            - value: "time"
-              labelI18n:
-                de: "Zeit (Format: HH:MM)"
-                en: "Time (format: HH:MM)"
-            - value: "email"
-              labelI18n:
-                de: "E-Mail"
-                en: "Mail"
-            descriptionI18n:
-              de: "Art des Validators, der BenutzerInneneingaben überprüft."
-              en: "Validator type that checks user input."
-            required: false
-            backend: false
-            multiple: false
+            multiline: false
           - type: "string"
-            id: "value"
+            id: "defaultValue"
             labelI18n:
               de: "Standardwert"
               en: "Default Value"
@@ -126,10 +119,14 @@ forms:
               de: "Standardwert für dieses Eingabefeld."
               en: "Default value for this input field."
             required: false
-            backend: false
+            backend: true
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
+            multiple: false
           - type: "number"
-            id: "minVal"
+            id: "minValue"
             labelI18n:
               de: "Mindestwert"
               en: "Minimum Value"
@@ -137,9 +134,11 @@ forms:
               de: "Mindestwert für Zahleneingaben."
               en: "Minimum value for number inputs."
             required: false
-            backend: false
+            backend: true
+            propertyPath: "validation.minValue"
+            condition: null
           - type: "number"
-            id: "maxVal"
+            id: "maxValue"
             labelI18n:
               de: "Maximalwert"
               en: "Maximum Value"
@@ -147,9 +146,123 @@ forms:
               de: "Maximalwert für Zahleneingaben."
               en: "Maximum value for number inputs."
             required: false
+            backend: true
+            propertyPath: "validation.maxValue"
+            condition: null
+          aggregate: false
+          whitelist: null
+        datetime:
+          labelI18n:
+            de: "Datum (Format: yyyy-MM-dd)"
+            en: "Date (format: yyyy-MM-dd)"
+          descriptionI18n:
+            de: "Allgemeines Eingabefeld für mehrere Datentypen."
+            en: "Generic input field for multiple data types."
+          settings:
+          - type: "translation"
+            id: "placeholder"
+            labelI18n:
+              de: "Platzhalter"
+              en: "Placeholder"
+            descriptionI18n:
+              de: "Platzhalter für dieses Eingabefeld."
+              en: "Placeholder for this input field."
+            required: false
             backend: false
+            propertyPath: null
+            condition: null
+            richContent: false
+            multiline: false
+          - type: "string"
+            id: "defaultValue"
+            labelI18n:
+              de: "Standardwert"
+              en: "Default Value"
+            descriptionI18n:
+              de: "Standardwert für dieses Eingabefeld."
+              en: "Default value for this input field."
+            required: false
+            backend: true
+            propertyPath: null
+            condition: null
+            richContent: false
+            multiline: false
+            multiple: false
+          aggregate: false
+          whitelist: null
+        boolean:
+          labelI18n:
+            de: "Checkbox"
+            en: "Checkbox"
+          descriptionI18n:
+            de: "Einfache checkbox."
+            en: "Simple checkbox."
+          settings:
+          - type: "string"
+            id: "storedValue"
+            labelI18n:
+              de: "StoredWert"
+              en: "StoredValue"
+            descriptionI18n:
+              de: "Wert der für diese Checkbox gespeichert wird."
+              en: "Value that is stored for this checkbox."
+            required: false
+            backend: false
+            propertyPath: null
+            condition: null
+          - type: "boolean"
+            id: "defaultValue"
+            labelI18n:
+              de: "Ausgewählt"
+              en: "Checked"
+            descriptionI18n:
+              de: "Dieses Checkbox ist ausgewählt."
+              en: "This checkbox is checked."
+            required: false
+            backend: true
+            propertyPath: null
+            condition: null
+          aggregate: false
+          whitelist: null
+        string:
+          labelI18n:
+            de: "Eingabefeld"
+            en: "Input Field"
+          descriptionI18n:
+            de: "Allgemeines Eingabefeld für mehrere Datentypen."
+            en: "Generic input field for multiple data types."
+          settings:
+          - type: "translation"
+            id: "placeholder"
+            labelI18n:
+              de: "Platzhalter"
+              en: "Placeholder"
+            descriptionI18n:
+              de: "Platzhalter für dieses Eingabefeld."
+              en: "Placeholder for this input field."
+            required: false
+            backend: false
+            propertyPath: null
+            condition: null
+            richContent: false
+            multiline: false
+          - type: "string"
+            id: "defaultValue"
+            labelI18n:
+              de: "Standardwert"
+              en: "Default Value"
+            descriptionI18n:
+              de: "Standardwert für dieses Eingabefeld."
+              en: "Default value for this input field."
+            required: false
+            backend: true
+            propertyPath: null
+            condition: null
+            richContent: false
+            multiline: false
+            multiple: false
           - type: "number"
-            id: "maxCharCount"
+            id: "maxLength"
             labelI18n:
               de: "Eingabelänge"
               en: "Input Length"
@@ -157,10 +270,87 @@ forms:
               de: "Anzahl der Zeichen, die eingegeben werden dürfen."
               en: "Maximum number of allowed characters."
             required: false
-            backend: false
+            backend: true
+            propertyPath: "validation.maxLength"
+            condition: null
+          - type: "select"
+            id: "validation"
+            labelI18n:
+              de: "Validator"
+              en: "Validator"
+            options:
+            - value:
+                key: "telephone"
+                regex: "^[\\s\\d\\+\\/]*$"
+                errorMessage:
+                  de: "Telephonnummer falsch"
+              labelI18n:
+                de: "Telefonnummer (nur Ziffern, und Leerzeichen)"
+                en: "Telephone (only numbers, and spaces)"
+            - value:
+                key: "socialsecurity"
+                regex: "^[1-9]\\d{9}$"
+                errorMessage:
+                  de: "Das ist keine Sozialversicherungsnummer"
+              labelI18n:
+                de: "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes\
+                  \ Datum)"
+                en: "Social Security Number (only numbers 10 digits, last 6 digits\
+                  \ denote past date)"
+            - value:
+                key: "email"
+                regex: "^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\\
+                  s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\\
+                  .[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$"
+                errorMessage:
+                  de: "Das soll ne eMail Adresse sein?"
+              labelI18n:
+                de: "E-Mail"
+                en: "Mail"
+            descriptionI18n: null
+            required: false
+            backend: true
+            propertyPath: "validation.regexValidation"
+            condition: null
+            multiple: false
           aggregate: false
           whitelist: null
-        file:
+        catalog:
+          labelI18n:
+            de: "Auswahl"
+            en: "Select"
+          descriptionI18n:
+            de: "Liste an auswählbaren Werten."
+            en: "List of values to select from."
+          settings:
+          - type: "options"
+            id: "selectOptions"
+            labelI18n:
+              de: "Auswahlmöglichkeiten"
+              en: "Selectable Options"
+            descriptionI18n:
+              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+              en: "List of key value pairs to select from."
+            required: false
+            backend: true
+            propertyPath: null
+            condition: null
+            multiple: false
+          - type: "boolean"
+            id: "customOption"
+            labelI18n:
+              de: "Zusätzliches Element"
+              en: "Additional Element"
+            descriptionI18n:
+              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+              en: "Field to enter additional selection option."
+            required: false
+            backend: false
+            propertyPath: null
+            condition: null
+          aggregate: false
+          whitelist: null
+        binary:
           labelI18n:
             de: "Fileupload"
             en: "File Upload"
@@ -168,39 +358,7 @@ forms:
             de: "Einfacher Fileupload."
             en: "Simple file upload."
           settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diesen Fileupload."
-              en: "Label for this file upload."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieser Fileupload ist verpflichtend."
-              en: "This file upload is mandatory."
-            required: false
-            backend: false
-          - type: "string"
-            id: "description"
-            labelI18n:
-              de: "Beschreibung"
-              en: "Description"
-            descriptionI18n:
-              de: "Die Beschreibung des Upload-Elements."
-              en: "The description of the upload element."
-            required: false
-            backend: false
-            richContent: false
-          - type: "string"
+          - type: "translation"
             id: "tooltip"
             labelI18n:
               de: "Tooltip"
@@ -210,9 +368,12 @@ forms:
               en: "The tooltip of the upload element."
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
           - type: "number"
-            id: "max_filesize"
+            id: "maxFilesize"
             labelI18n:
               de: "Max. Dateigröße (MB)"
               en: "Max. Filesize (MB)"
@@ -220,7 +381,21 @@ forms:
               de: "Max. erlaubte Dateigröße (MB)"
               en: "Max. allowed Filesize (MB)"
             required: false
-            backend: false
+            backend: true
+            propertyPath: "validation.binary.maxFilesize"
+            condition: null
+          - type: "boolean"
+            id: "multiple"
+            labelI18n:
+              de: "Mehrfach Upload"
+              en: "Multiupload"
+            descriptionI18n:
+              de: "Upload von mehreren Dateien erlauben"
+              en: "Allow upload of multiple files"
+            required: false
+            backend: true
+            propertyPath: "isList"
+            condition: null
           - type: "select"
             id: "allowedFiletypes"
             labelI18n:
@@ -247,216 +422,15 @@ forms:
             multiple: true
           aggregate: false
           whitelist: null
-        buttons:
+        time:
           labelI18n:
-            de: "Button"
-            en: "Button"
+            de: "Zeit (Format: HH:MM)"
+            en: "Time (format: HH:MM)"
           descriptionI18n:
-            de: "Buttons um Formular abzuschicken und zurückzusetzen"
-            en: "Submit and optional reset button"
+            de: "Allgemeines Eingabefeld für mehrere Datentypen."
+            en: "Generic input field for multiple data types."
           settings:
-          - type: "string"
-            id: "submitlabel"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diesen Button."
-              en: "Label for this button."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "showreset"
-            labelI18n:
-              de: "Reset Button anzeigen"
-              en: "Show reset button"
-            descriptionI18n:
-              de: "Wenn aktiv wird ein Reset Button angezeigt."
-              en: "If checked will show a reset button."
-            required: false
-            backend: false
-          - type: "string"
-            id: "resetlabel"
-            labelI18n:
-              de: "Label des Reset Buttons"
-              en: "Label of reset button"
-            descriptionI18n:
-              de: "Label für den Reset Button."
-              en: "Label for the reset button."
-            required: false
-            backend: false
-            richContent: false
-          aggregate: false
-          whitelist: null
-        selectgroup:
-          labelI18n:
-            de: "Auswahl"
-            en: "Select"
-          descriptionI18n:
-            de: "Liste an auswählbaren Werten."
-            en: "List of values to select from."
-          settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diese Auswahl."
-              en: "Label for this selection."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Diese Auswahl ist verpflichtend."
-              en: "This selection is mandatory."
-            required: false
-            backend: false
-          - type: "select"
-            id: "select_type"
-            labelI18n:
-              de: "Typ"
-              en: "Type"
-            options:
-            - value: "radiobuttons"
-              labelI18n:
-                de: "Radio Buttons"
-                en: "Radio Buttons"
-            - value: "singleselect"
-              labelI18n:
-                de: "Dropdown mit einer Auswahl"
-                en: "Dropdown with single selection"
-            - value: "multiselect"
-              labelI18n:
-                de: "Dropdown mit mehreren Auswahlen"
-                en: "Dropdown with multiple selections"
-            descriptionI18n:
-              de: "Typ dieser Auswahl."
-              en: "Type of this selection."
-            required: false
-            backend: false
-            multiple: false
-          - type: "options"
-            id: "options"
-            labelI18n:
-              de: "Auswahlmöglichkeiten"
-              en: "Selectable Options"
-            descriptionI18n:
-              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
-              en: "List of key value pairs to select from."
-            required: false
-            backend: false
-            multiple: false
-          - type: "boolean"
-            id: "additional_element"
-            labelI18n:
-              de: "Zusätzliches Element"
-              en: "Additional Element"
-            descriptionI18n:
-              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-              en: "Field to enter additional selection option."
-            required: false
-            backend: false
-          aggregate: false
-          whitelist: null
-        checkbox:
-          labelI18n:
-            de: "Checkbox"
-            en: "Checkbox"
-          descriptionI18n:
-            de: "Einfache checkbox."
-            en: "Simple checkbox."
-          settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diese Auswahl."
-              en: "Label for this selection."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieses Checkbox ist verpflichtend."
-              en: "This checkbox is mandatory."
-            required: false
-            backend: false
-          - type: "boolean"
-            id: "checked"
-            labelI18n:
-              de: "Ausgewählt"
-              en: "Checked"
-            descriptionI18n:
-              de: "Dieses Checkbox ist ausgewählt."
-              en: "This checkbox is checked."
-            required: false
-            backend: false
-          - type: "string"
-            id: "value"
-            labelI18n:
-              de: "Wert"
-              en: "Value"
-            descriptionI18n:
-              de: "Wert der durch diese Checkbox gewählt wird."
-              en: "Value that is selected by this checkbox."
-            required: false
-            backend: false
-            richContent: false
-          aggregate: false
-          whitelist: null
-        recaptcha:
-          labelI18n:
-            de: "Recaptcha"
-            en: "Recaptcha"
-          descriptionI18n:
-            de: "Recaptcha Spamschutz."
-            en: "Recaptcha spam protection."
-          settings: []
-          aggregate: false
-          whitelist: null
-        textarea:
-          labelI18n:
-            de: "Mehrzeiliges Eingabefeld"
-            en: "Textarea Field"
-          descriptionI18n:
-            de: "Mehrzeiliges Eingabefeld"
-            en: "Multi-line text"
-          settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für dieses Eingabefeld"
-              en: "Label for this input field"
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieses Eingabefeld ist verpflichtend."
-              en: "This input field is mandatory."
-            required: false
-            backend: false
-          - type: "string"
+          - type: "translation"
             id: "placeholder"
             labelI18n:
               de: "Platzhalter"
@@ -466,17 +440,25 @@ forms:
               en: "Placeholder for this input field."
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
-          - type: "number"
-            id: "maxCharCount"
+            multiline: false
+          - type: "string"
+            id: "defaultValue"
             labelI18n:
-              de: "Eingabelänge"
-              en: "Input Length"
+              de: "Standardwert"
+              en: "Default Value"
             descriptionI18n:
-              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
-              en: "Maximum number of allowed characters."
+              de: "Standardwert für dieses Eingabefeld."
+              en: "Default value for this input field."
             required: false
-            backend: false
+            backend: true
+            propertyPath: null
+            condition: null
+            richContent: false
+            multiline: false
+            multiple: false
           aggregate: false
           whitelist: null
         usermail:
@@ -489,28 +471,7 @@ forms:
             en: "Field for user eMail. When filled, the user will get an eMail after\
               \ filling out the form."
           settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für dieses Eingabefeld."
-              en: "Label for this input field."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieses Eingabefeld ist verpflichtend."
-              en: "This input field is mandatory."
-            required: false
-            backend: false
-          - type: "string"
+          - type: "translation"
             id: "placeholder"
             labelI18n:
               de: "Platzhalter"
@@ -520,19 +481,11 @@ forms:
               en: "Placeholder for this input field."
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
-          - type: "string"
-            id: "description"
-            labelI18n:
-              de: "Beschreibung"
-              en: "Description"
-            descriptionI18n:
-              de: "Die Beschreibung des Benutzer-E-Mail-Elements."
-              en: "The description of the user mail element."
-            required: false
-            backend: false
-            richContent: false
-          - type: "string"
+            multiline: false
+          - type: "translation"
             id: "tooltip"
             labelI18n:
               de: "Tooltip"
@@ -542,9 +495,12 @@ forms:
               en: "The tooltip of the user mail element."
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
           - type: "number"
-            id: "maxCharCount"
+            id: "maxLength"
             labelI18n:
               de: "Eingabelänge"
               en: "Input Length"
@@ -552,8 +508,10 @@ forms:
               de: "Anzahl der Zeichen, die eingegeben werden dürfen."
               en: "Maximum number of allowed characters."
             required: false
-            backend: false
-          - type: "string"
+            backend: true
+            propertyPath: "validation.maxLength"
+            condition: null
+          - type: "translation"
             id: "mailsubject"
             labelI18n:
               de: "E-Mail Betreff"
@@ -562,8 +520,11 @@ forms:
               de: "Betreff des E-Mails, das an den Benutzer geschickt wird."
               en: "Subject of the Email, sent to the user."
             required: false
-            backend: false
+            backend: true
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
           - type: "select"
             id: "mailtemplate"
             labelI18n:
@@ -578,28 +539,10 @@ forms:
               de: "Vorlage, die zur Darstellung des E-Mail Inhalts verwendet wird."
               en: "Template, which is used to display the Email body."
             required: false
-            backend: false
+            backend: true
+            propertyPath: null
+            condition: null
             multiple: false
-          - type: "reference"
-            id: "mailsource"
-            labelI18n:
-              de: "E-Mail Vorlage als Seite"
-              en: "Email Template from Page"
-            referenceTypes:
-            - "page"
-            descriptionI18n:
-              de: "Vorlage als Seite, die zur Darstellung des E-Mail Inhalts verwendet\
-                \ wird."
-              en: "Template from Page, which is used to display the Email body."
-            required: false
-            backend: false
-            allowedMarkupLanguageIds:
-            - 21
-            multiple: false
-            titleI18n:
-              de: "modal.repository_browser_title_forms_email_template_single"
-              en: "modal.repository_browser_title_forms_email_template_single"
-            onlyInCurrentNode: false
           aggregate: false
           whitelist: null
       blocks:
@@ -622,40 +565,6 @@ forms:
               \ Element den erwarteten Wert hat."
             en: "Conditional container which contents is only active when the checked\
               \ element has the expected value."
-          settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diesen Container."
-              en: "Label for this container."
-            required: false
-            backend: false
-            richContent: false
-          - type: "string"
-            id: "element_to_check"
-            labelI18n:
-              de: "Elementname"
-              en: "Element name"
-            descriptionI18n:
-              de: "Zu prüfendes Element."
-              en: "Element to check."
-            required: false
-            backend: false
-            richContent: false
-          - type: "string"
-            id: "value_to_check"
-            labelI18n:
-              de: "Wert"
-              en: "Value"
-            descriptionI18n:
-              de: "Erwarteter Wert."
-              en: "Expected value."
-            required: false
-            backend: false
-            richContent: false
           container: true
           whitelist: null
         sectionheadline:
@@ -666,7 +575,7 @@ forms:
             de: "Überschrift für einen neuen Abschnitt im Formular."
             en: "Headline for a new section of the form."
           settings:
-          - type: "string"
+          - type: "translation"
             id: "text"
             labelI18n:
               de: "Text"
@@ -674,7 +583,10 @@ forms:
             descriptionI18n: {}
             required: false
             backend: false
-            richContent: false
+            propertyPath: null
+            condition: null
+            richContent: true
+            multiline: false
           container: false
           whitelist: null
         text:
@@ -685,7 +597,7 @@ forms:
             de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
             en: "Text to furher explain the form."
           settings:
-          - type: "string"
+          - type: "translation"
             id: "text"
             labelI18n:
               de: "Text"
@@ -693,49 +605,10 @@ forms:
             descriptionI18n: {}
             required: false
             backend: false
-            richContent: false
-          container: false
-          whitelist: null
-        formpage:
-          labelI18n:
-            de: "Seite"
-            en: "Page"
-          descriptionI18n:
-            de: "Unterteilt das Formular in mehrere Seiten."
-            en: "Splits the form into multiple pages."
-          settings:
-          - type: "string"
-            id: "description"
-            labelI18n:
-              de: "Name"
-              en: "Name"
-            descriptionI18n:
-              de: "Name der Seite."
-              en: "Name of the page."
-            required: false
-            backend: false
-            richContent: false
-          - type: "string"
-            id: "info"
-            labelI18n:
-              de: "Beschreibung"
-              en: "Description"
-            descriptionI18n:
-              de: "Beschreibung für diese Seite."
-              en: "Description for this page."
-            required: false
-            backend: false
-            richContent: false
-          container: true
-          whitelist: null
-        formprogress:
-          labelI18n:
-            de: "Fortschrittsbalken"
-            en: "Progress Bar"
-          descriptionI18n:
-            de: "Einfacher Fortschrittsbalken."
-            en: "Simple progress bar."
-          settings: []
+            propertyPath: null
+            condition: null
+            richContent: true
+            multiline: false
           container: false
           whitelist: null
         group:
@@ -748,22 +621,110 @@ forms:
           settings: []
           container: true
           whitelist: null
-      userOptions: null
-      templateOptions:
-      - value: "theme-red"
-        labelI18n:
-          de: "Rotes Thema"
-          en: "Red theme"
-      - value: "theme-blue"
-        labelI18n:
-          de: "Blaues Thema"
-          en: "Blue theme"
+      captchaOptions:
+        - value: recaptcha_checkbox
+          labelI18n:
+            de: "Recaptcha: Häckchen"
+            en: "Recaptcha: Checkbox"
+        - value: recaptcha_invisible
+          labelI18n:
+            de: "Recaptcha: Hintergrund"
+            en: "Recaptcha: Background"
+        - value: friendly_auto
+          labelI18n:
+            de: "Friendly Captcha"
+            en: "Friendly Captcha"
+        - value: friendly_button
+          labelI18n:
+            de: "Friendly Captcha: Button"
+            en: "Friendly Captcha: Button"
+        - value: friendly_background
+          labelI18n:
+            de: "Friendly Captcha: Hintergrund"
+            en: "Friendly Captcha: Background"
+      templateOptions: null
       userEmailTemplateOptions: null
       adminEmailTemplateOptions:
       - value: "useremail"
         labelI18n:
           de: "Standard"
           en: "Default"
+      flows:
+        - id: default
+          labelI18n:
+            de: Standard
+            en: Standard
+          nameTranslationKey: formgen_flow_translation_key
+          steps:
+            - buttonLabelTranslationKey: form_flow_btn_form
+              reactClass: FormScreen
+              nameTranslationKey: form_flow_name_form
+              descriptionTranslationKey: form_flow_desc_form
+              buttons:
+                - reactClass: DetailInfoButton
+                  labelTranslationKey: form_detailinfo
+                  mobileDisabled: true
+                - reactClass: CancelButton
+                  labelTranslationKey: form_cancel
+                - reactClass: PreviousPageButton
+                  labelTranslationKey: form_previousPage
+                - reactClass: NextPageButton
+                  labelTranslationKey: form_nextPage
+                - reactClass: SubmitButton
+                  labelTranslationKey: form_submit
+              variables: []
+            - buttonLabelTranslationKey: form_flow_btn_success
+              reactClass: SuccessScreen
+              nameTranslationKey: form_flow_name_success
+              descriptionTranslationKey: form_flow_desc_success
+              buttons: []
+              variables: []
+        - id: with_summary
+          labelI18n:
+            de: Mit Zusmmenfassung
+            en: With Zusammenfassung
+          nameTranslationKey: formgen_flow_translation_key
+          steps:
+            - buttonLabelTranslationKey: form_flow_btn_form
+              reactClass: FormScreen
+              nameTranslationKey: form_flow_name_form
+              descriptionTranslationKey: form_flow_desc_form
+              buttons:
+                - reactClass: DetailInfoButton
+                  labelTranslationKey: form_detailinfo
+                  mobileDisabled: true
+                - reactClass: CancelButton
+                  labelTranslationKey: form_cancel
+                - reactClass: PreviousPageButton
+                  labelTranslationKey: form_previousPage
+                - reactClass: NextPageButton
+                  labelTranslationKey: form_nextPage
+              variables: []
+            - buttonLabelTranslationKey: form_flow_btn_summary
+              reactClass: SummaryScreen
+              nameTranslationKey: form_flow_name_summary
+              descriptionTranslationKey: form_flow_desc_summary
+              buttons:
+                - reactClass: CancelButton
+                  labelTranslationKey: form_cancel
+                - reactClass: PrintPdfButton
+                  labelTranslationKey: form_print
+                  mobileDisabled: true
+                - reactClass: PreviousPageButton
+                  labelTranslationKey: form_previousPage
+                - reactClass: NextPageButton
+                  labelTranslationKey: form_nextPage
+                - reactClass: SubmitButton
+                  labelTranslationKey: form_submit
+              variables:
+                - name: showDetails
+                  value: true
+            - buttonLabelTranslationKey: form_flow_btn_success
+              reactClass: SuccessScreen
+              nameTranslationKey: form_flow_name_success
+              descriptionTranslationKey: form_flow_desc_success
+              buttons: []
+              variables: []
       pluginConfiguration: null
     poll:
       nameI18n:
@@ -774,125 +735,7 @@ forms:
       external: false
       submitOnce: true
       controls:
-        buttons:
-          labelI18n:
-            de: "Button"
-            en: "Button"
-          descriptionI18n:
-            de: "Buttons um Formular abzuschicken und zurückzusetzen"
-            en: "Submit and optional reset button"
-          settings:
-          - type: "string"
-            id: "submitlabel"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diesen Button."
-              en: "Label for this button."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "showreset"
-            labelI18n:
-              de: "Reset Button anzeigen"
-              en: "Show reset button"
-            descriptionI18n:
-              de: "Wenn aktiv wird ein Reset Button angezeigt."
-              en: "If checked will show a reset button."
-            required: false
-            backend: false
-          - type: "string"
-            id: "resetlabel"
-            labelI18n:
-              de: "Label des Reset Buttons"
-              en: "Label of reset button"
-            descriptionI18n:
-              de: "Label für den Reset Button."
-              en: "Label for the reset button."
-            required: false
-            backend: false
-            richContent: false
-          aggregate: false
-          whitelist: null
-        selectgroup:
-          labelI18n:
-            de: "Auswahl"
-            en: "Select"
-          descriptionI18n:
-            de: "Liste an auswählbaren Werten."
-            en: "List of values to select from."
-          settings:
-          - type: "string"
-            id: "label"
-            labelI18n:
-              de: "Label"
-              en: "Label"
-            descriptionI18n:
-              de: "Label für diese Auswahl."
-              en: "Label for this selection."
-            required: false
-            backend: false
-            richContent: false
-          - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Diese Auswahl ist verpflichtend."
-              en: "This selection is mandatory."
-            required: false
-            backend: false
-          - type: "select"
-            id: "select_type"
-            labelI18n:
-              de: "Typ"
-              en: "Type"
-            options:
-            - value: "radiobuttons"
-              labelI18n:
-                de: "Radio Buttons"
-                en: "Radio Buttons"
-            - value: "singleselect"
-              labelI18n:
-                de: "Dropdown mit einer Auswahl"
-                en: "Dropdown with single selection"
-            - value: "multiselect"
-              labelI18n:
-                de: "Dropdown mit mehreren Auswahlen"
-                en: "Dropdown with multiple selections"
-            descriptionI18n:
-              de: "Typ dieser Auswahl."
-              en: "Type of this selection."
-            required: false
-            backend: false
-            multiple: false
-          - type: "options"
-            id: "options"
-            labelI18n:
-              de: "Auswahlmöglichkeiten"
-              en: "Selectable Options"
-            descriptionI18n:
-              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
-              en: "List of key value pairs to select from."
-            required: false
-            backend: false
-            multiple: false
-          - type: "boolean"
-            id: "additional_element"
-            labelI18n:
-              de: "Zusätzliches Element"
-              en: "Additional Element"
-            descriptionI18n:
-              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-              en: "Field to enter additional selection option."
-            required: false
-            backend: false
-          aggregate: false
-          whitelist: null
-        checkbox:
+        boolean:
           labelI18n:
             de: "Checkbox"
             en: "Checkbox"
@@ -901,28 +744,19 @@ forms:
             en: "Simple checkbox."
           settings:
           - type: "string"
-            id: "label"
+            id: "storedValue"
             labelI18n:
-              de: "Label"
-              en: "Label"
+              de: "StoredWert"
+              en: "StoredValue"
             descriptionI18n:
-              de: "Label für diese Auswahl."
-              en: "Label for this selection."
+              de: "Wert der für diese Checkbox gespeichert wird."
+              en: "Value that is stored for this checkbox."
             required: false
             backend: false
-            richContent: false
+            propertyPath: null
+            condition: null
           - type: "boolean"
-            id: "mandatory"
-            labelI18n:
-              de: "Verpflichtend"
-              en: "Mandatory"
-            descriptionI18n:
-              de: "Dieses Checkbox ist verpflichtend."
-              en: "This checkbox is mandatory."
-            required: false
-            backend: false
-          - type: "boolean"
-            id: "checked"
+            id: "defaultValue"
             labelI18n:
               de: "Ausgewählt"
               en: "Checked"
@@ -930,18 +764,44 @@ forms:
               de: "Dieses Checkbox ist ausgewählt."
               en: "This checkbox is checked."
             required: false
-            backend: false
-          - type: "string"
-            id: "value"
+            backend: true
+            propertyPath: null
+            condition: null
+          aggregate: false
+          whitelist: null
+        catalog:
+          labelI18n:
+            de: "Auswahl"
+            en: "Select"
+          descriptionI18n:
+            de: "Liste an auswählbaren Werten."
+            en: "List of values to select from."
+          settings:
+          - type: "options"
+            id: "selectOptions"
             labelI18n:
-              de: "Wert"
-              en: "Value"
+              de: "Auswahlmöglichkeiten"
+              en: "Selectable Options"
             descriptionI18n:
-              de: "Wert der durch diese Checkbox gewählt wird."
-              en: "Value that is selected by this checkbox."
+              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+              en: "List of key value pairs to select from."
+            required: false
+            backend: true
+            propertyPath: null
+            condition: null
+            multiple: false
+          - type: "boolean"
+            id: "customOption"
+            labelI18n:
+              de: "Zusätzliches Element"
+              en: "Additional Element"
+            descriptionI18n:
+              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+              en: "Field to enter additional selection option."
             required: false
             backend: false
-            richContent: false
+            propertyPath: null
+            condition: null
           aggregate: false
           whitelist: null
       blocks:
@@ -955,6 +815,17 @@ forms:
           settings: []
           container: false
           whitelist: null
+        conditionalcontainer:
+          labelI18n:
+            de: "Wenn-Dann-Container"
+            en: "Conditional container"
+          descriptionI18n:
+            de: "Wenn-Dann-Container dessen Inhalt nur aktiv ist, wenn das geprüfte\
+              \ Element den erwarteten Wert hat."
+            en: "Conditional container which contents is only active when the checked\
+              \ element has the expected value."
+          container: true
+          whitelist: null
         sectionheadline:
           labelI18n:
             de: "Überschrift"
@@ -963,7 +834,7 @@ forms:
             de: "Überschrift für einen neuen Abschnitt im Formular."
             en: "Headline for a new section of the form."
           settings:
-          - type: "string"
+          - type: "translation"
             id: "text"
             labelI18n:
               de: "Text"
@@ -971,7 +842,10 @@ forms:
             descriptionI18n: {}
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
           container: false
           whitelist: null
         text:
@@ -982,7 +856,7 @@ forms:
             de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
             en: "Text to furher explain the form."
           settings:
-          - type: "string"
+          - type: "translation"
             id: "text"
             labelI18n:
               de: "Text"
@@ -990,13 +864,66 @@ forms:
             descriptionI18n: {}
             required: false
             backend: false
+            propertyPath: null
+            condition: null
             richContent: false
+            multiline: false
           container: false
           whitelist: null
-      userOptions: null
+      captchaOptions:
+        - value: recaptcha_checkbox
+          labelI18n:
+            de: "Recaptcha: Häckchen"
+            en: "Recaptcha: Checkbox"
+        - value: recaptcha_invisible
+          labelI18n:
+            de: "Recaptcha: Hintergrund"
+            en: "Recaptcha: Background"
+        - value: friendly_auto
+          labelI18n:
+            de: "Friendly Captcha"
+            en: "Friendly Captcha"
+        - value: friendly_button
+          labelI18n:
+            de: "Friendly Captcha: Button"
+            en: "Friendly Captcha: Button"
+        - value: friendly_background
+          labelI18n:
+            de: "Friendly Captcha: Hintergrund"
+            en: "Friendly Captcha: Background"
       templateOptions: null
       userEmailTemplateOptions: null
       adminEmailTemplateOptions: null
+      flows:
+        - id: no_summary
+          labelI18n:
+            de: Ohne Zusammenfassung Forms
+            en: Without Summary Forms
+          nameTranslationKey: formgen_flow_translation_key
+          steps:
+            - buttonLabelTranslationKey: form_flow_btn_form
+              reactClass: FormScreen
+              nameTranslationKey: form_flow_name_form
+              descriptionTranslationKey: form_flow_desc_form
+              buttons:
+                - reactClass: DetailInfoButton
+                  labelTranslationKey: form_detailinfo
+                  mobileDisabled: true
+                - reactClass: CancelButton
+                  labelTranslationKey: form_cancel
+                - reactClass: PreviousPageButton
+                  labelTranslationKey: form_previousPage
+                - reactClass: NextPageButton
+                  labelTranslationKey: form_nextPage
+                - reactClass: SubmitButton
+                  labelTranslationKey: form_submit
+              variables: []
+            - buttonLabelTranslationKey: form_flow_btn_success
+              reactClass: SuccessScreen
+              nameTranslationKey: form_flow_name_success
+              descriptionTranslationKey: form_flow_desc_success
+              buttons: []
+              variables: []
       pluginConfiguration: null
 </shell>
 
@@ -1063,3 +990,22 @@ It is possible to create special pages in the CMS, which can be used as template
 The pages must be created from templates, which use the markup language +Forms e-mail template+ and must render valid "Handlebars":https://handlebarsjs.com/ code.
 
 Those pages will be excluded from publishing, they will neither be written into the filesystem nor into a Content.Repository.
+
+h3. Redirect After Submission (successUrl)
+
+A successUrl can be configured in the form properties to specify the page the user should be navigated to after successfully submitting a form.
+
+h4. Default Behavior
+
+Because flows are individually configurable and an automatic redirect would restrict the flow execution, the navigation does not happen automatically. Instead, a button is displayed on the success screen whenever a successUrl is configured. The user must actively trigger the redirect by clicking the button.
+
+This behavior is built into the default flow and requires no additional implementation.
+
+h4. Behavior With Customized Flows
+
+If the flow is overridden or extended for a specific project, the default behavior no longer applies. In this case, the redirect logic must be implemented explicitly. Two options are available:
+
+* *Custom Elements:* The logic for evaluating the successUrl and triggering the navigation is implemented directly within the custom element.
+* *Hook postSubmitForm:* The redirect is handled via the postSubmitForm hook, which is called after the form has been submitted successfully.
+
+In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.

@@ -32,8 +32,8 @@ const FormHeader: React.FC<FormHeaderProps> = (props) => {
     // isCancel left or right?
     const cancelButtonLeft = true;
 
-    const cancelDef = buttons.find(btn => btn.translateKey === 'form_cancel');
-    const detailInfoDef = buttons.find(btn => btn.translateKey === 'form_detailinfo');
+    const cancelDef = buttons.find(btn => btn.labelTranslationKey === 'form_cancel');
+    const detailInfoDef = buttons.find(btn => btn.labelTranslationKey === 'form_detailinfo');
     const styles = useMemo(() => mergeStyles(pagingStyles, customPagingStyles), []);
 
     const CancelButton = () => {
@@ -72,15 +72,15 @@ const FormHeader: React.FC<FormHeaderProps> = (props) => {
 
 function renderButtons(buttonDefinition: IFormFlowButtonDefinition[], additionalProps: any = {}) {
     return buttonDefinition.map((buttonDef, index) => {
-        const ButtonComponent = ButtonComponents[buttonDef.btnComponent];
+        const ButtonComponent = ButtonComponents[buttonDef.reactClass];
         if (!ButtonComponent) {
-            console.warn(`Unbekannte Button-Komponente: ${buttonDef.btnComponent}`);
+            console.warn(`Unbekannte Button-Komponente: ${buttonDef.reactClass}`);
             return null;
         }
         return (
             <ButtonComponent
                 key={index}
-                translateKey={buttonDef.translateKey}
+                translateKey={buttonDef.labelTranslationKey}
                 buttonDefinition={buttonDef}
                 mockForm={additionalProps.isMock}
                 {...additionalProps}

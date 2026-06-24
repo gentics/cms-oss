@@ -121,7 +121,7 @@ public class FormResourceTypesTest {
 				.hasFieldOrPropertyWithValue("nameI18n", Map.of("de", "CMS Formular", "en", "CMS Form"))
 				.hasOnlyFields("type", "flows", "nameI18n", "descriptionI18n", "external", "submitOnce", "pluginName", "blocks",
 						"controls", "templateOptions", "userOptions", "userEmailTemplateOptions",
-						"adminEmailTemplateOptions");
+						"adminEmailTemplateOptions", "captchaOptions");
 	}
 
 	/**

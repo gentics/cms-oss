@@ -34,7 +34,12 @@
         "type": "number",
         "precision": 2,
         "isRaw": true,
-        "unit": {},
+        "unit": {
+          "de-AT": "Euro",
+          "en-CH": "Dollar",
+          "fr-CH": null,
+          "it-CH": null
+        },
         "updateOnChange": false,
         "validation": {
           "minValue": 10.5,
@@ -49,10 +54,14 @@
         "type": "number",
         "precision": 1,
         "isRaw": true,
-        "unit": {},
-        "updateOnChange": false,
-        "validation": {
+        "unit": {
+          "de-AT": "Euro",
+          "en-CH": "Dollar",
+          "fr-CH": null,
+          "it-CH": null
         },
+        "updateOnChange": false,
+        "validation": {},
         "mandatory": false,
         "isList": false,
 
@@ -63,8 +72,7 @@
         "isRaw": true,
         "unit": {},
         "updateOnChange": false,
-        "validation": {
-        },
+        "validation": {},
         "mandatory": false,
         "isList": false,
 
@@ -94,7 +102,7 @@
         "isList": false,
         "name": "Rbn_AR_Disabled_Test_Dropdown"
       },
-      
+
       "FDADA5C0-7948-4FFF-B5F9-A5609E03BB0A": {
         "type": "reference",
         "searchReferenceValueMinLength": 4,
@@ -975,6 +983,10 @@
         "type": "binary",
         "updateOnChange": false,
         "validation": {},
+        "maxSize": 20024000,
+        "maxSizeEntireList": 20024000,
+        "allowedFileExtensions": [],
+        "allowAllFileExtensions": true,
         "mandatory": false,
         "isList": true,
         "name": "Rbn_AR_Standortverwaltung_Q_Anhaenge"
@@ -983,6 +995,10 @@
         "type": "binary",
         "updateOnChange": false,
         "validation": {},
+        "maxSize": 20024000,
+        "maxSizeEntireList": 20120000,
+        "allowedFileExtensions": ["png"],
+        "allowAllFileExtensions": false,
         "mandatory": false,
         "isList": false,
         "name": "Rbn_AR_Standortverwaltung_Q_Anhang"
@@ -1071,80 +1087,6 @@
       "it-AT": "Chiedere e autorizzare il sito e il numero d'esercizio"
     },
     "formwidth": "9",
-    "formFlowKey": "default",
-    "formFlow": [
-      {
-        "key": "default",
-        "name": "Standard",
-        "formFlowSteps": [
-          {
-            "buttonText": "form_flow_btn_form",
-            "reactClass": "FormScreen",
-            "name": "form_flow_name_form",
-            "description": "form_flow_desc_form",
-            "buttonDefinition": [
-              { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" }
-            ],
-            "variables": []
-          },
-          {
-            "buttonText": "form_flow_btn_summary",
-            "reactClass": "SummaryScreen",
-            "name": "form_flow_name_summary",
-            "description": "form_flow_desc_summary",
-            "buttonDefinition": [
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PrintPdfButton",    "translateKey": "form_print",       "mobileDisabled": true },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
-              { "btnComponent": "SubmitButton",      "translateKey": "form_submit" }
-            ],
-            "variables": [
-              { "name": "showDetails", "value": true }
-            ]
-          },
-          {
-            "buttonText": "form_flow_btn_success",
-            "reactClass": "SuccessScreen",
-            "name": "form_flow_name_success",
-            "description": "form_flow_desc_success",
-            "buttonDefinition": [],
-            "variables": []
-          }
-        ]
-      },
-      {
-        "key": "no_summary",
-        "name": "Ohne Zusammenfassung",
-        "formFlowSteps": [
-          {
-            "buttonText": "form_flow_btn_form",
-            "reactClass": "FormScreen",
-            "name": "form_flow_name_form",
-            "description": "form_flow_desc_form",
-            "buttonDefinition": [
-              { "btnComponent": "DetailInfoButton",  "translateKey": "form_detailinfo",  "mobileDisabled": true },
-              { "btnComponent": "CancelButton",      "translateKey": "form_cancel" },
-              { "btnComponent": "PreviousPageButton", "translateKey": "form_previousPage" },
-              { "btnComponent": "NextPageButton",    "translateKey": "form_nextPage" },
-              { "btnComponent": "SubmitButton",    "translateKey": "form_submit" }
-            ],
-            "variables": []
-          },
-          {
-            "buttonText": "form_flow_btn_success",
-            "reactClass": "SuccessScreen",
-            "name": "form_flow_name_success",
-            "description": "form_flow_desc_success",
-            "buttonDefinition": [],
-            "variables": []
-          }
-        ]
-      }
-    ],
     "pages": [
       {
         "pagename": {
@@ -1223,13 +1165,15 @@
             "description": {},
             "formGridOptions": {
               "numberOfColumns": 3,
+              "alignment": "left",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "alignmentUnit": "left"
             },
             "uiSchemaPage": 0
           },
@@ -1243,13 +1187,15 @@
             "formGridOptions": {
               "numberStep": 0.5,
               "numberOfColumns": 3,
+              "alignment": "right",
               "overlayOptions": {
                 "isShowOverlay": false,
                 "texts": {
                   "textPre": {},
                   "textPost": {}
                 }
-              }
+              },
+              "alignmentUnit": "right"
             },
             "uiSchemaPage": 0
           },
@@ -1360,8 +1306,8 @@
             "type": "property",
             "formGridOptions": {
               "numberOfColumns": "12",
-              "value": { 
-                "de-AT": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>", 
+              "value": {
+                "de-AT": "<h1>Hauptüberschrift (h1)</h1><h2>Unterüberschrift (h2)</h2><h3>Kleinere Überschrift (h3)</h3><p>Dies ist ein <strong>normaler Absatz</strong> mit <em>kursivem Text</em> und <u>unterstrichenem Text</u>. Auch <code>Inline-Code</code> ist möglich.</p><p>Ein Link zu <a href=\"https://www.example.com\" target=\"_blank\">example.com</a>.</p><hr><h3>Ungeordnete Liste (ul)</h3><ul><li>Eintrag A</li><li>Eintrag B</li><li>Eintrag C</li></ul><h3>Geordnete Liste (ol)</h3><ol><li>Erster Schritt</li><li>Zweiter Schritt</li><li>Dritter Schritt</li></ol><h3>Zitat / Blockquote</h3><blockquote>\"Das Leben ist zu kurz für schlechten Code.\" – Irgendjemand</blockquote><h3>Codeblock</h3><pre>function hello() {\n  console.log(\"Hallo Welt\");\n}</pre>",
                 "en-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Help to apply for a site and company number</h4>\n\nFor further guidance, you can watch the <a target=\"_blank\" href=\"/en/standort-faq/apply-for-site-company-number\" class=\"aloha-link-text\" hreflang=\"\">Explanatory video on How can I apply for a site and a site number?</a>  or consult the <a target=\"_blank\" href=\"/en/help\" class=\"aloha-link-text\" hreflang=\"\">Help</a> on the Waste and resources Services.",
                 "fr-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Aide pour demander un site et un num\u00e9ro d'identification</h4>\n\nPour plus d'informations, vous pouvez regarder <a target=\"_blank\" href=\"/fr/standort-faq/demander-site-et-numero-identification\" class=\"aloha-link-text\" hreflang=\"\">la \tVid\u00e9o d'explication : Comment puis-je demander un site et un num\u00e9ro d'identification ?</a> ou consulter les <a target=\"_blank\" href=\"/fr/aides\" class=\"aloha-link-text\" hreflang=\"\">Aides</a> du groupe de service d\u00e9chets et mati\u00e8res premi\u00e8res.",
                 "it-AT": "<h4 style=\"padding: 25px 0 15px 0px;\">Supporto per richiedere un sito e numero d'esercizio</h4>\n\nPer ulteriori indicazioni, \u00e8 possibile visualizzare il <a target=\"_blank\" href=\"/it/standort-faq/richiedere-sito-e-numero-d-esercizio\" class=\"aloha-link-text\" hreflang=\"\">video esplicativo su come posso richiedere un numero d\u2019esercizio?</a> o consultare il <a target=\"_blank\" href=\"/it/supporto\" class=\"aloha-link-text\" hreflang=\"\">supporto</a> del gruppo di servizi Rifiuti e materie prime."
@@ -1704,22 +1650,22 @@
             "type": "property",
             "id": "89D6E122-2CC7-4940-A202-F1D2C51898AD",
             "label": {
-                "de-AT": "Radio Buttons",
-                "it-AT": "Radio Buttons",
-                "fr-AT": "Radio Buttons"
+              "de-AT": "Radio Buttons",
+              "it-AT": "Radio Buttons",
+              "fr-AT": "Radio Buttons"
             },
             "description": {},
             "formGridOptions": {
-                "numberOfColumns": 12,
-                "overlayOptions": {
-                    "isShowOverlay": false,
-                    "texts": {
-                        "textPre": {},
-                        "textPost": {}
-                    }
-                },
-                "radio": true,
-                "fileExtensionsNotAllowed": []
+              "numberOfColumns": 12,
+              "overlayOptions": {
+                "isShowOverlay": false,
+                "texts": {
+                  "textPre": {},
+                  "textPost": {}
+                }
+              },
+              "radio": true,
+              "fileExtensionsNotAllowed": []
             },
             "uiSchemaPage": 0
           },
@@ -2770,7 +2716,8 @@
               }
             },
             "uiSchemaPage": 0
-          },{
+          },
+          {
             "type": "property",
             "id": "G46F9670-8B2A-4731-8A01-9592C0DB6A12",
             "label": {
@@ -3053,7 +3000,7 @@
             "uiSchemaPage": 0,
             "id": "CD73CF3B-0191-47F5-9BFD-9DFF682B2F21"
           },
-           {
+          {
             "label": {
               "de-AT": "Space"
             },
@@ -5415,32 +5362,32 @@
         "possibleValueSetID": "c7ce4abe-6ad1-485e-ae5b-3feca330f400",
         "possibleValues": [
           {
-              "identifier": "RefID_Test|123123123123_TenantID_UKF",
-              "displayName": "Aktiengesellschaft (AG)"
+            "identifier": "RefID_Test|123123123123_TenantID_UKF",
+            "displayName": "Aktiengesellschaft (AG)"
           },
           {
-              "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
-              "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
+            "identifier": "RefID_Test2|B123123123123123_TenantID_UKF",
+            "displayName": "Gesellschaft mit beschränkter Haftung (GmbH)"
           },
           {
-              "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
-              "displayName": "Dienstleistung"
+            "identifier": "RefID_12312312312312|CA2312312312313123_TenantID_UKF",
+            "displayName": "Dienstleistung"
           },
           {
-              "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
-              "displayName": "Handel"
+            "identifier": "RefID_DS12313123123312|AB1231231223123123_TenantID_UKF",
+            "displayName": "Handel"
           }
         ]
       }
     ],
     "formControls": {
       "button": {
-          "id": "ABCDDSAD-1233-444C-A441-AASD1231SD1231",
-          "name": "Absenden",
-          "action": "openWindow",
-          "actionAfterCalling": "stayOnPage",
-          "returnUrl": "",
-          "targetUrl": ""
+        "id": "ABCDDSAD-1233-444C-A441-AASD1231SD1231",
+        "name": "Absenden",
+        "action": "openWindow",
+        "actionAfterCalling": "stayOnPage",
+        "returnUrl": "",
+        "targetUrl": ""
       }
     },
     "properties": {
@@ -6279,5 +6226,130 @@
       }
     }
   },
-  "transactionId": ""
+  "transactionId": "",
+  "flowId": "default",
+  "flows": [
+    {
+      "id": "default",
+      "labelI18n": {
+        "de": "Standard",
+        "en": "Default"
+      },
+      "nameTranslationKey": "formgen_flow_translation_key",
+      "steps": [
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_form",
+          "reactClass": "FormScreen",
+          "nameTranslationKey": "form_flow_name_form",
+          "descriptionTranslationKey": "form_flow_desc_form",
+          "buttons": [
+            {
+              "reactClass": "DetailInfoButton",
+              "labelTranslationKey": "form_detailinfo",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            }
+          ],
+          "variables": []
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_summary",
+          "reactClass": "SummaryScreen",
+          "nameTranslationKey": "form_flow_name_summary",
+          "descriptionTranslationKey": "form_flow_desc_summary",
+          "buttons": [
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PrintPdfButton",
+              "labelTranslationKey": "form_print",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            },
+            {
+              "reactClass": "SubmitButton",
+              "labelTranslationKey": "form_submit"
+            }
+          ],
+          "variables": [{ "name": "showDetails", "value": true }]
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_success",
+          "reactClass": "SuccessScreen",
+          "nameTranslationKey": "form_flow_name_success",
+          "descriptionTranslationKey": "form_flow_desc_success",
+          "buttons": [],
+          "variables": []
+        }
+      ]
+    },
+    {
+      "id": "no_summary",
+      "labelI18n": {
+        "de": "Ohne Zusammenfassung",
+        "en": "Without Summary"
+      },
+      "nameTranslationKey": "formgen_flow_translation_key",
+      "steps": [
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_form",
+          "reactClass": "FormScreen",
+          "nameTranslationKey": "form_flow_name_form",
+          "descriptionTranslationKey": "form_flow_desc_form",
+          "buttons": [
+            {
+              "reactClass": "DetailInfoButton",
+              "labelTranslationKey": "form_detailinfo",
+              "mobileDisabled": true
+            },
+            {
+              "reactClass": "CancelButton",
+              "labelTranslationKey": "form_cancel"
+            },
+            {
+              "reactClass": "PreviousPageButton",
+              "labelTranslationKey": "form_previousPage"
+            },
+            {
+              "reactClass": "NextPageButton",
+              "labelTranslationKey": "form_nextPage"
+            },
+            {
+              "reactClass": "SubmitButton",
+              "labelTranslationKey": "form_submit"
+            }
+          ],
+          "variables": []
+        },
+        {
+          "buttonLabelTranslationKey": "form_flow_btn_success",
+          "reactClass": "SuccessScreen",
+          "nameTranslationKey": "form_flow_name_success",
+          "descriptionTranslationKey": "form_flow_desc_success",
+          "buttons": [],
+          "variables": []
+        }
+      ]
+    }
+  ]
 }

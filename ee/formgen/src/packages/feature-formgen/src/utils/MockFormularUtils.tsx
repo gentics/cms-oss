@@ -131,7 +131,7 @@ export function fetchMockDefaultFormular(
 }
 
 export function fetchMockDefaultFeatures(): Promise<any> {
-  if (!__DEV__) return Promise.resolve(null)
+  if (!__DEV__) return Promise.resolve({})
   if (Platform.OS === 'web') {
     return fetch('/mock-files/defaultFeatures.json').then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)

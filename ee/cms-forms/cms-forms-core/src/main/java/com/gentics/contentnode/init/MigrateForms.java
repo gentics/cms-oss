@@ -214,8 +214,8 @@ public class MigrateForms extends InitJob {
 	private BiConsumer<ObjectNode, ObjectNode> CATALOG_PROPERTY_MIGRATOR = (elementNode, property) -> {
 		property.put("type", "catalog");
 		String selectType = elementNode.optional("select_type_i18n")
-				.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
-				.orElse("");
+			.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
+			.orElse("");
 
 		switch (selectType) {
 		case "radiobuttons":
@@ -235,8 +235,8 @@ public class MigrateForms extends InitJob {
 	 */
 	private BiConsumer<ObjectNode, ObjectNode> CATALOG_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
 		String selectType = elementNode.optional("select_type_i18n")
-				.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
-				.orElse("");
+			.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
+			.orElse("");
 
 		boolean radio = false;
 
@@ -254,6 +254,34 @@ public class MigrateForms extends InitJob {
 
 		property.withObjectProperty(FORM_GRID_OPTIONS)
 			.put("radio", radio);
+	};
+
+	/**
+	 * Migrator for checkbox schema properties
+	 */
+	private final BiConsumer<ObjectNode, ObjectNode> CHECKBOX_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		var defaultValue = elementNode.optional("checked_i18n")
+			.flatMap(n -> n.valueStream().filter(JsonNode::isBoolean).map(JsonNode::asBoolean).findFirst())
+			.orElse(false);
+
+		if (property.optional("value").isEmpty()) {
+			elementNode.optional("value_i18n")
+				.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
+				.ifPresent(storedValue -> property.put("value", storedValue));
+		}
+
+		property.withObjectProperty(FORM_GRID_OPTIONS).put("defaultValue", defaultValue);
+	};
+
+	/**
+	 * Migrator for checkbox ui-schema properties
+	 */
+	private final BiConsumer<ObjectNode, ObjectNode> CHECKBOX_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		var storedValue = elementNode.optional("value_i18n")
+			.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
+			.orElse("X");
+
+		property.withObjectProperty(FORM_GRID_OPTIONS).put("storedValue", storedValue);
 	};
 
 	/**
@@ -542,7 +570,7 @@ public class MigrateForms extends InitJob {
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", MULTILINE_STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "checkbox":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", CHECKBOX_PROPERTY_MIGRATOR, CHECKBOX_UI_PROPERTY_MIGRATOR);
 			break;
 		case "selectgroup":
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "catalog", CATALOG_PROPERTY_MIGRATOR, CATALOG_UI_PROPERTY_MIGRATOR);

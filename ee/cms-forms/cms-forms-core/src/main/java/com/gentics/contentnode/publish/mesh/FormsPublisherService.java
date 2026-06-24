@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.configuration.FormTypeConfiguration;
@@ -24,6 +25,7 @@ import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.forms.FormTransformer;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
@@ -82,7 +84,10 @@ public class FormsPublisherService implements MeshPublisherService {
 					// TODO log
 				} else {
 					ObjectNode pluginConfiguration = Optional.ofNullable(typeConfiguration.pluginConfiguration)
-							.orElseGet(() -> mapper.createObjectNode());
+							.orElseGet(() -> mapper.createObjectNode()).deepCopy();
+					Optional.ofNullable(typeConfiguration.flows).ifPresent(flows -> {
+						pluginConfiguration.set("flows", mapper.convertValue(flows, ArrayNode.class));
+					});
 					configurationPerPlugin
 							.computeIfAbsent(typeConfiguration.pluginName, key -> mapper.createObjectNode())
 							.set(formType, pluginConfiguration);
@@ -245,14 +250,23 @@ public class FormsPublisherService implements MeshPublisherService {
 	 * Get the formGen translations model for the given set of active form types
 	 * @param activeFormTypes set of active form types
 	 * @return formGen translations model
+	 * @throws NodeException
 	 */
-	protected FormGenTranslationsModel getFormGenTranslations(Set<String> activeFormTypes) {
+	protected FormGenTranslationsModel getFormGenTranslations(Set<String> activeFormTypes) throws NodeException {
 		FormGenTranslationsModel model = new FormGenTranslationsModel();
-		model._default = transform(FormConfigProvider.getFormGenTranslations());
+		model._default = transform(FormConfigProvider.getFormGenTranslations(true));
 		model.types = new LinkedHashMap<>();
 
 		for (String formType : activeFormTypes) {
-			model.types.put(formType, transform(FormConfigProvider.getFormGenTranslations(formType)));
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(formType, true);
+
+			FormTypeConfiguration config = Optional.ofNullable(FormConfigProvider.getConfig()).map(m -> m.get(formType)).orElse(null);
+
+			if (config != null) {
+				translations = FormTransformer.transformToExternalLanguageCodes(config, translations.clone());
+			}
+
+			model.types.put(formType, transform(translations));
 		}
 
 		return model;

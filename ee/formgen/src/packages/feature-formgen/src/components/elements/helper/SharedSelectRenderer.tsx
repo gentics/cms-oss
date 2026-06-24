@@ -15,6 +15,13 @@ function isOptionSelected(option: any, selectedValues: any[]): boolean {
   return selectedValues.some((val) => val.identifier === option.identifier);
 }
 
+function getMockRadioOptions() {
+  return Array.from({ length: 5 }, (_, index) => ({
+    identifier: `mock-${index + 1}`,
+    displayName: `Wert${index + 1}`,
+  }));
+}
+
 /**
  * Props for the shared select renderer.
  *
@@ -50,6 +57,9 @@ function SharedSelectRenderer({
 
   // Render radio or checkbox options when the field is configured for radio mode.
   if (props.formGridOptions?.radio) {
+    const radioOptions = props.formState.isFormgridPreview
+      ? getMockRadioOptions()
+      : props.possibleValues || [];
     const type = props.isList ? 'checkbox' : 'radio';
     const currentSelectedValues: any[] = props.value
       ? Array.isArray(props.value)
@@ -113,6 +123,7 @@ function SharedSelectRenderer({
           localErrorMsg={props.error ? props.error : ''}
           jsonPath={props.jsonpath}
           objectId={props.id}
+          selectedElementId={props.selectedElementId}
         >
           <View ref={elementRef} style={booleanStyles.radioButtonGroupContainer}>
             <AndpText
@@ -130,7 +141,7 @@ function SharedSelectRenderer({
               {labelText}
             </AndpText>
 
-            {props.possibleValues?.map((option: any, idx: any) => (
+            {radioOptions.map((option: any, idx: any) => (
               <AndpRadioButton
                 key={option.identifier || idx}
                 id={`${props.jsonpath}-${type}-${idx}`}
@@ -153,7 +164,7 @@ function SharedSelectRenderer({
     }
 
     // Multi-column layout: group options into rows based on the resolved column count.
-    const options = props.possibleValues || [];
+    const options = radioOptions;
     const rows: any[][] = [];
 
     for (let i = 0; i < options.length; i += columnCount) {
@@ -179,6 +190,7 @@ function SharedSelectRenderer({
         localErrorMsg={props.error ? props.error : ''}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        selectedElementId={props.selectedElementId}
       >
         <View ref={elementRef} style={booleanStyles.radioButtonGroupContainer}>
           <AndpText
@@ -355,6 +367,7 @@ function SharedSelectRenderer({
       localErrorMsg={props.error ? props.error : ''}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View style={{ zIndex: 10 }}>
         <BaseDropDownInputElement

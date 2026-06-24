@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Text, TouchableOpacity, View, Pressable, StyleProp, ViewStyle } from 'react-native';
+import { Text, TouchableOpacity, View, StyleProp, ViewStyle } from 'react-native';
 import Animated, { Easing, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { stickyLayerStyles } from '../../../styles/common/common-style.native';
 import { stickyLayerStyles as customStickyLayerStyles } from '../../../styles/custom/custom-style.native';
@@ -113,32 +113,43 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
   const breakPoints = useBreakpoints();
   const styles = useMemo(() => mergeStyles(stickyLayerStyles, customStickyLayerStyles), []);
   const { buttons } = useButtons();
+  const hasPages = !!formState.form.pages?.length;
 
   // On Mobile, exclude form_cancel and detail_info
 
   const footerButtons = buttons.filter(
-    b => !["form_cancel", "form_detailinfo"].includes(b.translateKey)
+    b => !["form_cancel", "form_detailinfo"].includes(b.labelTranslationKey)
   );
 
   // Determine arrangement for normal forms
   const hasManyFooterButtons = footerButtons.length > 2;
 
-  // detect Prev/Next/Submit by component name or translateKey
+  // detect Prev/Next/Submit by component name or labelTranslationKey
   const prevDef = footerButtons.find(
     (b) =>
-      /prev/i.test(b.btnComponent || '') || /prev/i.test(b.translateKey || '')
+      /prev/i.test(b.reactClass || '') || /prev/i.test(b.labelTranslationKey || '')
   );
   const nextDef = footerButtons.find(
     (b) =>
-      /next/i.test(b.btnComponent || '') || /next/i.test(b.translateKey || '')
+      /next/i.test(b.reactClass || '') || /next/i.test(b.labelTranslationKey || '')
   );
   const submitDef = footerButtons.find(
     (b) =>
-      /submit/i.test(b.btnComponent || '') || /submit/i.test(b.translateKey || '')
+      /submit/i.test(b.reactClass || '') || /submit/i.test(b.labelTranslationKey || '')
   );
   const otherFooterButtons = footerButtons.filter(
     (b) => b !== prevDef && b !== nextDef && b !== submitDef && b.mobileDisabled == false
   );
+
+  // Abstracting the ExpertExcelDownloadButton button to avoid duplicate code
+  const excelButton = formState.schema.excelResultSupported ? (
+    <ExpertExcelDownloadButton
+      t={t}
+      onPress={props.handleExpertExcelDownload!}
+      disabled={props.uiState.loading}
+      uiState={props.uiState}
+    />
+  ) : null;
 
   return (
     <View style={styles.combinedStickyLayerContainer}>
@@ -180,25 +191,28 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
           >
             {isExpertSearch ? (
               <>
-                {formState.schema.excelResultSupported && (
-                  <ContextMenuMultiButton triggerIcon={<AndpIcon size="md" name="bars" color={theme.colors.colorAccent} />}>
-                    <ExpertExcelDownloadButton
-                      t={t}
-                      onPress={props.handleExpertExcelDownload!}
-                      disabled={props.uiState.loading}
-                      uiState={props.uiState}
-                    />
-                  </ContextMenuMultiButton>
+                {hasPages
+                  ? excelButton && (
+                      <ContextMenuMultiButton
+                        triggerIcon={
+                          <AndpIcon
+                            size="md"
+                            name="bars"
+                            color={theme.colors.colorAccent}
+                          />
+                        }
+                      >
+                        {excelButton}
+                      </ContextMenuMultiButton>
+                    )
+                  : excelButton}
+                {hasPages && (
+                  <ExpertSearchButton
+                    t={t}
+                    onPress={() => props.handleExpertSearch?.()}
+                    disabled={props.uiState.loading}
+                  />
                 )}
-                <ExpertSearchButton
-                  t={t}
-                  onPress={() =>
-                    props.handleExpertSearch
-                      ? props.handleExpertSearch()
-                      : () => { }
-                  }
-                  disabled={props.uiState.loading}
-                />
               </>
             ) : isDialogFormSubmit ? (
               <>
@@ -232,15 +246,15 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
 
 function renderButtons(buttonDefinition: IFormFlowButtonDefinition[], additionalProps: any = {}) {
   return buttonDefinition.map((buttonDef, index) => {
-    const ButtonComponent = ButtonComponents[buttonDef.btnComponent];
+    const ButtonComponent = ButtonComponents[buttonDef.reactClass];
     if (!ButtonComponent) {
-      console.warn(`Unbekannte Button-Komponente: ${buttonDef.btnComponent}`);
+      console.warn(`Unbekannte Button-Komponente: ${buttonDef.reactClass}`);
       return null;
     }
     return (
       <ButtonComponent
         key={index}
-        translateKey={buttonDef.translateKey}
+        translateKey={buttonDef.labelTranslationKey}
         buttonDefinition={buttonDef}
         {...additionalProps}
       />

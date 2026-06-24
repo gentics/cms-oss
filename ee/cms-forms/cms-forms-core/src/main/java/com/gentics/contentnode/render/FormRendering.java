@@ -7,11 +7,15 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormGenProvider;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.forms.FormTransformer;
+import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Page;
@@ -63,14 +67,31 @@ public class FormRendering {
 					}
 				}
 
-				// render the preview tag
-				writer.write(String.format(
-					"<%s data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"%s\"></%s>",
-					options.getPreviewRoot(),
-					form.getId(),
-					language,
-					FORMS_PREVIEW_CLASS,
-					options.getPreviewRoot()));
+				ObjectNode formJson = new FormTransformer().withTransformationTarget(TransformationTarget.preview).transform(form);
+				formJson.put("language", language);
+
+				StringBuilder preview = new StringBuilder();
+
+				preview.append("\n<script>window.formPreviewData = %s;\n</script>".formatted(formJson.toPrettyString()));
+
+				for (String cssPath : FormGenProvider.getCSSPaths()) {
+					preview.append("\n<link rel=\"stylesheet\" href=\"%s\"/>".formatted(cssPath));
+				}
+
+				String pluginName = Optional.ofNullable(FormConfigProvider.getConfig())
+						.map(m -> m.get(form.getFormType())).map(c -> c.pluginName).orElse("");
+
+				String formId = MeshPublisher.getMeshUuid(form);
+
+				preview.append(
+						"\n<div id=\"root\" tabindex=\"0\" data-formID=\"%s\" data-culture=\"%s\" data-plugin-name=\"%s\"></div>"
+								.formatted(formId, language, pluginName));
+
+				for (String jsPath : FormGenProvider.getJSPaths()) {
+					preview.append("\n<script type=\"module\" src=\"%s\"></script>".formatted(jsPath));
+				}
+
+				writer.write(preview.toString());
 			}
 		} else {
 			writer.write(translate(options.getNoForm()));
@@ -237,13 +258,15 @@ public class FormRendering {
 		 */
 		php((form, options) -> {
 			String showResults = options.isShowResults() ? ", 'showResults' => true" : "";
+			String externalId = Optional.ofNullable(form.getExternalId()).map(id -> ", 'externalId' => '%s'".formatted(id)).orElse("");
 
 			return String.format(
-				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => '%s', 'language' => $node['language']%s])",
+				"@%s('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => '%s', 'language' => $node['language']%s%s])",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
 				getPluginName(form),
-				showResults);
+				showResults,
+				externalId);
 		}),
 
 		/**
@@ -251,13 +274,15 @@ public class FormRendering {
 		 */
 		java((form, options) -> {
 			String showResults = options.isShowResults() ? " showResults=true" : "";
+			String externalId = Optional.ofNullable(form.getExternalId()).map(id -> " externalId=\"%s\"".formatted(id)).orElse("");
 
 			return String.format(
-				"<eval>{ %s \"%s\" pluginName=\"%s\" language=data.node.language%s }</eval>",
+				"<eval>{ %s \"%s\" pluginName=\"%s\" language=data.node.language%s%s }</eval>",
 				FORMS_HELPER_NAME,
 				MeshPublisher.toMeshUuid(form.getGlobalId().toString()),
 				getPluginName(form),
-				showResults);
+				showResults,
+				externalId);
 		});
 
 		/**

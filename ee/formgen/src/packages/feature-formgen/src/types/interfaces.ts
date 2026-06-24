@@ -109,17 +109,11 @@ export interface Theme {
 }
 
 export interface IFeatures {
-  [key: string]: IFeaturesConfig & IFeatureUploadConstraintOptions;
+  [key: string]: IFeaturesConfig;
 }
 
 export interface IFeaturesConfig {
   [key: string]: string;
-}
-
-interface IFeatureUploadConstraintOptions {
-  maxSizePerFile: number;
-  maxSizeOverall: number;
-  fileExtensionsAllowed: string[];
 }
 
 export enum PaymentStateTypes {
@@ -197,7 +191,7 @@ export interface IFormComponentBaseAttributes {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -235,7 +229,8 @@ export interface IFormComponentBaseAttributes {
   isSearch?: boolean;
   isLoggedIn?: boolean;
   rawErrorMsgs?: IErrorMessage[];
-  insideSubaggregatIndex?: number
+  insideSubaggregatIndex?: number;
+  selectedElementId?: string;
 
 }
 
@@ -351,8 +346,27 @@ export interface FormState {
   isLoggedIn: boolean;
   detailUrl?: string;
   hasDetail?: boolean;
+  isFormgridPreview?: boolean;
   pluginName: PluginNameEnum;
+  captchaConfig?: CaptchaConfig;
+  // Optional redirect target shown as a button on the SuccessScreen.
+  // Keyed by language code (e.g. { "de": "http://..." }).
+  successUrl?: { [language: string]: string };
 }
+
+export type FriendlyCaptchaMode = 'auto' | 'button' | 'background'
+export type reCaptchaMode = 'checkbox' | 'invisible'
+
+/**
+ * This 
+ */
+export interface CaptchaConfig {
+  provider: 'friendly' | 'recaptcha';
+  siteKey: string;
+  mode?: FriendlyCaptchaMode | reCaptchaMode;
+  language?: string;
+  baseUrl?: string;
+};
 //TODO Method uncomment "?""
 export interface IFormPageComponent {
   formState: FormState;
@@ -399,7 +413,7 @@ export interface IFormPageComponent {
     instant?: boolean,
     formGridOptions?: IFormGridOptions,
   ) => void;
-  submitCSVUpload?: (jsonpath: string, id: string) => void;
+  submitCSVUpload?: (jsonpath: string) => void;
   handleSearch?: (jsonPath: string, searchTerm: string, callback: any) => void;
   handleLazyCatalog?: (
     jsonPath: string,
@@ -429,11 +443,11 @@ export interface NormalizedSchemas {
 
 export interface IFormFlowClass {
   reactClass: string;
-  buttonDefinition: IFormFlowButtonDefinition[];
-  name: string;
-  description: string;
+  buttons: IFormFlowButtonDefinition[];
+  nameTranslationKey: string;
+  descriptionTranslationKey: string;
   variables?: IFormFlowClassVariables[];
-  buttonText: string;
+  buttonLabelTranslationKey: string;
 }
 
 export interface IFormFlowClassVariables {
@@ -442,8 +456,8 @@ export interface IFormFlowClassVariables {
 }
 
 export interface IFormFlowButtonDefinition {
-  btnComponent: string;
-  translateKey: string;
+  reactClass: string;
+  labelTranslationKey: string;
   mobileDisabled?: boolean;
 }
 
@@ -452,12 +466,12 @@ export interface IFormFlowData {
 }
 
 export interface IFormFlowSteps {
-  key: string;
-  name: string;
-  formFlowSteps: IFormFlowClass[];
+  id: string;
+  nameTranslationKey: string;
+  steps: IFormFlowClass[];
 }
 export interface IFormFlowStep {
-  buttonText: string;
+  buttonLabelTranslationKey: string;
   reactClass: string;
 }
 /**
@@ -471,8 +485,6 @@ export interface IForm {
   pages?: IFormPage[];
   formwidth?: number;
   formwidthOptimized?: boolean;
-  formFlowKey: string;
-  formFlow: IFormFlowSteps[];
 }
 
 /**
@@ -546,7 +558,12 @@ export interface IFormGridOptions {
 
   image?: IFormGridImageOptions;
   siteKey?: string;
+  baseUrl?: string;
   mode?: 'checkbox' | 'invisible';
+  hidden?: boolean;
+  condition?: ICmsCondition;
+  storedValue?: string;
+  text?: ITranslationSet;
 }
 export interface IOverlayInfoOptions {
   isShowOverlay: boolean;
@@ -589,12 +606,23 @@ export interface ISchemaFieldProperties {
   autoCompleteMinLength?: number;
   isRaw?: boolean;
   condition?: ICmsCondition;
+  maxSize?: number
+  maxSizeEntireList?: number
+  allowedFileExtensions?: string[]
+  allowAllFileExtensions?: boolean
 }
 
 export interface IValidation {
   formID?: string;
   hasValidationErrors?: boolean;
+  binary?: IBinaryValidationOptions;
   [key: string]: any;
+}
+
+export interface IBinaryValidationOptions {
+  allowedFileTypes?: string[];
+  allowedFileNames?: string[];
+  maxFilesize?: number;
 }
 
 export interface ICmsCondition {
@@ -625,6 +653,7 @@ export interface IData {
   formControls?: any;
   transactionId?: string;
   paymentStatus?: string;
+  deleteFileJsonPath?: string;
   possibleValueSets?: PossibleValueSet[];
 }
 
@@ -676,7 +705,6 @@ export interface IDataFieldProperties {
   renderingType?: string;
   autoCompleteSearchValue?: string;
   autoCompleteResults?: IAutocompleteValue[];
-  csvUpload?: boolean;
   isUpdateOnChange?: boolean;
   createable?: boolean;
 }
@@ -710,7 +738,9 @@ export interface IBinary {
   value: string; // z.B. "mesh(not uploaded yet):Dateiname"
   uri?: string | null;
   type?: string;
+  ext?: string;
   size?: number;
+  shouldBeDelete?: boolean; // nur im deleteFile-Request-Body gesetzt, nie persistent
 }
 
 /**
@@ -719,7 +749,11 @@ export interface IBinary {
  * - 'mesh'     : uploaded to Mesh (value starts with "mesh:")
  * - 'actanova' : stored in ActaNova (any other non-empty value)
  */
-export type BinarySource = 'local' | 'mesh' | 'actanova';
+export enum BinarySource {
+  LOCAL = 'local',
+  MESH = 'mesh',
+  ACTANOVA = 'actanova',
+}
 
 /**
  * IBinaryFile is the single source of truth for the list UI.
@@ -727,13 +761,15 @@ export type BinarySource = 'local' | 'mesh' | 'actanova';
  * - `file`  : the original File object (only for local selections); null once
  *             the backend returns a server-side IBinary for the same file
  * - `source`: local | mesh | actanova
- * - `fileType`: lowercased extension derived from binary.fileName (no dot)
+ * - `fileExt`: lowercased extension derived from binary.fileName (no dot)
+ * - `mimeType`: the MIME Type of the file
  */
 export interface IBinaryFile {
   binary: IBinary;
   file: File | null;
   source: BinarySource;
-  fileType: string;
+  fileExt: string;
+  mimeType: string;
 }
 
 export interface ITranslationSet {
@@ -900,6 +936,13 @@ export interface LoadingOverlayScreenProps {
 
 export interface IOverlayFooterProps {
   footerMessages?: (string | undefined)[];
+}
+
+export interface IAggregateAddButtonProps {
+  id?: string;
+  className?: string;
+  onPress: () => any;
+  showButtonText?: boolean;
 }
 
 type formEditModeValues = keyof typeof editModeMap;

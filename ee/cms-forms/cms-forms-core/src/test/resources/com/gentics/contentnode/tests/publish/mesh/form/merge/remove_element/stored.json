@@ -1,0 +1,36 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "property",
+						"id": "first_element",
+						"label": {
+							"de-AT": "Erstes Element",
+							"en-AT": "First Element"
+						},
+						"formGridOptions": {
+							"numberOfColumns": "6"
+						}
+					},
+					{
+						"type": "property",
+						"id": "second_element",
+						"label": {
+							"de-AT": "Zweites Element",
+							"en-AT": "Second Element"
+						},
+						"formGridOptions": {
+							"numberOfColumns": "6"
+						}
+					}
+				]
+			}
+		]
+	}
+}

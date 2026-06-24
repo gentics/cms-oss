@@ -49,6 +49,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
@@ -712,6 +713,8 @@ public class FormTransformerTest implements ConfigModifier {
 		ObjectNode data = mapper.createObjectNode();
 		data.put("cms_id", form.getId());
 		data.put("type", form.getFormType());
+		data.put("name", form.getName());
+		data.put("submitOnce", FormConfigProvider.getConfig().get(form.getFormType()).submitOnce);
 		data.withObjectProperty("schema").withObjectProperty("properties");
 		ObjectNode formName = data.withObjectProperty("ui-schema").withObjectProperty("formname");
 		for (String language : form.getLanguages()) {
@@ -797,7 +800,7 @@ public class FormTransformerTest implements ConfigModifier {
 				pageContentReferenceBackend, urlReference, urlReferenceBackend, meshlinkReference,
 				meshlinkReferenceBackend);
 
-		formsConfig.controls = Map.of("control", control);
+		formsConfig.controls = new Controls(Map.of("control", control));
 
 		formTypeConfiguration.put(FORM_TYPE, formsConfig);
 

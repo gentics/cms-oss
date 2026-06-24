@@ -8,7 +8,6 @@ export const FormGridElementTypes: IElementTypes = {
     formgridimage: Elements.FormGridImageElement as unknown as IElementType,
     formgridtext: Elements.FormGridTextElement as unknown as IElementType,
     formgridspacer: Elements.FormGridTextElement as unknown as IElementType,
-    text: Elements.TextElement as unknown as IElementType,
 };
 
 /*
@@ -39,10 +38,8 @@ export const cmsInputElementTypes: IElementTypes = {
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase
 */
 const sharedElementTypes: IElementTypes = {
-    ...FormGridElementTypes,           // shared
     ...cmsInputElementTypes,
-    boolean: Elements.BooleanElement,
-    select: Elements.SelectElement,
+    catalog: Elements.CatalogElement,
     datetime: Elements.DateTimeElement as unknown as IElementType,
     time: Elements.DateTimeElement as unknown as IElementType,
     binary: Elements.BinaryElement as unknown as IElementType,
@@ -55,22 +52,27 @@ const sharedElementTypes: IElementTypes = {
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase 
 */
 const cmsElementTypes: IElementTypes = {
-    ...FormGridElementTypes,           // shared
+    text: Elements.FormGridTextElement as unknown as IElementType,
+    spacer: Elements.FormGridTextElement as unknown as IElementType,
+    boolean: Elements.CMSBooleanElement,
     container: Elements.CmsContainerElement,
-    recaptcha: Elements.CmsRecaptchaElement,
+    conditionalcontainer: Elements.CmsContainerElement,
+    adminmail: Elements.CatalogElement,
+    usermail: Elements.CmsUserMailElement,
 };
 
 /*
 * !IMPORTANT! it is case sensitiv, keys should always be lowercase 
 */
 const pluginElementTypes: IPluginElements = {
+    // TODO: Should this shared entry actually be here? When is the plugin-name ever "shared"??
     "shared": sharedElementTypes,
     "acta-nova": anElementTypes,
-    "cms-forms": cmsElementTypes
+    "forms": cmsElementTypes
 }
 
 export const getElementTypeByPlugin = (elementType: string, pluginName: string) => {
-    let sharedElementTypes = pluginElementTypes['shared'];
-    let specificElementTypes = pluginElementTypes[pluginName];
+    let specificElementTypes = pluginElementTypes[pluginName] || {};
+    // Der specific type wird bevorzugt
     return specificElementTypes[elementType] || sharedElementTypes[elementType];
 }

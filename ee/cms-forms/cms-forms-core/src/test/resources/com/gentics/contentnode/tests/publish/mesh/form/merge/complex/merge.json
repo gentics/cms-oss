@@ -1,0 +1,395 @@
+{
+    "ui-schema": {
+        "formID": "PKForm1",
+        "version": "2",
+        "formname": {
+            "de": "PK Formular #1",
+            "en": "PK Form #1"
+        },
+        "pages": [
+            {
+                "pagename": {
+                    "de": "Seite 1",
+                    "en": "Page 1"
+                },
+                "elements": [
+                    {
+                        "type": "aggregate",
+                        "id": "1656d5c9_26cd_4a24_b730_36e665dc09be",
+                        "label": {
+                            "de": "Öffentlicher Verkehr",
+                            "en": "Public transport",
+                            "it": "Trasporto pubblico",
+                            "fr": "Transports en commun"
+                        },
+                        "description": {
+                            "de": "description Öffentlicher Verkehr",
+                            "en": "description Public transport",
+                            "it": "description Trasporto pubblico",
+                            "fr": "description Transports en commun"
+                        },
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "2e9feb29_d23d_4215_b1f8_01dd35b7dfc4",
+                                "label": {
+                                    "de": "Zugang von",
+                                    "en": "Access by",
+                                    "it": "Accesso da",
+                                    "fr": "Accès à partir de"
+                                },
+                                "description": {
+                                    "de": "description Zugang von",
+                                    "en": "description Access by",
+                                    "it": "description Accesso da",
+                                    "fr": "description Accès à partir de"
+                                }
+                            },
+                            {
+                                "type": "property",
+                                "id": "5819cc0b_503b_4411_860d_fc903b2d4fb2",
+                                "label": {
+                                    "de": "Öffentliche Verkehrsmittel",
+                                    "en": "Public transport",
+                                    "it": "Mezzi di trasporto pubblico",
+                                    "fr": "Transport en commun"
+                                },
+                                "description": {
+                                    "de": "description Öffentliche Verkehrsmittel",
+                                    "en": "description Public transport",
+                                    "it": "description Mezzi di trasporto pubblico",
+                                    "fr": "description Transport en commun"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "aggregate",
+                        "id": "7526aebf_2a59_4bd9_ba20_667bb839124e",
+                        "label": {
+                            "de": "Parkausstattung",
+                            "en": "Park equipment",
+                            "it": "Attrezzatura del parco",
+                            "fr": "Équipement du parc"
+                        },
+                        "description": {
+                            "de": "description Parkausstattung",
+                            "en": "description Park equipment",
+                            "it": "description Attrezzatura del parco",
+                            "fr": "description Équipement du parc"
+                        },
+                        "elements": [
+                            {
+                                "type": "property",
+                                "id": "c756f82f_2813_4869_975b_64faa19e214e",
+                                "label": {
+                                    "de": "Kinderspielplatz",
+                                    "en": "Playground",
+                                    "it": "Area giochi per bambini",
+                                    "fr": "Aire de jeux pour enfants"
+                                },
+                                "description": {
+                                    "de": "description Kinderspielplatz",
+                                    "en": "description Playground",
+                                    "it": "description Area giochi per bambini",
+                                    "fr": "description Aire de jeux pour enfants"
+                                }
+                            },
+                            {
+                                "type": "property",
+                                "id": "b3901066_2f48_41f7_9ee5_84fa60e4ad13",
+                                "label": {
+                                    "de": "Öffentliche Toiletten",
+                                    "en": "Public toilets",
+                                    "it": "Servizi igienici pubblici",
+                                    "fr": "Toilettes publiques"
+                                },
+                                "description": {
+                                    "de": "description Öffentliche Toiletten",
+                                    "en": "description Public toilets",
+                                    "it": "description Servizi igienici pubblici",
+                                    "fr": "description Toilettes publiques"
+                                }
+                            },
+                            {
+                                "type": "property",
+                                "id": "eee42cdc_b408_4fbf_b2d9_dd9495049208",
+                                "label": {
+                                    "de": "Andere Ausstattung",
+                                    "en": "Other equipment",
+                                    "it": "Altre attrezzature",
+                                    "fr": "Autre équipement"
+                                },
+                                "description": {
+                                    "de": "description Andere Ausstattung",
+                                    "en": "description Other equipment",
+                                    "it": "description Altre attrezzature",
+                                    "fr": "description Autre équipement"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "property",
+                        "id": "d1191232_7992_4998_a2a4_75008cbd34b5",
+                        "label": {
+                            "de": "Letzte Inspektion",
+                            "en": "Last inspection",
+                            "it": "Ultima ispezione",
+                            "fr": "Dernière inspection"
+                        },
+                        "description": {
+                            "de": "description Letzte Inspektion",
+                            "en": "description Last inspection",
+                            "it": "description Ultima ispezione",
+                            "fr": "description Dernière inspection"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "bla",
+                        "label": {
+                            "de": "Element"
+                        }
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite 2",
+                    "en": "Page 2"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "bc9947f0_7a25_4968_b80f_0337b27d6bd3",
+                        "label": {
+                            "de": "Nächste Inspektion",
+                            "en": "Next inspection",
+                            "it": "Prossima ispezione",
+                            "fr": "Prochaine inspection"
+                        },
+                        "description": {
+                            "de": "description Nächste Inspektion",
+                            "en": "description Next inspection",
+                            "it": "description Prossima ispezione",
+                            "fr": "description Prochaine inspection"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "a9ee31ec_a4ca_4b0c_973e_79e843b83795",
+                        "label": {
+                            "de": "Gesamtfläche (m²)",
+                            "en": "Total area (m²)",
+                            "it": "Superficie totale (m²)",
+                            "fr": "Superficie totale (m²)"
+                        },
+                        "description": {
+                            "de": "description Gesamtfläche (m²)",
+                            "en": "description Total area (m²)",
+                            "it": "description Superficie totale (m²)",
+                            "fr": "description Superficie totale (m²)"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "1ebf488c_2930_4ca7_8c5f_0b6af8ccec42",
+                        "label": {
+                            "de": "Wasserverbrauch!",
+                            "en": "Water consumption",
+                            "it": "Consumo d'acqua",
+                            "fr": "Consommation d’eau"
+                        },
+                        "description": {
+                            "de": "description Wasserverbrauch",
+                            "en": "description Water consumption",
+                            "it": "description Consumo d'acqua",
+                            "fr": "description Consommation d’eau"
+                        }
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite 3",
+                    "en": "Page 3"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "faa183f2_0d6c_40c7_9657_4b787e0e6cae",
+                        "label": {
+                            "de": "Anzahl der Standorte",
+                            "en": "Number of sites",
+                            "it": "Numero di ubicazioni",
+                            "fr": "Nombre d’emplacements"
+                        },
+                        "description": {
+                            "de": "description Anzahl der Standorte",
+                            "en": "description Number of sites",
+                            "it": "description Numero di ubicazioni",
+                            "fr": "description Nombre d’emplacements"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "f70c702f_d8a5_4f7b_ba2a_7d9bbe804461",
+                        "label": {
+                            "de": "Behindertengerecht",
+                            "en": "Adapted to needs of people with disabilities",
+                            "it": "Accessibile ai disabili",
+                            "fr": "Accessible aux personnes handicapées"
+                        },
+                        "description": {
+                            "de": "description Behindertengerecht",
+                            "en": "description Adapted to needs of people with disabilities",
+                            "it": "description Accessibile ai disabili",
+                            "fr": "description Accessible aux personnes handicapées"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "0a8da5e0_9315_4789_9e19_3d57368f65dd",
+                        "label": {
+                            "de": "Parkplatztyp",
+                            "en": "Parking space type",
+                            "it": "Tipo di parcheggio",
+                            "fr": "Type de place de stationnement"
+                        },
+                        "description": {
+                            "de": "description Parkplatztyp",
+                            "en": "description Parking space type",
+                            "it": "description Tipo di parcheggio",
+                            "fr": "description Type de place de stationnement"
+                        }
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite 4",
+                    "en": "Page 4"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "33e35955_bf0d_4b75_b305_ef6efbc6dbe1",
+                        "label": {
+                            "de": "Ansprechpartner",
+                            "en": "Contact person",
+                            "it": "Interlocutore",
+                            "fr": "Interlocuteur"
+                        },
+                        "description": {
+                            "de": "description Ansprechpartner",
+                            "en": "description Contact person",
+                            "it": "description Interlocutore",
+                            "fr": "description Interlocuteur"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "4c451097_7933_4f6a_ad70_cf8cc8f24795",
+                        "label": {
+                            "de": "Beteiligte Organisationen",
+                            "en": "Participating organizations",
+                            "it": "Organizzazioni interessate",
+                            "fr": "Organisations participantes"
+                        },
+                        "description": {
+                            "de": "description Beteiligte Organisationen",
+                            "en": "description Participating organizations",
+                            "it": "description Organizzazioni interessate",
+                            "fr": "description Organisations participantes"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "98b4ffa2_facb_42a6_a3ad_d283f3b603a6",
+                        "label": {
+                            "de": "Parkname",
+                            "en": "Park name",
+                            "it": "Nome parco",
+                            "fr": "Nom du parc"
+                        },
+                        "description": {
+                            "de": "description Parkname",
+                            "en": "description Park name",
+                            "it": "description Nome parco",
+                            "fr": "description Nom du parc"
+                        }
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite 5",
+                    "en": "Page 5"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "af3070cc_bac1_415e_b4a7_c255cddc313d",
+                        "label": {
+                            "de": "Öffnungszeit bis",
+                            "en": "Open till",
+                            "it": "Orario di apertura fino a",
+                            "fr": "Ouverture jusqu’à"
+                        },
+                        "description": {
+                            "de": "description Öffnungszeit bis",
+                            "en": "description Open till",
+                            "it": "description Orario di apertura fino a",
+                            "fr": "description Ouverture jusqu’à"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "675ee3aa_3041_4742_8ebc_53209f5ec584",
+                        "label": {
+                            "de": "Park-Website",
+                            "en": "Park website",
+                            "it": "Sito web del parco",
+                            "fr": "Site Web du parc"
+                        },
+                        "description": {
+                            "de": "description Park-Website",
+                            "en": "description Park website",
+                            "it": "description Sito web del parco",
+                            "fr": "description Site Web du parc"
+                        }
+                    },
+                    {
+                        "type": "property",
+                        "id": "4da367d2_7ef9_4aa5_b56e_1e6319380281",
+                        "label": {
+                            "de": "Berechnetes Fachdatum"
+                        },
+                        "description": {
+                            "de": "description Berechnetes Fachdatum"
+                        }
+                    }
+                ]
+            },
+            {
+                "pagename": {
+                    "de": "Seite 6",
+                    "en": "Page 6"
+                },
+                "elements": [
+                    {
+                        "type": "property",
+                        "id": "f3fc0e79_2b3d_4b4b_90d5_b1ece15b847a",
+                        "label": {
+                            "de": "Binary (Dokument)"
+                        },
+                        "description": {
+                            "de": "description Binary (Dokument)"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

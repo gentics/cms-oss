@@ -106,6 +106,7 @@ function ANBooleanElement(props: IFormComponentAttributes) {
         localErrorMsg={localErrMsg}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        selectedElementId={props.selectedElementId}
       >
         <View style={{ zIndex: 10 }}>
           <BaseDropDownInputElement
@@ -205,6 +206,7 @@ function ANBooleanElement(props: IFormComponentAttributes) {
         localErrorMsg={localErrMsg}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        selectedElementId={props.selectedElementId}
       >
         <View ref={elementRef}>
           <AndpButton
@@ -255,6 +257,7 @@ function ANBooleanElement(props: IFormComponentAttributes) {
         isSmallerWarning={true}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        selectedElementId={props.selectedElementId}
       >
         <View
           ref={elementRef}
@@ -325,6 +328,7 @@ function ANBooleanElement(props: IFormComponentAttributes) {
       isSmallerWarning={true}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View ref={elementRef}>
         <AndpRadioButton

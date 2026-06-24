@@ -25,9 +25,10 @@ function FormGridTextElement(props: IFormComponentAttributes) {
   const formGridOptions = props.formGridOptions;
   const { width } = useWindowDimensions();
 
+  const textVal = formGridOptions?.value || formGridOptions?.text;
   const value: string =
-    formGridOptions?.value && props.formState
-      ? getI18nText(props.formState, formGridOptions.value) || ''
+    textVal && props.formState
+      ? getI18nText(props.formState, textVal) || ''
       : '';
 
   const linkCallbackHook = (link: string) => {
@@ -53,6 +54,7 @@ function FormGridTextElement(props: IFormComponentAttributes) {
       localErrorMsg=''
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <CustomRenderHTML
         basePath={props.restService.initUrl}
@@ -62,7 +64,7 @@ function FormGridTextElement(props: IFormComponentAttributes) {
           selectable: true,
         }}
         linkCallback={Platform.OS != "web" ? linkCallbackHook : undefined}
-        t={props.t}
+        t={(key, fallback) => props.t(key, fallback || '')}
       ></CustomRenderHTML>
     </FormElementWrapper>
   );

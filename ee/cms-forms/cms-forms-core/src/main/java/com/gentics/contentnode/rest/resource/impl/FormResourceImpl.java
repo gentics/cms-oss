@@ -7,7 +7,9 @@ import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
 import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermissionCheck;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -18,10 +20,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -33,6 +39,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.FormDataUtils;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.TriFunction;
 import com.gentics.contentnode.events.Events;
@@ -58,6 +65,7 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -69,6 +77,9 @@ import com.gentics.contentnode.rest.model.FormTimeManagement;
 import com.gentics.contentnode.rest.model.form.FormListResponse;
 import com.gentics.contentnode.rest.model.form.FormModel;
 import com.gentics.contentnode.rest.model.form.FormResponse;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsForLanguage;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslationsResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationListResponse;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationModel;
 import com.gentics.contentnode.rest.model.formtype.FormTypeConfigurationResponse;
@@ -76,17 +87,20 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.WastebinSearch;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ItemVersionListResponse;
+import com.gentics.contentnode.rest.model.response.LanguageList;
 import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
 import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.model.response.admin.CustomTool;
 import com.gentics.contentnode.rest.resource.FormResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FormDataExportParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
@@ -94,11 +108,15 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.rest.util.AndFilter;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.NodeFeatureFilter;
 import com.gentics.contentnode.rest.util.PermFilter;
+import com.gentics.contentnode.rest.util.PermissionFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.staging.StagingUtil;
 
@@ -145,7 +163,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		model.setFolderId(form.getFolderId());
 
 		model.setLanguages(form.getLanguages());
-		model.setData(form.getData());
+		ObjectNode formData = form.getData().deepCopy();
+		model.setData(formData.without(FormDataUtils.OLD_UI_SCHEMA));
 
 		model.setCdate(form.getCDate().getIntTimestamp());
 		model.setCreator(ModelBuilder.getUser(form.getCreator()));
@@ -203,9 +222,10 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	};
 
 	/**
-	 * Function that transforms the rest model into the given node model
+	 * Function that transforms the base data of the rest model into the given node model.
+	 * This will set everything but the formType and data
 	 */
-	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+	public final static BiFunction<FormModel, Form, Form> REST2NODE_BASEDATA = (restModel, form) -> {
 		if (StringUtils.isNotBlank(restModel.getExternalId())) {
 			form.setExternalId(restModel.getExternalId());
 		}
@@ -219,15 +239,30 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		if (restModel.getLanguages() != null) {
 			form.setLanguages(restModel.getLanguages());
 		}
-		if (restModel.getData() != null) {
-			form.updateData(restModel.getData());
-		}
+		return form;
+	};
+
+	/**
+	 * Function that transforms the rest model into the given node model
+	 */
+	public final static BiFunction<FormModel, Form, Form> REST2NODE = (restModel, form) -> {
+		REST2NODE_BASEDATA.apply(restModel, form);
+
 		if (restModel.getFormType() != null) {
 			form.setFormType(restModel.getFormType());
+		}
+		if (restModel.getData() != null) {
+			FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+			form.updateData(FormTransformer.transformToInternalLanguageCodes(config, restModel.getData().deepCopy()));
 		}
 
 		return form;
 	};
+
+	/**
+	 * Required key of the translations custom tool
+	 */
+	public final static String TRANSLATIONS_CUSTOM_TOOL_KEY = "form_translations";
 
 	@Override
 	@GET
@@ -334,11 +369,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				if (form.getLanguages() != null) {
 					// check whether the languages are all activated for the node
-					checkLanguages(node, form.getLanguages());
+					checkLanguages(node, update.getFormType(), form.getLanguages());
 				}
 
-				form.setFormType(null);
-				update = REST2NODE.apply(form, t.getObject(update, true));
+				update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+				FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+				handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
 				update.save();
 
 				FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
@@ -347,6 +383,12 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				trx.success();
 				return response;
 			} else {
+				// copy the ui-schema over to the old-ui-schema
+				JsonNode data = form.getData();
+				if (data instanceof ObjectNode dataObject) {
+					dataObject.set(FormDataUtils.OLD_UI_SCHEMA, dataObject.path(FormDataUtils.UI_SCHEMA));
+				}
+
 				// try to create the form
 				if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
 					throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
@@ -370,10 +412,19 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				checkFormType(node, form.getFormType());
 
 				// check whether the languages are all activated for the node
-				checkLanguages(node, form.getLanguages());
+				checkLanguages(node, form.getFormType(),form.getLanguages());
 
 				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
 				nodeForm.setFolderId(folder.getId());
+
+				if (StringUtils.isNotBlank(nodeForm.getExternalId())) {
+					JsonNode uiSchema = nodeForm.getData().path(FormDataUtils.UI_SCHEMA);
+					JsonNode schema = nodeForm.getData().path(FormDataUtils.SCHEMA);
+
+					String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+					nodeForm.setExternalHash(currentExternalHash);
+				}
+
 				nodeForm.save();
 
 				FormResponse response = new FormResponse(TRANSFORM2REST.apply(nodeForm.reload()),
@@ -413,7 +464,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			if (form.getLanguages() != null) {
 				// check whether the languages are all activated for the node
-				checkLanguages(node, form.getLanguages());
+				checkLanguages(node, update.getFormType(), form.getLanguages());
 			}
 
 			form.setFormType(null);
@@ -702,7 +753,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				}
 
 				// check whether the languages are all activated for the node
-				checkLanguages(targetNode, form.getLanguages());
+				checkLanguages(targetNode, form.getFormType(),form.getLanguages());
 
 				// check whether the form type is activated for the node
 				checkFormType(targetNode, form.getFormType());
@@ -845,6 +896,30 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				return mp.get(uriBuilder -> {
 					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field);
+				}, requestBuilder -> {
+					requestBuilder.addHeader("Accept", "application/zip");
+				});
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("{id}/data/{dataId}/binary/{field}/{index}")
+	@Produces({ "*/*" })
+	public Response downloadDataMultivalueBinaryField(@PathParam("id") String formId, @PathParam("dataId") String dataId,
+			@PathParam("field") String field, @PathParam("index") int index) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			Form form = load(Form.class, formId);
+			checkReportingPermission(form);
+			ContentRepository cr = getMeshCrForPreview(form);
+
+			try (MeshPublisher mp = new MeshPublisher(cr)) {
+				String projectName = MeshPublisher.getMeshProjectName(form.getOwningNode());
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				return mp.get(uriBuilder -> {
+					uriBuilder.segment(projectName, "plugins", "forms", "forms", uuid, "data", dataId, "binary", field, Integer.toString(index));
 				}, requestBuilder -> {
 					requestBuilder.addHeader("Accept", "application/zip");
 				});
@@ -1062,6 +1137,128 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	}
 
 	@Override
+	@GET
+	@Path("/translations")
+	public FormGenTranslationsResponse getGlobalTranslations() throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/translations")
+	public FormGenTranslationsResponse saveGlobalTranslations(FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(false), translations);
+			FormConfigProvider.storeFormGenTranslations(diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse getFormTypeTranslations(@PathParam("type") String type) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(translations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/types/{type}/translations")
+	public FormGenTranslationsResponse saveFormTypeTranslations(@PathParam("type") String type,
+			FormGenTranslations translations) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+			getFormTypeConfiguration(type);
+
+			FormGenTranslations diff = FormConfigProvider.diff(FormConfigProvider.getFormGenTranslations(type, false), translations);
+			FormConfigProvider.storeFormGenTranslations(type, diff);
+
+			FormGenTranslations newTranslations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			trx.success();
+			return new FormGenTranslationsResponse(newTranslations, ResponseInfo.ok(""));
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/types/{type}/translations/{code}")
+	public FormGenTranslationsForLanguage getFormTypeTranslationsForLanguage(@PathParam("type") String type, @PathParam("code") String code) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FormTypeConfiguration config = getFormTypeConfiguration(type);
+			FormGenTranslations translations = FormConfigProvider.getFormGenTranslations(type, true);
+
+			// if a language mapping exists, make sure to transform the language code to the internal version
+			if (MapUtils.isNotEmpty(config.languageMapping)) {
+				code = config.languageMapping.getOrDefault(code, code);
+				translations = FormTransformer.transformToInternalLanguageCodes(config, translations.clone());
+			}
+
+			final String finalCode = code;
+			FormGenTranslationsForLanguage response = new FormGenTranslationsForLanguage();
+			response.putAll(translations.entrySet().stream()
+					.map(entry -> Pair.of(entry.getKey(), entry.getValue().get(finalCode)))
+					.filter(pair -> StringUtils.isNotBlank(pair.getValue()))
+					.collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/translations/languages")
+	public LanguageList getTranslationLanguages(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			checkTranslationsPermission();
+
+			// get all nodes with the FORMS feature active the user can see 
+			List<Node> nodes = new ArrayList<>(trx.getTransaction().getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDS)));
+			AndFilter nodeFilter = new AndFilter();
+			nodeFilter.addFilter(PermissionFilter.get(ObjectPermission.view));
+			nodeFilter.addFilter(NodeFeatureFilter.get(Feature.FORMS));
+			nodeFilter.filter(nodes);
+
+			// collect all languages of the remaining nodes
+			Set<ContentLanguage> languages = new HashSet<>();
+			for (Node node : nodes) {
+				languages.addAll(node.getLanguages());
+			}
+
+			LanguageList response = ListBuilder.from(languages, ContentLanguage.TRANSFORM2REST)
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "code"))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "code"))
+					.page(paging).to(new LanguageList());
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
 	@DELETE
 	@Path("/nodes/{nodeId}/types/{type}")
 	public GenericResponse removeFormTypeConfigurationsFromNode(@PathParam("nodeId") String nodeId, @PathParam("type") String type) throws NodeException {
@@ -1117,10 +1314,14 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * Check whether the requested languages exist and are assigned to the node
 	 *
 	 * @param node      node
+	 * @param formType form type
 	 * @param languages requested languages
 	 * @throws NodeException
 	 */
-	protected void checkLanguages(Node node, List<String> languages) throws NodeException {
+	protected void checkLanguages(Node node, String formType, List<String> languages) throws NodeException {
+		FormTypeConfiguration config = getFormTypeConfiguration(formType);
+		FormTransformer.transformToInternalLanguageCodes(config, languages);
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		List<ContentLanguage> all = t.getObjects(ContentLanguage.class,
 				DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS));
@@ -1179,6 +1380,47 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				form.getFolderId(), PermType.formreport.getBit())) {
 			throw new InsufficientPrivilegesException(
 					I18NHelper.get("form.nopermission", Integer.toString(form.getId())), form, PermType.formreport);
+		}
+	}
+
+	/**
+	 * Get the custom tool for handling the translations as optional
+	 * @return optional custom tool
+	 */
+	protected Optional<CustomTool> getCustomFormTranslationsTool() {
+		Collection<?> customTools = ObjectTransformer.getCollection(
+				NodeConfigRuntimeConfiguration.getPreferences().getPropertyObject("custom_tools"),
+				Collections.emptyList());
+		return customTools.stream().map(o -> {
+			if (o instanceof Map) {
+				return ModelBuilder.getCustomTool((Map<?, ?>) o);
+			} else {
+				return null;
+			}
+		}).filter(tool -> tool != null).filter(tool -> Strings.CI.equals(tool.getKey(), TRANSLATIONS_CUSTOM_TOOL_KEY))
+				.findFirst();
+	}
+
+	/**
+	 * Check whether the custom tool for handling translations is configured and if the user has permission on it
+	 * @throws EntityNotFoundException if the custom tool is not configured
+	 * @throws InsufficientPrivilegesException if the user has no permission on the custom tool
+	 * @throws NodeException
+	 */
+	protected void checkTranslationsPermission() throws EntityNotFoundException, InsufficientPrivilegesException, NodeException {
+		CustomTool customTool = getCustomFormTranslationsTool().orElseThrow(() -> new EntityNotFoundException(
+				I18NHelper.get("custom_tool.notfound", TRANSLATIONS_CUSTOM_TOOL_KEY)));
+
+		PermHandler permHandler = TransactionManager.getCurrentTransaction().getPermHandler();
+
+		boolean admin = permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_VIEW)
+				&& permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOLS, null, PermHandler.PERM_CHANGE_PERM);
+
+		if (!admin && !permHandler.checkPermissionBit(PermHandler.TYPE_CUSTOM_TOOL, customTool.getId(),
+				PermHandler.PERM_VIEW)) {
+			throw new InsufficientPrivilegesException(
+					I18NHelper.get("custom_tool.nopermission", I18NHelper.get(customTool.getName())), null,
+					PermType.read);
 		}
 	}
 
@@ -1281,7 +1523,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 	 * @return configuration
 	 * @throws EntityNotFoundException
 	 */
-	protected FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
+	protected static FormTypeConfiguration getFormTypeConfiguration(String type) throws EntityNotFoundException {
 		FormTypeConfiguration config = FormConfigProvider.getConfig().get(type);
 
 		if (config == null) {
@@ -1289,5 +1531,36 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 		}
 
 		return config;
+	}
+
+	/**
+	 * Generate and set the external hash
+	 * @param form form
+	 * @param newData new data
+	 * @throws NodeException
+	 */
+	protected void handleUiSchemaMerge(Form form, JsonNode newData) throws NodeException {
+		if (Optional.ofNullable(newData).map(JsonNode::isNull).orElse(true)) {
+			return;
+		}
+		JsonNode copy = newData.deepCopy();
+		ObjectNode uiSchema = copy.withObjectProperty(FormDataUtils.UI_SCHEMA);
+		ObjectNode schema = copy.withObjectProperty(FormDataUtils.SCHEMA);
+		ObjectNode oldData = form.getData().deepCopy();
+
+		String currentExternalHash = DigestUtils.sha1Hex(schema.toString().concat(uiSchema.toString()));
+		String previousExternalHash = form.getExternalHash();
+
+		if (!Strings.CI.equals(currentExternalHash, previousExternalHash)) {
+			ObjectNode merged = new FormTransformer().mergeUiSchemaAndFormGrid(
+					getFormTypeConfiguration(form.getFormType()), oldData.withObjectProperty(FormDataUtils.OLD_UI_SCHEMA), uiSchema,
+					oldData.withObjectProperty(FormDataUtils.UI_SCHEMA));
+
+			oldData.set(FormDataUtils.SCHEMA, schema);
+			oldData.set(FormDataUtils.UI_SCHEMA, merged);
+			oldData.set(FormDataUtils.OLD_UI_SCHEMA, uiSchema);
+			form.setExternalHash(currentExternalHash);
+			form.setData(oldData);
+		}
 	}
 }

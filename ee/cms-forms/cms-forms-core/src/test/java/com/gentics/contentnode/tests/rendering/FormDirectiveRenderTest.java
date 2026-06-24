@@ -35,6 +35,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -117,60 +118,71 @@ public class FormDirectiveRenderTest {
 	static {
 		String key = "default";
 
+		String preview = "\n"
+				+ "<script>window.formPreviewData = {\n"
+				+ "  \"formId\" : %d,\n"
+				+ "  \"formType\" : \"generic\",\n"
+				+ "  \"uiSchema\" : null,\n"
+				+ "  \"cmsSid\" : %d,\n"
+				+ "  \"language\" : \"%s\"\n"
+				+ "};\n"
+				+ "</script>\n"
+				+ "<div id=\"root\" tabindex=\"0\" data-formID=\"%s\" data-culture=\"%s\" data-plugin-name=\"forms\"></div>";
+
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form)");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form}}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language }</eval>");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "id";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form.target.id)");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form.target.id}}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language }</eval>");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "string";
 		VTL_TEMPLATES.put(key, "#gtx_form(\"$cms.tag.parts.form\")");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form}}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language }</eval>");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "noform";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form, {\"noForm\": \"No Form\"})");
 		HBS_TEMPLATES.put(key, "{{#gtx_form cms.tag.parts.form}}{{{this}}}{{else}}No Form{{/gtx_form}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language }</eval>");
 		EXPECTED_NOFORM.put(key, "No Form");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "php";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form, {\"type\": \"php\"})");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form type=\"php\"}}}");
 		EXPECTED_PUBLISHED.put(key, "@renderForm('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => 'forms', 'language' => $node['language']])");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "span";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form, {\"previewRoot\": \"span\"})");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form previewRoot=\"span\"}}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language }</eval>");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<span data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></span>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "resultsJava";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form, {\"showResults\": true})");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form showResults=true}}}");
 		EXPECTED_PUBLISHED.put(key, "<eval>{ renderForm \"%s\" pluginName=\"forms\" language=data.node.language showResults=true }</eval>");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 
 		key = "resultsPhp";
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form, {\"type\": \"php\", \"showResults\": true})");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form type=\"php\" showResults=true}}}");
 		EXPECTED_PUBLISHED.put(key, "@renderForm('%s', [$formsCookie['key'] => $formsCookie['value'], 'pluginName' => 'forms', 'language' => $node['language'], 'showResults' => true])");
 		EXPECTED_NOFORM.put(key, "");
-		EXPECTED_PREVIEW.put(key, "<div data-gcn-formid=\"%d\" data-gcn-formlanguage=\"%s\" class=\"gcn-form-preview\"></div>");
+		EXPECTED_PREVIEW.put(key, preview);
 	}
 
 	/**
@@ -373,6 +385,7 @@ public class FormDirectiveRenderTest {
 				// JSON and the order of the properties might vary on different systems)
 				Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
 				content = pattern.matcher(content).replaceAll("");
+				content = content.replaceAll("\r\n", "\n");
 
 				assertThat(renderResult.getReturnCode()).as("Render result").isEqualTo("OK");
 				assertThat(content).as("Rendered content").isEqualTo(getExpectedContent("vtl_form"));
@@ -396,6 +409,7 @@ public class FormDirectiveRenderTest {
 				// JSON and the order of the properties might vary on different systems)
 				Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
 				content = pattern.matcher(content).replaceAll("");
+				content = content.replaceAll("\r\n", "\n");
 
 				assertThat(renderResult.getReturnCode()).as("Render result").isEqualTo("OK");
 				assertThat(content).as("Rendered content").isEqualTo(getExpectedContent("hbs_form"));
@@ -420,7 +434,10 @@ public class FormDirectiveRenderTest {
 				renderedTag = supply(() -> String.format(EXPECTED_PUBLISHED.get(templateCode), MeshPublisher.getMeshUuid(form)));
 				break;
 			default:
-				renderedTag = String.format(EXPECTED_PREVIEW.get(templateCode), form.getId(), language);
+				int sid = TransactionManager.getCurrentTransaction().getSession().getSessionId();
+				String uuid = MeshPublisher.getMeshUuid(form);
+
+				renderedTag = EXPECTED_PREVIEW.get(templateCode).formatted(form.getId(), sid, language, uuid, language);
 				break;
 			}
 		}

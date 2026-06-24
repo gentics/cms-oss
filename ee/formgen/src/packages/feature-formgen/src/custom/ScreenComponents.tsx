@@ -6,4 +6,5 @@ export const ScreenComponents: { [key: string]: any} = {
   SummaryScreen: Component.SummaryScreen,
   PaymentScreen: Component.PaymentScreen,
   SuccessScreen: Component.SuccessScreen,
+  OptionalRedirectScreen: Component.OptionalRedirectScreen,
 };

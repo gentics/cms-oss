@@ -4,10 +4,8 @@ import {
   FormState,
   IFormGridOptions,
   IFormComponentAttributes,
-  IDataFieldProperties,
   SummaryOptions,
   IBinary,
-  CommonValidation,
   IBinaryFile,
   BinarySource,
 } from '../../../../types/interfaces';
@@ -15,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { binaryElementStyles } from '../../../../styles/common/common-style';
 import { binaryElementStyles as customBinaryElementStyles } from '../../../../styles/custom/custom-style';
 import { TFunction } from 'i18next';
-import * as validationUtils from '../../../../utils/ValidationUtils';
+import * as BinaryValidationUtils from '../../../../utils/BinaryValidationUtils';
 import * as formEventsUtils from '../../../../utils/FormEventsUtils';
 import * as utils from '../../../../utils/Utils';
 import { SummaryElement } from '../../helper/SummaryElement';
@@ -25,8 +23,12 @@ import { mergeStyles } from '@andp/core/src/AndpUtils';
 import { RestService } from '../../../../services/RestService';
 import FileCard from './parts/FileCard/FileCard.web';
 import * as DocumentPicker from 'expo-document-picker';
-import { DocumentPickerAsset } from 'expo-document-picker';
+
 import { v4 as uuidv4 } from 'uuid';
+import { IOverlayFullScreenTextEnum } from '../../../../constants/enums/IOverlayFullScreenTextEnum';
+import { OverlayTypeEnum } from '../../../../custom/OverlayTypes';
+import * as overlayUtils from '../../../../utils/OverlayUtils';
+
 
 /**
  * In-memory per-field cache to keep local (unuploaded) files across unmount/remount
@@ -36,8 +38,6 @@ import { v4 as uuidv4 } from 'uuid';
 type BinaryFileWithUid = IBinaryFile & { uid: string };
 
 const binaryLocalCache: Map<string, BinaryFileWithUid[]> = new Map();
-
-
 
 function BinaryElement(props: IFormComponentAttributes) {
   const { t } = useTranslation();
@@ -142,21 +142,22 @@ function BinaryElement(props: IFormComponentAttributes) {
     name?.split('.').pop()?.toLowerCase() ?? '';
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value) return 'local';
-    if (String(b.value).startsWith('mesh:')) return 'mesh';
-    if (String(b.value).startsWith('mesh(not uploaded yet)')) return 'local';
-    return 'actanova';
+    if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
+    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
+    return BinarySource.LOCAL;
   };
 
   const makeBinaryFromFile = (file: File): IBinary => ({
     fileName: file.name,
-    type: readExt(file.name),
+    type: file.type,
+    ext: readExt(file.name),
     uri: URL.createObjectURL(file),
     value: '',
   });
 
   const toIBinaryFileFromServer = (formFile: IBinary): BinaryFileWithUid => {
-    const fileType = readExt(formFile.fileName || '');
+    const fileExt = readExt(formFile.fileName || '');
     const source = classifySource(formFile);
     const withUri: IBinary = {
       ...formFile,
@@ -170,13 +171,15 @@ function BinaryElement(props: IFormComponentAttributes) {
             200
           )
           : formFile.uri,
-      type: fileType,
+      ext: fileExt,
+      type: formFile.type ?? ''
     };
     return {
       binary: withUri,
       file: null,
       source,
-      fileType,
+      fileExt: fileExt,
+      mimeType: formFile.type ?? '',
       uid: uuidv4(),
     };
   };
@@ -185,6 +188,27 @@ function BinaryElement(props: IFormComponentAttributes) {
   const getFileKey = (it: BinaryFileWithUid): string => {
     return it.uid;
   };
+
+  async function addFiles(rawFiles: File[], ctx: typeof latestRef.current) {
+    const filesToAdd = ctx.isList ? rawFiles : [rawFiles[0]];
+
+    await formEventsUtils.handleBinaryAdd(
+      ctx.formState, ctx.uiState, ctx.jsonpath, ctx.id,
+      ctx.updateState, ctx.restService, filesToAdd,
+      ctx.isLoggedIn, ctx.formGridOptions, ctx.editable,
+    );
+
+    const additions: BinaryFileWithUid[] = filesToAdd.map((f) => ({
+      binary: makeBinaryFromFile(f),
+      file: f,
+      source: BinarySource.LOCAL,
+      fileExt: readExt(f.name),
+      mimeType: f.type,
+      uid: uuidv4(),
+    }));
+
+    setFiles((prev) => ctx.isList ? [...prev, ...additions] : additions);
+  }
 
 
   useEffect(() => {
@@ -221,32 +245,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       const dropped = Array.from(e.dataTransfer?.files ?? []);
       if (!dropped.length) return;
 
-      // In single-file mode, only keep the latest file and replace previous selection
-      const files = current.isList ? dropped : [dropped[0]];
-
-      formEventsUtils.handleBinaryAdd(
-        current.formState,
-        current.uiState,
-        current.jsonpath,
-        current.id,
-        current.updateState,
-        current.restService,
-        files,
-        current.isLoggedIn,
-        current.formGridOptions,
-        current.editable,
-      );
-
-      const additions: BinaryFileWithUid[] = files.map((f) => ({
-        binary: makeBinaryFromFile(f),
-        file: f,
-        source: 'local',
-        fileType: readExt(f.name),
-        uid: uuidv4(),
-      }));
-
-      // Append in list mode, replace in single-file mode
-      setFiles((prev) => (current.isList ? [...prev, ...additions] : additions));
+      await addFiles(dropped, current);
     };
 
     const onDragLeave = () => setIsDragOver(false);
@@ -280,8 +279,16 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
+      // allValueNames includes both server-confirmed entries and local placeholders
+      // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
+      // props.value — e.g. because the upload failed and the state was rolled back —
+      // the card is removed from the UI automatically.
+      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
       const remainingLocals = prev.filter(
-        (x) => x.source === 'local' && !serverNames.has(x.binary.fileName),
+        (x) =>
+          x.source === BinarySource.LOCAL &&
+          !serverNames.has(x.binary.fileName) &&
+          allValueNames.has(x.binary.fileName),
       );
       return [...serverList, ...remainingLocals];
     });
@@ -314,9 +321,9 @@ function BinaryElement(props: IFormComponentAttributes) {
   const renderItems = files.map((item, index) => {
     const key = getFileKey(item);
     let binaryLink = "";
-    if (item.source == "local") {
+    if (item.source === BinarySource.LOCAL) {
       binaryLink = item.binary.uri || "";
-    } else if (item.source == "mesh") {
+    } else if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,
         item.binary.value,
@@ -329,8 +336,10 @@ function BinaryElement(props: IFormComponentAttributes) {
         key={key}
         t={props.t}
         file={item}
-        onLink={() => Linking.openURL(binaryLink)}
-        showDownload={(binaryLink !== '' && props.formState.isLoggedIn)}
+        onLink={() => {
+          Linking.openURL(binaryLink);
+        }}
+        showDownload={(binaryLink !== '')}
         onRemove={async () => {
           await formEventsUtils.handleBinaryDelete(
             props.formState,
@@ -364,6 +373,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       localErrorMsg={localErrMsg}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View ref={dropRef}>
         <View ref={elementRef}>
@@ -397,25 +407,18 @@ function BinaryElement(props: IFormComponentAttributes) {
               files.length > 0 && styles.fileChooserWithFiles,
             ]}
             onPress={async () => {
+              overlayUtils.setOverlay(
+                latestRef.current.uiState,
+                props.formState,
+                OverlayTypeEnum.FULL_SCREEN_LOADING,
+                latestRef.current.updateState,
+                { loadingText: IOverlayFullScreenTextEnum.FileUploadClientProcess },
+              );
               const newFiles = await onBinaryPress(props);
+              overlayUtils.hideOverlay(latestRef.current.uiState, latestRef.current.updateState);
+
               if (newFiles && newFiles.length > 0) {
-                setFiles((prev) => {
-                  const additions: BinaryFileWithUid[] = [];
-                  for (const f of newFiles) {
-                    additions.push({
-                      binary: makeBinaryFromFile(f),
-                      file: f,
-                      source: 'local',
-                      fileType: readExt(f.name),
-                      uid: uuidv4(),
-                    });
-                  }
-                  // Single-file upload: replace previous selection
-                  if (!props.isList) {
-                    return additions.slice(0, 1);
-                  }
-                  return [...prev, ...additions];
-                });
+                await addFiles(newFiles, latestRef.current);
               }
             }}
             disabled={!props.editable}
@@ -454,141 +457,25 @@ function BinaryElement(props: IFormComponentAttributes) {
 }
 
 async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | null> {
-  // Open DocumentPicker
-  let pickerResult;
   try {
-    pickerResult = await DocumentPicker.getDocumentAsync({
+     
+    const pickerResult = await DocumentPicker.getDocumentAsync({
       type: '*/*',
       multiple: props.isList,
     });
+    if (pickerResult.canceled) return null;
 
-    if (pickerResult.canceled) {
-      return null;
-    }
-
-    const selectedFiles: DocumentPickerAsset[] = pickerResult.assets || [];
-
-    let filesToAdd: File[] = [];
-    selectedFiles.forEach((filePickerAsset, index) => {
-      if (filePickerAsset.file) {
-        filesToAdd.push(filePickerAsset.file);
-      }
-    });
-
-    // in single-file mode, only keep the first file
-    if (!props.isList && filesToAdd.length > 1) {
-      filesToAdd = [filesToAdd[0]];
-    }
-
-    formEventsUtils.handleBinaryAdd(
-      props.formState,
-      props.uiState,
-      props.jsonpath,
-      props.id,
-      props.updateState,
-      props.restService,
-      filesToAdd,
-      props.isLoggedIn,
-      props.formGridOptions,
-      props.editable,
-    );
-    return filesToAdd;
+    return (pickerResult.assets ?? [])
+      .filter((asset) => !!asset.file)
+      .map((asset) => asset.file!);
   } catch (error) {
     console.error('DocumentPicker error: ', error);
     return null;
   }
 }
 
-
-BinaryElement.validate = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  formGridOptions?: IFormGridOptions,
-  localValue?: any,
-): CommonValidation {
-  const commonResult: CommonValidation = validationUtils.commonValidate(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    formGridOptions,
-    localValue,
-  );
-  if (!commonResult.isValid) {
-    return commonResult;
-  }
-
-  const binaryIsValid = BinaryElement.validateBinary(
-    state,
-    jsonpath,
-    id,
-    updateErrorMessages,
-    t,
-    formGridOptions?.fileExtensionsNotAllowed,
-  );
-
-  if (!binaryIsValid) {
-    const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-    return {
-      isValid: false,
-      errorMessage: elemState?.validationMessage,
-    };
-  }
-  return { isValid: true };
-};
-
-/**
- * Binary-spezifische Validierung:
- * - Dateiendungen
- * - Dateigrößen
- */
-BinaryElement.validateBinary = function (
-  state: FormState,
-  jsonpath: string,
-  id: string,
-  updateErrorMessages: boolean,
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-): boolean {
-  const value = utils.getValue(state, jsonpath, id);
-  const elemState = utils.getElementByIdOrJsonPath(state.data, jsonpath, id);
-
-  if (
-    elemState &&
-    (value.fileName || (Array.isArray(value) && value[0]?.fileName))
-  ) {
-    if (
-      !BinaryElement.hasAllowedFileExtension(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-        fileExtensionsNotAllowed,
-      )
-    ) {
-      return false;
-    }
-    if (
-      !hasAllowedUploadSize(
-        state,
-        jsonpath,
-        elemState,
-        updateErrorMessages,
-        value,
-        t,
-      )
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-};
+BinaryElement.validateBinary = BinaryValidationUtils.validateBinary;
+BinaryElement.validate = BinaryValidationUtils.validate;
 
 /**
  * Zusammenfassungswert für die Summary-Anzeige
@@ -668,193 +555,5 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
     );
   }
 };
-
-/**
- * Hilfsfunktion, um zu erkennen, ob es sich um eine bereits in ActaNova
- * gespeicherte Datei handelt (dann müssen wir sie nicht erneut validieren).
- */
-function isActaNovaFile(file: IBinary) {
-  if (
-    !file.value ||
-    file.value === '' ||
-    file.value.startsWith('mesh:') ||
-    file.value.startsWith('mesh(not uploaded yet):')
-  ) {
-    return false;
-  }
-  return true;
-}
-
-BinaryElement.hasAllowedFileExtension = function (
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-  fileExtensionsNotAllowed?: string[],
-) {
-  const fileExtensionsAllowedDefault = formState.features
-    ?.feature_upload_constraints?.fileExtensionsAllowed
-    ? formState.features.feature_upload_constraints.fileExtensionsAllowed
-    : [];
-  // are there any file extensions restrictions?
-  // if so reduce the list of allowed extensions by default by the not allowed extensions
-  const allowedExtensions = fileExtensionsNotAllowed
-    ? fileExtensionsAllowedDefault.filter(
-      (extension) => fileExtensionsNotAllowed.indexOf(extension) === -1,
-    )
-    : fileExtensionsAllowedDefault;
-  let hasAllowedExtension = false;
-  // multi file upload
-
-  if (Array.isArray(value)) {
-    // loop through all files
-    // check if the filename ends with an allowed extension
-    for (let fileIndex = 0; fileIndex < value.length; fileIndex++) {
-      const file = value[fileIndex];
-      const currentFileName = file.fileName;
-      let isCurrentFileAllowed = false;
-      // acta nova files don't need to be checked
-      if (isActaNovaFile(value[fileIndex])) {
-        isCurrentFileAllowed = true;
-      } else {
-        for (let index = 0; index < allowedExtensions.length; index++) {
-          const currentFileExtension = allowedExtensions[index];
-          if (
-            currentFileName
-              .substr(
-                currentFileName.length - currentFileExtension.length,
-                currentFileExtension.length,
-              )
-              .toLowerCase() === currentFileExtension.toLowerCase()
-          ) {
-            isCurrentFileAllowed = true;
-            break;
-          }
-        }
-      }
-      // exit if there is one file with a not allowed extension
-      if (!isCurrentFileAllowed) {
-        hasAllowedExtension = false;
-        break;
-      } else {
-        hasAllowedExtension = true;
-      }
-    }
-    // now all files have been checked
-  } else {
-    // single file upload
-    // check if filename does not end with one of the allowed extensions
-    // acta nova files don't need to be checked
-    if (isActaNovaFile(value)) {
-      hasAllowedExtension = true;
-    } else {
-      hasAllowedExtension = allowedExtensions.some(
-        (currentFileExtension) =>
-          value.fileName
-            .substr(
-              value.fileName.length - currentFileExtension.length,
-              currentFileExtension.length,
-            )
-            .toLowerCase() === currentFileExtension.toLowerCase(),
-      );
-    }
-  }
-
-  if (!hasAllowedExtension && updateErrorMessages) {
-    elemState.validationMessage = `${t(
-      'form_fileTypeError',
-    )} ${allowedExtensions?.join(', ')}`;
-    utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-  }
-
-  return hasAllowedExtension;
-};
-
-/**
- * Check auf erlaubte Dateigröße (Einzel- und Gesamtgrößenbeschränkung)
- */
-function hasAllowedUploadSize(
-  formState: FormState,
-  jsonpath: string,
-  elemState: IDataFieldProperties,
-  updateErrorMessages: boolean,
-  value: IBinary | IBinary[],
-  t: TFunction,
-) {
-  // use config from feature if available or fall back to 5 MB per file / 20 MB overall
-  const maxSingleUploadSizeByte = formState.features?.feature_upload_constraints
-    ?.maxSizePerFile
-    ? formState.features.feature_upload_constraints.maxSizePerFile
-    : 5_242_880;
-  const maxMultipleUploadSizeByte = formState.features
-    ?.feature_upload_constraints?.maxSizeOverall
-    ? formState.features.feature_upload_constraints.maxSizeOverall
-    : 20_971_520;
-  const byteToMBFactor = 1_048_576; // 1024 * 1024
-  const maxSingleUploadSizeMB = Math.floor(
-    maxSingleUploadSizeByte / byteToMBFactor,
-  );
-  const maxMultipleUploadSizeMB = Math.floor(
-    maxMultipleUploadSizeByte / byteToMBFactor,
-  );
-
-  let sumSizes = 0;
-  let failedCheckForOneFile = false;
-
-  if (Array.isArray(value)) {
-    // multiple files
-    value.forEach((singleElement) => {
-      // only consider non-ActaNova files
-      if (!isActaNovaFile(singleElement)) {
-        if (singleElement.size) {
-          sumSizes = sumSizes + singleElement.size;
-          if (singleElement.size > maxSingleUploadSizeByte) {
-            if (updateErrorMessages) {
-              elemState.validationMessage = `${t(
-                'form_maxFileUploadSizeSingleError',
-              ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${singleElement.fileName
-                }`;
-            }
-            utils.setStateElementByJsonpath(
-              formState.data,
-              jsonpath,
-              elemState,
-            );
-            failedCheckForOneFile = true;
-            return false;
-          }
-        }
-      }
-    });
-    if (failedCheckForOneFile) return false;
-
-    // overall
-    if (sumSizes > maxMultipleUploadSizeByte) {
-      if (updateErrorMessages) {
-        elemState.validationMessage = `${t(
-          'form_maxFileUploadSizeMultipleError',
-        )}: ${maxMultipleUploadSizeMB} MB`;
-      }
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-      return false;
-    }
-  } else if (
-    // single file
-    !isActaNovaFile(value) &&
-    value.size &&
-    value.size > maxSingleUploadSizeByte
-  ) {
-    if (updateErrorMessages) {
-      elemState.validationMessage = `${t(
-        'form_maxFileUploadSizeSingleError',
-      ).replace('%size%', maxSingleUploadSizeMB.toString())}: ${maxMultipleUploadSizeMB} MB`;
-      utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
-    }
-    return false;
-  }
-  return true;
-}
 
 export default BinaryElement;

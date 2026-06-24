@@ -35,6 +35,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
@@ -214,7 +215,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 
 		control.settings = List.of(pageContentReference);
 
-		formsConfig.controls = Map.of("control", control);
+		formsConfig.controls = new Controls(Map.of("control", control));
 
 		formTypeConfiguration.put(FORM_TYPE, formsConfig);
 

@@ -1,0 +1,76 @@
+---
+- id: default
+  labelI18n:
+    de: Standard
+    en: Default
+  nameTranslationKey: formgen_flow_translation_key
+  steps:
+    - buttonLabelTranslationKey: form_flow_btn_form
+      reactClass: FormScreen
+      nameTranslationKey: form_flow_name_form
+      descriptionTranslationKey: form_flow_desc_form
+      buttons:
+        - reactClass: DetailInfoButton
+          labelTranslationKey: form_detailinfo
+          mobileDisabled: true
+        - reactClass: CancelButton
+          labelTranslationKey: form_cancel
+        - reactClass: PreviousPageButton
+          labelTranslationKey: form_previousPage
+        - reactClass: NextPageButton
+          labelTranslationKey: form_nextPage
+      variables: []
+    - buttonLabelTranslationKey: form_flow_btn_summary
+      reactClass: SummaryScreen
+      nameTranslationKey: form_flow_name_summary
+      descriptionTranslationKey: form_flow_desc_summary
+      buttons:
+        - reactClass: CancelButton
+          labelTranslationKey: form_cancel
+        - reactClass: PrintPdfButton
+          labelTranslationKey: form_print
+          mobileDisabled: true
+        - reactClass: PreviousPageButton
+          labelTranslationKey: form_previousPage
+        - reactClass: NextPageButton
+          labelTranslationKey: form_nextPage
+        - reactClass: SubmitButton
+          labelTranslationKey: form_submit
+      variables:
+        - name: showDetails
+          value: true
+    - buttonLabelTranslationKey: form_flow_btn_success
+      reactClass: SuccessScreen
+      nameTranslationKey: form_flow_name_success
+      descriptionTranslationKey: form_flow_desc_success
+      buttons: []
+      variables: []
+- id: no_summary
+  labelI18n:
+    de: Ohne Zusammenfassung Forms
+    en: Without Summary Forms
+  nameTranslationKey: formgen_flow_translation_key
+  steps:
+    - buttonLabelTranslationKey: form_flow_btn_form
+      reactClass: FormScreen
+      nameTranslationKey: form_flow_name_form
+      descriptionTranslationKey: form_flow_desc_form
+      buttons:
+        - reactClass: DetailInfoButton
+          labelTranslationKey: form_detailinfo
+          mobileDisabled: true
+        - reactClass: CancelButton
+          labelTranslationKey: form_cancel
+        - reactClass: PreviousPageButton
+          labelTranslationKey: form_previousPage
+        - reactClass: NextPageButton
+          labelTranslationKey: form_nextPage
+        - reactClass: SubmitButton
+          labelTranslationKey: form_submit
+      variables: []
+    - buttonLabelTranslationKey: form_flow_btn_success
+      reactClass: SuccessScreen
+      nameTranslationKey: form_flow_name_success
+      descriptionTranslationKey: form_flow_desc_success
+      buttons: []
+      variables: []

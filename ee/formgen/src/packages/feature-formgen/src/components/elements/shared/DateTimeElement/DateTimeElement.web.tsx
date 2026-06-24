@@ -22,11 +22,12 @@ import {
   validate as dateTimeValidate,
   getSummaryValue as dateTimeGetSummaryValue,
 } from './DateTimeValidate';
+import Datetime from 'react-datetime';
 
 import 'moment/locale/de';
 import 'moment/locale/fr';
 import 'moment/locale/it';
-const Datetime = require('react-datetime').default;
+
 require('../../../../styles/common/common-datepicker.css');
 require('../../../../styles/custom/custom-datepicker.css');
 require('react-datetime/css/react-datetime.css');
@@ -375,9 +376,9 @@ function DateTimeElement(props: IFormComponentAttributes) {
       returnKeyType="done"
       placeholderTextColor={
         props.error
-          ? commonColors.error
+          ? styles.placeholderLabelError.color
           : !props.value
-          ? commonColors.mutedText
+          ? styles.dropdownPlaceholderLabel.color
           : theme.colors.textPrimary
       }
       style={[
@@ -454,19 +455,17 @@ function DateTimeElement(props: IFormComponentAttributes) {
       hideAnFieldLoadErrorIcon
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View ref={inputContainerRef}>
         <Animated.Text
           style={[
             styles.datePickerLabel,
-            Platform.select({
-              web: {
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              },
-              default: null,
-            }),
+            {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            },  
             placeholderAnimatedStyle,
             placeholderTextAnimatedStyle,
             props.error && props.editable && styles.errorDatePickerLabel,
@@ -486,6 +485,11 @@ function DateTimeElement(props: IFormComponentAttributes) {
                   <div
                     ref={portalRef}
                     className="rdt custom-datetime rdtOpen"
+                    // Verhindert, dass der Input bei mousedown im Kalender den
+                    // Fokus verliert. Sonst würde onBlur setOpen(false) auslösen
+                    // und den Portal-Kalender unmounten, BEVOR der click/onChange
+                    // des Tages feuert (mousedown läuft vor click).
+                    onMouseDown={(e) => e.preventDefault()}
                     style={{
                       top: anchor.y + anchor.height,
                       left: anchor.x,
@@ -531,18 +535,5 @@ const DateTimeElementWithStatics =
 
 DateTimeElementWithStatics.validate = dateTimeValidate;
 DateTimeElementWithStatics.getSummaryValue = dateTimeGetSummaryValue;
-
-/* -------------------------------------------------------------------- */
-/* constants + styles                                                   */
-/* -------------------------------------------------------------------- */
-const commonColors = {
-  error: '#dc0018',
-  errorBackground: '#fcedef',
-  darkText: '#333333',
-  mutedText: theme.colors.textMuted,
-  loadingText: '#666666',
-  backgroundPrimary: theme.colors.backgroundPrimary,
-  borderColor: theme.border.color.darkGray,
-};
 
 export default DateTimeElementWithStatics;

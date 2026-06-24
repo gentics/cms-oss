@@ -117,7 +117,7 @@ function ANDropDownReferenceElement(props: IFormComponentAttributes) {
     updateValue(props.isList ? [] : null);
   };
 
-  const labelText = utils.getI18nText(props.formState, props.label);
+  const labelText = utils.getI18nText(props.formState, props.label) + (props.required ? ' *' : '');  
   const placeholderText = !props.isList && utils.isFilled(props.value)
     ? props.value.displayName
     : (props.isList && selectedValues.length > 0 ? '' : utils.getI18nText(props.formState, props.label) + (props.required ? ' *' : ''));
@@ -189,6 +189,7 @@ function ANDropDownReferenceElement(props: IFormComponentAttributes) {
       localErrorMsg={hasErrors || ""}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      selectedElementId={props.selectedElementId}
     >
       <View ref={containerRef as any} style={{ zIndex: 10 }}>
         <BaseDropDownInputElement

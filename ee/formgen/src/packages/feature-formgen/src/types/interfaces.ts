@@ -391,7 +391,7 @@ export interface CaptchaConfig {
 export interface RawCaptchaConfig {
   provider: 'friendly' | 'recaptcha';
   sitekey: string;
-  mode: string;
+  mode: FriendlyCaptchaMode | reCaptchaMode;
   baseUrl?: string;
   language?: string;
 };

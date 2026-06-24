@@ -11,7 +11,7 @@ import {
     signal,
     ViewChild,
 } from '@angular/core';
-import { FormPropertyData, FormSchema, FormUISchema } from '@gentics/cms-models';
+import { FormFlow, FormPropertyData, FormSchema, FormTypeConfiguration, FormUISchema } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 interface IFeatures {
@@ -31,6 +31,9 @@ interface IFeatureUploadConstraintOptions {
 type FormgridPreviewData = {
     formId: string;
     formType: string;
+    pluginName: string;
+    flowId: string;
+    flows: FormFlow[];
     schema: FormSchema;
     uiSchema: FormUISchema;
     language: string;
@@ -46,6 +49,9 @@ type FormgridPreviewData = {
  */
 interface PreviewInformation {
     formType: string;
+    pluginName: string;
+    flowId: string;
+    flows: FormFlow[];
     features: IFeatures;
     availableLanguages: string[];
     cmsSid?: number;
@@ -155,6 +161,9 @@ export class FormPreviewComponent implements AfterViewInit {
 
     public readonly formId = input.required<number>();
     public readonly formType = input.required<string>();
+    public readonly config = input.required<FormTypeConfiguration>();
+    public readonly flowId = input.required<string>();
+
     public readonly schema = input.required<FormSchema>();
     public readonly uiSchema = input.required<FormUISchema>();
     public readonly languages = input.required<string[]>();
@@ -286,6 +295,9 @@ export class FormPreviewComponent implements AfterViewInit {
                     currentPage: this.pageIndex(),
                     formId: `${this.formId()}`,
                     formType: this.formType(),
+                    pluginName: this.config().pluginName,
+                    flowId: this.flowId(),
+                    flows: this.config().flows,
                     selectedElementId: this.selectedElementId(),
                     prefillContent: this.prefill(),
                     cmsSid: this.client.getClient().sid as number,
@@ -318,6 +330,10 @@ export class FormPreviewComponent implements AfterViewInit {
                             language: this.activeLanguage(),
                             formId: `${this.formId()}`,
                             formType: this.formType(),
+                            pluginName: this.config().pluginName,
+                            flowId: this.flowId(),
+                            flows: this.config().flows,
+
                             cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),

@@ -34,15 +34,7 @@ h4. REST API Interactions
 
 Since custom implementations often times need to load data from the CMS, multiple ways to directly interact with the CMS REST API are provided.
 
-First are general purpose functions to perform generic @GET@, @POST@, and @DELETE@ requests:
-
-* @restRequestGET@
-* @restRequestPOST@
-* @restRequestDELETE@
-
-These are useful for calls to a custom proxy or for endpoints which aren't included in the rest-client.
-
-The most convenient way to use the REST API, is via the provided @restClient@ (CMS v6.1+), which has appropiate functions and typings for various endpoints.
+The most convenient way to use the REST API, is via the provided @restClient@, which has appropriate functions and typings for various endpoints.
 Please see the @@gentics/cms-rest-client@ package for more information.
 
 Please note, that the GCNJS-API which is also available, is deprecated and should be replaced with calls from the UI Bridge instead.

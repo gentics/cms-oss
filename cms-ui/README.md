@@ -5,7 +5,7 @@ Management is done via [NX](https://nx.dev) but is also partially integrated wit
 
 ## Package repository settings
 
-Authentification for the UI packages is only needed, if you wish to access restriced ones or if you want to publish packages.
+Authentication for the UI packages is only needed, if you wish to access restricted ones or if you want to publish packages.
 If you only want to develop/build the UIs, you can skip this step entirely.
 
 Since our repository doesn't authenticate with the NPM Tokens however, we need to create the auth value ourself and add the registry to the config manually:
@@ -150,7 +150,7 @@ npm run many -- --target=build
 **NX Command**: [`run-many`](https://nx.dev/nx-api/nx/documents/run-many)
 
 As already shown in the examples above, it's possible to run multiple targets and projects in one command.
-The most common use case is to run the builds and tests all at once and as many in paralell as possible:
+The most common use case is to run the builds and tests all at once and as many in parallel as possible:
 
 ```bash
 # Run the "build", "test", "component-test", and "e2e"/integration-tests targets for all applications/libraries
@@ -170,7 +170,7 @@ NX supports [tagging](https://nx.dev/nx-api/devkit/documents/ProjectConfiguratio
 Tags that are used in this Repository:
 
 * `lib`: A library
-* `models`: Only contains models/type defintions
+* `models`: Only contains models/type definitions
 * `angular`: Uses angular
 * `publish`: Project which can be published
 * `app`: An application
@@ -240,7 +240,24 @@ npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 
 **Readme**: [apps/ct-link-checker/README.md](apps/ct-link-checker/README.md)
 
+### Custom Tool: Form Translations
+
+**Name:**: ct-form-translations
+
+**Type:**: Application
+
+**Readme**: [apps/ct-form-translations/README.md](apps/ct-form-translations/README.md)
+
 ## Packages
+
+### Aloha Models
+
+**Name:** aloha-models
+
+**Type:** Library
+
+Models for Aloha-Editor, primarily used to integrate a custom UI with Aloha-Editor as backend.
+Therefore only a very small subset of models is actually provided.
 
 ### CMS Models
 
@@ -250,11 +267,23 @@ npm run nx -- g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 
 **Readme**: [libs/cms-models/README.md](libs/cms-models/README.md)
 
-This Angular workspace also contains a [library project](./libs/cms-models/) containing all CMS model types used in the Gentics CMS User Interface and the Gentics CMS Admin User Interface.
-The library is published on the Gentics interal Artifactory server and can be added to a project using `npm` after logging in.
-For details regarding this and the model types, please see the [README](./libs/cms-models/README.md) file.
+Models for the entire Gentics CMS REST API.
 
-To maintain compatibility with legacy code, the default `ModelType` for [normalizable interfaces](./libs/cms-models/README.md#normalizable-model-types), has been changed to `AnyModelType` when re-exporting the types from `common/models`.
+### CMS Integration API Models
+
+**Name:** cms-integration-api-models
+
+**Type:** Library
+
+Models for integrations with UI APIs, such as Custom Tools, Page Editing, and custom Tag-/Properties Editors.
+
+### Common
+
+**Name:** common
+
+**Type:** Library
+
+Small library which provides common utility functions which are frequently used in other libraries or apps in this monorepo.
 
 ### CMS Rest Clients
 
@@ -280,7 +309,7 @@ General purpose CMS Rest Client for TypeScript/JavaScript.
 
 **Name:** cms-rest-client-angular
 
-**Type:** Library
+**Type:** Angular Library
 
 **Readme**: [libs/cms-rest-client-angular/README.md](libs/cms-rest-client-angular/README.md)
 
@@ -290,12 +319,39 @@ Angular wrapper of the CMS Rest Client to work with it easier in angular project
 
 **Name**: ui-core
 
-**Type**: Library
+**Type**: Angular Library
 
 **Readme**: [libs/ui-core/README.md](libs/ui-core/README.md)
 
-Previously as [standalone project](https://github.com/gentics/gentics-ui-core/) available, now integrated in the Monorepo.
 Provides general purpose ui components to create custom applications.
+
+### Image Editor
+
+**Name:** image-editor
+
+**Type**: Angular Library
+
+**Readme**: [libs/image-editor/README.md](libs/image-editor/README.md)
+
+Angular library for simple image editing/manipulation. Used for editing images in the editor-ui.
+
+### CMS Components
+
+**Name:** cms-components
+
+**Type:** Angular Library
+
+**Readme**: [libs/cms-components/README.md](libs/cms-components/README.md)
+
+Extends the UI-Core and provides components, services, etc. which are Gentics CMS specific.
+
+### Form Grid
+
+**Name:** form-grid
+
+**Type:** Angular Library
+
+Angular library to manage editing of Gentics CMS forms.
 
 ### E2E Utils
 
@@ -305,7 +361,7 @@ Provides general purpose ui components to create custom applications.
 
 **Readme**: [libs/e2e-utils/README.md](libs/e2e-utils/README.md)
 
-A purely internal library which contains utils, commands, and assertions for playwright based tests.
+A purely internal library which contains utils for playwright based tests.
 
 ## Coding Style
 

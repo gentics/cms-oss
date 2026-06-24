@@ -1,7 +1,3 @@
-# image-editor
+# Image Editor
 
-This library was generated with [Nx](https://nx.dev).
-
-## Running unit tests
-
-Run `nx test image-editor` to execute the unit tests.
+Angular library to make simple edits images, like rotations, resizing, cropping, and setting focal points.

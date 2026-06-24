@@ -142,12 +142,13 @@ export class SearchBarComponent implements ControlValueAccessor {
             this.cvaTouch();
         }
 
-        this.query = (event.target as HTMLInputElement).value || '';
-
-        if (typeof event === 'string') {
-            this.cvaChange(event);
-            this.change.emit(event);
+        const newVal = (event.target as HTMLInputElement).value || '';
+        if (this.query === newVal) {
+            return;
         }
+        this.query = newVal;
+        this.cvaChange(newVal);
+        this.change.emit(newVal);
     }
 
     onInputBlur(event: string): void {

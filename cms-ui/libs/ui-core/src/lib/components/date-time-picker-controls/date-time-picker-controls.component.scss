@@ -1,7 +1,10 @@
 @import '../../../styles/base-import';
 
 @mixin compact-header() {
-    .month, .date, .year {
+
+    .month,
+    .date,
+    .year {
         display: inline-block;
         font-size: $gtx-font-size-regular;
         margin: 0 2px;
@@ -35,19 +38,22 @@
             padding: 5px;
             background-color: darken($secondary-color, 10%);
         }
+
         .month {
             text-transform: uppercase;
             color: white;
-            font-size: 24px;
+            font-size: 1.5rem;
         }
+
         .date {
             color: white;
-            font-size: 48px;
-            line-height: 48px;
+            font-size: 3rem;
+            line-height: 1;
         }
+
         .year {
             color: lighten($secondary-color, 30%);
-            font-size: 24px;
+            font-size: 1.5rem;
         }
 
         @media #{$small-and-down} {
@@ -63,20 +69,33 @@
 
     .year-selector {
         gtx-select::ng-deep {
-            .view-value {
-                color: lighten($secondary-color, 30%);
-                font-size: 24px;
-                padding-left: 28px;
-                border-color: transparent;
-                display: flex;
-                align-items: center;
-                icon {
-                    color: $gtx-color-off-white;
-                }
+            .box-wrapper {
+                border: none;
+            }
+
+            .box-content {
+                padding: 0;
             }
 
             gtx-dropdown-trigger {
                 margin-top: 0;
+
+                >.view-value {
+                    position: relative;
+                    display: flex;
+                    color: lighten($secondary-color, 30%);
+                    font-size: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    padding: 0;
+                    justify-content: center;
+
+                    icon {
+                        position: absolute;
+                        right: 0;
+                        color: $gtx-color-off-white;
+                    }
+                }
             }
         }
     }
@@ -92,26 +111,31 @@
     }
 
     .time-picker {
+        max-width: 300px;
+
         @media #{$medium-and-up} {
             margin-top: 20px;
         }
+
         &::ng-deep input[type=number] {
             text-align: center;
-            font-size: 24px;
-            height: 40px;
+            font-size: 1.5rem;
+            height: 1.5em;
+
             @media #{$small-and-down} {
-                font-size: 18px;
-                height: 34px;
+                font-size: 1.25rem;
             }
+
             /* remove the spinner arrows */
             &::-webkit-outer-spin-button,
             &::-webkit-inner-spin-button {
                 -webkit-appearance: none;
                 margin: 0;
             }
+
             // -moz-appearance:textfield;
 
-            & + label {
+            &+label {
                 text-align: center;
                 width: 100%;
             }
@@ -123,10 +147,11 @@
         text-align: center;
         border: none;
         background: transparent;
-        font-size: 24px;
+        font-size: 1.5rem;
         color: $secondary-color;
-        line-height: 16px;
+        line-height: 1;
         transition: background 0.2s;
+
         &:hover {
             background-color: transparentize($secondary-color, 0.5);
         }
@@ -142,10 +167,12 @@
                 padding-top: 10px;
             }
         }
+
         .time-picker {
             @media #{$medium-and-up} {
                 margin-top: 0;
             }
+
             input[type=number] {
                 font-size: 18px;
                 height: 34px;

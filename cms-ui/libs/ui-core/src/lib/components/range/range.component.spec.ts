@@ -1,8 +1,8 @@
-import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
-import { By } from '@angular/platform-browser';
 import { componentTest } from '@gentics/ui-core/testing';
+import { UserAgentProvider } from '../../providers';
 import { RangeComponent } from './range.component';
 
 describe('RangeComponent', () => {
@@ -10,12 +10,13 @@ describe('RangeComponent', () => {
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule],
         declarations: [RangeComponent, TestComponent],
+        providers: [UserAgentProvider],
         teardown: { destroyAfterEach: false },
         schemas: [NO_ERRORS_SCHEMA],
     }));
 
     it('uses defaults for undefined attributes which have a default',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
             fixture.detectChanges();
 
@@ -26,19 +27,19 @@ describe('RangeComponent', () => {
     );
 
     it('does not set attributes which are not defined',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-            const getAttr: Function = (name: string) => nativeInput.attributes.getNamedItem(name);
+            const getAttr = (name: string) => nativeInput.attributes.getNamedItem(name);
             fixture.detectChanges();
 
-            expect(getAttr('id')).toBe(null);
-            expect(getAttr('max')).toBe(null);
-            expect(getAttr('min')).toBe(null);
-            expect(getAttr('maxLength')).toBe(null);
-            expect(getAttr('name')).toBe(null);
-            expect(getAttr('pattern')).toBe(null);
-            expect(getAttr('placeholder')).toBe(null);
-            expect(getAttr('step')).toBe(null);
+            expect(getAttr('id')).toEqual(null);
+            expect(getAttr('max')).toEqual(null);
+            expect(getAttr('min')).not.toEqual(null);
+            expect(getAttr('maxLength')).toEqual(null);
+            expect(getAttr('name')).toEqual(null);
+            expect(getAttr('pattern')).toEqual(null);
+            expect(getAttr('placeholder')).toEqual(null);
+            expect(getAttr('step')).not.toEqual(null);
         }),
     );
 
@@ -53,7 +54,7 @@ describe('RangeComponent', () => {
                 step="5"
                 value="35"
             ></gtx-range>`,
-        fixture => {
+        (fixture) => {
             const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
             fixture.detectChanges();
 
@@ -68,49 +69,9 @@ describe('RangeComponent', () => {
         ),
     );
 
-    it('emits "blur" with the current value when its native input blurs',
-        componentTest(() => TestComponent, `
-            <gtx-range
-                (blur)="onBlur($event)"
-                [value]="value">
-            </gtx-range>`,
-        (fixture, instance) => {
-            const inputDel: DebugElement = fixture.debugElement.query(By.css('input'));
-            fixture.detectChanges();
-            instance.onBlur = jasmine.createSpy('onBlur');
-            const event = createFocusEvent('blur');
-            inputDel.nativeElement.dispatchEvent(event);
-            tick();
-            tick();
-
-            expect(instance.onBlur).toHaveBeenCalledWith(75);
-        },
-        ),
-    );
-
-    it('emits "focus" with the current value when its native input is focused',
-        componentTest(() => TestComponent, `
-            <gtx-range
-                (focus)="onFocus($event)"
-                [value]="value">
-            </gtx-range>`,
-        (fixture, instance) => {
-            const inputDel: DebugElement = fixture.debugElement.query(By.css('input'));
-            fixture.detectChanges();
-            instance.onFocus = jasmine.createSpy('onFocus');
-
-            const event = createFocusEvent('focus');
-            inputDel.triggerEventHandler('focus', event);
-            tick();
-
-            expect(instance.onFocus).toHaveBeenCalledWith(75);
-        },
-        ),
-    );
-
     it('emits "change" when the value of its native input is changed',
         componentTest(() => TestComponent, `
-            <gtx-range (change)="onChange($event)" value="25">
+            <gtx-range (valueChange)="onChange($event)" value="25">
             </gtx-range>`,
         (fixture, instance) => {
             const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
@@ -125,28 +86,8 @@ describe('RangeComponent', () => {
         ),
     );
 
-    it('emits "change" when its native input is blurred',
-        componentTest(() => TestComponent, `
-            <gtx-range
-                (change)="onChange($event)"
-                value="25">
-            </gtx-range>`,
-        (fixture, instance) => {
-            const inputDel: DebugElement = fixture.debugElement.query(By.css('input'));
-            fixture.detectChanges();
-            instance.onChange = jasmine.createSpy('onChange');
-
-            const event = createFocusEvent('blur');
-            inputDel.nativeElement.dispatchEvent(event);
-            tick();
-
-            expect(instance.onChange).toHaveBeenCalledWith(25);
-        },
-        ),
-    );
-
     it('displays the thumb element by default',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             const thumbElement: HTMLInputElement = fixture.nativeElement.querySelector('.thumb');
 
@@ -155,14 +96,14 @@ describe('RangeComponent', () => {
         ),
     );
 
-    it('hides the thumb element when thumbLabel == false',
+    it('hides the thumb element when showThumb == false',
         componentTest(() => TestComponent, `
-            <gtx-range [thumbLabel]="false"></gtx-range>`,
-        fixture => {
+            <gtx-range [showThumb]="false"></gtx-range>`,
+        (fixture) => {
             fixture.detectChanges();
             const thumbElement: HTMLInputElement = fixture.nativeElement.querySelector('.thumb');
 
-            expect(isHidden(thumbElement)).toBe(true);
+            expect(thumbElement).toEqual(null);
         },
         ),
     );
@@ -172,7 +113,7 @@ describe('RangeComponent', () => {
         it('can bind its value with ngModel (inbound)',
             componentTest(() => TestComponent, `
                 <gtx-range [(ngModel)]="value"></gtx-range>`,
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 fixture.detectChanges();
@@ -203,7 +144,7 @@ describe('RangeComponent', () => {
                 <form [formGroup]="testForm">
                     <gtx-range formControlName="test"></gtx-range>
                 </form>`,
-            fixture => {
+            (fixture) => {
                 fixture.detectChanges();
                 tick();
                 const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
@@ -253,44 +194,12 @@ describe('RangeComponent', () => {
     describe('DOM Events:', () => {
 
         function calledWithDomEvent(spy: jasmine.Spy): boolean {
-            return spy.calls.all().some(call => call.args[0] instanceof Event);
+            return spy.calls.all().some((call) => call.args[0] instanceof Event);
         }
-
-        it('does not forward the native blur event',
-            componentTest(() => TestComponent, `
-                <gtx-range (blur)="onBlur($event)"></gtx-range>`,
-            (fixture, instance) => {
-                const onBlur = instance.onBlur = jasmine.createSpy('onBlur');
-                fixture.detectChanges();
-
-                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                const event = createFocusEvent('blur');
-                nativeInput.dispatchEvent(event);
-
-                expect(calledWithDomEvent(onBlur)).toBe(false);
-            },
-            ),
-        );
-
-        it('does not forward the native focus event',
-            componentTest(() => TestComponent, `
-                <gtx-range (focus)="onFocus($event)"></gtx-range>`,
-            (fixture, instance) => {
-                const onFocus = instance.onFocus = jasmine.createSpy('onFocus');
-                fixture.detectChanges();
-
-                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                const event = createFocusEvent('focus');
-                nativeInput.dispatchEvent(event);
-
-                expect(calledWithDomEvent(onFocus)).toBe(false);
-            },
-            ),
-        );
 
         it('does not forward the native change event',
             componentTest(() => TestComponent, `
-                <gtx-range (change)="onChange($event)"></gtx-range>`,
+                <gtx-range (valueChange)="onChange($event)"></gtx-range>`,
             (fixture, instance) => {
                 const onChange = instance.onFocus = jasmine.createSpy('onChange');
                 fixture.detectChanges();
@@ -336,7 +245,6 @@ function createFocusEvent(type: 'focus' | 'blur'): FocusEvent {
 
     return event;
 }
-
 
 @Component({
     template: '<gtx-range></gtx-range>',

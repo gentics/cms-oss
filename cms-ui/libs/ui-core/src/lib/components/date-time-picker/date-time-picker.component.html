@@ -3,7 +3,11 @@
         <label (click)="showModal()">{{ label }}</label>
     }
 
-    <span class="display-value" [class.placeholder]="!displayValue">{{ displayValue || placeholder}}</span>
+    <span
+        class="display-value"
+        [attr.data-value]="value"
+        [class.placeholder]="!displayValue"
+    >{{ displayValue || placeholder }}</span>
 
     @if (clearable == null ? !required : clearable) {
         <button

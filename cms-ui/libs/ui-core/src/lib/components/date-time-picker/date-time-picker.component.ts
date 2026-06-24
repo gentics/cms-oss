@@ -37,7 +37,7 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
     styleUrls: ['./date-time-picker.component.scss'],
     providers: [generateFormProvider(DateTimePickerComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DateTimePickerComponent
     extends BaseFormElementComponent<number>
@@ -137,7 +137,6 @@ export class DateTimePickerComponent
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.momentValue = unix(timestamp);
         this.updateDisplayValue();
     }

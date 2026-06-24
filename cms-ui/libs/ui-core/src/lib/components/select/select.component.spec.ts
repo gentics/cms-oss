@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -71,7 +71,7 @@ describe('SelectComponent', () => {
 
             expect(instance.onChange).not.toHaveBeenCalled();
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -91,7 +91,7 @@ describe('SelectComponent', () => {
             tick();
             expect(instance.ngModelValue).toEqual('Bar');
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -111,7 +111,7 @@ describe('SelectComponent', () => {
             tick();
             expect(instance.ngModelValue).toEqual('Bar');
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -901,6 +901,15 @@ class TestComponent {
     onBlur(...args: any[]): void { }
     onFocus(...args: any[]): void { }
     onChange(...args: any[]): void { }
+}
+
+function getClearButton(fixture: ComponentFixture<any>): DebugElement | null {
+    return fixture.debugElement.query(By.css('.addon-button[data-action="clear"]'));
+}
+
+function getClearButtonElement(fixture: ComponentFixture<any>): HTMLButtonElement | null {
+    const dbg = getClearButton(fixture);
+    return dbg == null ? null : dbg.nativeElement as HTMLButtonElement;
 }
 
 function clickSelectAndOpen(fixture: ComponentFixture<TestComponent>): void {

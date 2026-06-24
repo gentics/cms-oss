@@ -5,18 +5,19 @@ import CmsFriendlyCaptchaElement from './CmsFriendlyCaptchaElement';
 import CmsRecaptchaElement from './CmsRecaptchaElement';
 
 interface Props {
-  config?: CaptchaConfig;
   formState: FormState;
 }
 
-export default function CMSFormCaptcha({ config, formState }: Props) {
-  if (!config) return null;
-
+export default function CMSFormCaptcha({ formState }: Props) {
+  const config = formState.captchaConfig;
   const breakPoints = useBreakpoints();
+
   const widthStyle = widthFromColumNumber(
     formState.form.formwidth || 8,
     breakPoints,
   );
+
+  if (!config) return null;
 
   const renderElement = () => {
     switch (config.provider) {

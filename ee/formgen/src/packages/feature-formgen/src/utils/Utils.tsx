@@ -22,6 +22,10 @@ import {
   IForm,
   IFirstErrorElementInfo,
   IFormGridOptions,
+  CaptchaConfig,
+  RawCaptchaConfig,
+  FriendlyCaptchaMode,
+  reCaptchaMode,
   ICmsCondition,
 } from '../types/interfaces';
 import JsonPath from 'jsonpath';
@@ -1029,3 +1033,25 @@ export const isTouchOnlyDevice = (): boolean => {
  */
 export const previewPointerEvents = (preview?: boolean): 'none' | 'auto' =>
   preview ? 'none' : 'auto';
+
+/**
+ * The single mapping point: backend JSON (`RawCaptchaConfig`) -> internal
+ * `CaptchaConfig`.
+ *
+ * Decouples the backend response shape from the internal model. Returns
+ * `undefined` when no captcha config is present.
+ */
+export function mapCaptchaConfig(
+  raw: RawCaptchaConfig | null | undefined,
+): CaptchaConfig | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  return {
+    provider: raw.provider,
+    siteKey: raw.sitekey,
+    mode: raw.mode as FriendlyCaptchaMode | reCaptchaMode,
+    baseUrl: raw.baseUrl,
+    language: raw.language,
+  };
+}

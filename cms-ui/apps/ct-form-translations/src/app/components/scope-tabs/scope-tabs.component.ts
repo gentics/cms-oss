@@ -5,7 +5,6 @@ import {
     Input,
     Output,
 } from '@angular/core';
-
 import { Scope, ScopeId } from '../../models/translations.model';
 
 export interface ScopeTabInfo {

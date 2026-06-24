@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { ExposableEmbeddedToolAPI } from '@gentics/cms-integration-api-models';
 import { ReplaySubject, Subscription } from 'rxjs';
-
 import { ToolApi } from './tool-api';
 
 /**

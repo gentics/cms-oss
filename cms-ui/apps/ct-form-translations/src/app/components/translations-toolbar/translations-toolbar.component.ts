@@ -5,7 +5,6 @@ import {
     Input,
     Output,
 } from '@angular/core';
-
 import { FilterMode } from '../../models/translations.model';
 
 @Component({
@@ -25,6 +24,11 @@ export class TranslationsToolbarComponent {
     @Output() readonly filterChange = new EventEmitter<FilterMode>();
 
     onSearchInput(value: string): void {
+        // The search-bar component is hacked together and events faulty events
+        // from time to time. Only string events should be accepted.
+        if (typeof value !== 'string') {
+            return;
+        }
         this.searchChange.emit(value);
     }
 

@@ -11,7 +11,6 @@ import * as EN_TRANSLATIONS from '../../public/i18n/en.json';
 import { AppComponent } from './app.component';
 import { SaveBarComponent } from './components/save-bar/save-bar.component';
 import { ScopeTabsComponent } from './components/scope-tabs/scope-tabs.component';
-import { ShellComponent } from './components/shell/shell.component';
 import { TranslationsTableComponent } from './components/translations-table/translations-table.component';
 import { TranslationsToolbarComponent } from './components/translations-toolbar/translations-toolbar.component';
 import { AuthenticationService } from './services/authentication.service';
@@ -19,7 +18,6 @@ import { AuthenticationService } from './services/authentication.service';
 @NgModule({
     declarations: [
         AppComponent,
-        ShellComponent,
         ScopeTabsComponent,
         TranslationsToolbarComponent,
         TranslationsTableComponent,

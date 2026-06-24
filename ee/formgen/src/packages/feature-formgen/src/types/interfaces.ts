@@ -8,6 +8,8 @@ import { IDebugSectionProps } from '../components/overlays/DebugSection';
 import { IOverlayFullScreenTextEnum } from '../constants/enums/IOverlayFullScreenTextEnum';
 import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 
+export type UnitPosition = "Append" | "Prepend";
+
 //SummaryDetails
 export interface ISummaryDetailsUser {
   email: string;
@@ -550,7 +552,6 @@ export interface IFormGridOptions {
   tableColumnWidthOptimized?: boolean;
   tableRowMaxLineHeight?: number;
   alignment?: 'left' | 'center' | 'right';
-  alignmentUnit?: 'left' | 'center' | 'right';
   buttonDisplayStyle?: 'icon' | 'text' | 'icontext';
   overlayOptions?: IOverlayInfoOptions;
   // Sichtbarkeitssteuerung für Grid-Elemente
@@ -589,9 +590,10 @@ export interface ISchema {
 export interface ISchemaFields {
   [key: string]: ISchemaFieldProperties;
 }
-// TODO!
+
 export interface ISchemaFieldProperties {
-  unit?: ITranslationSet;
+  unitText?: ITranslationSet;
+  unitPosition?: UnitPosition;
   value?: string;
   dateOnly?: boolean;
   type: string;

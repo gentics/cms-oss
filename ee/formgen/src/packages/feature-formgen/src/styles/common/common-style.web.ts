@@ -1567,13 +1567,8 @@ const inputElementStyles = StyleSheet.create({
     top: inputElementTheme.paddingTop+3,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: inputElementTheme.disabled.backgroundColor,
-    borderRadius: inputElementTheme.borderRadius,
-    paddingHorizontal: inputElementTheme.unitBadge.paddingHorizontal,
   },
-  unitBadgeError: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  },
+  unitBadgeError: {},
   unitBadgeLeft: {
     left: inputElementTheme.paddingLeft,
   },

@@ -26,6 +26,7 @@ import {
   RawCaptchaConfig,
   FriendlyCaptchaMode,
   reCaptchaMode,
+  ICmsCondition,
 } from '../types/interfaces';
 import JsonPath from 'jsonpath';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
@@ -172,6 +173,105 @@ export function getVisible(formState: FormState, jsonpath: string) {
   }
   //@TODO check default visibility
   return true;
+}
+
+/**
+ * Evaluates a CMS field/container condition against the current form data.
+ * A condition is met when the referenced control's value equals the expected value.
+ * Shared by ElementRenderer, validation and the visibility computation for the request payload.
+ */
+export function evaluateCmsCondition(
+  formState: FormState,
+  condition: ICmsCondition,
+): boolean {
+  const referencedValue =
+    formState.data.properties?.[condition.source.control]?.value;
+  return referencedValue === condition.equals;
+}
+
+/**
+ * Recursively walks the uiSchema elements and writes the effective visibility state of each
+ * CMS field into data.properties[id].visible. A field is visible only when its own condition is
+ * met (and it isn't hidden) AND every ancestor container is visible.
+ * Container elements are not part of the data structure, so no flag is written for them.
+ */
+function applyCmsVisibilityToElements(
+  elements: IFormElement[] | undefined,
+  parentVisible: boolean,
+  data: IData,
+  formState: FormState,
+): void {
+  if (!elements) return;
+  for (const obj of elements) {
+    // A container ("container"/"conditionalcontainer") is part of the uiSchema but NOT of
+    // data.properties, so it gets no flag of its own. Instead it gates its children: if the
+    // container is hidden by its condition, every field inside it must also count as invisible.
+    // We pass the combined visibility (parent AND container condition) down and recurse, so
+    // nested containers are handled correctly.
+    if (['container', 'conditionalcontainer'].includes(obj.type)) {
+      const containerVisible =
+        parentVisible &&
+        (obj.formGridOptions?.condition
+          ? evaluateCmsCondition(formState, obj.formGridOptions.condition)
+          : true);
+      applyCmsVisibilityToElements(
+        obj.elements,
+        containerVisible,
+        data,
+        formState,
+      );
+      continue;
+    }
+
+    // Only real input fields have a value in data.properties. Layout-only elements
+    // (text/spacer) and elements without a formGrid type are skipped - they are never validated.
+    const type = obj.formGridOptions?.type;
+    if (!type || type === 'formgridText' || type === 'formgridSpacer') {
+      continue;
+    }
+
+    // Determine the field's own visibility:
+    // - hidden === true   -> always invisible
+    // - has a condition   -> visible only when the condition is met
+    // - otherwise         -> visible by default
+    const fieldVisible =
+      obj.formGridOptions?.hidden === true
+        ? false
+        : obj.formGridOptions?.condition
+        ? evaluateCmsCondition(formState, obj.formGridOptions.condition)
+        : true;
+    // Effective visibility = field is visible AND all of its ancestor containers are visible.
+    const effectiveVisible = parentVisible && fieldVisible;
+
+    // Write the flag back explicitly (true AND false). The plugin skips validation for
+    // visible === false; visible fields must keep visible === true so they are not accidentally
+    // suppressed. Preserve any existing property data (value, ...) and only set/overwrite visible.
+    if (data.properties == null) {
+      data.properties = {};
+    }
+    const existing = data.properties[obj.id];
+    data.properties[obj.id] = {
+      ...(existing ?? { value: '' }),
+      visible: effectiveVisible,
+    };
+  }
+}
+
+/**
+ * Sets the effective `visible` flag on every CMS field in `data.properties`, so the Forms plugin
+ * can skip validating fields the user cannot see. No-op for non-CMS forms (ActaNova sets `visible`
+ * itself). Operates on the passed-in `data` object - callers must pass a clone, not the React state.
+ */
+export function applyCmsVisibility(
+  data: IData,
+  form: IForm,
+  pluginName: PluginNameEnum,
+  formState: FormState,
+): void {
+  if (pluginName !== PluginNameEnum.CMS_FORMS || !form.pages) return;
+  for (const page of form.pages) {
+    applyCmsVisibilityToElements(page.elements, true, data, formState);
+  }
 }
 
 export function getCreatable(formState: FormState, jsonpath: string) {
@@ -852,7 +952,10 @@ export const endANRequest = (
 
 export const prepareDataForSave = (formState: FormState, uploadBinaries: boolean): FormData => {
   var data = new FormData();
-  data.append('formdata', JSON.stringify(formState.data));
+  // For CMS forms, send the effective visibility state per field (clone to avoid mutating state).
+  const dataToSave: IData = JSON.parse(JSON.stringify(formState.data));
+  applyCmsVisibility(dataToSave, formState.form, formState.pluginName, formState);
+  data.append('formdata', JSON.stringify(dataToSave));
   if (formState.fileUploads != null && uploadBinaries) {
     for (let [schemaID, jsonpaths] of Object.entries(formState.fileUploads)) {
       let jsonpathsObject: object = {};

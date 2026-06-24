@@ -71,6 +71,8 @@ export default function App() {
       features: initialPreviewData.features,
       formType: initialPreviewData.formType,
       pluginName: initialPreviewData.pluginName,
+      flowId: initialPreviewData.flowId,
+      flows: initialPreviewData.flows,
       availableLanguages: [initialPreviewData.language],
       cmsSid: initialPreviewData.cmsSid,
     });
@@ -112,6 +114,8 @@ export default function App() {
             features: event.features,
             formType: event.formType,
             pluginName: event.pluginName,
+            flowId: event.flowId,
+            flows: event.flows,
             availableLanguages: event.availableLanguages,
             cmsSid: event.cmsSid,
           });

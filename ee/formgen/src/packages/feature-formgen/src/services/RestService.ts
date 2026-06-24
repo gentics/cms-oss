@@ -315,7 +315,12 @@ export class RestService {
       if (obj.hasOwnProperty('editable')) {
         delete obj.editable;
       }
-      if (obj.hasOwnProperty('visible')) {
+      // For CMS forms the plugin needs `visible` to skip validating fields the user can't see,
+      // so it must stay in the payload. ActaNova keeps the previous behaviour.
+      if (
+        obj.hasOwnProperty('visible') &&
+        this.pluginName !== PluginNameEnum.CMS_FORMS
+      ) {
         delete obj.visible;
       }
       if (obj.hasOwnProperty('autoCompleteResults')) {

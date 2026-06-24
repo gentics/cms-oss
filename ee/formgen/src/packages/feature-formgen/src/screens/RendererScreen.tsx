@@ -76,6 +76,16 @@ import StickyLayerScreenPart from './screen-parts/StickyLayer';
 import { sendPreviewPageChangeEvent } from '../components/elements/helper/formgridPreviewBridge';
 import { PreviewFormData, PreviewInformation } from '../types/preview';
 
+interface FormResponseBody {
+  uiSchema: IForm;
+  schema: ISchema;
+  flowId: string;
+  flows: IFormFlowSteps[];
+  data?: IData;
+  captchaConfig?: any;
+  successUrl?: { [language: string]: string };
+}
+
 const RendererScreen: React.FC<{
   formId: string;
   businessObjectId: string;
@@ -715,14 +725,14 @@ const RendererScreen: React.FC<{
     return missingFormFlowResponse;
   };
 
-  const applyFormFlow = (responseBody: any): ApiResponse | null => {
+  const applyFormFlow = (responseBody: FormResponseBody | null): ApiResponse | null => {
     const flowStepsList: IFormFlowSteps[] | undefined = responseBody?.flows;
     if (!flowStepsList || flowStepsList.length === 0) {
       return handleMissingFormFlow();
     }
 
     //use defined flow, or first flow in list
-    const flowId = responseBody.flowId;
+    const flowId = responseBody!.flowId;
     const matchingFlow = flowId
       ? flowStepsList?.find((x: IFormFlowSteps) => x.id === flowId)
       : flowStepsList?.[0];
@@ -948,7 +958,7 @@ const RendererScreen: React.FC<{
     }
 
     // 3) Mock load
-    let responseBody: { uiSchema: IForm, schema: ISchema, data?: IData, captchaConfig?: any; successUrl?: { [language: string]: string }; } | null = null;
+    let responseBody: FormResponseBody | null = null;
     if (props.isFormgridPreview && props.previewFormData != null) {
       formState.form = props.previewFormData.uiSchema;
       formState.data = { formID: props.formId, properties: props.prefillContent };
@@ -959,6 +969,8 @@ const RendererScreen: React.FC<{
         schema: props.previewFormData.schema,
         uiSchema: props.previewFormData.uiSchema,
         captchaConfig: null,
+        flows: props.previewInformation!.flows || [],
+        flowId: props.previewInformation!.flowId,
       };
     } else {
       const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);

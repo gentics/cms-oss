@@ -202,7 +202,7 @@ export function hasAllowedUploadSize(
             "form_maxFileUploadSizeSingleError",
           ).replace(
             "%size%",
-            Math.floor(maxSize / 1_024 / 1_024).toString(),
+            Number((maxSize / 1_024 / 1_024).toFixed(1)).toString(),
           )}: ${file.fileName}`;
           utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
         }
@@ -237,7 +237,7 @@ function anHasAllowedEntireListUploadSize(
     if (updateErrorMessages) {
       elemState.validationMessage = t(
         "form_maxFileUploadSizeMultipleError",
-      ).replace("%size%", Math.floor(maxSizeEntireList / 1_024 / 1_024).toString());
+      ).replace("%size%", Number((maxSizeEntireList / 1_024 / 1_024).toFixed(1)).toString());
       utils.setStateElementByJsonpath(formState.data, jsonpath, elemState);
     }
     return false;

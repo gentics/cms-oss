@@ -61,6 +61,7 @@ import * as utils from '../utils/Utils';
 import {
   endANRequest,
   getFeatureActive,
+  mapCaptchaConfig,
   setNormalizedSchema,
   startANRequest,
 } from '../utils/Utils';
@@ -843,7 +844,7 @@ const RendererScreen: React.FC<{
       if (missingFlowResponse1) return missingFlowResponse1;
       formState.data = getPrefillData(data.data);
       formState.schema = data.schema;
-      formState.captchaConfig = data.captchaConfig;
+      formState.captchaConfig = mapCaptchaConfig(data.captchaConfig);
       formState.successUrl = data.successUrl;
       uiState.lastPage = data.uiSchema.pages.length;
 
@@ -883,7 +884,7 @@ const RendererScreen: React.FC<{
       formState.form = responseBody.uiSchema;
       formState.data = getPrefillData(responseBody.data);
       formState.schema = responseBody.schema;
-      formState.captchaConfig = responseBody.captchaConfig;
+      formState.captchaConfig = mapCaptchaConfig(responseBody.captchaConfig);
       formState.successUrl = responseBody.successUrl;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
@@ -979,7 +980,7 @@ const RendererScreen: React.FC<{
         formState.data = responseBody!.data!;
         formState.schema = responseBody!.schema;
         formState.successUrl = responseBody!.successUrl;
-        formState.captchaConfig = responseBody!.captchaConfig;
+        formState.captchaConfig = mapCaptchaConfig(responseBody!.captchaConfig);
       }
     }
     if (formState?.form?.pages) {
@@ -2154,11 +2155,11 @@ const RendererScreen: React.FC<{
             rawErrorMsgs={rawErrorMsgs}
             reportResult={reportResult}
           ></FlowPage>
-          {/* {flowPageReactClass !== 'SuccessScreen' && (
+          {flowPageReactClass !== 'SuccessScreen' && (
             <CMSFormCaptcha
               formState={formState}
             />
-          )} */}
+          )}
         </ScrollView>
         <StickyLayerScreenPart
           updateState={updateState}

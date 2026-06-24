@@ -24,6 +24,19 @@ table.translations {
      min-width sorgt für vernünftige Mindestbreite. */
   table-layout: auto;
   min-width: 100%;
+
+  /* This hack is needed so the cell wrapper can properly fill out the whole cell */
+  tr {
+    height: 1px;
+
+    td {
+        height: inherit;
+
+        .cell-input-wrapper {
+            height: 100%;
+        }
+    }
+  }
 }
 
 table.translations thead {

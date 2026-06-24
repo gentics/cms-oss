@@ -5,11 +5,11 @@ import CmsFriendlyCaptchaElement from './CmsFriendlyCaptchaElement';
 import CmsRecaptchaElement from './CmsRecaptchaElement';
 
 interface Props {
-  config?: CaptchaConfig;
   formState: FormState;
 }
 
-export default function CMSFormCaptcha({ config, formState }: Props) {
+export default function CMSFormCaptcha({ formState }: Props) {
+  const config = formState.captchaConfig;
   if (!config) return null;
 
   const breakPoints = useBreakpoints();

@@ -358,7 +358,18 @@ export type FriendlyCaptchaMode = 'auto' | 'button' | 'background'
 export type reCaptchaMode = 'checkbox' | 'invisible'
 
 /**
- * This 
+ * Internal, app-wide captcha configuration.
+ *
+ * This is the model the captcha components work against
+ *
+ * @property provider Which captcha service to render: `'friendly'` (Friendly
+ *   Captcha) or `'recaptcha'` (Google reCAPTCHA).
+ * @property siteKey  Public site key of the configured provider.
+ * @property mode     Optional widget mode; the allowed values depend on the
+ *   provider (`FriendlyCaptchaMode` for `'friendly'`, `reCaptchaMode` for
+ *   `'recaptcha'`). Falls back to the provider's default when omitted.
+ * @property language Optional UI language for the widget (e.g. `'de'`).
+ * @property baseUrl  Optional base URL, used by the native reCAPTCHA renderer.
  */
 export interface CaptchaConfig {
   provider: 'friendly' | 'recaptcha';
@@ -366,6 +377,23 @@ export interface CaptchaConfig {
   mode?: FriendlyCaptchaMode | reCaptchaMode;
   language?: string;
   baseUrl?: string;
+};
+
+/**
+ * Raw shape of the captcha configuration as the backend sends it in the
+ * form-load response.
+ *
+ * This is the SINGLE place where the backend JSON property names live. If the
+ * backend renames a captcha property, change it ONLY here (and in
+ * `mapCaptchaConfig`) — the captcha components keep working against the
+ * internal `CaptchaConfig` type.
+ */
+export interface RawCaptchaConfig {
+  provider: 'friendly' | 'recaptcha';
+  sitekey: string;
+  mode: string;
+  baseUrl?: string;
+  language?: string;
 };
 //TODO Method uncomment "?""
 export interface IFormPageComponent {

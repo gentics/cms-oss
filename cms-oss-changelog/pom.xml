@@ -42,7 +42,7 @@
 					<baseDirectory>${basedir}/src/changelog</baseDirectory>
 					<outputDirectory>${basedir}/target/output</outputDirectory>
 					<changelogTitle>Gentics CMS OSS</changelogTitle>
-					<changelogTypes>note,manualchange,optional-manualchange,security,feature,enhancement,documentation,bugfix,newui</changelogTypes>
+					<changelogTypes>note,manualchange,optional-manualchange,security,feature,enhancement,documentation,bugfix</changelogTypes>
 					<changelogVersion>${changelog.version}</changelogVersion>
 					<strictRenderMode>true</strictRenderMode>
 					<allowEmptyChangelog>true</allowEmptyChangelog>

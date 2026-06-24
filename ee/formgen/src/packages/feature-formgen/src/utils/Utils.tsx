@@ -1044,7 +1044,6 @@ export const previewPointerEvents = (preview?: boolean): 'none' | 'auto' =>
 export function mapCaptchaConfig(
   raw: RawCaptchaConfig | null | undefined,
 ): CaptchaConfig | undefined {
-  debugger;
   if (!raw) {
     return undefined;
   }

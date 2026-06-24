@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { IDataFields, IFeatures, IForm, ISchema } from "./interfaces";
+import { IDataFields, IFeatures, IForm, IFormFlowSteps, ISchema } from "./interfaces";
 
 export type FormgridPreviewData = {
   formId: string;
@@ -7,6 +7,8 @@ export type FormgridPreviewData = {
   pluginName: string;
   schema: ISchema;
   uiSchema: IForm;
+  flows: IFormFlowSteps[];
+  flowId: string;
   features?: IFeatures;
   cmsSid?: number;
   language: string;
@@ -22,6 +24,8 @@ export interface PreviewInformation {
   dynamic: boolean;
   formType: string;
   pluginName: string;
+  flows: IFormFlowSteps[];
+  flowId: string;
   availableLanguages: string[];
   cmsSid?: number;
   features?: IFeatures;

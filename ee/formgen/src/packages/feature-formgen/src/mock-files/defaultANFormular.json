@@ -19,7 +19,11 @@
         "type": "number",
         "precision": 0,
         "isRaw": true,
-        "unit": {},
+        "unitText": {
+          "de": "m²",
+          "en": "m²"
+        },
+        "unitPosition": "Append",
         "updateOnChange": false,
         "validation": {
           "minValue": 0,
@@ -34,12 +38,11 @@
         "type": "number",
         "precision": 2,
         "isRaw": true,
-        "unit": {
-          "de-AT": "Euro",
-          "en-CH": "Dollar",
-          "fr-CH": null,
-          "it-CH": null
+        "unitText": {
+          "de": "€",
+          "en": "$"
         },
+        "unitPosition": "Prepend",
         "updateOnChange": false,
         "validation": {
           "minValue": 10.5,

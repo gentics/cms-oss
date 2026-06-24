@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { TFunction } from 'i18next';
-import { FormState, IFormComponentAttributes, UIState } from '../../../../types/interfaces';
+import { FormState, IFormComponentAttributes, UIState, UnitPosition } from '../../../../types/interfaces';
 import { FormElementWrapper } from '../../helper/FormElementWrapper';
 import { inputElementTheme } from '@andp/core/src/styles/theme';
 import { previewPointerEvents } from '../../../../utils/Utils';
@@ -153,10 +153,7 @@ interface SharedInputComponentProps {
 
   // Unit-Badge
   unitText?: string;
-  unitBadgeWidth?: number;
-  isUnitLeft?: boolean;
-  isUnitRight?: boolean;
-  onUnitLayout?: (width: number) => void;
+  unitPosition?: UnitPosition;
 
   // Refs & Styles
   elementRef: React.RefObject<TextInput | null>;
@@ -171,9 +168,17 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
     textAlign = 'left', numberOfLines = 1, height, isFocused,
     labeltext, onChangeText, onNumberChangeText, onFocus, onBlur, onContentSizeChange, onNumberKeyPress,
     renderNumberAddon, needSpace = false,
-    unitText = '', unitBadgeWidth = 0, isUnitLeft = false, isUnitRight = false, onUnitLayout,
+    unitText,
+    unitPosition = 'Append',
     elementRef, styles, t,
   } = props;
+
+  const [unitBadgeWidth, setUnitBadgeWidth] = useState(0);
+  const isPrepend = unitPosition === 'Prepend';
+  const isAppend = unitPosition === 'Append';
+  // Show the unit badge once the field has a value or is focused.
+  const hasValue = value !== undefined && value !== null && value !== '';
+  const showUnit = !!unitText && (hasValue || isFocused);
 
   const activeInputBorderWidth = isFocused && editable
     ? inputElementTheme.focused.borderWidth
@@ -348,14 +353,14 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
                   !editable && styles.disabledInput,
                   needSpace && styles.inputNumberWithSpace,
                   { textAlign },
-                  isUnitLeft && unitBadgeWidth > 0 && {
+                  showUnit && isPrepend && unitBadgeWidth > 0 && {
                     paddingLeft:
                       inputElementTheme.paddingLeft
                       + unitBadgeWidth
                       + inputElementTheme.unitBadge.gap
                       - activeInputBorderWidth,
                   },
-                  isUnitRight && unitBadgeWidth > 0 && {
+                  showUnit && isAppend && unitBadgeWidth > 0 && {
                     paddingRight: unitBadgeRightPadding,
                   },
                 ]}
@@ -375,29 +380,14 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
                   ? { 'aria-invalid': !!localErrorMsg, 'aria-haspopup': 'false', 'aria-expanded': isFocused }
                   : {})}
               />
-              {isUnitLeft && (
+              {showUnit && (
                 <View
                   pointerEvents="none"
-                  onLayout={(e) => onUnitLayout?.(e.nativeEvent.layout.width)}
+                  onLayout={(e) => setUnitBadgeWidth(e.nativeEvent.layout.width)}
                   style={[
                     styles.unitBadge,
-                    styles.unitBadgeLeft,
+                    isPrepend ? styles.unitBadgeLeft : { right: unitBadgeRightOffset },
                     error && editable && styles.unitBadgeError,
-                  ]}
-                >
-                  <Text style={[styles.unitBadgeText, error && editable && styles.unitBadgeTextError]}>
-                    {unitText}
-                  </Text>
-                </View>
-              )}
-              {isUnitRight && (
-                <View
-                  pointerEvents="none"
-                  onLayout={(e) => onUnitLayout?.(e.nativeEvent.layout.width)}
-                  style={[
-                    styles.unitBadge,
-                    error && editable && styles.unitBadgeError,
-                    { right: unitBadgeRightOffset },
                   ]}
                 >
                   <Text style={[styles.unitBadgeText, error && editable && styles.unitBadgeTextError]}>

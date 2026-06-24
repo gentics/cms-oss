@@ -54,40 +54,42 @@ const FormgenScreen: React.FC<{
   const restService = new RestService(props.endpoint, pluginName, props.apiToken);
 
   useEffect(() => {
-    if(pluginName == PluginNameEnum.ACTA_NOVA){
-      const fetchFeatures = async () => {
-        const response = await restService.ANLoadFeaturesAsync();
-        if (response.success) {
-          const features = response.responseData;
-          if (features != null) {
-            setFeatures(features);
-          } else {
-            setLoadFeatureError(true);
-            setError("Server not responding: Features not available");
-          }
-        }
-      };
+    if (pluginName !== PluginNameEnum.ACTA_NOVA) {
+      return;
+    }
 
-      const fetchMockFeatures = async () => {
-        if (__DEV__ || props.isFormgridPreview) {
-          const response = await fetchMockDefaultFeatures();
-          const features = response;
-          if (features != null) {
-            setFeatures(features);
-          } else {
-            setLoadFeatureError(true);
-            setError('Server not responding: Features not available');
-          }
+    const fetchFeatures = async () => {
+      const response = await restService.ANLoadFeaturesAsync();
+      if (response.success) {
+        const features = response.responseData;
+        if (features != null) {
+          setFeatures(features);
+        } else {
+          setLoadFeatureError(true);
+          setError("Server not responding: Features not available");
         }
-      };
-
-      if (props.features != null) {
-        setFeatures(props.features);
-      } else if (props.mockForm || props.isFormgridPreview) {
-        fetchMockFeatures();
-      } else if (!props.isFormgridPreview) {
-        fetchFeatures();
       }
+    };
+
+    const fetchMockFeatures = async () => {
+      if (__DEV__ || props.isFormgridPreview) {
+        const response = await fetchMockDefaultFeatures();
+        const features = response;
+        if (features != null) {
+          setFeatures(features);
+        } else {
+          setLoadFeatureError(true);
+          setError('Server not responding: Features not available');
+        }
+      }
+    };
+
+    if (props.features != null) {
+      setFeatures(props.features);
+    } else if (props.mockForm || props.isFormgridPreview) {
+      fetchMockFeatures();
+    } else if (!props.isFormgridPreview) {
+      fetchFeatures();
     }
   }, []);
 

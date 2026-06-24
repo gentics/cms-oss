@@ -1183,7 +1183,6 @@ const RendererScreen: React.FC<{
   };
 
   const handleSubmitDialogForm = async () => {
-    debugger;
     const isMock: boolean = props.mockForm;
     if (
       !validationUtils.isPageValid(formState, true, uiState.currentPage, isMock)

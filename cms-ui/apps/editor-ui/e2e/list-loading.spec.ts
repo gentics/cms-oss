@@ -1,6 +1,7 @@
-import { AccessControlledType, GcmsPermission, Node, PageCopyResponse, User } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, Node, PageCopyResponse, User, Variant } from '@gentics/cms-models';
 import {
     createClient,
+    isVariant,
     EntityImporter,
     FOLDER_T,
     GroupImportData,
@@ -296,5 +297,49 @@ test.describe('List Loading', () => {
                 await expect(item).toBeVisible();
             }
         });
+    });
+
+
+    test.describe('Content Staging', () => {
+        test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
+
+        test.beforeEach(async ({ page }) => {
+            // Pagination data may be loaded from the server stored user-data
+            // This will simply return empty data for the user
+            await setupUserDataRerouting(page);
+
+            await navigateToApp(page);
+            await loginWithForm(page, AUTH.admin);
+            await selectNode(page, IMPORTER.get(NODE_FULL)!.id);
+        });
+
+        test('should load content under staging mode, displaying items\' staging status', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19876',
+            }],
+        }, async ({ page }) => {
+            await page.locator('gtx-button[data-action="open-actions-menu"]').click();
+            await page.locator('.dropdown-content-wrapper button.action-button.action-content-staging').click();
+
+			await page.locator('gtx-content-staging-modal gtx-content-package-list gtx-contents-list-item gtx-checkbox').click();
+            await page.locator('gtx-content-staging-modal button.primary[data-action="primary"]').click();
+
+            await page.locator('gtx-button.staging-mode-leaver').isVisible();
+            const folderList = findList(page, 'folder');
+            const folderItems = await folderList.locator('item-list-row').all();
+            for (const item of folderItems) {
+                await expect(item.locator('.status-label icon')).toBeVisible();
+                await expect(item.locator('.status-label')).toHaveText('Nicht beinhaltet');
+            }
+
+            const pageList = findList(page, 'page');
+            const pageItems = await pageList.locator('item-list-row').all();
+            for (const item of pageItems) {
+                await expect(item.locator('.status-label icon')).toBeVisible();
+                await expect(item.locator('.status-label')).toHaveText('Nicht beinhaltet');
+            }
+        });
+
     });
 });

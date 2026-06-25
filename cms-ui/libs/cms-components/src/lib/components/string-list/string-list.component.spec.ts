@@ -161,7 +161,7 @@ describe('StringListComponent', () => {
 
             const listElement: HTMLDivElement = fixture.nativeElement.querySelector('.list');
             expect(listElement).not.toBeNull();
-            const deleteButtons: NodeListOf<HTMLInputElement> = listElement.querySelectorAll('.delete-button .button-event-wrapper button');
+            const deleteButtons: NodeListOf<HTMLButtonElement> = listElement.querySelectorAll('.addon-button[data-action="remove"]');
             expect(deleteButtons).not.toBeNull();
             expect(deleteButtons.length).toEqual(initialValue.length);
 
@@ -174,7 +174,7 @@ describe('StringListComponent', () => {
             expect(instance.onValueChange).toHaveBeenCalledWith(expectedValue);
         }));
 
-        it('should not be possible to add values when disabled', componentTest(() => TestComponent, async (fixture, instance) => {
+        it('should not be possible to add values when disabled', componentTest(() => TestComponent, (fixture, instance) => {
             const value = ['All', 'your', 'base', 'are', 'belong', 'to', 'us'];
             const label = 'sample text';
             instance.value = value;
@@ -226,7 +226,7 @@ describe('StringListComponent', () => {
             fixture.detectChanges();
             tick();
 
-            fixture.nativeElement.querySelectorAll('.list .delete-button .button-event-wrapper button').item(2).click();
+            fixture.nativeElement.querySelectorAll('.addon-button[data-action="remove"]').item(2).click();
             fixture.detectChanges();
             tick();
             expect(instance.onValueChange).toHaveBeenCalledTimes(0);
@@ -449,7 +449,7 @@ describe('StringListComponent', () => {
 
             const listElement: HTMLDivElement = fixture.nativeElement.querySelector('.list');
             expect(listElement).not.toBeNull();
-            const deleteButtons: NodeListOf<HTMLInputElement> = listElement.querySelectorAll('.delete-button .button-event-wrapper button');
+            const deleteButtons: NodeListOf<HTMLInputElement> = listElement.querySelectorAll('.addon-button[data-action="remove"]');
             expect(deleteButtons).not.toBeNull();
             expect(deleteButtons.length).toEqual(initialValue.length);
 
@@ -525,7 +525,7 @@ describe('StringListComponent', () => {
             fixture.detectChanges();
             tick();
 
-            fixture.nativeElement.querySelectorAll('.list .delete-button .button-event-wrapper button').item(2).click();
+            fixture.nativeElement.querySelectorAll('.addon-button[data-action="remove"]').item(2).click();
             fixture.detectChanges();
             tick();
             expect(instance.onFormControlChange).toHaveBeenCalledTimes(0);

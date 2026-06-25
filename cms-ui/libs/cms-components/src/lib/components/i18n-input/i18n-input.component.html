@@ -4,6 +4,8 @@
         [label]="label"
         [disabled]="disabled"
         [allowMultiLine]="useTextArea"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (valueChange)="handleInputChange($event)"
     ></gtx-rich-content-editor>
 } @else if (useTextArea) {
@@ -14,8 +16,9 @@
         [required]="requiredInCurrentLanguage"
         [class.untranslated]="!isTranslated"
         [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (valueChange)="handleInputChange($event)"
-        (blur)="triggerTouch()"
     ></gtx-textarea>
 } @else {
     <gtx-input
@@ -25,8 +28,9 @@
         [required]="requiredInCurrentLanguage"
         [class.untranslated]="!isTranslated"
         [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (valueChange)="handleInputChange($event)"
-        (blur)="triggerTouch()"
     ></gtx-input>
 }
 

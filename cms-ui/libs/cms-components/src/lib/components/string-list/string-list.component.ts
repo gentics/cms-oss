@@ -16,6 +16,7 @@ import { ControlValueAccessor, UntypedFormArray, UntypedFormControl } from '@ang
 import { generateFormProvider, ISortableEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { MultiValueValidityState } from '../../models';
+import { isEqual } from 'lodash-es';
 
 @Component({
     selector: 'gtx-string-list',
@@ -69,15 +70,7 @@ export class StringListComponent implements OnInit, OnChanges, OnDestroy, Contro
 
     public ngOnInit(): void {
         this.subscriptions.push(this.form.valueChanges.subscribe(() => {
-            let hasChanged = this.form.value.length !== this.value.length;
-            if (!hasChanged) {
-                for (let i = 0; i < this.form.value.length; i++) {
-                    if (this.form.value[i] !== this.value[i]) {
-                        hasChanged = true;
-                        break;
-                    }
-                }
-            }
+            const hasChanged = !isEqual(this.form.value, this.value);
             if (hasChanged) {
                 this.value = this.form.value;
                 this.triggerChange();
@@ -99,6 +92,7 @@ export class StringListComponent implements OnInit, OnChanges, OnDestroy, Contro
         this.subscriptions.forEach((sub) => sub.unsubscribe());
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     public writeValue(value: any): void {
         this.updateValue(value);
     }
@@ -115,6 +109,7 @@ export class StringListComponent implements OnInit, OnChanges, OnDestroy, Contro
         this.updateDisabled(state);
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     protected updateValue(value: any): void {
         if (value == null) {
             this.value = [];
@@ -123,13 +118,14 @@ export class StringListComponent implements OnInit, OnChanges, OnDestroy, Contro
         if (!Array.isArray(value)) {
             value = [value];
         }
-        this.value = value
+        this.value = (value as any[])
             .filter((element) => typeof element !== 'object' && typeof element !== 'symbol')
             .map((element) => typeof element !== 'string' ? '' + element : element);
         this.rebuildFormFromValue(this.value);
         this.changeDetector.markForCheck();
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     protected updateDisabled(value: any): void {
         if (typeof value === 'boolean') {
             this.disabled = value;
@@ -202,10 +198,8 @@ export class StringListComponent implements OnInit, OnChanges, OnDestroy, Contro
             return;
         }
 
-        this.value.splice(index, 1);
-        this.form.removeAt(index);
-        this.triggerChange();
         this.triggerTouch();
+        this.form.removeAt(index);
     }
 
     public cancelEvent(event: Event): void {

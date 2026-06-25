@@ -10,6 +10,8 @@
         data-action="browse"
         [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
         [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (click)="browseItems($event)"
     >
         <icon>folder_open</icon>
@@ -21,21 +23,27 @@
             data-action="upload"
             [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
             [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
             (click)="uploadItems($event)"
         >
             <icon>cloud_upload</icon>
         </button>
     }
 
-    <button
-        class="addon-button icon-alert"
-        data-action="clear"
-        [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
-        [disabled]="disabled"
-        (click)="clearItems($event)"
-    >
-        <icon>clear</icon>
-    </button>
+    @if (clearable == null ? !required : clearable) {
+        <button
+            class="addon-button icon-alert"
+            data-action="clear"
+            [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
+            [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
+            (click)="clearItems($event)"
+        >
+            <icon>clear</icon>
+        </button>
+    }
 </gtx-form-element-container>
 
 @if ((showBreadcrumb == null ? !multiple && breadcrumbTitle : showBreadcrumb) && breadcrumbs?.length > 0) {

@@ -39,7 +39,7 @@ enum UpdateQueue {
     styleUrls: ['./rich-content-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(RichContentEditorComponent)],
-    standalone: false
+    standalone: false,
 })
 export class RichContentEditorComponent extends BaseFormElementComponent<string> implements AfterViewInit {
 
@@ -57,7 +57,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
     public activeContent: RichContent | null = null;
 
     public focused = false;
-    /** Internal flag to not check for seleciton changes for a while */
+    /** Internal flag to not check for selection changes for a while */
     protected ignoreSelectionChanges = false;
     /**
      * Value updates only occur when the element is not focused/on blur.
@@ -106,7 +106,7 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
 
     protected updateHtmlFromValue(): void {
         const extracted = extractRichContent(this.value || '');
-        let html = extracted.map(elem => {
+        let html = extracted.map((elem) => {
             return typeof elem === 'string' ? elem : richContentToHtml(elem);
         }).join('');
 
@@ -195,14 +195,14 @@ export class RichContentEditorComponent extends BaseFormElementComponent<string>
         return true;
     }
 
-    public handleFocus(): void {
+    public handleFocusIn(): void {
         this.focused = true;
         if (!this.ignoreSelectionChanges) {
             this.updateActiveElementFromSelection();
         }
     }
 
-    public handleBlur(): void {
+    public handleFocusOut(): void {
         this.focused = false;
         this.activeElement = null;
         this.activeContent = null;

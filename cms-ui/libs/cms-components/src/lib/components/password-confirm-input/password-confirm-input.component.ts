@@ -11,14 +11,14 @@ import { BaseFormElementComponent, generateFormProvider, generateValidatorProvid
         generateFormProvider(PasswordConfirmInputComponent),
         generateValidatorProvider(PasswordConfirmInputComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class PasswordConfirmInputComponent
     extends BaseFormElementComponent<string>
     implements OnChanges, Validator {
 
     @Input()
-    public allowVisibilty = true;
+    public allowVisibility = true;
 
     @Input()
     public visible = false;

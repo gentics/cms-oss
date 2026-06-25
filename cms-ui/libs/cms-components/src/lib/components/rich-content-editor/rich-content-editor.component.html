@@ -5,8 +5,8 @@
 <div
   class="content-wrapper"
   [class.focused]="focused"
-  (focusin)="handleFocus()"
-  (focusout)="handleBlur()"
+  (focusin)="handleFocusIn()"
+  (focusout)="handleFocusOut()"
   >
   <div
     class="content-toolbar"
@@ -53,6 +53,8 @@
     [innerHTML]="rawHtml"
     (keydown)="handleKeyDown($event)"
     (input)="handleContentChange()"
+    (focus)="handleFocus($event)"
+    (blur)="handleBlur($event)"
   ></div>
 </div>
 

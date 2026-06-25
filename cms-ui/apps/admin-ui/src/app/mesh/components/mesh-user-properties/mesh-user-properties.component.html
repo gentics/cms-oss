@@ -29,7 +29,7 @@
         }
         @if (form.get('password').enabled) {
           <gtx-password-confirm-input
-            class="columns small-12"
+            class="columns small-12 password-confirm"
             data-control="password"
             [label]="('user.password' | gtxI18n) + ' *'"
             [confirmLabel]="'mesh.confirm_addition' | gtxI18n: { label: ('user.password' | gtxI18n) }"

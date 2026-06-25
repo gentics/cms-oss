@@ -2,7 +2,7 @@
     <label>{{ label }}</label>
 }
 
-<ng-template #entry let-control="control">
+<ng-template #entry let-control="control" let-index="index">
     <gtx-input
         class="item-primary input"
         [class.error]="errors?.errors[index] != null"
@@ -31,7 +31,7 @@
             @for (control of form.controls; track control; let index = $index) {
                 <gtx-sortable-item>
                     <gtx-contents-list-item class="drag-item">
-                        <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control }"></ng-container>
+                        <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control, index: index }"></ng-container>
                         <gtx-drag-handle></gtx-drag-handle>
                     </gtx-contents-list-item>
                 </gtx-sortable-item>
@@ -43,7 +43,7 @@
         <div #regularList class="list regular-list">
             @for (control of form.controls; track control; let index = $index) {
                 <gtx-contents-list-item class="regular-item">
-                    <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control }"></ng-container>
+                    <ng-container [ngTemplateOutlet]="entry" [ngTemplateOutletContext]="{ control: control, index: index }"></ng-container>
                 </gtx-contents-list-item>
             }
         </div>

@@ -8,7 +8,7 @@ import { map } from 'rxjs';
 import { GCMS_UI_SERVICES_PROVIDER } from '../../providers/gcms-ui-services/gcms-ui-services';
 
 /**
- * Component which wrapps the repository-browser API and allows for items to be picked.
+ * Component which wraps the repository-browser API and allows for items to be picked.
  * Will load the items if necessary in order to display them correctly.
  */
 @Component({

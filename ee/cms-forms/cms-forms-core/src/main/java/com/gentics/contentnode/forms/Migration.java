@@ -662,6 +662,8 @@ public class Migration {
 									case "date":
 										ControlConfig dateTimeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
 										fillElementConfig("datetime", dateTimeControl, element);
+										// add an additional setting for "dateOnly"
+										dateTimeControl.settings.add(createDateOnlySetting());
 										controls.put("datetime", dateTimeControl);
 										break;
 									case "datepicker":
@@ -885,5 +887,16 @@ public class Migration {
 			System.err.println("%s. Unknown selection type '%s' in '%s'".formatted(currentFileName, string, node.toString()));
 			return null;
 		}
+	}
+
+	/**
+	 * Create the "dateOnly" boolean setting for the "datetime" element config
+	 * @return setting
+	 */
+	protected BooleanSetting createDateOnlySetting() {
+		BooleanSetting dateOnly = new BooleanSetting("dateOnly", Map.of("de", "Nur Datum", "en", "Only Dates"));
+		dateOnly.backend = true;
+		dateOnly.propertyPath = "dateOnly";
+		return dateOnly;
 	}
 }

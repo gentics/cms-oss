@@ -79,9 +79,8 @@
                     ></a>
                 </ng-template>
 
-                <ng-container *ngIf="uiMode === UIMode.EDIT && item">
+                <ng-container *ngIf="item">
                     <item-status-label
-                        *ngIf="item.type === 'page' || item.type === 'form'"
                         [item]="item"
                         [nodeLanguages]="nodeLanguages"
                         [activeNodeId]="activeNode?.id"
@@ -90,7 +89,7 @@
                     ></item-status-label>
 
                     <file-status-label
-                        *ngIf="item.type === 'image' || item.type === 'file'"
+                        *ngIf="(item.type === 'image' || item.type === 'file') && uiMode === UIMode.EDIT"
                         [item]="item"
                     ></file-status-label>
                 </ng-container>

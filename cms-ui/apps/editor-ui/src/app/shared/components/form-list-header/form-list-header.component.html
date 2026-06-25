@@ -246,7 +246,7 @@
                         }
 
                         @if (uiMode() === UIMode.STAGING) {
-                            <gtx-dropdown-item data-action="stage" (click)="stageItems(StagingMode.REGULAR)">
+                            <gtx-dropdown-item data-action="stage" (click)="stageItems()">
                                 <icon left>inventory</icon>
                                 {{ 'editor.stage_multiple_items_label' | gtxI18n:{
                                     itemType: ('common.type_' + (external() ? 'external_form' : 'form') | gtxI18n),
@@ -254,7 +254,7 @@
                                 } }}
                             </gtx-dropdown-item>
 
-                            <gtx-dropdown-item data-action="unstage" (click)="unstageItems(StagingMode.REGULAR)">
+                            <gtx-dropdown-item data-action="unstage" (click)="unstageItems()">
                                 <icon left>remove</icon>
                                 {{ 'editor.unstage_multiple_items_label' | gtxI18n:{
                                     itemType: ('common.type_' + (external() ? 'external_form' : 'form') | gtxI18n),

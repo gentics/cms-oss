@@ -3,7 +3,6 @@ import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Form, Language } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { StagingMode } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
@@ -191,7 +190,7 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent<Form> {
         this.contextMenuOperations.takeFormsOffline(itemsToTakeOffline);
     }
 
-    async stageItems(mode: StagingMode): Promise<void> {
+    async stageItems(): Promise<void> {
         const itemsToStage = this.getNotDeletedItems();
         if (itemsToStage.length === 0) {
             return;
@@ -200,7 +199,7 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent<Form> {
         let counter = 0;
 
         for (const item of itemsToStage) {
-            const res = await this.contextMenuOperations.stageItemToCurrentPackage(item, mode === StagingMode.RECURSIVE, false);
+            const res = await this.contextMenuOperations.stageItemToCurrentPackage(item, false, false);
             if (res) {
                 counter++;
             }
@@ -240,7 +239,7 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent<Form> {
         // All other errors are reported anyways
     }
 
-    async unstageItems(mode: StagingMode): Promise<void> {
+    async unstageItems(): Promise<void> {
         const itemsToUnstage = this.getNotDeletedItems();
         if (itemsToUnstage.length === 0) {
             return;

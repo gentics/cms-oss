@@ -1,4 +1,10 @@
-<gtx-form-element-container [disabled]="disabled" [focusable]="true" [clickable]="true" (boxClick)="showModal()">
+<gtx-form-element-container
+    [disabled]="disabled"
+    [focusable]="true"
+    [clickable]="true"
+    (boxClick)="showModal()"
+    (boxBlur)="triggerTouch()"
+>
     @if (label) {
         <label (click)="showModal()">{{ label }}</label>
     }

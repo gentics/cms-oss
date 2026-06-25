@@ -50,6 +50,19 @@ export class FormElementContainerComponent extends BaseComponent {
     @Output()
     public boxClick = new EventEmitter<void>();
 
+    /**
+     * Event for when the box has been blurred/lost the focus.
+     * May be used to mark the element as touched.
+     */
+    @Output()
+    public boxBlur = new EventEmitter<void>();
+
+    /**
+     * Event for when the box has been focused.
+     */
+    @Output()
+    public boxFocus = new EventEmitter<void>();
+
     public handleKeyPress(event: KeyboardEvent): void {
         if (this.disabled || this.readonly || !this.clickable) {
             return;

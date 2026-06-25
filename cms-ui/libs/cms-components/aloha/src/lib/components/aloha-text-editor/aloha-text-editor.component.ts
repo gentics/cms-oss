@@ -546,6 +546,7 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
         }
 
         this.isFocused = false;
+        this.triggerTouch();
         this.changeDetector.markForCheck();
     };
 

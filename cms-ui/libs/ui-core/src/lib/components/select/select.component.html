@@ -1,4 +1,4 @@
-<gtx-form-element-container [disabled]="disabled" [focusable]="true">
+<gtx-form-element-container [disabled]="disabled" [focusable]="true" (boxBlur)="triggerTouch()">
     @if (label != null) {
         <label (click)="viewValueContainer.click()">{{ label }}</label>
     }
@@ -22,7 +22,6 @@
                 [attr.data-value]="valueArray"
                 [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
                 data-context-trigger
-                (blur)="inputBlur($event)"
             >
                 @if (selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)) {
                     <div class="view-value-item">{{ viewValue }}</div>

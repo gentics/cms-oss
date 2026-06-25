@@ -5,10 +5,8 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    EventEmitter,
     Input,
     OnChanges,
-    Output,
     QueryList,
     SimpleChanges,
     ViewChild,
@@ -114,18 +112,6 @@ export class SelectComponent
      */
     @Input()
     public disableUnknownValues = false;
-
-    /**
-     * Blur event.
-     */
-    @Output()
-    public blur = new EventEmitter<any>();
-
-    /**
-     * Focus event.
-     */
-    @Output()
-    public focus = new EventEmitter<any>();
 
     @ViewChild(DropdownListComponent, { static: true })
     private dropdownList: DropdownListComponent;
@@ -287,12 +273,6 @@ export class SelectComponent
     override triggerChange(value: SingleOrArray<string | number>): void {
         super.triggerChange(value);
         this.updateViewValue();
-    }
-
-    inputBlur(e: Event): void {
-        e.stopPropagation();
-        this.triggerTouch();
-        this.blur.emit(this.value);
     }
 
     /**

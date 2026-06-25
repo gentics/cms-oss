@@ -88,11 +88,9 @@ export class FormPropertiesComponent
 
     public useEmailPageTemplate: boolean;
     public loadedMailTemplate: Page | null = null;
-    public mailTemplateBreadcrubs = '';
 
     public useInternalSuccessPage: boolean;
     public loadedSuccessPage: Page | null = null;
-    public successPageBreadcrumbs = '';
 
     public formLanguages: Language[] = [];
     public activeLanguage: Language | null = null;
@@ -169,12 +167,12 @@ export class FormPropertiesComponent
             this.item?.data?.adminEmailTemplate,
         );
 
-        this.configureForm(this.form.value as any);
+        this.configureForm(this.form.value as any, false);
     }
 
     protected createForm(): FormGroup<FormProperties<FormPropertiesData>> {
         this.formData = new FormGroup<FormProperties<Partial<EditableFormData>>>({
-            formWidth: new FormControl(this.item?.data?.formWidth || this.safeValue(['data', 'formWidth'])),
+            formWidth: new FormControl(this.item?.data?.formWidth ?? this.safeValue(['data', 'formWidth']) ?? 12),
             flowId: new FormControl(this.item?.data?.flowId || this.safeValue(['data', 'flowId'])),
             captchaId: new FormControl(this.item?.data.flowId || this.safeValue(['data', 'captchaId'])),
             templateContext: new FormControl(this.item?.data?.templateContext || this.safeValue(['data', 'templateContext'])),
@@ -212,7 +210,7 @@ export class FormPropertiesComponent
     protected assembleValue(value: FormPropertiesData): FormPropertiesData {
         if (this.activeConfiguration?.flows?.length > 0 && value.data?.flowId == null) {
             if (value.data == null) {
-                value.data = {} as any;
+                value.data = {};
             }
             value.data.flowId = this.activeConfiguration.flows[0].id;
         }

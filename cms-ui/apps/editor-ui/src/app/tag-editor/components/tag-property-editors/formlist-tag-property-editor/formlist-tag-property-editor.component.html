@@ -6,7 +6,7 @@
       [required]="tagPart?.mandatory"
       [disabled]="readOnly"
       [(ngModel)]="tagProperty.stringValue"
-      (valueCahnge)="onChange($event)"
+      (valueChange)="onChange($event)"
       >
       @for (item of (forms$ | async); track item.uuid) {
         <gtx-option

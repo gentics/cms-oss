@@ -34,7 +34,7 @@
         display: contents !important;
     }
 
-    &.ng-invalid gtx-form-element-container {
+    &.ng-invalid.ng-touched gtx-form-element-container {
         border-color: $gtx-color-alert;
     }
 }

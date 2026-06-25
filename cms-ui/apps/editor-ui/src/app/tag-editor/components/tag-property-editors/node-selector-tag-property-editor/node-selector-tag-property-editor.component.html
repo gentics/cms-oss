@@ -12,7 +12,7 @@
             @for (item of nodes$ | async; track item.id) {
                 <gtx-option
                     [value]="item.id"
-                    [icon]="item.type == 'channel' ? 'input' : ''"
+                    [icon]="item.type === 'channel' ? 'input' : ''"
                 >{{ item.name }}</gtx-option>
             }
         </gtx-select>

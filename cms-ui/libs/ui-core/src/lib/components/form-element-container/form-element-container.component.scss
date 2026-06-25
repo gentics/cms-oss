@@ -38,6 +38,11 @@ gtx-form-element-container {
 
             transition: inherit;
             border-color: inherit;
+            outline: none;
+
+            &:focus {
+                outline: none;
+            }
 
             .box-content {
                 display: flex;
@@ -160,7 +165,7 @@ gtx-form-element-container {
     }
 
     &.invalid,
-    &.ng-invalid {
+    &.ng-invalid.ng-touched {
         border-color: $gtx-color-alert;
 
         label {

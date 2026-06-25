@@ -115,8 +115,4 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
         const newState: CheckboxState = this.value === CHECKBOX_STATE_INDETERMINATE ? true : !this.value;
         this.triggerChange(newState);
     }
-
-    public handleBlur(): void {
-        this.triggerTouch();
-    }
 }

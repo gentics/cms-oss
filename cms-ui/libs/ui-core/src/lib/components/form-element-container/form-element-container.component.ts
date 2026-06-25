@@ -55,13 +55,15 @@ export class FormElementContainerComponent extends BaseComponent {
      * May be used to mark the element as touched.
      */
     @Output()
-    public boxBlur = new EventEmitter<void>();
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public blur = new EventEmitter<void>();
 
     /**
      * Event for when the box has been focused.
      */
     @Output()
-    public boxFocus = new EventEmitter<void>();
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public focus = new EventEmitter<void>();
 
     public handleKeyPress(event: KeyboardEvent): void {
         if (this.disabled || this.readonly || !this.clickable) {
@@ -76,5 +78,15 @@ export class FormElementContainerComponent extends BaseComponent {
 
     public handleClick(): void {
         this.boxClick.emit();
+    }
+
+    public handleFocus(event: Event): void {
+        cancelEvent(event);
+        this.focus.emit();
+    }
+
+    public handleBlur(event: Event): void {
+        cancelEvent(event);
+        this.blur.emit();
     }
 }

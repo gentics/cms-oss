@@ -19,6 +19,7 @@ import { CheckboxComponent } from '../checkbox/checkbox.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
+import { FormElementContainerComponent } from '../form-element-container/form-element-container.component';
 import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
@@ -30,6 +31,7 @@ describe('SelectComponent', () => {
         TestBed.configureTestingModule({
             imports: [FormsModule, ReactiveFormsModule],
             declarations: [
+                FormElementContainerComponent,
                 SelectComponent,
                 SelectOptionDirective,
                 SelectOptionGroupDirective,
@@ -273,14 +275,14 @@ describe('SelectComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
             tick();
-            const fakeInput: HTMLInputElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            const fakeInput: HTMLInputElement = (fixture.nativeElement as HTMLElement).querySelector('.box-wrapper');
             spyOn(instance, 'onBlur');
 
             triggerEvent(fakeInput, 'blur');
             tick();
             fixture.detectChanges();
 
-            expect(instance.onBlur).toHaveBeenCalledWith('Bar');
+            expect(instance.onBlur).toHaveBeenCalledTimes(1);
         }),
     );
 

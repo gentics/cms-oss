@@ -71,17 +71,13 @@ describe('ButtonComponent', () => {
     it('sets the button as form submit button when "submit" is set to a boolean value',
         componentTest(() => TestComponent, `
             <gtx-button [submit]="isSubmit"></gtx-button>`,
-        async (fixture, testComponent) => {
+        (fixture, testComponent) => {
             testComponent.isSubmit = true;
             fixture.detectChanges();
             const button: HTMLButtonElement = fixture.nativeElement.querySelector('button');
             expect(button.type).toBe('submit');
 
             testComponent.isSubmit = false;
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(button.type).not.toBe('submit');
         },

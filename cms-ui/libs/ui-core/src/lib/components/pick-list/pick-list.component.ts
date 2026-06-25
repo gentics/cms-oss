@@ -2,10 +2,8 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter,
     Input,
     OnChanges,
-    Output,
     SimpleChanges,
 } from '@angular/core';
 import { generateFormProvider } from '../../utils';
@@ -99,18 +97,6 @@ export class PickListComponent
      */
     @Input()
     public emptyAssignedItemsLabel = 'No items assigned yet';
-
-    /**
-     * Blur event.
-     */
-    @Output()
-    public blur = new EventEmitter<PickListValue>();
-
-    /**
-     * Focus event.
-     */
-    @Output()
-    public focus = new EventEmitter<PickListValue>();
 
     /**
      * Items currently shown in the available list.
@@ -384,26 +370,6 @@ export class PickListComponent
      */
     public getItemDescription(item: PickListItem): string {
         return item?.description ?? '';
-    }
-
-    /**
-     * Emit the current control value when one of the list containers receives focus.
-     */
-    public inputFocus(): void {
-        if (this.disabled) {
-            return;
-        }
-
-        this.focus.emit(this.value);
-    }
-
-    /**
-     * Mark the control as touched and emit blur when focus leaves a list container.
-     */
-    public inputBlur(event: FocusEvent): void {
-        event.stopPropagation();
-        this.triggerTouch();
-        this.blur.emit(this.value);
     }
 
     /**

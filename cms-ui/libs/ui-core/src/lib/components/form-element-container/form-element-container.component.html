@@ -10,8 +10,8 @@
         class="box-wrapper"
         [attr.tabindex]="focusable && !disabled ? 0 : null"
         (keypress)="handleKeyPress($event)"
-        (blur)="boxBlur.emit()"
-        (focus)="boxFocus.emit()"
+        (blur)="handleBlur($event)"
+        (focus)="handleFocus($event)"
     >
         <div class="box-content" (click)="handleClick()">
             <ng-content />

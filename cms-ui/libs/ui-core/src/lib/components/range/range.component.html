@@ -52,8 +52,8 @@
                 [value]="value"
 
                 (input)="onInput($event)"
-                (focus)="markFocused(true)"
-                (blur)="markFocused(false)"
+                (focus)="handleFocus($event)"
+                (blur)="handleBlur($event)"
             />
         </div>
     </div>

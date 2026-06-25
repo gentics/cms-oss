@@ -21,7 +21,8 @@
         [value]="value || ''"
 
         (input)="textAreaInputHandler($event)"
-        (blur)="blurHandler()"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
     ></textarea>
 </gtx-form-element-container>
 

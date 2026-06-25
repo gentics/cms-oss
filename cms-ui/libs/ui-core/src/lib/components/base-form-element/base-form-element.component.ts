@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 import { BaseComponent } from '../base-component/base.component';
+import { cancelEvent } from '@gentics/common';
 
 /**
  * Base class for all components which can/are used in a form (via ngModel or via FormControls).
@@ -59,6 +60,20 @@ export abstract class BaseFormElementComponent<T>
     @Output()
     public touch = new EventEmitter<void>();
 
+    /**
+     * Fires when the element loses focus.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public blur = new EventEmitter<void>();
+
+    /**
+     * Fires when the element gains focus.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public focus = new EventEmitter<void>();
+
     /** Internal values for control-value accessor impl */
     private cvaChange: (value: T | null) => void;
     private cvaTouch: () => void;
@@ -99,6 +114,25 @@ export abstract class BaseFormElementComponent<T>
      * Hook which is called whenever the component is being touched by the user.
      */
     protected onTouch(): void {}
+
+    /**
+     * Simple handler function for templates to use.
+     */
+    public handleFocus(event?: Event): void {
+        cancelEvent(event);
+        this.focus.emit();
+    }
+
+    /**
+     * Simple handler function for templates to use.
+     */
+    public handleBlur(event?: Event): void {
+        cancelEvent(event);
+        this.blur.emit();
+
+        // Trigger the touch on blur to make it consistent with all components
+        this.triggerTouch();
+    }
 
     /**
      * Function to trigger all required external hooks and to update the

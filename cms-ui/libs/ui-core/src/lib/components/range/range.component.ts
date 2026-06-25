@@ -111,7 +111,13 @@ export class RangeComponent extends BaseFormElementComponent<number> {
         this.triggerChange(newVal);
     }
 
-    markFocused(focused: boolean): void {
-        this.focused = focused;
+    public override handleFocus(event?: Event): void {
+        super.handleFocus(event);
+        this.focused = true;
+    }
+
+    public override handleBlur(event?: Event): void {
+        super.handleBlur(event);
+        this.focused = false;
     }
 }

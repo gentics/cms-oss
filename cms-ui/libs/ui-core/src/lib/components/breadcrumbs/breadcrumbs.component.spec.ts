@@ -83,8 +83,8 @@ describe('Breadcrumbs', () => {
     );
 
     it('changes the text of the created links with the bound input property',
-        componentTest(() => TestComponent, async (fixture, component) => {
-            const links = component.links = [
+        componentTest(() => TestComponent, (fixture, component) => {
+            component.links = [
                 { text: 'A' },
                 { text: 'B' },
                 { text: 'C' },
@@ -100,10 +100,6 @@ describe('Breadcrumbs', () => {
                 { text: 'BBB' },
                 { text: 'CCC' },
             ];
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
 
             expect(linkTexts(fixture)).toEqual(['AAA', 'BBB', 'CCC'],
@@ -112,7 +108,7 @@ describe('Breadcrumbs', () => {
     );
 
     it('changes the href of the created links with the bound input property',
-        componentTest(() => TestComponent, async (fixture, component) => {
+        componentTest(() => TestComponent, (fixture, component) => {
             component.links = [
                 { text: 'A', href: '/a' },
                 { text: 'B', href: './b' },
@@ -127,10 +123,6 @@ describe('Breadcrumbs', () => {
             component.links[1].href = './bb';
             component.links[2].href = '#cc';
             component.links = [...component.links];
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
 
             expect(linkHrefs(fixture)).toEqual(['/aa', './bb', '#cc'],
@@ -142,10 +134,6 @@ describe('Breadcrumbs', () => {
                 { text: 'B', href: './bbb' },
                 { text: 'C', href: '#ccc' },
             ];
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
 
             expect(linkHrefs(fixture)).toEqual(['/aaa', './bbb', '#ccc'],
@@ -161,28 +149,16 @@ describe('Breadcrumbs', () => {
                 { text: 'C', href: '/c' }
             ]" [disabled]="disableBreadcrumbs">
             </gtx-breadcrumbs>`,
-        async (fixture, component) => {
+        (fixture, component) => {
             component.disableBreadcrumbs = false;
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
 
             component.disableBreadcrumbs = true;
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual([null, null, null]);
 
             component.disableBreadcrumbs = false;
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
         },
@@ -236,16 +212,12 @@ describe('Breadcrumbs', () => {
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-        async (fixture, component) => {
+        (fixture, component) => {
             component.links = [
                 { text: 'X', href: '/x', someKey: 'someValue' },
             ];
             component.routerLinks = [];
 
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
 
@@ -254,10 +226,6 @@ describe('Breadcrumbs', () => {
                 { text: 'Y', route: ['/route', 'y'] },
             ];
 
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
         },
@@ -268,7 +236,7 @@ describe('Breadcrumbs', () => {
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-        async (fixture, component) => {
+        (fixture, component) => {
 
             // Links, but no router links
             component.links = [
@@ -277,10 +245,6 @@ describe('Breadcrumbs', () => {
             ];
             component.routerLinks = [];
 
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
@@ -291,10 +255,6 @@ describe('Breadcrumbs', () => {
                 { text: 'B', route: ['/route', 'b'] },
             ];
 
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
@@ -306,10 +266,6 @@ describe('Breadcrumbs', () => {
                 { text: 'A', route: ['/route', 'a'] },
             ];
 
-            fixture.changeDetectorRef.markForCheck();
-            fixture.detectChanges();
-            await fixture.whenStable();
-            fixture.changeDetectorRef.markForCheck();
             fixture.detectChanges();
             expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
         },
@@ -344,7 +300,7 @@ describe('Breadcrumbs', () => {
             componentTest(() => TestComponent, `
                 <gtx-breadcrumbs multilineExpanded='true' [routerLinks]="routerLinks">
                 </gtx-breadcrumbs>`,
-            async (fixture, instance) => {
+            (fixture, instance) => {
                 instance.routerLinks = [
                     { text: 'A', route: ['/TestA/TestB/TestC'] },
                     { text: 'B', route: ['/TestA', 'TestB', 'TestC'] },
@@ -354,10 +310,6 @@ describe('Breadcrumbs', () => {
                 expect(linkTexts(fixture)).toEqual(['A', 'B']);
 
                 instance.routerLinks = [...instance.routerLinks, { text: 'C', route: ['./TestC'] }];
-                fixture.changeDetectorRef.markForCheck();
-                fixture.detectChanges();
-                await fixture.whenStable();
-                fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
                 expect(linkTexts(fixture)).toEqual(['A', 'B', 'C']);
             },

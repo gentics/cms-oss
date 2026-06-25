@@ -88,8 +88,8 @@ export class JsonInputComponent
         this.triggerTouch();
     }
 
-    public handleBlur(): void {
-        this.triggerTouch();
+    public override handleBlur(event?: Event): void {
+        super.handleBlur(event);
 
         if (this.raw) {
             this.triggerChange(this.rawValue);

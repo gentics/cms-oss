@@ -139,29 +139,6 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
     public type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
 
     /**
-     * Fires when the input loses focus.
-     * @deprecated Will be removed in next major version, and therefore a bubbled `blur` event from the
-     * browser may occur instead, which has a different value.
-     */
-    @Output()
-    public blur = new EventEmitter<string | number>();
-
-    /**
-     * Fires when the input gains focus.
-     * @deprecated Will be removed in next major version, and therefore a bubbled `focus` event from the
-     * browser may occur instead, which has a different value.
-     */
-    @Output()
-    public focus = new EventEmitter<string | number>();
-
-    /**
-     * Fires whenever a char is entered into the field.
-     * @deprecated Use `valueChange` instead.
-     */
-    @Output()
-    public change = new EventEmitter<string | number>();
-
-    /**
      * Fires when the value has been cleared via the `clearable` button.
      */
     @Output()
@@ -199,11 +176,6 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
 
     protected onValueChange(): void {
         // No op
-    }
-
-    public override triggerChange(value: string | number): void {
-        super.triggerChange(value);
-        this.change.emit(this.getFinalValue());
     }
 
     public handleKeyDown(event: KeyboardEvent): void {
@@ -251,18 +223,14 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
         this.triggerChange(parsed);
     }
 
-    public onBlur(e: Event): void {
-        cancelEvent(e);
+    public override handleBlur(event?: Event): void {
         this.focused = false;
-        this.triggerTouch();
-        this.blur.emit(this.value);
-        this.changeDetector.markForCheck();
+        this.handleBlur(event);
     }
 
-    public onFocus(e: Event): void {
+    public override handleFocus(event?: Event): void {
         this.focused = true;
-        this.focus.emit(this.value);
-        this.changeDetector.markForCheck();
+        super.handleFocus(event);
     }
 
     public clear(): void {

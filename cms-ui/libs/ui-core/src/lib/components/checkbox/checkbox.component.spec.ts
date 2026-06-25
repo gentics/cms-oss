@@ -138,29 +138,38 @@ describe('CheckboxComponent', () => {
                 const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
                 instance.boundProperty = false;
+
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
-                await fixture.whenStable();
+                await fixture.whenRenderingDone();
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
 
                 expect(nativeInput.checked).toBe(false);
                 expect(nativeInput.indeterminate).toBe(false);
 
                 instance.boundProperty = CHECKBOX_STATE_INDETERMINATE;
+
+                // This is needed, twice, because otherwise the checkbox isn't re-rendered for *whatever* reason.
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
-                await fixture.whenStable();
+                await fixture.whenRenderingDone();
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
+
                 expect(nativeInput.indeterminate).toBe(true);
 
                 instance.boundProperty = true;
+
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
-                await fixture.whenStable();
+                await fixture.whenRenderingDone();
                 fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
+                await fixture.whenRenderingDone();
+
                 expect(nativeInput.checked).toBe(true);
                 expect(nativeInput.indeterminate).toBe(false);
             },
@@ -251,24 +260,16 @@ describe('CheckboxComponent', () => {
         it('should change check state when "value" attribute binding changes',
             componentTest(() => TestComponent, `
                 <gtx-checkbox [pure]="true" [value]="checkState"></gtx-checkbox>`,
-            async (fixture) => {
+            (fixture) => {
                 const instance: TestComponent = fixture.componentInstance;
                 const checkboxComponent = instance.checkboxComponent;
                 const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
-                fixture.changeDetectorRef.markForCheck();
-                fixture.detectChanges();
-                await fixture.whenStable();
-                fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
 
                 expect(checkboxComponent.value).toBe(false);
                 expect(nativeInput.checked).toBe(false);
 
                 instance.checkState = true;
-                fixture.changeDetectorRef.markForCheck();
-                fixture.detectChanges();
-                await fixture.whenStable();
-                fixture.changeDetectorRef.markForCheck();
                 fixture.detectChanges();
 
                 expect(checkboxComponent.value).toBe(true);

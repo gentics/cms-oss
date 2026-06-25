@@ -55,9 +55,13 @@ General utility functions which are not angular specific have been moved to <cod
 * @getValueByPath@
 * @waitTake@ (to @rxjs@ entrypoint, i.E. <code>@gentics/common/rxjs</code>)
 
+The @BaseFormElementComponent@ gained new @blur@ and @focus@ outputs.
+You can use the new @handleFocus@ and @handleBlur@ functions to handle the events from the template conveniently.
+Components from the @ui-core@ have implemented these to track focus.
+
+
 The components @gtx-checkbox@ and @gtx-range@ have been updated to extend the @BaseFormElement@ component, and therefore follow it's pattern:
 
-* Removed @blur@ and @focus@ outputs
 * Output @change@ has been renamed to @valueChange@
 
 Specific changes for @gtx-checkbox@

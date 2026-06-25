@@ -4,21 +4,24 @@
         <div class="column-header">
             <h4>{{ availableListLabel }}</h4>
             @if (showCount) {
-            <span class="count">{{availableItems.length}}</span>
+                <span class="count">{{availableItems.length}}</span>
             }
         </div>
-        <div class="list-box"
+        <div
+            class="list-box"
             [attr.tabindex]="disabled ? null : 0"
             [attr.aria-disabled]="disabled"
             [class.drag-highlight]="isDraggingOverAvailable"
-            (focus)="inputFocus()"
-            (blur)="inputBlur($event)"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
             (dragenter)="onDragEnter('available')"
             (dragleave)="onDragLeave('available')"
             (dragover)="onDragOver($event)"
-            (drop)="onDrop('available', $event)">
+            (drop)="onDrop('available', $event)"
+        >
             @for (item of availableItems; track item.id) {
-                <div class="list-item"
+                <div
+                    class="list-item"
                     [class.selected]="isSelected('available', item)"
                     title=""
                     [attr.draggable]="!disabled && enableDragAndDrop"
@@ -66,19 +69,22 @@
         <div class="column-header">
             <h4>{{ assignedListLabel }}</h4>
             @if (showCount) {
-            <span class="count">{{assignedItems.length}}</span>
+                <span class="count">{{assignedItems.length}}</span>
             }
         </div>
-        <div class="list-box"
+
+        <div
+            class="list-box"
             [attr.tabindex]="disabled ? null : 0"
             [attr.aria-disabled]="disabled"
             [class.drag-highlight]="isDraggingOverAssigned"
-            (focus)="inputFocus()"
-            (blur)="inputBlur($event)"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
             (dragenter)="onDragEnter('assigned')"
             (dragleave)="onDragLeave('assigned')"
             (dragover)="onDragOver($event)"
-            (drop)="onDrop('assigned', $event)">
+            (drop)="onDrop('assigned', $event)"
+        >
             @for (item of assignedItems; track item.id) {
                 <div class="list-item"
                     [class.selected]="isSelected('assigned', item)"

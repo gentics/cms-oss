@@ -1,5 +1,7 @@
 <input
+    #input
     type="radio"
+    tabindex="0"
     [attr.id]="id || UNIQUE_ID"
     [attr.name]="name"
     [checked]="checked"
@@ -7,12 +9,10 @@
     [required]="required"
     [value]="value || ''"
     [class.tabbed]="tabbedFocus"
-    tabindex="0"
 
-    (blur)="onBlur()"
-    (focus)="onFocus()"
+    (focus)="handleFocus($event)"
+    (blur)="handleBlur($event)"
     (change)="onInputChecked($event, input)"
-    #input
 />
 
 <label [attr.for]="id || UNIQUE_ID" (click)="input.click()">

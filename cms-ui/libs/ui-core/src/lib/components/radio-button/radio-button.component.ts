@@ -2,13 +2,12 @@ import {
     Attribute,
     ChangeDetectorRef,
     Component,
-    EventEmitter, HostListener,
+    HostListener,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
     Optional,
-    Output,
     SimpleChanges,
 } from '@angular/core';
 import { randomId } from '@gentics/common';
@@ -80,18 +79,6 @@ export class RadioButtonComponent
     /** If this radio-button is currently checked or not */
     @Input()
     public checked = false;
-
-    /**
-     * Blur event
-     */
-    @Output()
-    public blur = new EventEmitter<void>(true);
-
-    /**
-     * Focus event
-     */
-    @Output()
-    public focus = new EventEmitter<void>(true);
 
     /** If the element is focused via tab/keyboard shortcuts. */
     public tabbedFocus = false;
@@ -180,14 +167,9 @@ export class RadioButtonComponent
         this.checked = this.writtenValue !== NO_SET && isEqual(this.value, this.writtenValue);
     }
 
-    public onBlur(): void {
-        this.blur.emit();
-        this.triggerTouch();
+    public override handleBlur(event?: Event): void {
+        super.handleBlur(event);
         this.tabbedFocus = false;
-    }
-
-    public onFocus(): void {
-        this.focus.emit();
     }
 
     @HostListener('keyup', ['$event'])

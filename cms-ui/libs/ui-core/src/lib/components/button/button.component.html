@@ -7,6 +7,8 @@
         [class.btn-icon]="!!icon"
         [type]="submit ? 'submit' : 'button'"
         [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (click)="preventDisabledClick($event)"
     >
         <ng-content></ng-content>

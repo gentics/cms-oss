@@ -1,4 +1,4 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, HostListener, Input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { cancelEvent } from '@gentics/common';
 
 /**
@@ -67,6 +67,20 @@ export class ButtonComponent {
     @Input({ transform: booleanAttribute })
     public submit = false;
 
+    /**
+     * Event for when the button is getting focused.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public focus = new EventEmitter<void>();
+
+    /**
+     * Event for when the button looses focus.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public blur = new EventEmitter<void>();
+
     // In some browsers, disabled elements don't fire mouse events, but bubble them up the DOM tree.
     // To not trigger actions when the button is disabled, we need to prevent them manually.
     @HostListener('click', ['$event'])
@@ -74,5 +88,15 @@ export class ButtonComponent {
         if (event && this.disabled) {
             cancelEvent(event);
         }
+    }
+
+    public handleFocus(event?: Event): void {
+        cancelEvent(event);
+        this.focus.emit();
+    }
+
+    public handleBlur(event?: Event): void {
+        cancelEvent(event);
+        this.blur.emit();
     }
 }

@@ -3,7 +3,8 @@
     [focusable]="true"
     [clickable]="true"
     (boxClick)="showModal()"
-    (boxBlur)="triggerTouch()"
+    (focus)="handleFocus($event)"
+    (blur)="handleBlur($event)"
 >
     @if (label) {
         <label (click)="showModal()">{{ label }}</label>

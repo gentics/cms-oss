@@ -1,4 +1,9 @@
-<gtx-form-element-container [disabled]="disabled" [focusable]="true" (boxBlur)="triggerTouch()">
+<gtx-form-element-container
+    [disabled]="disabled"
+    [focusable]="true"
+    (focus)="handleFocus($event)"
+    (blur)="handleBlur($event)"
+>
     @if (label != null) {
         <label (click)="viewValueContainer.click()">{{ label }}</label>
     }
@@ -26,10 +31,10 @@
                 @if (selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)) {
                     <div class="view-value-item">{{ viewValue }}</div>
                 }
-                @if (placeholder && selectedOptions.length == 0) {
+                @if (placeholder && selectedOptions.length === 0) {
                     <div class="placeholder">{{ placeholder }}</div>
                 }
-                @if (!placeholder && selectedOptions.length == 0) {
+                @if (!placeholder && selectedOptions.length === 0) {
                     <div></div>
                 }
                 <icon>arrow_drop_down</icon>

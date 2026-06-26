@@ -322,7 +322,7 @@ test.describe('List Loading', () => {
             await page.locator('gtx-button[data-action="open-actions-menu"]').click();
             await page.locator('.dropdown-content-wrapper button.action-button.action-content-staging').click();
 
-			await page.locator('gtx-content-staging-modal gtx-content-package-list gtx-contents-list-item gtx-checkbox').click();
+            await page.locator('gtx-content-staging-modal gtx-content-package-list gtx-contents-list-item gtx-checkbox').click();
             await page.locator('gtx-content-staging-modal button.primary[data-action="primary"]').click();
 
             await page.locator('gtx-button.staging-mode-leaver').isVisible();

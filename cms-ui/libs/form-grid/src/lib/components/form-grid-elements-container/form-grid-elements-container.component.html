@@ -69,7 +69,7 @@
                             <span class="tag-text">{{ displayItem.config.labelI18n | gtxI18nObject }}</span>
                         </span>
 
-                        @if (!displayItem.isControl || mode() === FormGridEditMode.FULL) {
+                        @if (!displayItem.isControl || (mode() === FormGridEditMode.FULL)) {
                             <gtx-button
                                 type="alert"
                                 class="delete-button"
@@ -78,9 +78,7 @@
                             >
                                 <icon>delete_outline</icon>
                             </gtx-button>
-                        }
 
-                        @if (mode() !== FormGridEditMode.NONE) {
                             <gtx-button
                                 [type]="displayItem.visible ? 'default' : 'secondary'"
                                 class="visibility-button"

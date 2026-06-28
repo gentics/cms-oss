@@ -42,16 +42,23 @@ import { AuthenticationService } from './services/authentication.service';
             translate.setTranslation('de', DE_TRANSLATIONS, true);
             translate.setTranslation('en', EN_TRANSLATIONS, true);
 
-            const savedLang = localStorage.getItem('GCMSUI_uiLanguage');
+            let savedLang = localStorage.getItem('GCMSUI_uiLanguage');
+
+            // For whatever reason, some strings are *sometimes* written with, and sometimes without quotes.
+            const matches = /^['|"]([a-zA-Z-]+)['|"]$/.exec(savedLang);
+            if (matches != null && matches.length >= 2) {
+                savedLang = matches[1];
+            }
+
             if (savedLang === 'de' || savedLang === 'en') {
-                translate.use(savedLang);
+                i18n.setLanguage(savedLang);
             } else {
-                const infered = i18n.inferUserLanguage();
-                if (infered === 'de' || savedLang === 'en') {
-                    translate.use(infered);
+                const inferred = i18n.inferUserLanguage();
+                if (inferred === 'de' || savedLang === 'en') {
+                    i18n.setLanguage(inferred);
                 } else {
                     // If nothing matches, we fall back to english just in case
-                    translate.use('en');
+                    i18n.setLanguage('en');
                 }
             }
 

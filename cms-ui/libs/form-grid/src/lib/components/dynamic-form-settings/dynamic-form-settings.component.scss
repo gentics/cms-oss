@@ -16,9 +16,30 @@
             max-width: calc(50% - 0.5rem);
         }
 
+        /*
+         * Next two styles are to make checkboxes stand out a bit more and give them proper space inside the grid.
+         * Has the effect of having checkboxes grouped together compactly, but still have some distance to other
+         * elements, as they are too crammed otherwise.
+         */
+
+        /*
+         * This is for the first checkbox in the entire list, or after another non-checkbox.
+         * Additionally, if it has another checkbox following it, add some padding to the top.
+         */
         &:not([data-control-type="boolean"]) + [data-control-type="boolean"],
-        &:not([data-control-type="boolean"]) + [data-control-type="boolean"] + [data-control-type="boolean"] {
-            padding-top: 0.5rem;
+        &[data-control-type="boolean"]:first-child {
+            &,
+            & + [data-control-type="boolean"] {
+                padding-top: 0.25rem;
+            }
+        }
+
+        /*
+         * Checkboxes which are before another not-checkbox element. Only the one needs it in the end,
+         * since checkboxes are in the same row and expand height wise.
+         */
+        &[data-control-type="boolean"]:has(+ .settings-entry:not([data-control-type="boolean"])) {
+            padding-bottom: 0.25rem;
         }
     }
 }

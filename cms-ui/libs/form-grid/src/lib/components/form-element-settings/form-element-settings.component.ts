@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { FormElement, FormElementConfiguration, FormSchema, FormSchemaProperty, FormTypeConfiguration } from '@gentics/cms-models';
+import { FormGridEditMode } from '../../models';
 
 @Component({
     selector: 'gtx-form-element-settings',
@@ -10,6 +11,8 @@ import { FormElement, FormElementConfiguration, FormSchema, FormSchemaProperty, 
 })
 export class FormElementSettingsComponent {
 
+    public readonly FormGridEditMode = FormGridEditMode;
+
     public readonly config = input.required<FormTypeConfiguration>();
     public readonly schema = input.required<FormSchema>();
     public readonly elementMap = input.required<Record<string, FormElement>>();
@@ -18,7 +21,7 @@ export class FormElementSettingsComponent {
     public readonly elementConfig = input.required<FormElementConfiguration>();
     public readonly elementSchema = input<FormSchemaProperty>();
 
-    public readonly disabled = input.required<boolean>();
+    public readonly mode = input.required<FormGridEditMode>();
 
     public readonly visibleSettings = computed(() => {
         const all = this.elementConfig().settings || [];

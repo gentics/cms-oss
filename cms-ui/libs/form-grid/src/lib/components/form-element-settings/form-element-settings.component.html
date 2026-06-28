@@ -1,15 +1,16 @@
 <div class="settings-container">
-    <gtx-form-condition-input
-        class="settings-entry"
-        [label]="'form_grid.definition_condition' | gtxI18n"
-        [schema]="schema()"
-        [disabled]="disabled()"
-        [elementMap]="elementMap()"
-        [element]="element()"
-        [elementConfig]="elementConfig()"
-        [value]="element()?.formGridOptions?.condition"
-        (valueChange)="updateSettingValue('condition', $event)"
-    />
+    @if (mode() === FormGridEditMode.FULL || elementSchema() == null) {
+        <gtx-form-condition-input
+            class="settings-entry"
+            [label]="'form_grid.definition_condition' | gtxI18n"
+            [schema]="schema()"
+            [elementMap]="elementMap()"
+            [element]="element()"
+            [elementConfig]="elementConfig()"
+            [value]="element()?.formGridOptions?.condition"
+            (valueChange)="updateSettingValue('condition', $event)"
+        />
+    }
 
     <gtx-dynamic-form-settings
         class="settings-entry"
@@ -18,7 +19,7 @@
         [element]="element()"
         [elementConfig]="elementConfig()"
         [elementSchema]="elementSchema()"
-        [disabled]="disabled()"
+        [disabled]="mode() === FormGridEditMode.NONE"
         (elementChange)="element.set($event)"
     />
 </div>

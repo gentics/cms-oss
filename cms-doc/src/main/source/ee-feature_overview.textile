@@ -39,6 +39,8 @@ With the forms feature, it is possible to create forms directly in Gentics CMS, 
 
 See "Gentics CMS Forms":feature_forms.html for details.
 
+Forms are rendered and customized on the client side by FormGen. See "FormGen":formgen.html for details.
+
 h3. Keycloak
 
 The keycloak feature allows SSO to the CMS via "Keycloak":http://www.keycloak.org/

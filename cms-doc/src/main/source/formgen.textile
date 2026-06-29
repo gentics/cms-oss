@@ -1,0 +1,429 @@
+h2. FormGen Customizing
+
+*FormGen* is the React Native / Expo based renderer that displays Gentics Forms, validates user input, runs the configured form flow 
+and submits the data. See "Gentics Forms":forms.html for how forms are configured and embedded into pages.
+
+This guide describes how to adapt FormGen to project-specific requirements. FormGen establishes a clear separation between its 
+*core* and *customer-specific code*: all customizations are placed in a dedicated +custom/+ folder (and a +styles/custom/+ folder for styling). 
+The core stays untouched and therefore update-compatible.
+
+You can:
+* register new form controls or replace existing ones,
+* hook into the form lifecycle (before/after submit, page changes, validation, form initialisation),
+* replace or add navigation buttons,
+* extend or replace overlays (loading / error / info dialogs),
+* register or replace whole screens,
+* override the styling.
+
+endprologue.
+
+h3. Where customizations live
+
+All customer-specific code is placed in the FormGen feature package:
+
+|_. Path |_. Purpose |
+| +packages/feature-formgen/src/custom/+ | Element, hook, button, overlay and screen customizations. |
+| +packages/feature-formgen/src/styles/custom/+ | Style overrides (CSS and React Native style sheets). |
+
+NOTE: The file names below are given relative to +packages/feature-formgen/src/+.
+
+h3. Custom elements (controls)
+
+Elements are the input controls a visitor interacts with (text input, checkbox, select, file upload, …).
+
+h4. Central files
+
+|_. File |_. Purpose |
+| +custom/ElementDefinitions.tsx+ | Re-exports all element components. |
+| +custom/ElementTypes.tsx+ | Maps a control type to a component, per Mesh plugin. |
+
+h4. How resolution works
+
+Elements are resolved per *plugin*. The plugin is the value configured as +pluginName+ on the 
+form type in +conf/forms.yml+ (for standard CMS Forms this is +forms+). +ElementTypes.tsx+ defines one type map per plugin 
+plus a +shared+ map, and resolves a control type with +getElementTypeByPlugin(type, pluginName)+: the plugin-specific map is 
+preferred, with a fallback to the +shared+ map.
+
+NOTE: Keys are *case sensitive* and should always be written in *lowercase*.
+
+The following is an excerpt of the actual mapping for CMS Forms (+forms+ plugin):
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+// Plain text inputs, all rendered by the same component
+export const cmsInputElementTypes: IElementTypes = {
+    string:   Elements.InputElement,
+    number:   Elements.InputElement,
+    email:    Elements.InputElement,
+    textarea: Elements.InputElement,
+};
+
+// Shared across all plugins
+const sharedElementTypes: IElementTypes = {
+    ...cmsInputElementTypes,
+    catalog:  Elements.CatalogElement,
+    datetime: Elements.DateTimeElement,
+    time:     Elements.DateTimeElement,
+    binary:   Elements.BinaryElement,
+};
+
+// Specific to the "forms" plugin (overrides shared)
+const cmsElementTypes: IElementTypes = {
+    text:                 Elements.FormGridTextElement,
+    spacer:               Elements.FormGridTextElement,
+    boolean:              Elements.CMSBooleanElement,
+    container:            Elements.CmsContainerElement,
+    conditionalcontainer: Elements.CmsContainerElement,
+    adminmail:            Elements.CatalogElement,
+    usermail:             Elements.CmsUserMailElement,
+};
+
+const pluginElementTypes: IPluginElements = {
+    "shared":    sharedElementTypes,
+    "acta-nova": anElementTypes,
+    "forms":     cmsElementTypes,
+};
+
+export const getElementTypeByPlugin = (elementType, pluginName) => {
+    const sharedTypes   = pluginElementTypes['shared'];
+    const specificTypes = pluginElementTypes[pluginName] || {};
+    // the plugin-specific type is preferred
+    return specificTypes[elementType] || sharedTypes[elementType];
+};
+</pre>
+</div>
+
+h4. The element contract
+
+Every element component is typed as +IElementType+ and must implement two methods in addition to being a React component:
+
+|_. Method |_. Purpose |
+| +validate(state, jsonPath, id, updateErrorMessages, t, formGridOptions?, localValue?)+ | Returns a +CommonValidation+ (+{ isValid, errorMessage? }+) for the element's current value. |
+| +getSummaryValue(state, jsonPath, id, t, formGridOptions?, restService?)+ | Returns the value to display on the summary screen. |
+
+h4. Add or replace an element
+
+# Implement the React Native component, e.g. +components/elements/.../FancyDatePickerElement.tsx+, including +validate+ and +getSummaryValue+.
+# Re-export it from +custom/ElementDefinitions.tsx+.
+# Map a lowercase key to it in +custom/ElementTypes.tsx+ — in +cmsElementTypes+ for the +forms+ plugin, or in +sharedElementTypes+ to make it available to all plugins. To *replace* an existing element, point an existing key at your component instead.
+# Make sure the control's type matches the key. For the built-in controls this key corresponds to the control type used in +conf/forms.yml+ (e.g. +string+, +catalog+, +boolean+, +binary+).
+
+h3. Lifecycle hooks
+
+The file +custom/HooksUtils.tsx+ exposes 14 asynchronous hook functions that let you inject business logic before or after 
+central actions, without changing the core. The default implementations are mostly empty (some only log); 
+you override their bodies for your project.
+
+h4. Available hooks
+
+|_. Hook |_. Timing |_. Parameters |
+| +preSubmitForm+ | Before submit | +formid, data, formState, uiState, updateState, restService+ |
+| +postSubmitForm+ | After successful submit | +formid, data, formState, uiState, updateState, restService+ |
+| +preHandleNextFormPageChange+ | Before next form page | +formState, uiState, restService, updateState, mockForm?+ |
+| +postHandleNextFormPageChange+ | After next form page | +formState, uiState, restService, updateState, mockForm?+ |
+| +preHandlePreviousFormPageChange+ | Before previous form page | +formState, uiState, restService, updateState, mockForm?+ |
+| +postHandlePreviousFormPageChange+ | After previous form page | +formState, uiState, restService, updateState, mockForm?+ |
+| +preHandleNextFormFlowPageChange+ | Before next flow step | +uiState, updateState+ |
+| +postHandleFormFlowPageChange+ | After next flow step | +uiState, updateState+ |
+| +preHandlePreviousFormFlowPageChange+ | Before previous flow step | +uiState, updateState+ |
+| +postHandlePreviousFormFlowPageChange+ | After previous flow step | +uiState, updateState+ |
+| +preLoadValidation+ | Before validation run | +restService, formState, uiState, updateState, afterValidation, jsonPath?, mockForm?, updateOnChange?+ |
+| +postLoadValidation+ | After validation run | +restService, formState, uiState, updateState, afterValidation, jsonPath?, mockForm?, updateOnChange?+ |
+| +preInitForm+ | Before the form is loaded | +uiState, formState, newFormId?+ |
+| +postInitForm+ | After the form is loaded | +uiState, formState, responseFromInitForm, newFormId?+ |
+
+h4. Implementation example
+
+The default +preSubmitForm+ triggers the captcha check before the form is submitted. The example below shows the actual default plus an additional UI update:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+export async function preSubmitForm(
+  formid, data, formState, uiState, updateState, restService
+) {
+  // 1 | Execute the configured captcha (throws on failure -> submit is aborted)
+  if (CaptchaService.hasExecute()) {
+    await CaptchaService.execute();
+  }
+
+  // 2 | Optional UI update, e.g. show a spinner
+  uiState.loading = true;
+  updateState(StatesToUpdateEnum.UIState);
+}
+</pre>
+</div>
+
+h4. Notes
+
+* All hook functions are +async+ and return +Promise<void>+; the core +await+s them.
+* A +throw+ inside a "pre" hook aborts the action that follows — e.g. throwing in +preSubmitForm+ prevents the form from being submitted.
+* When updating state, pass a valid +StatesToUpdateEnum+ value: +FormState+, +UIState+ or +ALL+.
+* Use +console.log()+ only for debugging.
+
+h3. Buttons
+
+The navigation buttons rendered inside the form flow can be replaced or extended.
+
+h4. Central files
+
+|_. File |_. Purpose |
+| +custom/ButtonComponentDefinitions.tsx+ | Re-exports the button components. |
+| +custom/ButtonComponentsTypes.tsx+ | Maps a button key (+reactClass+) to a component. |
+
+The mapping object is +ButtonComponents+. At render time the button is resolved with +ButtonComponents[buttonDef.reactClass]+, where +reactClass+ is the value configured per button in a flow step (+flows[].steps[].buttons[].reactClass+ in +conf/forms.yml+). The default keys are +NextPageButton+, +PreviousPageButton+, +CancelButton+, +PrintPdfButton+, +DetailInfoButton+ and +SubmitButton+.
+
+h4. Add or replace a button
+
+# Create the button component, e.g. +components/buttons/MyNextPageButton.tsx+.
+# Re-export it from +custom/ButtonComponentDefinitions.tsx+.
+# Map a key to it in +custom/ButtonComponentsTypes.tsx+ (use a new key, or an existing one to replace it).
+# Reference the key as +reactClass+ in the flow step's +buttons+ list in +conf/forms.yml+.
+
+h3. Overlays
+
+Overlays are the modal dialogs FormGen shows for loading, errors, confirmations and information.
+
+h4. Central files
+
+|_. File |_. Purpose |
+| +custom/OverlayDefinitions.tsx+ | Re-exports all overlay components. |
+| +custom/OverlayTypes.tsx+ | Defines the +OverlayTypeEnum+ and the +overlayTypes+ mapping (+OverlayTypeEnum+ value → component). |
+| +utils/OverlayUtils.tsx+ | API for showing and hiding overlays. |
+
+h4. The mapping
+
++OverlayTypes.tsx+ contains the +OverlayTypeEnum+ (e.g. +FULL_SCREEN_LOADING+, +LOAD_FORM+, +DEFAULT_ERRORS+, +ON_LEAVE+, +SUBMIT_USER_INPUT_FAILURE+, +LOAD_CAPTCHA_ERROR+, …) and the +overlayTypes+ record that links each enum value to a component:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+export const overlayTypes: IOverlayTypes = {
+  [OverlayTypeEnum.FULL_SCREEN_LOADING]: Overlays.FullScreenOverlay,
+  [OverlayTypeEnum.DEFAULT_ERRORS]:      Overlays.DefaultErrorsOverlay,
+  // ... further mappings
+};
+</pre>
+</div>
+
+h4. The DefaultOverlay component
+
+Most overlays build on the +DefaultOverlay+ component, which provides a header, body and footer area:
+
+* *Header:* +title+, +closeAble+, +onClose+
+* *Body:* +contentMessages+, +contentElementNodes+, +buttonList+, +buttonObjects+
+* *Footer:* +footerMessages+
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+return (
+  <DefaultOverlay
+    {...props}
+    title={t('form_OverlayErrorTitle')}
+    contentMessages={[t('form_OverlayErrorContent')]}
+    footerMessages={[
+      t('form_error_overlay__first_line'),
+      t('form_error_overlay__second_line'),
+    ]}
+    onClose={extraProps.onClose}
+    closeAble={extraProps.closeAble}
+  />
+);
+</pre>
+</div>
+
+h4. Showing and hiding overlays
+
++utils/OverlayUtils.tsx+ provides:
+
+* +setOverlay(uiState, formState, overlayType, updateState?, additionalProps?)+ — shows the given overlay. Use the +additionalProps+ object to pass context-specific data.
+* +hideOverlay(uiState, updateState?)+ — hides the currently displayed overlay.
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+overlayUtils.setOverlay(
+  uiState,
+  formState,
+  OverlayTypeEnum.FULL_SCREEN_LOADING,
+  updateState,
+  { loadingText: IOverlayFullScreenTextEnum.FileUpload }
+);
+</pre>
+</div>
+
+h4. Add or replace an overlay
+
+To add a new overlay:
+# Create the component and re-export it from +custom/OverlayDefinitions.tsx+.
+# Add an entry to +OverlayTypeEnum+ in +custom/OverlayTypes.tsx+.
+# Add the mapping in +overlayTypes+.
+# Show it programmatically with +overlayUtils.setOverlay(...)+.
+
+To replace an existing overlay, point its +OverlayTypeEnum+ entry in +overlayTypes+ at your own component (ensure compatible props).
+
+h4. Notes
+
+* *Feature flag* +feature_debug+: when active, debug sections are added to overlays.
+* *Re-render*: inside forms, use a +useEffect+ hook to make sure the overlay is shown after state changes.
+
+h3. Screens
+
+A form flow is a sequence of screens (form, summary, success, …). Custom screens (e.g. a payment or an alternative summary screen) 
+can be registered and used in the flow.
+
+h4. Central files
+
+|_. File |_. Purpose |
+| +custom/ScreenDefinitions.tsx+ | Re-exports all screen components. |
+| +custom/ScreenComponents.tsx+ | Maps a screen key (+reactClass+) to a component. |
+
+The mapping object is +ScreenComponents+. At render time the screen is resolved with +ScreenComponents[reactClass]+, where +reactClass+ is the value configured per flow step (+flows[].steps[].reactClass+ in +conf/forms.yml+). 
+The default keys are +StartInfoScreen+, +FormScreen+, +SummaryScreen+, +PaymentScreen+ and +SuccessScreen+.
+
+h4. Add or replace a screen
+
+# Create the screen component, e.g. +screens/SummaryScreenV2.tsx+.
+# Re-export it from +custom/ScreenDefinitions.tsx+.
+# Map a key to it in +custom/ScreenComponents.tsx+.
+# Set +reactClass: SummaryScreenV2+ on the corresponding step of a flow in +conf/forms.yml+.
+
+NOTE: See the +flows+ configuration in "Gentics CMS Forms":forms.html for how flow steps, their +reactClass+ and their buttons are defined.
+
+h3. Styling
+
+The look and feel can be overridden in +packages/feature-formgen/src/styles/custom/+:
+
+|_. File |_. Purpose |
+| +styles/custom/custom-style.web.ts+ | Style sheet overrides for the web build. |
+| +styles/custom/custom-style.native.ts+ | Style sheet overrides for the native build. |
+| +styles/custom/custom-style.css+ | Additional CSS rules for the web build. |
+| +styles/custom/custom-datepicker.css+ | CSS overrides for the date picker. |
+
+h4. How styling works
+
+With the move to React Native, FormGen no longer styles its components with classic CSS or SCSS: styles are generated for the web *and* for the native platforms (iOS, Android), 
+and a web stylesheet cannot simply be reused there. Instead of CSS classes, styling is expressed as JavaScript objects created with +StyleSheet.create+. 
+The principle is the same as CSS, only the syntax differs: properties are written in camelCase (+fontSize+ instead of +font-size+), and values are plain strings or numbers.
+
+A CSS class that renders an 18px bold, dark-grey headline therefore looks like this:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+const styles = StyleSheet.create({
+  headline: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+});
+</pre>
+</div>
+
+A complete property reference is available in the React Native documentation on "Style basics":https://reactnative.dev/docs/style and the 
+"StyleSheet API":https://reactnative.dev/docs/stylesheet.
+
+h4. Web and native builds
+
+When the appearance has to differ between the web and the native app, React Native resolves the right file automatically by extension: +*.native.ts+ is used on iOS and 
+Android, +*.web.ts+ on the web. Because both +custom-style.web.ts+ and +custom-style.native.ts+ exist, the build picks the matching one — use this to apply, for example, 
+different margins, font sizes or touch-specific adjustments on mobile devices.
+
+h4. Common and custom
+
+As in earlier projects, styling is split into two areas:
+
+* *Common* — the base styling shipped by Gentics, in +styles/common/+.
+* *Custom* — your project-specific overrides, in +styles/custom/+.
+
+WARNING: Never modify +common+ — these styles are central and update-compatible. All overrides and additions go into +custom+, where an object of the same name 
+layers over (and overrides) its +common+ counterpart.
+
+The +custom+ style sheets are already prepared: the styling objects the components use are declared there — all of them as empty objects — so you do not create new objects, 
+you fill the existing ones. For example, +custom-style.web.ts+ ships the overlay footer styling as:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+const overlayFooterStyles = StyleSheet.create({
+  footer: {},
+  footerText: {},
+});
+</pre>
+</div>
+
+To colour the overlay footer text red, you fill in +footerText+ with +{ color: 'red' }+. The change is layered over the +common+ styling and overrides it for 
+the object of the same name.
+
+NOTE: These +.ts+ files expose many such keys (e.g. +formContainer+, +row+, +h1+ … +h6+, +p+, +a+); filling one in overrides the corresponding component style.
+
+h4. CSS for pseudo-classes
+
+Native platforms have no real hover or focus state, so React Native does not support +:hover+, +:focus+ and the like. For the web build, however, FormGen wraps 
+every element in a +<div>+ whose class is derived from the control type — +string-element+, +number-element+, +reference-element+, and so on. 
+You can target these wrappers with plain CSS in +custom-style.css+:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+/* style ALL elements on hover */
+div[class$="-element"]:hover {
+  outline: 2px solid black;
+  border-radius: 6px;
+  outline-style: dashed;
+  box-shadow: 0 4px 12px rgba(0, 206, 209, 0.25);
+}
+</pre>
+</div>
+
+WARNING: Use +custom-style.css+ only for rules that rely on pseudo-classes. Other styles defined here may be overwritten by the theme.
+
+h3. Theming
+
+Theming is an abstraction on top of the component-level +common+ / +custom+ styling. Rather than setting visual properties — colours, font families, 
+sizes, spacings — on each component individually, a central *theme* defines them once in a single place, and the components read their values from it; 
+changing a value there therefore propagates to everywhere it is used. This keeps the look consistent from one source of truth and makes it possible 
+to drive styling globally — so the same definitions could, in principle, give several apps built on the shared core an identical look. The theme has two levels:
+
+# *Theme properties* — used directly by the components, in +packages/core/src/styles/theme.web.ts+ (and +theme.native.ts+). Changing a property here 
+updates every component that uses it. For instance, +theme.colors.backgroundPrimary+ defaults to white; setting it to a red value renders every component 
+that references it in red.
+# *Variables* — one level above, in +packages/core/src/styles/variables.ts+. They define the building blocks (colours, sizes, spacings) once, in a single place, and are referenced from the theme — a small design system. The theme's colours, for example, are taken from the +colors+ object exported here.
+
+h3. Custom fonts
+
+To use your own fonts:
+
+# *Store the font files.* Place the +.ttf+ or +.otf+ files in +packages/core/src/styles/custom/fonts+.
+# *Register them in +font-config.ts+.* In +packages/core/src/styles/custom/font-config.ts+, add the fonts to the +fontFamilies+ object as key/value pairs — the key is the internal name you reference later as a +fontFamily+, the value is the file, included via +require(...)+:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+export const fontFamilies = {
+  'Inter-Regular': require('./fonts/Inter-Regular.ttf'),
+  'Inter-Bold':    require('./fonts/Inter-Bold.ttf'),
+  'MyFont-Italic': require('./fonts/MyFont-Italic.ttf'),
+};
+</pre>
+</div>
+
+# *Assign them in the theme.* In the central theme, map the registered font names to the +fontFamily+ entries used for the various text styles:
+
+<div class="code_container">
+<pre class="brush: js; toolbar: false; gutter: true;">
+export const theme: ITheme = {
+  fontFamily: {
+    regular: 'Inter-Regular',
+    bold:    'Inter-Bold',
+    italic:  'Inter-Italic',
+    thin:    'Inter-Thin',
+    // …
+  },
+};
+</pre>
+</div>
+
+This defines, centrally and consistently, which font is used for which text style — from the same central place the theme provides.
+
+h3. Best practices
+
+* Keep all customizations inside +custom/+ and +styles/custom/+ — never modify the core, so updates stay compatible.
+* Implement +validate+ and +getSummaryValue+ for every custom element; they are required by the element contract.
+* Avoid long +await+s in the render path.
+* Use i18n translation keys for all visible texts.
+* Keep mapping keys lowercase for elements; for screens and buttons use exactly the +reactClass+ value configured in +conf/forms.yml+.

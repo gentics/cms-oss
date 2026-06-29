@@ -370,8 +370,8 @@
     },
 
     "validator_name_number_natural": {
-        "en": "Number (natural, small)",
-        "de": "Zahl (natürlich, klein)"
+        "en": "Number (natural)",
+        "de": "Zahl (natürlich)"
     },
     "validator_name_email_address": {
         "en": "E-mail address",

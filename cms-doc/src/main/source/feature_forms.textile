@@ -4,6 +4,7 @@ With the feature _forms_ it is possible to manage forms in Gentics CMS.
 * Forms are created and edited in the Editor User Interface.
 * Forms can be included into pages.
 * Forms can be published into Mesh ContentRepositories (Gentics Mesh Forms Plugin is required).
+* Forms are rendered on the client side by *FormGen*.
 
 NOTE: See the "Forms Migration Guide":forms_migration.html when updating from an older CMP Version (<= CMP 8.4).
 
@@ -35,8 +36,20 @@ h4. General configuration
 | +templateOptions+ | list of select options | optional | Defines available styling variations (themes) for the form type. Each option has a +value+ key and a +labelI18n+ translation map. |
 | +userEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the confirmation email sent to the user upon form submission. |
 | +adminEmailTemplateOptions+ | list of select options | optional | Defines which email templates are available for the notification email sent to the administrator when a user submits the form. |
-| +flows+ | list of flow configs | optional | Defines the available form flows for this type. A flow controls the sequence of screens (e.g. form, summary, success) presented to the user. The first entry is used as the default. Each flow has an +id+, +labelI18n+, +nameTranslationKey+, and a list of +steps+. Each step defines a +reactClass+ (the screen component), navigation +buttons+, and optional +variables+ passed to the component. |
+| +flows+ | list of flow configs | optional | Defines the available form flows for this type. A flow controls the sequence of screens (e.g. form, summary, success) presented to the user. The first entry is used as the default. Each flow has an +id+, +labelI18n+, +nameTranslationKey+, and a list of +steps+. Each step defines a +reactClass+ (the screen component), navigation +buttons+, and optional +variables+ passed to the component. See the Form flows section below. |
 | +pluginConfiguration+ | object | optional | Arbitrary configuration object passed to the Mesh plugin to configure type-specific behaviour. Structure depends on the plugin. |
+
+h4. Internal and external forms
+
+Forms come in two kinds, *internal* and *external*, which are handled differently. Which kind a form is, is determined by its form type and configured per form type via the +external+ flag (in combination with +pluginName+) in the General configuration above.
+
+|_. Kind |_. Configuration |_. Handled by |
+| *Internal form* | +external: false+ (the default when the flag is omitted) | A Gentics Mesh plugin, named by +pluginName+ (e.g. the Gentics Mesh Forms Plugin for +pluginName: "forms"+), which processes and stores the submissions. |
+| *External form* | +external: true+ | Treated as an external form and *not* by the Gentics Mesh Forms Plugin. |
+
+*Internal forms* are the forms managed by this feature: they are created and edited in the Editor and their submissions are processed by the configured Mesh plugin. This is the default, and all examples in this document are internal form types.
+
+NOTE: The +external+ flag is a property of the form *type*, not of an individual form. All forms created from a form type therefore share the same kind.
 
 h4. Available control types
 
@@ -73,6 +86,45 @@ h4. Control and block settings
 | +select+ | string (one of options) | +options+ (list, required), +multiple+ (boolean, optional) | A dropdown with a fixed list of options defined in the configuration. Set +multiple: true+ to allow selecting more than one value. |
 | +options+ | list of key-value pairs | +multiple+ (boolean or +"editable"+, optional) | Lets the form editor define the selectable options at authoring time. Set +multiple: true+ for multi-select, +false+ for single-select, or +"editable"+ to let the editor decide. |
 | +reference+ | CMS object reference | +referenceTypes+ (list, required), +publishAs+ (required: +content+, +url+, or +meshlink+), +multiple+ (boolean, optional) | A picker for referencing CMS objects (pages, files, or images). |
+
+h4. Form flows
+
+A form flow controls the sequence of screens a user is guided through when filling out a form — for example the form itself, an optional summary, and a final success screen. Each form type defines its flows in the +flows+ list of the General configuration; the first entry is used as the default. A flow determines which screens are shown, which buttons appear on each screen, and which additional variables are passed to the screen components.
+
+This allows the form process to be tailored to a project's needs, for example:
+
+* Show or hide individual buttons (such as a print button on the summary screen).
+* Pass variables that enable additional behaviour in a screen (such as showing detailed information in the summary).
+* Add or remove screens, for example by inserting a summary step before submission.
+
+The example configuration below defines two flows for the +generic+ type: a +default+ flow leading straight from the form to the success screen, and a +with_summary+ flow that inserts a summary screen in between.
+
+A flow has the following top-level fields:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +id+ | string | required | Unique identifier of the flow. Used to reference the flow from a form. |
+| +labelI18n+ | translation map | required | Human-readable name of the flow, keyed by language code. |
+| +nameTranslationKey+ | string | optional | Translation key for the flow name. |
+| +steps+ | list of step configs | required | The ordered sequence of screens the user is guided through. See the step fields below. |
+
+Each entry in +steps+ describes a single screen:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +reactClass+ | string | required | The screen component to render, e.g. +FormScreen+, +SummaryScreen+ or +SuccessScreen+. The available components are provided by FormGen. |
+| +buttonLabelTranslationKey+ | string | optional | Translation key for the label of the button on the preceding screen that navigates to this step. |
+| +nameTranslationKey+ | string | optional | Translation key for the screen title. |
+| +descriptionTranslationKey+ | string | optional | Translation key for the screen description. |
+| +buttons+ | list of button configs | optional | The navigation buttons shown in the screen footer. See the button fields below. |
+| +variables+ | list of key-value pairs | optional | Additional values passed to the screen component as properties. Each entry has a +name+ and a +value+ (e.g. +showDetails: true+ to let the summary screen show detailed information). |
+
+Each entry in +buttons+ describes a single footer button:
+
+|_. Field |_. Type |_. Required |_. Description |
+| +reactClass+ | string | required | The button component to render, e.g. +SubmitButton+, +CancelButton+, +PreviousPageButton+, +NextPageButton+, +PrintPdfButton+ or +DetailInfoButton+. The available components are provided by FormGen. |
+| +labelTranslationKey+ | string | optional | Translation key for the button label. |
+| +mobileDisabled+ | boolean | optional | If +true+, the button is hidden on mobile devices (where the button component supports it). |
+
+NOTE: The screen and button components available as +reactClass+ values are provided by *FormGen* and can be extended per project. For configuring and customizing these components see the "FormGen Customizing Guide":forms_formgen_customizing.html.
 
 NOTE: These are examples - you can and should adapt these configurations to your needs.
 
@@ -929,7 +981,9 @@ forms:
 
 NOTE: Assign at least one language to the node where you will be creating forms.
 
-After this, the feature must be enabled for all Nodes, that need to contain forms. Also the Nodes need to have the form types assigned, which should be available for creating forms.
+After this, the forms feature must be enabled for every node that should contain forms. Enable it per node in the *Node Management* tab of the administration interface, under the node's *Features*.
+
+Once the feature is enabled for a node, an additional *Form Types* tab appears for that node. Use it to assign the form types that should be available when creating forms in that node.
 
 h3. Implementation using Handlebars
 
@@ -983,6 +1037,12 @@ The first parameter passed to the directive is the (internal) CMS Form ID (taken
 | +previewRoot+     | HTML Element, which should be rendered as root element for the preview | *div* |
 | +showResults+     | Boolean flag to force rendering results of a poll instead of the form itself. (This has no effect on non-poll forms.) | *false* |
 
+h3. Rendering and customizing with FormGen
+
+The forms configured above are rendered by *FormGen*. FormGen offers a wide range of configuration and customization options, such as custom form controls, lifecycle hooks, navigation buttons, overlays, screens and styling.
+
+For all details on configuring and customizing the renderer, see the "FormGen Customizing Guide":forms_formgen_customizing.html.
+
 h3. E-mail template pages
 
 It is possible to create special pages in the CMS, which can be used as templates for mails, which are sent by forms (either admin mails or user mails).
@@ -1009,3 +1069,5 @@ If the flow is overridden or extended for a specific project, the default behavi
 * *Hook postSubmitForm:* The redirect is handled via the postSubmitForm hook, which is called after the form has been submitted successfully.
 
 In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.
+
+NOTE: The redirect handling for customized flows — custom elements or the +postSubmitForm+ hook — is implemented and configured in *FormGen* (see the "FormGen Customizing Guide":forms_formgen_customizing.html).

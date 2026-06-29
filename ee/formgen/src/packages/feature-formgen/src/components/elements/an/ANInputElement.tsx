@@ -39,7 +39,6 @@ function ANInputElement(props: IFormComponentAttributes) {
   const [isFocused, setIsFocused] = useState(false);
   const [lastHandleChangeValue, setLastHandleChangeValue] = useState(props.value);
   const [isFilled, setIsFilled] = useState(!!props.value);
-  const [unitBadgeWidth, setUnitBadgeWidth] = useState(0);
   let labeltext =
     utils.getI18nText(props.formState, props.label) +
     (props.required ? ' *' : '');
@@ -287,14 +286,7 @@ function ANInputElement(props: IFormComponentAttributes) {
   const isTextarea =
     !!(props.formGridOptions?.numberOfLines && props.formGridOptions?.numberOfLines > 1 && !isNumber);
 
-  const unitText: string =
-    isNumber && schema.unit
-      ? utils.getI18nText(props.formState, schema.unit) ?? ''
-      : '';
-  const hasUnit = unitText.length > 0;
-  const alignmentUnit = props.formGridOptions?.alignmentUnit ?? 'left';
-  const isUnitLeft = formattedValue != null && formattedValue !== '' && hasUnit && alignmentUnit === 'left';
-  const isUnitRight = formattedValue != null && formattedValue !== '' && hasUnit && alignmentUnit === 'right';
+  const unitText = schema.unitText && utils.getI18nText(props.formState, schema.unitText)
 
   return (
     <SharedInputComponent
@@ -376,10 +368,7 @@ function ANInputElement(props: IFormComponentAttributes) {
       styles={styles}
       t={t}
       unitText={unitText}
-      unitBadgeWidth={unitBadgeWidth}
-      isUnitLeft={isUnitLeft}
-      isUnitRight={isUnitRight}
-      onUnitLayout={setUnitBadgeWidth}
+      unitPosition={schema.unitPosition}
     />
   );
 }

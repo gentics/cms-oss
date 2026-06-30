@@ -10,19 +10,46 @@ import { mergedDe, mergedEn } from './devTranslations';
 import { Platform } from 'react-native';
 import { PreviewInformation } from '../../../feature-formgen/src/types/preview';
 import { RequestCallback } from 'i18next-http-backend';
-/**
- * Initialisiert i18n.
- * @param formId - formId of current form
- * @param pluginName - name of plugin to use correct endpoint
- * @param translationUrl Wenn vorhanden => wird im Backend-LoadPath verwendet
- * @param isDev Wenn true => Lokale Datei statt http-Backend
- * @param culture Der zu verwendende Sprachcode (z.B. 'en' oder 'de')
- */
-export async function initI18n(
+
+export async function initI18nForms(
   meshEndpoint: string,
   formId: string,
   pluginName: string,
-  translationUrl?: string,
+  isDev = false,
+  previewInfo?: PreviewInformation,
+  culture: string = 'de', // Standard: 'de'
+){
+  const backendUrl = `${meshEndpoint}/api/${pluginName}/translations/${formId}/{{lng}}`;
+  return initI18n(
+    backendUrl,
+    isDev,
+    previewInfo,
+    culture
+  );
+}
+
+export async function initI18nMicroApps( 
+  meshEndpoint: string,
+  isDev = false,
+  culture: string = 'de', // Standard: 'de'
+){
+  const backendUrl = `${meshEndpoint}/api/andp/translate/{{lng}}`;
+  return initI18n(
+    backendUrl,
+    isDev,
+    undefined,
+    culture
+  );
+}
+
+/**
+ * Initialisiert i18n.
+ * @param backendUrl -> loads tranlations from this url
+ * @param isDev Wenn true => Lokale Datei statt http-Backend
+ * @param culture Der zu verwendende Sprachcode (z.B. 'en' oder 'de')
+ */
+async function initI18n(
+  backendUrl: string,
   isDev = false,
   previewInfo?: PreviewInformation,
   culture: string = 'de', // Standard: 'de'
@@ -126,9 +153,7 @@ export async function initI18n(
         fallbackLng: culture,
         showSupportNotice: false,
         backend: {
-          loadPath: translationUrl
-            ? `${translationUrl}/{{lng}}/form.json`
-            : `${meshEndpoint}/api/${pluginName}/translations/${formId}/{{lng}}`,
+          loadPath: `${backendUrl}`,
         },
         interpolation: { escapeValue: false },
         react: { useSuspense: false },

@@ -2,7 +2,7 @@ import { convertStyleToCssBlock, mergeStyles } from '@andp/core/src/AndpUtils';
 import {
   LoadingScreen,
 } from '@andp/core/src/components/LoadingComponents';
-import { initI18n } from '@andp/core/src/services/i18n';
+import { initI18nForms } from '@andp/core/src/services/i18n';
 import theme from '@andp/core/src/styles/theme';
 import { TFunction } from 'i18next';
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
@@ -28,7 +28,6 @@ const FormgenScreen: React.FC<{
   devMode: boolean;
   mockForm: boolean;
   endpoint: string;
-  translationUrl?: string; // for loading translations inside webroot of mesh plugin (for example boxed solution)
   successContent?: string;
   prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;
@@ -103,11 +102,10 @@ const FormgenScreen: React.FC<{
     let mounted = true;
     (async () => {
       try {
-        const i18nInstance = await initI18n(
+        const i18nInstance = await initI18nForms(
           props.endpoint,
           props.formId,
           props.pluginName,
-          props.translationUrl,
           false,
           props.previewInformation,
           props.language
@@ -129,7 +127,7 @@ const FormgenScreen: React.FC<{
     return () => {
       mounted = false;
     };
-  }, [props.endpoint, props.translationUrl]);
+  }, [props.endpoint]);
 
   useEffect(() => {
     if (loading || !isWeb) {
@@ -214,7 +212,6 @@ const FormgenScreen: React.FC<{
           mockForm={props.mockForm}
           t={t}
           endpoint={props.endpoint}
-          translationUrl={props.translationUrl}
           prefillContent={props.prefillContent}
           userData={props.userData}
           detailUrl={props.detailUrl}

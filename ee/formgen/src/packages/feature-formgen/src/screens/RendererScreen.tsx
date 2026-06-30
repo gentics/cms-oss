@@ -98,7 +98,6 @@ const RendererScreen: React.FC<{
   mockForm: boolean;
   t: TFunction;
   endpoint: string;
-  translationUrl?: string;
   successContent?: string;
   prefillContent?: IDataFields;
   userData?: ISummaryDetailsUser;

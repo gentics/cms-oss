@@ -55,7 +55,7 @@ const cmsElementTypes: IElementTypes = {
     text: Elements.FormGridTextElement as unknown as IElementType,
     spacer: Elements.FormGridTextElement as unknown as IElementType,
     boolean: Elements.CMSBooleanElement,
-    container: Elements.CmsContainerElement,
+    group: Elements.CmsContainerElement,
     conditionalcontainer: Elements.CmsContainerElement,
     adminmail: Elements.CatalogElement,
     usermail: Elements.CmsUserMailElement,

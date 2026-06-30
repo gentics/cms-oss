@@ -92,6 +92,18 @@ form_validation_error_file_type_title:
 form_validation_error_file_type:
   de: Die Datei {0} hat einen ungültigen Dateityp.
   en: The file {0} is of invalid type.  
+form_validation_error_email_title:
+  de: Ungültige Email-Adresse
+  en: Invalid email address
+form_validation_error_email:
+  de: Die Email-Adresse {0} ist ungültig.
+  en: The email address {0} is invalid.
+form_maxFileUploadSizeSingleError:
+  de: Die Datei ist zu groß"
+  en: The file is too large"
+form_invalidEmailError:
+  de: Diese Email-Adresse ist ungültig
+  en: This email adress is invalid
 form_notFilledError:
   de: Das Pflichtfeld wurde nicht befüllt.
   en: The mandatory field was not filled.

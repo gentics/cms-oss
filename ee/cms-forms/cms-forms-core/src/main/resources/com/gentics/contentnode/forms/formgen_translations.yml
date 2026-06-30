@@ -123,8 +123,8 @@ form_errorBlock_title:
   de: Die Angaben im Formular sind ungültig oder unvollständig.
   en: The entries in the form are invalid or incomplete.
 form_fileTypeError:
-  de: Es sind nur folgende Dateitypen erlaubt: 
-  en: Only the following file types are allowed: 
+  de: "Es sind nur folgende Dateitypen erlaubt: "
+  en: "Only the following file types are allowed: "
 form_image_invalidImageUrl:
   de: Bild konnte nicht geladen werden - ungültige URL oder Endung.
   en: Image could not be loaded - invalid URL or extension.
@@ -153,8 +153,8 @@ form_summary:
   de: Zusammenfassung
   en: Summary
 form_accessibility_dropdown_item:
-  de: Eintrag {{index}}: {{label}}
-  en: Item {{index}}: {{label}}
+  de: "Eintrag {{index}}: {{label}}"
+  en: "Item {{index}}: {{label}}"
 form_accessibility_dropdown_open:
   de: Dropdown öffnen
   en: Open dropdown
@@ -168,8 +168,8 @@ form_accessibility_dropdown_toggle:
   de: Dropdown umschalten
   en: Toggle dropdown
 form_accessibility_boolean_checkbox_error_hint:
-  de: Ungültige Auswahl: {{error}}
-  en: Invalid selection: {{error}}
+  de: "Ungültige Auswahl: {{error}}"
+  en: "Invalid selection: {{error}}"
 form_accessibility_boolean_checkbox_hint:
   de: Tippen, um den Zustand der Checkbox zu ändern
   en: Tap to change the checkbox state
@@ -177,47 +177,47 @@ form_screenreader_mandatory_field:
   de: Pflichtfeld
   en: Mandatory field
 form_accessibility_tooltip_button:
-  de: Infos anzeigen: {{label}}
-  en: Show info: {{label}}
+  de: "Infos anzeigen: {{label}}"
+  en: "Show info: {{label}}"
 form_accessibility_tooltip_button_hint:
   de: Tippen, um zusätzliche Informationen anzuzeigen
   en: Tap to show additional information
 form_accessibility_binary_file_chooser:
-  de: Datei für {{label}} auswählen
-  en: Select file for {{label}}
+  de: "Datei für {{label}} auswählen"
+  en: "Select file for {{label}}"
 form_accessibility_binary_file_chooser_hint:
   de: Tippen, um eine Datei auszuwählen
   en: Tap to select a file
 form_accessibility_binary_file_chooser_error_hint:
-  de: Fehler beim Auswählen der Datei: {{error}}
-  en: Error selecting the file: {{error}}
+  de: "Fehler beim Auswählen der Datei: {{error}}"
+  en: "Error selecting the file: {{error}}"
 form_accessibility_textInput_multiline_label:
-  de: Mehrzeiliges Textfeld für {{label}}
-  en: Multiline text field for {{label}}
+  de: "Mehrzeiliges Textfeld für {{label}}"
+  en: "Multiline text field for {{label}}"
 form_accessibility_textInput_error_hint:
-  de: Ungültige Eingabe: {{error}}
-  en: Invalid input: {{error}}
+  de: "Ungültige Eingabe: {{error}}"
+  en: "Invalid input: {{error}}"
 form_accessibility_textInput_multiline_hint:
-  de: Tippen, um mehrzeiligen Text für {{label}} einzugeben
-  en: Tap to enter multiline text for {{label}}
+  de: "Tippen, um mehrzeiligen Text für {{label}} einzugeben"
+  en: "Tap to enter multiline text for {{label}}"
 form_accessibility_textInput_number_hint:
-  de: Tippen, um eine Zahl für {{label}} einzugeben
-  en: Tap to enter a number for {{label}}
+  de: "Tippen, um eine Zahl für {{label}} einzugeben"
+  en: "Tap to enter a number for {{label}}"
 form_accessibility_textInput_string_label:
-  de: Textfeld für {{label}}
-  en: Text field for {{label}}
+  de: "Textfeld für {{label}}"
+  en: "Text field for {{label}}"
 form_accessibility_textInput_string_hint:
-  de: Tippen, um Text für {{label}} einzugeben
-  en: Tap to enter text for {{label}}
+  de: "Tippen, um Text für {{label}} einzugeben"
+  en: "Tap to enter text for {{label}}"
 form_accessibility_datepicker_input:
-  de: Auswahlfeld für {{label}}
-  en: Selection field for {{label}}
+  de: "Auswahlfeld für {{label}}"
+  en: "Selection field for {{label}}"
 form_accessibility_datepicker_input_error_hint:
-  de: Fehler: {{error}}
-  en: Error: {{error}}
+  de: "Fehler: {{error}}"
+  en: "Error: {{error}}"
 form_accessibility_datepicker_input_hint:
-  de: Tippen, um {{label}} auszuwählen
-  en: Tap to select {{label}}
+  de: "Tippen, um {{label}} auszuwählen"
+  en: "Tap to select {{label}}"
 form_accessibility_datepicker_clear:
   de: Eingabe löschen
   en: Clear input

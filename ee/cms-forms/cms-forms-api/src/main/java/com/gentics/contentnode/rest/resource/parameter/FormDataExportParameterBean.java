@@ -24,5 +24,5 @@ public class FormDataExportParameterBean {
 	 * Optional language codes
 	 */
 	@QueryParam("lang")
-	public List<String> languages;
+	public String language;
 }

@@ -1470,9 +1470,8 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 				if (exportFormat.options != null) {
 					uriBuilder.queryParam("options", exportFormat.options);
 				}
-				if (exportFormat.languages != null) {
-					Object[] languages = exportFormat.languages.toArray(new String[exportFormat.languages.size()]);
-					uriBuilder.queryParam("lang", languages);
+				if (StringUtils.isNotBlank(exportFormat.language)) {
+					uriBuilder.queryParam("lang", exportFormat.language);
 				}
 			}
 

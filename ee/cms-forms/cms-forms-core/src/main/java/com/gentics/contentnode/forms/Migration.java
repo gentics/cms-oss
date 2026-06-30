@@ -38,6 +38,7 @@ import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.Blocks;
 import com.gentics.contentnode.rest.model.formtype.BooleanSetting;
+import com.gentics.contentnode.rest.model.formtype.Condition;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
@@ -693,6 +694,21 @@ public class Migration {
 				}
 				control.settings.add(validationSetting);
 			}
+
+			break;
+		case "catalog":
+			BooleanSetting isList = new BooleanSetting("isList", Map.of("de", "Mehrfachauswahl", "en", "Multiselection"));
+			isList.backend = true;
+			isList.propertyPath = "isList";
+			control.settings.add(isList);
+
+			BooleanSetting radio = new BooleanSetting("radio", Map.of("de", "Radio Buttons", "en", "Radio Buttons"));
+			try {
+				radio.condition = mapper.readValue("{\"source\":{\"setting\":\"isList\"},\"equals\": false}", Condition.class);
+			} catch (JsonProcessingException e) {
+				throw new RuntimeException(e);
+			}
+			control.settings.add(radio);
 
 			break;
 		}

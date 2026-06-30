@@ -199,10 +199,11 @@ public class MigrateForms extends InitJob {
 	private BiConsumer<ObjectNode, ObjectNode> EMPTY_MIGRATOR = (elementNode, property) -> {};
 
 	/**
-	 * Migrator for string schema properties
+	 * Migrator for string ui-schema properties
 	 */
-	private BiConsumer<ObjectNode, ObjectNode> STRING_PROPERTY_MIGRATOR = (elementNode, property) -> {
-		property.put("numberOfLines", 1);
+	private BiConsumer<ObjectNode, ObjectNode> STRING_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		property.withObjectProperty(FORM_GRID_OPTIONS)
+			.put("numberOfLines", 1);
 	};
 
 	/**
@@ -222,11 +223,12 @@ public class MigrateForms extends InitJob {
 	};
 
 	/**
-	 * Migrator for multiline string schema properties
+	 * Migrator for multiline string ui-schema properties
 	 */
-	private BiConsumer<ObjectNode, ObjectNode> MULTILINE_STRING_PROPERTY_MIGRATOR = (elementNode, property) -> {
-		STRING_PROPERTY_MIGRATOR.accept(elementNode, property);
-		property.put("numberOfLines", 5);
+	private BiConsumer<ObjectNode, ObjectNode> MULTILINE_STRING_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
+		STRING_UI_PROPERTY_MIGRATOR.accept(elementNode, property);
+		property.withObjectProperty(FORM_GRID_OPTIONS)
+			.put("numberOfLines", 5);
 	};
 
 	/**
@@ -555,12 +557,12 @@ public class MigrateForms extends InitJob {
 				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "time", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 				break;
 			default:
-				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
 				break;
 			}
 			break;
 		case "textarea":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", MULTILINE_STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", EMPTY_MIGRATOR, MULTILINE_STRING_UI_PROPERTY_MIGRATOR);
 			break;
 		case "checkbox":
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
@@ -572,7 +574,7 @@ public class MigrateForms extends InitJob {
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "binary", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "usermail":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "usermail", STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "usermail", EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
 			break;
 		case "formpage":
 			ObjectNode page = uiSchemaPages.addObject();
@@ -631,9 +633,6 @@ public class MigrateForms extends InitJob {
 			property.put("isList", false);
 			property.withObjectProperty("validation");
 
-			// migrate type specific data
-			propertyMigrator.accept(elementNode, property);
-
 			// store the property in the reference, we will add it later
 			propertyRef.set(property);
 
@@ -643,6 +642,9 @@ public class MigrateForms extends InitJob {
 					migrateSetting(migratedType, s, elementNode, property);
 				});
 			});
+
+			// migrate type specific data
+			propertyMigrator.accept(elementNode, property);
 		});
 
 		// create the ui property and migrate common data

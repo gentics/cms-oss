@@ -695,6 +695,9 @@ public class Migration {
 				control.settings.add(validationSetting);
 			}
 
+			NumberSetting numberOfLines = new NumberSetting("numberOfLines", Map.of("de", "Anzahl Zeilen", "en", "Number of Lines"));
+			control.settings.add(numberOfLines);
+
 			break;
 		case "catalog":
 			BooleanSetting isList = new BooleanSetting("isList", Map.of("de", "Mehrfachauswahl", "en", "Multiselection"));

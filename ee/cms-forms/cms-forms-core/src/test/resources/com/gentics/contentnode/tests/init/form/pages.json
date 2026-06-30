@@ -1,73 +1,73 @@
 {
-    "elements": [
-        {
-            "globalId": "415c45f6-180f-4867-ab90-b0192bb47c05",
-            "name": "formpage_415c45f6_180f_4867_ab90_b0192bb47c05",
-            "type": "formpage",
-            "active": true,
-            "elements": [
-                {
-                    "globalId": "50aeed2c-0858-4252-98bf-cc7176974b70",
-                    "name": "input_50aeed2c_0858_4252_98bf_cc7176974b70",
-                    "type": "input",
-                    "active": true,
-                    "elements": [],
-                    "label_i18n": {
-                        "de": "Eingabe auf Seite eins"
-                    },
-                    "mandatory_i18n": null,
-                    "placeholder_i18n": null,
-                    "validation_i18n": null,
-                    "value_i18n": null,
-                    "minVal_i18n": null,
-                    "maxVal_i18n": null,
-                    "maxCharCount_i18n": null
-                }
-            ],
-            "description_i18n": {
-                "de": "Seite eins"
-            },
-            "info_i18n": {
-                "de": "Beschreibung zu Seite eins"
-            }
-        },
-        {
-            "globalId": "e16e225f-eedc-473f-ad6f-d79ab1c05e4d",
-            "name": "formpage_e16e225f_eedc_473f_ad6f_d79ab1c05e4d",
-            "type": "formpage",
-            "active": true,
-            "elements": [
-                {
-                    "globalId": "18832ae6-537a-493f-8ec7-352dfb598087",
-                    "name": "input_18832ae6_537a_493f_8ec7_352dfb598087",
-                    "type": "input",
-                    "active": true,
-                    "elements": [],
-                    "label_i18n": {
-                        "de": "Eingabe auf Seite zwei"
-                    },
-                    "mandatory_i18n": null,
-                    "placeholder_i18n": null,
-                    "validation_i18n": null,
-                    "value_i18n": null,
-                    "minVal_i18n": null,
-                    "maxVal_i18n": null,
-                    "maxCharCount_i18n": null
-                }
-            ],
-            "description_i18n": {
-                "de": "Seite zwei"
-            },
-            "info_i18n": {
-                "de": "Beschreibung zu Seite zwei"
-            }
-        }
-    ],
-    "email": "",
-    "mailsubject_i18n": {},
-    "mailsource_pageid": 0,
-    "mailsource_nodeid": 0,
-    "mailtemp_i18n": {},
-    "type": "GENERIC",
-    "templateContext": "theme-red"
+	"elements": [
+		{
+			"globalId": "415c45f6-180f-4867-ab90-b0192bb47c05",
+			"name": "formpage_415c45f6_180f_4867_ab90_b0192bb47c05",
+			"type": "formpage",
+			"active": true,
+			"elements": [
+				{
+					"globalId": "50aeed2c-0858-4252-98bf-cc7176974b70",
+					"name": "input_50aeed2c_0858_4252_98bf_cc7176974b70",
+					"type": "input",
+					"active": true,
+					"elements": [],
+					"label_i18n": {
+						"de": "Eingabe auf Seite eins"
+					},
+					"mandatory_i18n": null,
+					"placeholder_i18n": null,
+					"validation_i18n": null,
+					"value_i18n": null,
+					"minVal_i18n": null,
+					"maxVal_i18n": null,
+					"maxCharCount_i18n": null
+				}
+			],
+			"description_i18n": {
+				"de": "Seite eins"
+			},
+			"info_i18n": {
+				"de": "Beschreibung zu Seite eins"
+			}
+		},
+		{
+			"globalId": "e16e225f-eedc-473f-ad6f-d79ab1c05e4d",
+			"name": "formpage_e16e225f_eedc_473f_ad6f_d79ab1c05e4d",
+			"type": "formpage",
+			"active": true,
+			"elements": [
+				{
+					"globalId": "18832ae6-537a-493f-8ec7-352dfb598087",
+					"name": "input_18832ae6_537a_493f_8ec7_352dfb598087",
+					"type": "input",
+					"active": true,
+					"elements": [],
+					"label_i18n": {
+						"de": "Eingabe auf Seite zwei"
+					},
+					"mandatory_i18n": null,
+					"placeholder_i18n": null,
+					"validation_i18n": null,
+					"value_i18n": null,
+					"minVal_i18n": null,
+					"maxVal_i18n": null,
+					"maxCharCount_i18n": null
+				}
+			],
+			"description_i18n": {
+				"de": "Seite zwei"
+			},
+			"info_i18n": {
+				"de": "Beschreibung zu Seite zwei"
+			}
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
 }

@@ -1,153 +1,153 @@
 {
-    "elements": [
-        {
-            "globalId": "443f67ee-f345-4d76-a406-a5f6fd3b3fd2",
-            "name": "selectgroup_443f67ee_f345_4d76_a406_a5f6fd3b3fd2",
-            "type": "selectgroup",
-            "active": true,
-            "elements": [],
-            "label_i18n": {
-                "de": "Als Radiobuttons"
-            },
-            "mandatory_i18n": null,
-            "select_type_i18n": {
-                "de": "radiobuttons"
-            },
-            "options": [
-                {
-                    "key": "one",
-                    "value_i18n": {
-                        "de": "Eins"
-                    }
-                },
-                {
-                    "key": "two",
-                    "value_i18n": {
-                        "de": "Zwei"
-                    }
-                },
-                {
-                    "key": "three",
-                    "value_i18n": {
-                        "de": "Drei"
-                    }
-                }
-            ],
-            "additional_element_i18n": null
-        },
-        {
-            "globalId": "3d9cdd7b-ddee-4fb7-a81a-7dffcf652d6e",
-            "name": "selectgroup_3d9cdd7b_ddee_4fb7_a81a_7dffcf652d6e",
-            "type": "selectgroup",
-            "active": true,
-            "elements": [],
-            "label_i18n": {
-                "de": "Also single dropdown"
-            },
-            "mandatory_i18n": null,
-            "select_type_i18n": {
-                "de": "singleselect"
-            },
-            "options": [
-                {
-                    "key": "four",
-                    "value_i18n": {
-                        "de": "Vier"
-                    }
-                },
-                {
-                    "key": "five",
-                    "value_i18n": {
-                        "de": "Fünf"
-                    }
-                },
-                {
-                    "key": "six",
-                    "value_i18n": {
-                        "de": "Sechs"
-                    }
-                }
-            ],
-            "additional_element_i18n": null
-        },
-        {
-            "globalId": "72e08c42-56be-4f9a-93b2-63a949b42d7d",
-            "name": "selectgroup_72e08c42_56be_4f9a_93b2_63a949b42d7d",
-            "type": "selectgroup",
-            "active": true,
-            "elements": [],
-            "label_i18n": {
-                "de": "Also multi dropdown"
-            },
-            "mandatory_i18n": null,
-            "select_type_i18n": {
-                "de": "multiselect"
-            },
-            "options": [
-                {
-                    "key": "seven",
-                    "value_i18n": {
-                        "de": "Sieben"
-                    }
-                },
-                {
-                    "key": "eight",
-                    "value_i18n": {
-                        "de": "Acht"
-                    }
-                },
-                {
-                    "key": "nine",
-                    "value_i18n": {
-                        "de": "Neun"
-                    }
-                }
-            ],
-            "additional_element_i18n": null
-        },
-        {
-            "globalId": "50aad7f6-1ff4-4900-a677-97ad79ac238c",
-            "name": "selectgroup_50aad7f6_1ff4_4900_a677_97ad79ac238c",
-            "type": "selectgroup",
-            "active": true,
-            "elements": [],
-            "label_i18n": {
-                "de": "Mit zusätzlichem Element"
-            },
-            "mandatory_i18n": null,
-            "select_type_i18n": {
-                "de": "multiselect"
-            },
-            "options": [
-                {
-                    "key": "ten",
-                    "value_i18n": {
-                        "de": "Zehn"
-                    }
-                },
-                {
-                    "key": "eleven",
-                    "value_i18n": {
-                        "de": "Elf"
-                    }
-                },
-                {
-                    "key": "twelve",
-                    "value_i18n": {
-                        "de": "Zwölf"
-                    }
-                }
-            ],
-            "additional_element_i18n": {
-                "de": true
-            }
-        }
-    ],
-    "email": "",
-    "mailsubject_i18n": {},
-    "mailsource_pageid": 0,
-    "mailsource_nodeid": 0,
-    "mailtemp_i18n": {},
-    "type": "GENERIC",
-    "templateContext": "theme-red"
+	"elements": [
+		{
+			"globalId": "443f67ee-f345-4d76-a406-a5f6fd3b3fd2",
+			"name": "selectgroup_radiobuttons",
+			"type": "selectgroup",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Als Radiobuttons"
+			},
+			"mandatory_i18n": null,
+			"select_type_i18n": {
+				"de": "radiobuttons"
+			},
+			"options": [
+				{
+					"key": "one",
+					"value_i18n": {
+						"de": "Eins"
+					}
+				},
+				{
+					"key": "two",
+					"value_i18n": {
+						"de": "Zwei"
+					}
+				},
+				{
+					"key": "three",
+					"value_i18n": {
+						"de": "Drei"
+					}
+				}
+			],
+			"additional_element_i18n": null
+		},
+		{
+			"globalId": "3d9cdd7b-ddee-4fb7-a81a-7dffcf652d6e",
+			"name": "selectgroup_singleselect",
+			"type": "selectgroup",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Also single dropdown"
+			},
+			"mandatory_i18n": null,
+			"select_type_i18n": {
+				"de": "singleselect"
+			},
+			"options": [
+				{
+					"key": "four",
+					"value_i18n": {
+						"de": "Vier"
+					}
+				},
+				{
+					"key": "five",
+					"value_i18n": {
+						"de": "Fünf"
+					}
+				},
+				{
+					"key": "six",
+					"value_i18n": {
+						"de": "Sechs"
+					}
+				}
+			],
+			"additional_element_i18n": null
+		},
+		{
+			"globalId": "72e08c42-56be-4f9a-93b2-63a949b42d7d",
+			"name": "selectgroup_multiselect",
+			"type": "selectgroup",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Also multi dropdown"
+			},
+			"mandatory_i18n": null,
+			"select_type_i18n": {
+				"de": "multiselect"
+			},
+			"options": [
+				{
+					"key": "seven",
+					"value_i18n": {
+						"de": "Sieben"
+					}
+				},
+				{
+					"key": "eight",
+					"value_i18n": {
+						"de": "Acht"
+					}
+				},
+				{
+					"key": "nine",
+					"value_i18n": {
+						"de": "Neun"
+					}
+				}
+			],
+			"additional_element_i18n": null
+		},
+		{
+			"globalId": "50aad7f6-1ff4-4900-a677-97ad79ac238c",
+			"name": "selectgroup_additional",
+			"type": "selectgroup",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Mit zusätzlichem Element"
+			},
+			"mandatory_i18n": null,
+			"select_type_i18n": {
+				"de": "multiselect"
+			},
+			"options": [
+				{
+					"key": "ten",
+					"value_i18n": {
+						"de": "Zehn"
+					}
+				},
+				{
+					"key": "eleven",
+					"value_i18n": {
+						"de": "Elf"
+					}
+				},
+				{
+					"key": "twelve",
+					"value_i18n": {
+						"de": "Zwölf"
+					}
+				}
+			],
+			"additional_element_i18n": {
+				"de": true
+			}
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
 }

@@ -510,7 +510,7 @@ public class MigrateForms extends InitJob {
 		toMigrate.data().optional("elements").filter(element -> element.isArray()).ifPresent(elements -> {
 			for (JsonNode element : elements) {
 				if (element.isObject()) {
-					migrateElement(config, (ObjectNode) element, schemaProperties, pages, firstPage);
+					migrateElement(migrated, config, (ObjectNode) element, schemaProperties, pages, firstPage);
 				}
 			}
 		});
@@ -528,15 +528,17 @@ public class MigrateForms extends InitJob {
 
 	/**
 	 * Migrate a single element
+	 * @param migratedForm migrated form
 	 * @param config form type configuration
 	 * @param elementNode element node to migrate
 	 * @param schemaProperties root node collecting the schema properties
 	 * @param uiSchemaPages root node collecing the uiSchema pages
 	 * @param currentPage current page
 	 */
-	protected void migrateElement(FormTypeConfiguration config, ObjectNode elementNode, ObjectNode schemaProperties,
+	protected void migrateElement(ObjectNode migratedForm, FormTypeConfiguration config, ObjectNode elementNode, ObjectNode schemaProperties,
 			ArrayNode uiSchemaPages, ObjectNode currentPage) {
 		String elementType = elementNode.optional("type").map(n -> n.asText()).orElse("unknown");
+		boolean active = elementNode.path("active").asBoolean(true);
 
 		switch (elementType) {
 		case "buttons":
@@ -547,34 +549,34 @@ public class MigrateForms extends InitJob {
 			String validation = getStringFromI18n(elementNode, "validation_i18n").orElse("");
 			switch (validation) {
 			case "number":
-				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "number", NUMBER_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "number", active, NUMBER_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
 				break;
 			case "date":
 			case "datepicker":
-				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "datetime", DATE_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
+				migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "datetime", active, DATE_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
 				break;
 			case "time":
-				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "time", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+				migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "time", active, EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 				break;
 			default:
-				migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
+				migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", active, EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
 				break;
 			}
 			break;
 		case "textarea":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", EMPTY_MIGRATOR, MULTILINE_STRING_UI_PROPERTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", active, EMPTY_MIGRATOR, MULTILINE_STRING_UI_PROPERTY_MIGRATOR);
 			break;
 		case "checkbox":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", active, EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "selectgroup":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "catalog", CATALOG_PROPERTY_MIGRATOR, CATALOG_UI_PROPERTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "catalog", active, CATALOG_PROPERTY_MIGRATOR, CATALOG_UI_PROPERTY_MIGRATOR);
 			break;
 		case "file":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "binary", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "binary", active, EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "usermail":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "usermail", EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, "usermail", active, EMPTY_MIGRATOR, STRING_UI_PROPERTY_MIGRATOR);
 			break;
 		case "formpage":
 			ObjectNode page = uiSchemaPages.addObject();
@@ -582,30 +584,42 @@ public class MigrateForms extends InitJob {
 			elementNode.optional("elements").filter(element -> element.isArray()).ifPresent(elements -> {
 				for (JsonNode element : elements) {
 					if (element.isObject()) {
-						migrateElement(config, (ObjectNode) element, schemaProperties, uiSchemaPages, page);
+						migrateElement(migratedForm, config, (ObjectNode) element, schemaProperties, uiSchemaPages, page);
 					}
 				}
 			});
 			break;
+		case "recaptcha":
+			if (active) {
+				migratedForm.put("captchaId", "recaptcha_checkbox");
+			}
+			break;
+		case "friendlycaptcha":
+			if (active) {
+				migratedForm.put("captchaId", "friendly_auto");
+			}
+			break;
 		default:
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, elementType, EMPTY_MIGRATOR, EMPTY_MIGRATOR);
+			migrateElement(migratedForm, config, elementNode, schemaProperties, uiSchemaPages, currentPage, elementType, active, EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		}
 	}
 
 	/**
 	 * Migrate a single element
+	 * @param migratedForm migrated form
 	 * @param config form type configuration
 	 * @param elementNode element node
 	 * @param schemaProperties root node collecting the schema properties
 	 * @param uiSchemaPages root node collecing the ui-schema pages
 	 * @param currentPage current page
 	 * @param migratedType migrated type
+	 * @param active true when the element is active, false if not
 	 * @param propertyMigrator property migrator
 	 * @param uiPropertyMigrator ui property migrator
 	 */
-	protected void migrateElement(FormTypeConfiguration config, ObjectNode elementNode, ObjectNode schemaProperties, ArrayNode uiSchemaPages,
-			ObjectNode currentPage, String migratedType, BiConsumer<ObjectNode, ObjectNode> propertyMigrator, BiConsumer<ObjectNode, ObjectNode> uiPropertyMigrator) {
+	protected void migrateElement(ObjectNode migratedForm, FormTypeConfiguration config, ObjectNode elementNode, ObjectNode schemaProperties, ArrayNode uiSchemaPages,
+			ObjectNode currentPage, String migratedType, boolean active, BiConsumer<ObjectNode, ObjectNode> propertyMigrator, BiConsumer<ObjectNode, ObjectNode> uiPropertyMigrator) {
 		// extract the name
 		String name = elementNode.optional("name").map(JsonNode::asText).orElse("");
 
@@ -682,7 +696,7 @@ public class MigrateForms extends InitJob {
 				elementNode.optional("elements").filter(element -> element.isArray()).ifPresent(elements -> {
 					for (JsonNode element : elements) {
 						if (element.isObject()) {
-							migrateElement(config, (ObjectNode) element, schemaProperties, uiSchemaPages, uiProperty);
+							migrateElement(migratedForm, config, (ObjectNode) element, schemaProperties, uiSchemaPages, uiProperty);
 						}
 					}
 				});
@@ -719,6 +733,11 @@ public class MigrateForms extends InitJob {
 				throw new RuntimeException(e);
 			}
 
+		}
+
+		// make inactive elements hidden
+		if (!active) {
+			uiProperty.withObjectProperty(FORM_GRID_OPTIONS).put("hidden", true);
 		}
 
 		// add the schema property to the schema

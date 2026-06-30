@@ -78,9 +78,11 @@ public class FormMigrationTest implements ConfigModifier {
 	public static Collection<Object[]> data() {
 		return Stream
 				.of("form/simple.json", "form/success.json", "form/mailsettings.json", "form/pages.json",
+						"form/recaptcha.json", "form/friendlycaptcha.json",
+						"form/inactive_recaptcha.json", "form/inactive_friendlycaptcha.json",
 						"controls/input.json", "controls/checkbox.json", "controls/textarea.json",
 						"controls/select.json", "controls/file.json", "controls/usermail.json",
-						"controls/recaptcha.json", "blocks/sectionheadline.json", "blocks/text.json",
+						"blocks/sectionheadline.json", "blocks/text.json",
 						"blocks/spacer.json", "blocks/conditionalcontainer.json", "blocks/group.json")
 				.map(fileName -> new Object[] { fileName }).collect(Collectors.toList());
 	}

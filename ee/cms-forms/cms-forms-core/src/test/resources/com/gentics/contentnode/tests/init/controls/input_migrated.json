@@ -29,6 +29,14 @@
 				"mandatory": false,
 				"isList": false,
 				"name": "input_3af7e246_e2cd_48fd_a9e2_bf968497fc1a"
+			},
+			"input_inactive": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "input_inactive"
 			}
 		}
 	},
@@ -70,6 +78,19 @@
 						"description": {},
 						"formGridOptions": {
 							"numberOfLines": 1
+						}
+					},
+					{
+						"type": "property",
+						"id": "input_inactive",
+						"label": {
+							"de": "Inaktiv",
+							"en": "Inactive"
+						},
+						"description": {},
+						"formGridOptions": {
+							"numberOfLines": 1,
+							"hidden": true
 						}
 					}
 				]

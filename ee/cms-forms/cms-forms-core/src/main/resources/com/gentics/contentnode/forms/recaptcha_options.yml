@@ -1,0 +1,8 @@
+- value: recaptcha_checkbox
+  labelI18n:
+    de: "Recaptcha: Häckchen"
+    en: "Recaptcha: Checkbox"
+- value: recaptcha_invisible
+  labelI18n:
+    de: "Recaptcha: Hintergrund"
+    en: "Recaptcha: Background"

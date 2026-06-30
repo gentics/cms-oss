@@ -47,6 +47,15 @@
 				"de": 10,
 				"en": 10
 			}
+		},
+		{
+			"name": "input_inactive",
+			"type": "input",
+			"active": false,
+			"label_i18n": {
+				"de": "Inaktiv",
+				"en": "Inactive"
+			}
 		}
 	],
 	"email": "",

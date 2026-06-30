@@ -203,7 +203,7 @@ export default function App() {
 
   function initFromDocumentElements(): void {
     const rootElement = document.getElementById('root');
-    const lang = document.getElementById('data-culture')?.getAttribute('data-culture');
+    const lang = rootElement?.getAttribute('data-culture');
     //formid is the cms form uuid
     //externalId - a possible externalFormID, e.g. a actanova form-id
     //internally used formid is now externalId if available

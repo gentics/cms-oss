@@ -724,6 +724,12 @@ export interface FormDataListOptions {
     q?: string;
 }
 
+export interface FormExportOptions {
+    format?: string;
+    options?: string;
+    lang?: string;
+}
+
 export interface FormTypeConfigirationListOptions extends BaseListOptionsWithPaging<{
     type: string;
     name: string;

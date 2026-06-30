@@ -85,6 +85,16 @@ public class Migration {
 	public final static String CONTROLS_FILENAME = "controls.yml";
 
 	/**
+	 * Name of the file containing the recaptcha options
+	 */
+	public final static String RECAPTCHA_OPTIONS_FILENAME = "recaptcha_options.yml";
+
+	/**
+	 * Name of the file containing the friendlycaptcha options
+	 */
+	public final static String FRIENDLYCAPTCHA_OPTIONS_FILENAME = "friendlycaptcha_options.yml";
+
+	/**
 	 * Known types
 	 */
 	protected final static List<String> FORM_TYPES = Arrays.asList("generic", "poll");
@@ -155,7 +165,7 @@ public class Migration {
 	/**
 	 * List of unmigrated element types
 	 */
-	protected final static List<String> UNMIGRATED_ELEMENT_TYPES = Arrays.asList("textarea", "buttons", "formpage", "formprogress");
+	protected final static List<String> UNMIGRATED_ELEMENT_TYPES = Arrays.asList("textarea", "buttons", "formpage", "formprogress", "recaptcha", "friendlycaptcha");
 
 	/**
 	 * Migration map for element types
@@ -263,6 +273,16 @@ public class Migration {
 	 * Default Controls
 	 */
 	protected Controls controls;
+
+	/**
+	 * Recaptcha Options
+	 */
+	protected List<SelectOption> recaptchaOptions;
+
+	/**
+	 * Friendlycaptcha Options
+	 */
+	protected List<SelectOption> friendlycaptchaOptions;
 
 	/**
 	 * Main method
@@ -409,6 +429,16 @@ public class Migration {
 			controls = yamlMapper.readValue(in, Controls.class);
 		}
 
+		// read recaptcha options
+		try (InputStream in = getClass().getResourceAsStream(RECAPTCHA_OPTIONS_FILENAME)) {
+			recaptchaOptions = yamlMapper.readValue(in, CaptchaOptions.class);
+		}
+
+		// read friendlycaptcha options
+		try (InputStream in = getClass().getResourceAsStream(FRIENDLYCAPTCHA_OPTIONS_FILENAME)) {
+			friendlycaptchaOptions = yamlMapper.readValue(in, CaptchaOptions.class);
+		}
+
 		for (String formType : FORM_TYPES) {
 			String fileName = CONFIG_FILENAMES.get(formType);
 			File configFile = new File(uiConfPath, fileName);
@@ -477,6 +507,26 @@ public class Migration {
 								migrate(key, element, e -> toBlock(key, e, out.blocks));
 							} else {
 								migrate(key, element, e -> toControl(key, e, out.controls));
+							}
+
+							// special handling for captcha elements, which are migrated into form settings
+							switch (key) {
+							case "recaptcha":
+								if (out.captchaOptions == null) {
+									out.captchaOptions = new ArrayList<>();
+								}
+								if (recaptchaOptions != null) {
+									out.captchaOptions.addAll(recaptchaOptions);
+								}
+								break;
+							case "friendlycaptcha":
+								if (out.captchaOptions == null) {
+									out.captchaOptions = new ArrayList<>();
+								}
+								if (friendlycaptchaOptions != null) {
+									out.captchaOptions.addAll(friendlycaptchaOptions);
+								}
+								break;
 							}
 						}, () -> {
 							System.err.println("%s: Ignoring element without type: '%s'".formatted(currentFileName, element.toString()));
@@ -924,5 +974,12 @@ public class Migration {
 		dateOnly.backend = true;
 		dateOnly.propertyPath = "dateOnly";
 		return dateOnly;
+	}
+
+	/**
+	 * Class for captcha options
+	 */
+	protected static class CaptchaOptions extends ArrayList<SelectOption> {
+		private static final long serialVersionUID = 4679518341936800029L;
 	}
 }

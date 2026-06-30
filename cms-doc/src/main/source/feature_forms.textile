@@ -124,7 +124,7 @@ Each entry in +buttons+ describes a single footer button:
 | +labelTranslationKey+ | string | optional | Translation key for the button label. |
 | +mobileDisabled+ | boolean | optional | If +true+, the button is hidden on mobile devices (where the button component supports it). |
 
-NOTE: The screen and button components available as +reactClass+ values are provided by *FormGen* and can be extended per project. For configuring and customizing these components see the "FormGen Customizing Guide":forms_formgen_customizing.html.
+NOTE: The screen and button components available as +reactClass+ values are provided by *FormGen* and can be extended per project. For configuring and customizing these components see the "FormGen Customizing Guide":formgen.html.
 
 NOTE: These are examples - you can and should adapt these configurations to your needs.
 
@@ -1041,7 +1041,7 @@ h3. Rendering and customizing with FormGen
 
 The forms configured above are rendered by *FormGen*. FormGen offers a wide range of configuration and customization options, such as custom form controls, lifecycle hooks, navigation buttons, overlays, screens and styling.
 
-For all details on configuring and customizing the renderer, see the "FormGen Customizing Guide":forms_formgen_customizing.html.
+For all details on configuring and customizing the renderer, see the "FormGen Customizing Guide":formgen.html
 
 h3. E-mail template pages
 
@@ -1050,6 +1050,72 @@ It is possible to create special pages in the CMS, which can be used as template
 The pages must be created from templates, which use the markup language +Forms e-mail template+ and must render valid "Handlebars":https://handlebarsjs.com/ code.
 
 Those pages will be excluded from publishing, they will neither be written into the filesystem nor into a Content.Repository.
+
+h3. Forms Frontend Rendering
+
+Forms are rendered on Client side with a provided React Component (=FormGen). The compiled JavaScript Application need to be part of your Portal so the Application can be included by the Forms-Directive.
+You have two Options:
+
+* Download Pre-Compiled Ready to Use React-App and include in your portal
+* Download Formgen Source Code and add it to your project for customization (build step required)
+
+h4. Use pre-compiled Frontend FormGen
+
+You can download the builded Files from our Artifact-Server : https://repo.gentics.com/repository/maven-releases/com/gentics/cms/formgen/6.5.x/formgen-6.5.x.zip (use the correct CMS Version number)
+Or download it via maven dependency Plugin 
+
+<shell>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-dependency-plugin</artifactId>
+    <version>3.6.1</version>
+    <executions>
+      <execution>
+        <id>copy-formgen</id>
+        <phase>prepare-package</phase>
+        <goals>
+          <goal>unpack</goal>
+        </goals>
+        <configuration>
+          <artifactItems>
+            <artifactItem>
+              <groupId>com.gentics.cms</groupId>
+              <artifactId>formgen</artifactId>
+              <version>6.5.0</version>
+              <type>zip</type>
+              <outputDirectory>/formgen</outputDirectory>
+            </artifactItem>
+          </artifactItems>
+        </configuration>
+      </execution>
+    </executions>
+  </plugin>
+</shell>
+
+Place the downloaded Files in /portal/public/cpa/formgen (portal-php) or /portal/data/static/cpa/formgen (portal-java)
+
+h4. Download Sources & building
+
+You can download the source Files from our Artifact-Server : https://repo.gentics.com/repository/maven-releases/com/gentics/cms/formgen/6.5.x/formgen-6.5.x-src.zip (use the correct CMS Version number)
+Or also download it via maven dependeny Plugin (see step nefore), just add the <classifier>src</classifier> to the artifactItem
+
+You can now customize FormGen (see the "FormGen Customizing Guide":formgen.html).
+
+h5. Building
+
+For Building you need node and npm.
+In the extracted source Folder run
+
+<pre><code>
+npm ci
+// and in apps/andp-ma-formgen
+npm run build
+//you get a dist/_expo/ containing the builded Formgen
+//Place it in
+//portal-java: /portal/data/static/cpa/formgen/_expo
+//portal-php:  /portal/public/cpa/formgen/_expo
+</code></pre>
+
 
 h3. Redirect After Submission (successUrl)
 
@@ -1070,4 +1136,4 @@ If the flow is overridden or extended for a specific project, the default behavi
 
 In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.
 
-NOTE: The redirect handling for customized flows — custom elements or the +postSubmitForm+ hook — is implemented and configured in *FormGen* (see the "FormGen Customizing Guide":forms_formgen_customizing.html).
+NOTE: The redirect handling for customized flows — custom elements or the +postSubmitForm+ hook — is implemented and configured in *FormGen* (see the "FormGen Customizing Guide":formgen.html).

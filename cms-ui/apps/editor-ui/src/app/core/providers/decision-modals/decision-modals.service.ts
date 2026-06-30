@@ -8,7 +8,9 @@ import {
     GcmsRolePrivilege,
     Image,
     InheritableItem,
+    ItemPermissions,
     Node,
+    NodeFeature,
     Page,
     Raw,
 } from '@gentics/cms-models';
@@ -30,6 +32,8 @@ import { ApplicationStateService, FeaturesActionsService, FolderActionsService }
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
+import { EntityStateUtil } from '../../../shared/util/entity-states';
+import { EditMode } from '@gentics/cms-integration-api-models';
 
 /**
  * A shorthand service for modals displayed in multiple places
@@ -59,7 +63,7 @@ export class DecisionModalsService {
      * Displays a confirmation dialog before taking an action on a possibly-inherited item to ask whether
      * the user wishes to edit the master version or create a new localization and then work on that.
      */
-    showInheritedDialog(item: InheritableItem | Node, nodeId: number): Promise<{ item: InheritableItem | Node; nodeId: number }> {
+    showInheritedDialog(item: InheritableItem | Node, nodeId: number): Promise<{ item: InheritableItem | Node; nodeId: number; editMode?: EditMode }> {
         // We cannot rely on the `item.inherited` property since its value varies depending on the node context under
         // which the data was last fetched. A reliable way is to compare the inheritedFromId with the current node - this
         // should remain constant.
@@ -72,19 +76,23 @@ export class DecisionModalsService {
         return Promise.all([
             this.featuresActions.checkFeature(Feature.ALWAYS_LOCALIZE),
             this.permissionService.forItem(item, item.inheritedFromId).pipe(take(1)).toPromise(),
-        ])
-            .then(([alwaysLocalizeIsEnabled, permOriginal]) => {
-                if (alwaysLocalizeIsEnabled || !permOriginal.edit) {
-                    return this.localizeItemAndRefreshList(item as InheritableItem, nodeId);
-                } else {
-                    return this.askUserInWhichNodeToEdit(item as InheritableItem, nodeId);
-                }
-            });
+        ]).then(([alwaysLocalizeIsEnabled, permOriginal]) => {
+            if (alwaysLocalizeIsEnabled || !permOriginal.edit) {
+                return this.localizeItemAndRefreshList(item as InheritableItem, nodeId, false);
+            } else {
+                return this.askUserInWhichNodeToEdit(item as InheritableItem, nodeId);
+            }
+        });
     }
 
-    private localizeItemAndRefreshList(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem<Raw>; nodeId: number }> {
-        return this.folderActions.localizeItem(item.type, item.id, nodeId)
-            .then((localizedItem) => {
+    private localizeItemAndRefreshList(item: InheritableItem, nodeId: number, partial: boolean): Promise<{ item: InheritableItem<Raw>; nodeId: number }> {
+        var action: Promise<any>;
+        if (partial) {
+            action = this.folderActions.localizePagePartially(item.id, nodeId);
+        } else {
+            action = this.folderActions.localizeItem(item.type, item.id, nodeId);
+        }
+        return action.then((localizedItem) => {
                 // Refresh the list view to reflect the new local item.
                 const parentFolderId = (localizedItem as Page | File | Image).folderId
                   || (localizedItem as Folder).motherId;
@@ -92,46 +100,97 @@ export class DecisionModalsService {
                 if (parentFolderId === currentFolderId) {
                     this.folderActions.getItems(parentFolderId, item.type);
                 }
-                return { item: localizedItem, nodeId };
+                return { item: localizedItem, nodeId, editMode: partial ? EditMode.EDIT_INHERITANCE : EditMode.EDIT };
             });
     }
 
     private askUserInWhichNodeToEdit(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem; nodeId: number }> {
         const localNodeName = this.entityResolver.getNode(nodeId).name;
-        return this.modalService
-            .dialog({
-                title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
-                body: this.i18n.instant('modal.edit_inherited_body', {
-                    _type: item.type,
-                    master: (item).inheritedFrom,
-                    name: item.name,
-                    local: localNodeName,
-                }),
-                buttons: [
-                    {
-                        label: this.i18n.instant('common.cancel_button'),
-                        type: 'secondary',
-                        returnValue: '',
-                        flat: true,
-                    },
-                    {
-                        label: this.i18n.instant('modal.edit_original_button'),
-                        type: 'secondary',
-                        returnValue: 'editOriginal',
-                    },
-                    {
-                        label: this.i18n.instant('modal.localize_and_edit_button'),
-                        type: 'default',
-                        returnValue: 'localize',
-                    },
-                ],
-            }, { width: '800px' })
+        const nodeFeatures = this.appState.now.features.nodeFeatures[nodeId] || [];
+        const partialLocalizeEnabled = nodeFeatures.includes(NodeFeature.PARTIAL_MULTICHANNELLING);
+        const multiChannelingEnabled = this.appState.now.features[Feature.MULTICHANNELLING];
+        var dialog: Promise<any>;
+        if (
+            partialLocalizeEnabled
+            && item.type === 'page'
+            && multiChannelingEnabled
+            && !EntityStateUtil.stateDeleted(item)
+            && item.inherited
+        ) {
+            const body = this.i18n.instant(['modal.edit_inherited_partial_body','modal.localization_type_description'], {
+                _type: item.type,
+                master: (item).inheritedFrom,
+                name: item.name,
+                local: localNodeName,
+            }) as any;
+            dialog = this.modalService
+                .dialog({
+                    title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
+                    body: Object.keys(body).map(key => body[key]).join('<br>'),
+                    buttons: [
+                        {
+                            label: this.i18n.instant('common.cancel_button'),
+                            type: 'secondary',
+                            returnValue: '',
+                            flat: true,
+                        },
+                        {
+                            label: this.i18n.instant('modal.edit_original_button'),
+                            type: 'secondary',
+                            returnValue: 'editOriginal',
+                        },
+                        {
+                            label: this.i18n.instant('modal.localize_full_and_edit_button'),
+                            type: 'default',
+                            returnValue: 'localize',
+                        },
+                        {
+                            label: this.i18n.instant('modal.localize_partial_and_edit_button'),
+                            type: 'default',
+                            returnValue: 'localizePartial',
+                        },
+                    ],
+                })
+        } else {
+            dialog = this.modalService
+                .dialog({
+                    title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
+                    body: this.i18n.instant('modal.edit_inherited_body', {
+                        _type: item.type,
+                        master: (item).inheritedFrom,
+                        name: item.name,
+                        local: localNodeName,
+                    }),
+                    buttons: [
+                        {
+                            label: this.i18n.instant('common.cancel_button'),
+                            type: 'secondary',
+                            returnValue: '',
+                            flat: true,
+                        },
+                        {
+                            label: this.i18n.instant('modal.edit_original_button'),
+                            type: 'secondary',
+                            returnValue: 'editOriginal',
+                        },
+                        {
+                            label: this.i18n.instant('modal.localize_and_edit_button'),
+                            type: 'default',
+                            returnValue: 'localize',
+                        },
+                    ],
+                }, { width: '800px' });
+        }
+        return dialog
             .then((modal) => modal.open())
             .then((result: string) => {
-                if (result === 'editOriginal') {
-                    return { item, nodeId: item.inheritedFromId };
-                } else if (result === 'localize') {
-                    return this.localizeItemAndRefreshList(item, nodeId) as Promise<{ item: InheritableItem; nodeId: number }>;
+                switch (result) {
+                    case 'editOriginal':
+                        return { item, nodeId: item.inheritedFromId };
+                    case 'localize':
+                        return this.localizeItemAndRefreshList(item, nodeId, false) as Promise<{ item: InheritableItem; nodeId: number }>;
+                    case 'localizePartial':
+                        return this.localizeItemAndRefreshList(item, nodeId, true) as Promise<{ item: InheritableItem; nodeId: number }>;
                 }
             });
     }

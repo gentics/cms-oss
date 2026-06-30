@@ -48,7 +48,7 @@
         "translation_description": "Beschreibung",
         "translation_summary": "Zusammenfassung",
         "translation_static_option_label": "Optionsbezeichnung",
-        "translation_no_options_defined": "Keine optionen definitiert",
+        "translation_no_options_defined": "Keine Optionen definiert",
         "condition_source_type": "Bedingung: Quelltyp",
         "condition_source_schema": "Bedingung: Schema Attribut",
         "condition_source_control": "Bedingung: Eingabe Element",

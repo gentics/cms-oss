@@ -1,55 +1,100 @@
 {
-    "adminEmailAddress": "",
-    "adminEmailSubject": {},
-    "adminEmailPageId": 0,
-    "adminEmailNodeId": 0,
-    "adminEmailTemplate": {},
-    "successPageId": 4711,
-    "successNodeId": 42,
-    "successUrl": {},
-    "templateContext": "theme-red",
-    "schema": {
-        "properties": {
-            "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed": {
-                "type": "boolean",
-                "updateOnChange": false,
-                "validation": {},
-                "mandatory": true,
-                "isList": false,
-                "name": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
-                "value": "X",
-                "formGridOptions": {
-                    "defaultValue": true
-                }
-            }
-        }
-    },
-    "ui-schema": {
-        "formname": {
-            "de": "Test Form",
-            "en": "Test Form"
-        },
-        "formdescription": {
-            "de": "This is the Test Form",
-            "en": "This is the Test Form"
-        },
-        "pages": [
-            {
-                "elements": [
-                    {
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"checkbox_mandatory": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": true,
+				"isList": false,
+				"name": "checkbox_mandatory",
+				"formGridOptions": {
+					"defaultValue": false
+				}
+			},
+			"checkbox_checked": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "checkbox_checked",
+				"formGridOptions": {
+					"defaultValue": true
+				}
+			},
+			"checkbox_value_y": {
+				"type": "boolean",
+				"updateOnChange": false,
+				"validation": {},
+				"mandatory": false,
+				"isList": false,
+				"name": "checkbox_value_y",
+				"formGridOptions": {
+					"defaultValue": false
+				}
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
 						"type": "property",
-						"id": "checkbox_cd32991a_ad5d_4e1e_a645_94d3593d55ed",
+						"id": "checkbox_mandatory",
 						"label": {
-                            "de": "Klick mich",
-                            "en": "Click me"
-                        },
+							"de": "Verpflichtend",
+							"en": "Mandatory"
+						},
 						"description": {},
-                        "formGridOptions": {
-                            "storedValue": "X"
-                        }
+						"formGridOptions": {
+							"storedValue": "X"
+						}
+					},
+					{
+						"type": "property",
+						"id": "checkbox_checked",
+						"label": {
+							"de": "Angehakt",
+							"en": "Checked"
+						},
+						"description": {},
+						"formGridOptions": {
+							"storedValue": "X"
+						}
+					},
+					{
+						"type": "property",
+						"id": "checkbox_value_y",
+						"label": {
+							"de": "Anderer Wert",
+							"en": "Different Value"
+						},
+						"description": {},
+						"formGridOptions": {
+							"storedValue": "Y"
+						}
 					}
-                ]
-            }
-        ]
-    }
+				]
+			}
+		]
+	}
 }

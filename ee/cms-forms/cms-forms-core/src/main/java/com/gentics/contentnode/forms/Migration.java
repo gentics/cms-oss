@@ -98,9 +98,7 @@ public class Migration {
 		"validation",
 		"select_type",
 		"element_to_check",
-		"value_to_check",
-		// The checked value will be handled by the custom checkbox migrators.
-		"checked");
+		"value_to_check");
 
 	/**
 	 * List of unmigrated properties per element type ID
@@ -109,9 +107,7 @@ public class Migration {
 			"string", Arrays.asList("minVal", "maxVal"),
 			"datetime", Arrays.asList("minVal", "maxVal", "maxCharCount"),
 			"time", Arrays.asList("minVal", "maxVal", "maxCharCount"),
-			"number", Arrays.asList("maxCharCount"),
-			// The default value for boolean elements will behandled by the custom checkbox migrations.
-			"boolean", Arrays.asList("value"));
+			"number", Arrays.asList("maxCharCount"));
 
 	/**
 	 * Map of property id to propertyPath settings
@@ -137,6 +133,14 @@ public class Migration {
 			"allowedFiletypes", "allowedTypes");
 
 	/**
+	 * Migration map for property ids per element type ID
+	 */
+	public final static Map<String, Map<String, String>> PROPERTY_MIGRATION_MAP_PER_ID = Map.of(
+			"boolean", Map.of(
+					"value", "storedValue",
+					"checked", "defaultValue"));
+
+	/**
 	 * List of property ids, which are backend properties (have the backend flag set)
 	 */
 	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFilesize", "allowedTypes",
@@ -145,7 +149,7 @@ public class Migration {
 	/**
 	 * List of property ids, which should be migrated to "string" instead of "translation"
 	 */
-	public final static List<String> STRING_PROPERTIES = Arrays.asList("defaultValue");
+	public final static List<String> STRING_PROPERTIES = Arrays.asList("defaultValue", "storedValue");
 
 	/**
 	 * List of unmigrated element types
@@ -751,6 +755,9 @@ public class Migration {
 			return null;
 		}
 
+		if (PROPERTY_MIGRATION_MAP_PER_ID.containsKey(elementType)) {
+			id = PROPERTY_MIGRATION_MAP_PER_ID.get(elementType).getOrDefault(id, id);
+		}
 		id = PROPERTY_MIGRATION_MAP.getOrDefault(id, id);
 
 		Map<String, String> label = getTranslationMap(property, "label_i18n_ui", true);

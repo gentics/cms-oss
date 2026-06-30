@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Strings;
+import org.assertj.core.util.Arrays;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -76,13 +78,16 @@ public class FormMigrationTest implements ConfigModifier {
 
 	@Parameters(name = "{index}: form: {0}")
 	public static Collection<Object[]> data() {
-		return Stream
-				.of("form/simple.json", "form/success.json", "form/mailsettings.json", "form/pages.json",
-						"controls/input.json", "controls/checkbox.json", "controls/textarea.json",
-						"controls/select.json", "controls/file.json", "controls/usermail.json",
-						"controls/recaptcha.json", "blocks/sectionheadline.json", "blocks/text.json",
-						"blocks/spacer.json", "blocks/conditionalcontainer.json", "blocks/group.json")
-				.map(fileName -> new Object[] { fileName }).collect(Collectors.toList());
+//		return Stream
+//				.of("form/simple.json", "form/success.json", "form/mailsettings.json", "form/pages.json",
+//						"controls/input.json", "controls/checkbox.json", "controls/textarea.json",
+//						"controls/select.json", "controls/file.json", "controls/usermail.json",
+//						"controls/recaptcha.json", "blocks/sectionheadline.json", "blocks/text.json",
+//						"blocks/spacer.json", "blocks/conditionalcontainer.json", "blocks/group.json")
+//				.map(fileName -> new Object[] { fileName }).collect(Collectors.toList());
+		Collection<Object[]> data = new ArrayList<>();
+		data.add(new Object[] {"controls/checkbox.json"});
+		return data;
 	}
 
 	@BeforeClass

@@ -82,6 +82,13 @@ public class MigrateForms extends InitJob {
 	protected static Map<String, String> INVERTED_PROPERTY_MIGRATION_MAP = MapUtils.invertMap(Migration.PROPERTY_MIGRATION_MAP);
 
 	/**
+	 * Map of new property ids to old property names per new element type
+	 */
+	protected static Map<String, Map<String, String>> INVERTED_PROPERTY_MIGRATION_MAP_PER_ID = Migration.PROPERTY_MIGRATION_MAP_PER_ID
+			.entrySet().stream()
+			.collect(Collectors.toMap(Map.Entry::getKey, entry -> MapUtils.invertMap(entry.getValue())));
+
+	/**
 	 * SQL Statement to get up to 100 unmigrated forms
 	 */
 	protected final static String SQL_UNMIGRATED_FORMS = "SELECT form.id, folder.node_id, form.name, form.description, form.languages, form.data, form.success_page_id, form.success_node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.formtype = ? LIMIT 100";
@@ -145,6 +152,20 @@ public class MigrateForms extends InitJob {
 		return element.optional(property)
 				.flatMap(selectionNode -> selectionNode.valueStream().filter(JsonNode::isArray).findFirst())
 				.map(array -> array.valueStream().map(JsonNode::asText).collect(Collectors.toList()));
+	}
+
+	/**
+	 * Get the old name of the setting
+	 * @param elementType migrated element type
+	 * @param newId id of the new setting
+	 * @return old setting name
+	 */
+	protected static String getOldName(String elementType, String newId) {
+		String oldName = INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(newId, newId);
+		if (INVERTED_PROPERTY_MIGRATION_MAP_PER_ID.containsKey(elementType)) {
+			oldName = INVERTED_PROPERTY_MIGRATION_MAP_PER_ID.get(elementType).getOrDefault(newId, oldName);
+		}
+		return oldName;
 	}
 
 	/**
@@ -254,34 +275,6 @@ public class MigrateForms extends InitJob {
 
 		property.withObjectProperty(FORM_GRID_OPTIONS)
 			.put("radio", radio);
-	};
-
-	/**
-	 * Migrator for checkbox schema properties
-	 */
-	private final BiConsumer<ObjectNode, ObjectNode> CHECKBOX_PROPERTY_MIGRATOR = (elementNode, property) -> {
-		var defaultValue = elementNode.optional("checked_i18n")
-			.flatMap(n -> n.valueStream().filter(JsonNode::isBoolean).map(JsonNode::asBoolean).findFirst())
-			.orElse(false);
-
-		if (property.optional("value").isEmpty()) {
-			elementNode.optional("value_i18n")
-				.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
-				.ifPresent(storedValue -> property.put("value", storedValue));
-		}
-
-		property.withObjectProperty(FORM_GRID_OPTIONS).put("defaultValue", defaultValue);
-	};
-
-	/**
-	 * Migrator for checkbox ui-schema properties
-	 */
-	private final BiConsumer<ObjectNode, ObjectNode> CHECKBOX_UI_PROPERTY_MIGRATOR = (elementNode, property) -> {
-		var storedValue = elementNode.optional("value_i18n")
-			.flatMap(n -> n.valueStream().filter(JsonNode::isTextual).map(JsonNode::asText).findFirst())
-			.orElse("X");
-
-		property.withObjectProperty(FORM_GRID_OPTIONS).put("storedValue", storedValue);
 	};
 
 	/**
@@ -570,7 +563,7 @@ public class MigrateForms extends InitJob {
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "string", MULTILINE_STRING_PROPERTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "checkbox":
-			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", CHECKBOX_PROPERTY_MIGRATOR, CHECKBOX_UI_PROPERTY_MIGRATOR);
+			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "boolean", EMPTY_MIGRATOR, EMPTY_MIGRATOR);
 			break;
 		case "selectgroup":
 			migrateElement(config, elementNode, schemaProperties, uiSchemaPages, currentPage, "catalog", CATALOG_PROPERTY_MIGRATOR, CATALOG_UI_PROPERTY_MIGRATOR);
@@ -647,7 +640,7 @@ public class MigrateForms extends InitJob {
 			// migrate all backend settings
 			Optional.ofNullable(controlConfig.settings).ifPresent(settings -> {
 				settings.stream().filter(s -> s.backend).forEach(s -> {
-					migrateSetting(s, elementNode, property);
+					migrateSetting(migratedType, s, elementNode, property);
 				});
 			});
 		});
@@ -671,12 +664,12 @@ public class MigrateForms extends InitJob {
 		// migrate all frontend settings defined in the type configuration to formGridOptions
 		optionalControl.map(c -> c.settings).ifPresent(settings -> {
 			settings.stream().filter(s -> !s.backend).forEach(s -> {
-				migrateSetting(s, elementNode, uiProperty);
+				migrateSetting(migratedType, s, elementNode, uiProperty);
 			});
 		});
 		optionalBlock.map(b -> b.settings).ifPresent(settings -> {
 			settings.stream().filter(s -> !s.backend).forEach(s -> {
-				migrateSetting(s, elementNode, uiProperty);
+				migrateSetting(migratedType, s, elementNode, uiProperty);
 			});
 		});
 		optionalBlock.ifPresent(blockConfig -> {
@@ -737,12 +730,13 @@ public class MigrateForms extends InitJob {
 
 	/**
 	 * Migrate a single setting
+	 * @param migratedType migrated element type
 	 * @param setting setting to migrate
 	 * @param elementNode element node
 	 * @param propertyOrUiProperty either the schema property or the ui-schema property
 	 */
-	protected void migrateSetting(BaseSetting setting, ObjectNode elementNode, ObjectNode propertyOrUiProperty) {
-		String oldName = "%s_i18n".formatted(INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id));
+	protected void migrateSetting(String migratedType, BaseSetting setting, ObjectNode elementNode, ObjectNode propertyOrUiProperty) {
+		String oldName = "%s_i18n".formatted(getOldName(migratedType, setting.id));
 
 		String settingTypeName = Optional.ofNullable(setting.getClass().getAnnotation(JsonTypeName.class))
 				.map(JsonTypeName::value).orElse("");
@@ -796,7 +790,7 @@ public class MigrateForms extends InitJob {
 			}
 			break;
 		case OptionsSetting.TYPE:
-			oldName = INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id);
+			oldName = getOldName(migratedType, setting.id);
 			elementNode.optional(oldName).filter(JsonNode::isArray).ifPresent(options -> {
 				options.valueStream().map(option -> {
 					JsonNode migratedOption = mapper.createObjectNode().put("value", option.get("key").asText())
@@ -811,8 +805,8 @@ public class MigrateForms extends InitJob {
 		case UserSetting.TYPE:
 			break;
 		case ReferenceSetting.TYPE:
-			String itemIdProperty = "%s_pageid".formatted(INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id));
-			String nodeIdProperty = "%s_nodeid".formatted(INVERTED_PROPERTY_MIGRATION_MAP.getOrDefault(setting.id, setting.id));
+			String itemIdProperty = "%s_pageid".formatted(getOldName(migratedType, setting.id));
+			String nodeIdProperty = "%s_nodeid".formatted(getOldName(migratedType, setting.id));
 
 			int itemId = elementNode.optional(itemIdProperty).filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);
 			int nodeId = elementNode.optional(nodeIdProperty).filter(JsonNode::isInt).map(JsonNode::asInt).orElse(0);

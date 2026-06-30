@@ -3,8 +3,15 @@ form_loading:
   de: laden...
 form_OverlayInitial_text:
   de: Seite wird geladen...
+form_OverlayBinary_text:
+  de: File-Upload
+  en: File Upload
+form_OverlayBinary_client_process_text:
+  de: Datei wird verarbeitet...
+  en: File is being processed.
 form_OverlayErrorTitle:
-  de: Dieser Service steht aktuell nicht zur Verfügung
+  de: Dieses Formular steht aktuell nicht zur Verfügung
+  en: This service is currently unavailable
 form_cancel:
   de: Abbrechen
 form_flow_name_summary:
@@ -22,9 +29,9 @@ form_flow_btn_summary:
 form_flow_btn_form:
   de: Zum Formular
 form_step:
-  de: "Schritt"
+  de: Schritt
 form_print:
-  de: "Drucken"
+  de: Drucken
 form_validation_error_missing_mandatory_field_title:
   de: Fehlendes Pflichtfeld
   en: Missing mandatory field
@@ -41,7 +48,7 @@ form_validation_error_unsafe_value_title:
   de: Formular-Daten enthalten unsichere Werte
   en: Form data contains unsafe values
 form_validation_error_unsafe_value:
-  de: Der gesendeten Daten für {0} enthält ungültige Werte.
+  de: Die gesendeten Daten für {0} enthalten ungültige Werte.
   en: The data sent for field {0} contains unsafe values.
 form_validation_error_min_value_title:
   de: Wert zu klein
@@ -84,4 +91,125 @@ form_validation_error_file_type_title:
   en: Invalid file type
 form_validation_error_file_type:
   de: Die Datei {0} hat einen ungültigen Dateityp.
-  en: The file {0} is of invalid type.
+  en: The file {0} is of invalid type.  
+form_notFilledError:
+  de: Das Pflichtfeld wurde nicht befüllt.
+  en: The mandatory field was not filled.
+form_notANumberError:
+  de: Dieses Feld muss mit einer Nummer befüllt sein
+  en: This field must be filled with a number
+form_maxLengthError:
+  de: Dieses Feld darf nur max {{maxCount}} Zeichen lang sein
+  en: This field must be a maximum of {{maxCount}} characters long
+form_minError:
+  de: Der Wert muss min {{minVal}} sein
+  en: The value must be at least {{minVal}}
+form_maxError:
+  de: Der Wert darf max {{maxVal}} sein
+  en: The value must be at most {{maxVal}}
+form_errorBlock_title:
+  de: Die Angaben im Formular sind ungültig oder unvollständig.
+  en: The entries in the form are invalid or incomplete.
+form_fileTypeError:
+  de: Es sind nur folgende Dateitypen erlaubt: 
+  en: Only the following file types are allowed: 
+form_image_invalidImageUrl:
+  de: Bild konnte nicht geladen werden - ungültige URL oder Endung.
+  en: Image could not be loaded - invalid URL or extension.
+form_notADateTime:
+  de: Dieses Feld muss mit einem DateTime befüllt sein
+  en: This field must be filled with a DateTime
+form_error_overlay__first_line:
+  de: Der Fehler wurde aufgezeichnet - wir kümmern uns um die Behebung.
+  en: The error has been recorded - we are working on fixing it.
+form_error_overlay__second_line:
+  de: In dringenden Fällen melden Sie sich an den Supportkontakt des Services.
+  en: In urgent cases, please contact the service support contact.
+form_OverlayErrorContent:
+  de: Das Serviceformular kann aktuell nicht geladen werden, versuchen Sie es bitte später nochmals.
+  en: The service form cannot be loaded at the moment, please try again later.
+form_OverlayErrorOnSubmitTitle:
+  de: Fehler beim Absenden des Formulars
+  en: An error occurred when submitting.
+form_OverlayErrorOnSubmitContent:
+  de: Beim Absenden des Formulars wurde ein Fehler entdeckt. Bitte korrigieren Sie ihre Eingaben.
+  en: An error was detected when submitting the form. Please correct your entries.
+form_successDefault:
+  de: Formular erfolgreich gesendet!
+  en: Form successfully send!
+form_summary:
+  de: Zusammenfassung
+  en: Summary
+form_accessibility_dropdown_item:
+  de: Eintrag {{index}}: {{label}}
+  en: Item {{index}}: {{label}}
+form_accessibility_dropdown_open:
+  de: Dropdown öffnen
+  en: Open dropdown
+form_accessibility_clear:
+  de: Inhalt löschen
+  en: Clear content
+form_accessibility_clear_hint:
+  de: Tippen Sie, um den Inhalt zu löschen.
+  en: Tap to clear the content.
+form_accessibility_dropdown_toggle:
+  de: Dropdown umschalten
+  en: Toggle dropdown
+form_accessibility_boolean_checkbox_error_hint:
+  de: Ungültige Auswahl: {{error}}
+  en: Invalid selection: {{error}}
+form_accessibility_boolean_checkbox_hint:
+  de: Tippen, um den Zustand der Checkbox zu ändern
+  en: Tap to change the checkbox state
+form_screenreader_mandatory_field:
+  de: Pflichtfeld
+  en: Mandatory field
+form_accessibility_tooltip_button:
+  de: Infos anzeigen: {{label}}
+  en: Show info: {{label}}
+form_accessibility_tooltip_button_hint:
+  de: Tippen, um zusätzliche Informationen anzuzeigen
+  en: Tap to show additional information
+form_accessibility_binary_file_chooser:
+  de: Datei für {{label}} auswählen
+  en: Select file for {{label}}
+form_accessibility_binary_file_chooser_hint:
+  de: Tippen, um eine Datei auszuwählen
+  en: Tap to select a file
+form_accessibility_binary_file_chooser_error_hint:
+  de: Fehler beim Auswählen der Datei: {{error}}
+  en: Error selecting the file: {{error}}
+form_accessibility_textInput_multiline_label:
+  de: Mehrzeiliges Textfeld für {{label}}
+  en: Multiline text field for {{label}}
+form_accessibility_textInput_error_hint:
+  de: Ungültige Eingabe: {{error}}
+  en: Invalid input: {{error}}
+form_accessibility_textInput_multiline_hint:
+  de: Tippen, um mehrzeiligen Text für {{label}} einzugeben
+  en: Tap to enter multiline text for {{label}}
+form_accessibility_textInput_number_hint:
+  de: Tippen, um eine Zahl für {{label}} einzugeben
+  en: Tap to enter a number for {{label}}
+form_accessibility_textInput_string_label:
+  de: Textfeld für {{label}}
+  en: Text field for {{label}}
+form_accessibility_textInput_string_hint:
+  de: Tippen, um Text für {{label}} einzugeben
+  en: Tap to enter text for {{label}}
+form_accessibility_datepicker_input:
+  de: Auswahlfeld für {{label}}
+  en: Selection field for {{label}}
+form_accessibility_datepicker_input_error_hint:
+  de: Fehler: {{error}}
+  en: Error: {{error}}
+form_accessibility_datepicker_input_hint:
+  de: Tippen, um {{label}} auszuwählen
+  en: Tap to select {{label}}
+form_accessibility_datepicker_clear:
+  de: Eingabe löschen
+  en: Clear input
+form_accessibility_datepicker_clear_hint:
+  de: Tippen, um die Eingabe zu löschen
+  en: Tap to clear the input
+

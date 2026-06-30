@@ -186,7 +186,22 @@ export function evaluateCmsCondition(
 ): boolean {
   const referencedValue =
     formState.data.properties?.[condition.source.control]?.value;
-  return referencedValue === condition.equals;
+
+  // Katalog-/Auswahlfelder speichern den Wert als IPossibleValue
+  // ({ identifier, displayName }). condition.equals ist aber immer ein einfacher
+  // Identifier (String/Zahl). Deshalb vergleichen wir in diesem Fall gegen den
+  // identifier des Objekts.
+  const isPossibleValue = (value: unknown): value is IPossibleValue =>
+    value !== null &&
+    typeof value === 'object' &&
+    'identifier' in value &&
+    'displayName' in value;
+
+  const comparableValue = isPossibleValue(referencedValue)
+    ? referencedValue.identifier
+    : referencedValue;
+
+  return comparableValue === condition.equals;
 }
 
 /**

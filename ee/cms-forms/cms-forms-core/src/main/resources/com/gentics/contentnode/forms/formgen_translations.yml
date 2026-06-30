@@ -1,37 +1,49 @@
 ---
 form_loading:
   de: laden...
+  en: loading...
 form_OverlayInitial_text:
-  de: Seite wird geladen...
+  de: Formular wird geladen...
+  en: Form is loading...
 form_OverlayBinary_text:
   de: File-Upload
   en: File Upload
 form_OverlayBinary_client_process_text:
   de: Datei wird verarbeitet...
-  en: File is being processed.
+  en: File is being processed...
 form_OverlayErrorTitle:
   de: Dieses Formular steht aktuell nicht zur Verfügung
-  en: This service is currently unavailable
+  en: This form is currently unavailable
 form_cancel:
   de: Abbrechen
+  en: Cancel
 form_flow_name_summary:
   de: Zusammenfassung
+  en: Summary
 form_flow_name_form:
   de: Formular
+  en: Form
 form_previousPage:
   de: Vorherige Seite
+  en: Previous Page
 form_nextPage:
   de: Nächste Seite
+  en: Next Page
 form_submit:
   de: Absenden
+  en: Submit
 form_flow_btn_summary:
   de: Zur Zusammenfassung
+  en: Go to Summary
 form_flow_btn_form:
   de: Zum Formular
+  en: Go to Form
 form_step:
   de: Schritt
+  en: Step
 form_print:
   de: Drucken
+  en: Print
 form_validation_error_missing_mandatory_field_title:
   de: Fehlendes Pflichtfeld
   en: Missing mandatory field
@@ -99,8 +111,8 @@ form_validation_error_email:
   de: Die Email-Adresse {0} ist ungültig.
   en: The email address {0} is invalid.
 form_maxFileUploadSizeSingleError:
-  de: Die Datei ist zu groß"
-  en: The file is too large"
+  de: Die Datei ist zu groß
+  en: The file is too large
 form_invalidEmailError:
   de: Diese Email-Adresse ist ungültig
   en: This email adress is invalid
@@ -111,14 +123,14 @@ form_notANumberError:
   de: Dieses Feld muss mit einer Nummer befüllt sein
   en: This field must be filled with a number
 form_maxLengthError:
-  de: Dieses Feld darf nur max {{maxCount}} Zeichen lang sein
-  en: This field must be a maximum of {{maxCount}} characters long
+  de: "Dieses Feld darf nur max {{maxCount}} Zeichen lang sein"
+  en: "This field must be a maximum of {{maxCount}} characters long"
 form_minError:
-  de: Der Wert muss min {{minVal}} sein
-  en: The value must be at least {{minVal}}
+  de: "Der Wert muss min {{minVal}} sein"
+  en: "The value must be at least {{minVal}}"
 form_maxError:
-  de: Der Wert darf max {{maxVal}} sein
-  en: The value must be at most {{maxVal}}
+  de: "Der Wert darf max {{maxVal}} sein"
+  en: "The value must be at most {{maxVal}}"
 form_errorBlock_title:
   de: Die Angaben im Formular sind ungültig oder unvollständig.
   en: The entries in the form are invalid or incomplete.

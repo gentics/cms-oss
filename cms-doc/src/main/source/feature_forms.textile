@@ -1137,3 +1137,5 @@ If the flow is overridden or extended for a specific project, the default behavi
 In both cases, ensure that the successUrl is read from the form data and that the navigation is executed at the correct point in the flow.
 
 NOTE: The redirect handling for customized flows — custom elements or the +postSubmitForm+ hook — is implemented and configured in *FormGen* (see the "FormGen Customizing Guide":formgen.html).
+
+.

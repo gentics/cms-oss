@@ -106,11 +106,11 @@ gtx-form-element-container {
                     color: $gtx-color-primary;
                 }
 
-                &[disabled] {
+                &:disabled {
                     cursor: not-allowed;
                 }
 
-                &:not([disabled=true]):hover {
+                &:not(:disabled):hover {
                     color: $gtx-color-mid-gray;
                     cursor: pointer;
 
@@ -131,7 +131,7 @@ gtx-form-element-container {
                     }
                 }
 
-                &:not([disabled=true]):focus {
+                &:not(:disabled):focus {
                     outline-color: $gtx-color-primary;
                     z-index: 1;
                 }

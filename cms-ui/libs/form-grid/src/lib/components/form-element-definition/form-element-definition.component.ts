@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 import {
     FormControlConfiguration,
     FormElement,
@@ -27,6 +27,8 @@ export class FormElementDefinitionComponent {
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormControlConfiguration>();
     public readonly elementSchema = model.required<FormSchemaProperty>();
+
+    public readonly validChange = output<boolean>();
 
     public readonly controls = computed(() => {
         return this.config().controls || {};

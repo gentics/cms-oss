@@ -1,16 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, effect, HostBinding, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, HostBinding, input, model, output, untracked } from '@angular/core';
+import { FormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import {
     FormElement,
     FormElementConfiguration,
     FormSchemaProperty,
     FormSettingConfiguration,
+    FormSettingType,
     FormTypeConfiguration,
     FormUserOptionReference,
     ItemInNode,
 } from '@gentics/cms-models';
-import { setByPath } from '@gentics/common';
+import { getValueByPath, setByPath } from '@gentics/common';
 import { isSettingVisible } from '../../utils/conditions';
 import { sanitizeItemReference } from '../../utils/sanitize';
+import { Subscription } from 'rxjs';
+import { setEnabled } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-dynamic-form-settings',
@@ -29,6 +33,7 @@ export class DynamicFormSettingsComponent {
     public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly disabled = input.required<boolean>();
+    public readonly validChange = output<boolean>();
 
     public readonly visibleSettings = computed(() => {
         const elConf = this.elementConfig();
@@ -41,10 +46,71 @@ export class DynamicFormSettingsComponent {
     @HostBinding('class.has-settings')
     public hasVisibleSettings = false;
 
+    public form!: UntypedFormGroup;
+
     constructor() {
         // Ugly workaround, as HostBindings don't work with signals
         effect(() => {
             this.hasVisibleSettings = this.visibleSettings().length > 0;
+        });
+
+        effect((cleanup) => {
+            const settings = this.settings() || [];
+            const disabled = this.disabled();
+            const controlSubs: Subscription[] = [];
+            this.form = new UntypedFormGroup({});
+            setEnabled(this.form, !disabled);
+
+            // Prevents changes to the data to re-create the entire form
+            const schema = untracked(() => this.elementSchema());
+            const el = untracked(() => this.element());
+
+            // Create the form from the settings with the initial data and validators
+            for (const setting of settings) {
+                const path = setting.propertyPath
+                    ? setting.propertyPath
+                    : ['formGridOptions', setting.id];
+                const control = new FormControl(getValueByPath(setting.backend ? schema : el, path));
+                this.form.setControl(setting.id, control);
+
+                if (setting.required) {
+                    control.setValidators(Validators.required);
+                }
+
+                controlSubs.push(control.valueChanges.subscribe((value) => {
+                    switch (setting.type) {
+                        case FormSettingType.USER: {
+                            this.updateUserValue(setting, value);
+                            break;
+                        }
+
+                        case FormSettingType.REFERENCE:
+                            this.updateReferenceValue(setting, value);
+                            break;
+
+                        default:
+                            this.updateData(setting, value);
+                            break;
+                    }
+                }));
+            }
+
+            // Setup the validation observer
+            const statusSub = this.form.statusChanges.subscribe((status) => {
+                this.validChange.emit(status === 'VALID');
+            });
+
+            cleanup(() => {
+                statusSub.unsubscribe();
+                controlSubs.forEach((s) => s.unsubscribe());
+            });
+        });
+
+        effect(() => {
+            const disabled = this.disabled();
+            if (this.form != null) {
+                setEnabled(this.form, !disabled);
+            }
         });
     }
 

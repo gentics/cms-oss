@@ -21,5 +21,6 @@
         [elementSchema]="elementSchema()"
         [disabled]="mode() === FormGridEditMode.NONE"
         (elementChange)="element.set($event)"
+        (validChange)="validChange.emit($event)"
     />
 </div>

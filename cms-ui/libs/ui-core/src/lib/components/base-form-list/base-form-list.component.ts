@@ -69,7 +69,7 @@ export abstract class BaseFormListComponent<T> extends BaseFormElementComponent<
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', true]);
-        // Set the value to this flag. Used to ignore changes until intial value has been provided.
+        // Set the value to this flag. Used to ignore changes until initial value has been provided.
         this.value = INITIAL_UNSET_VALUE as any;
     }
 
@@ -84,7 +84,7 @@ export abstract class BaseFormListComponent<T> extends BaseFormElementComponent<
         // Therefore, configure the form with the current value again to properly update the controls.
         if (changes.initialValue && this.initialValue) {
             if (this.form) {
-                this.configureForm(this.form.value as any);
+                this.configureForm(this.form.value);
                 this.form.updateValueAndValidity();
             }
 

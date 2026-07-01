@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 import { FormElement, FormElementConfiguration, FormSchema, FormSchemaProperty, FormTypeConfiguration } from '@gentics/cms-models';
 import { FormGridEditMode } from '../../models';
 
@@ -22,6 +22,7 @@ export class FormElementSettingsComponent {
     public readonly elementSchema = input<FormSchemaProperty>();
 
     public readonly mode = input.required<FormGridEditMode>();
+    public readonly validChange = output<boolean>();
 
     public readonly visibleSettings = computed(() => {
         const all = this.elementConfig().settings || [];

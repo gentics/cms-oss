@@ -715,13 +715,14 @@ public class Migration {
 												.add(createRegexValidationOption(option, SOCIAL_SECURITY_PATTERN));
 										break;
 									case "date":
-										ControlConfig dateTimeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
-										fillElementConfig("datetime", dateTimeControl, element);
-										// add an additional setting for "dateOnly"
-										dateTimeControl.settings.add(createDateOnlySetting());
-										controls.put("datetime", dateTimeControl);
-										break;
 									case "datepicker":
+										if (!controls.containsKey("datetime")) {
+											ControlConfig dateTimeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));
+											fillElementConfig("datetime", dateTimeControl, element);
+											// add an additional setting for "dateOnly"
+											dateTimeControl.settings.add(createDateOnlySetting());
+											controls.put("datetime", dateTimeControl);
+										}
 										break;
 									case "time":
 										ControlConfig timeControl = new ControlConfig(getTranslationMap(option, "value_i18n_ui", true));

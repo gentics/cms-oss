@@ -293,7 +293,7 @@ export function commonValidate(
           parsedNr = parseNumber(value);
           if (
             value != null &&
-            value.length > 0 &&
+            (value.length > 0 || (!isNaN (value) && value.toString().length > 0)) &&
             !isNaN(parsedNr) &&
             parsedNr < validationInfo
           ) {
@@ -319,7 +319,7 @@ export function commonValidate(
           parsedNr = parseNumber(value);
           if (
             value != null &&
-            value.length > 0 &&
+            (value.length > 0 || (!isNaN (value) && value.toString().length > 0)) &&
             !isNaN(parsedNr) &&
             parsedNr > validationInfo
           ) {

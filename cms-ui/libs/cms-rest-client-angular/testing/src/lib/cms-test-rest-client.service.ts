@@ -12,7 +12,7 @@ export class GCMSTestRestClientService extends GCMSRestClientService {
 
     constructor() {
         // Bit hacky, but it works, as we don't really need it and it gets overwritten in an instant
-        super(null as any);
+        super(null);
         this.driver = new AngularTestDriver();
         this.client.driver = this.driver;
         this.client.config = {
@@ -36,7 +36,7 @@ export class GCMSTestRestClientService extends GCMSRestClientService {
         return this.driver.getCalls();
     }
 
-    setResponder(responderOrValue: Responder | any): void {
+    setResponder(responderOrValue: Responder): void {
         this.driver.setResponse(responderOrValue);
     }
 }

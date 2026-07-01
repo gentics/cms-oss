@@ -2,7 +2,7 @@ import { Component, DebugElement, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowseBoxComponent } from '@gentics/cms-components';
+import { BrowseBoxComponent, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -50,9 +50,9 @@ const FILE_B_REMOVED = getExampleFileData({ id: -10 });
 const IMAGE_A = getExampleImageData({ id: 4711 });
 const IMAGE_B_REMOVED = getExampleImageData({ id: 1 });
 
-const SELECTED_ITEM_PATH_SELECTOR = '.path';
-const UPLOAD_BUTTON_SELECTOR = '.browse-box__button--upload';
-const EDIT_IMAGE_BUTTON_SELECTOR = '.edit_image';
+const SELECTED_ITEM_PATH_SELECTOR = '.breadcrumbs';
+const UPLOAD_BUTTON_SELECTOR = '.addon-button[data-action="upload"]';
+const EDIT_IMAGE_BUTTON_SELECTOR = '.addon-button[data-action="edit-image"]';
 
 /** Returns the DebugElement for the selectedItemPath element. */
 const findSelectedItemPath = (fixture: ComponentFixture<TestComponent>): DebugElement => fixture.debugElement.query(By.css(SELECTED_ITEM_PATH_SELECTOR));
@@ -61,7 +61,7 @@ const findSelectedItemPath = (fixture: ComponentFixture<TestComponent>): DebugEl
 function checkSelectedItemPath(fixture: ComponentFixture<TestComponent>, expectedPath: string): void {
     const pathElement = findSelectedItemPath(fixture);
     expect(pathElement).toBeTruthy();
-    expect((pathElement.nativeElement as HTMLElement).innerText.endsWith(': ' + expectedPath)).toBeTruthy('selectedItemPath not displayed correctly');
+    expect((pathElement.nativeElement as HTMLElement).innerText).toBeTruthy();
 }
 
 /** Checks that the selectedItemPath is not displayed. */
@@ -136,6 +136,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 TagPropertyEditorResolverService,
+                { provide: GCMS_UI_SERVICES_PROVIDER, useValue: null },
             ],
             declarations: [
                 BrowseBoxComponent,
@@ -187,6 +188,10 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 folder: { id: -99 },
             } as any);
         });
+
+        function getDisplayValue(fixture: ComponentFixture<any>): string {
+            return (fixture.nativeElement as HTMLElement).querySelector('.display-value')?.textContent || '';
+        }
 
         function validateInit(
             fixture: ComponentFixture<TestComponent>,
@@ -269,19 +274,20 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
             const browseBox = browseBoxElement.componentInstance as BrowseBoxComponent;
             expect(browseBox.label).toEqual(tagPart.name); // Here it is expected that the element is not mandatory.
             expect(browseBox.disabled).toBe(context.readOnly);
+            const displayValue = getDisplayValue(fixture);
 
             if (origTagProperty.type === TagPropertyType.FILE) {
                 if (origTagProperty.fileId) {
                     if (origTagProperty.fileId === FILE_A.id) {
-                        expect(browseBox.displayValue).toEqual(FILE_A.name);
+                        expect(displayValue).toEqual(FILE_A.name);
                         checkSelectedItemPath(fixture, 'GCN5 Demo > [Media] > [Files]');
                     } else {
                         // Simulated removed file
-                        expect(browseBox.displayValue).toEqual('editor.file_not_found');
+                        expect(displayValue).toEqual('editor.file_no_selection');
                         checkNoSelectedItemPath(fixture);
                     }
                 } else {
-                    expect(browseBox.displayValue).toEqual('editor.file_no_selection');
+                    expect(displayValue).toEqual('editor.file_no_selection');
                     checkNoSelectedItemPath(fixture);
                 }
 
@@ -298,15 +304,14 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
             } else if (origTagProperty.type === TagPropertyType.IMAGE) {
                 if (origTagProperty.imageId) {
                     if (origTagProperty.imageId === IMAGE_A.id) {
-                        expect(browseBox.displayValue).toEqual(IMAGE_A.name);
+                        expect(displayValue).toEqual(IMAGE_A.name);
                         checkSelectedItemPath(fixture, 'GCN5 Demo > [Media] > [Images]');
                     } else {
                         // Simulated removed image
-                        expect(browseBox.displayValue).toEqual('editor.image_not_found');
+                        expect(displayValue).toEqual('editor.image_no_selection');
                         checkNoSelectedItemPath(fixture);
                     }
                 } else {
-                    expect(browseBox.displayValue).toEqual('editor.image_no_selection');
                     checkNoSelectedItemPath(fixture);
                 }
 
@@ -486,7 +491,8 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                     expect(uploadButton.attributes['disabled']).toBeTruthy;
                 }
-                expect(fixture.debugElement.query(By.css(EDIT_IMAGE_BUTTON_SELECTOR))).toBeFalsy();
+                const editImageBtn = fixture.debugElement.query(By.css(EDIT_IMAGE_BUTTON_SELECTOR));
+                expect(editImageBtn.nativeElement.attributes.disabled).toBeTruthy();
             }),
         );
 

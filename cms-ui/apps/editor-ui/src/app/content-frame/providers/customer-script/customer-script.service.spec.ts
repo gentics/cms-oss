@@ -1,16 +1,29 @@
 import { HttpClient } from '@angular/common/http';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { AlohaModule } from '@gentics/cms-components/aloha';
-import { AlohaGlobal, CNParentWindow, CNWindow, EditMode } from '@gentics/cms-integration-api-models';
-import { ItemInNode } from '@gentics/cms-models';
+import {
+    AlohaGlobal,
+    CNParentWindow,
+    CNWindow,
+    EditMode,
+    ImageEditorOptions,
+    RepositoryBrowserOptions,
+    TagEditorOptions,
+    TagEditorResult,
+} from '@gentics/cms-integration-api-models';
+import { FileOrImage, Folder, Image, ItemInNode, Page, Raw, Tag, TagType } from '@gentics/cms-models';
+import { GCMSRestClient } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { createSpyFn } from '@gentics/ui-core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { ApiBase } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { GcmsUiServicesProvider } from '../../../core/providers/gcms-ui-services/gcms-ui-services.service';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
@@ -52,6 +65,7 @@ describe('CustomerScriptService', () => {
 
     let mockWindow: CNWindow;
     let customerScriptService: CustomerScriptService;
+    let uiServices: MockGcmsUiServicesProvider;
     let state: TestApplicationState;
     let apiBase: MockApiBase;
     let originalConsoleWarn: any;
@@ -77,11 +91,16 @@ describe('CustomerScriptService', () => {
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: ModalService, useClass: MockModalService },
+                ...provideTranslateService({
+                    defaultLanguage: 'en',
+                }),
+                { provide: GcmsUiServicesProvider, useClass: MockGcmsUiServicesProvider },
             ],
         });
 
         mockWindow = new MockWindow() as any;
         customerScriptService = TestBed.inject(CustomerScriptService);
+        uiServices = TestBed.inject(GcmsUiServicesProvider) as any;
         state = TestBed.inject(ApplicationStateService) as any;
         apiBase = TestBed.inject(ApiBase) as any;
 
@@ -270,13 +289,12 @@ describe('CustomerScriptService', () => {
             const mockPage = { page: 'page' };
             const expectedResult = Promise.resolve(null);
 
-            const mockTagEditorService = TestBed.inject(TagEditorService);
-            spyOn(mockTagEditorService, 'openTagEditor').and.returnValue(expectedResult);
+            uiServices.openTagEditor.and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
             const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, { withDelete: false });
 
-            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag as any, mockTagType as any, mockPage as any, { withDelete: false });
+            expect(uiServices.openTagEditor).toHaveBeenCalledWith(mockTag as any, mockTagType as any, mockPage as any, { withDelete: false });
             expect(actualResult).toBe(expectedResult);
         });
 
@@ -285,23 +303,21 @@ describe('CustomerScriptService', () => {
             const selected: ItemInNode | ItemInNode[] = [];
             const expectedResult = Promise.resolve(selected);
 
-            const mockRepositoryBrowserClientService = TestBed.inject(RepositoryBrowserClient);
-            spyOn(mockRepositoryBrowserClientService, 'openRepositoryBrowser').and.returnValue(expectedResult);
+            uiServices.openRepositoryBrowser.and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
             const actualResult = gcmsUi.openRepositoryBrowser(<any> mockOptions);
 
-            expect(mockRepositoryBrowserClientService.openRepositoryBrowser).toHaveBeenCalledWith(mockOptions as any);
+            expect(uiServices.openRepositoryBrowser).toHaveBeenCalledWith(mockOptions);
             expect(actualResult).toBe(expectedResult);
         });
 
         it('editImage() correctly delegates to EditorOverlayService', () => {
-            const result = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const editorOverlayService: MockEditorOverlayService = TestBed.inject(EditorOverlayService) as any;
+            const gcmsui = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
 
-            const promise = result.editImage(1, 4711);
+            const promise = gcmsui.editImage(1, 4711);
             expect(promise instanceof Promise).toBeTruthy();
-            expect(editorOverlayService.editImage).toHaveBeenCalledWith({ nodeId: 1, itemId: 4711 });
+            expect(uiServices.openImageEditor).toHaveBeenCalledWith({ nodeId: 1, imageId: 4711 });
         });
 
         it('unsubscribes the onStateChange handler and destroys the GCMSUI object', () => {
@@ -379,4 +395,37 @@ class MockModalService {
     fromComponent(): Promise<void> {
         return Promise.resolve();
     }
+}
+
+class MockGcmsUiServicesProvider implements Partial<GcmsUiServicesProvider> {
+    public restClient: GCMSRestClient = {} as any;
+    public editorNodeId = 0;
+    createSelectedItemsHelper = createSpyFn('createSelectedItemsHelper', (itemType: 'page' | 'folder' | 'file' | 'image' | 'form', defaultNodeId?: number) => {
+        return null;
+    });
+
+    openImageEditor = createSpyFn('openImageEditor', (options: ImageEditorOptions): Promise<Image<Raw> | void> => {
+        return Promise.resolve();
+    });
+
+    openRepositoryBrowser = createSpyFn<GcmsUiServicesProvider['openRepositoryBrowser']>(
+        'openRepositoryBrowser',
+        <T = ItemInNode>(options: RepositoryBrowserOptions): Promise<T | T[] | null> => {
+            return Promise.resolve(null);
+        },
+    ) as any;
+
+    openTagEditor = createSpyFn(
+        'openTagEditor',
+        (tag: Tag, tagType: TagType, page: Page<Raw>, options?: TagEditorOptions): Promise<TagEditorResult> => {
+            return Promise.resolve(null as any);
+        },
+    );
+
+    openUploadModal = createSpyFn(
+        'openUploadModal',
+        (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean): Promise<FileOrImage> => {
+            return Promise.resolve(null as any);
+        },
+    );
 }

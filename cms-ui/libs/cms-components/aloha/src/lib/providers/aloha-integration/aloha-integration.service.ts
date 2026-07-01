@@ -23,7 +23,7 @@ import { Store } from '@ngxs/store';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
-import { AlohaStateModel, SetAlohaRessources } from '../../models';
+import { AlohaStateModel, SetAlohaResources } from '../../models';
 import { overrideFunction, revertKeyedFunctionOverrides } from '../../utils';
 import { RenderedAlohaComponent } from '../../models/internal';
 
@@ -244,7 +244,7 @@ export class AlohaIntegrationService {
             this.scopesRef$,
             this.scopeChange$.pipe(
                 // Needs an initial value, otherwise this entire `combineLatest` does not emit a value,
-                // only when the user actualy performs a context-change.
+                // only when the user actually performs a context-change.
                 startWith(null),
             ),
             this.toolbarReloadSub.asObservable(),
@@ -265,15 +265,15 @@ export class AlohaIntegrationService {
         ).subscribe(this.activeEditableSub);
     }
 
-    public loadRessources(): void {
+    public loadResources(): void {
         const state: { aloha: AlohaStateModel } = this.store.snapshot();
         // Check if already loaded
         if (state?.aloha?.jsFiles?.length > 0) {
             return;
         }
 
-        this.client.info.getAlohaRessources().subscribe((res) => {
-            this.store.dispatch(new SetAlohaRessources(res.jsFiles, res.cssFiles));
+        this.client.info.getAlohaResources().subscribe((res) => {
+            this.store.dispatch(new SetAlohaResources(res.jsFiles, res.cssFiles));
         });
     }
 

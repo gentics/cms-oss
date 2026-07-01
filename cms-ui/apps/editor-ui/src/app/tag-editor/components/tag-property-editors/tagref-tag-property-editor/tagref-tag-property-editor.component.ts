@@ -216,17 +216,20 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnDestroy {
                                     this.changeDetector.markForCheck();
                                 }),
                             );
+                    } else if (selection.tag) {
+                        return this.api.folders.getItem(this.page.folderId, 'folder')
+                            .pipe(
+                                map((response) => response.folder),
+                                catchError((err) => of(err)),
+                                tap((folder: Folder<Raw>) => {
+                                    this.uploadDestination = folder;
+                                    this.changeDetector.markForCheck();
+                                }),
+                            );
+                    } else {
+                        return of(null);
                     }
 
-                    return this.api.folders.getItem(this.page.folderId, 'folder')
-                        .pipe(
-                            map((response) => response.folder),
-                            catchError((err) => of(err)),
-                            tap((folder: Folder<Raw>) => {
-                                this.uploadDestination = folder;
-                                this.changeDetector.markForCheck();
-                            }),
-                        );
                 }),
                 takeUntil(this.stopper.stopper$),
             )
@@ -261,7 +264,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnDestroy {
             const { __parent__: parentEl, ...tagContent } = tag;
             containerEl = parentEl;
             containerId = containerEl.id;
-            cleanTag = tagContent as any;
+            cleanTag = tagContent;
             tagId = tag.id;
         }
 
@@ -320,6 +323,15 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnDestroy {
      * Loads the TagType for the selected Tag.
      */
     private addTagTypeToSelection(selection: TagSelection): Observable<AugmentedTagSelection> {
+        if (selection == null) {
+            return of({
+                originalTag: null,
+                container: null,
+                tag: null,
+                tagType: null,
+            });
+        }
+
         let tagType$: Observable<TagType>;
         if (selection.container && selection.tag) {
             tagType$ = this.api.tagType.getTagType(selection.tag.constructId).pipe(

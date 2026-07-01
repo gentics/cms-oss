@@ -3,11 +3,13 @@ import {
     ChangeDetectorRef,
     Component,
     computed,
+    effect,
     HostListener,
     input,
     model,
     OnDestroy,
     OnInit,
+    output,
     signal,
 } from '@angular/core';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
@@ -167,6 +169,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     public readonly formName = input<string>('');
     /** The ID of the flow for this form */
     public readonly flowId = input.required<string>();
+    /** If the form is fully valid */
+    public readonly valid = output<boolean>();
 
     /* PAGE & VIEW
      * ===================================================================== */
@@ -235,6 +239,11 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     /** If the right sidebar is expanded */
     public readonly rightSidebarExpanded = signal(false);
 
+    // TODO: Per element validation?
+    public readonly definitionValid = signal(true);
+    public readonly settingsValid = signal(true);
+    public readonly translationsValid = signal(true);
+
     /* SELECTION & EDITING
      * ===================================================================== */
 
@@ -298,6 +307,14 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         private notification: I18nNotificationService,
     ) {
         super(changeDetector);
+        effect(() => {
+            // Called like this, to mark them observed
+            const def = this.definitionValid();
+            const set = this.settingsValid();
+            const tra = this.translationsValid();
+
+            this.valid.emit(def && set && tra);
+        });
     }
 
     /* HOOKS
@@ -729,6 +746,9 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         this.editingPageIndex.set(null);
+        this.definitionValid.set(true);
+        this.settingsValid.set(true);
+        this.translationsValid.set(true);
 
         const blockType = data.element.formGridOptions?.type || null;
         const elementSchema = this.schemaPropertiesMap()[data.element.id] || null;

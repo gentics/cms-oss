@@ -445,6 +445,10 @@ export interface FormSchemaProperty {
      * Which sub-properties this property manages.
      */
     properties?: FormSchemaProperties;
+    /**
+     * Custom defined properties via custom settings
+     */
+    [key: string]: any;
 }
 
 export interface FormPage {
@@ -498,6 +502,10 @@ export interface FormElement {
      * Unknown
      */
     editModeDialogFormID?: string;
+    /**
+     * Custom defined properties via custom settings
+     */
+    [key: string]: any;
 }
 
 export type ImageObjectFit = 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
@@ -594,6 +602,9 @@ export interface FormGridOptions {
     inForm?: boolean;
     inSummary?: boolean;
 
+    /**
+     * Custom defined properties via custom settings
+     */
     [key: string]: any;
 }
 

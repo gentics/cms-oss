@@ -30,6 +30,7 @@
         [elementConfig]="elementConfig()"
         [elementSchema]="elementSchema()"
         [disabled]="mode() === FormGridEditMode.NONE"
+        (validChange)="validChange.emit($event)"
         (elementChange)="element.set($event)"
         (elementSchemaChange)="updateElementSchema($event)"
     />

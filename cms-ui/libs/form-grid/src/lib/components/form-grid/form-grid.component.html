@@ -239,6 +239,7 @@
                                         [mode]="mode()"
                                         (elementChange)="upsetElementChanges($event)"
                                         (elementSchemaChange)="updateElementSchema($event)"
+                                        (validChange)="definitionValid.set($event)"
                                     ></gtx-form-element-definition>
                                 </gtx-tab>
                             }
@@ -257,6 +258,7 @@
                                     [elementSchema]="selectedElementSchema()"
                                     [mode]="mode()"
                                     (elementChange)="upsetElementChanges($event)"
+                                    (validChange)="settingsValid.set($event)"
                                 ></gtx-form-element-settings>
                             </gtx-tab>
 
@@ -276,6 +278,7 @@
                                     [languages]="languages()"
                                     [(activeLanguage)]="activeLanguage"
                                     (hasMissingTranslationsChange)="hasMissingTranslations.set($event)"
+                                    (validChange)="translationsValid.set($event)"
                                 ></gtx-form-element-translation>
                             </gtx-tab>
                         </gtx-tabs>

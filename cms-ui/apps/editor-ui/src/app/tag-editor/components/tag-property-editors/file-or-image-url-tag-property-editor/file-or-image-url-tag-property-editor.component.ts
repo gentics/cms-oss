@@ -11,7 +11,6 @@ import {
     FileTagPartProperty,
     FileUpload,
     Folder,
-    Image,
     ImageTagPartProperty,
     ItemInNode,
     Page,
@@ -179,21 +178,6 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 };
                 this.changeSelectedItem(itemWithNode);
                 this.changeDetector.markForCheck();
-            });
-    }
-
-    editImage(nodeId: number, imageId: number): void {
-        if (!nodeId) {
-            nodeId = this.context.node.id;
-        }
-        this.editorOverlayService.editImage({ nodeId: nodeId, imageId: imageId })
-            .then((newImage) => {
-                if (!newImage) {
-                    return;
-                }
-                const imageWithNodeId: ItemInNode<Image<Raw>> = newImage as any;
-                imageWithNodeId.nodeId = nodeId;
-                this.changeSelectedItem(imageWithNodeId);
             });
     }
 

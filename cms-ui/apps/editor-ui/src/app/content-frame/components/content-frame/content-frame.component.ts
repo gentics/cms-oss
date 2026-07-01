@@ -413,7 +413,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             map((activeNode) => activeNode && activeNode.inheritedFromId !== activeNode.id),
         );
 
-        this.aloha.loadRessources();
+        this.aloha.loadResources();
 
         this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;

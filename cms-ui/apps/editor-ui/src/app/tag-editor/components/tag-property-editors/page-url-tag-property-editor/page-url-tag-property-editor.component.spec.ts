@@ -2,7 +2,7 @@ import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowseBoxComponent } from '@gentics/cms-components';
+import { BrowseBoxComponent, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -82,6 +82,10 @@ class MockI18nPipe implements PipeTransform {
 
 class MockFolderActions { }
 
+function getDisplayValue(fixture: ComponentFixture<any>): string {
+    return (fixture.nativeElement as HTMLElement).querySelector('.display-value')?.textContent || '';
+}
+
 /**
  * TODO: Implement tests after feature release in Dec 2018.
  */
@@ -108,6 +112,7 @@ describe('PageUrlTagPropertyEditor', () => {
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: GCMS_UI_SERVICES_PROVIDER, useValue: null },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -213,16 +218,17 @@ describe('PageUrlTagPropertyEditor', () => {
 
             expect(browseBox.label).toEqual('tag_editor.internal_page');
             expect(browseBox.disabled).toBe(context.readOnly);
+            const displayValue = getDisplayValue(fixture);
 
             if (origTagProperty.pageId) {
                 if (origTagProperty.pageId === PAGE_A.id) {
-                    expect(browseBox.displayValue).toEqual(PAGE_A.name);
+                    expect(displayValue).toEqual(PAGE_A.name);
                 } else {
                     // Simulated removed file
-                    expect(browseBox.displayValue).toEqual('editor.page_not_found');
+                    expect(displayValue).toEqual('editor.page_no_selection');
                 }
             } else {
-                expect(browseBox.displayValue).toEqual('editor.page_no_selection');
+                expect(displayValue).toEqual('editor.page_no_selection');
             }
 
             // If an image was pre-selected, make sure that is has been loaded.

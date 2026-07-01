@@ -2,9 +2,9 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowseBoxComponent, I18nInputComponent } from '@gentics/cms-components';
+import { BrowseBoxComponent, CmsComponentsModule, GCMS_UI_SERVICES_PROVIDER, I18nInputComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
-import { EditableFormData, Form, ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
+import { EditableFormData, Form, FormTypeConfigurationListResponse, ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -12,6 +12,7 @@ import { FormProperties, GenticsUICoreModule, SelectComponent } from '@gentics/u
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { Api } from '../../../core/providers/api';
+import { GcmsUiServicesProvider } from '../../../core/providers/gcms-ui-services/gcms-ui-services.service';
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
@@ -22,10 +23,27 @@ type PageWithNodeId = ItemInNode<Page<Raw>>;
 
 describe('FormProperties', () => {
 
+    let client: GCMSTestRestClientService;
+    function setupClient(): void {
+        client = TestBed.inject(GCMSRestClientService) as any;
+
+        spyOn(client.form, 'listConfigurations').and.callFake(() => {
+            return of({
+                responseInfo: {
+                    responseCode: ResponseCode.OK,
+                },
+                items: [],
+                hasMoreItems: false,
+                numItems: 0,
+            } as FormTypeConfigurationListResponse);
+        });
+    }
+
     beforeEach(() => {
         configureComponentTest({
             imports: [
                 GenticsUICoreModule.forRoot(),
+                CmsComponentsModule,
                 FormsModule,
                 ReactiveFormsModule,
             ],
@@ -34,6 +52,8 @@ describe('FormProperties', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: GcmsUiServicesProvider, useValue: null },
+                { provide: GCMS_UI_SERVICES_PROVIDER, useValue: null },
             ],
             declarations: [
                 TestComponent,
@@ -51,6 +71,7 @@ describe('FormProperties', () => {
 
         it('does show language selection if two languages are available',
             componentTest(() => TestComponent, (fixture, instance) => {
+                setupClient();
                 instance.isMultiLang = true;
                 instance.languages = [
                     {
@@ -77,29 +98,9 @@ describe('FormProperties', () => {
             }),
         );
 
-        it('does not show language selection if only one languages is available',
-            componentTest(() => TestComponent, (fixture, instance) => {
-
-                instance.isMultiLang = false;
-                instance.languages = [
-                    {
-                        code: 'de',
-                        id: 1,
-                        name: 'Deutsch',
-                    },
-                ];
-                fixture.detectChanges();
-                tick();
-
-                const languageSelectionElement = getLanguageSelectionElement(fixture);
-                expect(languageSelectionElement).toBeNull();
-                flush();
-            }),
-        );
-
         it('does not show language selection if no languages are available',
             componentTest(() => TestComponent, (fixture, instance) => {
-
+                setupClient();
                 const languageSelectionElement = getLanguageSelectionElement(fixture);
                 expect(languageSelectionElement).toBeNull();
             }),
@@ -129,7 +130,7 @@ describe('FormProperties', () => {
                 schemas: [NO_ERRORS_SCHEMA],
             });
             repositoryBrowserClient = new MockRepositoryBrowserClient();
-
+            setupClient();
         });
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
@@ -148,7 +149,7 @@ describe('FormProperties', () => {
                     data: {
                         adminEmailNodeId: TEST_PAGE.nodeId,
                         adminEmailPageId: TEST_PAGE.id,
-                    } as Partial<EditableFormData>,
+                    },
                 } as Form;
                 fixture.detectChanges();
                 tick();

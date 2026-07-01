@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActionDefinition } from '@gentics/cms-components';
 import { State, StateContext } from '@ngxs/store';
-import { AlohaStateModel, INITIAL_ALOHA_STATE, SetAlohaRessources } from '../models/state';
+import { AlohaStateModel, INITIAL_ALOHA_STATE, SetAlohaResources } from '../models/state';
 
 @State({
     name: 'aloha',
@@ -10,8 +10,8 @@ import { AlohaStateModel, INITIAL_ALOHA_STATE, SetAlohaRessources } from '../mod
 @Injectable()
 export class AlohaStateModule {
 
-    @ActionDefinition(SetAlohaRessources)
-    handleSetAlohaRessources(ctx: StateContext<AlohaStateModel>, action: SetAlohaRessources): void {
+    @ActionDefinition(SetAlohaResources)
+    handleSetAlohaRessources(ctx: StateContext<AlohaStateModel>, action: SetAlohaResources): void {
         ctx.patchState({
             jsFiles: action.jsFiles,
             cssFiles: action.cssFiles,

@@ -30,6 +30,7 @@ export class FormElementTranslationComponent {
     public readonly activeLanguage = model.required<string>();
 
     public readonly hasMissingTranslationsChange = output<boolean>();
+    public readonly validChange = output<boolean>();
 
     public readonly translationSettings = computed(() => {
         const all = this.elementConfig().settings || [];

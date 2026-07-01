@@ -5,9 +5,14 @@
 <div class="entries">
     @for (option of value; track option.value) {
         <gtx-input
+            class="ng-touched"
             [disabled]="disabled"
+            [class.ng-invalid]="invalidIndices | gtxIncludes:$any($index)"
+            [placeholder]="placeholder"
             [value]="option.value"
             (valueChange)="updateOptionValue($index, $event)"
+            (blur)="handleBlur()"
+            (focus)="handleFocus()"
         >
             <button
                 class="addon-button icon-alert"
@@ -26,4 +31,6 @@
     size="small"
     [disabled]="disabled"
     (click)="addNewOption($event)"
+    (focus)="handleFocus()"
+    (blur)="handleBlur()"
 ><icon left>add</icon>{{ 'form_grid.add_option' | gtxI18n }}</gtx-button>

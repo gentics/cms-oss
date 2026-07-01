@@ -12,7 +12,6 @@ import 'zone.js/testing';
 })
 class AppTestingModule {}
 
-// First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(
     [BrowserTestingModule, AppTestingModule],
     platformBrowserTesting(), {

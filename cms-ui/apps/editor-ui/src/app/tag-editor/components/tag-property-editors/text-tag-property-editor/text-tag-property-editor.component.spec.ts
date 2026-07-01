@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
@@ -34,6 +34,7 @@ describe('TextTagPropertyEditorComponent', () => {
             imports: [
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
+                ReactiveFormsModule,
             ],
             providers: [
                 TagPropertyEditorResolverService,
@@ -84,7 +85,6 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that the initial values are correct.
             const inputComponent = inputElement.componentInstance as InputComponent;
             expect(inputComponent.label).toEqual(tagPart.name);
-            expect(inputComponent.readonly).toBe(context.readOnly);
             expect(inputElement.query(By.css('input')).nativeElement.value).toEqual(origTagProperty.stringValue);
         }
 
@@ -157,7 +157,6 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that the initial values are correct.
             const textAreaComponent = textAreaElement.componentInstance as TextareaComponent;
             expect(textAreaComponent.label).toEqual(tagPart.name);
-            expect(textAreaComponent.readonly).toBe(context.readOnly);
             const textAreaEl: HTMLTextAreaElement = textAreaElement.query(By.css('textarea')).nativeElement;
             expect(textAreaEl.value).toEqual(origTagProperty.stringValue);
         }

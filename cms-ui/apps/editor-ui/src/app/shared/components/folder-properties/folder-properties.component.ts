@@ -213,9 +213,9 @@ export class FolderPropertiesComponent
             this.autocompletePublishDirectory();
         }));
 
-        // Mark this as dirty, as to not suggest file-names automatically
+        // Mark this as touched, as to not suggest file-names automatically
         if (this.value?.publishDir) {
-            form.controls.publishDir.markAsDirty();
+            form.controls.publishDir.markAsTouched();
         }
 
         return form;
@@ -289,7 +289,7 @@ export class FolderPropertiesComponent
 
         if (
             !this.folderAutocompleteEnabled
-            || ctrl.dirty
+            || ctrl.touched
             || this.mode === FolderPropertiesMode.EDIT
         ) {
             return;
@@ -310,11 +310,12 @@ export class FolderPropertiesComponent
         }
 
         const nodeId = this.nodeId || this.appState.now.folder.activeNode;
-        this.autocompleteSubscription = this.client.folder.sanitizePublshDirectory({
+        this.autocompleteSubscription = this.client.folder.sanitizePublishDirectory({
             nodeId: nodeId,
             publishDir: publishDirProposal,
         }).subscribe((res) => {
-            if (ctrl.pristine) {
+            if (!ctrl.touched) {
+                ctrl.markAsDirty();
                 ctrl.setValue(res.publishDir);
                 this.changeDetector.markForCheck();
             }

@@ -1,6 +1,6 @@
 import { Component, ComponentRef, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { I18nService } from '@gentics/cms-components';
 import {
@@ -44,6 +44,7 @@ describe('GenticsTagEditorComponent', () => {
             imports: [
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
+                ReactiveFormsModule,
             ],
             providers: [
                 TagPropertyEditorResolverService,

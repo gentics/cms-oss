@@ -83,6 +83,13 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
     public canUpload = false;
 
     /**
+     * If true, allows the user to edit the selected image.
+     * Only visible if it's not `multiple`, and the selected item is an image.
+     */
+    @Input()
+    public canEditImage = false;
+
+    /**
      * If the breadcrumb should be displayed.
      * Defaults to `!multiple`.
      */
@@ -112,6 +119,12 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
      */
     @Input()
     public uploadTooltip: string;
+
+    /**
+     * Optional tooltip for the edit-image button (if this is not set, a default tooltip is used).
+     */
+    @Input()
+    public editImageTooltip: string;
 
     /**
      * The title for the breadcrumb
@@ -189,6 +202,38 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
     public uploadItems(event?: MouseEvent): void {
         cancelEvent(event);
         this.upload.emit();
+    }
+
+    editImage(): void {
+        if (Array.isArray(this.value)) {
+            return;
+        }
+        if (this.value.type !== 'image') {
+            return;
+        }
+        const nodeId = this.value.nodeId;
+
+        this.gcmsUiServices.openImageEditor({
+            imageId: this.value.id,
+            nodeId,
+        }).then((newImage) => {
+            if (!newImage) {
+                return;
+            }
+
+            const item: ItemInNode = {
+                ...newImage,
+                nodeId,
+            };
+            const hash = this.getItemCacheKey(item);
+            this.cachedItems[hash] = {
+                id: item.id,
+                nodeId: item.nodeId,
+                type: item.type,
+                name: item.name,
+            };
+            this.triggerChange(item);
+        });
     }
 
     protected onValueChange(): void {

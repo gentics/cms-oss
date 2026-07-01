@@ -14,8 +14,8 @@ export const INITIAL_ALOHA_STATE = deepFreeze<AlohaStateModel>({
 });
 
 @ActionDeclaration(MODULE_STATE)
-export class SetAlohaRessources {
-    static readonly type = 'SetAlohaRessources';
+export class SetAlohaResources {
+    static readonly type = 'SetAlohaResources';
     constructor(
         public jsFiles: string[],
         public cssFiles: string[],

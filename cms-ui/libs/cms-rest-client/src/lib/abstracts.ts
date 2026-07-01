@@ -1,6 +1,6 @@
 import {
     AccessControlledType,
-    AlohaRessourceInformationResponse,
+    AlohaResourceInformationResponse,
     AssignEntityToContentPackageOptions,
     BackgroundJobResponse,
     BaseListOptionsWithPaging,
@@ -658,7 +658,7 @@ export interface AbstractFolderAPI extends BasicAPI {
     templates: (id: number | string, options?: FolderListOptions) => FolderTemplateListResponse;
 
     setStartpage: (id: number | string, body: FolderStartpageRequest) => Response;
-    sanitizePublshDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
+    sanitizePublishDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
 
     inheritanceStatus: (id: number | string, options?: InheritanceStatusOptions) => InheritanceResponse;
     multipleInheritanceStatus: (options: MultiInheritanceStatusOptions) => MultipleInheritanceResponse;
@@ -835,7 +835,7 @@ export interface AbstractImageAPI extends BasicAPI {
 
 export interface AbstractInfoAPI extends BasicAPI {
     getMaintenanceMode: () => MaintenanceModeResponse;
-    getAlohaRessources: () => AlohaRessourceInformationResponse;
+    getAlohaResources: () => AlohaResourceInformationResponse;
 }
 
 export interface AbstractLanguageAPI extends BasicAPI {

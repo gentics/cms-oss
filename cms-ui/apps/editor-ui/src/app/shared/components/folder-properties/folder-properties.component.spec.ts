@@ -203,7 +203,7 @@ describe('FolderPropertiesComponent', () => {
                 responseMessage: 'Successfully loaded subfolders',
             },
         }));
-        spyOn(client.folder, 'sanitizePublshDirectory').and.callFake(() => of({
+        spyOn(client.folder, 'sanitizePublishDirectory').and.callFake(() => of({
             messages: [],
             responseInfo: {
                 responseCode: ResponseCode.OK,
@@ -269,7 +269,7 @@ describe('FolderPropertiesComponent', () => {
                     descriptionI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -300,7 +300,7 @@ describe('FolderPropertiesComponent', () => {
                     descriptionI18n: {},
                     publishDirI18n: {},
                 });
-                expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${ACTIVE_FOLDER_PUBLISH_DIR}${TEST_STRING_FOLDER_NAME}` });
+                expect((client.folder.sanitizePublishDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${ACTIVE_FOLDER_PUBLISH_DIR}${TEST_STRING_FOLDER_NAME}` });
             }),
         );
 
@@ -335,7 +335,7 @@ describe('FolderPropertiesComponent', () => {
                     descriptionI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -353,10 +353,13 @@ describe('FolderPropertiesComponent', () => {
                     description: '',
                 };
                 fixture.detectChanges();
+                tick(1_000);
 
                 expect(getInput(fixture, 'name').value).toEqual('');
 
                 setInputValue(fixture, 'name', TEST_STRING_FOLDER_NAME);
+                fixture.detectChanges();
+                tick(1_000);
 
                 expect(getInput(fixture, 'name').value).toEqual(TEST_STRING_FOLDER_NAME);
                 expect(getInput(fixture, 'publishDir').value).toEqual(SANITIZATION_RESULT);
@@ -368,7 +371,7 @@ describe('FolderPropertiesComponent', () => {
                     descriptionI18n: {},
                     publishDirI18n: {},
                 });
-                expect((client.folder.sanitizePublshDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${TEST_STRING_FOLDER_NAME}` });
+                expect((client.folder.sanitizePublishDirectory as jasmine.Spy).calls.mostRecent().args[0]).toEqual({ nodeId: ACTIVE_NODE_ID, publishDir: `${TEST_STRING_FOLDER_NAME}` });
             }),
         );
 
@@ -409,7 +412,7 @@ describe('FolderPropertiesComponent', () => {
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -448,7 +451,7 @@ describe('FolderPropertiesComponent', () => {
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -488,7 +491,7 @@ describe('FolderPropertiesComponent', () => {
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 
@@ -528,7 +531,7 @@ describe('FolderPropertiesComponent', () => {
                     nameI18n: {},
                     publishDirI18n: {},
                 });
-                expect(client.folder.sanitizePublshDirectory).not.toHaveBeenCalled();
+                expect(client.folder.sanitizePublishDirectory).not.toHaveBeenCalled();
             }),
         );
 

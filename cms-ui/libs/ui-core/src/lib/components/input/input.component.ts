@@ -225,7 +225,7 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
 
     public override handleBlur(event?: Event): void {
         this.focused = false;
-        this.handleBlur(event);
+        super.handleBlur(event);
     }
 
     public override handleFocus(event?: Event): void {

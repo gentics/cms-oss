@@ -11,17 +11,12 @@ import {
     ModalCloseError,
     StateChangedHandler,
 } from '@gentics/cms-integration-api-models';
-import {
-    Construct,
-} from '@gentics/cms-models';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Construct } from '@gentics/cms-models';
 import { Subscription, of } from 'rxjs';
-import { catchError, distinctUntilChanged, endWith, map } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { AppState } from '../../../common/models/app-state';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { stripLeadingSlash } from '../../../common/utils/strip';
-import { ApiBase } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { GcmsUiServicesProvider } from '../../../core/providers/gcms-ui-services/gcms-ui-services.service';
@@ -34,14 +29,11 @@ type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const gcmsui_debugTool = (window as any).gcmsui_debugTool;
-
 /**
  * Checks for the existence of a customer-defined JavaScript file which can be run in all iframes after the post-load.ts scripts
  * have run.
  *
- * Customer-defined scripts should be located in ../customer-config/scripts/index.js, and should export a default function which
+ * Customer-defined scripts should be located in ../customer-config/scripts/index.js, and should expofrt a default function which
  * will be passed a GCMSUI object which contains data about the current environment and methods of interacting with the UI.
  */
 @Injectable()
@@ -56,8 +48,6 @@ export class CustomerScriptService implements OnDestroy {
     constructor(
         private http: HttpClient,
         private state: ApplicationStateService,
-        private apiBase: ApiBase,
-        private client: GCMSRestClientService,
         private entityResolver: EntityResolver,
         private errorHandlerService: ErrorHandler,
         private aloha: AlohaIntegrationService,
@@ -170,13 +160,6 @@ export class CustomerScriptService implements OnDestroy {
                 postLoadScriptExecuted = true;
             }
         };
-
-        const restRequestGET = (endpoint: string, params: any): Promise<object> =>
-            this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise();
-        const restRequestPOST = (endpoint: string, data: object, params?: object): Promise<object> =>
-            this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
-        const restRequestDELETE = (endpoint: string, params?: object): Promise<void | object> =>
-            this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise();
 
         let subscription: Subscription;
         let stateChangedHandler: StateChangedHandler;

@@ -69,7 +69,7 @@
                     @for (item of items | paginate: paginationConfig; track identify($index, item)) {
                         <masonry-item
                             class="icon-checkbox-trigger"
-                            [class.item-in-editor]="item === itemInEditor"
+                            [class.item-in-editor]="item.id === activeItemId"
                             [attr.data-item-type]="itemType"
                             [attr.data-id]="item.id"
                             [attr.data-global-id]="item.globalId"

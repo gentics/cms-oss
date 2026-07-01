@@ -5,7 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { I18nNotificationService, TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, PermissionResponse, ResponseCode } from '@gentics/cms-models';
+import { AccessControlledType, FormTypeConfigurationListResponse, PermissionResponse, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
@@ -231,7 +231,7 @@ class MockMapPermissionsPipe implements PipeTransform {
     transform(): EditorPermissions {
         return {
             ...getNoPermissions(),
-        } as any;
+        };
     }
 }
 
@@ -293,22 +293,30 @@ class MockSplitViewContainer {
     }
 }
 
-class MockClient {
+class MockClient implements Partial<GCMSRestClientService> {
     page = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['page']> as any;
 
     file = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['file']> as any;
 
     image = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['image']> as any;
 
     form = {
         get: () => throwError('not mocked'),
-    };
+        listConfigurations: () => of({
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+            },
+            hasMoreItems: false,
+            items: [],
+            numItems: 0,
+        } as FormTypeConfigurationListResponse),
+    } as Partial<GCMSRestClientService['form']> as any;
 
     folder = {
         get: () => throwError('not mocked'),
@@ -369,7 +377,7 @@ class MockClient {
                 responseMessage: 'Successfully loaded breadcrumb',
             },
         }),
-    };
+    } as Partial<GCMSRestClientService['folder']> as any;
 
     permission = {
         getInstance: () => of({
@@ -381,7 +389,7 @@ class MockClient {
             privilegeMap: {},
             permissionsMap: {},
         } as PermissionResponse),
-    };
+    } as Partial<GCMSRestClientService['permission']> as any;
 }
 
 class MockLocalStorage implements Partial<LocalStorage> {

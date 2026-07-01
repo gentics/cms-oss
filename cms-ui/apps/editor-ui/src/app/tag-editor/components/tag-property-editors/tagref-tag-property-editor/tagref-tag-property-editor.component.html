@@ -4,7 +4,7 @@
         [placeholder]="'editor.tag_no_selection' | gtxI18n"
         [browseTooltip]="'tag_editor.browse_for_tag' | gtxI18n"
         [disabled]="readOnly"
-        [allowedSelection]="tagProperty.type === TagPropertyType.PAGETAG ? 'contenttag' : 'templatetag'"
+        [allowedSelection]="tagProperty?.type === TagPropertyType.PAGETAG ? 'contenttag' : 'templatetag'"
         [multiple]="false"
         [contentLanguage]="page?.language"
         [startFolder]="uploadDestination?.id"
@@ -13,7 +13,7 @@
     ></gtx-browse-box>
 
     <div>
-        @if (selectedContainer) {
+        @if (selectedContainer?.type) {
             @if (selectedContainer.type === 'page') {
                 {{ 'common.type_page' | gtxI18n }}: {{ selectedFullPath }}
             } @else {

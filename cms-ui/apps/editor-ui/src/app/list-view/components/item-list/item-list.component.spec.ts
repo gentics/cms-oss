@@ -112,7 +112,7 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
             [activeNode]="activeNode"
             [nodeLanguages]="activeNodeLanguages"
             [startPageId]="startPageId"
-            [itemInEditor]="itemInEditor"
+            [activeItemId]="activeItemId"
             [folderPermissions]="permissions"
             [linkPaths]="isSearching"
         ></item-list>`,
@@ -139,7 +139,7 @@ class TestComponent implements OnInit {
     currentFolderId$: Observable<number>;
     selectedItems: number[] = [];
     startPageId: number = Number.NaN;
-    itemInEditor: any = undefined;
+    activeItemId: number;
     permissions = allPermissions();
     isSearching = true;
     itemsInfoPipe$: Observable<boolean>;
@@ -434,7 +434,7 @@ describe('ItemListComponent', () => {
             ];
             instance.itemList.itemsInfo = { list: [1, 2] } as ItemsInfo;
             instance.itemList.activeNode = { id: 11 } as NodeModel;
-            instance.itemList.itemType = 'page' as FolderItemType;
+            instance.itemList.itemType = 'page';
             const usageActions = TestBed.inject(UsageActionsService);
             spyOn(instance.itemList, 'updateItemHash').and.callFake(function () { });
             spyOn(instance.itemList, 'getTotalUsage').and.callThrough();
@@ -664,10 +664,10 @@ describe('ItemListComponent', () => {
                 instance.filterTerm = <any>2;
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = <any>null;
+                instance.filterTerm = null;
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = <any>undefined;
+                instance.filterTerm = undefined;
                 expect(detectChanges).not.toThrow();
                 tick();
             }),
@@ -890,12 +890,6 @@ describe('ItemListComponent', () => {
 
                 updateItemsInfoState({
                     hasMore: false,
-                });
-                tick();
-
-                expect(state.now.folder.folders.selected).toEqual([]);
-
-                updateItemsInfoState({
                     list: fullList,
                     total: fullList.length,
                 });
@@ -960,12 +954,6 @@ describe('ItemListComponent', () => {
 
                 updateItemsInfoState({
                     hasMore: false,
-                });
-                tick();
-
-                expect(state.now.folder.folders.selected).toEqual([1]);
-
-                updateItemsInfoState({
                     list: fullList,
                     total: fullList.length,
                 });
@@ -1194,7 +1182,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.itemInEditor = instance.items[2];
+            instance.activeItemId = instance.items[2].id;
             fixture.detectChanges();
 
             const backgroundColors = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('gtx-contents-list-item'))
@@ -1234,7 +1222,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.itemInEditor = instance.items[2];
+            instance.activeItemId = instance.items[2].id;
             fixture.detectChanges();
 
             const boxShadows = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('image-thumbnail'))

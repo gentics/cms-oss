@@ -3,7 +3,10 @@
         <label>{{ label }}</label>
     }
 
-    <div class="display-value">{{ displayValue }}</div>
+    <div
+        class="display-value"
+        [class.placeholder]="!displayValue"
+    >{{ displayValue || placeholder }}</div>
 
     <button
         class="addon-button"
@@ -28,6 +31,20 @@
             (click)="uploadItems($event)"
         >
             <icon>cloud_upload</icon>
+        </button>
+    }
+
+    @if (canEditImage && !multiple && $any(value)?.type === 'image') {
+        <button
+            class="addon-button icon-secondary"
+            data-action="edit-image"
+            [title]="!!editImageTooltip || editImageTooltip === '' ? editImageTooltip : 'tag_editor.image_manipulation' | gtxI18n"
+            [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
+            (click)="editImage()"
+        >
+            <icon>edit</icon>
         </button>
     }
 

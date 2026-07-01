@@ -11,12 +11,14 @@ import {
 import {
     ChannelSyncRequest,
     DependencyItemTypePlural,
+    EditableFormData,
     Favourite,
     Feature,
     File as FileModel,
     Folder,
     FolderItemType,
     Form,
+    I18nString,
     Image,
     InheritableItem,
     InheritanceRequest,
@@ -30,7 +32,7 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash-es';
+import { isEqual, omit, pick } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
 import { EditorPermissions, StageableItem } from '../../../common/models';
@@ -65,6 +67,7 @@ import { FormListLoaderService } from '../form-list-loader/form-list-loader.serv
 import { LocalizationMap } from '../localizations/localizations.service';
 import { NavigationInstruction, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
+import { DataSourceApi } from '@gentics/cms-rest-clients-angular';
 
 /**
  * Encapsulates the logic for the various context-menu functions which are shared amongst a number of context menus.
@@ -290,11 +293,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     return;
                 }
 
+                const languagesToKeep = form.languages.filter((l) => !languageCodesToDelete.includes(l));
+
                 updateItems.push({
                     itemId: formId,
                     payload: {
-                        languages: form.languages.filter((l) => !languageCodesToDelete.includes(l)),
-                        // FIXME: Remove language data from form
+                        languages: languagesToKeep,
+                        data: this.deleteLanguagesFromFormData(form.data, languageCodesToDelete),
                     },
                 });
             });
@@ -408,6 +413,52 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         }).filter((action) => action != null);
 
         await Promise.all(requests);
+    }
+
+    private purgeKeysFrom(data: any, keysToDelete: string[]): any {
+        if (data == null || typeof data !== 'object') {
+            return data;
+        }
+        if (Array.isArray(data)) {
+            return data.map((el) => this.purgeKeysFrom(el, keysToDelete));
+        }
+
+        const returnVal = {};
+
+        for (const key of Object.keys((data))) {
+            if (keysToDelete.includes(key)) {
+                continue;
+            }
+
+            returnVal[key] = this.purgeKeysFrom(data[key], keysToDelete);
+        };
+
+        return returnVal;
+    }
+
+    private deleteLanguagesFromFormData(data: Partial<EditableFormData>, languagesToDelete: string[]): Partial<EditableFormData> {
+        const copy = structuredClone(data);
+
+        copy.adminEmailSubject = this.purgeKeysFrom(copy.adminEmailSubject, languagesToDelete);
+        copy.successUrlI18n = this.purgeKeysFrom(copy.successUrlI18n, languagesToDelete);
+
+        Object.values(copy.schema.properties).forEach((prop) => {
+            Object.keys(prop).forEach((key) => {
+                prop[key] = this.purgeKeysFrom(prop[key], languagesToDelete);
+            });
+        });
+
+        for (const page of copy['ui-schema'].pages) {
+            page.pagename = this.purgeKeysFrom(page.pagename, languagesToDelete);
+
+            for (const el of page.elements) {
+                Object.keys(el).forEach((key) => {
+                    el[key] = this.purgeKeysFrom(el[key], languagesToDelete);
+                });
+            }
+        }
+
+        return copy;
     }
 
     /**
@@ -1056,40 +1107,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     private isDeleted(item: Item): boolean {
         if (item) {
             return EntityStateUtil.stateDeleted(item);
-        }
-    }
-
-    private removeLanguagesFromObject(object: object, languages: string[]): void {
-        Object.keys(object).forEach((propertyName: string) => {
-            const property = object[propertyName];
-
-            if (propertyName.endsWith('_i18n')) {
-                if (!property || typeof property !== 'object') {
-                    return;
-                }
-
-                for (const language of languages) {
-                    delete property[language];
-                }
-
-                return;
-            }
-
-            if (!!property && typeof property === 'object') {
-                this.removeLanguagesFromObject(property, languages);
-            } else if (!!property && Array.isArray(property)) {
-                this.removeLanguagesFromArray(property, languages);
-            }
-        });
-    }
-
-    private removeLanguagesFromArray(array: any[], languages: string[]): void {
-        for (const entry of array) {
-            if (!!entry && typeof entry === 'object') {
-                this.removeLanguagesFromObject(entry, languages);
-            } else if (!!entry && Array.isArray(entry)) {
-                this.removeLanguagesFromArray(entry, languages);
-            }
         }
     }
 }

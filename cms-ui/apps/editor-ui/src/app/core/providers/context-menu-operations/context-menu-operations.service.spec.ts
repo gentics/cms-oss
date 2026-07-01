@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/quote-props */
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Type } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
@@ -301,7 +302,6 @@ describe('ContextMenuOperationsService', () => {
         describe('form', () => {
 
             const basicFormData: Partial<EditableFormData> = {
-                adminEmailAddress: 'email@email.com',
                 successUrlI18n: {
                     en: 'https://successurl.com',
                     de: 'https://successurl.com',
@@ -309,26 +309,269 @@ describe('ContextMenuOperationsService', () => {
                 adminEmailSubject: {
                     en: 'Email Subject',
                     de: 'E-Mail-Betreff',
+                },
+                'ui-schema': {
+                    key: '123',
+                    version: '123',
+                    pages: [
+                        {
+                            pagename: {
+                                de: 'Seite 1',
+                                en: 'Page 1',
+                            },
+                            elements: [
+                                {
+                                    type: 'property',
+                                    id: 'something1',
+                                    label: {
+                                        de: 'DE Label 1',
+                                        en: 'EN Label 1',
+                                    },
+                                    uiSchemaPage: 0,
+                                    description: {
+                                        de: 'DE Description 1',
+                                        en: 'EN Description 1',
+                                    },
+                                    formGridOptions: {
+                                        type: 'foobar',
+                                        text: {
+                                            de: 'DE Text 1',
+                                            en: 'EN Text 1',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+                schema: {
+                    key: '123',
+                    version: '123',
+                    properties: {
+                        something1: {
+                            type: 'foobar',
+                            de: 'irgendein text, not purged',
+                            en: 'some text, not purged',
+                            formGridOptions: {
+                                selectOptions: [
+                                    {
+                                        value: 'hello_world',
+                                        label: {
+                                            de: 'Hallo Welt',
+                                            en: 'Hello World',
+                                        },
+                                    },
+                                    {
+                                        value: 'foobar',
+                                        label: {
+                                            de: 'Deutsch',
+                                            en: 'English',
+                                        },
+                                    },
+                                ],
+                            },
+                            translatedText: {
+                                en: 'Should be purgable',
+                                de: 'Purge me as well',
+                            },
+                            arrayTranslations: [
+                                {
+                                    en: 'Should be purgable 1',
+                                    de: 'Purge me as well 1',
+                                },
+                                {
+                                    en: 'Should be purgable 2',
+                                    de: 'Purge me as well 2',
+                                },
+                            ],
+                            complexTranslations: {
+                                something: {
+                                    en: 'Should be purgable nested',
+                                    de: 'Purge me as well nested',
+                                },
+                                arr: [
+                                    {
+                                        en: 'Should be purgable nested array',
+                                        de: 'Purge me as well nested array',
+                                    },
+                                ],
+                            },
+                        },
+                    },
                 },
             };
 
             const basicFormDataWithoutEn: Partial<EditableFormData> = {
-                adminEmailAddress: 'email@email.com',
                 successUrlI18n: {
                     de: 'https://successurl.com',
                 },
                 adminEmailSubject: {
                     de: 'E-Mail-Betreff',
                 },
+                'ui-schema': {
+                    key: '123',
+                    version: '123',
+                    pages: [
+                        {
+                            pagename: {
+                                de: 'Seite 1',
+                            },
+                            elements: [
+                                {
+                                    type: 'property',
+                                    id: 'something1',
+                                    label: {
+                                        de: 'DE Label 1',
+                                    },
+                                    uiSchemaPage: 0,
+                                    description: {
+                                        de: 'DE Description 1',
+                                    },
+                                    formGridOptions: {
+                                        type: 'foobar',
+                                        text: {
+                                            de: 'DE Text 1',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+                schema: {
+                    key: '123',
+                    version: '123',
+                    properties: {
+                        something1: {
+                            type: 'foobar',
+                            de: 'irgendein text, not purged',
+                            en: 'some text, not purged',
+                            formGridOptions: {
+                                selectOptions: [
+                                    {
+                                        value: 'hello_world',
+                                        label: {
+                                            de: 'Hallo Welt',
+                                        },
+                                    },
+                                    {
+                                        value: 'foobar',
+                                        label: {
+                                            de: 'Deutsch',
+                                        },
+                                    },
+                                ],
+                            },
+                            translatedText: {
+                                de: 'Purge me as well',
+                            },
+                            arrayTranslations: [
+                                {
+                                    de: 'Purge me as well 1',
+                                },
+                                {
+                                    de: 'Purge me as well 2',
+                                },
+                            ],
+                            complexTranslations: {
+                                something: {
+                                    de: 'Purge me as well nested',
+                                },
+                                arr: [
+                                    {
+                                        de: 'Purge me as well nested array',
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
             };
 
             const basicFormDataWithoutDe: Partial<EditableFormData> = {
-                adminEmailAddress: 'email@email.com',
                 successUrlI18n: {
                     en: 'https://successurl.com',
                 },
                 adminEmailSubject: {
                     en: 'Email Subject',
+                },
+                'ui-schema': {
+                    key: '123',
+                    version: '123',
+                    pages: [
+                        {
+                            pagename: {
+                                en: 'Page 1',
+                            },
+                            elements: [
+                                {
+                                    type: 'property',
+                                    id: 'something1',
+                                    label: {
+                                        en: 'EN Label 1',
+                                    },
+                                    uiSchemaPage: 0,
+                                    description: {
+                                        en: 'EN Description 1',
+                                    },
+                                    formGridOptions: {
+                                        type: 'foobar',
+                                        text: {
+                                            en: 'EN Text 1',
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+                schema: {
+                    key: '123',
+                    version: '123',
+                    properties: {
+                        something1: {
+                            type: 'foobar',
+                            de: 'irgendein text, not purged',
+                            en: 'some text, not purged',
+                            formGridOptions: {
+                                selectOptions: [
+                                    {
+                                        value: 'hello_world',
+                                        label: {
+                                            en: 'Hello World',
+                                        },
+                                    },
+                                    {
+                                        value: 'foobar',
+                                        label: {
+                                            en: 'English',
+                                        },
+                                    },
+                                ],
+                            },
+                            translatedText: {
+                                en: 'Should be purgable',
+                            },
+                            arrayTranslations: [
+                                {
+                                    en: 'Should be purgable 1',
+                                },
+                                {
+                                    en: 'Should be purgable 2',
+                                },
+                            ],
+                            complexTranslations: {
+                                something: {
+                                    en: 'Should be purgable nested',
+                                },
+                                arr: [
+                                    {
+                                        en: 'Should be purgable nested array',
+                                    },
+                                ],
+                            },
+                        },
+                    },
                 },
             };
 
@@ -337,9 +580,9 @@ describe('ContextMenuOperationsService', () => {
 
             beforeEach(() => {
                 wastebinActionsMoveItemsToWastebinSpy = spyOn(wastebinActions, 'moveItemsToWastebin')
-                    .and.callFake((<T extends ItemType>(_type: 'folder' | 'page' | 'file' | 'form' | 'image', ids: number[]) => {
+                    .and.callFake(<T extends ItemType>(_type: 'folder' | 'page' | 'file' | 'form' | 'image', ids: number[]) => {
                         return Promise.resolve({ succeeded: ids ? ids.length : 0, failed: 0, error: undefined });
-                    }) as any);
+                    });
 
                 folderActionsUpdateItemSpy = spyOn(folderActions, 'updateItem')
                     .and.callFake((<T extends ItemType>(_type: T, _itemId: number, payload: Partial<ItemTypeMap<Raw>[T]>) => {

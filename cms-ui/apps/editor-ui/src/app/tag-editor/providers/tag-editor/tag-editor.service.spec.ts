@@ -180,7 +180,7 @@ describe('TagEditorService', () => {
 
         tagEditorContext.gcmsUiServices.openImageEditor({ nodeId: 1, imageId: 415 });
 
-        expect(openImageEditorSpy).toHaveBeenCalledWith({ nodeId: 1, itemId: 415 });
+        expect(openImageEditorSpy).toHaveBeenCalledWith({ nodeId: 1, imageId: 415 });
     }));
 
     it('createTagEditorContext() creates a new TagEditorContext with the correct values', fakeAsync(() => {

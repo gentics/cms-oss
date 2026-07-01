@@ -814,7 +814,7 @@ export interface MaintenanceModeResponse extends Response {
     message: string;
 }
 
-export interface AlohaRessourceInformationResponse extends Response {
+export interface AlohaResourceInformationResponse extends Response {
     jsFiles: string[];
     cssFiles: string[];
 }

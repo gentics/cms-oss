@@ -484,7 +484,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         templates: (id, options) => this.executeMappedJsonRequest(GET, `/folder/getTemplates/${id}`, null, options),
 
         setStartpage: (id, body) => this.executeMappedJsonRequest(POST, `/folder/startpage/${id}`, body),
-        sanitizePublshDirectory: (body) => this.executeMappedJsonRequest(POST, '/folder/sanitize/publishDir', body),
+        sanitizePublishDirectory: (body) => this.executeMappedJsonRequest(POST, '/folder/sanitize/publishDir', body),
 
         inheritanceStatus: (id, options) => this.executeMappedJsonRequest(GET, `/folder/disinherit/${id}`, null, options),
         multipleInheritanceStatus: (options) => this.executeMappedJsonRequest(GET, '/folder/disinherit', null, options),
@@ -640,7 +640,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public info: GCMSInfoAPI = {
         getMaintenanceMode: () => this.executeMappedJsonRequest(GET, '/info/maintenance'),
-        getAlohaRessources: () => this.executeMappedJsonRequest(GET, '/info/aloha'),
+        getAlohaResources: () => this.executeMappedJsonRequest(GET, '/info/aloha'),
     };
 
     public language: GCMSLanguageAPI = {

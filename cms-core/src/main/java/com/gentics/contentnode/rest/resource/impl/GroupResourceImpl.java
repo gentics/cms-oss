@@ -399,6 +399,7 @@ public class GroupResourceImpl implements GroupResource {
 			recursiveAddGroups(groups, user.getUserGroups());
 
 			GroupList response = ListBuilder.from(groups, UserGroup.TRANSFORM2REST)
+				.filter(o -> PermFilter.get(filter).matches(o))
 				.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "description"))
 				.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.setperm, ObjectPermission.userassignment))
 				.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "description"))

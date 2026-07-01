@@ -3,11 +3,17 @@ package com.gentics.contentnode.tests.rest.group;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Triple;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.exception.DuplicateValueException;
@@ -15,6 +21,9 @@ import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.exception.MovingGroupNotPossibleException;
 import com.gentics.contentnode.exception.UserWithoutGroupException;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.response.GroupList;
@@ -28,17 +37,27 @@ import com.gentics.contentnode.tests.utils.Expected;
 /**
  * Test cases for updating groups
  */
+@RunWith(value = Parameterized.class)
 public class GroupEditTest extends AbstractGroupEditTest {
 	/**
 	 * Test creating a new group (as subgroup of node group)
 	 * @throws NodeException
 	 */
+	@Parameter(0)
+	public int userId;
+
+	@Parameters(name = "{index}: user ID {0}")
+	public static Collection<Object[]> data() {
+		// 1 for system, 3 for super admin
+		return List.of(new Object[] { 1 }, new Object[] { 3 });
+	}
+
 	@Test
 	public void testCreate() throws NodeException {
 		String name = "New Group";
 		String description = "Group description";
 		GroupResourceImpl resource = new GroupResourceImpl();
-		Group created = Trx.supply(() -> {
+		Group created = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			GroupLoadResponse response = resource.add(String.valueOf(NODE_GROUP), new Group().setName(name).setDescription(description));
 			ContentNodeRESTUtils.assertResponseOK(response);
 
@@ -51,7 +70,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 			.has(attribute("description", description));
 
 		// assert group created in correct mother group
-		List<Group> groups = Trx.supply(() -> {
+		List<Group> groups = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			GroupList response = resource.subgroups(String.valueOf(NODE_GROUP), null, null, null, null);
 			ContentNodeRESTUtils.assertResponseOK(response);
 			return response.getItems();
@@ -59,8 +78,8 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		assertThat(groups).as("Subgroups of node group").usingFieldByFieldElementComparator().containsOnly(created);
 
 		// assert permissions duplicated
-		Set<Triple<Integer, Integer, String>> nodeGroupPerms = Trx.supply(() -> ContentNodeTestUtils.getGroupPerms(NODE_GROUP));
-		Set<Triple<Integer, Integer, String>> groupPerms = Trx.supply(() -> ContentNodeTestUtils.getGroupPerms(created.getId()));
+		Set<Triple<Integer, Integer, String>> nodeGroupPerms = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> ContentNodeTestUtils.getGroupPerms(NODE_GROUP));
+		Set<Triple<Integer, Integer, String>> groupPerms = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> ContentNodeTestUtils.getGroupPerms(created.getId()));
 		assertThat(groupPerms).as("Created group permissions").containsOnlyElementsOf(nodeGroupPerms);
 	}
 
@@ -74,14 +93,14 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		String name = "New Group";
 		String description = "Group description";
 		GroupResourceImpl resource = new GroupResourceImpl();
-		Trx.supply(() -> {
+		Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			GroupLoadResponse response = resource.add(String.valueOf(NODE_GROUP), new Group().setName(name).setDescription(description));
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			return response.getGroup();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			resource.add(String.valueOf(NODE_GROUP), new Group().setName(name).setDescription(description));
 		});
 	}
@@ -93,7 +112,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	@Expected(ex = MissingFieldException.class, message = "Das Feld 'Name' darf nicht leer sein.")
 	public void testCreateEmptyName() throws NodeException {
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group());
 		});
 	}
@@ -106,13 +125,13 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	public void testUpdate() throws NodeException {
 		String originalName = "Original Group";
 		String originalDescription = "Original description";
-		Group created = Trx.supply(() -> {
+		Group created = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName(originalName).setDescription(originalDescription)).getGroup();
 		});
 
 		String newName = "New Group Name";
 		String newDescription = "New Group description";
-		Group updatedGroup = Trx.supply(() -> {
+		Group updatedGroup = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().update(String.valueOf(created.getId()), new Group().setName(newName).setDescription(newDescription)).getGroup();
 		});
 
@@ -128,20 +147,20 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	public void testDelete() throws NodeException {
 		String name = "Group to Delete";
-		Group created = Trx.supply(() -> {
+		Group created = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName(name)).getGroup();
 		});
 
-		List<Group> groups = Trx.supply(() -> {
+		List<Group> groups = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().list(null, null, null, null).getItems();
 		});
 		assertThat(groups).as("Groups after adding").usingFieldByFieldElementComparator().contains(created);
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().delete(String.valueOf(created.getId()));
 		});
 
-		groups = Trx.supply(() -> {
+		groups = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().list(null, null, null, null).getItems();
 		});
 		assertThat(groups).as("Groups after deleting").usingFieldByFieldElementComparator().doesNotContain(created);
@@ -153,32 +172,32 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testDeleteSubgroups() throws NodeException {
-		Group mother = Trx.supply(() -> {
+		Group mother = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Mother")).getGroup();
 		});
-		Group child1 = Trx.supply(() -> {
+		Group child1 = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(mother.getId()), new Group().setName("Child 1")).getGroup();
 		});
-		Group child2 = Trx.supply(() -> {
+		Group child2 = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(mother.getId()), new Group().setName("Child 2")).getGroup();
 		});
-		Group subchild1 = Trx.supply(() -> {
+		Group subchild1 = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(child1.getId()), new Group().setName("Subchild 1")).getGroup();
 		});
-		Group subchild2 = Trx.supply(() -> {
+		Group subchild2 = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(child2.getId()), new Group().setName("Subchild 2")).getGroup();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after adding").usingFieldByFieldElementComparator()
 					.contains(mother, child1, child2, subchild1, subchild2);
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().delete(String.valueOf(mother.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator().doesNotContain(mother, child1, child2, subchild1, subchild2);
 		});
 	}
@@ -190,34 +209,34 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	public void testDeleteWithMembers() throws NodeException {
 		// create group
-		Group toDelete = Trx.supply(() -> {
+		Group toDelete = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group to Delete")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 
 		// add members to new group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			for (User member : members) {
 				new GroupResourceImpl().addUser(String.valueOf(toDelete.getId()), String.valueOf(member.getId()));
 			}
 		});
 
 		// check that group has members
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(toDelete.getId()), null, null, null, null, null).getItems()).as("Members of new group").isNotEmpty();
 		});
 
 		// delete
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().delete(String.valueOf(toDelete.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator()
 					.doesNotContain(toDelete);
 		});
@@ -231,17 +250,17 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Expected(ex = UserWithoutGroupException.class, message = "Die Gruppe 'Group to Delete' kann nicht gelöscht werden, weil dadurch der Benutzer 'bla' seine letzte Gruppe verlieren würde.")
 	public void testDeleteWithLastMember() throws NodeException {
 		// create group
-		Group toDelete = Trx.supply(() -> {
+		Group toDelete = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group to Delete")).getGroup();
 		});
 
 		// create user
-		Trx.supply(() -> {
+		Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(toDelete.getId()), new User().setLogin("bla")).getUser();
 		});
 
 		// delete
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().delete(String.valueOf(toDelete.getId()));
 		});
 	}
@@ -254,25 +273,25 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Expected(ex = UserWithoutGroupException.class, message = "Die Gruppe 'Group to Delete' kann nicht gelöscht werden, weil dadurch der Benutzer 'bla' seine letzte Gruppe verlieren würde.")
 	public void testDeleteSubgroupsWithLastMember() throws NodeException {
 		// create group
-		Group toDelete = Trx.supply(() -> {
+		Group toDelete = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group to Delete")).getGroup();
 		});
 		// create subgroup
-		Group subgroup = Trx.supply(() -> {
+		Group subgroup = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(toDelete.getId()), new Group().setName("Subgroup")).getGroup();
 		});
 
 		// create user
-		User user = Trx.supply(() -> {
+		User user = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(toDelete.getId()), new User().setLogin("bla")).getUser();
 		});
 		// add user to subgroup
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(subgroup.getId()), String.valueOf(user.getId()));
 		});
 
 		// delete
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().delete(String.valueOf(toDelete.getId()));
 		});
 	}
@@ -283,27 +302,44 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testAddUser() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 
 		// add members to new group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			for (User member : members) {
 				new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(member.getId()));
 			}
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Members of new group")
 					.usingFieldByFieldElementComparator().containsOnlyElementsOf(members);
 		});
+	}
+
+	/**
+	 * Test adding a user to the Super Node User group
+	 * @return 
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAddUserToSupergroup() throws NodeException {
+		try {
+			addUserToSupergroup();
+		} catch (InsufficientPrivilegesException e) {
+			// System group (ID #1) should throw nothing
+			if (userId < 2) {
+				throw e;
+			}
+		}
 	}
 
 	/**
@@ -312,24 +348,24 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testAddUser2() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 
 		// add members to new group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			for (User member : members) {
 				new UserResourceImpl().addToGroup(String.valueOf(member.getId()), String.valueOf(group.getId()));
 			}
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Members of new group")
 					.usingFieldByFieldElementComparator().containsOnlyElementsOf(members);
 		});
@@ -341,26 +377,26 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testAddUserTwice() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 		User user = members.get(0);
 
 		// add user to group twice
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Members of new group")
 					.usingFieldByFieldElementComparator().hasSize(1).containsOnly(user);
 		});
@@ -372,34 +408,67 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testRemoveUser() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 		User user = members.get(0);
 
 		// add user to group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members before removing")
 					.usingFieldByFieldElementComparator().hasSize(1).containsOnly(user);
 		});
 
 		// remove user from group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().removeUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members after removing").isEmpty();
+		});
+	}
+
+	/**
+	 * Test removing a user
+	 * @throws NodeException
+	 */
+	@Test
+	@Ignore("fails all subsequent consistency checks")
+	public void testRemoveUserFromSupergroup() throws NodeException {
+		List<User> members = addUserToSupergroup();
+
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
+		});
+
+		// add members to new group, to allow deletion from super
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			for (User member : members) {
+				new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(member.getId()));
+			}
+		});
+			
+		// remove user from group
+		for (User user: members) {
+			Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+				new GroupResourceImpl().removeUser(String.valueOf(2), String.valueOf(user.getId()));
+			});
+		}
+
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			assertThat(new GroupResourceImpl().users(String.valueOf(2), null, null, null, null, null).getItems()).as("Group members after removing")
+				.noneMatch(user -> members.stream().noneMatch(u -> u.getId().equals(user.getId())));
 		});
 	}
 
@@ -409,33 +478,33 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testRemoveUser2() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 		User user = members.get(0);
 
 		// add user to group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members before removing")
 					.usingFieldByFieldElementComparator().hasSize(1).containsOnly(user);
 		});
 
 		// remove user from group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new UserResourceImpl().removeFromGroup(String.valueOf(user.getId()), String.valueOf(group.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members after removing").isEmpty();
 		});
 	}
@@ -446,36 +515,36 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	 */
 	@Test
 	public void testRemoveUserTwice() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
 		// get members of node group
-		List<User> members = Trx.supply(() -> {
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
 		});
 		assertThat(members).as("Group members").isNotEmpty();
 		User user = members.get(0);
 
 		// add user to group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().addUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members before removing")
 					.usingFieldByFieldElementComparator().hasSize(1).containsOnly(user);
 		});
 
 		// remove user from group twice
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().removeUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().removeUser(String.valueOf(group.getId()), String.valueOf(user.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().users(String.valueOf(group.getId()), null, null, null, null, null).getItems()).as("Group members after removing").isEmpty();
 		});
 	}
@@ -488,14 +557,14 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Expected(ex = UserWithoutGroupException.class, message = "Der Benutzer 'username' kann nicht von der Gruppe 'Group' entfernt werden, weil das die letzte Gruppe des Benutzers ist.")
 	public void testRemoveUserLastGroup() throws NodeException {
 		String login = "username";
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
-		User createdUser = Trx.supply(() -> {
+		User createdUser = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User().setLogin(login)).getUser();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().removeUser(String.valueOf(group.getId()), String.valueOf(createdUser.getId()));
 		});
 	}
@@ -507,11 +576,11 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	public void testCreateUser() throws NodeException {
 		String login = "username";
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
-		User createdUser = Trx.supply(() -> {
+		User createdUser = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User().setLogin(login)).getUser();
 		});
 
@@ -525,11 +594,11 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	@Expected(ex = MissingFieldException.class, message = "Das Feld 'Login' darf nicht leer sein.")
 	public void testCreateUserNoLogin() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User());
 		});
 	}
@@ -541,11 +610,11 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	@Expected(ex = DuplicateValueException.class, message = "Das Feld 'Login' darf nicht den Wert 'node' haben, weil dieser Wert bereits verwendet wird.")
 	public void testCreateUserDuplicateLogin() throws NodeException {
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User().setLogin("node"));
 		});
 	}
@@ -558,14 +627,14 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	public void testCreateUserWithPassword() throws NodeException {
 		String login = "username";
 		String password = "password";
-		Group group = Trx.supply(() -> {
+		Group group = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Group")).getGroup();
 		});
 
-		User createdUser = Trx.supply(() -> {
+		User createdUser = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User().setLogin(login).setPassword(password)).getUser();
 		});
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(ContentNodeRESTUtils.login(createdUser.getLogin(), password)).as("SID").isNotNull();
 		});
 	}
@@ -577,19 +646,19 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Test
 	public void testMove() throws NodeException {
 		// create source and target groups
-		Group source = Trx.supply(() -> {
+		Group source = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Source Group")).getGroup();
 		});
-		Group target = Trx.supply(() -> {
+		Group target = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Target Group")).getGroup();
 		});
 
 		// create group to move
-		Group toMove = Trx.supply(() -> {
+		Group toMove = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(source.getId()), new Group().setName("Moved Group")).getGroup();
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().subgroups(String.valueOf(source.getId()), null, null, null, null).getItems()).as("Source group children before moving")
 					.usingFieldByFieldElementComparator().containsOnly(toMove);
 			assertThat(new GroupResourceImpl().subgroups(String.valueOf(target.getId()), null, null, null, null).getItems()).as("Target group children before moving")
@@ -597,11 +666,11 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		// move
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().move(String.valueOf(target.getId()), String.valueOf(toMove.getId()));
 		});
 
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			assertThat(new GroupResourceImpl().subgroups(String.valueOf(source.getId()), null, null, null, null).getItems()).as("Source group children after moving")
 					.isEmpty();
 			assertThat(new GroupResourceImpl().subgroups(String.valueOf(target.getId()), null, null, null, null).getItems()).as("Target group children after moving")
@@ -617,16 +686,16 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Expected(ex = MovingGroupNotPossibleException.class, message = "Die Gruppe 'Moved Group' kann nicht in die Gruppe 'Subgroup' verschoben werden, weil das eine Untergruppe ist.")
 	public void testMoveIntoSubgroup() throws NodeException {
 		// create group to move
-		Group toMove = Trx.supply(() -> {
+		Group toMove = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Moved Group")).getGroup();
 		});
 		// create subgroup
-		Group subgroup = Trx.supply(() -> {
+		Group subgroup = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(toMove.getId()), new Group().setName("Subgroup")).getGroup();
 		});
 
 		// move
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().move(String.valueOf(subgroup.getId()), String.valueOf(toMove.getId()));
 		});
 	}
@@ -639,25 +708,46 @@ public class GroupEditTest extends AbstractGroupEditTest {
 	@Expected(ex = MovingGroupNotPossibleException.class, message = "Die Gruppe 'Moved Group' kann nicht in die Gruppe 'Target Group' verschoben werden, weil es dort schon eine Gruppe mit diesem Namen gibt.")
 	public void testMoveDuplicateName() throws NodeException {
 		// create source and target groups
-		Group source = Trx.supply(() -> {
+		Group source = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Source Group")).getGroup();
 		});
-		Group target = Trx.supply(() -> {
+		Group target = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(NODE_GROUP), new Group().setName("Target Group")).getGroup();
 		});
 
-		// create group to move
-		Group toMove = Trx.supply(() -> {
+		// create group to moveTrx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> 
+		Group toMove = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			return new GroupResourceImpl().add(String.valueOf(source.getId()), new Group().setName("Moved Group")).getGroup();
 		});
 		// create conflicting group
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().add(String.valueOf(target.getId()), new Group().setName("Moved Group"));
 		});
 
 		// move
-		Trx.operate(() -> {
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
 			new GroupResourceImpl().move(String.valueOf(target.getId()), String.valueOf(toMove.getId()));
 		});
+	}
+
+	private List<User> addUserToSupergroup() throws NodeException {
+		// get members of node group
+		List<User> members = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			return new GroupResourceImpl().users(String.valueOf(NODE_GROUP), null, null, null, null, null).getItems();
+		});
+		assertThat(members).as("Group members").isNotEmpty();
+
+		// add members to new group
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			for (User member : members) {
+				new GroupResourceImpl().addUser(String.valueOf(2), String.valueOf(member.getId()));
+			}
+		});
+
+		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
+			assertThat(new GroupResourceImpl().users(String.valueOf(2), null, null, null, null, null).getItems()).as("Members of new group")
+					.usingFieldByFieldElementComparator().containsOnlyElementsOf(members);
+		});
+		return members;
 	}
 }

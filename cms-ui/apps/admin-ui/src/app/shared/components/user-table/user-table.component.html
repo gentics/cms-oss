@@ -10,20 +10,22 @@
 
 @if (!hideActions) {
     <div class="entity-table-actions-bar">
-        <gtx-button
-            class="table-action-button"
-            flat
-            size="small"
-            type="primary"
-            data-action="create"
-            [disabled]="disabled"
-            [gtxActionAllowed]="'user.createUser'"
-            (click)="handleCreateButton()"
-        >
-            <icon left>add</icon> {{ (group ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | gtxI18n }}
-        </gtx-button>
+        @if (group || assignable) {
+            <gtx-button
+                class="table-action-button"
+                flat
+                size="small"
+                type="primary"
+                data-action="create"
+                [disabled]="disabled"
+                [gtxActionAllowed]="'user.createUser'"
+                (click)="handleCreateButton()"
+            >
+                <icon left>add</icon> {{ (group ? 'shared.create_new_user_in_group_button' : 'shared.create_new_user_button') | gtxI18n }}
+            </gtx-button>
+        }
 
-        @if (group && assignable) {
+        @if (assignable) {
             <gtx-button
                 class="table-action-button"
                 flat

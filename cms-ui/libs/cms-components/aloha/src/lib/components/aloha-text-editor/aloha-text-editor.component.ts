@@ -464,10 +464,10 @@ export class AlohaTextEditorComponent extends BaseFormElementComponent<string> i
 
             .aloha-editable {
                 outline: none !important;
+            }
 
-                > p:first-child {
-                    margin-top: 0;
-                }
+            #main > *:first-child {
+                margin-top: 0 !important;
             }
 
             .aloha-sidebar-bar,

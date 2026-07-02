@@ -65,13 +65,7 @@
 							"de": "eMail Adresse"
 						},
 						"formGridOptions": {
-							"numberOfLines": 1,
-							"tooltip": {
-								"de": "Ein Tip: nehmen Sie Ihre eMail Adresse"
-							},
-							"placeholder": {
-								"de": "eMail"
-							}
+							"numberOfLines": 1
 						}
 					},
 					{

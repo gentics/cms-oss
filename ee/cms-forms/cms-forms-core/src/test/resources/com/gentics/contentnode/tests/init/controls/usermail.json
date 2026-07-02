@@ -12,14 +12,8 @@
 			"mandatory_i18n": {
 				"de": true
 			},
-			"placeholder_i18n": {
-				"de": "eMail"
-			},
 			"description_i18n": {
 				"de": "eMail Adresse"
-			},
-			"tooltip_i18n": {
-				"de": "Ein Tip: nehmen Sie Ihre eMail Adresse"
 			},
 			"maxCharCount_i18n": {
 				"de": 200

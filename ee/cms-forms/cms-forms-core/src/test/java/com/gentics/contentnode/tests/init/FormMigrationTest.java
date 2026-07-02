@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
@@ -82,6 +84,7 @@ public class FormMigrationTest implements ConfigModifier {
 						"form/inactive_recaptcha.json", "form/inactive_friendlycaptcha.json",
 						"controls/input.json", "controls/checkbox.json", "controls/textarea.json",
 						"controls/select.json", "controls/file.json", "controls/usermail.json",
+						"controls/tooltip.json", "controls/placeholder.json",
 						"blocks/sectionheadline.json", "blocks/text.json",
 						"blocks/spacer.json", "blocks/conditionalcontainer.json", "blocks/group.json")
 				.map(fileName -> new Object[] { fileName }).collect(Collectors.toList());
@@ -127,7 +130,16 @@ public class FormMigrationTest implements ConfigModifier {
 			return ids.get(0);
 		});
 
-		MigrateForms migrator = new MigrateForms();
+		MigrateForms migrator = new MigrateForms() {
+			@Override
+			protected URI getCustomMigrationScriptFile() {
+				try {
+					return FormMigrationTest.class.getResource("test_migration.groovy").toURI();
+				} catch (URISyntaxException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		};
 		operate(() -> migrator.execute());
 
 		Form migratedForm = execute(id -> TransactionManager.getCurrentTransaction().getObject(Form.class, id), formId);

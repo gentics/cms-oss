@@ -6,7 +6,7 @@
 	"schema": {
         "properties": {}
     },
-	"ui-schema": {
+	"uiSchema": {
 		"formname": {
 			"de": "Test Form",
 			"en": "Test Form"

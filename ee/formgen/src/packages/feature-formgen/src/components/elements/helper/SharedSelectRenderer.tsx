@@ -187,7 +187,7 @@ function SharedSelectRenderer({
           disabled={!props.editable}
           error={!!props.error}
           type={type}
-          accessibilityLabel={t('form_catalog_customOption')}
+          accessibilityLabel={t('form_catalog_customOption_placeholder')}
         />
         <View style={{ flex: 1 }}>
         <SharedInputComponent
@@ -216,7 +216,7 @@ function SharedSelectRenderer({
           isTextarea={false}
           numberOfLines={1}
           isFocused={customInputFocused}
-          labeltext={t('form_catalog_customOption')}
+          labeltext={t('form_catalog_customOption_placeholder')}
           onChangeText={handleCustomRadioChange}
           onNumberChangeText={() => {}}
           onFocus={() => {

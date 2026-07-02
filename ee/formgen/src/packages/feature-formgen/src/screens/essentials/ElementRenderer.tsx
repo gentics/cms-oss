@@ -258,6 +258,11 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
             formState.pluginName,
             obj.id,
           )}
+          customOption={utils.getCMSCustomOption(
+            formState.data,
+            jsonpath,
+            obj.id,
+          )}
           handleSearch={props.handleSearch}
           loading={utils.getLoading(formState, jsonpath)}
           ANFieldLoadError={utils.getANFieldLoadError(

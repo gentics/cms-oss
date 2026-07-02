@@ -263,6 +263,10 @@ export interface IFormComponentAttributes extends IFormComponentBaseAttributes {
   parentId: string;
   isList: boolean;
   possibleValues: IPossibleValue[];
+  // Catalog only: when true the user may enter an additional free-text value that
+  // is not part of the predefined selectOptions. Delivered by the backend on the
+  // per-element data object, alongside `possibleValues`.
+  customOption?: boolean;
   loading: boolean;
   ANFieldLoadError: boolean;
   formGridOptions?: IFormGridOptions;
@@ -728,6 +732,8 @@ export interface IDataFieldProperties {
   properties?: IDataFields;
   possibleValueSetID?: string;
   possibleValues?: IPossibleValue[];
+  // Catalog only: allow entering an additional free-text value (not in selectOptions).
+  customOption?: boolean;
   possibleAggregateValues?: IDataPossibleAggregationValueFields;
   searchValue?: string;
   loading?: boolean;
@@ -872,6 +878,7 @@ export type OverlayAdditionalProps =
   | IOverlayLeaveExtraProps
   | IOverlayFullScreenExtraProps
   | IOverlayAggregateDeleteConfirmationExtraProps
+  | IOverlayCustomOptionExtraProps
   | IOverlaySubmitExtraProps;
 
 export interface OverlayState {
@@ -933,6 +940,20 @@ export interface IOverlayAggregateDeleteConfirmationExtraProps
 
 export interface IOverlaySubmitExtraProps extends IOverlayExtraCommonProps {
   errorMsgs?: IErrorMessage[];
+}
+
+/**
+ * Extra props for the catalog "custom option" input overlay.
+ * The dropdown catalog element opens this overlay when the user selects the
+ * special "additional element" option. The entered value is handed back through
+ * `onConfirm`, cancelling triggers `onCancel` so the special option can be reset.
+ */
+export interface IOverlayCustomOptionExtraProps
+  extends IOverlayExtraCommonProps {
+  onConfirm: (value: string) => void;
+  onCancel?: () => void;
+  title?: string;
+  placeholder?: string;
 }
 
 export interface OverlayButtonDefinition {

@@ -1,12 +1,26 @@
-import React, { useMemo, useState } from 'react';
-import { View, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { View, TouchableOpacity, Dimensions, TextInput } from 'react-native';
 import { FormElementWrapper } from './FormElementWrapper';
 import * as utils from '../../../utils/Utils';
+import * as overlayUtils from '../../../utils/OverlayUtils';
+import { OverlayTypeEnum } from '../../../custom/OverlayTypes';
+import { IOverlayCustomOptionExtraProps } from '../../../types/interfaces';
 import AndpIcon from '@andp/core/src/components/AndpIcon';
 import AndpText from '@andp/core/src/components/AndpText';
 import { dropdownInputTheme } from '@andp/core/src/styles/theme';
 import AndpRadioButton from '@andp/core/src/components/AndpRadioButton';
 import BaseDropDownInputElement from '../an/DropDownElements/BaseDropDownInputElement';
+import SharedInputComponent from '../shared/components/InputElementComponent';
+import { inputElementStyles } from '../../../styles/common/common-style';
+import { inputElementStyles as customInputElementStyles } from '../../../styles/custom/custom-style';
+import { mergeStyles } from '@andp/core/src/AndpUtils';
+
+/**
+ * Sentinel identifier for the synthetic "additional element" option that is shown
+ * in the dropdown when `customOption` is enabled. Selecting it opens the input
+ * overlay instead of persisting it as a value.
+ */
+const CUSTOM_OPTION_IDENTIFIER = '__formgen_custom_option__';
 
 /**
  * Returns whether the given option is already part of the current selection.
@@ -55,6 +69,24 @@ function SharedSelectRenderer({
 }: SharedSelectRendererProps) {
   const { formState, uiState, t } = props;
 
+  // Catalog flag: allow the user to enter an additional free-text value.
+  // Delivered by the backend on the per-element data object (same source as
+  // `possibleValues`) and mapped to this prop in ElementRenderer.
+  const customOptionEnabled = props.customOption === true;
+
+  // Shared state/styles for the customOption free-text field rendered via
+  // SharedInputComponent. Declared unconditionally (before the radio/dropdown
+  // branch returns) to keep hook order stable across renders.
+  const [customInputFocused, setCustomInputFocused] = useState(false);
+  // Tracks that the user activated the custom option even before entering text,
+  // so its indicator shows as selected immediately on click (radio semantics).
+  const [customSelected, setCustomSelected] = useState(false);
+  const customInputRef = useRef<TextInput>(null);
+  const customInputStyles = useMemo(
+    () => mergeStyles(inputElementStyles, customInputElementStyles),
+    [],
+  );
+
   // Render radio or checkbox options when the field is configured for radio mode.
   if (props.formGridOptions?.radio) {
     const radioOptions = props.formState.isFormgridPreview
@@ -70,6 +102,8 @@ function SharedSelectRenderer({
     // Toggle the clicked option and delegate the resulting value to the wrapper.
     const handleChangeRadio = (selectedOption: any) => {
       if (type === 'radio') {
+        // Selecting a predefined radio deactivates the custom option.
+        setCustomSelected(false);
         onSelectionChange(selectedOption);
       } else {
         let updatedValues = [...currentSelectedValues];
@@ -83,6 +117,120 @@ function SharedSelectRenderer({
         onSelectionChange(updatedValues);
       }
     };
+
+    // customOption in radio mode: render a plain text input at the end of the list.
+    // The custom value is the current selection whose identifier is not one of the
+    // predefined options. Editing it writes the entered text as the field value.
+    const radioOptionIds = new Set(
+      radioOptions.map((o: any) => o.identifier),
+    );
+    const customRadioEntry = currentSelectedValues.find(
+      (v) => !radioOptionIds.has(v.identifier),
+    );
+    const customRadioText = customRadioEntry?.displayName ?? '';
+
+    const handleCustomRadioChange = (text: string) => {
+      if (type === 'radio') {
+        onSelectionChange(
+          text.trim().length === 0
+            ? null
+            : { identifier: text, displayName: text },
+        );
+      } else {
+        // checkbox / list: keep predefined selections, replace the single custom entry.
+        const withoutCustom = currentSelectedValues.filter((v) =>
+          radioOptionIds.has(v.identifier),
+        );
+        onSelectionChange(
+          text.trim().length === 0
+            ? withoutCustom
+            : [...withoutCustom, { identifier: text, displayName: text }],
+        );
+      }
+    };
+
+    // The indicator is selected as soon as a custom value exists or the user has
+    // activated the custom option by clicking it.
+    const customIndicatorSelected = !!customRadioEntry || customSelected;
+
+    // Activate the custom option (mark its indicator). In radio mode the custom
+    // option is exclusive, so any predefined selection is cleared. Shared by the
+    // indicator press and by focusing the text field.
+    const activateCustomOption = () => {
+      if (!props.editable) return;
+      setCustomSelected(true);
+      if (type === 'radio' && !customRadioEntry) {
+        onSelectionChange(null);
+      }
+    };
+
+    // Pressing the indicator activates the custom option and focuses the text
+    // field. In checkbox mode, pressing an already set entry clears it.
+    const handleCustomIndicatorPress = () => {
+      if (!props.editable) return;
+      if (type === 'checkbox' && customRadioEntry) {
+        handleCustomRadioChange('');
+        setCustomSelected(false);
+        return;
+      }
+      activateCustomOption();
+      customInputRef.current?.focus();
+    };
+
+    const customRadioInput = customOptionEnabled ? (
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+        <AndpRadioButton
+          id={`${props.jsonpath}-${type}-customOption`}
+          selected={customIndicatorSelected}
+          label=""
+          onPress={handleCustomIndicatorPress}
+          disabled={!props.editable}
+          error={!!props.error}
+          type={type}
+          accessibilityLabel={t('form_catalog_customOption')}
+        />
+        <View style={{ flex: 1 }}>
+        <SharedInputComponent
+          formState={formState}
+          uiState={uiState}
+          // Distinct ids/jsonpath: the internally rendered FormElementWrapper
+          // emits a <div id={jsonpath}> on web — without a suffix it would
+          // collide with the radio group's own DOM id and preview selection.
+          // description/error are suppressed so the group's tooltip and error
+          // message are not duplicated here.
+          formComponentAttributes={{
+            ...props,
+            jsonpath: `${props.jsonpath}-customOption`,
+            id: `${props.id}-customOption`,
+            description: undefined,
+            error: undefined,
+            required: false,
+            formGridOptions: undefined,
+          }}
+          localErrorMsg=""
+          showFilledIcon={false}
+          isInputAllowed={true}
+          value={customRadioText}
+          editable={props.editable}
+          isNumber={false}
+          isTextarea={false}
+          numberOfLines={1}
+          isFocused={customInputFocused}
+          labeltext={t('form_catalog_customOption')}
+          onChangeText={handleCustomRadioChange}
+          onNumberChangeText={() => {}}
+          onFocus={() => {
+            setCustomInputFocused(true);
+            activateCustomOption();
+          }}
+          onBlur={() => setCustomInputFocused(false)}
+          elementRef={customInputRef}
+          styles={customInputStyles}
+          t={t}
+        />
+        </View>
+      </View>
+    ) : null;
 
     // Respect the configured number of radio columns on larger screens only.
     const screenWidth = Dimensions.get('window').width;
@@ -158,6 +306,7 @@ function SharedSelectRenderer({
                 accessibilityLabel={option.displayName}
               />
             ))}
+            {customRadioInput}
           </View>
         </FormElementWrapper>
       );
@@ -231,6 +380,7 @@ function SharedSelectRenderer({
               </View>
             ))}
           </View>
+          {customRadioInput}
         </View>
       </FormElementWrapper>
     );
@@ -268,8 +418,40 @@ function SharedSelectRenderer({
     onSelectionChange(props.isList ? [] : null);
   };
 
+  // Open the custom-option overlay. The entered value is added as a new option and
+  // selected; cancelling leaves the current selection untouched (the special option
+  // itself is never persisted as a value).
+  const openCustomOptionOverlay = () => {
+    setInputValue('');
+    setDropdownOpen(false);
+    const extraProps: IOverlayCustomOptionExtraProps = {
+      onConfirm: (val: string) => {
+        const newOption = { identifier: val, displayName: val };
+        if (props.isList) {
+          const exists = selectedValues.some(
+            (v) => v.identifier === newOption.identifier,
+          );
+          onSelectionChange(exists ? selectedValues : [...selectedValues, newOption]);
+        } else {
+          onSelectionChange(newOption);
+        }
+      },
+    };
+    overlayUtils.setOverlay(
+      uiState,
+      formState,
+      OverlayTypeEnum.CUSTOM_OPTION_INPUT,
+      props.updateState,
+      extraProps,
+    );
+  };
+
   // Apply the clicked dropdown option and reset the search input afterwards.
   const onSelectOption = (option: any) => {
+    if (option.identifier === CUSTOM_OPTION_IDENTIFIER) {
+      openCustomOptionOverlay();
+      return;
+    }
     if (props.isList) {
       const exists = selectedValues.find(
         (v) => v.identifier === option.identifier,
@@ -315,7 +497,19 @@ function SharedSelectRenderer({
   const labelText =
     utils.getI18nText(formState, props.label) + (props.required ? ' *' : '');
 
-  const dropdownData = filteredOptions.length > 0 ? filteredOptions : undefined;
+  // When customOption is enabled, append the synthetic "additional element" entry
+  // at the end of the list so it is always selectable regardless of the search text.
+  const displayOptions = customOptionEnabled
+    ? [
+        ...filteredOptions,
+        {
+          identifier: CUSTOM_OPTION_IDENTIFIER,
+          displayName: t('form_catalog_customOption'),
+        },
+      ]
+    : filteredOptions;
+
+  const dropdownData = displayOptions.length > 0 ? displayOptions : undefined;
 
   // Render a single dropdown result entry, including the selected-state checkmark.
   const renderOptionCatalog = ({ item }: { item: any }) => (
@@ -398,7 +592,7 @@ function SharedSelectRenderer({
           dropdownOnSelect={onSelectOption}
           disabled={!props.editable}
         >
-          {filteredOptions.length === 0 && (
+          {displayOptions.length === 0 && (
             <AndpText
               style={[
                 styles.activityText,

@@ -635,6 +635,7 @@ export interface ISchemaFieldProperties {
   validation?: IValidation;
   mandatory?: boolean;
   isList?: boolean;
+  customOption?: boolean;
   properties?: ISchemaFields;
   formPage?: number;
   autoCompleteMinLength?: number;
@@ -732,8 +733,6 @@ export interface IDataFieldProperties {
   properties?: IDataFields;
   possibleValueSetID?: string;
   possibleValues?: IPossibleValue[];
-  // Catalog only: allow entering an additional free-text value (not in selectOptions).
-  customOption?: boolean;
   possibleAggregateValues?: IDataPossibleAggregationValueFields;
   searchValue?: string;
   loading?: boolean;

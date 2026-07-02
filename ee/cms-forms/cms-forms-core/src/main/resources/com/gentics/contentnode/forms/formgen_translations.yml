@@ -236,4 +236,17 @@ form_accessibility_datepicker_clear:
 form_accessibility_datepicker_clear_hint:
   de: Tippen, um die Eingabe zu löschen
   en: Tap to clear the input
+form_catalog_customOption:
+  de: Neue Option
+  en: New Option
+form_catalog_customOption_placeholder:
+  de: Neue Option hier eingeben
+  en: Enter new option here
+form_catalog_customOption_confirm:
+  de: Übernehmen
+  en: Apply
+form_catalog_customOption_overlay_title:
+  de: Neue Option
+  en: New Option
+
 

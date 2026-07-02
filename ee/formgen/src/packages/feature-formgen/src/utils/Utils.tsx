@@ -623,6 +623,22 @@ export function getPossibleValues(
   return [];
 }
 
+/**
+ * 
+ * Reads the catalog `customOption` flag from the per-element data object, i.e. the
+ * same structure `getPossibleValues` reads `possibleValues` from
+ * (`data.properties[id]`). Returns true only when the backend explicitly set it.
+ */
+export function getCMSCustomOption(
+  data: IData,
+  jsonpath: string,
+  id?: string,
+): boolean {
+
+  const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
+  return elementState?.customOption === true;
+}
+
 export function getLoading(formState: FormState, jsonpath: string): boolean {
   const elementState = getElementByJsonPath(formState.data, jsonpath);
   if (elementState?.loading) {

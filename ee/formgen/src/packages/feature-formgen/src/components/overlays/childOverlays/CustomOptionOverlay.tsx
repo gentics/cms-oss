@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, TextInput } from 'react-native';
 import {
   ICommonOverlayProps,
   IOverlayCustomOptionExtraProps,
   OverlayButtonDefinition,
 } from '../../../types/interfaces';
 import DefaultOverlay from '../DefaultOverlay';
-import AndpInputElement from '@andp/core/src/components/AndpInputElement';
+import SharedInputComponent from '../../elements/shared/components/InputElementComponent';
+import { inputElementStyles } from '../../../styles/common/common-style';
+import { inputElementStyles as customInputElementStyles } from '../../../styles/custom/custom-style';
+import { mergeStyles } from '@andp/core/src/AndpUtils';
 import * as overlayUtils from '../../../utils/OverlayUtils';
 
 /**
@@ -26,6 +29,20 @@ const CustomOptionOverlay: React.FC<ICommonOverlayProps> = (
     .additionalProps as IOverlayCustomOptionExtraProps;
 
   const [value, setValue] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+  const inputStyles = useMemo(
+    () => mergeStyles(inputElementStyles, customInputElementStyles),
+    [],
+  );
+
+  // Preserve the previous autoFocus behavior (SharedInputComponent has no
+  // autoFocus prop): focus the field once when the overlay mounts.
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const labelText = t('form_catalog_customOption_placeholder');
 
   const close = () => overlayUtils.hideOverlay(props.uiState, props.updateState);
 
@@ -67,14 +84,35 @@ const CustomOptionOverlay: React.FC<ICommonOverlayProps> = (
       buttonList={buttonList}
       contentElementNodes={
         <View style={{ marginVertical: 12 }}>
-          <AndpInputElement
+          <SharedInputComponent
+            formState={props.formState}
+            uiState={props.uiState}
+            // The overlay is not a real form element; synthesize the minimal
+            // attributes the shared component / FormElementWrapper reads.
+            formComponentAttributes={{
+              jsonpath: 'form_customOption_overlay',
+              id: 'form_customOption_overlay',
+              editable: true,
+              error: undefined,
+              required: false,
+            } as any}
+            localErrorMsg=""
+            showFilledIcon={false}
+            isInputAllowed={true}
             value={value}
+            editable={true}
+            isNumber={false}
+            isTextarea={false}
+            numberOfLines={1}
+            isFocused={isFocused}
+            labeltext={labelText}
             onChangeText={setValue}
-            placeholder={
-              additionalProps?.placeholder ||
-              t('form_catalog_customOption_placeholder')
-            }
-            autoFocus={true}
+            onNumberChangeText={() => {}}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            elementRef={inputRef}
+            styles={inputStyles}
+            t={t}
           />
         </View>
       }

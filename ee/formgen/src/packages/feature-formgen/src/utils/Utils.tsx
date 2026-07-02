@@ -636,7 +636,6 @@ export function getCMSCustomOption(
 ): boolean {
 
   const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
-  debugger;
   return elementState?.customOption === true;
 }
 

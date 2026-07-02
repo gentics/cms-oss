@@ -416,10 +416,13 @@ public class GroupResourceImpl implements GroupResource {
 	@Path("/{id}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public GroupLoadResponse get(@PathParam("id") String id) throws NodeException {
+	public GroupLoadResponse get(@PathParam("id") String id, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
 			GroupLoadResponse response = new GroupLoadResponse(null, ResponseInfo.ok("Successfully loaded group"), UserGroup.TRANSFORM2REST.apply(group));
+			if (perms != null && perms.perms) {
+				response.setPerms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.setperm, ObjectPermission.userassignment).apply(group).getRight());
+			}
 			trx.success();
 			return response;
 		}

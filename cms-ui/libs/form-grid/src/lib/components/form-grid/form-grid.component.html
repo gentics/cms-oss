@@ -237,6 +237,7 @@
                                         [elementConfig]="selectedElementConfiguration()!"
                                         [elementSchema]="selectedElementSchema()!"
                                         [mode]="mode()"
+                                        [languages]="languages()"
                                         (elementChange)="upsetElementChanges($event)"
                                         (elementSchemaChange)="updateElementSchema($event)"
                                         (validChange)="definitionValid.set($event)"
@@ -257,6 +258,7 @@
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()"
                                     [mode]="mode()"
+                                    [languages]="languages()"
                                     (elementChange)="upsetElementChanges($event)"
                                     (validChange)="settingsValid.set($event)"
                                 ></gtx-form-element-settings>

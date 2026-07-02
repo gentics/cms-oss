@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { AbstractControl, ValidationErrors, Validator } from '@angular/forms';
-import { FormSelectOptionValue } from '@gentics/cms-models';
 import { cancelEvent } from '@gentics/common';
 import { BaseFormElementComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { DefaultableFormSelectOptionValue } from '../../models';
 
 @Component({
     selector: 'gtx-form-options-input',
@@ -15,10 +15,13 @@ import { BaseFormElementComponent, generateFormProvider, generateValidatorProvid
     ],
     standalone: false,
 })
-export class FormOptionsInputComponent extends BaseFormElementComponent<FormSelectOptionValue[]> implements Validator {
+export class FormOptionsInputComponent extends BaseFormElementComponent<DefaultableFormSelectOptionValue[]> implements Validator {
 
     @Input()
     public placeholder: string;
+
+    @Input()
+    public languages: string[] = [];
 
     public invalidIndices: Set<number> = new Set();
 
@@ -74,6 +77,23 @@ export class FormOptionsInputComponent extends BaseFormElementComponent<FormSele
         // Create a clone so changes are detected
         const newItems = [...this.value || []];
         newItems[index].value = value as string;
+        for (const lang of this.languages) {
+            const option = newItems[index];
+            if (
+                !option.label[lang]
+                // eslint-disable-next-line no-underscore-dangle
+                || option._defaulted?.includes?.(lang)
+            ) {
+                option.label[lang] = value as string;
+                // eslint-disable-next-line no-underscore-dangle
+                option._defaulted ??= [];
+                // eslint-disable-next-line no-underscore-dangle
+                if (!option._defaulted.includes(lang)) {
+                    // eslint-disable-next-line no-underscore-dangle
+                    option._defaulted.push(lang);
+                }
+            }
+        }
         this.triggerChange(newItems);
     }
 }

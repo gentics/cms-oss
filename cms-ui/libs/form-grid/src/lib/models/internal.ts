@@ -1,4 +1,4 @@
-import { FormElement, FormSchemaProperty } from '@gentics/cms-models';
+import { FormElement, FormSchemaProperty, FormSelectOptionValue } from '@gentics/cms-models';
 
 export const ELEMENT_MIME = 'application/x-form-grid-element';
 export const CLIPBOARD_MIME = 'application/x-formgrid-clipboard';
@@ -39,4 +39,14 @@ export interface ElementInterPageMoveEvent {
     elementId: string;
     fromPage: number;
     toPage: number;
+}
+
+export interface DefaultableFormSelectOptionValue extends FormSelectOptionValue {
+    /**
+     * Internally used to determine which labels are to be defaulted to the value.
+     * This is needed as there's otherwise no way to distinguish a label from a user,
+     * and one that has been defaulted.
+     */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    _defaulted?: string[];
 }

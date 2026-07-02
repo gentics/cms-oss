@@ -22,6 +22,7 @@ export class FormElementSettingsComponent {
     public readonly elementSchema = input<FormSchemaProperty>();
 
     public readonly mode = input.required<FormGridEditMode>();
+    public readonly languages = input.required<string[]>();
     public readonly validChange = output<boolean>();
 
     public readonly visibleSettings = computed(() => {

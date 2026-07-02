@@ -29,6 +29,7 @@ export class FormElementDefinitionComponent {
     public readonly elementSchema = model.required<FormSchemaProperty>();
 
     public readonly validChange = output<boolean>();
+    public readonly languages = input.required<string[]>();
 
     public readonly controls = computed(() => {
         return this.config().controls || {};

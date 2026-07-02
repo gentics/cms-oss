@@ -3,11 +3,11 @@ import {
     FormElement,
     FormElementConfiguration,
     FormSchemaProperty,
-    FormSelectOptionValue,
     FormSettingConfiguration,
     I18nString,
 } from '@gentics/cms-models';
 import { getValueByPath, setByPath } from '@gentics/common';
+import { DefaultableFormSelectOptionValue } from '../../models';
 import { isSettingVisible } from '../../utils/conditions';
 
 @Component({
@@ -89,9 +89,19 @@ export class DynamicFormTranslationsComponent {
             if (!Array.isArray(data)) {
                 return data;
             }
-            const opt: FormSelectOptionValue | null = data?.[index];
+            const opt: DefaultableFormSelectOptionValue | null = data?.[index];
             if (opt != null) {
                 opt.label = value || {};
+                // eslint-disable-next-line no-underscore-dangle
+                if (Array.isArray(opt._defaulted)) {
+                    // Always from active-language as we only update one lang at a time
+                    // eslint-disable-next-line no-underscore-dangle
+                    const idx = opt._defaulted.indexOf(this.activeLanguage());
+                    if (idx > -1) {
+                        // eslint-disable-next-line no-underscore-dangle
+                        opt._defaulted.splice(idx, 1);
+                    }
+                }
             }
             return data;
         });

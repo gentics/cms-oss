@@ -33,6 +33,7 @@ export class DynamicFormSettingsComponent {
     public readonly elementSchema = model<FormSchemaProperty>();
 
     public readonly disabled = input.required<boolean>();
+    public readonly languages = input.required<string[]>();
     public readonly validChange = output<boolean>();
 
     public readonly visibleSettings = computed(() => {

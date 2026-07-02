@@ -20,6 +20,7 @@
         [elementConfig]="elementConfig()"
         [elementSchema]="elementSchema()"
         [disabled]="mode() === FormGridEditMode.NONE"
+        [languages]="languages()"
         (elementChange)="element.set($event)"
         (validChange)="validChange.emit($event)"
     />

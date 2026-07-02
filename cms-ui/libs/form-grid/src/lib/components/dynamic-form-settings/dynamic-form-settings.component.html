@@ -122,6 +122,7 @@
                     [label]="(setting.labelI18n | gtxI18nObject) + (setting.required ? '*' : '')"
                     [placeholder]="setting.placeholderI18n | gtxI18nObject"
                     [required]="setting.required ?? false"
+                    [languages]="languages()"
                 />
             }
 

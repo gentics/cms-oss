@@ -60,6 +60,10 @@ gtx-form-element-container {
 
                 transition: inherit;
                 border-color: inherit;
+
+                input {
+                    background: none;
+                }
             }
 
             .addon-button {

@@ -259,8 +259,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
             obj.id,
           )}
           customOption={utils.getCMSCustomOption(
-            formState.data,
-            jsonpath,
+            formState.schema,
             obj.id,
           )}
           handleSearch={props.handleSearch}

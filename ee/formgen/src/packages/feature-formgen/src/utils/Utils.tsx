@@ -630,13 +630,14 @@ export function getPossibleValues(
  * (`data.properties[id]`). Returns true only when the backend explicitly set it.
  */
 export function getCMSCustomOption(
-  data: IData,
-  jsonpath: string,
+  schema: ISchema,
   id?: string,
 ): boolean {
-
-  const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
-  return elementState?.customOption === true;
+  if (!id) {
+    return false;
+  }
+  const elementSchema = getSchemaForElement(schema, id);
+  return elementSchema?.customOption === true;
 }
 
 export function getLoading(formState: FormState, jsonpath: string): boolean {

@@ -1,0 +1,77 @@
+{
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"input_no_placeholder": {
+				"type": "string",
+				"updateOnChange": false,
+				"mandatory": false,
+				"isList": false,
+				"name": "input_no_placeholder",
+				"validation": {}
+			},
+			"input_placeholder": {
+				"type": "string",
+				"updateOnChange": false,
+				"mandatory": false,
+				"isList": false,
+				"name": "input_placeholder",
+				"validation": {}
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "input_no_placeholder",
+						"label": {
+							"de": "Ohne Placeholder",
+							"en": "No placeholder"
+						},
+						"description": {
+							"de": "Das beschreibt das Element",
+							"en": "This describes the element"
+						},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					},
+					{
+						"type": "property",
+						"id": "input_placeholder",
+						"label": {
+							"de": "Das ist der Placeholder",
+							"en": "This comes from the placeholder"
+						},
+						"description": {
+							"de": "Das beschreibt das Element",
+							"en": "This describes the element"
+						},
+						"formGridOptions": {
+							"numberOfLines": 1
+						}
+					}
+				]
+			}
+		]
+	}
+}

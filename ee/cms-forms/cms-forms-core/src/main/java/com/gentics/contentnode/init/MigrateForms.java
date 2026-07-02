@@ -4,6 +4,7 @@ import static com.gentics.contentnode.etc.FormDataUtils.FORM_GRID_OPTIONS;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -291,7 +292,7 @@ public class MigrateForms extends InitJob {
 
 	@Override
 	public void execute() throws NodeException {
-		File customMigrationScriptFile = getCustomMigrationScriptFile();
+		URI customMigrationScriptFile = getCustomMigrationScriptFile();
 		if (customMigrationScriptFile != null) {
 			sharedData = new Binding();
 			shell = new GroovyShell(sharedData);
@@ -384,7 +385,7 @@ public class MigrateForms extends InitJob {
 	 * Find the custom forms migration file (if present)
 	 * @return custom migration file or null if not found
 	 */
-	protected File getCustomMigrationScriptFile() {
+	protected URI getCustomMigrationScriptFile() {
 		String confPath = ConfigurationValue.CONF_PATH.get();
 		String configFiles = ConfigurationValue.CONF_FILES.get();
 
@@ -401,10 +402,10 @@ public class MigrateForms extends InitJob {
 					return file.isFile() && Strings.CI.equals(file.getName(), CUSTOM_MIGRATION_SCRIPT_NAME);
 				})).findFirst();
 				if (optFile.isPresent()) {
-					return optFile.get();
+					return optFile.get().toURI();
 				}
 			} else if (configFile.exists() && Strings.CI.equals(configFile.getName(), CUSTOM_MIGRATION_SCRIPT_NAME)) {
-				return configFile;
+				return configFile.toURI();
 			}
 		}
 
@@ -737,7 +738,7 @@ public class MigrateForms extends InitJob {
 
 		// make inactive elements hidden
 		if (!active) {
-			uiProperty.withObjectProperty(FORM_GRID_OPTIONS).put("hidden", true);
+			uiPropertyRef.get().withObjectProperty(FORM_GRID_OPTIONS).put("hidden", true);
 		}
 
 		// add the schema property to the schema

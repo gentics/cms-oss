@@ -61,11 +61,7 @@
 						},
 						"description": {},
 						"formGridOptions": {
-							"numberOfLines": 1,
-							"placeholder": {
-								"de": "Gib was ein",
-								"en": "Enter something"
-							}
+							"numberOfLines": 1
 						}
 					},
 					{

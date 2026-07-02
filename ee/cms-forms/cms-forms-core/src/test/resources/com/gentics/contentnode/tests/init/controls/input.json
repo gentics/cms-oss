@@ -14,10 +14,6 @@
 				"de": true,
 				"en": true
 			},
-			"placeholder_i18n": {
-				"de": "Gib was ein",
-				"en": "Enter something"
-			},
 			"validation_i18n": null,
 			"value_i18n": null,
 			"minVal_i18n": null,
@@ -38,7 +34,6 @@
 				"en": "Not mandatory"
 			},
 			"mandatory_i18n": null,
-			"placeholder_i18n": null,
 			"validation_i18n": null,
 			"value_i18n": null,
 			"minVal_i18n": null,

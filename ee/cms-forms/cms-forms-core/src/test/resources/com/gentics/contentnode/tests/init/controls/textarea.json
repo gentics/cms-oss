@@ -10,9 +10,6 @@
 				"de": "Mehrzeilig"
 			},
 			"mandatory_i18n": null,
-			"placeholder_i18n": {
-				"de": "Gib hier was ein"
-			},
 			"maxCharCount_i18n": {
 				"de": 200
 			}

@@ -38,7 +38,6 @@ import com.gentics.contentnode.rest.model.formtype.BaseSetting;
 import com.gentics.contentnode.rest.model.formtype.BlockConfig;
 import com.gentics.contentnode.rest.model.formtype.Blocks;
 import com.gentics.contentnode.rest.model.formtype.BooleanSetting;
-import com.gentics.contentnode.rest.model.formtype.Condition;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.ElementConfig;
@@ -109,7 +108,9 @@ public class Migration {
 		"validation",
 		"select_type",
 		"element_to_check",
-		"value_to_check");
+		"value_to_check",
+		"tooltip",
+		"placeholder");
 
 	/**
 	 * List of unmigrated properties per element type ID
@@ -155,7 +156,7 @@ public class Migration {
 	 * List of property ids, which are backend properties (have the backend flag set)
 	 */
 	public final static List<String> BACKEND_PROPERTIES = Arrays.asList("minValue", "maxValue", "maxLength", "maxFilesize", "allowedTypes",
-			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions");
+			"mailsubject", "mailtemplate", "mailsource", "defaultValue", "selectOptions", "customOption");
 
 	/**
 	 * List of property ids, which should be migrated to "string" instead of "translation"
@@ -756,12 +757,7 @@ public class Migration {
 			isList.propertyPath = "isList";
 			control.settings.add(isList);
 
-			BooleanSetting radio = new BooleanSetting("radio", Map.of("de", "Radio Buttons", "en", "Radio Buttons"));
-			try {
-				radio.condition = mapper.readValue("{\"source\":{\"setting\":\"isList\"},\"equals\": false}", Condition.class);
-			} catch (JsonProcessingException e) {
-				throw new RuntimeException(e);
-			}
+			BooleanSetting radio = new BooleanSetting("radio", Map.of("de", "Radio Buttons/Checkboxen", "en", "Radio Buttons/Checkboxes"));
 			control.settings.add(radio);
 
 			break;

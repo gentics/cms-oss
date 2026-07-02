@@ -42,10 +42,7 @@
 						},
 						"description": {},
 						"formGridOptions": {
-							"numberOfLines": 5,
-							"placeholder": {
-								"de": "Gib hier was ein"
-							}
+							"numberOfLines": 5
 						}
 					}
 				]

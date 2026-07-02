@@ -1,59 +1,56 @@
 {
-    "adminEmailAddress": "",
-    "adminEmailSubject": {},
-    "adminEmailPageId": 0,
-    "adminEmailNodeId": 0,
-    "adminEmailTemplate": {},
-    "successPageId": 4711,
-    "successNodeId": 42,
-    "successUrl": {},
-    "templateContext": "theme-red",
-    "schema": {
-        "properties": {
-            "file_85f0431b_ecfd_40a6_b87d_26255767d335": {
-                "type": "binary",
-                "updateOnChange": false,
-                "validation": {
-                    "binary": {
-                        "maxFilesize": 20.0,
-                        "allowedTypes": ["image"]
-                    }
-                },
-                "mandatory": false,
-                "isList": false,
-                "name": "file_85f0431b_ecfd_40a6_b87d_26255767d335"
-            }
-        }
-    },
-    "ui-schema": {
-        "formname": {
-            "de": "Test Form",
-            "en": "Test Form"
-        },
-        "formdescription": {
-            "de": "This is the Test Form",
-            "en": "This is the Test Form"
-        },
-        "pages": [
-            {
-                "elements": [
-                    {
-                        "type": "property",
-                        "id": "file_85f0431b_ecfd_40a6_b87d_26255767d335",
-                        "label": {
-                            "de": "Ein Bild"
-                        },
-                        "description": {
-                            "de": "Ein Bild von dir bitte!"
-                        },
-                        "formGridOptions": {
-                            "tooltip": {
-                                "de": "Bitte Bitte"
-                            }
-                        }
-                    }
-                ]
-            }
-        ]
-    }
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"file_85f0431b_ecfd_40a6_b87d_26255767d335": {
+				"type": "binary",
+				"updateOnChange": false,
+				"validation": {
+					"binary": {
+						"maxFilesize": 20.0,
+						"allowedTypes": [
+							"image"
+						]
+					}
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "file_85f0431b_ecfd_40a6_b87d_26255767d335"
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "file_85f0431b_ecfd_40a6_b87d_26255767d335",
+						"label": {
+							"de": "Ein Bild"
+						},
+						"description": {
+							"de": "Ein Bild von dir bitte!"
+						}
+					}
+				]
+			}
+		]
+	}
 }

@@ -121,6 +121,13 @@ The following properties will not be migrated, because their functionality is no
 * @description@
 * @mandatory@
 * @validation@
+* @tooltip@
+* @placeholder@
+
+NOTE: The properties @tooltip@ and @placeholder@ are not migrated, because in FormGen, the shown "tooltip" is taken
+from the @description@ of the control, and the shown "placeholder" is the control's @label@. In cases where the tooltip and/or placeholder
+shall overwrite the description/label of the control in a form, a "Custom form migration":#custom-form-migration script like shown in the
+example below can be used.
 
 h4. Added configuration
 
@@ -219,4 +226,15 @@ The script may modify the @property@ and @uiProperty@ variables as shown in the 
 if (element && element.columns_i18n && element.columns_i18n.de) {
     uiProperty.formGridOptions.numberOfColumns = element.columns_i18n.de as Integer
 }
+
+// Migrate the tooltip to the description
+if (element && element.tooltip_i18n) {
+    uiProperty.description = element.tooltip_i18n
+}
+
+// Migrate the placeholder to the label
+if (element && element.placeholder_i18n) {
+    uiProperty.label = element.placeholder_i18n
+}
+
 </shell>

@@ -336,10 +336,6 @@ export interface FormBaseSetting {
      */
     descriptionI18n?: I18nString;
     /**
-     * Placeholder text which is displayed if nothing has been entered/selected yet.
-     */
-    placeholderI18n?: I18nString;
-    /**
      * If the editor is required to fill out the setting
      */
     required?: boolean;

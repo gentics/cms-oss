@@ -92,11 +92,22 @@ function DateTimeElement(props: IFormComponentAttributes) {
     // The RendererScreen on web expects measureLayout to be present to calculate scroll position.
     // We delegate this to the inner inputContainerRef which corresponds to the actual DOM element.
     if (refInput.current && !refInput.current.measureLayout) {
-        refInput.current.measureLayout = (relativeTo: any, onSuccess: any, onFail: any) => {
-            if (inputContainerRef.current && inputContainerRef.current.measureLayout) {
-                inputContainerRef.current.measureLayout(relativeTo, onSuccess, onFail); 
-            }
-        };
+      refInput.current.measureLayout = (
+        relativeTo: any,
+        onSuccess: any,
+        onFail: any,
+      ) => {
+        if (
+          inputContainerRef.current &&
+          inputContainerRef.current.measureLayout
+        ) {
+          inputContainerRef.current.measureLayout(
+            relativeTo,
+            onSuccess,
+            onFail,
+          );
+        }
+      };
     }
     // IMPORTANT: No dependency array [] here!
     // We need to re-register the ref on every render so the parent knows about the current error state.
@@ -129,20 +140,20 @@ function DateTimeElement(props: IFormComponentAttributes) {
     let m: Moment | null = mServer.isValid()
       ? mServer
       : mIso.isValid()
-      ? mIso
-      : mTime.isValid()
-      ? mTime
-      : mDate.isValid()
-      ? mDate
-      : null;
+        ? mIso
+        : mTime.isValid()
+          ? mTime
+          : mDate.isValid()
+            ? mDate
+            : null;
 
     if (m) {
       setDateValue(m);
       const display = isTimeField
         ? m.format('HH:mm')
         : schema.dateOnly
-        ? m.format('DD.MM.YYYY')
-        : m.format('DD.MM.YYYY HH:mm');
+          ? m.format('DD.MM.YYYY')
+          : m.format('DD.MM.YYYY HH:mm');
       setInputValue(display);
       if (datevalue !== '') {
         handleAnimationForFocus();
@@ -197,17 +208,16 @@ function DateTimeElement(props: IFormComponentAttributes) {
   /* outside click handling for portal                                    */
   /* -------------------------------------------------------------------- */
   useEffect(() => {
-    // updateOnChange beim ersten Mal, außer readOnly
-    if (!open && props.editable) {
-      handleBlur();
-    }
-
     function handleDocClick(e: MouseEvent | TouchEvent) {
       const target = e.target as Node;
       const inPortal = portalRef.current?.contains(target);
       const inInput = inputContainerRef.current?.contains(target);
 
       if (open && !inPortal && !inInput) {
+        setIsFocused(false); 
+        if ((inputValue === '' || !dateValue || dateValue === '')) {
+          handleAnimationForBlur();
+        }
         setOpen(false);
       }
     }
@@ -224,40 +234,52 @@ function DateTimeElement(props: IFormComponentAttributes) {
   /* handlers                                                             */
   /* -------------------------------------------------------------------- */
   const handleArrowToggle = (e: any) => {
-      if (!props.editable) return;
-      if (isFocused && open) {
-        // Dropdown ist offen -> schließen
-        setIsFocused(false);
-        handleAnimationForBlur();
-        if (refInput.current && typeof refInput.current.blur === 'function') {
-          refInput.current.blur();
-        }
-        handleBlur();
-      } else {
-        // Dropdown ist geschlossen -> öffnen und fokussieren
-        setIsFocused(true);
-        handleAnimationForFocus();
-        if (refInput.current && typeof refInput.current.focus === 'function') {
-          refInput.current.focus();
-        }
-        handleFocus();
+    if (!props.editable) return;
+    if (isFocused && open) {
+      // Dropdown ist offen -> schließen
+      setIsFocused(false);
+      handleAnimationForBlur();
+      if (refInput.current && typeof refInput.current.blur === 'function') {
+        refInput.current.blur();
       }
-    };
+      handleBlur();
+    } else {
+      // Dropdown ist geschlossen -> öffnen und fokussieren
+      setIsFocused(true);
+      handleAnimationForFocus();
+      if (refInput.current && typeof refInput.current.focus === 'function') {
+        refInput.current.focus();
+      }
+      handleFocus();
+    }
+  };
 
-  const onChangeWeb = (val: string | Moment) => {
+  /**
+   * Returns the freshly computed moment + formatted string instead of relying
+   * on state. setDateValue/setInputValue are async, so reading dateValue or
+   * inputValue right after this call would yield stale values. Returning them
+   * lets callers use the actual values synchronously in the same render.
+   *
+   * See Bug Issues: SUP-19048 & SUP-19841
+   */
+  const onChangeWeb = (
+    val: string | Moment,
+  ): { m: Moment | ''; formatted: string } => {
     if (!val || (typeof val === 'string' && val.trim() === '')) {
       setDateValue('');
+      setInputValue('');
       handleDateChange(props, '', isTimeField);
-      return;
+      return { m: '', formatted: '' };
     }
     const m = moment.isMoment(val) ? val : moment(val);
-    setDateValue(m);
     const formatted = isTimeField
       ? m.format('HH:mm')
       : schema.dateOnly
-      ? m.format('DD.MM.YYYY')
-      : m.format('DD.MM.YYYY HH:mm');
+        ? m.format('DD.MM.YYYY')
+        : m.format('DD.MM.YYYY HH:mm');
+    setDateValue(m);
     setInputValue(formatted);
+    return { m, formatted };
   };
 
   /**
@@ -295,8 +317,8 @@ function DateTimeElement(props: IFormComponentAttributes) {
     const m = isTimeField
       ? moment(val, 'HH:mm', true)
       : schema.dateOnly
-      ? moment(val, 'DD.MM.YYYY', true)
-      : moment(val, 'DD.MM.YYYY HH:mm', true);
+        ? moment(val, 'DD.MM.YYYY', true)
+        : moment(val, 'DD.MM.YYYY HH:mm', true);
     setDateValue(m);
     setInputValue(val);
   };
@@ -333,7 +355,9 @@ function DateTimeElement(props: IFormComponentAttributes) {
           ? t('form_accessibility_datepicker_input_error_hint', {
               error: localErrMsg,
             })
-          : t('form_accessibility_datepicker_input_hint', { label: labelText })
+          : t('form_accessibility_datepicker_input_hint', {
+              label: labelText,
+            })
       }
       accessibilityState={{
         disabled: !props.editable,
@@ -432,7 +456,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
                 : formElementWrapperTheme.dropdownIcon.color
             }
           />
-        </Pressable>
+        </Pressable>,
       ]}
     />
   );
@@ -465,7 +489,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-            },  
+            },
             placeholderAnimatedStyle,
             placeholderTextAnimatedStyle,
             props.error && props.editable && styles.errorDatePickerLabel,
@@ -517,10 +541,11 @@ function DateTimeElement(props: IFormComponentAttributes) {
           }}
           closeOnClickOutside={true}
           onChange={(val: any) => {
-            onChangeWeb(val);
+            const { m, formatted } = onChangeWeb(val);
             if (schema.dateOnly) {
               setOpen(false);
-              handleBlur(true);
+              setIsFocused(false);
+              handleDateChange(props, m, isTimeField, formatted);
             }
           }}
           className="custom-datetime"

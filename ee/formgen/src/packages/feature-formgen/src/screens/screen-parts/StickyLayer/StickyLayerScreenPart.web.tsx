@@ -111,17 +111,6 @@ const StickyLayerScreenPart: React.FC<IStickyLayerProps> = (props) => {
                     disabled={props.uiState.loading}
                   />
                 )}
-                {hasPages && (
-                  <ExpertSearchButton
-                    t={t}
-                    onPress={() =>
-                      props.handleExpertSearch
-                        ? props.handleExpertSearch()
-                        : () => {}
-                    }
-                    disabled={props.uiState.loading}
-                  />
-                )}
               </>
             ) : isDialogFormSubmit ? (
               <>

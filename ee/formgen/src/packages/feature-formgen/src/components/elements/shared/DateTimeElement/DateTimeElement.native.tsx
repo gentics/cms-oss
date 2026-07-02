@@ -291,8 +291,8 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
       prevDisplayRef.current = disp;
       hadValueOnOpenRef.current = !!disp;
 
-      placeholderTopSV.value = withSpring(4, { stiffness, damping });
-      placeholderFontSV.value = withSpring(12, { stiffness, damping });
+      placeholderTopSV.value = withSpring(styles.datePickerLabelActive.top, { stiffness, damping });
+      placeholderFontSV.value = withSpring(styles.datePickerLabelActive.fontSize, { stiffness, damping });
     } else {
       const s = String(v);
       setDisplayValue(s);

@@ -43,6 +43,8 @@ export class DynamicFormSettingsComponent {
         return this.settings().filter((setting) => isSettingVisible(setting, elConf, el, elSchema));
     });
 
+    private readonly elementId = computed(() => this.element().id);
+
     @HostBinding('class.has-settings')
     public hasVisibleSettings = false;
 
@@ -56,14 +58,17 @@ export class DynamicFormSettingsComponent {
 
         effect((cleanup) => {
             const settings = this.settings() || [];
-            const disabled = this.disabled();
+            // only needed to re-create the whole form if the element-id changes.
+            this.elementId();
+
+            // Prevents changes to the data to re-create the entire form
+            const disabled = untracked(() => this.disabled());
+            const schema = untracked(() => this.elementSchema());
+            const el = untracked(() => this.element());
+
             const controlSubs: Subscription[] = [];
             this.form = new UntypedFormGroup({});
             setEnabled(this.form, !disabled);
-
-            // Prevents changes to the data to re-create the entire form
-            const schema = untracked(() => this.elementSchema());
-            const el = untracked(() => this.element());
 
             // Create the form from the settings with the initial data and validators
             for (const setting of settings) {

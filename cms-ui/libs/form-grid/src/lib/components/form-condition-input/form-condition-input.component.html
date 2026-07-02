@@ -2,6 +2,7 @@
     <gtx-select
         class="source-type-selector"
         [label]="'form_grid.condition_source_type' | gtxI18n"
+        [clearable]="true"
         [value]="sourceType()"
         (valueChange)="updateSourceType($event)"
     >

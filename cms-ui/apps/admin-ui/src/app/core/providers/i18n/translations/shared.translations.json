@@ -17,7 +17,7 @@
     },
     "assign_group_to_users_title": {
         "en": "Assign Users to Group \"{{ entityName }}\"",
-        "de": "Benutzer der Gruppe „{{ entityName }} zuweisen"
+        "de": "Benutzer der Gruppe „{{ entityName }}“ zuweisen"
     },
     "assign_group_to_users_button": {
         "en": "Assign Users to Group",

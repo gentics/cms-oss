@@ -1,7 +1,7 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, GroupBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Group, GroupListOptions, GroupListResponse, Raw } from '@gentics/cms-models';
+import { GcmsPermission, Group, GroupListOptions, GroupListResponse, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,7 +17,11 @@ export interface LoadGroupChildrenOptions {
     groupId: number;
 }
 
-export type GroupTableLoaderOptions = LoadUserGroupOptions | LoadGroupChildrenOptions;
+export interface LoadAssignableOnlyOptions {
+    assignableOnly: boolean,
+}
+
+export type GroupTableLoaderOptions = LoadUserGroupOptions | LoadGroupChildrenOptions | LoadAssignableOnlyOptions;
 
 const isLoadGroupChildrenOptions = (options: GroupTableLoaderOptions): options is LoadGroupChildrenOptions =>
     options != null && typeof options === 'object' && Number.isInteger((options as LoadGroupChildrenOptions).groupId);
@@ -47,16 +51,19 @@ export class GroupTableLoaderService extends BaseTableLoaderService<Group<Raw>, 
 
     protected loadGroups(
         options: TableLoadOptions,
-        additionalOptions?: LoadUserGroupOptions,
+        additionalOptions?: GroupTableLoaderOptions,
     ): Observable<EntityPageResponse<GroupBO>> {
         const loadOptions: GroupListOptions = {
             ...this.createDefaultOptions(options),
             perms: true,
         };
+        if ((additionalOptions as any)?.assignableOnly) {
+            loadOptions.permitted = GcmsPermission.USER_ASSIGNMENT;
+        }
         let loader: Observable<GroupListResponse>;
 
-        if (additionalOptions?.userId) {
-            loader = this.api.user.getUserGroups(additionalOptions.userId, loadOptions);
+        if ((additionalOptions as any)?.userId) {
+            loader = this.api.user.getUserGroups((additionalOptions as any).userId, loadOptions);
         } else {
             loader = this.api.group.listGroups(loadOptions);
         }

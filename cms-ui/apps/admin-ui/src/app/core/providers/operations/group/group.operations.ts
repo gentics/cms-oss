@@ -4,6 +4,7 @@ import { Injectable, Injector } from '@angular/core';
 import {
     AccessControlledType,
     EntityIdType,
+    GcmsPermission,
     Group,
     GroupCreateRequest,
     GroupPermissionsListOptions,
@@ -26,6 +27,7 @@ import { map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
+import { PermissionsService } from '../../permissions';
 
 /**
  * Operations on Groups.
@@ -40,6 +42,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         injector: Injector,
         private api: GcmsApi,
         private entities: EntityManagerService,
+        private permissions: PermissionsService,
         private appState: AppStateService,
         private notification: I18nNotificationService,
     ) {
@@ -93,7 +96,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Get a single group and add it to the AppState.
      */
     get(userId: number): Observable<Group<Raw>> {
-        return this.api.group.getGroup(userId).pipe(
+        return this.api.group.getGroup(userId, { perms: true }).pipe(
+            tap((res: GroupResponse) => this.permissions.storePermissions(AccessControlledType.GROUP_ADMIN, res.group.id, res.perms || GcmsPermission.VIEW)),
             map((res: GroupResponse) => res.group),
             // update state with server response
             tap((group: Group<Raw>) => this.entities.addEntity(this.entityIdentifier, group)),

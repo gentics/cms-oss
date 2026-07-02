@@ -34,7 +34,7 @@ import { map, takeUntil, tap } from 'rxjs/operators';
     templateUrl: './group-detail.component.html',
     styleUrls: ['group-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOperations> implements OnInit {
 
@@ -168,4 +168,14 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         this.fgProperties.markAsPristine();
     }
 
+    protected isGroupAssignable(): Observable<boolean> {
+        if (this.currentEntity) {
+            return this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN, this.currentEntity.id).pipe(
+                map(typePermissions => {
+					return typePermissions.hasPermission(GcmsPermission.USER_ASSIGNMENT);
+				}),
+            );
+        }
+        return of(false);
+    }
 }

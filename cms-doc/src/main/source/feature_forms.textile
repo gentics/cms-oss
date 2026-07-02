@@ -54,14 +54,14 @@ NOTE: The +external+ flag is a property of the form *type*, not of an individual
 h4. Available control types
 
 |_. Control |_. Setting types used |_. Aggregate |_. Description |
-| +string+ | +translation+, +string+, +number+, +select+ | no | Single-line text input. Supports a placeholder, default value, maximum character length, and an optional regex-based validator. |
-| +number+ | +translation+, +string+, +number+ | no | Integer/numeric input. Supports a placeholder, default value, and minimum and maximum value constraints. |
-| +datetime+ | +translation+, +string+ | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder and default value. |
-| +time+ | +translation+, +string+ | no | Time input in +HH:MM+ format. Supports a placeholder and default value. |
+| +string+ | +translation+, +string+, +number+, +select+ | no | Single-line text input. Supports a placeholder (label), default value, maximum character length, and an optional regex-based validator. |
+| +number+ | +translation+, +string+, +number+ | no | Integer/numeric input. Supports a placeholder (label), default value, and minimum and maximum value constraints. |
+| +datetime+ | +translation+, +string+ | no | Date input in +yyyy-MM-dd+ format. Supports a placeholder (label) and default value. |
+| +time+ | +translation+, +string+ | no | Time input in +HH:MM+ format. Supports a placeholder (label) and default value. |
 | +boolean+ | +string+, +boolean+ | no | Checkbox control. Configures the value stored when checked and the default checked state. |
 | +catalog+ | +options+, +boolean+ | no | Selection control (dropdown or radio buttons). Editors define the available options as key-value pairs. An additional free-text option can optionally be enabled. |
-| +binary+ | +translation+, +number+, +boolean+, +select+ | no | File upload control. Configures a tooltip, maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
-| +usermail+ | +translation+, +number+, +select+ | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, tooltip, maximum length, email subject, and email template. |
+| +binary+ | +translation+, +number+, +boolean+, +select+ | no | File upload control. maximum file size in MB, whether multiple uploads are allowed, and a filter for allowed file types (images, videos, documents). |
+| +usermail+ | +translation+, +number+, +select+ | no | Email address input for the form submitter. When filled out, a confirmation email is sent to the entered address. Configures placeholder, maximum length, email subject, and email template. |
 
 h4. Available block types
 
@@ -87,16 +87,15 @@ h4. Control and block settings
 | +options+ | list of key-value pairs | +multiple+ (boolean or +"editable"+, optional) | Lets the form editor define the selectable options at authoring time. Set +multiple: true+ for multi-select, +false+ for single-select, or +"editable"+ to let the editor decide. |
 | +reference+ | CMS object reference | +referenceTypes+ (list, required), +publishAs+ (required: +content+, +url+, or +meshlink+), +multiple+ (boolean, optional) | A picker for referencing CMS objects (pages, files, or images). |
 
-h4. Configurable Element Settings (from +forms.yaml+)
+h4. Configurable Element Settings
 
-This section describes what can be configured *per element* as defined in +forms.yaml+. That file defines two form types (+generic+ / "Standard" and +poll+ / "Poll"). Each type provides *controls* (input elements that hold a value) and *blocks* (layout/structure elements without a value).
+This section describes what can be configured *per element* as defined in the formtype configuration (forms.yml).
 
 h5. Controls
 
 h6. +number+ - Number Input Field
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +placeholder+ | translation | false | — | Placeholder for this input field |
 | +defaultValue+ | string | true | — | Default value |
 | +minValue+ | number | true | +validation.minValue+ | Minimum value for number inputs |
 | +maxValue+ | number | true | +validation.maxValue+ | Maximum value for number inputs |
@@ -104,7 +103,6 @@ h6. +number+ - Number Input Field
 h6. +string+ - String Input Field
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +placeholder+ | translation | false | — | Placeholder for this input field |
 | +defaultValue+ | string | true | — | Default value |
 | +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
 | +validation+ | select | true | +validation.regexValidation+ | Predefined validator: *Telephone*, *Social Security Number* or *E-Mail* (each with a regex + error message) |
@@ -113,7 +111,6 @@ h6. +string+ - String Input Field
 h6. +datetime+ – Datetime Input Field
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +placeholder+ | translation | false | — | Placeholder for this input field |
 | +defaultValue+ | string | true | — | Default value |
 | +dateOnly+ | boolean | true | +dateOnly+ | Only a date (without time component) can be selected |
 
@@ -122,7 +119,6 @@ h6. +time+
 Same as +datetime+ but without the +dateOnly+ setting:
 
 |_. Setting |_. type |_. backend |_. Description |
-| +placeholder+ | translation | false | Placeholder for this input field |
 | +defaultValue+ | string | true | Default value |
 
 h6. +boolean+ – Checkbox
@@ -144,7 +140,6 @@ NOTE: +radio+ carries a +condition+ (+source.setting: isList+, +equals: false+),
 h6. +binary+ – File Upload
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +tooltip+ | translation | false | — | Tooltip of the upload element |
 | +maxFilesize+ | number | true | +validation.binary.maxFilesize+ | Max. allowed filesize (MB) |
 | +allowedTypes+ | select | true | +validation.binary.allowedTypes+ | Selection list of allowed file types (the categories selected in the CMS — the same +allowedTypes+ that the plugin then resolves into +allowedFileTypes+ & +allowedFileNames+. The options should be defined in +config.yml+ of forms plugin). |
 | +multiple+ | boolean | true | +isList+ | Allow upload of multiple files |
@@ -154,8 +149,6 @@ h6. +usermail+ – User EMail Field
 Sends an email to the entered address after the form was submitted.
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +placeholder+ | translation | false | — | Placeholder for this input field |
-| +tooltip+ | translation | false | — | Tooltip of the user mail element |
 | +maxLength+ | number | true | +validation.maxLength+ | Maximum number of allowed characters |
 | +mailsubject+ | translation | true | — | Subject of the email sent to the user |
 | +mailtemplate+ | select | true | — | Email template if set then the defined template inside forms plugin and the configured +userEmailTemplateOptions+ is overwritten. |
@@ -165,7 +158,6 @@ h6. +adminmail+
 Element to specify which admin mail addresses submission notifications should be sent to. If such an element is present in the form, the form's +email+ property is ignored, and the recipients are instead taken from the selected option keys (which are mapped to the configured mail addresses). When no +adminmail+ element is present, mail sending falls back to the admin email configured on the form (+email+).
 
 |_. Setting |_. type |_. backend |_. propertyPath |_. Description |
-| +placeholder+ | translation | false | — | Placeholder for this input field |
 | +selectOptions+ | options | true | — | List of selectable key/value pairs |
 
 h5. Blocks (structure / layout)
@@ -187,7 +179,7 @@ In addition, each form type defines options on the form level, e.g.:
 
 h6. Captcha options (+captchaOptions+)
 
-Each option is defined by a +value+ (the identifier stored on the form) and a localized +labelI18n+. Both the +generic+ and the +poll+ form type offer the same set of options:
+Each option is defined by a +value+ (the identifier stored on the form) and a localized +labelI18n+.
 
 |_. Value |_. Label (en) |_. Label (de) |_. Description |
 | +recaptcha_checkbox+ | Recaptcha: Checkbox | Recaptcha: Häckchen | Google reCAPTCHA rendered as an explicit "I'm not a robot" checkbox |
@@ -195,8 +187,6 @@ Each option is defined by a +value+ (the identifier stored on the form) and a lo
 | +friendly_auto+ | Friendly Captcha | Friendly Captcha | Friendly Captcha that starts its verification automatically |
 | +friendly_button+ | Friendly Captcha: Button | Friendly Captcha: Button | Friendly Captcha triggered via a button |
 | +friendly_background+ | Friendly Captcha: Background | Friendly Captcha: Hintergrund | Friendly Captcha that runs in the background |
-
-NOTE: +captchaOptions+ only lists the variants an editor can *choose* from. The actual captcha is added to a form via the +recaptcha+ control element (see above).
 
 IMPORTANT: +captchaOptions+ only selects *which* captcha variant is used. The provider credentials and endpoints themselves — e.g. the reCAPTCHA / Friendly Captcha *site key*, *secret / verification key* and the verification URL — are *not* part of the form configuration. They must be configured in the forms plugin configuration (+config.yml+ of the forms plugin), the same place where e.g. the +binary+ +allowedTypes+ are defined.
 

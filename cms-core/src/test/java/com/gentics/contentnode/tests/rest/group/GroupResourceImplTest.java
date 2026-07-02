@@ -24,6 +24,7 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.response.GroupList;
+import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -99,6 +100,18 @@ public class GroupResourceImplTest {
 		assertThat(onlyAssignable)
 			.as("Assignable groups")
 			.matches(assignable -> assignable.getPerms().values().stream().noneMatch(perms -> perms.stream().noneMatch(p -> Permission.userassignment.equals(p))), "Only user assignable groups provided");
+	}
+
+	@Test
+	public void testGroupPerms() throws NodeException {
+		GroupLoadResponse response = assertRequiredPermissions(testGroup, "tester", "tester", restContext, 
+				target -> target.path("group").path(testGroup.getId().toString())
+					.queryParam("perms", Boolean.TRUE.toString().toLowerCase())
+					.request().get(GroupLoadResponse.class), 
+				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+				Triple.of(UserGroup.TYPE_GROUPADMIN, 1, PermHandler.PERM_VIEW));
+
+		assertThat(response.getPerms()).as("Group response with permissions").isNotNull().isNotEmpty();
 	}
 }
 

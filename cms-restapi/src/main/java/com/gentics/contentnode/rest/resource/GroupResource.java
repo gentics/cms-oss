@@ -120,6 +120,7 @@ public interface GroupResource {
 	/**
 	 * Load group with given ID
 	 * @param id local group ID
+	 * @param perms permission parameters
 	 * @return group response
 	 * @throws Exception
 	 */
@@ -129,7 +130,7 @@ public interface GroupResource {
 		@ResponseCode(code = 200, condition = "Group {id} exists."),
 		@ResponseCode(code = 404, condition = "Group {id} does not exist.")
 	})
-	GroupLoadResponse get(@PathParam("id") String id) throws Exception;
+	GroupLoadResponse get(@PathParam("id") String id, @BeanParam PermsParameterBean perms) throws Exception;
 
 	/**
 	 * List subgroups of the given group.<br>

@@ -13,7 +13,12 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -31,11 +37,20 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.forms.Migration;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -52,17 +67,25 @@ import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
+import com.gentics.contentnode.rest.model.formtype.FormFlow;
+import com.gentics.contentnode.rest.model.formtype.FormFlowStep;
+import com.gentics.contentnode.rest.model.formtype.FormFlows;
+import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
+import com.gentics.contentnode.rest.model.formtype.StringSetting;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
 import com.gentics.contentnode.testutils.ConfigBy;
+import com.gentics.contentnode.testutils.ConfigModifier;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Test cases for the FormDirective
  */
 @RunWith(value = Parameterized.class)
-@ConfigBy(FormTypeConfigurationModifier.class)
-public class FormDirectiveRenderTest {
+@ConfigBy(FormDirectiveRenderTest.class)
+public class FormDirectiveRenderTest implements ConfigModifier {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
@@ -118,16 +141,14 @@ public class FormDirectiveRenderTest {
 	static {
 		String key = "default";
 
-		String preview = "\n"
-				+ "<script>window.formPreviewData = {\n"
-				+ "  \"formId\" : %d,\n"
-				+ "  \"formType\" : \"generic\",\n"
-				+ "  \"uiSchema\" : null,\n"
-				+ "  \"cmsSid\" : %d,\n"
-				+ "  \"language\" : \"%s\"\n"
-				+ "};\n"
-				+ "</script>\n"
-				+ "<div id=\"root\" tabindex=\"0\" data-formID=\"%s\" data-culture=\"%s\" data-plugin-name=\"forms\"></div>";
+		String preview = "";
+		try (InputStream in = FormDirectiveRenderTest.class.getResourceAsStream("preview.txt")) {
+			StringWriter out = new StringWriter();
+			IOUtils.copy(in, out, Charset.forName("UTF-8"));
+			preview = out.toString();
+		} catch (IOException e) {
+			fail(e);
+		}
 
 		VTL_TEMPLATES.put(key, "#gtx_form($cms.tag.parts.form)");
 		HBS_TEMPLATES.put(key, "{{{gtx_form cms.tag.parts.form}}}");
@@ -456,5 +477,55 @@ public class FormDirectiveRenderTest {
 		}
 
 		return renderedTag;
+	}
+
+	@Override
+	public void accept(MapPreferences prefs) throws NodeException {
+		ObjectMapper mapper = new ObjectMapper();
+		YAMLMapper yamlMapper = new YAMLMapper();
+
+		FormTypeConfigurationMap formTypeConfiguration = new FormTypeConfigurationMap();
+
+		// prepare forms config
+		FormTypeConfiguration formsConfig = new FormTypeConfiguration(Map.of("de", "CMS Formular", "en", "CMS Form"),
+				"forms");
+		ControlConfig stringControl = new ControlConfig(Map.of("de", "Eingabefeld"));
+
+		StringSetting stringSetting = new StringSetting("rich", Map.of("de", "Reicher Text"));
+		stringSetting.backend = true;
+		stringSetting.richContent = true;
+		stringControl.settings = Arrays.asList(stringSetting);
+
+		formsConfig.controls = new Controls(Map.of("string", stringControl));
+
+		// add a dummy flow
+		formsConfig.flows = new FormFlows();
+		formsConfig.flows.add(new FormFlow("testFlow", Map.of("de", "Test Ablauf"), "test.flow", List.of(new FormFlowStep("test.flow.step", "test.flow.step.button", "test.flow.step.react.class"))));
+
+		try {
+			formsConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
+		} catch (JsonProcessingException e) {
+			throw new NodeException(e);
+		}
+		formTypeConfiguration.put(FormTypeConfigurationModifier.GENERIC_TYPE, formsConfig);
+
+		// prepare andp config
+		FormTypeConfiguration andpConfig = new FormTypeConfiguration(Map.of("de", "ANDP Formular", "en", "ANDP Form"), "acta-nova");
+		andpConfig.external = true;
+		try {
+			andpConfig.pluginConfiguration = mapper.readValue("{\"password\": \"supersecret\"}", ObjectNode.class);
+		} catch (JsonProcessingException e) {
+			throw new NodeException(e);
+		}
+		formTypeConfiguration.put(FormTypeConfigurationModifier.ANDP_TYPE, andpConfig);
+
+		prefs.set(FormConfigProvider.TYPES_CONFIG_PATH, formTypeConfiguration);
+
+		// add default translations
+		try (InputStream in = Migration.class.getResourceAsStream(Migration.FORMGEN_TRANSLATIONS_FILENAME)) {
+			prefs.set(FormConfigProvider.TRANSLATIONS_CONFIG_PATH, yamlMapper.readValue(in, FormGenTranslations.class));
+		} catch (IOException e) {
+			throw new NodeException("Error while reading translations", e);
+		}
 	}
 }

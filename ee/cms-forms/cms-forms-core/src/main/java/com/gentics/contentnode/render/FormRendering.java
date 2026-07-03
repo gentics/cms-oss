@@ -7,9 +7,11 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.FormGenProvider;
@@ -70,6 +72,18 @@ public class FormRendering {
 				ObjectNode formJson = new FormTransformer().withTransformationTarget(TransformationTarget.preview).transform(form);
 				formJson.put("language", language);
 
+				// load the form type configuration
+				Optional<FormTypeConfiguration> optConfig = Optional.ofNullable(FormConfigProvider.getConfig()).map(m -> m.get(form.getFormType()));
+				String pluginName = optConfig.map(c -> c.pluginName).orElse("");
+
+				// add plugin name and flows
+				formJson.put("pluginName", pluginName);
+				optConfig.map(c -> c.flows).ifPresent(flows -> {
+					ObjectMapper mapper = new ObjectMapper();
+					JsonNode flowsJsonNode = mapper.valueToTree(flows);
+					formJson.set("flows", flowsJsonNode);
+				});
+
 				StringBuilder preview = new StringBuilder();
 
 				preview.append("\n<script>window.formPreviewData = %s;\n</script>".formatted(formJson.toPrettyString()));
@@ -77,9 +91,6 @@ public class FormRendering {
 				for (String cssPath : FormGenProvider.getCSSPaths()) {
 					preview.append("\n<link rel=\"stylesheet\" href=\"%s\"/>".formatted(cssPath));
 				}
-
-				String pluginName = Optional.ofNullable(FormConfigProvider.getConfig())
-						.map(m -> m.get(form.getFormType())).map(c -> c.pluginName).orElse("");
 
 				String formId = MeshPublisher.getMeshUuid(form);
 

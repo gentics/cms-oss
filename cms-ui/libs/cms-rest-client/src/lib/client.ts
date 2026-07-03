@@ -554,8 +554,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         deleteData: (id, dataUuid) => this.executeMappedJsonRequest(DELETE, `/form/${id}/data/${dataUuid}`),
         getDataBinary: (id, dataUuid, binaryField) => this.executeMappedJsonRequest(GET, `/form/${id}/data/${dataUuid}/binary/${binaryField}`),
 
-        restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/restore/${id}`, null, options),
-        deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/delete/${id}`, null, options),
+        restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/${id}/restore`, null, options),
+        deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(DELETE, `/form/wastebin/${id}`, null, options),
 
         usageInPages: (options) => this.executeMappedJsonRequest(GET, '/form/usage/pages', null, options),
         usageInTemplates: (options) => this.executeMappedJsonRequest(GET, '/form/usage/templates', null, options),
@@ -602,7 +602,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id, options) => this.executeMappedJsonRequest(GET, `/image/load/${id}`, null, options),
         getMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/image/save/${id}`, body),
-        delete: (id, options) => this.executeMappedJsonRequest(DELETE, `/image/delete/${id}`, null, options),
+        delete: (id, options) => this.executeMappedJsonRequest(POST, `/image/delete/${id}`, null, options),
 
         move: (id, body) => this.executeMappedJsonRequest(POST, `/image/move/${id}`, body),
         moveMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/move', body),

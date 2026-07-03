@@ -40,6 +40,16 @@ public class StagedForm extends StagingBase {
 	private List<String> languages;
 
 	/**
+	 * Optional external ID
+	 */
+	private String externalId;
+
+	/**
+	 * Optional external Hash
+	 */
+	private String externalHash;
+
+	/**
 	 * Form data
 	 */
 	private JsonNode data;
@@ -95,6 +105,38 @@ public class StagedForm extends StagingBase {
 	 */
 	public void setLanguages(List<String> languages) {
 		this.languages = languages;
+	}
+
+	/**
+	 * External ID
+	 * @return external ID
+	 */
+	public String getExternalId() {
+		return externalId;
+	}
+
+	/**
+	 * Set the external ID
+	 * @param externalId external ID
+	 */
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
+	}
+
+	/**
+	 * External Hash
+	 * @return external Hash
+	 */
+	public String getExternalHash() {
+		return externalHash;
+	}
+
+	/**
+	 * Set the external Hash
+	 * @param externalHash external Hash
+	 */
+	public void setExternalHash(String externalHash) {
+		this.externalHash = externalHash;
 	}
 
 	/**

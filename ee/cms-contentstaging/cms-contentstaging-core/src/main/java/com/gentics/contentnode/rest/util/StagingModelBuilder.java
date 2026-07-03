@@ -1343,6 +1343,14 @@ public class StagingModelBuilder {
 		if (restModel.getLanguages() != null) {
 			form.setLanguages(restModel.getLanguages());
 		}
+
+		if (!StringUtils.isBlank(restModel.getExternalId())) {
+			form.setExternalId(restModel.getExternalId());
+		}
+		if (!StringUtils.isBlank(restModel.getExternalHash())) {
+			form.setExternalHash(restModel.getExternalHash());
+		}
+
 		if (restModel.getData() != null) {
 			FormDataUtils.handleElements(formTypeConfiguration, restModel.getData(), null, (element, elementType) -> {
 				String error = I18NHelper.get("form.form_type_configuration.element_type.notfound", elementType,
@@ -1381,6 +1389,9 @@ public class StagingModelBuilder {
 		model.setDescription(form.getDescription());
 
 		model.setLanguages(form.getLanguages());
+
+		model.setExternalId(form.getExternalId());
+		model.setExternalHash(form.getExternalHash());
 
 		ObjectNode copy = new FormTransformer()
 				.withTransformationTarget(TransformationTarget.toContentPackage)

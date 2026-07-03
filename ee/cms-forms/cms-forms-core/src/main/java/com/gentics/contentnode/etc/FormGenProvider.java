@@ -63,6 +63,8 @@ public class FormGenProvider implements ConfigurationService {
 		String fsPath = ConfigurationValue.FORMGEN_PATH.get();
 
 		if (StringUtils.isBlank(fsPath)) {
+			cssPaths.clear();
+			jsPaths.clear();
 			URL location = getClass().getProtectionDomain().getCodeSource().getLocation();
 
 			if (Strings.CI.equals(location.getProtocol(), "file")) {

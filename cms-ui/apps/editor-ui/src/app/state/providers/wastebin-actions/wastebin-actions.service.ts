@@ -224,9 +224,7 @@ export class WastebinActionsService {
                 }).toPromise();
                 break;
             case 'form':
-                worker = this.client.form.restoreMultipleFromWastebin({
-                    ids: removedIds,
-                }).toPromise();
+                worker = Promise.all(removedIds.map((id) => this.client.form.restoreFromWastebin(id).toPromise()));
                 break;
         }
 

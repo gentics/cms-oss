@@ -180,11 +180,17 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         let itemLang: Language;
         let available: boolean;
 
+        this.itemIdDeleted = this.item != null
+          && PublishableStateUtil.stateDeleted(this.item);
+
         if (this.item.type === 'page') {
             itemLang = this.nodeLanguages.find((lang) => lang.code === (this.item as Page).language);
             available = !!itemLang;
         } else if (this.item.type === 'form') {
-            itemLang = this.nodeLanguages.find((lang) => (lang.id === this.appState.now.folder.activeFormLanguage && ((this.item as Form).languages.includes(lang.code))));
+            itemLang = this.nodeLanguages.find((lang) => (
+                lang.id === this.appState.now.folder.activeFormLanguage
+                && ((this.item as Form).languages.includes(lang.code))
+            ));
             if (!itemLang) {
                 itemLang = this.nodeLanguages.find((lang) => (this.item as Form).languages.includes(lang.code));
             }
@@ -193,9 +199,6 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
             this.languageState = null;
             return;
         }
-
-        this.itemIdDeleted = this.item != null
-          && PublishableStateUtil.stateDeleted(this.item);
 
         this.languageState = {
             ...itemLang,

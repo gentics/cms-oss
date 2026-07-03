@@ -6,13 +6,14 @@ import {
     clickModalAction,
     dismissNotifications,
     FixtureFile,
+    ITEM_TYPE_FORM,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
     openContext,
     reroute,
     selectDateInPicker,
-    wait
+    wait,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -20,7 +21,11 @@ import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
 
 export function findList(page: Page, type: string): Locator {
-    return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    if (type === ITEM_TYPE_FORM) {
+        return page.locator('gtx-form-list');
+    } else {
+        return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    }
 }
 
 export function findRepoBrowserList(repoBrowser: Locator, type: string): Locator {
@@ -318,7 +323,7 @@ export async function createInternalLink(
 
         // If the handler didn't confirm/close the modal, we do it now
         if (await repoBrowser.isVisible()) {
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
         }
 
         // Fill out rest of the form
@@ -600,7 +605,7 @@ export async function setStringChipValue(chip: Locator, value: string | number):
 }
 
 export async function setDateChipValue(chip: Locator, value: Date): Promise<void> {
-    await chip.locator('.gtx-chip-input-value-inner-date').click();
+    await chip.locator('.gtx-chip-input-value-inner-date .box-wrapper').click();
     const datePickerModal = chip.page().locator('gtx-date-time-picker-modal');
     await selectDateInPicker(datePickerModal, value);
     await clickModalAction(datePickerModal, 'confirm');
@@ -611,7 +616,7 @@ export function findColorPickerPaletteColor(picker: Locator, color: string): Loc
 }
 
 export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
-    return picker.locator(`.palette .palette-entry`).nth(index);
+    return picker.locator('.palette .palette-entry').nth(index);
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
@@ -632,4 +637,3 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
         return pickedHexColor;
     });
 }
-

@@ -1,4 +1,11 @@
-import { AccessControlledType, CmsFormElementKeyI18nValuePair, FormSaveRequest, GcmsPermission, NodeFeature, Variant } from '@gentics/cms-models';
+import {
+    AccessControlledType,
+    CmsFormElementKeyI18nValuePair,
+    FormSaveRequest,
+    GcmsPermission,
+    NodeFeature,
+    Variant,
+} from '@gentics/cms-models';
 import { cloneWithSymbols } from '@gentics/common';
 import {
     clickNotificationAction,
@@ -29,7 +36,16 @@ import {
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Page, test } from '@playwright/test';
-import { editorAction, expectItemLanguageCode, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
+import {
+    editorAction,
+    expectItemLanguageCode,
+    expectItemOffline,
+    expectItemPublished,
+    findItem,
+    findList,
+    itemAction,
+    selectNode,
+} from './helpers';
 
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -40,6 +56,8 @@ test.describe('Form Management', () => {
     const NEW_FORM_NAME = 'Hello World';
     const CHANGE_FORM_NAME = 'Hello World again';
     const NEW_FORM_DESCRIPTION = 'This is an example text';
+
+    const FORM_TYPE_GENERIC = 'generic';
 
     const TEST_GROUP_BASE: GroupImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
@@ -91,6 +109,8 @@ test.describe('Form Management', () => {
             await IMPORTER.setupFeatures(TestSize.MINIMAL, {
                 [NodeFeature.FORMS]: true,
             });
+            const nodeId = IMPORTER.get(NODE_MINIMAL).id;
+            await IMPORTER.client.form.assignConfiguration(FORM_TYPE_GENERIC, nodeId).send();
             await IMPORTER.importData([FORM_ONE]);
         });
     });
@@ -134,6 +154,7 @@ test.describe('Form Management', () => {
         const form = modal.locator('gtx-form-properties');
 
         await form.locator('[formcontrolname="name"] input').fill(NEW_FORM_NAME);
+        await pickSelectValue(form.locator('[formcontrolname="formType"]'), FORM_TYPE_GENERIC);
         await form.locator('[formcontrolname="description"] input').fill(NEW_FORM_DESCRIPTION);
         await pickSelectValue(form.locator('[formcontrolname="languages"]'), [LANGUAGE_DE]);
 
@@ -205,6 +226,7 @@ test.describe('Form Management', () => {
         await expect(item).toBeVisible();
     });
 
+    // FIXME: To be fixed
     test('should be able to change success-page correctly', {
         annotation: [{
             type: 'ticket',
@@ -310,6 +332,7 @@ test.describe('Form Management', () => {
         });
     });
 
+    // FIXME: To be fixed
     test('should be possible to publish the form after saving properties', {
         annotation: [{
             type: 'ticket',
@@ -365,6 +388,7 @@ test.describe('Form Management', () => {
         });
     });
 
+    // FIXME: To be fixed
     test('should display an error message when form config is missing', {
         annotation: [{
             type: 'ticket',
@@ -425,6 +449,7 @@ test.describe('Form Management', () => {
     });
 
     // TODO: Flaky on CI
+    // FIXME: To be fixed
     test('should display the label value as title', {
         annotation: [{
             type: 'ticket',
@@ -472,6 +497,7 @@ test.describe('Form Management', () => {
         });
     });
 
+    // FIXME: To be fixed
     test('should edit and save selectable-options correctly', {
         annotation: [{
             type: 'ticket',
@@ -551,11 +577,12 @@ test.describe('Form Management', () => {
         });
     });
 
+    // FIXME: To be fixed
     test('should be possible to change active form language', {
-         annotation: [{
+        annotation: [{
             type: 'ticket',
             description: 'SUP-19642',
-        }]
+        }],
     }, async ({ page }) => {
         // import the language in two languages
         await IMPORTER.importData([FORM_TWO]);
@@ -566,7 +593,7 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -574,7 +601,7 @@ test.describe('Form Management', () => {
                     { type: GcmsPermission.UPDATE_FORM, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -612,11 +639,12 @@ test.describe('Form Management', () => {
         });
     });
 
+    // FIXME: To be fixed
     test('should be possible to delete a language variant of a form', {
-         annotation: [{
+        annotation: [{
             type: 'ticket',
             description: 'SUP-19642',
-        }]
+        }],
     }, async ({ page }) => {
         // import the language in two languages
         await IMPORTER.importData([FORM_TWO]);
@@ -626,7 +654,7 @@ test.describe('Form Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -635,7 +663,7 @@ test.describe('Form Management', () => {
                     { type: GcmsPermission.DELETE_FORM, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -666,11 +694,11 @@ test.describe('Form Management', () => {
             await modal.waitFor();
 
             // click the language selector
-            await pickSelectValue(modal.locator('gtx-form-language-selector gtx-select'), ["de"]);
+            await pickSelectValue(modal.locator('gtx-form-language-selector gtx-select'), ['de']);
 
             // prepare the expected requests
             const saveRequest = waitForResponseFrom(page, 'PUT', `/rest/form/${DE_EN_FORM.id}`);
-            const loadListRequest = waitForResponseFrom(page, 'GET', `/rest/form`);
+            const loadListRequest = waitForResponseFrom(page, 'GET', '/rest/form');
 
             // click "delete"
             await modal.locator('gtx-button.confirm-button').click();

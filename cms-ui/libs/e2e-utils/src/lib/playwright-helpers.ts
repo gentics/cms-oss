@@ -454,8 +454,7 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
 
 export async function pickDate(source: Locator, date?: Date): Promise<void> {
     const dateTimePicker = await getSourceLocator(source, 'gtx-date-time-picker');
-    const input = dateTimePicker.locator('gtx-input');
-    await input.click();
+    await dateTimePicker.locator('.box-wrapper').click();
 
     const modal = source.page().locator('gtx-date-time-picker-modal');
 

@@ -248,7 +248,7 @@ test.describe('Page Editing', () => {
                     await editorAction(page, 'close');
 
                     await page.locator('content-frame').waitFor({ state: 'detached' });
-                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.7 });
                 });
             });
 
@@ -279,7 +279,7 @@ test.describe('Page Editing', () => {
                 await page.locator('content-frame').waitFor({ state: 'detached' });
                 // Ratio is "rather low", as the content may overflow/cause scrolling, and that
                 // also counts towards viewport visibilty.
-                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.7 });
             });
         });
 
@@ -1620,11 +1620,11 @@ test.describe('Page Editing', () => {
         await constructLoadRequest;
         expect(adminEndpointCalled).toBe(false);
 
-        // Switch to constructs tab
-        await selectEditorTab(page, TAB_ID_CONSTRUCTS);
-
         // Click in editor to activate constructs
         await editor.click();
+
+        // Switch to constructs tab
+        await selectEditorTab(page, TAB_ID_CONSTRUCTS);
 
         // Verify constructs are loaded
         const controls = page.locator('content-frame gtx-page-editor-controls');

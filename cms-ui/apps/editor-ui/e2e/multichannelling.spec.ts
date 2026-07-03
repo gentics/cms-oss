@@ -50,7 +50,7 @@ import {
 import { cloneWithSymbols } from '@gentics/common';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectEditorTab, selectNode, setupHelperWindowFunctions } from './helpers';
 
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -190,13 +190,12 @@ test.describe('Multichannelling', () => {
             let editButton: Locator;
 
             await test.step('Tag Setup', async () => {
-                // Select correct editor tab
-                const tabs = page.locator('content-frame gtx-page-editor-tabs');
-                await tabs.locator(`[data-id="${TAB_ID_CONSTRUCTS}"]`).click();
-
                 // Focus the editable and clear the content
                 await editor.click();
                 await editor.clear();
+
+                // Select correct editor tab
+                await selectEditorTab(page, TAB_ID_CONSTRUCTS);
 
                 // Insert the overview tag
                 const category = page.locator('content-frame .editor-toolbar gtx-construct-controls .construct-category[data-id="2"]');

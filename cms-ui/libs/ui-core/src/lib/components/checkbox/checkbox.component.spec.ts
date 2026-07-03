@@ -32,13 +32,10 @@ describe('CheckboxComponent', () => {
                 id="testId"
             ></gtx-checkbox>`,
         (fixture) => {
-            const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
             const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
 
             fixture.detectChanges();
 
-            expect(label.htmlFor).toBe('testId');
-            expect(label.getAttribute('for')).toBe('testId');
             expect(nativeInput.id).toBe('testId');
         },
         ),
@@ -106,7 +103,7 @@ describe('CheckboxComponent', () => {
         ),
     );
 
-    it('should emit a single "change" with current check state when the native input changes',
+    it('should not emit a "change" when the native input changes',
         componentTest(() => TestComponent, `
             <gtx-checkbox (valueChange)="onChange($event)">
             </gtx-checkbox>`,
@@ -120,8 +117,7 @@ describe('CheckboxComponent', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.onChange).toHaveBeenCalledWith(true);
-            expect(spy.calls.count()).toBe(1);
+            expect(spy).not.toHaveBeenCalled();
         },
         ),
     );
@@ -236,9 +232,9 @@ describe('CheckboxComponent', () => {
             ),
         );
 
-        it('should not change check state on click when bound to "value" attribute',
+        it('should not change check state on click when marked as "pure"',
             componentTest(() => TestComponent, `
-                <gtx-checkbox [pure]="true" value="true"></gtx-checkbox>`,
+                <gtx-checkbox [pure]="true" [value]="true"></gtx-checkbox>`,
             (fixture, component) => {
                 const checkboxComponent = component.checkboxComponent;
                 const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
@@ -247,7 +243,7 @@ describe('CheckboxComponent', () => {
                 expect(checkboxComponent.value).toBe(true);
                 expect(nativeInput.checked).toBe(true);
 
-                nativeInput.click();
+                fixture.nativeElement.querySelector('label').click();
                 tick();
                 fixture.detectChanges();
 

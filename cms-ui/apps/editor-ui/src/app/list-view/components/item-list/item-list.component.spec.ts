@@ -691,9 +691,9 @@ describe('ItemListComponent', () => {
                 const listItems: HTMLElement[] = getListItems(fixture);
 
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                ((listItems[0].querySelector('input[type="checkbox"]')) as HTMLElement).click();
+                ((listItems[0].querySelector('input[type="checkbox"] + label')) as HTMLElement).click();
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                ((listItems[1].querySelector('input[type="checkbox"]')) as HTMLElement).click();
+                ((listItems[1].querySelector('input[type="checkbox"] + label')) as HTMLElement).click();
                 tick();
                 fixture.detectChanges();
                 expect(state.now.folder.pages.selected).toEqual([1, 2]);
@@ -724,7 +724,7 @@ describe('ItemListComponent', () => {
             expect(state.now.folder.folders.selected).toEqual([]);
             expect(checkboxes[0].selected).toBe(false);
 
-            const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"]').click();
+            const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"] + label').click();
 
             for (const listItem of listItems) {
                 clickCheckbox(listItem);
@@ -743,7 +743,7 @@ describe('ItemListComponent', () => {
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
-                .querySelector('.list-header input[type="checkbox"]');
+                .querySelector('.list-header input[type="checkbox"] + label');
 
             expect(checkboxes[0].selected).toBe(false);
             expect(checkboxes[1].selected).toBe(false);
@@ -778,7 +778,7 @@ describe('ItemListComponent', () => {
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
-                .querySelector('.list-header input[type="checkbox"]');
+                .querySelector('.list-header input[type="checkbox"] + label');
 
             toggleAll.click();
             tick();
@@ -804,7 +804,7 @@ describe('ItemListComponent', () => {
 
     describe('selectionChange', () => {
 
-        const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"]').click();
+        const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"] + label').click();
 
         it('emits when items are checked/unchecked',
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -831,7 +831,7 @@ describe('ItemListComponent', () => {
         it('emits with all items when toggleAll is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -854,7 +854,7 @@ describe('ItemListComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 instance.filterTerm = '2';
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -879,7 +879,7 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
                 const fullList = [1, 2, 3, 4, 5, 6, 7, 8];
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -902,7 +902,7 @@ describe('ItemListComponent', () => {
         it('emits with all items when a single items is clicked and then toggleAll is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
                 const listItems = getListItems(fixture);
 
                 clickCheckbox(listItems[0]);
@@ -938,7 +938,7 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
                 const fullList = [1, 2, 3, 4, 5, 6, 7, 8];
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
                 const listItems = getListItems(fixture);
 
                 clickCheckbox(listItems[0]);

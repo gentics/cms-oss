@@ -102,7 +102,7 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
         }
     }
 
-    public toggleState(event: Event): void {
+    public toggleState(event?: Event): void {
         // Always cancel the event, so the input doesn't change itself
         cancelEvent(event);
 

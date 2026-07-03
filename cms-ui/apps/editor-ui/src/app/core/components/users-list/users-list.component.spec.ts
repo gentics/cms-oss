@@ -102,7 +102,7 @@ const getUserCheckboxes = (fixture: ComponentFixture<TestComponent>): CheckboxCo
     .map((del) => del.componentInstance);
 
 function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number): void {
-    fixture.debugElement.queryAll(By.css('gtx-checkbox input'))[index].nativeElement.click();
+    fixture.debugElement.queryAll(By.css('gtx-checkbox label'))[index].nativeElement.click();
     tick();
 }
 

@@ -152,14 +152,14 @@ describe('CheckboxTagPropertyEditorComponent', () => {
             tick();
 
             // Get the actual input element.
-            const checkboxElement = editorElement.query(By.css('input')).nativeElement;
+            const labelEl: HTMLLabelElement = editorElement.query(By.css('input + label')).nativeElement;
 
             // Simulate a user click.
             const changedProperty = cloneDeep(tagProperty);
             changedProperty.booleanValue = !initialValue;
             const expectedChanges: Partial<TagPropertyMap> = { };
             expectedChanges[tagPart.keyword] = changedProperty;
-            checkboxElement.click();
+            labelEl.click();
             fixture.detectChanges();
             tick();
             expect(onChangeSpy.calls.count()).toBe(1);
@@ -168,7 +168,7 @@ describe('CheckboxTagPropertyEditorComponent', () => {
 
             // Simulate another user click.
             changedProperty.booleanValue = !!initialValue;
-            checkboxElement.click();
+            labelEl.click();
             fixture.detectChanges();
             tick();
             expect(onChangeSpy.calls.count()).toBe(1);

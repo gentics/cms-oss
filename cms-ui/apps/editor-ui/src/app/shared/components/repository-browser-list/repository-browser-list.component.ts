@@ -75,7 +75,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     showImagesGridView$: Observable<boolean>;
 
     public activeLanguage: Language;
-    public showStatusIcons: boolean;
+    public showStatusIcons = true;
     public showAllLanguages: boolean;
 
     filterTerm$: Observable<string>;
@@ -112,11 +112,6 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
                 this.changeDetector.markForCheck();
             });
         }
-
-        this.appState.select(state => state.folder.displayStatusIcons).subscribe((show) => {
-            this.showStatusIcons = show;
-            this.changeDetector.markForCheck();
-        });
 
         this.appState.select(state => state.folder.displayAllLanguages).subscribe((show) => {
             this.showAllLanguages = show;

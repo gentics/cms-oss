@@ -24,7 +24,6 @@ class MockFolderActions {
     setItemsPerPage = jasmine.createSpy('setItemsPerPage');
     setRepositoryBrowserDisplayFields = jasmine.createSpy('setRepositoryBrowserDisplayFields');
     setDisplayAllPageLanguages = jasmine.createSpy('setDisplayAllPageLanguages');
-    setDisplayStatusIcons = jasmine.createSpy('setDisplayStatusIcons');
     setDisplayImagesGridView = jasmine.createSpy('setDisplayImagesGridView');
     setShowPath = jasmine.createSpy('setShowPath');
     getExistingItems = jasmine.createSpy('getExistingItems');

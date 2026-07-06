@@ -98,7 +98,6 @@ describe('FolderStateModule', () => {
             activeLanguage: null,
             activeFormLanguage: null,
             displayAllLanguages: false,
-            displayStatusIcons: false,
             displayDeleted: false,
             displayImagesGridView: true,
             lastError: '',

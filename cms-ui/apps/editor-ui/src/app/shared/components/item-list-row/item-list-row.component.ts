@@ -109,7 +109,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
     public showDeleted: boolean;
 
     @Input()
-    public showStatusIcons: boolean;
+    public showStatusIcons = true;
 
     @Input()
     public canBeSelected = true;
@@ -200,27 +200,20 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
         this.languageState = {
             ...itemLang,
             available,
-            deleted: this.itemIdDeleted,
             inherited:
                 this.item != null &&
                 PublishableStateUtil.stateInherited(this.item),
             localized:
                 this.item != null &&
                 PublishableStateUtil.stateLocalized(this.item),
-            modified:
-                this.item != null &&
-                PublishableStateUtil.stateModified(this.item),
-            planned:
-                this.item != null &&
-                PublishableStateUtil.statePlanned(this.item),
-            published:
-                this.item != null &&
-                PublishableStateUtil.statePublished(this.item),
-            queued:
-                this.item != null &&
-                PublishableStateUtil.stateInQueue(this.item),
             staged: this.item != null &&
                 this.stagingMap?.[this.item.globalId]?.included,
+            // Since we already have a dedicated item status label, the following info is not necessary
+            deleted: false,
+            modified: false,
+            planned: false,
+            published: false,
+            queued: false,
         }
     }
 

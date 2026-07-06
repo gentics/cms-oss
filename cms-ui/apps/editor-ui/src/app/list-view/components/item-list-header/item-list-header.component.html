@@ -141,20 +141,6 @@
 
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
-                        *ngIf="(itemType === 'page' || itemType === 'form')"
-                        class="page-language-toggle"
-                        data-action="toggle-status-icons"
-                        [attr.data-active]="showStatusIcons"
-                        (click)="toggleDisplayStatusIcons()"
-                    >
-                        <gtx-checkbox
-                            [checked]="showStatusIcons"
-                            (change)="toggleDisplayStatusIcons()"
-                        ></gtx-checkbox>
-                        {{ 'editor.display_status_icons_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
                         *ngIf="wastebinEnabled"
                         class="show-deleted-toggle"
                         data-action="toggle-wastebin"

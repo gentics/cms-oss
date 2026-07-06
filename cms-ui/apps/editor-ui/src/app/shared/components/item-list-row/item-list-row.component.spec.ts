@@ -16,7 +16,6 @@ import {
     ApplicationStateService,
     FolderActionsService,
     SetDisplayAllLanguagesAction,
-    SetDisplayStatusIconsAction,
     UsageActionsService,
     WastebinActionsService,
 } from '@editor-ui/app/state';
@@ -216,7 +215,6 @@ class MockFolderActions {
     refreshList(): void {}
     getFolder(): void {}
     setDisplayAllPageLanguages(): void {}
-    setDisplayStatusIcons(): void {}
 }
 
 class MockWastebinActionsService {
@@ -404,7 +402,6 @@ describe('ItemListRow', () => {
 
                 fixture.detectChanges();
 
-                state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 tick();
@@ -439,7 +436,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -475,7 +471,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -511,7 +506,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -552,7 +546,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -593,7 +586,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -634,7 +626,6 @@ describe('ItemListRow', () => {
                     }
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 fixture.detectChanges();
@@ -708,7 +699,6 @@ describe('ItemListRow', () => {
                     },
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(false));
                 state.dispatch(new SetDisplayAllLanguagesAction(true));
 
                 fixture.detectChanges();
@@ -780,7 +770,6 @@ describe('ItemListRow', () => {
                     },
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(true));
 
                 fixture.detectChanges();
@@ -867,7 +856,6 @@ describe('ItemListRow', () => {
                     },
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(true));
 
                 fixture.detectChanges();
@@ -954,7 +942,6 @@ describe('ItemListRow', () => {
                     },
                 });
 
-                state.dispatch(new SetDisplayStatusIconsAction(true));
                 state.dispatch(new SetDisplayAllLanguagesAction(true));
 
                 fixture.detectChanges();

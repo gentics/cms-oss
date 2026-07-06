@@ -862,12 +862,6 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         let createReq: Promise<Response>;
-        let listOptions = list.locator('[data-action="open-list-context"]');
-
-        await test.step('Change Status Icon Settings', async () => {
-            const dropdown = await openContext(listOptions);
-            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
-        });
 
         await test.step('Create a new Page', async () => {
             await list.locator('.header-controls [data-action="create-new-item"] button').click();

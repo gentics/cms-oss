@@ -76,6 +76,7 @@
     "@ngxs/devtools-plugin": "^20.1.0",
     "@ngxs/logger-plugin": "20.1.0",
     "@ngxs/store": "20.1.0",
+    "@usersnap/browser": "^1.0.2",
     "buffer": "^6.0.3",
     "core-js": "^3.27.2",
     "cropperjs": "^1.5.13",

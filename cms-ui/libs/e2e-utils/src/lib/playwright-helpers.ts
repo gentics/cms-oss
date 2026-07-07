@@ -206,7 +206,6 @@ export function findContextContent(page: Page, id: string): Locator {
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
-    await element.waitFor({ state: 'visible' });
     await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
 
     const id = await element.getAttribute(ATTR_CONTEXT_ID);

@@ -16,6 +16,7 @@
         <span class="translation-section-title">{{ 'form_grid.translation_section_definition' | gtxI18n }}</span>
 
         <gtx-i18n-input
+            data-control="label"
             [label]="'form_grid.translation_label' | gtxI18n"
             [value]="element().label"
             [disabled]="mode() === FormGridEditMode.NONE"
@@ -25,6 +26,7 @@
         ></gtx-i18n-input>
 
         <gtx-i18n-input
+            data-control="description"
             [label]="'form_grid.translation_description' | gtxI18n"
             [value]="element().description ?? null"
             [disabled]="mode() === FormGridEditMode.NONE"
@@ -34,6 +36,7 @@
         ></gtx-i18n-input>
 
         <gtx-i18n-input
+            data-control="summary"
             [label]="'form_grid.translation_summary' | gtxI18n"
             [value]="element().formGridOptions?.valueSummary ?? null"
             [disabled]="mode() === FormGridEditMode.NONE"

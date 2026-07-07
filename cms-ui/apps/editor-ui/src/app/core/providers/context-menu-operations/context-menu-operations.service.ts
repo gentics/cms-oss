@@ -442,13 +442,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         copy.adminEmailSubject = this.purgeKeysFrom(copy.adminEmailSubject, languagesToDelete);
         copy.successUrlI18n = this.purgeKeysFrom(copy.successUrlI18n, languagesToDelete);
 
-        Object.values(copy.schema.properties).forEach((prop) => {
+        Object.values(copy.schema?.properties || {}).forEach((prop) => {
             Object.keys(prop).forEach((key) => {
                 prop[key] = this.purgeKeysFrom(prop[key], languagesToDelete);
             });
         });
 
-        for (const page of copy['ui-schema'].pages) {
+        for (const page of (copy['ui-schema']?.pages || [])) {
             page.pagename = this.purgeKeysFrom(page.pagename, languagesToDelete);
 
             for (const el of page.elements) {

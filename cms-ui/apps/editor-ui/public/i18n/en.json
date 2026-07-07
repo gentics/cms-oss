@@ -574,7 +574,7 @@
         "broken": "Broken",
         "search_hintbox": "Query parameter changed. Press Enter key or click search icon to execute new query."
     },
-    "rich-content": {
+    "rich_content": {
         "manage_link_title": "Manage link",
         "display_text": "Display text",
         "link_type": "Link Type",

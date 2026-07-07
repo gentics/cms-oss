@@ -8,23 +8,23 @@
       @if (enterDisplayText) {
         <gtx-input
           property-name="displayText"
-          [label]="('richContent.display_text' | gtxI18n) + '*'"
+          [label]="('rich_content.display_text' | gtxI18n) + '*'"
           formControlName="displayText"
         ></gtx-input>
       }
       <gtx-select
-        [label]="('richContent.link_type' | gtxI18n) + '*'"
+        [label]="('rich_content.link_type' | gtxI18n) + '*'"
         property-name="linkType"
         formControlName="linkType"
         >
         @for (type of RichContentLinkType | gtxValues; track type) {
           <gtx-option
             [value]="type"
-          >{{ ('richContent.link_type_' + type) | gtxI18n }}</gtx-option>
+          >{{ ('rich_content.link_type_' + type) | gtxI18n }}</gtx-option>
         }
       </gtx-select>
       <gtx-select
-        [label]="'richContent.link_target' | gtxI18n"
+        [label]="'rich_content.link_target' | gtxI18n"
         property-name="target"
         formControlName="target"
         >
@@ -38,9 +38,9 @@
         <browse-box
           class="item-browser"
           property-name="item"
-          [label]="(('richContent.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
+          [label]="(('rich_content.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
           [disabled]="disabled"
-          [displayValue]="loadingItem ? ('richContent.link_item_loading_text' | gtxI18n) : itemDisplayValue"
+          [displayValue]="loadingItem ? ('rich_content.link_item_loading_text' | gtxI18n) : itemDisplayValue"
           [clearable]="false"
           (browse)="pickItem()"
         ></browse-box>
@@ -48,7 +48,7 @@
       @if (form.controls.url.enabled) {
         <gtx-input
           property-name="url"
-          [label]="('richContent.link_url' | gtxI18n) + '*'"
+          [label]="('rich_content.link_url' | gtxI18n) + '*'"
           formControlName="url"
         ></gtx-input>
       }

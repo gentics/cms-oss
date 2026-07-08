@@ -86,22 +86,22 @@ export class DecisionModalsService {
     }
 
     private localizeItemAndRefreshList(item: InheritableItem, nodeId: number, partial: boolean): Promise<{ item: InheritableItem<Raw>; nodeId: number }> {
-        var action: Promise<any>;
+        let action: Promise<any>;
         if (partial) {
             action = this.folderActions.localizePagePartially(item.id, nodeId);
         } else {
             action = this.folderActions.localizeItem(item.type, item.id, nodeId);
         }
         return action.then((localizedItem) => {
-                // Refresh the list view to reflect the new local item.
-                const parentFolderId = (localizedItem as Page | File | Image).folderId
-                  || (localizedItem as Folder).motherId;
-                const currentFolderId = this.appState.now.folder.activeFolder;
-                if (parentFolderId === currentFolderId) {
-                    this.folderActions.getItems(parentFolderId, item.type);
-                }
-                return { item: localizedItem, nodeId, editMode: partial ? EditMode.EDIT_INHERITANCE : EditMode.EDIT };
-            });
+            // Refresh the list view to reflect the new local item.
+            const parentFolderId = (localizedItem as Page | File | Image).folderId
+              || (localizedItem as Folder).motherId;
+            const currentFolderId = this.appState.now.folder.activeFolder;
+            if (parentFolderId === currentFolderId) {
+                this.folderActions.getItems(parentFolderId, item.type);
+            }
+            return { item: localizedItem, nodeId, editMode: partial ? EditMode.EDIT_INHERITANCE : EditMode.EDIT };
+        });
     }
 
     private askUserInWhichNodeToEdit(item: InheritableItem, nodeId: number): Promise<{ item: InheritableItem; nodeId: number }> {
@@ -109,7 +109,8 @@ export class DecisionModalsService {
         const nodeFeatures = this.appState.now.features.nodeFeatures[nodeId] || [];
         const partialLocalizeEnabled = nodeFeatures.includes(NodeFeature.PARTIAL_MULTICHANNELLING);
         const multiChannelingEnabled = this.appState.now.features[Feature.MULTICHANNELLING];
-        var dialog: Promise<any>;
+
+        let dialog: Promise<any>;
         if (
             partialLocalizeEnabled
             && item.type === 'page'
@@ -117,70 +118,76 @@ export class DecisionModalsService {
             && !EntityStateUtil.stateDeleted(item)
             && item.inherited
         ) {
-            const body = this.i18n.instant(['modal.edit_inherited_partial_body','modal.localization_type_description'], {
+            const body = this.i18n.instant(['modal.edit_inherited_partial_body', 'modal.localization_type_description'], {
                 _type: item.type,
                 master: (item).inheritedFrom,
                 name: item.name,
                 local: localNodeName,
             }) as any;
-            dialog = this.modalService
-                .dialog({
-                    title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
-                    body: Object.keys(body).map(key => body[key]).join('<br>'),
-                    buttons: [
-                        {
-                            label: this.i18n.instant('common.cancel_button'),
-                            type: 'secondary',
-                            returnValue: '',
-                            flat: true,
-                        },
-                        {
-                            label: this.i18n.instant('modal.edit_original_button'),
-                            type: 'secondary',
-                            returnValue: 'editOriginal',
-                        },
-                        {
-                            label: this.i18n.instant('modal.localize_full_and_edit_button'),
-                            type: 'default',
-                            returnValue: 'localize',
-                        },
-                        {
-                            label: this.i18n.instant('modal.localize_partial_and_edit_button'),
-                            type: 'default',
-                            returnValue: 'localizePartial',
-                        },
-                    ],
-                })
+            dialog = this.modalService.dialog({
+                title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
+                body: Object.keys(body).map((key) => body[key]).join('<br>'),
+                buttons: [
+                    {
+                        id: 'cancel',
+                        label: this.i18n.instant('common.cancel_button'),
+                        type: 'secondary',
+                        returnValue: '',
+                        flat: true,
+                    },
+                    {
+                        id: 'edit-original',
+                        label: this.i18n.instant('modal.edit_original_button'),
+                        type: 'secondary',
+                        returnValue: 'editOriginal',
+                    },
+                    {
+                        id: 'localize',
+                        label: this.i18n.instant('modal.localize_full_and_edit_button'),
+                        type: 'default',
+                        returnValue: 'localize',
+                    },
+                    {
+                        id: 'partial-localize',
+                        label: this.i18n.instant('modal.localize_partial_and_edit_button'),
+                        type: 'default',
+                        returnValue: 'localizePartial',
+                    },
+                ],
+            });
         } else {
-            dialog = this.modalService
-                .dialog({
-                    title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
-                    body: this.i18n.instant('modal.edit_inherited_body', {
-                        _type: item.type,
-                        master: (item).inheritedFrom,
-                        name: item.name,
-                        local: localNodeName,
-                    }),
-                    buttons: [
-                        {
-                            label: this.i18n.instant('common.cancel_button'),
-                            type: 'secondary',
-                            returnValue: '',
-                            flat: true,
-                        },
-                        {
-                            label: this.i18n.instant('modal.edit_original_button'),
-                            type: 'secondary',
-                            returnValue: 'editOriginal',
-                        },
-                        {
-                            label: this.i18n.instant('modal.localize_and_edit_button'),
-                            type: 'default',
-                            returnValue: 'localize',
-                        },
-                    ],
-                }, { width: '800px' });
+            dialog = this.modalService.dialog({
+                title: this.i18n.instant('modal.edit_inherited_title', { _type: item.type, name: item.name }),
+                body: this.i18n.instant('modal.edit_inherited_body', {
+                    _type: item.type,
+                    master: (item).inheritedFrom,
+                    name: item.name,
+                    local: localNodeName,
+                }),
+                buttons: [
+                    {
+                        id: 'cancel',
+                        label: this.i18n.instant('common.cancel_button'),
+                        type: 'secondary',
+                        returnValue: '',
+                        flat: true,
+                    },
+                    {
+                        id: 'edit-original',
+                        label: this.i18n.instant('modal.edit_original_button'),
+                        type: 'secondary',
+                        returnValue: 'editOriginal',
+                    },
+                    {
+                        id: 'localize',
+                        label: this.i18n.instant('modal.localize_and_edit_button'),
+                        type: 'default',
+                        returnValue: 'localize',
+                    },
+                ],
+            }, { width: '800px' });
         }
+
         return dialog
             .then((modal) => modal.open())
             .then((result: string) => {

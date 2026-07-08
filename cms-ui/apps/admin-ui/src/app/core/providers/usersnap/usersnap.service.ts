@@ -1,10 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Feature } from '@gentics/cms-models';
+import { Feature, User, UsersnapSettings } from '@gentics/cms-models';
 import { InitOptions, loadSpace, SpaceApi } from '@usersnap/browser';
 import { forkJoin, Subscription } from 'rxjs';
 import { filter, first, switchMap } from 'rxjs/operators';
 import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base';
-import { AppStateService } from '../../../state';
+import { AppStateService, UIStateModel } from '../../../state';
 import { AdminOperations } from '../operations/admin/admin.operations';
 
 const DEFAULT_CONFIG: InitOptions = {
@@ -49,6 +49,32 @@ export class UsersnapService extends InitializableServiceBase implements OnDestr
         this.loadUsersnapSettingsAndActivateIfEnabled();
     }
 
+    protected activateUsersnap(
+        settings: UsersnapSettings,
+        ui: UIStateModel,
+        user: User,
+    ): void {
+        loadSpace(settings.key).then((api) => {
+            const builtConfig: InitOptions = {
+                ...DEFAULT_CONFIG,
+                custom: {
+                    ...DEFAULT_CONFIG.custom,
+                    language: ui.language,
+                    cmsVersion: ui.cmpVersion.version,
+                    cmsVariant: ui.cmpVersion.variant,
+                    cmpVersion: ui.cmpVersion.cmpVersion,
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                    },
+                },
+            };
+            api.init(builtConfig);
+        });
+    }
+
     private loadUsersnapSettingsAndActivateIfEnabled(): void {
         const settings$ = this.appState.select((state) => state.features.global[Feature.USERSNAP]).pipe(
             filter((active) => active),
@@ -60,7 +86,7 @@ export class UsersnapService extends InitializableServiceBase implements OnDestr
 
         const ui$ = this.appState.select((state) => state.ui).pipe(
             filter((ui) => !!ui.language
-              && !!ui.cmpVersion?.version
+              && !!ui.cmpVersion?.version,
             ),
             first(),
         );
@@ -75,26 +101,7 @@ export class UsersnapService extends InitializableServiceBase implements OnDestr
             ui$,
             user$,
         ]).subscribe(([settings, ui, user]) => {
-            console.log('Activating Usersnap');
-            loadSpace(settings.key).then((api) => {
-                const builtConfig: InitOptions = {
-                    ...DEFAULT_CONFIG,
-                    custom: {
-                        ...DEFAULT_CONFIG.custom,
-                        language: ui.language,
-                        cmsVersion: ui.cmpVersion.version,
-                        cmsVariant: ui.cmpVersion.variant,
-                        cmpVersion: ui.cmpVersion.cmpVersion,
-                        user: {
-                            id: user.id,
-                            email: user.email,
-                            firstName: user.firstName,
-                            lastName: user.lastName,
-                        },
-                    },
-                };
-                api.init(builtConfig);
-            });
+            this.activateUsersnap(settings, ui, user);
         });
     }
 }

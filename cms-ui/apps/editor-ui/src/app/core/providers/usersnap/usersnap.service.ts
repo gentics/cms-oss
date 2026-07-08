@@ -1,7 +1,9 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { User, UsersnapSettings } from '@gentics/cms-models';
 import { InitOptions, loadSpace, SpaceApi } from '@usersnap/browser';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
-import { debounceTime, filter, first, switchMap, tap } from 'rxjs/operators';
+import { debounceTime, filter, first, map, switchMap, tap } from 'rxjs/operators';
+import { UIState } from '../../../common/models';
 import { ApplicationStateService, UIActionsService } from '../../../state';
 
 const DEFAULT_CONFIG: InitOptions = {
@@ -51,6 +53,32 @@ export class UsersnapService implements OnDestroy {
         this.destroy();
     }
 
+    protected activateUsersnap(
+        settings: UsersnapSettings,
+        ui: UIState,
+        user: User,
+    ): void {
+        loadSpace(settings.key).then((api) => {
+            const builtConfig: InitOptions = {
+                ...DEFAULT_CONFIG,
+                custom: {
+                    ...DEFAULT_CONFIG.custom,
+                    language: ui.language,
+                    cmsVersion: ui.cmpVersion.version,
+                    cmsVariant: ui.cmpVersion.variant,
+                    cmpVersion: ui.cmpVersion.cmpVersion,
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                    },
+                },
+            };
+            api.init(builtConfig);
+        });
+    }
+
     private loadUsersnapSettingsAndActivateIfEnabled(): void {
         const settings$ = combineLatest([
             this.appState.select((state) => state.features.usersnap),
@@ -73,7 +101,8 @@ export class UsersnapService implements OnDestroy {
             first(),
         );
 
-        const user$ = this.appState.select((state) => state.auth.user).pipe(
+        const user$ = this.appState.select((state) => state.auth).pipe(
+            map((auth) => auth.user),
             filter((user) => !!user),
             first(),
         );
@@ -83,26 +112,7 @@ export class UsersnapService implements OnDestroy {
             ui$,
             user$,
         ]).subscribe(([settings, ui, user]) => {
-            console.log('Activating Usersnap');
-            loadSpace(settings.key).then((api) => {
-                const builtConfig: InitOptions = {
-                    ...DEFAULT_CONFIG,
-                    custom: {
-                        ...DEFAULT_CONFIG.custom,
-                        language: ui.language,
-                        cmsVersion: ui.cmpVersion.version,
-                        cmsVariant: ui.cmpVersion.variant,
-                        cmpVersion: ui.cmpVersion.cmpVersion,
-                        user: {
-                            id: user.id,
-                            email: user.email,
-                            firstName: user.firstName,
-                            lastName: user.lastName,
-                        },
-                    },
-                };
-                api.init(builtConfig);
-            });
+            this.activateUsersnap(settings, ui, user);
         });
     }
 }

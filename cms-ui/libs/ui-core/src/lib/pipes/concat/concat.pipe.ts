@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { IncludeToDocs } from '@gentics/ui-core';
+import { IncludeToDocs } from '../../common';
 
 /**
  * Simple helper pipe to concatinate all arguments into one array.

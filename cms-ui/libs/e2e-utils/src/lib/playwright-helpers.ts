@@ -1,5 +1,6 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
-import { GCMSRestClient } from '@gentics/cms-rest-client';
+import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { errors } from 'playwright';
 import test, { Disposable, expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
@@ -142,17 +143,28 @@ export function waitForResponseFrom(
 
     return page.waitForResponse(matchRequest(method, path, options), { timeout })
         .catch((err) => {
-            // The actual class isn't publicly available, which is why we have to do this hacky workaround.
-            if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
-                const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
+            let reqErrMsg: string;
+            if (path instanceof RegExp) {
+                reqErrMsg = `"${method}" matching "${path.source}"`;
+            } else {
+                reqErrMsg = `"${method} ${path}"`;
+            }
+
+            if (Object.keys(options?.params ?? {}).length > 0) {
+                reqErrMsg += ` with params ${JSON.stringify(options.params)}`;
+            }
+
+            if (err instanceof errors.TimeoutError) {
+                const timeoutStr = timeout >= 1000 ? (timeout / 1000).toFixed(2) + 's' : (timeout + 'ms');
                 if (path instanceof RegExp) {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 } else {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 }
-                if (Object.keys(options?.params ?? {}).length > 0) {
-                    err.message += ` with params ${JSON.stringify(options.params)}`;
-                }
+            }
+
+            if (err instanceof GCMSRestClientRequestError) {
+                err.message = `Request ${reqErrMsg}, failed with status-code ${err.responseCode}: ${err.message}`;
             }
 
             throw err;

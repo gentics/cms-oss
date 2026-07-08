@@ -5,8 +5,8 @@
   "license": "Apache-2.0",
   "private": true,
   "engines": {
-    "npm": "^10.9.2",
-    "node": "^22.15.0"
+    "npm": "^11.17.0",
+    "node": "^26.4.0"
   },
   "scripts": {
     "prestart": "nvm-guard",
@@ -60,13 +60,13 @@
     }
   ],
   "dependencies": {
-    "@angular/animations": "21.2.9",
-    "@angular/common": "21.2.9",
-    "@angular/compiler": "21.2.9",
-    "@angular/core": "21.2.9",
-    "@angular/forms": "21.2.9",
-    "@angular/platform-browser": "21.2.9",
-    "@angular/router": "21.2.9",
+    "@angular/animations": "22.0.5",
+    "@angular/common": "22.0.5",
+    "@angular/compiler": "22.0.5",
+    "@angular/core": "22.0.5",
+    "@angular/forms": "22.0.5",
+    "@angular/platform-browser": "22.0.5",
+    "@angular/router": "22.0.5",
     "@bevacqua/rome": "^3.0.4",
     "@gentics/mesh-models": "^3.2.0",
     "@gentics/mesh-rest-client": "^3.2.0",
@@ -105,15 +105,15 @@
     "zone.js": "0.16.2"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "^21.0.3",
-    "@angular-devkit/architect": "0.2102.9",
-    "@angular-devkit/build-angular": "21.2.9",
-    "@angular-devkit/core": "21.2.9",
-    "@angular-devkit/schematics": "21.2.9",
-    "@angular/cli": "21.2.11",
-    "@angular/compiler-cli": "21.2.9",
-    "@angular/language-service": "21.2.9",
-    "@angular/platform-browser-dynamic": "21.2.9",
+    "@angular-builders/custom-webpack": "^22.0.1",
+    "@angular-devkit/architect": "0.2200.5",
+    "@angular-devkit/build-angular": "22.0.5",
+    "@angular-devkit/core": "22.0.5",
+    "@angular-devkit/schematics": "22.0.5",
+    "@angular/cli": "22.0.5",
+    "@angular/compiler-cli": "22.0.5",
+    "@angular/language-service": "22.0.5",
+    "@angular/platform-browser-dynamic": "22.0.5",
     "@cypress/schematic": "^2.5.0",
     "@cypress/webpack-dev-server": "5.6.1",
     "@nx/angular": "23.0.1",
@@ -131,7 +131,7 @@
     "@nx/web": "23.0.1",
     "@nx/workspace": "23.0.1",
     "@playwright/test": "1.60.0",
-    "@schematics/angular": "21.2.9",
+    "@schematics/angular": "22.0.5",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@swc-node/register": "~1.11.1",
     "@swc/cli": "~0.8.0",
@@ -153,7 +153,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
     "@typescript-eslint/utils": "^8.46.4",
-    "angular-eslint": "21.3.1",
+    "angular-eslint": "22.0.0",
     "autoprefixer": "^10.4.0",
     "cypress": "15.9.0",
     "cypress-multi-reporters": "^1.6.4",
@@ -189,7 +189,7 @@
     "karma-mocha-reporter": "^2.2.5",
     "keycloak-js": "^25.0.6",
     "mocha-junit-reporter": "^2.2.1",
-    "ng-packagr": "21.2.3",
+    "ng-packagr": "22.0.1",
     "nvm-guard": "^1.0.4",
     "nx": "23.0.1",
     "prettier": "~3.6.2",
@@ -197,15 +197,24 @@
     "raw-loader": "^4.0.2",
     "rimraf": "^2.6.3",
     "socket.io": "^4.4.1",
-    "ts-jest": "29.4.5",
+    "ts-jest": "29.4.11",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.4",
-    "typescript": "5.9.3",
-    "typescript-eslint": "^8.46.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
     "verdaccio": "6.6.0"
   },
   "nx": {
     "includedScripts": []
+  },
+  "allowScripts": {
+    "nx@23.0.1": true,
+    "@swc/core@1.15.43": true,
+    "esbuild@0.28.1": true,
+    "esbuild@0.19.12": true,
+    "esbuild@0.27.7": true,
+    "cypress@15.9.0": true,
+    "puppeteer@24.43.1": true
   }
 }

@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
@@ -198,7 +197,6 @@ export const routerModuleForChild: ModuleWithProviders<GenticsUICoreModule> = Ro
 @NgModule({
     imports: [
         CommonModule,
-        HammerModule,
         FormsModule,
         ReactiveFormsModule,
         routerModuleForChild,

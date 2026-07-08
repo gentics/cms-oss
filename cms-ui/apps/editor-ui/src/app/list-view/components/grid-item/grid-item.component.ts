@@ -83,8 +83,7 @@ export class GridItemComponent {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.appState.now.folder.activeLanguage;
-        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
+        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId })
             .then(modal => modal.open())
             .catch(this.errorHandler.catch);
     }

@@ -5,8 +5,8 @@
   "license": "Apache-2.0",
   "private": true,
   "engines": {
-    "npm": "^10.9.2",
-    "node": "^22.15.0"
+    "npm": "^11.17.0",
+    "node": "^26.4.0"
   },
   "scripts": {
     "prestart": "nvm-guard",

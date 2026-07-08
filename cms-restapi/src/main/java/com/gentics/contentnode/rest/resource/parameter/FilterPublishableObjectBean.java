@@ -61,14 +61,18 @@ public class FilterPublishableObjectBean {
 		 * @return the type enum
 		 */
 		public static PublishTypeDto fromString(String value) {
-			String toUpper = value.toUpperCase();
+			final String errormessage = "Specified type does not exist. Valid values for the type filter are: "
+					+ Arrays.toString(
+							PublishTypeDto.values());
+
+			if (value == null) {
+				throw new IllegalArgumentException(errormessage);
+			}
+
 			try {
-				return valueOf(toUpper);
+				return valueOf(value.toUpperCase());
 			} catch (Exception e) {
-				throw new IllegalArgumentException(
-						"Specified type does not exist. Valid values for the type filter are: "
-								+ Arrays.toString(
-								PublishTypeDto.values()));
+				throw new IllegalArgumentException(errormessage);
 			}
 		}
 	}

@@ -80,7 +80,7 @@
 </gtx-dropdown-list>
 
 <ng-template #stagingLabel let-included="included">
-    <div class="status-label" [class.included]="included">
+    <div class="status-label staging" [class.included]="included">
         <icon>{{ included ? 'check' : 'close' }}</icon>
         {{ (included ? 'common.staging_status_included' : 'common.staging_status_excluded') | i18n }}
     </div>

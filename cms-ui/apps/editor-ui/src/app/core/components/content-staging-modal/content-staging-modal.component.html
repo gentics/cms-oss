@@ -16,6 +16,7 @@
         <gtx-button
             type="secondary"
             flat
+            data-action="close"
             (click)="closeFn()"
         >{{ 'modal.close' | i18n }}</gtx-button>
     </ng-container>
@@ -24,11 +25,13 @@
         <gtx-button
             type="secondary"
             flat
+            data-action="cancel"
             (click)="closeFn()"
         >{{ 'modal.cancel' | i18n }}</gtx-button>
 
         <gtx-button
             type="primary"
+            data-action="confirm"
             (click)="updatePackageInState()"
         >{{ (activePackage ? 'modal.confirm_content_package_select' : 'modal.leave_content_staging_mode') | i18n }}</gtx-button>
     </ng-template>

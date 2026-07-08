@@ -21,6 +21,8 @@ import {
     setupUserDataRerouting,
     TestSize,
     UserImportData,
+    openContext,
+    clickModalAction,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -299,7 +301,6 @@ test.describe('List Loading', () => {
         });
     });
 
-
     test.describe('Content Staging', () => {
         test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
@@ -319,25 +320,30 @@ test.describe('List Loading', () => {
                 description: 'SUP-19876',
             }],
         }, async ({ page }) => {
-            await page.locator('gtx-button[data-action="open-actions-menu"]').click();
-            await page.locator('.dropdown-content-wrapper button.action-button.action-content-staging').click();
+            const actionMenu = await openContext(page.locator('gtx-actions-selector > [data-context-id="actions-menu"]'));
+            await actionMenu.locator('.action-buttons-dropdown-content button[data-action-id="content-staging"]').click();
 
-            await page.locator('gtx-content-staging-modal gtx-content-package-list gtx-contents-list-item gtx-checkbox').click();
-            await page.locator('gtx-content-staging-modal button.primary[data-action="primary"]').click();
+            const modal = page.locator('gtx-content-staging-modal');
+            await modal.locator('gtx-content-package-list gtx-contents-list-item gtx-checkbox label').click();
+            await clickModalAction(modal, 'confirm');
 
+            // Expect the leave content-staging mode button to be visible
             await page.locator('gtx-button.staging-mode-leaver').isVisible();
+
             const folderList = findList(page, 'folder');
             const folderItems = await folderList.locator('item-list-row').all();
             for (const item of folderItems) {
-                await expect(item.locator('.status-label icon')).toBeVisible();
-                await expect(item.locator('.status-label')).toHaveText('Nicht beinhaltet');
+                const status = item.locator('.status-label.staging');
+                await expect(status).toBeVisible();
+                await expect(status).not.toContainClass('included');
             }
 
             const pageList = findList(page, 'page');
             const pageItems = await pageList.locator('item-list-row').all();
             for (const item of pageItems) {
-                await expect(item.locator('.status-label icon')).toBeVisible();
-                await expect(item.locator('.status-label')).toHaveText('Nicht beinhaltet');
+                const status = item.locator('.status-label.staging');
+                await expect(status).toBeVisible();
+                await expect(status).not.toContainClass('included');
             }
         });
 

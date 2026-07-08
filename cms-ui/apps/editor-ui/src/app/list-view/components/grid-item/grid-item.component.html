@@ -85,6 +85,12 @@
                     <i class="material-icons" [attr.translate]="'no'">open_in_new</i>
                 </gtx-button>
             </a>
+            <item-status-label *ngIf="uiMode === UIMode.STAGING"
+                 [item]="item"
+                 [activeNodeId]="activeNode?.id"
+                 [uiMode]="uiMode"
+                 [stagingMap]="stagingMap"
+             ></item-status-label>
             <file-status-label *ngIf="uiMode === UIMode.EDIT" [item]="item"></file-status-label>
         </div>
     </div>

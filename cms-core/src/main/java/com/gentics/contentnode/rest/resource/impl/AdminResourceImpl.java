@@ -14,21 +14,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +26,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.APITokenFactory;
+import com.gentics.contentnode.auth.ResolvableAPITokenDataModel;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.PrepareStatement;
 import com.gentics.contentnode.distributed.DistributionUtil;
@@ -106,6 +96,10 @@ import com.gentics.contentnode.rest.model.response.log.ActionModel;
 import com.gentics.contentnode.rest.model.response.log.ActionModelList;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntry;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntryList;
+import com.gentics.contentnode.rest.model.token.APITokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.APITokenCreationResponse;
+import com.gentics.contentnode.rest.model.token.APITokenDataModel;
+import com.gentics.contentnode.rest.model.token.APITokenListResponse;
 import com.gentics.contentnode.rest.resource.AdminResource;
 import com.gentics.contentnode.rest.resource.parameter.ActionLogParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.DirtQueueParameterBean;
@@ -116,6 +110,8 @@ import com.gentics.contentnode.rest.util.CmpVersionUtils;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.rest.version.Main;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.runtime.ReloadConfigurationTask;
@@ -128,6 +124,18 @@ import com.gentics.contentnode.version.ServerVariantService;
 import com.gentics.lib.log.NodeLogger;
 
 import io.reactivex.Flowable;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource for various tasks used by the administrator (like retrieving version numbers)
@@ -821,6 +829,77 @@ public class AdminResourceImpl implements AdminResource {
 			response.setResponseInfo(responseInfo);
 			trx.success();
 			return response;
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/token")
+	public APITokenCreationResponse createAPIToken(APITokenCreationRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			// request body must be present and contain a name
+			MiscUtils.checkBody(request, b -> Pair.of("name", b.getName()));
+			// if "expires" is given, it must not be in the past
+			if (request.getExpires() != 0 && request.getExpires() < trx.getTransaction().getUnixTimestamp()) {
+				throw new RestMappedException(I18NHelper.get("exception.expires.past", String.valueOf(request.getExpires()))).setMessageType(Message.Type.WARNING)
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			}
+
+			// we do not allow creation of API Tokens for support users
+			SystemUser user = MiscUtils.load(SystemUser.class, String.valueOf(trx.getTransaction().getUserId()));
+			if (user.isSupportUser()) {
+				throw new RestMappedException(I18NHelper.get("exception.apitoken.supportuser")).setMessageType(Message.Type.WARNING)
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			}
+
+			// create the token
+			String token = APITokenFactory.createToken();
+
+			APITokenDataModel data = APITokenFactory.create(request, trx.getTransaction().getUserId(), token);
+
+			APITokenCreationResponse response = new APITokenCreationResponse()
+					.setData(data)
+					.setToken(token);
+			response.setResponseInfo(ResponseInfo.ok("Successfully created API Token"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/token")
+	public APITokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<ResolvableAPITokenDataModel> list = APITokenFactory.list(trx.getTransaction().getUserId());
+
+			trx.success();
+			return ListBuilder.from(list, APITokenDataModel.class::cast)
+				.filter(ResolvableFilter.get(filter, "name"))
+				.sort(ResolvableComparator.get(sorting, "id", "name", "cdate", "expires", "lastUsed", "valid"))
+				.page(paging)
+				.to(new APITokenListResponse());
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/token/{id}")
+	public GenericResponse deleteAPIToken(@PathParam("id") int tokenId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Optional<ResolvableAPITokenDataModel> optToken = APITokenFactory.load(trx.getTransaction().getUserId(), tokenId);
+
+			if (optToken.isEmpty()) {
+				throw new EntityNotFoundException(
+						I18NHelper.get("apitoken.notfound", String.valueOf(tokenId)));
+			}
+
+			APITokenFactory.delete(tokenId);
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully deleted token %d".formatted(tokenId)));
 		}
 	}
 

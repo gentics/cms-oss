@@ -133,26 +133,26 @@ public class PurgeWastebinTest {
 
 		try (Trx trx = new Trx()) {
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-				testedObject = trx.getTransaction().getObject(testedObject);
-		}
-
-		switch (maxAge) {
-		case off:
-			// no maxage, no purging
-			assertNotNull("Object must not have been deleted", testedObject);
-			break;
-		case old:
-			// the object is not long enough in the wastebin, so no purging
-			assertNotNull("Object must not have been deleted", testedObject);
-			break;
-		case young:
-			// the object is long enough in the wastebin, so it must have been purged
-			assertNull("Object must have been deleted", testedObject);
-			break;
-		}
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+					testedObject = trx.getTransaction().getObject(testedObject);
+			}
+	
+			switch (maxAge) {
+			case off:
+				// no maxage, no purging
+				assertNotNull("Object must not have been deleted", testedObject);
+				break;
+			case old:
+				// the object is not long enough in the wastebin, so no purging
+				assertNotNull("Object must not have been deleted", testedObject);
+				break;
+			case young:
+				// the object is long enough in the wastebin, so it must have been purged
+				assertNull("Object must have been deleted", testedObject);
+				break;
+			}
 			trx.success();
-	}
+		}
 	}
 
 	/**

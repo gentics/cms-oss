@@ -1,5 +1,6 @@
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
+    clickModalAction,
     EntityImporter,
     FILE_ONE,
     FIXTURE_FILE_TXT1,
@@ -17,7 +18,9 @@ import {
     loginWithForm,
     navigateToApp,
     NODE_MINIMAL,
+    openContext,
     pickSelectValue,
+    setupUserDataRerouting,
     TestSize,
     UserImportData,
     waitForResponseFrom,
@@ -97,6 +100,8 @@ test.describe('Media Management', () => {
     });
 
     async function setupWithPermissions(page: Page, permissions: ImportPermissions[]): Promise<void> {
+        await setupUserDataRerouting(page);
+
         await test.step('Test User Setup', async () => {
             const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
             TEST_GROUP.permissions = permissions;
@@ -386,5 +391,92 @@ test.describe('Media Management', () => {
         const newRect = await thumbnail.locator('.previewed-image img').evaluate((el) => el.getBoundingClientRect());
 
         expect(`${imageRect.width}x${imageRect.height}`).not.toEqual(`${newRect.width}x${newRect.height}`);
+    });
+
+    test('image usage information is clickable in grid view', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19872',
+        }],
+    }, async ({ page }) => {
+        // Import a test image
+        await IMPORTER.setupBinaryFiles({
+            [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG2,
+        });
+        await IMPORTER.importData([IMAGE_ONE]);
+        const IMAGE = IMPORTER.get(IMAGE_ONE);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        let list = findList(page, ITEM_TYPE_IMAGE);
+
+        await test.step('Setup image list display', async () => {
+            const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
+            await listOptions.locator('[data-action="toggle-display-type"]').click();
+        });
+
+        await test.step('Setup display fields', async () => {
+            const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
+            await listOptions.locator('[data-action="select-display-fields"]').click();
+            const modal = page.locator('display-field-selector');
+            await modal.locator('gtx-contents-list-item[data-id="usage"] label').click();
+            await clickModalAction(modal, 'confirm');
+        });
+
+        let item = await findImage(list, IMAGE.id);
+        await item.locator('list-item-details detail-chip.usage').click();
+
+        expect(page.locator('gtx-usage-modal')).toBeVisible();
+    });
+
+    test('image usage information is clickable in list view', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19872',
+        }],
+    }, async ({ page }) => {
+        // Import a test image
+        await IMPORTER.setupBinaryFiles({
+            [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG2,
+        });
+        await IMPORTER.importData([IMAGE_ONE]);
+        const IMAGE = IMPORTER.get(IMAGE_ONE);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        let list = findList(page, ITEM_TYPE_IMAGE);
+
+        await test.step('Setup display fields', async () => {
+            const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
+            await listOptions.locator('[data-action="select-display-fields"]').click();
+            const modal = page.locator('display-field-selector');
+            await modal.locator('gtx-contents-list-item[data-id="usage"] label').click();
+            await clickModalAction(modal, 'confirm');
+        });
+
+        let item = await findImage(list, IMAGE.id);
+        await item.locator('list-item-details detail-chip.usage').click();
+
+        expect(page.locator('gtx-usage-modal')).toBeVisible();
     });
 });

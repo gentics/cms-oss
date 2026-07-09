@@ -71,7 +71,7 @@
             @if (nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')) {
                 <language-context-selector
                     [availableLanguages]="nodeLanguages"
-            [activeLanguage]="itemType === 'form' ? formLanguage: folderLanguage"
+                    [activeLanguage]="itemType === 'form' ? formLanguage: folderLanguage"
                     [disabled]="elasticsearchQueryActive"
                     [title]="'editor.language_context_selector_disabled_search' | gtxI18n"
                     (languageChange)="selectLanguage($event)"
@@ -159,21 +159,6 @@
                     }
 
                     @if (uiMode === UIMode.EDIT) {
-                        @if ((itemType === 'page' || itemType === 'form')) {
-                            <gtx-dropdown-item
-                                class="page-language-toggle"
-                                data-action="toggle-status-icons"
-                                [attr.data-active]="showStatusIcons"
-                                (click)="toggleDisplayStatusIcons()"
-                            >
-                                <gtx-checkbox
-                                    [checked]="showStatusIcons"
-                                    (change)="toggleDisplayStatusIcons()"
-                                ></gtx-checkbox>
-                                {{ 'editor.display_status_icons_label' | gtxI18n }}
-                            </gtx-dropdown-item>
-                        }
-
                         @if (wastebinEnabled) {
                             <gtx-dropdown-item
                                 class="show-deleted-toggle"

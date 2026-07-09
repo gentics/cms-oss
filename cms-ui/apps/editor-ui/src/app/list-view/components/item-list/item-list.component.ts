@@ -103,7 +103,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     icon = '';
     showGrid = true;
 
-    public displayStatusInfo: boolean;
+    public displayStatusInfo = true;
     public displayDeleted: boolean;
     public displayAllLanguages: boolean;
     public searchTerm: string;
@@ -149,11 +149,6 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
                 this.changeDetector.markForCheck();
             }));
         }
-
-        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((show) => {
-            this.displayStatusInfo = show;
-            this.changeDetector.markForCheck();
-        }));
 
         this.subscriptions.push(this.appState.select((state) => state.folder.displayDeleted).subscribe((show) => {
             this.displayDeleted = show;

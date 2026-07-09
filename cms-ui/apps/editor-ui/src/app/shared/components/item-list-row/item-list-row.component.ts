@@ -108,7 +108,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public showDeleted: boolean;
 
     @Input()
-    public showStatusIcons: boolean;
+    public showStatusIcons = true;
 
     @Input()
     public canBeSelected = true;
@@ -179,7 +179,10 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
             itemLang = this.nodeLanguages.find((lang) => lang.code === (this.item as Page).language);
             available = !!itemLang;
         } else if (this.item.type === 'form') {
-            itemLang = this.nodeLanguages.find((lang) => (lang.id === this.appState.now.folder.activeFormLanguage && ((this.item as Form).languages.includes(lang.code))));
+            itemLang = this.nodeLanguages.find((lang) => (
+                lang.id === this.appState.now.folder.activeFormLanguage
+                && ((this.item as Form).languages.includes(lang.code))
+            ));
             if (!itemLang) {
                 itemLang = this.nodeLanguages.find((lang) => (this.item as Form).languages.includes(lang.code));
             }
@@ -195,7 +198,6 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         this.languageState = {
             ...itemLang,
             available,
-            deleted: this.itemIdDeleted,
             inherited:
                 this.item != null
                 && PublishableStateUtil.stateInherited(this.item),
@@ -216,6 +218,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
                 && PublishableStateUtil.stateInQueue(this.item),
             staged: this.item != null
               && this.stagingMap?.[this.item.globalId]?.included,
+            deleted: this.itemIdDeleted,
         };
     }
 
@@ -254,8 +257,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
-        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
+        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId })
             .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }

@@ -157,6 +157,8 @@ test.describe('Page Editing', () => {
         }
 
         test.describe('Basic Editing', () => {
+            const RATIO_THRESHOLD = 20;
+
             test.beforeEach(async ({page}) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
@@ -245,8 +247,20 @@ test.describe('Page Editing', () => {
 
                     await editorAction(page, 'close');
 
-                    await page.locator('content-frame').waitFor({state: 'detached'});
-                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
+                    const contents = page.locator('folder-contents');
+                    const { contentsHeight } = await contents.evaluate((el) => ({
+                        contentsHeight: el.getBoundingClientRect().height,
+                    }));
+                    const { parentHeight } = await page.locator('gtx-split-view-container > .slideable > .left-panel').evaluate((el) => ({
+                        parentHeight: el.getBoundingClientRect().height,
+                    }));
+
+                    const ratio = (contentsHeight <= parentHeight)
+                        ? 1.0
+                        : ((100 / contentsHeight) * (parentHeight - RATIO_THRESHOLD)) / 100;
+
+                    await expect(contents).toBeInViewport({ ratio });
                 });
             });
 
@@ -274,10 +288,19 @@ test.describe('Page Editing', () => {
 
                 await editorAction(page, 'close');
 
-                await page.locator('content-frame').waitFor({state: 'detached'});
-                // Ratio is "rather low", as the content may overflow/cause scrolling, and that
-                // also counts towards viewport visibilty.
-                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                await page.locator('content-frame').waitFor({ state: 'detached' });
+                const contents = page.locator('folder-contents');
+                const { contentsHeight } = await contents.evaluate((el) => ({
+                    contentsHeight: el.getBoundingClientRect().height,
+                }));
+                const { parentHeight } = await page.locator('gtx-split-view-container > .slideable > .left-panel').evaluate((el) => ({
+                    parentHeight: el.getBoundingClientRect().height,
+                }));
+
+                const ratio = (contentsHeight <= parentHeight)
+                    ? 1.0
+                    : ((100 / contentsHeight) * (parentHeight - RATIO_THRESHOLD)) / 100;
+                await expect(contents).toBeInViewport({ ratio });
             });
         });
 

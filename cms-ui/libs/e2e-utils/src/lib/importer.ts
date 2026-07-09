@@ -291,17 +291,44 @@ export class EntityImporter {
         };
 
         const nodes = (await this.client.node.list().send()).items || [];
+        let deleteQueue = nodes.slice();
+        let oldDeleteLen = -1;
 
-        for (const node of nodes) {
-            if (node.name === emptyNode.node.name) {
-                // Skip the node if it's a simple cleanup
-                if (!completeClean) {
-                    continue;
+        while (oldDeleteLen !== deleteQueue.length) {
+            if (deleteQueue.length === 0) {
+                return;
+            }
+
+            oldDeleteLen = deleteQueue.length;
+            const backlog: Node[] = [];
+
+            for (const node of deleteQueue) {
+                if (node.name === emptyNode.node.name) {
+                    // Skip the node if it's a simple cleanup
+                    if (!completeClean) {
+                        continue;
+                    }
+                }
+
+                await this.clearEmptyNodeForDeletion(node);
+                try {
+                    await this.client.node.delete(node.id).send();
+                } catch (err) {
+                    if (err instanceof GCMSRestClientRequestError) {
+                        // If we try to delete a master node, which still has channels,
+                        // then we get an error. Therefore queue it up again and try later.
+                        if (err.responseCode === 409) {
+                            backlog.push(node);
+                        }
+                    }
                 }
             }
 
-            await this.clearEmptyNodeForDeletion(node);
-            await this.client.node.delete(node.id).send();
+            deleteQueue = backlog;
+        }
+
+        if (deleteQueue.length > 0) {
+            throw new Error(`Could not clean up all nodes: ${deleteQueue.map((node) => node.id).join(', ')}`);
         }
 
         await this.cleanupTemplates();

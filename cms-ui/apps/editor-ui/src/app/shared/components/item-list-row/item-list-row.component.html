@@ -1,221 +1,224 @@
 @if (item != null) {
-  <gtx-contents-list-item
-    class="item-row icon-checkbox-trigger"
-    [class.selected]="selected"
-    [class.deleted]="itemIdDeleted"
-    [class.item-in-editor]="item.id === activeItemId"
-    [attr.data-item-type]="itemType"
-    [attr.data-id]="item.id"
-    [attr.data-global-id]="item.globalId"
+    <gtx-contents-list-item
+        class="item-row icon-checkbox-trigger"
+        [class.selected]="selected"
+        [class.deleted]="itemIdDeleted"
+        [class.item-in-editor]="item.id === activeItemId"
+        [attr.data-item-type]="itemType"
+        [attr.data-id]="item.id"
+        [attr.data-global-id]="item.globalId"
     >
-    @if (itemType !== 'image') {
-      <icon-checkbox
-        [disabled]="!canBeSelected"
-        [selected]="selected"
-        [icon]="icon"
-        (change)="toggleSelect()"
-      ></icon-checkbox>
-    } @else {
-      <icon-checkbox
-        [selected]="selected"
-        [image]="item"
-        [nodeId]="nodeId"
-        (change)="toggleSelect()"
-      ></icon-checkbox>
-    }
+        @if (itemType !== 'image') {
+            <icon-checkbox
+                [disabled]="!canBeSelected"
+                [selected]="selected"
+                [icon]="icon"
+                (change)="toggleSelect()"
+            ></icon-checkbox>
+        } @else {
+            <icon-checkbox
+                [selected]="selected"
+                [image]="item"
+                [nodeId]="nodeId"
+                (change)="toggleSelect()"
+            ></icon-checkbox>
+        }
 
-    @if (activeLanguage
-      && nodeLanguages?.length > 1
-      && showStatusIcons
-      && languageState
-      && itemType === 'page'
-      ) {
-      <div class="current-language-container">
-        <gtx-language-state
-          [language]="languageState"
-          [activeLanguage]="activeLanguage"
-          [state]="languageState"
-          [mode]="uiMode"
-          [showIndicators]="true"
-          [showDeleted]="showDeleted"
-        ></gtx-language-state>
-      </div>
-    }
-
-    <div #itemPrimary class="item-primary">
-      <ng-template #itemName>
-        <div class="item-name">
-          @if (item.inherited) {
-            <icon
-              class="inherited-icon"
-              [title]="'editor.inherited_tooltip' | gtxI18n:{ master: item.inheritedFrom }"
-            >input</icon>
-          } @else if (item | itemIsLocalized) {
-            <icon
-              class="localized-icon"
-              [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }"
-            >file_copy</icon>
-          }
-
-          @if (
-            (mode === ItemListRowMode.SELECT
-            || itemIdDeleted
-            || uiMode === UIMode.STAGING
-            )
-            && item.type !== 'folder'
-            ) {
-            <span
-              class="item-name-only"
-              [innerHTML]="item?.name | highlight:filterTerm"
-              (click)="itemClicked($event, item)"
-            ></span>
-          } @else {
-            <a
-              href=""
-              class="item-name-only item-name-router-link"
-              [routerLink]="mode === ItemListRowMode.SELECT ? null : (item | routerCommandsForItem)"
-              [title]="item?.description"
-              [innerHTML]="item?.name | highlight:filterTerm"
-              (click)="itemClicked($event, item)"
-            ></a>
-          }
-
-          @if (uiMode === UIMode.EDIT && item) {
-            @if (item.type === 'page' || item.type === 'form') {
-              <item-status-label
-                [item]="item"
-                [nodeLanguages]="nodeLanguages"
-                [activeNodeId]="activeNode?.id"
-                [uiMode]="uiMode"
-                [stagingMap]="stagingMap"
-              ></item-status-label>
-            }
-
-            @if (item.type === 'image' || item.type === 'file') {
-              <file-status-label
-                [item]="item"
-              ></file-status-label>
-            }
-          }
-
-          @if ((item | isStartPage: startPageId)) {
-            <start-page-icon></start-page-icon>
-          }
-
-          @if (!itemIdDeleted
-            && (
-            itemType === 'page'
-            || itemType === 'file'
-            || itemType === 'image'
-            ) && item.liveUrl
-            ) {
-            <a
-              [href]="item['liveUrl']"
-              target="_blank"
-              class="liveurl-icon"
-              [title]="'editor.live_url_tooltip' | gtxI18n"
-              >
-              <gtx-button icon size="small" type="secondary">
-                <icon>open_in_new</icon>
-              </gtx-button>
-            </a>
-          }
-        </div>
-      </ng-template>
-
-      @if (itemType === 'image') {
-        <image-thumbnail-tooltip
-          [image]="item"
-          [nodeId]="nodeId"
-          [parent]="itemPrimary"
-          >
-          <ng-content *ngTemplateOutlet="itemName"></ng-content>
-        </image-thumbnail-tooltip>
-      } @else {
-        <ng-content *ngTemplateOutlet="itemName"></ng-content>
-      }
-
-      @if (searching) {
-        <item-breadcrumbs
-          [item]="item"
-          [linkPaths]="mode !== ItemListRowMode.SELECT"
-        ></item-breadcrumbs>
-      }
-
-      @if (getItemDetailsShowPaths() && itemType !== 'folder') {
-        <div
-          class="file-name"
-          [title]="item | itemPath:activeNode?.name"
-          [innerHTML]="item | itemPath:activeNode?.name | highlight:filterTerm"
-        ></div>
-      }
-
-      @if (((item.type === 'page' && activeLanguage != null) || item.type === 'form')
-        && nodeLanguages?.length > 1
+        @if (
+            activeLanguage
+            && nodeLanguages?.length > 1
+            && showStatusIcons
+            && languageState
+            && itemType === 'page'
         ) {
-        <div class="language-indicator">
-          @if (item.type === 'page') {
-            <page-language-indicator
-              [languages]="nodeLanguages"
-              [activeLanguage]="activeLanguage"
-              [page]="item"
-              [permissions]="permissions"
-              [mode]="mode"
-              [uiMode]="uiMode"
-              [stagingMap]="stagingMap"
-              [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
-              [displayDeleted]="showDeleted"
-              [expandByDefault]="expandByDefault"
-              (languageClick)="pageLanguageClicked($event)"
-              (languageIconClick)="onPageLanguageIconClicked($event)"
-            ></page-language-indicator>
-          }
+            <div class="current-language-container">
+                <gtx-language-state
+                    [language]="languageState"
+                    [activeLanguage]="activeLanguage"
+                    [state]="languageState"
+                    [mode]="uiMode"
+                    [showIndicators]="true"
+                    [showDeleted]="showDeleted"
+                ></gtx-language-state>
+            </div>
+        }
 
-          @if (item.type === 'form') {
-            <form-language-indicator
-              [languages]="nodeLanguages"
-              [form]="item"
-              [permissions]="permissions"
-              [mode]="mode"
-              [uiMode]="uiMode"
-              [stagingMap]="stagingMap"
-              [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
-              [displayDeleted]="showDeleted"
-              [expandByDefault]="expandByDefault"
-              (languageClick)="formLanguageClicked($event)"
-              (languageIconClick)="onFormLanguageIconClicked($event)"
-            ></form-language-indicator>
-          }
+        <div #itemPrimary class="item-primary">
+            <ng-template #itemName>
+                <div class="item-name">
+                    @if (item.inherited) {
+                        <icon
+                            class="inherited-icon"
+                            [title]="'editor.inherited_tooltip' | gtxI18n:{ master: item.inheritedFrom }"
+                        >input</icon>
+                    } @else if (item | itemIsLocalized) {
+                        <icon
+                            class="localized-icon"
+                            [title]="'editor.localized_tooltip' | gtxI18n:{ master: item.masterNode }"
+                        >file_copy</icon>
+                    }
+
+                    @if (
+                        (mode === ItemListRowMode.SELECT
+                            || itemIdDeleted
+                            || uiMode === UIMode.STAGING
+                        )
+                        && item.type !== 'folder'
+                    ) {
+                        <span
+                            class="item-name-only"
+                            [innerHTML]="item?.name | highlight:filterTerm"
+                            (click)="itemClicked($event, item)"
+                        ></span>
+                    } @else {
+                        <a
+                            href=""
+                            class="item-name-only item-name-router-link"
+                            [routerLink]="mode === ItemListRowMode.SELECT ? null : (item | routerCommandsForItem)"
+                            [title]="item?.description"
+                            [innerHTML]="item?.name | highlight:filterTerm"
+                            (click)="itemClicked($event, item)"
+                        ></a>
+                    }
+
+                    @if (item) {
+                        <item-status-label
+                            [item]="item"
+                            [nodeLanguages]="nodeLanguages"
+                            [activeNodeId]="activeNode?.id"
+                            [uiMode]="uiMode"
+                            [stagingMap]="stagingMap"
+                        ></item-status-label>
+
+                        @if (uiMode === UIMode.EDIT && item.type === 'image' || item.type === 'file') {
+                            <file-status-label
+                                [item]="item"
+                            ></file-status-label>
+                        }
+                    }
+
+                    @if ((item | isStartPage: startPageId)) {
+                        <start-page-icon></start-page-icon>
+                    }
+
+                    @if (
+                        !itemIdDeleted
+                        && (
+                            itemType === 'page'
+                            || itemType === 'file'
+                            || itemType === 'image'
+                        ) && item.liveUrl
+                    ) {
+                        <a
+                            [href]="item['liveUrl']"
+                            target="_blank"
+                            class="liveurl-icon"
+                            [title]="'editor.live_url_tooltip' | gtxI18n"
+                        >
+                            <gtx-button icon size="small" type="secondary">
+                                <icon>open_in_new</icon>
+                            </gtx-button>
+                        </a>
+                    }
+                </div>
+            </ng-template>
+
+            @if (itemType === 'image') {
+                <image-thumbnail-tooltip
+                    [image]="item"
+                    [nodeId]="nodeId"
+                    [parent]="itemPrimary"
+                >
+                    <ng-content *ngTemplateOutlet="itemName"></ng-content>
+                </image-thumbnail-tooltip>
+            } @else {
+                <ng-content *ngTemplateOutlet="itemName"></ng-content>
+            }
+
+            @if (searching) {
+                <item-breadcrumbs
+                    [item]="item"
+                    [linkPaths]="mode !== ItemListRowMode.SELECT"
+                ></item-breadcrumbs>
+            }
+
+            @if (getItemDetailsShowPaths() && itemType !== 'folder') {
+                <div
+                    class="file-name"
+                    [title]="item | itemPath:activeNode?.name"
+                    [innerHTML]="item | itemPath:activeNode?.name | highlight:filterTerm"
+                ></div>
+            }
+
+            @if (
+                ((item.type === 'page' && activeLanguage != null)
+                    || item.type === 'form'
+                )
+                && nodeLanguages?.length > 1
+            ) {
+                <div class="language-indicator">
+                    @if (item.type === 'page') {
+                        <page-language-indicator
+                            [languages]="nodeLanguages"
+                            [activeLanguage]="activeLanguage"
+                            [page]="item"
+                            [permissions]="permissions"
+                            [mode]="mode"
+                            [uiMode]="uiMode"
+                            [stagingMap]="stagingMap"
+                            [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
+                            [displayDeleted]="showDeleted"
+                            [expandByDefault]="expandByDefault"
+                            (languageClick)="pageLanguageClicked($event)"
+                            (languageIconClick)="onPageLanguageIconClicked($event)"
+                        ></page-language-indicator>
+                    }
+
+                    @if (item.type === 'form') {
+                        <form-language-indicator
+                            [languages]="nodeLanguages"
+                            [form]="item"
+                            [permissions]="permissions"
+                            [mode]="mode"
+                            [uiMode]="uiMode"
+                            [stagingMap]="stagingMap"
+                            [displayStatusInfo]="showStatusIcons || uiMode === UIMode.STAGING"
+                            [displayDeleted]="showDeleted"
+                            [expandByDefault]="expandByDefault"
+                            (languageClick)="formLanguageClicked($event)"
+                            (languageIconClick)="onFormLanguageIconClicked($event)"
+                        ></form-language-indicator>
+                    }
+                </div>
+            }
         </div>
-      }
-    </div>
 
-    <div class="display-fields">
-      <list-item-details
-        [fields]="getItemDetailsDisplayFields()"
-        [item]="item"
-        [isDeleted]="itemIdDeleted"
-        (usageClick)="showUsage($event)"
-      ></list-item-details>
-    </div>
+        <div class="display-fields">
+            <list-item-details
+                [fields]="getItemDetailsDisplayFields()"
+                [item]="item"
+                [isDeleted]="itemIdDeleted"
+                (usageClick)="showUsage($event)"
+            ></list-item-details>
+        </div>
 
-    <div class="show-on-hover">
-      <favourite-toggle [item]="item"></favourite-toggle>
+        <div class="show-on-hover">
+            <favourite-toggle [item]="item"></favourite-toggle>
 
-      @if (mode !== ItemListRowMode.SELECT) {
-        <item-context-menu
-          class="context-menu"
-          [item]="item"
-          [external]="external"
-          [activeNode]="activeNode"
-          [isFolderStartPage]="itemType === 'page' && item.id === startPageId"
-          [isLocked]="itemType === 'page' && item | pageIsLocked"
-          [isDeleted]="itemIdDeleted"
-          [permissions]="permissions | gtxMapPermissions"
-          [uiMode]="uiMode"
-          [stagingMap]="stagingMap"
-        ></item-context-menu>
-      }
-    </div>
-  </gtx-contents-list-item>
+            @if (mode !== ItemListRowMode.SELECT) {
+                <item-context-menu
+                    class="context-menu"
+                    [item]="item"
+                    [external]="external"
+                    [activeNode]="activeNode"
+                    [isFolderStartPage]="itemType === 'page' && item.id === startPageId"
+                    [isLocked]="itemType === 'page' && item | pageIsLocked"
+                    [isDeleted]="itemIdDeleted"
+                    [permissions]="permissions | gtxMapPermissions"
+                    [uiMode]="uiMode"
+                    [stagingMap]="stagingMap"
+                ></item-context-menu>
+            }
+        </div>
+    </gtx-contents-list-item>
 }

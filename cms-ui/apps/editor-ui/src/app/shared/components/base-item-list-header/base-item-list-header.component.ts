@@ -36,8 +36,6 @@ export abstract class BaseItemListHeaderComponent<T extends StageableItem> {
 
     /** If the items should display all available languages */
     public readonly showAllLanguages = input<boolean>(false);
-    /** If the language information should also contain additional language status indicators */
-    public readonly showStatusIcons = input<boolean>(false);
     /** The term the list is currently filtered by */
     public readonly filterTerm = input<string>('');
     /** If a elasticsearch query is currently active */

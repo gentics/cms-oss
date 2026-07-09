@@ -29,6 +29,7 @@ import {
     NodeFeature,
     Page,
     Raw,
+	ItemPermissions,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
@@ -116,7 +117,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     editItem(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, EditMode.EDIT).navigate());
+            .then(({ item, nodeId, editMode }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, editMode || EditMode.EDIT).navigate());
     }
 
     editInheritance(page: Page, activeNodeId: number): void {
@@ -442,13 +443,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         copy.adminEmailSubject = this.purgeKeysFrom(copy.adminEmailSubject, languagesToDelete);
         copy.successUrlI18n = this.purgeKeysFrom(copy.successUrlI18n, languagesToDelete);
 
-        Object.values(copy.schema.properties).forEach((prop) => {
+        Object.values(copy.schema?.properties || {}).forEach((prop) => {
             Object.keys(prop).forEach((key) => {
                 prop[key] = this.purgeKeysFrom(prop[key], languagesToDelete);
             });
         });
 
-        for (const page of copy['ui-schema'].pages) {
+        for (const page of (copy['ui-schema']?.pages || [])) {
             page.pagename = this.purgeKeysFrom(page.pagename, languagesToDelete);
 
             for (const el of page.elements) {
@@ -688,9 +689,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
+		const body = this.i18n.instant(['modal.choose_localization_type_body','modal.localization_type_description']) as any;
         this.modalService.dialog({
             title: this.i18n.instant('modal.choose_localization_type_title'),
-            body: this.i18n.instant('modal.choose_localization_type_body'),
+            body: Object.keys(body).map(key => body[key]).join('<br>'),
             buttons: [
                 {
                     id: 'cancel',

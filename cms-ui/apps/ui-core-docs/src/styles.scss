@@ -96,7 +96,7 @@ gtx-contents-list-item {
         border-radius: 3px;
         color: white;
         &.css {
-            background-color: #d8d1b5;
+            background-color: #8dbe88;
         }
         &.component {
             background-color: #99bdd0;
@@ -106,6 +106,12 @@ gtx-contents-list-item {
         }
         &.service {
             background-color: #bc9f9f;
+        }
+        &.directive {
+            background-color: #eba1f1;
+        }
+        &.pipe {
+            background-color: #f1b19d;
         }
     }
 }

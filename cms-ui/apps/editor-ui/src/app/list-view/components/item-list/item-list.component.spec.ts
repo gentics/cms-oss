@@ -176,7 +176,6 @@ class MockFolderActions {
     getTemplates(): void { }
     getItemsOfTypeInFolder(): void { }
     setDisplayAllPageLanguages(): void { }
-    setDisplayStatusIcons(): void { }
     setCurrentPage = jasmine.createSpy('setCurrentPage');
 }
 

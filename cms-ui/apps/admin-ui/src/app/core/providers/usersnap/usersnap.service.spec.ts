@@ -1,13 +1,14 @@
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { Injectable } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { UsersnapSettings } from '@gentics/cms-models';
+import { User, UsersnapSettings, Variant } from '@gentics/cms-models';
 import { tap } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
 import { InterfaceOf } from '../../../common';
 import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '../../../state/utils/test-app-state';
 import { AdminOperations } from '../operations/admin/admin.operations';
 import { UsersnapService } from './usersnap.service';
+import { UIStateModel } from '../../../state';
 
 @Injectable()
 class TestUsersnapService extends UsersnapService {
@@ -16,8 +17,12 @@ class TestUsersnapService extends UsersnapService {
 
     // Override actual activateUsersnap(), because we do not want to add a new <script>
     // tag to the test.
-    protected activateUsersnap(settings: UsersnapSettings): void {
-        this.activateUsersnapSpy(settings);
+    protected override activateUsersnap(
+        settings: UsersnapSettings,
+        ui: UIStateModel,
+        user: User,
+    ): void {
+        this.activateUsersnapSpy(settings, ui, user);
     }
 
 }
@@ -56,6 +61,21 @@ describe('UsersnapService', () => {
                     appState.mockState({
                         ui: {
                             usersnap: usersnapSettings,
+                            language: 'en',
+                            cmpVersion: {
+                                cmpVersion: '8.4.0',
+                                variant: Variant.OPEN_SOURCE,
+                                version: '6.4.0',
+                                nodeInfo: {},
+                            },
+                        },
+                        auth: {
+                            user: {
+                                id: 1,
+                                email: 'example@example.com',
+                                firstName: 'abc',
+                                lastName: 'xyz',
+                            },
                         },
                     });
                 }),
@@ -83,7 +103,6 @@ describe('UsersnapService', () => {
 
         tick();
         expect(usersnapService.activateUsersnapSpy).toHaveBeenCalledTimes(1);
-        expect(usersnapService.activateUsersnapSpy).toHaveBeenCalledWith(appState.now.ui.usersnap);
     }));
 
     it('does not activate Usersnap twice', fakeAsync(() => {

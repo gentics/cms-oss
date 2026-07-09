@@ -1,6 +1,18 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output } from '@angular/core';
 import { GcmsUiServices } from '@gentics/cms-integration-api-models';
-import { AllowedItemSelectionType, Item, ItemInNode, ItemRef, ItemRequestOptions, MarkupLanguageType } from '@gentics/cms-models';
+import {
+    AllowedItemSelectionType,
+    File,
+    Form,
+    Image,
+    Item,
+    ItemInNode,
+    ItemRef,
+    ItemRequestOptions,
+    MarkupLanguageType,
+    Page,
+    Template,
+} from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cancelEvent } from '@gentics/common';
 import { BaseFormElementComponent } from '@gentics/ui-core';
@@ -141,6 +153,11 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
      */
     public displayValue: string;
 
+    /**
+     * For tests to verify which elements have been selected.
+     */
+    public selectedItemHashes = '';
+
     /** The breadrcrumbs/path of the item(s) */
     public breadcrumbs: string[] = [];
 
@@ -259,7 +276,14 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
     }
 
     protected getItemCacheKey(item: ItemInNode): string {
-        return `${item.type}_${item.nodeId}_${item.id}_${item.edate}`;
+        let hash = `${item.type}:${item.id}`;
+        if (item.nodeId) {
+            hash += `:${item.nodeId}`;
+        }
+        if (item.edate) {
+            hash += `@${item.edate}`;
+        }
+        return hash;
     }
 
     protected loadItemIntoCache(item: ItemInNode, hash: string): void {
@@ -283,27 +307,73 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
                 break;
             case 'file':
                 loader = this.client.file.get(item.id, options).pipe(
-                    map((res) => res.file),
+                    map((res) => {
+                        const loaded = res.file as File & { nodeId: number };
+
+                        if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
+                            loaded.nodeId = item.nodeId;
+                        } else {
+                            loaded.nodeId = loaded.channelId || loaded.masterId;
+                        }
+
+                        return loaded;
+                    }),
                 ).toPromise();
                 break;
             case 'image':
                 loader = this.client.image.get(item.id, options).pipe(
-                    map((res) => res.image),
+                    map((res) => {
+                        const loaded = res.image as Image & { nodeId: number };
+
+                        if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
+                            loaded.nodeId = item.nodeId;
+                        } else {
+                            loaded.nodeId = loaded.channelId || loaded.masterId;
+                        }
+
+                        return loaded;
+                    }),
                 ).toPromise();
                 break;
             case 'page':
                 loader = this.client.page.get(item.id, options).pipe(
-                    map((res) => res.page),
+                    map((res) => {
+                        const loaded = res.page as Page & { nodeId: number };
+
+                        if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
+                            loaded.nodeId = item.nodeId;
+                        } else {
+                            loaded.nodeId = loaded.master ? loaded.masterNodeId : loaded.channelId;
+                        }
+
+                        return loaded;
+                    }),
                 ).toPromise();
                 break;
             case 'form':
                 loader = this.client.form.get(item.id, options).pipe(
-                    map((res) => res.item),
+                    map((res) => {
+                        const loaded = res.item as Form & { nodeId: number };
+
+                        if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
+                            loaded.nodeId = item.nodeId;
+                        }
+
+                        return loaded;
+                    }),
                 ).toPromise();
                 break;
             case 'template':
                 loader = this.client.template.get(item.id, options).pipe(
-                    map((res) => res.template),
+                    map((res) => {
+                        const loaded = res.template as Template & { nodeId: number };
+
+                        if (Number.isInteger(item.nodeId) && item.nodeId !== 0) {
+                            loaded.nodeId = item.nodeId;
+                        }
+
+                        return loaded;
+                    }),
                 ).toPromise();
                 break;
         }
@@ -318,6 +388,7 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
                 nodeId: item.nodeId,
                 type: item.type,
                 name: loadedItem.name,
+                path: (loadedItem as any).path || '',
             };
             this.updateDisplayName();
             this.changeDetector.markForCheck();
@@ -339,12 +410,24 @@ export class BrowseBoxComponent extends BaseFormElementComponent<ItemInNode | It
                 }
                 const hash = this.getItemCacheKey(item);
                 if (!this.cachedItems[hash]) {
-                    return 'todo: loading?';
+                    return null;
                 }
 
                 return this.cachedItems[hash].name;
             })
+            .filter((name) => !!name)
             .join(', ');
+
+        this.selectedItemHashes = arr
+            .filter((item) => item != null)
+            .map((item) => {
+                let str = `${item.type}:${item.id}`;
+                if (item.nodeId) {
+                    str += `:${item.nodeId}`;
+                }
+                return str;
+            })
+            .join(',');
 
         this.breadcrumbs = Array.from(new Set(arr
             .filter((item) => item != null)

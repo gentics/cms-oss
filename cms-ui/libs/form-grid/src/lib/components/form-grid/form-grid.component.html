@@ -55,8 +55,8 @@
                             <gtx-sortable-item
                                 type="button"
                                 class="palette-item"
-                                [attr.data-is-control]="controls"
                                 [class.container-element]="$any(ctlEntry.value)[container]"
+                                [attr.data-is-control]="controls"
                                 [attr.data-container-type]="$any(ctlEntry.value)[container] ? container : null"
                                 [attr.data-element-type]="ctlEntry.key"
                             >
@@ -85,7 +85,7 @@
                 </ng-template>
 
                 @if (mode() === FormGridEditMode.FULL && config().controls != null) {
-                    <div class="panel-section">
+                    <div class="panel-section control-section">
                         <ng-container [ngTemplateOutlet]="paletteList" [ngTemplateOutletContext]="{
                             title: 'form_grid.section_controls' | gtxI18n,
                             entries: (config().controls | gtxEntries),
@@ -96,7 +96,7 @@
                 }
 
                 @if (config().blocks != null) {
-                    <div class="panel-section">
+                    <div class="panel-section block-section">
                         <ng-container [ngTemplateOutlet]="paletteList" [ngTemplateOutletContext]="{
                             title: 'form_grid.section_blocks' | gtxI18n,
                             entries: (config().blocks | gtxEntries),

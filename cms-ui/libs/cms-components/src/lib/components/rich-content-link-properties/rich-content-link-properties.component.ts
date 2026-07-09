@@ -34,8 +34,8 @@ export class RichContentLinkPropertiesComponent extends BaseFormPropertiesCompon
 
     public readonly RichContentLinkType = RichContentLinkType;
     public readonly AVAILABLE_TARGETS = [
-        { label: 'richContent.link_target_current_tab', value: '_top' },
-        { label: 'richContent.link_target_new_tab', value: '_blank' },
+        { label: 'rich_content.link_target_current_tab', value: '_top' },
+        { label: 'rich_content.link_target_new_tab', value: '_blank' },
     ];
 
     /**

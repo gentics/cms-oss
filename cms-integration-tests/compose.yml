@@ -82,6 +82,7 @@ services:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages:x
+      - ./cms/content-packages:/cms/content-packages
       - ./cms/logs:/cms/logs:x
 
     healthcheck:

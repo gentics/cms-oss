@@ -135,11 +135,7 @@ public class LangTrx implements AutoCloseable {
 		DBUtils.executeStatement("SELECT short FROM language WHERE id = ?", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				try {
-					stmt.setInt(1, ContentNodeHelper.getLanguageId());
-				} catch (NodeException e) {
-					throw new SQLException(e);
-				}
+				stmt.setInt(1, ContentNodeHelper.getLanguageId(-1));
 			}
 
 			@Override

@@ -315,11 +315,6 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
         this.userSettings.setDisplayAllLanguages(!currentVal);
     }
 
-    toggleDisplayStatusIcons(): void {
-        const currentVal = this.appState.now.folder.displayStatusIcons;
-        this.userSettings.setDisplayStatusIcons(!currentVal);
-    }
-
     toggleDisplayDeleted(): void {
         const currentVal = this.appState.now.folder.displayDeleted;
         this.userSettings.setDisplayDeleted(!currentVal);

@@ -1,13 +1,30 @@
-/* eslint-disable import/no-nodejs-modules */
-/* eslint-disable @typescript-eslint/no-use-before-define */
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+/* eslint-disable import-x/no-nodejs-modules */
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+    DocCodeSpan,
+    DocErrorText,
+    DocEscapedText,
+    DocFencedCode,
+    DocLinkTag,
+    DocNode,
+    DocNodeKind,
+    DocNodeTransforms,
+    DocParagraph,
+    DocPlainText,
+    DocSection,
+    TSDocParser,
+} from '@microsoft/tsdoc';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
 import * as ts from 'typescript';
 import { AccessModifer, DocBlock, DocumentationType, IDocumentation, PropertyGroup, SourceFile } from './src/app/common/docs';
 
 marked.setOptions({
+    breaks: false,
+    gfm: true,
+    pedantic: false,
+    silent: false,
     highlight: (code: string, lang: string): string => {
         if (lang && hljs.getLanguage(lang)) {
             return hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
@@ -60,7 +77,7 @@ function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocument
 
     for (const part of ['inputs', 'outputs', 'properties', 'methods']) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        docs[part].unshift(...inherited[part].map(block => blockWithInheritance(block, file.extends, inherited, map)));
+        docs[part].unshift(...inherited[part].map((block) => blockWithInheritance(block, file.extends, inherited, map)));
     }
 }
 
@@ -81,8 +98,8 @@ function blockWithInheritance(block: DocBlock, id: string, inheritance: IDocumen
     };
 }
 
-function createDocsFromAST(type: 'component' | 'service', filePath: string, sourceCode: string): IDocumentation {
-    /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
+function createDocsFromAST(type: DocumentationType, filePath: string, sourceCode: string): IDocumentation {
+
     const fileName = baseName(filePath);
     const sourceFile = ts.createSourceFile(fileName, sourceCode, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
@@ -129,7 +146,7 @@ function isNodeExported(node: ts.Node): boolean {
 }
 
 function getClassDocumentation(
-    type: 'component' | 'service',
+    type: DocumentationType,
     filePath: string,
     sourceFile: ts.SourceFile,
     classNode: ts.ClassDeclaration,
@@ -138,14 +155,56 @@ function getClassDocumentation(
         sourceFile: filePath,
         type,
         name: classNode.name.text,
+        selectors: [],
         generics: [],
         inheritance: [],
-        main: marked(getCommentFromNode(sourceFile, classNode)),
+        main: getCommentFromNode(sourceFile, classNode),
         inputs: [],
         methods: [],
         outputs: [],
         properties: [],
     };
+
+    if (classNode.modifiers) {
+        for (const mod of classNode.modifiers) {
+            if (!ts.isDecorator(mod)) {
+                continue;
+            }
+            const deco = mod.getChildAt(1);
+            const name = deco.getChildAt(0).getText();
+
+            const checkForSelector = name === 'Component' || name === 'Directive';
+            const checkForName = name === 'Pipe';
+
+            if (checkForSelector || checkForName) {
+                const options = deco.getChildAt(2).getChildAt(0).getChildAt(1);
+                for (const param of options.getChildren()) {
+                    if (param.getChildCount() === 0) {
+                        continue;
+                    }
+
+                    const paramName = param.getChildAt(0).getText();
+
+                    if (
+                        !(checkForSelector && paramName === 'selector')
+                        && !(checkForName && paramName === 'name')
+                    ) {
+                        continue;
+                    }
+
+                    // Expecting it to be a string
+                    const value = param.getChildAt(2).getText();
+                    const stripped = stripStringQuotes(value).trim();
+                    if (checkForSelector) {
+                        docs.selectors.push(...stripped.split(',').map((s) => s.trim()));
+                    } else {
+                        docs.selectors.push(stripped);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
     if (classNode.typeParameters != null) {
         for (const generic of classNode.typeParameters) {
@@ -154,7 +213,8 @@ function getClassDocumentation(
     }
 
     for (const member of classNode.members) {
-        if (!ts.isPropertyDeclaration(member)
+        if (
+            !ts.isPropertyDeclaration(member)
             && (!ts.isFunctionLike(member) && !ts.isSetAccessorDeclaration(member))
         ) {
             continue;
@@ -254,8 +314,8 @@ function getPropertyDocumentation(
 
     const base: Partial<DocBlock> = {
         identifier: node.name.getText(),
-        body: marked(getCommentFromNode(sourceFile, node)),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
+        body: getCommentFromNode(sourceFile, node),
+
         accessModifier: getAccessModifer(node),
     };
     let docs: DocBlock;
@@ -330,11 +390,11 @@ function getPrimitiveTypeName(node: ts.Node): string {
 }
 
 function getFunctionArgs(node: ts.FunctionLikeDeclaration): string[] {
-    return node.parameters.map(param => {
+    return node.parameters.map((param) => {
         let out = 'any';
         if (param.name != null) {
             out = param.name.getText();
-            if (param.type != null ){
+            if (param.type != null) {
                 out = `${out}: ${param.type.getText()}`;
             } else {
                 out = `${out}: any`;
@@ -378,7 +438,83 @@ function getCommentFromNode(sourceFile: ts.SourceFile, node: ts.Node): string {
         filteredComments.push(comment);
     }
 
-    return stripUnsupportedJsDoc(stripStars(filteredComments.join('\n')));
+    const raw = filteredComments.join('\n');
+    const parsed = commentToHTML(raw);
+    return parsed;
+}
+
+function commentToHTML(rawComment: string): string {
+    const parser = new TSDocParser();
+    const context = parser.parseString(rawComment);
+    const doc = context.docComment;
+
+    const parts = [];
+
+    for (const node of doc.getChildNodes()) {
+        parts.push(docNodeToHtml(node));
+    }
+
+    return parts.join('');
+}
+
+function docNodeToHtml(node: DocNode): string {
+    switch (node.kind) {
+        case DocNodeKind.CodeSpan:{
+            const raw = (node as DocCodeSpan).code;
+            const escaped = raw.replaceAll('<', '&lt;');
+            return `<code>${escaped}</code>`;
+        }
+
+        case DocNodeKind.FencedCode: {
+            const block = node as DocFencedCode;
+            const code = hljs.highlight(block.code, { language: block.language || 'xml' });
+            return `<pre><code>${code.value}</code></pre>`;
+        }
+
+        case DocNodeKind.Paragraph: {
+            const transformed = DocNodeTransforms.trimSpacesInParagraph(node as DocParagraph);
+            const parts = [];
+            for (const child of transformed.getChildNodes()) {
+                parts.push(docNodeToHtml(child));
+            }
+            if (parts.length === 0) {
+                return '';
+            }
+            return `${parts.join('')}\n\n`;
+        }
+
+        case DocNodeKind.LinkTag: {
+            const link = node as DocLinkTag;
+            const parts = [];
+            for (const child of link.getChildNodes()) {
+                parts.push(docNodeToHtml(child));
+            }
+
+            return `<a href=${link.urlDestination}>${parts.join('')}</a>`;
+        }
+
+        case DocNodeKind.SoftBreak:
+            return '<br>';
+
+        case DocNodeKind.PlainText:
+            return (node as DocPlainText).text;
+
+        case DocNodeKind.EscapedText:
+            return (node as DocEscapedText).decodedText;
+
+        case DocNodeKind.ErrorText:
+            return (node as DocErrorText).text;
+
+        case DocNodeKind.Section: {
+            const parts = [];
+            for (const child of (node as DocSection).getChildNodes()) {
+                parts.push(docNodeToHtml(child));
+            }
+            return marked(`${parts.join('')}`);
+        }
+    }
+
+    return '';
 }
 
 function getAccessModifer(node: ts.Node): AccessModifer {
@@ -396,13 +532,6 @@ function getAccessModifer(node: ts.Node): AccessModifer {
     return 'public';
 }
 
-/**
- * Remove the `*` and padding from the doc block body.
- */
-function stripStars(body: string): string {
-    return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?|\*\//mg, '$1').trim();
-}
-
-function stripUnsupportedJsDoc(body: string): string {
-    return body.replace(/@example[\s]*/, '');
+function stripStringQuotes(strValue: string): string {
+    return strValue.replace(/^(?:')(.*)(?:')$|^(?:")(.*)(?:")$/, '$1').trim();
 }

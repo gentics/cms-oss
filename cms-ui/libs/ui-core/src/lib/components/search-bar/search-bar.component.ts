@@ -9,19 +9,21 @@ import { generateFormProvider } from '../../utils';
  * located near the top of the screen, below the [TopBar](#/top-bar).
  *
  * ```html
- * <gtx-search-bar [query]="searchQuery"
- *                 (change)="onChange($event)"
- *                 (search)="search($event)">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     [query]="searchQuery"
+ *     (change)="onChange($event)"
+ *     (search)="search($event)"
+ * ></gtx-search-bar>
  * ```
  *
  * ## Use With NgModel
  * The search query can be bound with `NgModel`, which can be useful for implementing a reset function:
  *
  * ```html
- * <gtx-search-bar [(ngModel)]="searchQuery"
- *                 (clear)="searchQuery = ''">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     [(ngModel)]="searchQuery"
+ *     (clear)="searchQuery = ''"
+ * ></gtx-search-bar>
  * ```
  *
  * ## Content Projection
@@ -30,7 +32,7 @@ import { generateFormProvider } from '../../utils';
  *
  * ```html
  * <gtx-search-bar>
- *      <div class="chip">Tag 1<i class="material-icons">close</i></div>
+ *      <div class="chip">Tag 1<icon>close</icon></div>
  * </gtx-search-bar>
  * ```
  *
@@ -38,9 +40,10 @@ import { generateFormProvider } from '../../utils';
  * Icons in the `<gtx-search-bar>` can be replaced with custom ones.
  *
  * ```html
- * <gtx-search-bar submitIcon="filter_list"
- *                 clearIcon="undo">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     submitIcon="filter_list"
+ *     clearIcon="undo"
+ * ></gtx-search-bar>
  * ```
  */
 @Component({

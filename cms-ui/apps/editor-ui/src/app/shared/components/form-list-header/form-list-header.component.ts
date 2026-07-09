@@ -92,10 +92,6 @@ export class FormListHeaderComponent extends BaseItemListHeaderComponent<Form> {
         this.userSettings.setDisplayAllLanguages(!this.showAllLanguages());
     }
 
-    toggleDisplayStatusIcons(): void {
-        this.userSettings.setDisplayStatusIcons(!this.showStatusIcons());
-    }
-
     toggleDisplayDeleted(): void {
         this.userSettings.setDisplayDeleted(!this.showDeleted());
         // refresh list as refetch is required

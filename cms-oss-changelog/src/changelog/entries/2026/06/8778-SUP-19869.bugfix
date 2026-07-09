@@ -1,0 +1,2 @@
+Editor User Interface: As `Show Status Icons` view option confuses in the way of how the actual page/form language status is actually described, it has been removed. 
+Now the language icon is always shown, without the duplication of other page status items: published, deleted, queued etc.

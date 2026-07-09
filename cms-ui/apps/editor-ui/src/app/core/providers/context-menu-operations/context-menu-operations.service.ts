@@ -29,6 +29,7 @@ import {
     NodeFeature,
     Page,
     Raw,
+	ItemPermissions,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
@@ -116,7 +117,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     editItem(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, EditMode.EDIT).navigate());
+            .then(({ item, nodeId, editMode }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, editMode || EditMode.EDIT).navigate());
     }
 
     editInheritance(page: Page, activeNodeId: number): void {
@@ -688,9 +689,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
+		const body = this.i18n.instant(['modal.choose_localization_type_body','modal.localization_type_description']) as any;
         this.modalService.dialog({
             title: this.i18n.instant('modal.choose_localization_type_title'),
-            body: this.i18n.instant('modal.choose_localization_type_body'),
+            body: Object.keys(body).map(key => body[key]).join('<br>'),
             buttons: [
                 {
                     id: 'cancel',

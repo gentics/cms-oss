@@ -532,12 +532,6 @@ test.describe('Form Management', () => {
         ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
-        const listOptions = list.locator('[data-action="open-list-context"]');
-
-        await test.step('Change Status Icon Settings', async () => {
-            const dropdown = await openContext(listOptions);
-            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
-        });
 
         await test.step('Delete english variant', async () => {
             const deEnFormItem = findItem(list, DE_EN_FORM.id);

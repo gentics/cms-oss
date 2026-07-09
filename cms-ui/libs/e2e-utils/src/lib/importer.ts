@@ -296,7 +296,7 @@ export class EntityImporter {
 
         while (oldDeleteLen !== deleteQueue.length) {
             if (deleteQueue.length === 0) {
-                return;
+                break;
             }
 
             oldDeleteLen = deleteQueue.length;

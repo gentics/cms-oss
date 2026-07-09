@@ -52,6 +52,16 @@ test.describe('Templates Module', () => {
         testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any);
         testNode = IMPORTER.get(NODE_MINIMAL);
 
+        // We have to assign the template to the dummy node as well,
+        // as in the tests, we un-assign it from our test node, which is only
+        // permitted, if it's at least linked to another node.
+        // Will be cleaned up anyways so no risk here that it affects other tests.
+        const dummyNode = (await IMPORTER.client.node.get(IMPORTER.dummyNode).send()).node;
+        await IMPORTER.client.template.link(testTemplate.id, {
+            folderIds: [dummyNode.folderId],
+            nodeId: dummyNode.id,
+        }).send();
+
         // Navigate to the app and log in
         await navigateToApp(page);
         await loginWithForm(page, AUTH.admin);

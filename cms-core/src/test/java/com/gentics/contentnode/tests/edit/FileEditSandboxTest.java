@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.convertStreamToString;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.generateDataFile;
 import static org.junit.Assert.assertEquals;
@@ -25,10 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-
-import jakarta.servlet.ReadListener;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Rule;
@@ -56,6 +53,10 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.i18n.CNI18nString;
+
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 
 /**
@@ -1097,15 +1098,12 @@ public class FileEditSandboxTest {
 			FileUploadResponse fileUploadResponse = null;
 
 			try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-
 				try {
 					Random rand = new Random();
 					String filename = "abcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyz.txt";
 					multiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart(
 							filename, folder.getId(), folder.getNode().getId(), "", false, "testcontent");
-					fileUploadResponse = fileResource.create(multiPart);
+					fileUploadResponse = getFileResource().create(multiPart);
 					ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 				} finally {
 					if (multiPart != null) {

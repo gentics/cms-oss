@@ -2,6 +2,7 @@ package com.gentics.contentnode.image;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
@@ -365,7 +366,7 @@ public class WebpConversionTest {
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"folderId\""), folderId.toString()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"nodeId\""), nodeId.toString()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\""), t.getSessionId()))
-				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\""), t.getSession().getSessionSecret()))
+				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\""), ((DBSession)t.getSession()).getSessionSecret()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"fileName\""), getRequestFilename()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"description\""), description))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"overwrite\""), (overwrite ? "true" : "false")))

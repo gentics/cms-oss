@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest.page;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
@@ -27,7 +28,6 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.LegacyPageListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -71,16 +71,13 @@ public class PublishQueueTest {
 		// create a published page
 		publishedPage = Trx.supply(() -> createPage(folder, template, "Published"));
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
-			res.publish(publishedPage.getId().toString(), null, new PagePublishRequest());
+			getPageResource().publish(publishedPage.getId().toString(), null, new PagePublishRequest());
 		});
 
 		// create a page in the queue
 		try (Trx trx = new Trx(null, editorUser.getId())) {
 			queuedPage = createPage(folder, template, "In Queue");
-
-			PageResource res = new PageResourceImpl();
-			res.publish(queuedPage.getId().toString(), null, new PagePublishRequest());
+			getPageResource().publish(queuedPage.getId().toString(), null, new PagePublishRequest());
 		}
 
 		// create an unpublished page

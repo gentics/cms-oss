@@ -1,5 +1,9 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -8,6 +12,8 @@ import java.util.Map;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -34,12 +40,6 @@ import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 /**
  * This class implements logic, frequently used by all overview related tests.
@@ -103,12 +103,8 @@ public final class OverviewHelper {
 		}
 		t.commit(false);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-
 		String localCopyPageId = Integer.toString(ObjectTransformer.getInteger(localCopy.getId(), -1));
-		PageLoadResponse pageLoadResponse = pageResource.load(localCopyPageId, false, false, false, false, false, false, false, false, false, false, null, null);
+		PageLoadResponse pageLoadResponse = getPageResource().load(localCopyPageId, false, false, false, false, false, false, false, false, false, false, null, null);
 
 		assertEquals("Check the response code", ResponseCode.OK, pageLoadResponse.getResponseInfo().getResponseCode());
 		assertNotNull("Check if the page exists", pageLoadResponse.getPage());
@@ -147,16 +143,10 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveImage(com.gentics.contentnode.rest.model.Image image) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		ImageResourceImpl imageResource = new ImageResourceImpl();
-
-		imageResource.setTransaction(t);
-        
 		ImageSaveRequest saveRequest = new ImageSaveRequest();
 
 		saveRequest.setImage(image);
-		GenericResponse saveResponse = imageResource.save(image.getId(), saveRequest);
+		GenericResponse saveResponse = getImageResource().save(image.getId(), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
@@ -190,16 +180,10 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveFile(com.gentics.contentnode.rest.model.File file) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		FileResourceImpl fileResource = new FileResourceImpl();
-
-		fileResource.setTransaction(t);
-        
 		FileSaveRequest saveRequest = new FileSaveRequest();
 
 		saveRequest.setFile(file);
-		GenericResponse saveResponse = fileResource.save(file.getId(), saveRequest);
+		GenericResponse saveResponse = getFileResource().save(file.getId(), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
@@ -233,16 +217,10 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveFolder(com.gentics.contentnode.rest.model.Folder folder) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(t);
-        
 		FolderSaveRequest saveRequest = new FolderSaveRequest();
 
 		saveRequest.setFolder(folder);
-		GenericResponse saveResponse = folderResource.save(Integer.toString(folder.getId()), saveRequest);
+		GenericResponse saveResponse = getFolderResource().save(Integer.toString(folder.getId()), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
@@ -279,17 +257,11 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static com.gentics.contentnode.rest.model.Page createPage(int folderId, int templateId) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageCreateRequest createPageRequest = new PageCreateRequest();
 
 		createPageRequest.setFolderId(Integer.toString(folderId));
 		createPageRequest.setTemplateId(templateId);
-		PageLoadResponse createPageResponse = pageResource.create(createPageRequest);
+		PageLoadResponse createPageResponse = getPageResource().create(createPageRequest);
 
 		assertEquals("Check the reponse code", ResponseCode.OK, createPageResponse.getResponseInfo().getResponseCode());
 
@@ -306,17 +278,11 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void savePage(com.gentics.contentnode.rest.model.Page page) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageSaveRequest saveRequest = new PageSaveRequest();
 
 		saveRequest.setPage(page);
 		saveRequest.setUnlock(true);
-		GenericResponse saveResponse = pageResource.save(Integer.toString(page.getId()), saveRequest);
+		GenericResponse saveResponse = getPageResource().save(Integer.toString(page.getId()), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}

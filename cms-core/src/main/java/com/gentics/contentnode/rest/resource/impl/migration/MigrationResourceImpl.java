@@ -1,7 +1,9 @@
 package com.gentics.contentnode.rest.resource.impl.migration;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,12 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
 
 import org.apache.commons.io.FileUtils;
 
@@ -25,9 +21,11 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.distributed.TrxCallable;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.migration.MigrationDBLogger;
 import com.gentics.contentnode.migration.MigrationHelper;
 import com.gentics.contentnode.migration.MigrationPartMapper;
@@ -37,9 +35,7 @@ import com.gentics.contentnode.migration.jobs.TemplateMigrationJob;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.utility.ConstructComparator;
-import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
-import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.request.ConstructSortAttribute;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.request.migration.MigrationReinvokeRequest;
@@ -61,7 +57,6 @@ import com.gentics.contentnode.rest.model.response.migration.MigrationResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationStatusResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationTagsResponse;
 import com.gentics.contentnode.rest.model.response.migration.PossiblePartMappingsResponse;
-import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource;
 import com.gentics.contentnode.rest.resource.migration.MigrationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
@@ -70,88 +65,61 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+
 /**
  * Resource used for performing Tag Type and Template Migrations
  *
  * @author Taylor
  */
 @Path("/migration")
-public class MigrationResourceImpl extends AuthenticatedContentNodeResource implements MigrationResource {
+@Authenticated
+public class MigrationResourceImpl implements MigrationResource {
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#cancelMigration()
-	 */
+	@Override
 	@GET
 	@Path("/cancelMigration")
-	public GenericResponse cancelMigration() {
-		try {
-			return DistributionUtil.call(new CancelMigration().setLanguageId().setSession(getTransaction().getSession()));
-		} catch (Exception e) {
-			logger.error("Error while cancelling migration process", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while cancelling migration process. See server logs for details."));
+	public GenericResponse cancelMigration() throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return DistributionUtil.call(new CancelMigration().setLanguageId().setSession(trx.getTransaction().getSession()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationStatus()
-	 */
+	@Override
 	@GET
 	@Path("/getMigrationStatus")
-	public MigrationStatusResponse getMigrationStatus() {
-		try {
-			return DistributionUtil.call(new GetMigrationStatus().setLanguageId().setSession(getTransaction().getSession()));
-		} catch (Exception e) {
-			logger.error("Error while retrieving migration status", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationStatusResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while retrieving migration status. See server logs for details."));
+	public MigrationStatusResponse getMigrationStatus() throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return DistributionUtil.call(new GetMigrationStatus().setLanguageId().setSession(trx.getTransaction().getSession()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationJobItems(int)
-	 */
+	@Override
 	@GET
 	@Path("/getMigrationJobItems/{jobId}")
-	public MigrationJobItemsResponse getMigrationJobItems(@PathParam("jobId") int jobId) {
+	public MigrationJobItemsResponse getMigrationJobItems(@PathParam("jobId") int jobId) throws NodeException {
 		MigrationJobItemsResponse response;
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			MigrationDBLogger dbLogger = new MigrationDBLogger(MigrationDBLogger.DEFAULT_LOGGER);
 
 			response = new MigrationJobItemsResponse(null, new ResponseInfo(ResponseCode.OK, "The migration job items have been fetched."));
 			response.setJobId(jobId);
 			response.setJobItems(dbLogger.getMigrationJobItemEntries(jobId));
 			return response;
-		} catch (Exception e) {
-			logger.error("Error while retrieving job items for job {" + jobId + "}.", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationJobItemsResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while retrieving migration log. See server logs for details."));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationLog(java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/getMigrationLog/{jobId}")
-	public MigrationGetLogResponse getMigrationLog(@PathParam("jobId") int jobId) {
+	public MigrationGetLogResponse getMigrationLog(@PathParam("jobId") int jobId) throws NodeException {
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			MigrationGetLogResponse response = new MigrationGetLogResponse(null, new ResponseInfo(ResponseCode.OK, "Log sucessfully loaded."));
 			File logFile = new MigrationDBLogger(MigrationDBLogger.DEFAULT_LOGGER).getLogFileForJob(jobId);
 
@@ -163,29 +131,20 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 			contents = contents.replaceAll("\n", "\r\n");
 			response.setLogContents(contents);
 			return response;
-		} catch (Exception e) {
-			logger.error("Error while retrieving migration log", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationGetLogResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while retrieving migration log. See server logs for details."));
+		} catch (IOException e) {
+			throw new NodeException(e);
 		}
-
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationLog(java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/getMigrationLogs")
-	public MigrationGetLogsResponse getMigrationLogs() {
+	public MigrationGetLogsResponse getMigrationLogs() throws NodeException {
 
 		Map<String, String> logs = new HashMap<String, String>();
 		DateFormat dateFormat = new SimpleDateFormat(MigrationHelper.getTtmLogDateFormat());
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			File folder = MigrationHelper.getLogDir();
 
 			MigrationGetLogsResponse response = new MigrationGetLogsResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched migration logs."));
@@ -209,85 +168,44 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 			response.setJobEntries(dbLogger.getMigrationJobEntries());
 
 			return response;
-		} catch (Exception e) {
-			logger.error("Error while retrieving migration logs", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationGetLogsResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while retrieving migration logs. See server logs for details."));
+		} catch (ParseException e) {
+			throw new NodeException(e);
 		}
-
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#reinvokeMigration(com.gentics.contentnode.rest.model.request.ttm.TtmMigrationReinvokeRequest)
-	 */
+	@Override
 	@POST
 	@Path("/reinvokeMigration")
-	public MigrationResponse reinvokeTagTypeMigration(MigrationReinvokeRequest request) {
-		try {
-			return DistributionUtil.call(new ReinvokeTTM().setRequest(request).setLanguageId().setSession(getTransaction().getSession()));
-		} catch (Exception e) {
-			logger.error("Error while reinvoking job {" + request.getJobId() + "} for object {" + request.getJobId() + "}", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while executing tag type migration job. See server logs for details."));
+	public MigrationResponse reinvokeTagTypeMigration(MigrationReinvokeRequest request) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return DistributionUtil.call(new ReinvokeTTM().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.resource.migration.MigrationResource#performTemplateMigration(com.gentics.contentnode.rest.model.request.ttm.TemplateMigrationRequest)
-	 */
+	@Override
 	@POST
 	@Path("/performTemplateMigration")
-	public MigrationResponse performTemplateMigration(TemplateMigrationRequest request) {
-		try {
-			return DistributionUtil.call(new PerformTemplateMigration().setRequest(request).setLanguageId().setSession(getTransaction().getSession()));
-		} catch (Exception e) {
-			logger.error("Error while executing tag type migration job", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while executing migration job. See server logs for details."));
+	public MigrationResponse performTemplateMigration(TemplateMigrationRequest request) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return DistributionUtil.call(new PerformTemplateMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#performMigration(com.gentics.contentnode.rest.model.request.TagTypeMigrationRequest)
-	 */
+	@Override
 	@POST
 	@Path("/performMigration")
-	public MigrationResponse performTagTypeMigration(TagTypeMigrationRequest request) {
-		try {
-			return DistributionUtil.call(new PerformTagTypeMigration().setRequest(request).setLanguageId().setSession(getTransaction().getSession()));
-		} catch (Exception e) {
-			logger.error("Error while executing tag type migration job", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while executing tag type migration job. See server logs for details."));
+	public MigrationResponse performTagTypeMigration(TagTypeMigrationRequest request) throws Exception {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return DistributionUtil.call(new PerformTagTypeMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getPartsForTagType(java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/getPartsForTagType/{id}")
-	public MigrationPartsResponse getPartsForTagType(@PathParam("id") String id) {
-		Transaction t = getTransaction();
-
-		try {
+	public MigrationPartsResponse getPartsForTagType(@PathParam("id") String id) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			List<Part> nodeParts = MigrationHelper.fetchPartsForTagtype(id, t);
 
 			if (nodeParts == null || nodeParts.isEmpty()) {
@@ -305,24 +223,14 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 			response.setParts(restParts);
 			return response;
-		} catch (Exception e) {
-			logger.error("Error while getting parts", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationPartsResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting tags. See server logs for details."));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationTagTypes(com.gentics.contentnode.rest.model.request.MigrationTagsRequest)
-	 */
+	@Override
 	@POST
 	@Path("/getMigrationTagTypes")
-	public MigrationTagsResponse getMigrationTagTypes(MigrationTagsRequest request) {
-		try {
+	public MigrationTagsResponse getMigrationTagTypes(MigrationTagsRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			List<com.gentics.contentnode.rest.model.Construct> restList = getMigrationConstructList(request);
 
 			// Create response object with tag list
@@ -334,28 +242,14 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 			}
 
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new MigrationTagsResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new MigrationTagsResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (Exception e) {
-			logger.error("Error while getting tag types", e);
-
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new MigrationTagsResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting tags. See server logs for details."));
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.migration.MigrationResource#getMigrationConstructs(com.gentics.contentnode.rest.model.request.migration.MigrationTagsRequest)
-	 */
+	@Override
 	@POST
 	@Path("/getMigrationConstructs")
-	public ConstructListResponse getMigrationConstructs(MigrationTagsRequest request) {
-		try {
+	public ConstructListResponse getMigrationConstructs(MigrationTagsRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			List<com.gentics.contentnode.rest.model.Construct> restList = getMigrationConstructList(request);
 
 			// Create response object with tag list
@@ -363,18 +257,6 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 			response.setConstructs(restList);
 
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new ConstructListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new ConstructListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (Exception e) {
-			logger.error("Error while getting tag types", e);
-
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new ConstructListResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting tags. See server logs for details."));
 		}
 	}
 
@@ -385,7 +267,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 	 * @throws NodeException
 	 */
 	protected List<com.gentics.contentnode.rest.model.Construct> getMigrationConstructList(MigrationTagsRequest request) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 		List<Integer> ids = request.getIds();
 		List<Construct> tagTypes = null;
 
@@ -423,18 +305,14 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 		return restConstructs;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see MigrationResource#getPossiblePartMappings(int, int)
-	 */
+	@Override
 	@GET
 	@Path("/getPossiblePartMappings")
 	public PossiblePartMappingsResponse getPossiblePartMappings(@QueryParam("fromTagTypeId") int fromTagTypeId,
-			@QueryParam("toTagTypeId") int toTagTypeId) {
-		Transaction t = getTransaction();
+			@QueryParam("toTagTypeId") int toTagTypeId) throws NodeException {
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			Construct fromTagType = t.getObject(Construct.class, fromTagTypeId);
 			Construct toTagType = t.getObject(Construct.class, toTagTypeId);
 
@@ -464,12 +342,6 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 			response.setPossibleMapping(possibleMappingsRestModel);
 			return response;
-		} catch (NodeException e) {
-			logger.error("Error while getting possible part type mappings", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new PossiblePartMappingsResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting possible part mappings. See server logs for details."));
 		}
 	}
 

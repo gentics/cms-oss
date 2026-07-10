@@ -14,7 +14,7 @@ import com.gentics.contentnode.rest.model.response.PolicyResponse;
  */
 @Path("/policyMap")
 @Consumes("*/*")
-public interface PolicyMapResource extends AuthenticatedResource {
+public interface PolicyMapResource {
 	@GET
 	@Path("/partType/{typeId}/policyGroup")
 	public PolicyGroupResponse getPolicyGroup(@PathParam("typeId") int typeId) throws Exception;

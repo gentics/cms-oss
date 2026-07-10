@@ -1,5 +1,8 @@
 package com.gentics.contentnode.tests.construct;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getTemplateResource;
 import static org.junit.Assert.assertNull;
 
@@ -34,9 +37,6 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.resource.TemplateResource;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
@@ -104,12 +104,8 @@ public class DeleteConstructTest {
 		deleteConstruct();
 
 		try (Trx trx = new Trx()) {
-			Transaction t = trx.getTransaction();
-
 			// Load
-			PageResourceImpl pageResource = new PageResourceImpl();
-			pageResource.setTransaction(t);
-			PageLoadResponse response = pageResource.load(page.getId().toString(),
+			PageLoadResponse response = getPageResource().load(page.getId().toString(),
 					false, true, true, true, true, false, false, true, false, false, 0, null);
 
 			Map<String, com.gentics.contentnode.rest.model.Tag> tags = response.getPage().getTags();
@@ -120,7 +116,7 @@ public class DeleteConstructTest {
 			// Save
 			PageSaveRequest pageSaveRequest = new PageSaveRequest();
 			pageSaveRequest.setPage(response.getPage());
-			GenericResponse pageSaveResponse = pageResource.save(page.getId().toString(), pageSaveRequest);
+			GenericResponse pageSaveResponse = getPageResource().save(page.getId().toString(), pageSaveRequest);
 			ContentNodeTestUtils.assertResponseCodeOk(pageSaveResponse);
 
 			page.publish();
@@ -186,12 +182,8 @@ public class DeleteConstructTest {
 		deleteConstruct();
 
 		try (Trx trx = new Trx()) {
-			Transaction t = trx.getTransaction();
-
 			// Load
-			FolderResourceImpl folderResource = new FolderResourceImpl();
-			folderResource.setTransaction(t);
-			FolderLoadResponse response = folderResource.load(folder.getId().toString(), false, false, false, 0, null);
+			FolderLoadResponse response = getFolderResource().load(folder.getId().toString(), false, false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCodeOk(response);
 
 			assertNull("Object tag must not exist", response.getFolder().getTags().get("object.folderproperty"));
@@ -199,7 +191,7 @@ public class DeleteConstructTest {
 			// Save
 			FolderSaveRequest folderSaveRequest = new FolderSaveRequest();
 			folderSaveRequest.setFolder(response.getFolder());
-			GenericResponse folderSaveResponse = folderResource.save(folder.getId().toString(), folderSaveRequest);
+			GenericResponse folderSaveResponse = getFolderResource().save(folder.getId().toString(), folderSaveRequest);
 			ContentNodeTestUtils.assertResponseCodeOk(folderSaveResponse);
 		}
 
@@ -227,9 +219,7 @@ public class DeleteConstructTest {
 			Transaction t = trx.getTransaction();
 
 			// Load
-			FileResourceImpl fileResource = new FileResourceImpl();
-			fileResource.setTransaction(t);
-			FileLoadResponse response = fileResource.load(file.getId().toString(), false, false, 0, null);
+			FileLoadResponse response = getFileResource().load(file.getId().toString(), false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCodeOk(response);
 
 			assertNull("Object tag must not exist", response.getFile().getTags().get("object.fileproperty"));
@@ -237,7 +227,7 @@ public class DeleteConstructTest {
 			// Save
 			FileSaveRequest fileSaveRequest = new FileSaveRequest();
 			fileSaveRequest.setFile(response.getFile());
-			GenericResponse fileSaveResponse = fileResource.save(file.getId(), fileSaveRequest);
+			GenericResponse fileSaveResponse = getFileResource().save(file.getId(), fileSaveRequest);
 			ContentNodeTestUtils.assertResponseCodeOk(fileSaveResponse);
 		}
 

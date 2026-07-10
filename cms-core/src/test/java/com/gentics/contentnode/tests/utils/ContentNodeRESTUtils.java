@@ -8,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.DBSession;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -15,13 +17,6 @@ import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
-import com.gentics.contentnode.rest.resource.ConstructResource;
-import com.gentics.contentnode.rest.resource.FileResource;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.ImageResource;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.TemplateResource;
-import com.gentics.contentnode.rest.resource.UserResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
@@ -42,7 +37,7 @@ public class ContentNodeRESTUtils {
 	 * @return construct resource
 	 * @throws NodeException
 	 */
-	public static ConstructResource getConstructResource() throws NodeException {
+	public static ConstructResourceImpl getConstructResource() throws NodeException {
 		return new ConstructResourceImpl();
 	}
 
@@ -51,10 +46,8 @@ public class ContentNodeRESTUtils {
 	 * @return page resource
 	 * @throws NodeException
 	 */
-	public static PageResource getPageResource() throws NodeException {
-		PageResourceImpl resource = new PageResourceImpl();
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-		return resource;
+	public static PageResourceImpl getPageResource() throws NodeException {
+		return new PageResourceImpl();
 	}
 
 	/**
@@ -62,12 +55,8 @@ public class ContentNodeRESTUtils {
 	 * @return file resource
 	 * @throws NodeException
 	 */
-	public static FileResource getFileResource() throws NodeException {
-		FileResourceImpl resource = new FileResourceImpl();
-
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		return resource;
+	public static FileResourceImpl getFileResource() throws NodeException {
+		return new FileResourceImpl();
 	}
 
 	/**
@@ -75,9 +64,8 @@ public class ContentNodeRESTUtils {
 	 * @return user resource
 	 * @throws NodeException
 	 */
-	public static UserResource getUserResource() throws NodeException {
-		UserResource resource = new UserResourceImpl();
-		return resource;
+	public static UserResourceImpl getUserResource() throws NodeException {
+		return new UserResourceImpl();
 	}
 
 	/**
@@ -85,12 +73,8 @@ public class ContentNodeRESTUtils {
 	 * @return image resource
 	 * @throws NodeException
 	 */
-	public static ImageResource getImageResource() throws NodeException {
-		ImageResourceImpl resource = new ImageResourceImpl();
-
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		return resource;
+	public static ImageResourceImpl getImageResource() throws NodeException {
+		return new ImageResourceImpl();
 	}
 
 	/**
@@ -98,10 +82,8 @@ public class ContentNodeRESTUtils {
 	 * @return auth resource
 	 * @throws NodeException
 	 */
-	public static AuthenticationResource getAuthResource() throws NodeException {
-		AuthenticationResourceImpl resource = new AuthenticationResourceImpl();
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-		return resource;
+	public static AuthenticationResourceImpl getAuthResource() throws NodeException {
+		return new AuthenticationResourceImpl();
 	}
 
 	/**
@@ -109,11 +91,8 @@ public class ContentNodeRESTUtils {
 	 * @return folder resource
 	 * @throws Exception
 	 */
-	public static FolderResource getFolderResource() throws NodeException {
-		FolderResourceImpl res = new FolderResourceImpl();
-
-		res.setTransaction(TransactionManager.getCurrentTransaction());
-		return res;
+	public static FolderResourceImpl getFolderResource() throws NodeException {
+		return new FolderResourceImpl();
 	}
 
 	/**
@@ -130,7 +109,7 @@ public class ContentNodeRESTUtils {
 	 * @return template resource
 	 * @throws NodeException
 	 */
-	public static TemplateResource getTemplateResource() throws NodeException {
+	public static TemplateResourceImpl getTemplateResource() throws NodeException {
 		return new TemplateResourceImpl();
 	}
 
@@ -138,17 +117,19 @@ public class ContentNodeRESTUtils {
 	 * Perform login for the given luser credentials
 	 * @param login login
 	 * @param password password
-	 * @return sid
+	 * @return session
 	 * @throws NodeException
 	 */
-	public static String login(String login, String password) throws NodeException {
+	public static Session login(String login, String password) throws NodeException {
 		AuthenticationResource resource = getAuthResource();
 		LoginRequest request = new LoginRequest();
 		request.setLogin(login);
 		request.setPassword(password);
 		LoginResponse response = resource.login(request, "0");
 		assertResponseOK(response);
-		return response.getSid();
+
+		int sid = Integer.parseInt(response.getSid());
+		return new DBSession(sid, TransactionManager.getCurrentTransaction());
 	}
 
 	/**

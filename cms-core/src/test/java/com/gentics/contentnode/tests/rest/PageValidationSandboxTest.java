@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static org.junit.Assert.assertEquals;
 
@@ -12,6 +13,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -27,6 +29,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.validation.util.ValidationUtils;
@@ -58,11 +61,6 @@ public class PageValidationSandboxTest {
 	private static final int CONSTRUCT_ID = 1;
 
 	/**
-	 * Page resource used in various tests
-	 */
-	private PageResource pageResource;
-
-	/**
 	 * Initializes the client and the WebResource
 	 */
 	@Before
@@ -88,7 +86,6 @@ public class PageValidationSandboxTest {
 		nodePreferences.setProperty("validation.policyMap", "file://" + resourcePath.getPath());
 
 		testContext.getContext().startTransaction();
-		pageResource = getPageResource();
 	}
 
 	/**
@@ -177,28 +174,15 @@ public class PageValidationSandboxTest {
 	 * @return
 	 */
 	protected GenericResponse savePageAndcheckResponse(
-			Integer pageId, Page page, ResponseCode responseCode) {
+			Integer pageId, Page page, ResponseCode responseCode) throws NodeException {
 
 		PageSaveRequest pageSaveRequest = new PageSaveRequest(page);
-		GenericResponse saveResponse = pageResource.save(pageId.toString(), pageSaveRequest);
+		GenericResponse saveResponse = getPageResource().save(pageId.toString(), pageSaveRequest);
 
 		assertEquals("Saving should throw an error", responseCode,
 				saveResponse.getResponseInfo().getResponseCode());
 
 		return saveResponse;
-	}
-
-	/**
-	 * Get the page resource
-	 *
-	 * @return page resource
-	 * @throws TransactionException
-	 */
-	protected PageResource getPageResource() throws TransactionException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return pageResource;
 	}
 
 	/**
@@ -211,7 +195,7 @@ public class PageValidationSandboxTest {
 		PageCreateRequest pageCreateRequest = new PageCreateRequest();
 		pageCreateRequest.setFolderId(node.getFolder().getId().toString());
 
-		Page page = pageResource.create(pageCreateRequest).getPage();
+		Page page = getPageResource().create(pageCreateRequest).getPage();
 
 		return page;
 	}

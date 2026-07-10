@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.feature.niceurl;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
@@ -39,7 +40,6 @@ import com.gentics.contentnode.rest.model.response.ImageListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFileListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyPageListResponse;
 import com.gentics.contentnode.rest.model.response.PageListResponse;
-import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -381,13 +381,12 @@ public class NiceURLFilterTest {
 	 */
 	private Set<Integer> getObjectIdsLegacy(String niceUrl, String searchQuery) throws NodeException {
 		return Trx.supply(() -> {
-			FolderResource res = ContentNodeRESTUtils.getFolderResource();
 			String folderId = node.getFolder().getId().toString();
 
 			switch (type) {
 			case file:
 			{
-				LegacyFileListResponse response = res.getFiles(folderId,
+				LegacyFileListResponse response = getFolderResource().getFiles(folderId,
 					new InFolderParameterBean().setFolderId(folderId),
 					new FileListParameterBean().setNiceUrl(niceUrl),
 					new LegacyFilterParameterBean().setSearch(searchQuery),
@@ -401,7 +400,7 @@ public class NiceURLFilterTest {
 			}
 			case image:
 			{
-				LegacyFileListResponse response = res.getImages(folderId,
+				LegacyFileListResponse response = getFolderResource().getImages(folderId,
 					new InFolderParameterBean().setFolderId(folderId),
 					new FileListParameterBean().setNiceUrl(niceUrl),
 					new LegacyFilterParameterBean().setSearch(searchQuery),
@@ -415,7 +414,7 @@ public class NiceURLFilterTest {
 			}
 			case page:
 			{
-				LegacyPageListResponse response = res.getPages(folderId,
+				LegacyPageListResponse response = getFolderResource().getPages(folderId,
 					new InFolderParameterBean().setFolderId(folderId),
 					new PageListParameterBean().setNiceUrl(niceUrl),
 					new LegacyFilterParameterBean().setSearch(searchQuery),

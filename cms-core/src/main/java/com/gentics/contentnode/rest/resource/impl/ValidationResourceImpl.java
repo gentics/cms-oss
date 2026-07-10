@@ -13,10 +13,13 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.resource.ValidationResource;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.validation.map.NodeInputChannel;
@@ -50,11 +53,11 @@ import com.gentics.contentnode.validation.validator.ValidatorInstantiationExcept
 
 /**
  * REST API for validating user input.
- * TODO: 
  */
 @Path("/validate")
 @Consumes({ "text/html; charset=UTF-8" })
-public class ValidationResourceImpl extends AuthenticatedContentNodeResource implements ValidationResource {
+@Authenticated
+public class ValidationResourceImpl implements ValidationResource {
 
 	private boolean formattedError = false;
 
@@ -67,111 +70,128 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 		this.formattedError = formattedError;
 	}
 
+	@Override
 	@POST
 	@Path("/tagPart/{partId}")
-	public Response validateTagPart(
-			@PathParam("partId")
-	int partId,
-			String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
-		Transaction transaction = TransactionManager.getCurrentTransaction();
-		Part part = (Part) transaction.getObject(Part.class, new Integer(partId));
+	public Response validateTagPart(@PathParam("partId") int partId, String unsafe)
+			throws NodeException, ValidatorInstantiationException, ValidationException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction transaction = TransactionManager.getCurrentTransaction();
+			Part part = transaction.getObject(Part.class, partId);
 
-		if (null == part) {
-			throw new EntityNotFoundException("Unable to find part with partId `" + partId + "'");
+			if (null == part) {
+				throw new EntityNotFoundException("Unable to find part with partId `" + partId + "'");
+			}
+			return validate(new TagPartInputChannel(part), unsafe);
 		}
-		return validate(new TagPartInputChannel(part), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/genericInput")
 	public Response validateGenericInput(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new GenericInputChannel(), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/userName")
 	public Response validateUserName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserNameInputChannel(), unsafe);
 	}
-        
+
+	@Override
 	@POST
 	@Path("/userEmail")
 	public Response validateUserEmail(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserEmailInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/userFirstName")
 	public Response validateUserFirstName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserFirstLastNameInputChannel(), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/userLastName")
 	public Response validateUserLastName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserFirstLastNameInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/userDescription")
 	public Response validateUserDescription(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserDescriptionInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeName")
 	public Response validateNodeName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new NodeNameInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/hostName")
 	public Response validateHostName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new HostNameInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/fsPath")
 	public Response validateFsPath(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new FsPathInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeDescription")
 	public Response validateNodeDescription(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new NodeDescriptionInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/userMessage")
 	public Response validateUserMessage(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new UserMessageInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/groupName")
 	public Response validateGroupName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new GroupNameInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/groupDescription")
 	public Response validateGroupDescription(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new GroupDescriptionInputChannel(), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/roleName")
 	public Response validateRoleName(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new RoleNameInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/roleDescription")
 	public Response validateRoleDescription(String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new RoleDescriptionInputChannel(), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}")
 	public Response validateNodeInput(
@@ -181,6 +201,7 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 		return validate(new NodeInputChannel(nodeId), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/folderName")
 	public Response validateFolderName(
@@ -190,6 +211,7 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 		return validate(new FolderNameInputChannel(nodeId), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/folderDescription")
 	public Response validateFolderDescription(
@@ -199,6 +221,7 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 		return validate(new FolderDescriptionInputChannel(nodeId), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/pageName")
 	public Response validatePageName(
@@ -208,6 +231,7 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 		return validate(new PageNameInputChannel(nodeId), unsafe);
 	}
 
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/pageDescription")
 	public Response validatePageDescription(
@@ -216,7 +240,8 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 			String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new PageDescriptionInputChannel(nodeId), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/fileDescription")
 	public Response validateFileDescription(
@@ -225,7 +250,8 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 			String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new FileDescriptionInputChannel(nodeId), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/fileName")
 	public Response validateFileName(
@@ -234,7 +260,8 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 			String unsafe) throws NodeException, ValidatorInstantiationException, ValidationException {
 		return validate(new FileNameInputChannel(nodeId), unsafe);
 	}
-    
+
+	@Override
 	@POST
 	@Path("/nodeInput/{nodeId}/mimeType")
 	public Response validateMimeType(
@@ -245,8 +272,10 @@ public class ValidationResourceImpl extends AuthenticatedContentNodeResource imp
 	}
 
 	protected Response validate(InputChannel inputChannel, String unsafe) throws ValidatorInstantiationException, NodeException, ValidationException {
-		ValidationResult result = ValidationUtils.validate(inputChannel, unsafe);        
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ValidationResult result = ValidationUtils.validate(inputChannel, unsafe);
 
-		return Response.ok().entity(ModelBuilder.getValidationResultResponse(result, formattedError)).build();
+			return Response.ok().entity(ModelBuilder.getValidationResultResponse(result, formattedError)).build();
+		}
 	}
 }

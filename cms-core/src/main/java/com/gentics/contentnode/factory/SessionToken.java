@@ -1,8 +1,3 @@
-/*
- * @author tobiassteiner
- * @date Feb 6, 2011
- * @version $Id: SessionToken.java,v 1.1.2.3 2011-02-21 06:14:49 tobiassteiner Exp $
- */
 package com.gentics.contentnode.factory;
 
 import java.io.UnsupportedEncodingException;
@@ -11,15 +6,13 @@ import java.util.Map;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.lib.util.QueryStringUtils;
 
 /**
- * Note: this implementation depends strongly on how mysession_create_token()
- * (PHP) is implemented. Any changes in this class may require changes in
- * mysession_create_token() and related functions.
+ * Implementation of a Session Token
  */
 public class SessionToken {
-
 	/**
 	 * The name for the cookie that contains the session secret.
 	 * This value is defined in global.inc.php.
@@ -30,7 +23,7 @@ public class SessionToken {
 	 * here, simply for convenience, because many tests would fail otherwise. 
 	 */
 	public static final String SESSION_SECRET_COOKIE_NAME = "GCN_SESSION_SECRET";
-    
+
 	/**
 	 * The encoding to use for the query string of a request.
 	 * Can be used with {@link #injectIntoQueryString(String, String)}.
@@ -50,17 +43,17 @@ public class SessionToken {
 	 * @see mysession_create_secret() (PHP).
 	 */
 	protected static final int SESSION_TOKEN_SECRET_LENGTH = 15;
-    
+
 	/**
 	 * The primary key into the systemsession table.
 	 */
 	protected final int sessionId;
-    
+
 	/**
 	 * The session secret this instance was created with.
 	 */
 	protected final String sessionSecret;
-    
+
 	/**
 	 * The session secret retrieved from the session token string that was
 	 * used to construct this instance.
@@ -184,14 +177,9 @@ public class SessionToken {
 	public boolean canAuthenticate() {
 		return null != this.sessionSecret || null != this.tokenSecret;
 	}
-    
-	/**
-	 * @return true if this token authenticates the given session.
-	 */
-	public boolean authenticates(Session session) {
-		return canAuthenticate() && session.getUserId() > 0 && getSessionId() == session.getSessionId()
-				&& ((null != sessionSecret && sessionSecret.equals(session.getSessionSecret()))
-				|| (null != tokenSecret && tokenSecret.equals(session.getSessionSecret())));
+
+	public Session getSession() throws NodeException {
+		return DBSession.load(this).orElse(null);
 	}
 
 	/**
@@ -263,7 +251,7 @@ public class SessionToken {
 		params.put(SESSION_ID_QUERY_PARAM_NAME, new String[] { sessionToken });
 		return QueryStringUtils.buildQueryString(params, encoding);
 	}
-    
+
 	/**
 	 * Note: depends strongly on how mysession_create_token() (PHP) is implemented. 
 	 * Will return a session token string  that can be used to identify a session.

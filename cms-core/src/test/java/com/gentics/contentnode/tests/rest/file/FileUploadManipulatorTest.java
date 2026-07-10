@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.rest.file;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
@@ -56,7 +57,6 @@ import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.rest.file.fum.FUMResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
@@ -493,8 +493,7 @@ public class FileUploadManipulatorTest {
 				PropertyTrx pTrx = new FileUploadManipulatorURL(url);
 				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort())) {
 			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true, new String(expected, StandardCharsets.UTF_8));
-			FileResource resource = ContentNodeRESTUtils.getFileResource();
-			FileUploadResponse uploadResponse = resource.create(uploadMultiPart);
+			FileUploadResponse uploadResponse = getFileResource().create(uploadMultiPart);
 			if (uploadResponse.getFile() != null) {
 				assertThat(uploadResponse.getFile().getFileSize()).isEqualTo(expected.length);
 				assertThat(uploadResponse.getFile().getFileSize().longValue()).isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin").length());
@@ -518,8 +517,7 @@ public class FileUploadManipulatorTest {
 			fileUploadRequest.setOverwriteExisting(true);
 			fileUploadRequest.setDescription("");
 			fileUploadRequest.setSourceURL(appContext.getBaseUri() + appUrl);
-			FileResource resource = ContentNodeRESTUtils.getFileResource();
-			FileUploadResponse uploadResponse = resource.create(fileUploadRequest);
+			FileUploadResponse uploadResponse = getFileResource().create(fileUploadRequest);
 			if (uploadResponse.getFile() != null) {
 				assertThat(uploadResponse.getFile().getFileSize().intValue()).isEqualTo(expected.length);
 				assertThat(uploadResponse.getFile().getFileSize().longValue()).isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin").length());

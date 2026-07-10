@@ -14,6 +14,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -165,8 +166,8 @@ public class GlobalTagTypeMigrationOrderTest {
 			return request;
 		});
 
-		String sid = Trx.supply(() -> ContentNodeRESTUtils.login(LOGIN, PASSWORD));
-		try (Trx trx = new Trx(sid, 2)) {
+		Session session = Trx.supply(() -> ContentNodeRESTUtils.login(LOGIN, PASSWORD));
+		try (Trx trx = new Trx(session, 2)) {
 			TagTypeMigrationJob job = new TagTypeMigrationJob();
 			setJobParameter(job, migrationRequest);
 			job.execute(1000, TimeUnit.SECONDS);

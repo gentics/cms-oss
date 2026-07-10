@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
@@ -170,7 +171,7 @@ public final class TransactionManager {
 			TransactionImpl t = (TransactionImpl) transaction;
 			boolean connPool = ObjectTransformer.getBoolean(useConnectionPool, t.useConnectionPool);
 
-			return new TransactionImpl(t.sessionId, t.getUserId(), getTransactionID(), t.factoryHandle, connPool, t.getPermHandler());
+			return new TransactionImpl(t.session, t.getUserId(), getTransactionID(), t.factoryHandle, connPool, t.getPermHandler());
 		} else {
 			throw new TransactionException("Error while getting transaction: given transaction was not provided by the TransactionManager");
 		}
@@ -203,7 +204,7 @@ public final class TransactionManager {
 	 * Note on connection pooling: for long running transactions (e.g.
 	 * publishing process) it is STRONGLY recommended, to not use connection
 	 * pooling, since the memory consumption would be much higher.
-	 * @param sessionId sessionId for the user that is specified in the parameter userId
+	 * @param session session for the user that is specified in the parameter userId
 	 * @param userId userId of the user who should be associated with this transaction
 	 * @param factoryHandle factory handle
 	 * @param useConnectionPool flag to set whether db connections shall be
@@ -211,9 +212,9 @@ public final class TransactionManager {
 	 * @return a new open transaction
 	 * @throws TransactionException when no transaction could be started
 	 */
-	public static Transaction getTransaction(String sessionId, Integer userId, FactoryHandle factoryHandle,
+	public static Transaction getTransaction(Session session, Integer userId, FactoryHandle factoryHandle,
 			boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
-		return new TransactionImpl(sessionId, userId, getTransactionID(), factoryHandle, useConnectionPool, null);
+		return new TransactionImpl(session, userId, getTransactionID(), factoryHandle, useConnectionPool, null);
 	}
 
 	/**
@@ -248,8 +249,8 @@ public final class TransactionManager {
 	 * Note on connection pooling: for long running transactions (e.g.
 	 * publishing process) it is STRONGLY recommended, to not use connection
 	 * pooling, since the memory consumption would be much higher.
-	 * @param sessionId sessionId of the user which should be associated with
-	 *        the transaction. If the sessionId is null the System user is
+	 * @param session session of the user which should be associated with
+	 *        the transaction. If the session is null the System user is
 	 *        associated with the Transaction.
 	 * @param factoryHandle factory handle
 	 * @param useConnectionPool flag to set whether db connections shall be
@@ -257,9 +258,9 @@ public final class TransactionManager {
 	 * @return a new open transaction
 	 * @throws TransactionException when no transaction could be started
 	 */
-	public static Transaction getTransaction(String sessionId, FactoryHandle factoryHandle,
+	public static Transaction getTransaction(Session session, FactoryHandle factoryHandle,
 			boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
-		return new TransactionImpl(sessionId, getTransactionID(), factoryHandle, useConnectionPool);
+		return new TransactionImpl(session, getTransactionID(), factoryHandle, useConnectionPool);
 	}
 
 	/**
@@ -558,11 +559,6 @@ public final class TransactionManager {
 		private RenderResult renderResult;
 
 		/**
-		 * The session ID that was used to construct this instance with.
-		 */
-		protected String sessionId;
-
-		/**
 		 * Holds the session variables for this transaction.
 		 * This variable may be null, if this transaction is not associated
 		 * with a session.
@@ -673,18 +669,18 @@ public final class TransactionManager {
 
 		/**
 		 * Create a new transaction instance and start it.
-		 * @param sessionId sessionId of the user which should be associated with the transaction.
+		 * @param session session of the user which should be associated with the transaction.
 		 * @param id transaction id
 		 * @param factoryHandle factory handle
 		 * @param useConnectionPool whether a connection pool shall be used or not
 		 */
-		public TransactionImpl(String sessionId, long id, FactoryHandle factoryHandle, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
-			initTransaction(sessionId, null, id, factoryHandle, useConnectionPool, null);
+		public TransactionImpl(Session session, long id, FactoryHandle factoryHandle, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
+			initTransaction(session, null, id, factoryHandle, useConnectionPool, null);
 		}
 
 		/**
 		 * Create a new transaction instance and start it.
-		 * @param sessionId sessionId of the user which should be associated with the transaction
+		 * @param session session of the user which should be associated with the transaction
 		 * @param userId id of the user who is associated with the session
 		 * @param id transaction id
 		 * @param factoryHandle factory handle
@@ -692,18 +688,16 @@ public final class TransactionManager {
 		 * @param preInitializedPermHandler if not null, use this PermHandler
 		 * instead of initializing a new one.
 		 */
-		public TransactionImpl(String sessionId, Integer userId, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
-			initTransaction(sessionId, userId, id, factoryHandle, useConnectionPool, preInitializedPermHandler);
+		public TransactionImpl(Session session, Integer userId, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
+			initTransaction(session, userId, id, factoryHandle, useConnectionPool, preInitializedPermHandler);
 		}
 
 		/**
 		 * Initializes a new Transaction and starts it
 		 *
-		 * @param sessionId sessionId of the user which should be associated with the Transaction.
+		 * @param session session of the user which should be associated with the Transaction.
 		 *   Session variables like userId an languageId will be loaded from
-		 *   the session using this ID. If the given ID is non-null and
-		 *   doesn't identify a valid session, a
-		 *   {@link TransactionException} is thrown.
+		 *   the session.
 		 *   This parameter may be null, in which case the session will not
 		 *   have an associated user or session.
 		 * @param id transaction id
@@ -712,11 +706,11 @@ public final class TransactionManager {
 		 * @param preInitializedPermHandler if not null, use this PermHandler
 		 * instead of initializing a new one.
 		 */
-		protected void initTransaction(String sessionId, Integer user, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
+		protected void initTransaction(Session session, Integer user, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
 			// will get initialized by initTransactionUnsafe() and must be closed if a exception is thrown
 			connection = null;
 			try {
-				initTransactionUnsafe(sessionId, user, id, factoryHandle, useConnectionPool, preInitializedPermHandler);
+				initTransactionUnsafe(session, user, id, factoryHandle, useConnectionPool, preInitializedPermHandler);
 			} catch (TransactionException e) {
 				try {
 					// clear the level2 cache
@@ -758,11 +752,10 @@ public final class TransactionManager {
 		 * instead of initializing a new one.
 		 * @see #initTransaction(String, Integer, long, String, FactoryHandle, boolean, PermHandler)
 		 */
-		private void initTransactionUnsafe(String sessionId, Integer user, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
+		private void initTransactionUnsafe(Session session, Integer user, long id, FactoryHandle factoryHandle, boolean useConnectionPool, PermHandler preInitializedPermHandler) throws TransactionException, InvalidSessionIdException {
 			// begin profiling mark for any kind of transaction
 			RuntimeProfiler.beginMark(JavaParserConstants.TRANSACTION);
 
-			this.sessionId = sessionId;
 			this.userId = user;
 			this.useConnectionPool = useConnectionPool;
 
@@ -794,12 +787,8 @@ public final class TransactionManager {
 			// create a new TransactionConnector instance and add to DB. Store the returned handle
 			dbHandle = DB.addConnector(new TransactionConnector());
 
-			if (sessionId != null) {
-
-				SessionToken token = new SessionToken(sessionId);
-
-				this.sessionId = String.valueOf(token.getSessionId());
-				this.session = new Session(token.getSessionId(), this);
+			if (session != null) {
+				this.session = session;
 				ContentNodeHelper.setLanguageId(this.session.getLanguageId());
 			} else {
 				// this Transaction isn't associated with a session.
@@ -1168,7 +1157,7 @@ public final class TransactionManager {
 		 * @see com.gentics.lib.base.factory.Transaction#getSessionId()
 		 */
 		public String getSessionId() {
-			return sessionId;
+			return Optional.ofNullable(session).map(Session::getSessionId).orElse(null);
 		}
 
 		/*

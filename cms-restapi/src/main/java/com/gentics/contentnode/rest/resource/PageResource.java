@@ -67,7 +67,7 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
  * Resource used for loading, saving and manipulating GCN pages.
  */
 @Path("/page")
-public interface PageResource extends AuthenticatedResource {
+public interface PageResource {
 
 	/**
 	 * Get a list of pages in the specified folder.<br>
@@ -105,7 +105,7 @@ public interface PageResource extends AuthenticatedResource {
 		@BeanParam SortParameterBean sortingParams,
 		@BeanParam PagingParameterBean pagingParams,
 		@BeanParam PublishableParameterBean publishParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Create a page based on the given pagecreaterequest
@@ -114,7 +114,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/create")
-	PageLoadResponse create(PageCreateRequest request);
+	PageLoadResponse create(PageCreateRequest request) throws Exception;
 
 	/**
 	 * Copy a batch of pages or a single copy using the {@link PageCopyRequest} options.
@@ -125,7 +125,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/copy")
-	PageCopyResponse copy(PageCopyRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	PageCopyResponse copy(PageCopyRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Move the given page to another folder
@@ -135,7 +135,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/move/{id}")
-	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request);
+	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Move multiple pages to another folder
@@ -144,7 +144,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/move")
-	GenericResponse move(MultiObjectMoveRequest request);
+	GenericResponse move(MultiObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Saves a page into GCN
@@ -154,7 +154,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/save/{id}")
-	GenericResponse save(@PathParam("id") String id, PageSaveRequest request);
+	GenericResponse save(@PathParam("id") String id, PageSaveRequest request) throws Exception;
 
 	/**
 	 * Loads a page from GCN.
@@ -208,7 +208,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("disinherited") @DefaultValue("false") boolean disinherited,
 			@QueryParam("construct") @DefaultValue("false") boolean construct,
 			@QueryParam("nodeId") Integer nodeId, 
-			@QueryParam("package") String stagingPackageName);
+			@QueryParam("package") String stagingPackageName) throws Exception;
 
 	/**
 	 * Load a list of pages specified in the given {@link MultiPageLoadResponse request}.
@@ -223,7 +223,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/load")
-	MultiPageLoadResponse load(MultiPageLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
+	MultiPageLoadResponse load(MultiPageLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws Exception;
 
 	/**
 	 * Render given page in a preview (before actually saving it)
@@ -232,7 +232,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/preview")
-	PagePreviewResponse preview(PagePreviewRequest request);
+	PagePreviewResponse preview(PagePreviewRequest request) throws Exception;
 
 	/**
 	 * Inform a list of users that the list of pages have been put back into
@@ -243,7 +243,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/assign")
-	GenericResponse assign(MultiPageAssignRequest request);
+	GenericResponse assign(MultiPageAssignRequest request) throws Exception;
 
 	/**
 	 * Publish a list of pages. Instant publishing will not be done, when using this method.
@@ -253,7 +253,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/publish")
-	GenericResponse publish(@QueryParam("nodeId") Integer nodeId, MultiPagePublishRequest request);
+	GenericResponse publish(@QueryParam("nodeId") Integer nodeId, MultiPagePublishRequest request) throws Exception;
 
 	/**
 	 * Publish the page denoted by id (or send it in the queue when the User has not permission to publish the page).
@@ -266,7 +266,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/publish/{id}")
-	GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, PagePublishRequest request);
+	GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, PagePublishRequest request) throws Exception;
 
 	/**
 	 * Delete the page denoted by id. Note that inherited or localized pages can't be deleted in a channel.
@@ -278,7 +278,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws Exception;
 
 	/**
 	 * Remove the page denoted by the given id from the wastebin.
@@ -291,7 +291,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete/{id}")
-	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Remove the given pages from the wastebin
@@ -301,7 +301,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete")
-	GenericResponse deleteFromWastebin(PageIdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(PageIdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given page from the wastebin
@@ -314,7 +314,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore/{id}")
-	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given pages from the wastebin
@@ -324,7 +324,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore")
-	GenericResponse restoreFromWastebin(PageIdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(PageIdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Cancel editing the page. The page will be rolled back to the last version (changes made since the last version will be lost).
@@ -335,7 +335,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/cancel/{id}")
-	GenericResponse cancel(@PathParam("id") Integer id, @QueryParam("nodeId") Integer nodeId);
+	GenericResponse cancel(@PathParam("id") Integer id, @QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Render a preview of the posted page
@@ -358,7 +358,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
-			@QueryParam("publish") @DefaultValue("false") boolean publish, Page page);
+			@QueryParam("publish") @DefaultValue("false") boolean publish, Page page) throws Exception;
 
 	/**
 	 * Render the given page
@@ -387,7 +387,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
 			@QueryParam("publish") @DefaultValue("false") boolean publish,
-			@QueryParam("version") Integer versionTimestamp);
+			@QueryParam("version") Integer versionTimestamp) throws Exception;
 
 	/**
 	 * Render the content of the given page in preview mode
@@ -398,7 +398,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/render/content/{id}")
-	Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("version") Integer versionTimestamp);
+	Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("version") Integer versionTimestamp) throws Exception;
 
 	/**
 	 * Render the difference between two versions of the page
@@ -415,7 +415,7 @@ public interface PageResource extends AuthenticatedResource {
 	Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
 			@QueryParam("source") @DefaultValue("false") boolean source,
-			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff);
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) throws Exception;
 
 	/**
 	 * Render the difference between the page and another page
@@ -431,7 +431,7 @@ public interface PageResource extends AuthenticatedResource {
 	Response diffWithOtherPage(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
 			@QueryParam("source") @DefaultValue("false") boolean source,
-			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff);
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) throws Exception;
 
 	/**
 	 * Render a tag preview for the posted page
@@ -448,7 +448,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("proxyprefix") String proxyprefix,
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
-			Page page);
+			Page page) throws Exception;
 
 	/**
 	 * Render a tag of the given page
@@ -465,7 +465,7 @@ public interface PageResource extends AuthenticatedResource {
 			@PathParam("tag") String tag,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("proxyprefix") String proxyprefix,
-			@QueryParam("links") @DefaultValue("backend") LinksType linksType);
+			@QueryParam("links") @DefaultValue("backend") LinksType linksType) throws Exception;
 
 	/**
 	 * Get the list of tags (contenttags and templatetags) for this page
@@ -479,7 +479,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			final @QueryParam("sortby") @DefaultValue("name") TagSortAttribute sortBy,
 			final @QueryParam("sortorder") @DefaultValue("asc") SortOrder sortOrder,
-			@QueryParam("search") String search);
+			@QueryParam("search") String search) throws Exception;
 
 	/**
 	 * Get the privileges of the current user on the given page
@@ -488,7 +488,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	// @GET
 	// @Path("/privileges/{id}")
-	PrivilegesResponse getPrivileges(@PathParam("id") Integer id);
+	PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws Exception;
 
 	/**
 	 * Create a new tag in the given page
@@ -503,7 +503,7 @@ public interface PageResource extends AuthenticatedResource {
 	TagCreateResponse createTag(@PathParam("id") String id,
 			@QueryParam("constructId") Integer constructId,
 			@QueryParam("keyword") String keyword,
-			ContentTagCreateRequest request);
+			ContentTagCreateRequest request) throws Exception;
 
 	/**
 	 * Create multiple tags in the given page
@@ -513,7 +513,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/newtags/{id}")
-	MultiTagCreateResponse createTags(@PathParam("id") String id, MultiTagCreateRequest request);
+	MultiTagCreateResponse createTags(@PathParam("id") String id, MultiTagCreateRequest request) throws Exception;
 
 	/**
 	 * Restore the page version with the given version timestamp
@@ -523,7 +523,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/restore/{id}")
-	PageLoadResponse restoreVersion(@PathParam("id") String id, @QueryParam("version") Integer versionTimestamp);
+	PageLoadResponse restoreVersion(@PathParam("id") String id, @QueryParam("version") Integer versionTimestamp) throws Exception;
 
 	/**
 	 * Restore a single tag in the page with the given version timestamp
@@ -534,7 +534,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/restore/{pageid}/{tag}")
-	TagListResponse restoreTag(@PathParam("pageid") String pageId, @PathParam("tag") String tag, @QueryParam("version") Integer versionTimestamp);
+	TagListResponse restoreTag(@PathParam("pageid") String pageId, @PathParam("tag") String tag, @QueryParam("version") Integer versionTimestamp) throws Exception;
 
 	/**
 	 * Translate the page into the given language.
@@ -550,7 +550,7 @@ public interface PageResource extends AuthenticatedResource {
 	@Path("/translate/{id}")
 	PageLoadResponse translate(@PathParam("id") Integer id,
 			@QueryParam("language") String languageCode,
-			@QueryParam("locked") @DefaultValue("true") boolean locked, @QueryParam("channelId") Integer channelId);
+			@QueryParam("locked") @DefaultValue("true") boolean locked, @QueryParam("channelId") Integer channelId) throws Exception;
 
 	/**
 	 * Revoke the last step of the workflow
@@ -559,7 +559,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/workflow/revoke/{id}")
-	GenericResponse workflowRevoke(@PathParam("id") Integer id);
+	GenericResponse workflowRevoke(@PathParam("id") Integer id) throws Exception;
 
 	/**
 	 * Decline the workflow for the page (i.e. give it back to a lower group)
@@ -569,7 +569,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/workflow/decline/{id}")
-	GenericResponse workflowDecline(@PathParam("id") String id, WorkflowRequest request);
+	GenericResponse workflowDecline(@PathParam("id") String id, WorkflowRequest request) throws Exception;
 
 	/**
 	 * Get the total usage information of the given pages.
@@ -582,7 +582,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/usage/total")
-	TotalUsageResponse getTotalPageUsage(@QueryParam("id") List<Integer> pageId, @QueryParam("nodeId") Integer nodeId);
+	TotalUsageResponse getTotalPageUsage(@QueryParam("id") List<Integer> pageId, @QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Get the pages containing pagetags pointing to one of the given pages.
@@ -614,7 +614,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel);
+			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
 	 * Get the page variants of the given pages
@@ -645,7 +645,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel);
+			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
 	 * Get the pages using one of the given pages
@@ -676,7 +676,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel);
+			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
 	 * Get the templates using one of the given pages
@@ -705,7 +705,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates);
+			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws Exception;
 
 	/**
 	 * Get pages, which are used by one of the given pages
@@ -731,7 +731,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId);
+			@QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Get files, which are used by one of the given pages
@@ -757,7 +757,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId);
+			@QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Get images, which are used by one of the given pages
@@ -783,7 +783,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId);
+			@QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Take a specific page offline
@@ -793,7 +793,7 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/takeOffline/{id}")
-	GenericResponse takeOffline(@PathParam("id") String id, PageOfflineRequest request);
+	GenericResponse takeOffline(@PathParam("id") String id, PageOfflineRequest request) throws Exception;
 
 	/**
 	 * Do a quick search for pages that contain the given query string in their name or have it as ID.
@@ -805,7 +805,7 @@ public interface PageResource extends AuthenticatedResource {
 	@GET
 	@Path("/autocomplete")
 	@Produces(MediaType.TEXT_HTML)
-	String autocomplete(@QueryParam("q") String q, @QueryParam("limit") int limit);
+	String autocomplete(@QueryParam("q") String q, @QueryParam("limit") int limit) throws Exception;
 
 	/**
 	 * NOTE:
@@ -875,7 +875,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("versioninfo") @DefaultValue("false") boolean versionInfo,
 			@QueryParam("disinherited") @DefaultValue("false") boolean disinherited,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("liveUrl") String liveUrl);
+			@QueryParam("liveUrl") String liveUrl) throws Exception;
 
 	/**
 	 * Get all pages (for all nodes) in the publish queue
@@ -905,7 +905,7 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("search") String search,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
-			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder);
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder) throws Exception;
 
 	/**
 	 * Approved queued changes to online status of pages

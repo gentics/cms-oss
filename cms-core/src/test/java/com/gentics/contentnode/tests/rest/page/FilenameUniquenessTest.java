@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest.page;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
@@ -23,7 +24,6 @@ import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -184,13 +184,12 @@ public class FilenameUniquenessTest {
 		}, page1);
 
 		Trx.consume(p -> {
-			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
 			com.gentics.contentnode.rest.model.Page pageUpdate = new com.gentics.contentnode.rest.model.Page();
 			pageUpdate.setFileName("page_a.html");
 			PageSaveRequest save = new PageSaveRequest(pageUpdate);
 			save.setFailOnDuplicate(true);
 
-			GenericResponse response = pageResource.save(p.getId().toString(), save);
+			GenericResponse response = getPageResource().save(p.getId().toString(), save);
 
 			ContentNodeRESTUtils.assertResponse(response, ResponseCode.INVALIDDATA, "Error while saving page " + p.getId() + ": " + message,
 					new Message(Message.Type.CRITICAL, message));

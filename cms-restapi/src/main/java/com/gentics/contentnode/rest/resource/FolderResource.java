@@ -54,10 +54,10 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
  * Resource for loading and manipulating folders in GCN
  */
 @Path("/folder")
-public interface FolderResource extends AuthenticatedResource {
+public interface FolderResource {
 	@POST
 	@Path("/create")
-	FolderLoadResponse create(FolderCreateRequest request);
+	FolderLoadResponse create(FolderCreateRequest request) throws Exception;
 
 	/**
 	 * Load a single folder
@@ -78,7 +78,7 @@ public interface FolderResource extends AuthenticatedResource {
 			@DefaultValue("false") @QueryParam("update") boolean update,
 			@QueryParam("privileges") @DefaultValue("false") boolean addPrivileges,
 			@QueryParam("construct") @DefaultValue("false") boolean construct,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("package") String stagingPackageName);
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("package") String stagingPackageName) throws Exception;
 
 	/**
 	 * Load a list of folders specified in the given {@link MultiFolderLoadRequest request}.
@@ -93,7 +93,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/load")
-	MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
+	MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws Exception;
 
 	/**
 	 * Load the breadcrumb to the given folder
@@ -107,7 +107,7 @@ public interface FolderResource extends AuthenticatedResource {
 	@Path("/breadcrumb/{id}")
 	LegacyFolderListResponse getBreadcrumb(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("wastebin") @DefaultValue("false") boolean includeWastebin,
-			@QueryParam("tags") @DefaultValue("false") boolean includeTags);
+			@QueryParam("tags") @DefaultValue("false") boolean includeTags) throws Exception;
 
 	/**
 	 * get a list of pages for this folder
@@ -133,7 +133,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam LegacySortParameterBean sortingParams,
 		@BeanParam LegacyPagingParameterBean pagingParams,
 		@BeanParam PublishableParameterBean publishParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * get a list of files for this folder
@@ -158,7 +158,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam LegacySortParameterBean sortingParams,
 		@BeanParam LegacyPagingParameterBean pagingParams,
 		@BeanParam EditableParameterBean editableParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * get a list of images for this folder
@@ -182,7 +182,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam LegacySortParameterBean sortingParams,
 		@BeanParam LegacyPagingParameterBean pagingParams,
 		@BeanParam EditableParameterBean editableParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Get the list of folders in this folder
@@ -191,7 +191,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/getFolders/")
-	LegacyFolderListResponse getFolders(FolderListRequest folderListRequest);
+	LegacyFolderListResponse getFolders(FolderListRequest folderListRequest) throws Exception;
 
 	/**
 	 * Get the list of folders in this folder
@@ -255,7 +255,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam LegacySortParameterBean sortParams,
 		@BeanParam LegacyPagingParameterBean pagingParams,
 		@BeanParam EditableParameterBean editableParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Get the list of folders in this folder.<br>
@@ -289,7 +289,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam SortParameterBean sorting,
 		@BeanParam PagingParameterBean paging,
 		@BeanParam EditableParameterBean editable,
-		@BeanParam WastebinParameterBean wastebin);
+		@BeanParam WastebinParameterBean wastebin) throws Exception;
 
 	/**
 	 * Get the templates which are linked into the given folder
@@ -312,7 +312,7 @@ public interface FolderResource extends AuthenticatedResource {
 			@BeanParam LegacySortParameterBean sortingParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams);
+			@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Get a list of items for this folder
@@ -350,7 +350,7 @@ public interface FolderResource extends AuthenticatedResource {
 			@BeanParam LegacyFilterParameterBean filter,
 			@BeanParam LegacySortParameterBean sorting,
 			@BeanParam LegacyPagingParameterBean paging,
-			@BeanParam PublishableParameterBean publishParams);
+			@BeanParam PublishableParameterBean publishParams) throws Exception;
 
 	/**
 	 * Find pages by name, eventually starting with the given folder id
@@ -370,7 +370,7 @@ public interface FolderResource extends AuthenticatedResource {
 			@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("100") Integer maxItems,
 			@QueryParam("links") @DefaultValue("backend") LinksType links,
-			@QueryParam("recursive") @DefaultValue("true") boolean recursive);
+			@QueryParam("recursive") @DefaultValue("true") boolean recursive) throws Exception;
 
 	/**
 	 * Find files by name, starting with the given folder id
@@ -390,7 +390,7 @@ public interface FolderResource extends AuthenticatedResource {
 			@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("100") Integer maxItems,
 			@QueryParam("links") @DefaultValue("backend") LinksType links,
-			@QueryParam("recursive") @DefaultValue("true") boolean recursive);
+			@QueryParam("recursive") @DefaultValue("true") boolean recursive) throws Exception;
 
 	/**
 	 * Get externals links from all the pages inside the folder with id `folderId`.
@@ -402,7 +402,7 @@ public interface FolderResource extends AuthenticatedResource {
 	@Path("/getExternalLinks/{folderId}")
 	FolderExternalLinksResponse getExternalLinks(
 			@PathParam("folderId") Integer folderId,
-			@QueryParam("recursive")@DefaultValue("false") boolean recursive);
+			@QueryParam("recursive")@DefaultValue("false") boolean recursive) throws Exception;
 
 	/**
 	 * Save a single folder
@@ -412,7 +412,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/save/{id}")
-	GenericResponse save(@PathParam("id") String id, FolderSaveRequest request);
+	GenericResponse save(@PathParam("id") String id, FolderSaveRequest request) throws Exception;
 
 	/**
 	 * Delete a single folder. Note that inherited or localized folders can't be deleted in a channel.
@@ -423,7 +423,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws Exception;
 
 	/**
 	 * Remove the folder denoted by the given id from the wastebin.
@@ -436,7 +436,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete/{id}")
-	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Delete folders denoted by the set of IDs from the wastebin
@@ -446,7 +446,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete")
-	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given folder from the wastebin
@@ -459,7 +459,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore/{id}")
-	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the denoted folders from the wastebin
@@ -469,7 +469,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore")
-	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Get the privileges of the current user on the given folder
@@ -478,7 +478,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/privileges/{id}")
-	PrivilegesResponse getPrivileges(@PathParam("id") Integer id);
+	PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws Exception;
 
 	/**
 	 * Get the object counts for objects in the specified folder
@@ -498,7 +498,7 @@ public interface FolderResource extends AuthenticatedResource {
 		@QueryParam("language") String language,
 		@QueryParam("inherited") Boolean inherited,
 		@BeanParam InFolderParameterBean inFolder,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Request to set a startpage for a page
@@ -508,7 +508,7 @@ public interface FolderResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/startpage/{id}")
-	GenericResponse setStartpage(@PathParam("id") String id, StartpageRequest request);
+	GenericResponse setStartpage(@PathParam("id") String id, StartpageRequest request) throws Exception;
 
 	/**
 	 * Move the folder with id to a different location

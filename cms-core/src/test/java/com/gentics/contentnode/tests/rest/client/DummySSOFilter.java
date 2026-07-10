@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.ext.Provider;
 
-import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -41,7 +41,7 @@ public class DummySSOFilter implements ContainerRequestFilter {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class)).getSystemUser(LOGIN, null, false);
 
-				Session session = new Session(systemUser, "localhost", "Dummy User Agent", null, 0);
+				DBSession session = new DBSession(systemUser, "localhost", "Dummy User Agent", null, 0);
 				UriBuilder builder = requestContext.getUriInfo().getRequestUriBuilder();
 				builder.replaceQueryParam(SessionToken.SESSION_ID_QUERY_PARAM_NAME, session.getSessionId());
 				requestContext.setRequestUri(builder.build());

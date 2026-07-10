@@ -5,6 +5,7 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createImage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
@@ -43,7 +44,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
@@ -54,7 +54,6 @@ import com.gentics.contentnode.rest.model.request.ImageRotateRequest;
 import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
-import com.gentics.contentnode.rest.resource.ImageResource;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.image.ImageUtils;
@@ -423,19 +422,6 @@ public class ImageResourceTest {
 		assertThat(response.getImage().getId()).as("Image ID").isNotEqualTo(image.getId());
 		ImageFile resized = supply(t -> t.getObject(ImageFile.class, response.getImage().getId()));
 		assertThat(resized).as("Resized Image").hasFieldOrPropertyWithValue("md5", rotateCCWMd5.get(name));
-	}
-
-	/**
-	 * Get an image resource, that can be used to test REST calls The folder
-	 * resource will have the current transaction set
-	 * 
-	 * @return image resource
-	 * @throws NodeException
-	 */
-	private ImageResource getImageResource() throws NodeException {
-		ImageResourceImpl imageResource = new ImageResourceImpl();
-		imageResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return imageResource;
 	}
 
 	private void saveImageFP(float fpX, float fpY) throws NodeException {

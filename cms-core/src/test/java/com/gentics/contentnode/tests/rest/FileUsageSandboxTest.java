@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -25,8 +27,6 @@ import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.rest.resource.ImageResource;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -139,16 +139,11 @@ public class FileUsageSandboxTest {
 	 * @throws Exception
 	 */
 	private TotalUsageResponse fetchFromRest(File file) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		TotalUsageResponse response;
 		if (file.isImage()) {
-			ImageResourceImpl resource = new ImageResourceImpl();
-			resource.setTransaction(t);
-			response = resource.getTotalFileUsageInfo(Arrays.asList(file.getId()), file.getNode().getId());
+			response = getImageResource().getTotalFileUsageInfo(Arrays.asList(file.getId()), file.getNode().getId());
 		} else {
-			FileResourceImpl resource = new FileResourceImpl();
-			resource.setTransaction(t);
-			response = resource.getTotalUsageInfo(Arrays.asList(file.getId()), file.getNode().getId());
+			response = getFileResource().getTotalUsageInfo(Arrays.asList(file.getId()), file.getNode().getId());
 		}
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 		return response;

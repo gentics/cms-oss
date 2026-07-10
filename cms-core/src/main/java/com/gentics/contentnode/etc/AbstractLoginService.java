@@ -3,7 +3,7 @@ package com.gentics.contentnode.etc;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
-import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -104,7 +104,7 @@ public abstract class AbstractLoginService implements LoginService {
 	 */
 	public String createUserSession(SystemUser systemUser, HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws NodeException {
 		// Create a new session for the user
-		Session session = new Session(
+		DBSession session = new DBSession(
 			systemUser, servletRequest != null ? servletRequest.getRemoteAddr() : "",
 			servletRequest != null ? servletRequest.getHeader("user-agent") : "",
 			null,
@@ -124,7 +124,7 @@ public abstract class AbstractLoginService implements LoginService {
 				CookieHelper.SameSite.parse(sameSiteString),
 				servletResponse);
 
-			return Integer.toString(session.getSessionId());
+			return session.getSessionId();
 		}
 
 		return session.getSessionId() + session.getSessionSecret();

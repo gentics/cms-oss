@@ -559,13 +559,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		// Load page meta data
-		PageResourceImpl pageResource = new PageResourceImpl(t);
-
-		pageResource.omitTouchSession();
-		pageResource.setSessionId(t.getSessionId());
-		pageResource.setSessionSecret(t.getSession().getSessionSecret());
-		pageResource.setTransaction(t);
-		pageResource.initialize();
+		PageResourceImpl pageResource = new PageResourceImpl();
 		PageLoadResponse pageLoadResponse = pageResource.load(String.valueOf(pageId), !readonly, false, false, false, false, false, false, false, false, false, null, null);
 
 		if (pageLoadResponse.getResponseInfo().getResponseCode() != ResponseCode.OK) {

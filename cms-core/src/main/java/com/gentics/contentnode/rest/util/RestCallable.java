@@ -9,6 +9,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
@@ -56,9 +57,9 @@ public class RestCallable implements Callable<GenericResponse> {
 	protected String description;
 
 	/**
-	 * Session ID of the user
+	 * Session of the user
 	 */
-	protected String sessionId;
+	protected Session session;
 
 	/**
 	 * User ID
@@ -130,7 +131,7 @@ public class RestCallable implements Callable<GenericResponse> {
 		this.lock = lock;
 
 		Transaction t = TransactionManager.getCurrentTransaction();
-		sessionId = t.getSessionId();
+		session = t.getSession();
 		userId = t.getUserId();
 		languageId = ContentNodeHelper.getLanguageId();
 	}
@@ -198,7 +199,7 @@ public class RestCallable implements Callable<GenericResponse> {
 	 */
 	protected GenericResponse execute() throws Exception {
 		ContentNodeHelper.setLanguageId(languageId);
-		try (Trx trx = new Trx(sessionId, userId)) {
+		try (Trx trx = new Trx(session, userId)) {
 			try {
 				Operator.jobIsStarting(this);
 				GenericResponse result = wrapped.call();

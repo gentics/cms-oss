@@ -12,7 +12,7 @@ import jakarta.ws.rs.core.Response;
  */
 @Path("/validate")
 @Consumes({ "text/html; charset=UTF-8" })
-public interface ValidationResource extends AuthenticatedResource {
+public interface ValidationResource {
 
 	/**
 	 * @param formattedError

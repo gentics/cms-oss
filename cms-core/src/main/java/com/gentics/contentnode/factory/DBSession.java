@@ -10,6 +10,8 @@ import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.Language;
@@ -185,9 +187,16 @@ public class DBSession implements Session {
 		int sessionAge = ObjectTransformer.getInt(NodeConfigRuntimeConfiguration.getPreferences().getProperty("session_age"), 3600);
 		final int allowedSince = TransactionManager.getCurrentTransaction().getUnixTimestamp() - sessionAge;
 
+		int sessionId = sessionToken.sessionId;
+		String secret = StringUtils.firstNonBlank(sessionToken.sessionSecret, sessionToken.tokenSecret);
+
+		if (sessionId <= 0 || StringUtils.isBlank(secret)) {
+			return Optional.empty();
+		}
+
 		return DBUtils.select("SELECT id, user_id, language, secret FROM systemsession WHERE id = ? AND secret = ? AND since >= ?", pst -> {
-			pst.setInt(1, sessionToken.sessionId);
-			pst.setString(2, sessionToken.sessionSecret);
+			pst.setInt(1, sessionId);
+			pst.setString(2, secret);
 			pst.setInt(3, allowedSince);
 		}, DBUtils.getFirst(ROW_HANDLER));
 	}

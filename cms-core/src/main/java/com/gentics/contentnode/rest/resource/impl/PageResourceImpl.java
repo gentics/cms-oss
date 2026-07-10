@@ -765,6 +765,7 @@ public class PageResourceImpl implements PageResource {
 
 		Integer srcChannel = request.getVariantChannelId();
 
+		String id;
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx ct = new ChannelTrx(srcChannel)) {
 			Transaction t = trx.getTransaction();
 			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
@@ -1012,15 +1013,16 @@ public class PageResourceImpl implements PageResource {
 			}
 
 			// after creating the page, load it and return it
-			String id = Integer.toString(ObjectTransformer.getInteger(page.getId(), null));
-			PageLoadResponse response = load(id, !createVariant, false, false, false, false, false, false,
-					false, false, false, channelId, null);
-			if (response.getResponseInfo().getResponseCode() == ResponseCode.OK) {
-				response.getResponseInfo().setResponseMessage("Successfully created page");
-			}
+			id = Integer.toString(ObjectTransformer.getInteger(page.getId(), null));
 			trx.success();
-			return response;
 		}
+
+		PageLoadResponse response = load(id, !createVariant, false, false, false, false, false, false,
+				false, false, false, channelId, null);
+		if (response.getResponseInfo().getResponseCode() == ResponseCode.OK) {
+			response.getResponseInfo().setResponseMessage("Successfully created page");
+		}
+		return response;
 	}
 
 	@Override

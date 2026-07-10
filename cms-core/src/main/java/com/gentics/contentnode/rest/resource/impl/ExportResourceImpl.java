@@ -26,10 +26,13 @@ import com.gentics.contentnode.rest.resource.ExportResource;
 
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Export helper resource
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/export")
 public class ExportResourceImpl implements ExportResource {
@@ -108,6 +111,7 @@ public class ExportResourceImpl implements ExportResource {
 
 			response.setFolders(subselFolders);
 			response.setInheritedFolders(subselInheritedFolders);
+			trx.success();
 			return response;
 		}
 	}

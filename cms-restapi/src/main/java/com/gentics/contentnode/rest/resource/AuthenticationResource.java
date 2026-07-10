@@ -1,5 +1,13 @@
 package com.gentics.contentnode.rest.resource;
 
+import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
+import com.gentics.contentnode.rest.model.request.LoginRequest;
+import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
+import com.gentics.contentnode.rest.model.response.LoginResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -9,15 +17,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
-
-import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
-import com.gentics.contentnode.rest.model.request.LoginRequest;
-import com.gentics.contentnode.rest.model.request.LoginWithRsaRequest;
-import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
-import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
-import com.gentics.contentnode.rest.model.response.LoginResponse;
 
 /**
  * Authentication Resource. This can be used to authenticate an existing SID.
@@ -64,8 +63,7 @@ public interface AuthenticationResource {
 	 */
 	@POST
 	@Path("/login")
-	LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString);
-	
+	LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) throws Exception;
 
 	/**
 	 * Do a logout for the current session

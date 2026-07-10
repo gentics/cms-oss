@@ -69,7 +69,9 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Resource used for performing Tag Type and Template Migrations
@@ -77,6 +79,7 @@ import jakarta.ws.rs.QueryParam;
  * @author Taylor
  */
 @Path("/migration")
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 public class MigrationResourceImpl implements MigrationResource {
 
@@ -85,7 +88,9 @@ public class MigrationResourceImpl implements MigrationResource {
 	@Path("/cancelMigration")
 	public GenericResponse cancelMigration() throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return DistributionUtil.call(new CancelMigration().setLanguageId().setSession(trx.getTransaction().getSession()));
+			GenericResponse response = DistributionUtil.call(new CancelMigration().setLanguageId().setSession(trx.getTransaction().getSession()));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -94,7 +99,9 @@ public class MigrationResourceImpl implements MigrationResource {
 	@Path("/getMigrationStatus")
 	public MigrationStatusResponse getMigrationStatus() throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return DistributionUtil.call(new GetMigrationStatus().setLanguageId().setSession(trx.getTransaction().getSession()));
+			MigrationStatusResponse response = DistributionUtil.call(new GetMigrationStatus().setLanguageId().setSession(trx.getTransaction().getSession()));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -110,6 +117,7 @@ public class MigrationResourceImpl implements MigrationResource {
 			response = new MigrationJobItemsResponse(null, new ResponseInfo(ResponseCode.OK, "The migration job items have been fetched."));
 			response.setJobId(jobId);
 			response.setJobItems(dbLogger.getMigrationJobItemEntries(jobId));
+			trx.success();
 			return response;
 		}
 	}
@@ -130,6 +138,7 @@ public class MigrationResourceImpl implements MigrationResource {
 			// Replace unixstyle linebreaks to fix display of the log for IE
 			contents = contents.replaceAll("\n", "\r\n");
 			response.setLogContents(contents);
+			trx.success();
 			return response;
 		} catch (IOException e) {
 			throw new NodeException(e);
@@ -167,6 +176,7 @@ public class MigrationResourceImpl implements MigrationResource {
 
 			response.setJobEntries(dbLogger.getMigrationJobEntries());
 
+			trx.success();
 			return response;
 		} catch (ParseException e) {
 			throw new NodeException(e);
@@ -178,7 +188,9 @@ public class MigrationResourceImpl implements MigrationResource {
 	@Path("/reinvokeMigration")
 	public MigrationResponse reinvokeTagTypeMigration(MigrationReinvokeRequest request) throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return DistributionUtil.call(new ReinvokeTTM().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			MigrationResponse response = DistributionUtil.call(new ReinvokeTTM().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -187,7 +199,9 @@ public class MigrationResourceImpl implements MigrationResource {
 	@Path("/performTemplateMigration")
 	public MigrationResponse performTemplateMigration(TemplateMigrationRequest request) throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return DistributionUtil.call(new PerformTemplateMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			MigrationResponse response = DistributionUtil.call(new PerformTemplateMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -196,7 +210,9 @@ public class MigrationResourceImpl implements MigrationResource {
 	@Path("/performMigration")
 	public MigrationResponse performTagTypeMigration(TagTypeMigrationRequest request) throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return DistributionUtil.call(new PerformTagTypeMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			MigrationResponse response = DistributionUtil.call(new PerformTagTypeMigration().setRequest(request).setLanguageId().setSession(trx.getTransaction().getSession()));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -222,6 +238,7 @@ public class MigrationResourceImpl implements MigrationResource {
 			MigrationPartsResponse response = new MigrationPartsResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched parts"));
 
 			response.setParts(restParts);
+			trx.success();
 			return response;
 		}
 	}
@@ -241,6 +258,7 @@ public class MigrationResourceImpl implements MigrationResource {
 				response.addTagType(construct.getId(), construct);
 			}
 
+			trx.success();
 			return response;
 		}
 	}
@@ -256,6 +274,7 @@ public class MigrationResourceImpl implements MigrationResource {
 			ConstructListResponse response = new ConstructListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched tags"));
 			response.setConstructs(restList);
 
+			trx.success();
 			return response;
 		}
 	}
@@ -341,6 +360,7 @@ public class MigrationResourceImpl implements MigrationResource {
 					new ResponseInfo(ResponseCode.OK, "Successfully determined possible part mappings."));
 
 			response.setPossibleMapping(possibleMappingsRestModel);
+			trx.success();
 			return response;
 		}
 	}

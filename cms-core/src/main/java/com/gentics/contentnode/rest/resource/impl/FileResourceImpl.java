@@ -150,6 +150,7 @@ import jakarta.ws.rs.core.Response.Status;
  *
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/file")
 @Authenticated
 public class FileResourceImpl implements FileResource {
@@ -163,19 +164,6 @@ public class FileResourceImpl implements FileResource {
 	 */
 	public FileResourceImpl() {}
 
-//	@PostConstruct
-//	public void initialize() {
-//		// Attention: Multipart requests require seperate authentication handling within the resouce. Basically you just need to set the
-//		// session data and reinvoke this method.
-//		if ((getSessionId() == null || getSessionSecret() == null) && servletRequest != null && servletRequest.getContentType() != null
-//				&& servletRequest.getContentType().startsWith("multipart")) {
-//			logger.debug(
-//					"This request is a multipart request either sessionId or sessionSecret have not been set yet. The restcall may fail when no authentication will be invoked in the rest method.");
-//			return;
-//		}
-//		super.initialize();
-//	}
-
 	@Override
 	public FileListResponse list(
 			@BeanParam InFolderParameterBean inFolder,
@@ -186,7 +174,6 @@ public class FileResourceImpl implements FileResource {
 			@BeanParam EditableParameterBean editableParams,
 			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Transaction t = trx.getTransaction();
 			FolderResourceImpl folderResource = new FolderResourceImpl();
 
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
@@ -238,6 +225,7 @@ public class FileResourceImpl implements FileResource {
 							.to(new FileListResponse());
 
 					list.setStagingStatus(StagingUtil.checkStagingStatus(files, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+					trx.success();
 					return list;
 				}
 			}
@@ -264,6 +252,7 @@ public class FileResourceImpl implements FileResource {
 				throw new NodeException("Could not open file with id {" + id + "} for reading.");
 			}
 
+			trx.success();
 			// Warning. Keep in mind that the transaction has already been committed when reaching this point.
 			// The CommittingResponseFilter has already committed the transaction.
 			return Response.ok(new BinaryOutput(inputStream), mediaType).build();
@@ -300,6 +289,7 @@ public class FileResourceImpl implements FileResource {
 
 			FileLoadResponse response = new FileLoadResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded file " + id), restFile);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(file, stagingPackageName));
+			trx.success();
 			return response;
 		}
 	}
@@ -335,6 +325,7 @@ public class FileResourceImpl implements FileResource {
 
 			MultiFileLoadResponse response = new MultiFileLoadResponse(returnedFiles);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allFiles, request.getPackage(), o -> o.getGlobalId().toString()));
+			trx.success();
 			return response;
 		}
 	}
@@ -404,7 +395,9 @@ public class FileResourceImpl implements FileResource {
 			// can change the filename to anything else, but we ignore this case here.
 			String lockKey = FileFactory.sanitizeName(filename);
 
-			return (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName,lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
+			FileUploadResponse response = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName,lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
+			trx.success();
+			return response;
 		} finally {
 			if (multiPart != null) {
 				multiPart.cleanup();
@@ -482,6 +475,7 @@ public class FileResourceImpl implements FileResource {
 						addConversionFailedWarning(response);
 					}
 
+					trx.success();
 					return response;
 				} catch (IOException e) {
 					throw new NodeException(e);
@@ -733,6 +727,7 @@ public class FileResourceImpl implements FileResource {
 			String lockKey = FileFactory.sanitizeName(sentFilename);
 
 			fileUploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
+			trx.success();
 		} finally {
 			if (multiPart != null) {
 				multiPart.cleanup();
@@ -772,7 +767,7 @@ public class FileResourceImpl implements FileResource {
 
 			String lockKey = FileFactory.sanitizeName(request.getName());
 
-			return (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
+			FileUploadResponse uploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
 				try (ChannelTrx ctrx = new ChannelTrx(nodeId)) {
 					AtomicReference<String> mediaType = new AtomicReference<>(detectedMimeType);
 					AtomicReference<java.io.File> tmpFile = new AtomicReference<>();
@@ -816,6 +811,8 @@ public class FileResourceImpl implements FileResource {
 					}
 				}
 			});
+			trx.success();
+			return uploadResponse;
 		} catch (IOException e) {
 			throw new NodeException(e);
 		}
@@ -1371,7 +1368,9 @@ public class FileResourceImpl implements FileResource {
 				? FileFactory.sanitizeName(request.getNewFilename())
 				: FileFactory.sanitizeName(request.getFile().getName());
 
-			return (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleFileCopyRequest(request));
+			FileUploadResponse uploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleFileCopyRequest(request));
+			trx.success();
+			return uploadResponse;
 		}
 	}
 
@@ -1530,18 +1529,21 @@ public class FileResourceImpl implements FileResource {
 		};
 
 		try (Trx trx = ContentNodeHelper.trx()) {
+			GenericResponse response;
 			if (!ObjectTransformer.isEmpty(restFile.getName())) {
 				String lockKey = FileFactory.sanitizeName(restFile.getName());
-				return Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), save);
+				response = Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), save);
 			} else {
 				try {
-					return save.call();
+					response = save.call();
 				} catch (NodeException e) {
 					throw e;
 				} catch (Exception e) {
 					throw new NodeException(e);
 				}
 			}
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1560,8 +1562,9 @@ public class FileResourceImpl implements FileResource {
 
 		String sentFilename = metaData.getFilename();
 
-		if (!ObjectTransformer.isEmpty(sentFilename)) {
-			try (Trx trx = ContentNodeHelper.trx()) {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			GenericResponse response;
+			if (!ObjectTransformer.isEmpty(sentFilename)) {
 				String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
 				boolean isImage = mimeType != null && mimeType.startsWith("image/");
 
@@ -1571,10 +1574,12 @@ public class FileResourceImpl implements FileResource {
 				metaData.setFilename(sentFilename);
 
 				String lockKey = FileFactory.sanitizeName(sentFilename);
-				return Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, id));
+				response = Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, id));
+			} else {
+				response = handleMultiPartRequest(multiPart, metaData, id);
 			}
-		} else {
-			return handleMultiPartRequest(multiPart, metaData, id);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1614,7 +1619,7 @@ public class FileResourceImpl implements FileResource {
 			}
 
 			final int fileId = file.getId();
-			return Operator.executeLocked(new CNI18nString("file.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLocked(new CNI18nString("file.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
@@ -1627,6 +1632,8 @@ public class FileResourceImpl implements FileResource {
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
 					});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1658,33 +1665,33 @@ public class FileResourceImpl implements FileResource {
 				description.setParameter("0", ids.size());
 			}
 
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
 						List<File> files = new ArrayList<File>();
-						
+
 						for (String id : ids) {
 							File file = getFile(id, false);
-							
+
 							try (ChannelTrx cTrx = new ChannelTrx(file.getChannel())) {
 								file = getFile(id, false, ObjectPermission.view, ObjectPermission.wastebin);
 							}
-							
+
 							if (!file.isDeleted()) {
 								I18nString message = new CNI18nString("file.notfound");
 								message.setParameter("0", id.toString());
 								throw new EntityNotFoundException(message.toString());
 							}
-							
+
 							files.add(file);
 						}
-						
+
 						String filePaths = I18NHelper.getPaths(files, 5);
 						for (File file : files) {
 							file.delete(true);
 						}
-						
+
 						trx.success();
 						// generate the response
 						I18nString message = new CNI18nString(ids.size() == 1 ? "file.delete.wastebin.success" : "files.delete.wastebin.success");
@@ -1693,6 +1700,8 @@ public class FileResourceImpl implements FileResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1724,7 +1733,7 @@ public class FileResourceImpl implements FileResource {
 				description.setParameter("0", ids.size());
 			}
 
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -1760,6 +1769,8 @@ public class FileResourceImpl implements FileResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1780,7 +1791,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Map<Integer, Integer> masterMap = mapMasterFileIds(fileId);
-			return MiscUtils.getTotalUsageInfo(masterMap, File.TYPE_FILE, nodeId);
+			TotalUsageResponse response = MiscUtils.getTotalUsageInfo(masterMap, File.TYPE_FILE, nodeId);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1825,7 +1838,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			fileId = getMasterFileIds(fileId);
-			return MiscUtils.getFolderUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFolders);
+			FolderUsageListResponse response = MiscUtils.getFolderUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFolders);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1843,7 +1858,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			fileId = getMasterFileIds(fileId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, MiscUtils.PageUsage.GENERAL, nodeId, returnPages, pageModel);
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, MiscUtils.PageUsage.GENERAL, nodeId, returnPages, pageModel);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1860,7 +1877,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			fileId = getMasterFileIds(fileId);
-			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnTemplates);
+			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnTemplates);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1877,7 +1896,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			fileId = getMasterFileIds(fileId);
-			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnImages, true);
+			FileUsageListResponse response = MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnImages, true);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1894,7 +1915,9 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			fileId = getMasterFileIds(fileId);
-			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFiles, false);
+			FileUsageListResponse response = MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFiles, false);
+			trx.success();
+			return response;
 		}
 	}
 

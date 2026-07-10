@@ -27,17 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -46,7 +35,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -58,15 +46,12 @@ import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.MultichannellingFactory;
 import com.gentics.contentnode.factory.PageLanguageFallbackList;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FolderFactory;
 import com.gentics.contentnode.factory.object.FolderFactory.ReductionType;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.object.TagFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -84,7 +69,6 @@ import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
@@ -103,7 +87,6 @@ import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.render.RenderUrlFactory;
-import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
@@ -172,10 +155,21 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
 /**
  * Resource for loading and manipulating folders in GCN
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/folder")
 @Authenticated
 public class FolderResourceImpl implements FolderResource {
@@ -186,8 +180,10 @@ public class FolderResourceImpl implements FolderResource {
 	@Path("/create")
 	public FolderLoadResponse create(FolderCreateRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return (FolderLoadResponse) Operator.executeLocked("", 0,
+			FolderLoadResponse response = (FolderLoadResponse) Operator.executeLocked("", 0,
 					Operator.lock(LockType.motherId, request.getMotherId()), () -> doCreate(request));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -467,6 +463,7 @@ public class FolderResourceImpl implements FolderResource {
 			}
 
 			externalLinksResponse.setPages(getExternalLinks(folderIds));
+			trx.success();
 		}
 
 		return externalLinksResponse;
@@ -590,6 +587,7 @@ public class FolderResourceImpl implements FolderResource {
 
 			FolderLoadResponse response = new FolderLoadResponse(null, responseInfo, restFolder);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(nodeFolder, stagingPackageName));
+			trx.success();
 			return response;
 		}
 	}
@@ -632,6 +630,7 @@ public class FolderResourceImpl implements FolderResource {
 
 			// TODO make for filtered folders
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allFolders, request.getPackage(), o -> o.getGlobalId().toString()));
+			trx.success();
 			return response;
 		}
 	}
@@ -664,6 +663,7 @@ public class FolderResourceImpl implements FolderResource {
 				LegacyFolderListResponse response = new LegacyFolderListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched breadcrumb for folder " + id));
 
 				response.setFolders(restFolders);
+				trx.success();
 				return response;
 			}
 		}
@@ -875,6 +875,7 @@ public class FolderResourceImpl implements FolderResource {
 				response.setPages(restPages);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
 				response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
+				trx.success();
 				return response;
 			}
 		}
@@ -1075,6 +1076,7 @@ public class FolderResourceImpl implements FolderResource {
 				}
 				response.setFiles(restFiles);
 				response.setStagingStatus(StagingUtil.checkStagingStatus(imagesOrFiles, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+				trx.success();
 				return response;
 			}
 		}
@@ -1244,7 +1246,7 @@ public class FolderResourceImpl implements FolderResource {
 			}
 			response.setStagingStatus(StagingUtil.checkStagingStatus(folders, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 			response.setFolders(restFolders);
-
+			trx.success();
 			return response;
 		}
 	}
@@ -1347,6 +1349,7 @@ public class FolderResourceImpl implements FolderResource {
 
 			response.setStagingStatus(StagingUtil.checkStagingStatus(folders, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 
+			trx.success();
 			return response;
 		}
 	}
@@ -1687,6 +1690,7 @@ public class FolderResourceImpl implements FolderResource {
 					response.setHasMoreItems(pagingParams.maxItems > -1 && restTemplates.size() > pagingParams.skipCount + pagingParams.maxItems);
 					reduceList(restTemplates, pagingParams.skipCount, pagingParams.maxItems);
 					response.setTemplates(restTemplates);
+					trx.success();
 					return response;
 				} else {
 					TemplateListResponse response = new TemplateListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded templates"));
@@ -1694,6 +1698,7 @@ public class FolderResourceImpl implements FolderResource {
 					response.setNumItems(0);
 					response.setHasMoreItems(false);
 					response.setTemplates(new Vector<com.gentics.contentnode.rest.model.Template>(0));
+					trx.success();
 					return response;
 				}
 			}
@@ -1894,6 +1899,7 @@ public class FolderResourceImpl implements FolderResource {
 
 				response.setPages(foundPages);
 
+				trx.success();
 				return response;
 			} catch (SQLException e) {
 				throw new NodeException(e);
@@ -2004,6 +2010,7 @@ public class FolderResourceImpl implements FolderResource {
 
 				response.setFiles(foundFiles);
 
+				trx.success();
 				return response;
 			} catch (SQLException e) {
 				throw new NodeException(e);
@@ -2370,7 +2377,7 @@ public class FolderResourceImpl implements FolderResource {
 			}
 
 			final int folderId = folder.getId();
-			return Operator.executeLocked(new CNI18nString("folder.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLocked(new CNI18nString("folder.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
@@ -2383,6 +2390,9 @@ public class FolderResourceImpl implements FolderResource {
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
 					});
+
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2414,7 +2424,7 @@ public class FolderResourceImpl implements FolderResource {
 				description = new CNI18nString("folders.delete.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -2449,6 +2459,8 @@ public class FolderResourceImpl implements FolderResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2479,7 +2491,7 @@ public class FolderResourceImpl implements FolderResource {
 				description = new CNI18nString("folders.restore.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -2513,6 +2525,8 @@ public class FolderResourceImpl implements FolderResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2529,6 +2543,7 @@ public class FolderResourceImpl implements FolderResource {
 			PermHandler permHandler = t.getPermHandler();
 			List<Privilege> privileges = ModelBuilder.getFolderPrivileges(id, permHandler);
 
+			trx.success();
 			return new PrivilegesResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded privileges on folder " + id), privileges);
 		}
 	}
@@ -2540,7 +2555,6 @@ public class FolderResourceImpl implements FolderResource {
 			@QueryParam("language") String language, @QueryParam("inherited") Boolean inherited,
 			@BeanParam InFolderParameterBean inFolder, @BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
-			Transaction t = trx.getTransaction();
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 			String folderId = id.toString();
 
@@ -2613,6 +2627,7 @@ public class FolderResourceImpl implements FolderResource {
 
 				response.setFolders(folderList.getNumItems());
 
+				trx.success();
 				return response;
 			}
 		}
@@ -2704,6 +2719,7 @@ public class FolderResourceImpl implements FolderResource {
 						new ResponseInfo(ResponseCode.FAILURE, "Error while setting startpage for folder. Object property for startpage not configured properly"));
 			} else {
 				folder.save();
+				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully set startpage"));
 			}
 		}
@@ -2717,7 +2733,9 @@ public class FolderResourceImpl implements FolderResource {
 			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
 			MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
 					request.getFolderId(), request.getNodeId());
-			return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			GenericResponse response = moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2734,7 +2752,9 @@ public class FolderResourceImpl implements FolderResource {
 			}
 			MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
 					request.getNodeId());
-			return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			GenericResponse response = moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2746,6 +2766,7 @@ public class FolderResourceImpl implements FolderResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = MiscUtils.load(Node.class, Integer.toString(request.getNodeId()));
 			String sanitized = FolderFactory.cleanPubDir(request.getPublishDir(), node.isPubDirSegment(), true);
+			trx.success();
 			return new FolderPublishDirSanitizeResponse(null, ResponseInfo.ok("")).setPublishDir(sanitized);
 		}
 	}

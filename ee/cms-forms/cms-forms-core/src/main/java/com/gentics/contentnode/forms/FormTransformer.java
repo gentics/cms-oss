@@ -1064,7 +1064,7 @@ public class FormTransformer {
 				data.put("formType", form.getFormType());
 				data.set("uiSchema", data.get(FormDataUtils.UI_SCHEMA));
 				data.without(FormDataUtils.UI_SCHEMA);
-				data.put("cmsSid", TransactionManager.getCurrentTransaction().getSession().getSessionId());
+				data.put("cmsSid", TransactionManager.getCurrentTransaction().getSessionId());
 				break;
 			case fromContentPackage:
 			case toContentPackage:

@@ -96,7 +96,6 @@ import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.model.response.admin.CustomTool;
 import com.gentics.contentnode.rest.resource.FormResource;
-import com.gentics.contentnode.rest.resource.impl.AuthenticatedContentNodeResource.PageUsage;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormDataParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterFormTypeConfigurationsParameterBean;
@@ -111,6 +110,7 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.rest.util.AndFilter;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.MiscUtils.PageUsage;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.NodeFeatureFilter;
 import com.gentics.contentnode.rest.util.PermFilter;
@@ -1015,7 +1015,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			for (Integer id : formId) {
 				TotalUsageInfo info = new TotalUsageInfo();
 				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(id), Form.TYPE_FORM,
-						PageUsage.GENERAL, iNodeId);
+						MiscUtils.PageUsage.GENERAL, iNodeId);
 				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(id), Form.TYPE_FORM,
 						iNodeId);
 				info.setTotal(referencingPageIds.size() + usingTemplateIds.size());

@@ -2,6 +2,10 @@ package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
@@ -45,14 +49,6 @@ import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
-import com.gentics.contentnode.rest.resource.FileResource;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.ImageResource;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -366,8 +362,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPage() throws NodeException {
 		operate(() -> {
-			PageResource resource = new PageResourceImpl();
-			PageLoadResponse response = resource.load(String.valueOf(page.getId()), true, false, false, false, false, false, false, false, false, false, null, null);
+			PageLoadResponse response = getPageResource().load(String.valueOf(page.getId()), true, false, false, false, false, false, false, false, false, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTags(response.getPage().getTags().values());
@@ -381,8 +376,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPageFull() throws NodeException {
 		operate(() -> {
-			PageResource resource = new PageResourceImpl();
-			PageLoadResponse response = resource.load(String.valueOf(page.getId()), true, false, false, false, false, false, false, false, false, true, null, null);
+			PageLoadResponse response = getPageResource().load(String.valueOf(page.getId()), true, false, false, false, false, false, false, false, false, true, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsFull(response.getPage().getTags().values());
@@ -396,8 +390,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledPage() throws NodeException {
 		operate(() -> {
-			PageResource resource = new PageResourceImpl();
-			PageLoadResponse response = resource.load(String.valueOf(prefilledPage.getId()), true, false, false, false, false, false, false, false, false, false, null, null);
+			PageLoadResponse response = getPageResource().load(String.valueOf(prefilledPage.getId()), true, false, false, false, false, false, false, false, false, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getPage().getTags().values());
@@ -411,8 +404,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledPageChannel() throws NodeException {
 		operate(() -> {
-			PageResource resource = new PageResourceImpl();
-			PageLoadResponse response = resource.load(String.valueOf(prefilledPageChannel.getId()), true, false, false,
+			PageLoadResponse response = getPageResource().load(String.valueOf(prefilledPageChannel.getId()), true, false, false,
 					false, false, false, false, false, false, false, channel.getId(), null);
 			assertResponseCodeOk(response);
 
@@ -427,8 +419,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadFolder() throws NodeException {
 		operate(() -> {
-			FolderResource resource = new FolderResourceImpl();
-			FolderLoadResponse response = resource.load(String.valueOf(folder.getId()), true, false, false, null, null);
+			FolderLoadResponse response = getFolderResource().load(String.valueOf(folder.getId()), true, false, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTags(response.getFolder().getTags().values());
@@ -442,8 +433,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadFolderFull() throws NodeException {
 		operate(() -> {
-			FolderResource resource = new FolderResourceImpl();
-			FolderLoadResponse response = resource.load(String.valueOf(folder.getId()), true, false, true, null, null);
+			FolderLoadResponse response = getFolderResource().load(String.valueOf(folder.getId()), true, false, true, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsFull(response.getFolder().getTags().values());
@@ -457,8 +447,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledFolder() throws NodeException {
 		operate(() -> {
-			FolderResource resource = new FolderResourceImpl();
-			FolderLoadResponse response = resource.load(String.valueOf(prefilledFolder.getId()), true, false, false, null, null);
+			FolderLoadResponse response = getFolderResource().load(String.valueOf(prefilledFolder.getId()), true, false, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getFolder().getTags().values());
@@ -472,8 +461,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledFolderChannel() throws NodeException {
 		operate(() -> {
-			FolderResource resource = new FolderResourceImpl();
-			FolderLoadResponse response = resource.load(String.valueOf(prefilledFolderChannel.getId()), true, false,
+			FolderLoadResponse response = getFolderResource().load(String.valueOf(prefilledFolderChannel.getId()), true, false,
 					false, channel.getId(), null);
 			assertResponseCodeOk(response);
 
@@ -488,8 +476,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadFile() throws NodeException {
 		operate(() -> {
-			FileResource resource = new FileResourceImpl();
-			FileLoadResponse response = resource.load(String.valueOf(file.getId()), true, false, null, null);
+			FileLoadResponse response = getFileResource().load(String.valueOf(file.getId()), true, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTags(response.getFile().getTags().values());
@@ -503,8 +490,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadFileFull() throws NodeException {
 		operate(() -> {
-			FileResource resource = new FileResourceImpl();
-			FileLoadResponse response = resource.load(String.valueOf(file.getId()), true, true, null, null);
+			FileLoadResponse response = getFileResource().load(String.valueOf(file.getId()), true, true, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsFull(response.getFile().getTags().values());
@@ -518,8 +504,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledFile() throws NodeException {
 		operate(() -> {
-			FileResource resource = new FileResourceImpl();
-			FileLoadResponse response = resource.load(String.valueOf(prefilledFile.getId()), true, false, null, null);
+			FileLoadResponse response = getFileResource().load(String.valueOf(prefilledFile.getId()), true, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getFile().getTags().values());
@@ -533,8 +518,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledFileChannel() throws NodeException {
 		operate(() -> {
-			FileResource resource = new FileResourceImpl();
-			FileLoadResponse response = resource.load(String.valueOf(prefilledFileChannel.getId()), true, false, channel.getId(), null);
+			FileLoadResponse response = getFileResource().load(String.valueOf(prefilledFileChannel.getId()), true, false, channel.getId(), null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getFile().getTags().values());
@@ -548,8 +532,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadImage() throws NodeException {
 		operate(() -> {
-			ImageResource resource = new ImageResourceImpl();
-			ImageLoadResponse response = resource.load(String.valueOf(image.getId()), true, false, null, null);
+			ImageLoadResponse response = getImageResource().load(String.valueOf(image.getId()), true, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTags(response.getImage().getTags().values());
@@ -563,8 +546,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadImageFull() throws NodeException {
 		operate(() -> {
-			ImageResource resource = new ImageResourceImpl();
-			ImageLoadResponse response = resource.load(String.valueOf(image.getId()), true, true, null, null);
+			ImageLoadResponse response = getImageResource().load(String.valueOf(image.getId()), true, true, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsFull(response.getImage().getTags().values());
@@ -578,8 +560,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledImage() throws NodeException {
 		operate(() -> {
-			ImageResource resource = new ImageResourceImpl();
-			ImageLoadResponse response = resource.load(String.valueOf(prefilledImage.getId()), true, false, null, null);
+			ImageLoadResponse response = getImageResource().load(String.valueOf(prefilledImage.getId()), true, false, null, null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getImage().getTags().values());
@@ -593,8 +574,7 @@ public class ObjectTagLoadTest {
 	@Test
 	public void testLoadPrefilledImageChannel() throws NodeException {
 		operate(() -> {
-			ImageResource resource = new ImageResourceImpl();
-			ImageLoadResponse response = resource.load(String.valueOf(prefilledImageChannel.getId()), true, false, channel.getId(), null);
+			ImageLoadResponse response = getImageResource().load(String.valueOf(prefilledImageChannel.getId()), true, false, channel.getId(), null);
 			assertResponseCodeOk(response);
 
 			assertTagsPrefilled(response.getImage().getTags().values());

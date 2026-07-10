@@ -39,20 +39,18 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
-import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.perm.Permissions;
+import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.rest.model.Privilege;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.request.FolderListRequest;
 import com.gentics.contentnode.rest.model.request.SetPermsRequest;
-import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.GroupsPermBitsResponse;
+import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.PermBitsResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
@@ -187,22 +185,20 @@ public class PermissionSandboxTest {
 	public void testPrivilegeMapForFolders() throws NodeException {
 		// create a folder
 		Trx.operate(() -> {
-			FolderResource folderResource = new FolderResourceImpl();
 			FolderCreateRequest request = new FolderCreateRequest();
 			request.setMotherId(String.valueOf(ROOT_FOLDER_ID));
 			request.setName("Folder Name");
 
-			ContentNodeRESTUtils.assertResponseOK(folderResource.create(request));
+			ContentNodeRESTUtils.assertResponseOK(getFolderResource().create(request));
 		});
 
 		// get folders without privilege map
 		Trx.operate(() -> {
-			FolderResource folderResource = new FolderResourceImpl();
 			FolderListRequest request = new FolderListRequest();
 			request.setId(String.valueOf(ROOT_FOLDER_ID));
 			request.setPrivilegeMap(false);
 
-			LegacyFolderListResponse folderListResponse = folderResource.getFolders(request);
+			LegacyFolderListResponse folderListResponse = getFolderResource().getFolders(request);
 			ContentNodeRESTUtils.assertResponseOK(folderListResponse);
 			assertThat(folderListResponse.getFolders()).isNotEmpty();
 			folderListResponse.getFolders().forEach(f -> {
@@ -212,12 +208,11 @@ public class PermissionSandboxTest {
 
 		// get folders with privilege map
 		Trx.operate(() -> {
-			FolderResource folderResource = new FolderResourceImpl();
 			FolderListRequest request = new FolderListRequest();
 			request.setId(String.valueOf(ROOT_FOLDER_ID));
 			request.setPrivilegeMap(true);
 
-			LegacyFolderListResponse folderListResponse = folderResource.getFolders(request);
+			LegacyFolderListResponse folderListResponse = getFolderResource().getFolders(request);
 			ContentNodeRESTUtils.assertResponseOK(folderListResponse);
 
 			Set<Privilege> expected = new HashSet<>();
@@ -249,12 +244,11 @@ public class PermissionSandboxTest {
 	public void testPrivilegeMap() throws NodeException {
 		// create a folder
 		Integer folderId = Trx.supply(() -> {
-			FolderResource folderResource = new FolderResourceImpl();
 			FolderCreateRequest request = new FolderCreateRequest();
 			request.setMotherId(String.valueOf(ROOT_FOLDER_ID));
 			request.setName("Folder Name");
 
-			FolderLoadResponse response = folderResource.create(request);
+			FolderLoadResponse response = getFolderResource().create(request);
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			return response.getFolder().getId();

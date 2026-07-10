@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
@@ -133,9 +134,7 @@ public class TranslationResourceImplIntegrationTest {
 	 * @param page            page to add the tags
 	 * @param contentFileName
 	 */
-	private void createTags(Page page, String contentFileName) throws IOException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
+	private void createTags(Page page, String contentFileName) throws IOException, NodeException {
 		var createTagsRequest = new MultiTagCreateRequest();
 		var create = new HashMap<String, TagCreateRequest>();
 		addTagCreateRequest(create, "content1", null, textKeyword,
@@ -146,7 +145,7 @@ public class TranslationResourceImplIntegrationTest {
 
 		createTagsRequest.setCreate(create);
 
-		var response = pageResource.createTags(page.getId().toString(), createTagsRequest);
+		var response = getPageResource().createTags(page.getId().toString(), createTagsRequest);
 		assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
 	}
 

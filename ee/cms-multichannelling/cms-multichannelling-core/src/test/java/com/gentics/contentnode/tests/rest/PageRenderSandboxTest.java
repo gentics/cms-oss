@@ -3,6 +3,7 @@ package com.gentics.contentnode.tests.rest;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getNodeResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
@@ -80,9 +81,7 @@ import com.gentics.contentnode.rest.model.response.PagePreviewResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
-import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.ModelBuilder;
@@ -323,7 +322,7 @@ public class PageRenderSandboxTest {
 		}
 	}
 
-	protected void renderFrontendPageAndAssert(PageResource pageResource, String pageId,
+	protected void renderFrontendPageAndAssert(PageResourceImpl pageResource, String pageId,
 			String template, String expectedContent) throws NodeException {
 		PageRenderResponse renderResponse = pageResource.render(pageId, null,
 				template, false, null, LinksType.frontend, false, false, false, 0);
@@ -451,12 +450,8 @@ public class PageRenderSandboxTest {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 
 		Folder f = Trx.supply(() -> {
-			PageResourceImpl pageResource = new PageResourceImpl();
-
-			pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
 			// load the page
-			Page page = pageResource.load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage();
+			Page page = getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage();
 
 			// create a folder next to the page
 			Folder folder = createFolder("Velocity Render Test Folder", page.getFolderId(), "<node folder.name>");
@@ -469,18 +464,14 @@ public class PageRenderSandboxTest {
 					"#set($folder = $cms.imps.loader.getFolder("
 							+ folder.getId()
 							+ "))##\nfolder.name: $folder.name\nfolder.object.name_de: $folder.object.name_de\nfolder.object.name_de.parts.text: $folder.object.name_de.parts.text");
-			createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, pageResource);
+			createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource());
 
 			return folder;
 		});
 
 		try (Trx trx = new Trx(user)) {
-			PageResourceImpl pageResource = new PageResourceImpl();
-
-			pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
 			// render the page
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
+			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("folder.name: " + f.getName() + "\n" + "folder.object.name_de: " + f.getName() + "\n"
@@ -752,8 +743,7 @@ public class PageRenderSandboxTest {
 
 		// render page
 		try (Trx trx = new Trx(user)) {
-			PageResource pageResource = getPageResource();
-			PageRenderResponse rendered = pageResource.render(page.getId().toString(), ObjectTransformer.getInt(node.getId(), 0), null, false, "", LinksType.backend,
+			PageRenderResponse rendered = getPageResource().render(page.getId().toString(), ObjectTransformer.getInt(node.getId(), 0), null, false, "", LinksType.backend,
 					false, false, false, 0);
 
 			assertEquals("Test", rendered.getContent());
@@ -1264,17 +1254,16 @@ public class PageRenderSandboxTest {
 		assertFalse(null == page);
 
 		try (Trx trx = new Trx(user)) {
-			PageResource resource = getPageResource();
 			final Map<String, String> parts = new HashMap<String, String>();
 			parts.put("template",
 					"cms.rendermode.backend:  $cms.rendermode.backend\n"
 							+ "cms.rendermode.frontend: $cms.rendermode.frontend\n"
 					);
-			createTag(page, VELOCITY_CONSTRUCT_ID, "test", parts, resource);
+			createTag(page, VELOCITY_CONSTRUCT_ID, "test", parts, getPageResource());
 			assertContent(
 					"cms.rendermode.backend:  false\n"
 							+ "cms.rendermode.frontend: true\n",
-							previewPage(page, resource)
+							previewPage(page, getPageResource())
 					);
 			trx.success();
 		}
@@ -1451,8 +1440,7 @@ public class PageRenderSandboxTest {
 			prefs.setFeature("dsfallback", dsFallback);
 			prefs.setFeature("ds_empty_cs", emptyCs);
 			prefs.setFeature("multichannelling", multichannelling);
-			PageResource pageResource = getPageResource();
-			PageRenderResponse renderedOverviewEn = pageResource.render(Integer.toString(overviewPage.getId()), null, null, false, null, LinksType.backend,
+			PageRenderResponse renderedOverviewEn = getPageResource().render(Integer.toString(overviewPage.getId()), null, null, false, null, LinksType.backend,
 					false, false, false, 0);
 
 			assertResponseOK(renderedOverviewEn);
@@ -1498,13 +1486,12 @@ public class PageRenderSandboxTest {
 	 */
 	protected Folder createFolder(String name, Integer motherId, String nameDe) throws NodeException {
 		return Trx.supply(() -> {
-			FolderResource folderResource = getFolderResource();
 			// create a folder next to the page
 			FolderCreateRequest folderCreateRequest = new FolderCreateRequest();
 
 			folderCreateRequest.setMotherId(motherId.toString());
 			folderCreateRequest.setName(name);
-			FolderLoadResponse loadResponse = folderResource.create(folderCreateRequest);
+			FolderLoadResponse loadResponse = getFolderResource().create(folderCreateRequest);
 			Folder folder = loadResponse.getFolder();
 
 			// set the object property
@@ -1514,7 +1501,7 @@ public class PageRenderSandboxTest {
 			FolderSaveRequest folderSaveRequest = new FolderSaveRequest();
 
 			folderSaveRequest.setFolder(folder);
-			folderResource.save(folder.getId().toString(), folderSaveRequest);
+			getFolderResource().save(folder.getId().toString(), folderSaveRequest);
 
 			return folder;
 		});
@@ -1538,7 +1525,6 @@ public class PageRenderSandboxTest {
 	 */
 	protected Page createPage(Integer templateId, Integer folderId, String name, String language, Integer priority) throws NodeException {
 		Page page = Trx.supply(() -> {
-			PageResource pageResource = getPageResource();
 			PageCreateRequest pageCreateRequest = new PageCreateRequest();
 
 			pageCreateRequest.setFolderId(folderId.toString());
@@ -1547,7 +1533,7 @@ public class PageRenderSandboxTest {
 				pageCreateRequest.setLanguage(language);
 			}
 
-			return pageResource.create(pageCreateRequest).getPage();
+			return getPageResource().create(pageCreateRequest).getPage();
 		});
 
 		if (!StringUtils.isEmpty(name) || priority != null) {
@@ -1577,8 +1563,7 @@ public class PageRenderSandboxTest {
 	 */
 	protected Page translatePage(Page page, String name, String language) throws NodeException {
 		Page translation = Trx.supply(() -> {
-			PageResource pageResource = getPageResource();
-			PageLoadResponse loadResponse = pageResource.translate(page.getId(), language, false, null);
+			PageLoadResponse loadResponse = getPageResource().translate(page.getId(), language, false, null);
 
 			assertResponseOK(loadResponse);
 			return loadResponse.getPage();
@@ -1601,11 +1586,10 @@ public class PageRenderSandboxTest {
 	 */
 	protected void savePage(Page page) throws NodeException {
 		Trx.operate(() -> {
-			PageResource pageResource = getPageResource();
 			PageSaveRequest request = new PageSaveRequest(page);
 
 			request.setUnlock(true);
-			assertResponseOK(pageResource.save(Integer.toString(page.getId()), request));
+			assertResponseOK(getPageResource().save(Integer.toString(page.getId()), request));
 		});
 	}
 
@@ -1620,14 +1604,12 @@ public class PageRenderSandboxTest {
 	 */
 	protected void publishPages(boolean allLang, Page... pages) throws NodeException {
 		Trx.operate(() -> {
-			PageResource pageResource = getPageResource();
-
 			PagePublishRequest request = new PagePublishRequest();
 
 			request.setAlllang(allLang);
 
 			for (Page page : pages) {
-				assertResponseOK(pageResource.publish(Integer.toString(page.getId()), null, request));
+				assertResponseOK(getPageResource().publish(Integer.toString(page.getId()), null, request));
 			}
 		});
 	}
@@ -1646,7 +1628,7 @@ public class PageRenderSandboxTest {
 	 * @param pageResource
 	 *            page resource
 	 */
-	protected Tag createTag(Page page, Integer constructId, String tagName, Map<String, String> parts, PageResource pageResource) throws NodeException {
+	protected Tag createTag(Page page, Integer constructId, String tagName, Map<String, String> parts, PageResourceImpl pageResource) throws NodeException {
 		Construct construct = TransactionManager.getCurrentTransaction().getObject(Construct.class, constructId);
 		assertThat(construct).as("Construct").isNotNull();
 		Map<String, Part> partMap = construct.getParts().stream().collect(Collectors.toMap(p -> p.getKeyname(), p -> p));
@@ -1714,19 +1696,6 @@ public class PageRenderSandboxTest {
 	}
 
 	/**
-	 * Get the folder resource (for the current transaction)
-	 * 
-	 * @return folder resource
-	 * @throws TransactionException
-	 */
-	protected FolderResource getFolderResource() throws TransactionException {
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return folderResource;
-	}
-
-	/**
 	 * Assert that the response code is {@link ResponseCode.OK}
 	 * 
 	 * @param response
@@ -1769,7 +1738,7 @@ public class PageRenderSandboxTest {
 	 * @param  resource Page resource with which to generate the preview
 	 * @return The contents of the page preview
 	 */
-	private String previewPage(final Page page, final PageResource resource) {
+	private String previewPage(final Page page, final PageResourceImpl resource) throws NodeException {
 		final PagePreviewResponse response = resource.preview(
 			new PagePreviewRequest() {{setPage(page);}}
 		);

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -35,7 +36,6 @@ import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -208,11 +208,7 @@ public class TranslationRightsTests {
 		try {
 			assertEquals("Current User ID must match testtranslator's ID", translationUser.getId().intValue(), t.getUserId());
 
-			// translate page to language with permissions
-			PageResourceImpl pageRes = new PageResourceImpl();
-			pageRes.setTransaction(t);
-
-			PageLoadResponse result = pageRes.translate((Integer) page.getId(), destLanguage.getCode(), lock, (Integer) translateChannel.getId());
+			PageLoadResponse result = getPageResource().translate((Integer) page.getId(), destLanguage.getCode(), lock, (Integer) translateChannel.getId());
 
 			assertEquals("translation operation must be successful", ResponseCode.OK, result.getResponseInfo().getResponseCode());
 			assertTrue("translation must not be offline", result.getPage().isOnline());
@@ -220,13 +216,13 @@ public class TranslationRightsTests {
 			Integer translatedPageID = result.getPage().getId();
 
 			// Try again to check for duplicate translations
-			result = pageRes.translate((Integer) page.getId(), destLanguage.getCode(), lock, (Integer) translateChannel.getId());
+			result = getPageResource().translate((Integer) page.getId(), destLanguage.getCode(), lock, (Integer) translateChannel.getId());
 
 			assertEquals("translation operation must be successful", ResponseCode.OK, result.getResponseInfo().getResponseCode());
 			assertEquals("multiple translations of same language and node are not permitted", translatedPageID, result.getPage().getId());
 
 			// translate page to language without permissions
-			result = pageRes.translate((Integer) page.getId(), destLanguage2.getCode(), lock, (Integer) translateChannel.getId());
+			result = getPageResource().translate((Integer) page.getId(), destLanguage2.getCode(), lock, (Integer) translateChannel.getId());
 
 			assertEquals("translation must fail", ResponseCode.PERMISSION, result.getResponseInfo().getResponseCode());
 

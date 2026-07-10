@@ -1,5 +1,16 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayInputStream;
+
+import org.junit.Test;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -11,7 +22,6 @@ import com.gentics.contentnode.rest.model.response.FileListResponse;
 import com.gentics.contentnode.rest.model.response.ImageListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFileListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
@@ -20,13 +30,6 @@ import com.gentics.contentnode.rest.resource.parameter.LegacyPagingParameterBean
 import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Image tests for multichannelling support.
@@ -237,7 +240,7 @@ public class ImageChannelSandboxTest extends AbstractMultichannellingSandboxTest
 		LegacyPagingParameterBean paging = new LegacyPagingParameterBean();
 		EditableParameterBean editableParameterBean = new EditableParameterBean();
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean();
-		ImageListResponse imageListResponse = ContentNodeRESTUtils.getImageResource().list(
+		ImageListResponse imageListResponse = getImageResource().list(
 			inFolder,
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -255,8 +258,7 @@ public class ImageChannelSandboxTest extends AbstractMultichannellingSandboxTest
 		assertTrue("Check if the image is inherited", !imageListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoints.
-		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-		LegacyFileListResponse legacyFileListResponse = folderResource.getImages(
+		LegacyFileListResponse legacyFileListResponse = getFolderResource().getImages(
 			inFolder.folderId,
 			inFolder,
 			fileListParams,
@@ -275,7 +277,7 @@ public class ImageChannelSandboxTest extends AbstractMultichannellingSandboxTest
 		assertTrue("Check if the image is inherited", !legacyFileListResponse.getFiles().get(0).isInherited());
 
 		// Get all files for test folder in the master node.
-		FileListResponse fileListResponse = ContentNodeRESTUtils.getFileResource().list(
+		FileListResponse fileListResponse = getFileResource().list(
 			inFolder,
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -287,7 +289,7 @@ public class ImageChannelSandboxTest extends AbstractMultichannellingSandboxTest
 		assertTrue("Check if the image list contains elements", fileListResponse.getItems().size() == 0);
 
 		// Check again with legacy endpoints.
-		legacyFileListResponse = folderResource.getFiles(
+		legacyFileListResponse = getFolderResource().getFiles(
 			inFolder.folderId,
 			inFolder,
 			fileListParams,

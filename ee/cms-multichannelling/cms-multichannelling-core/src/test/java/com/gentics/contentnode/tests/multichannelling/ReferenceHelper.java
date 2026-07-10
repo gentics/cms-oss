@@ -1,11 +1,14 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
@@ -21,10 +24,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.OverviewHelper;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 /**
  * This class implements logic, frequently used by all overview related tests.
@@ -94,17 +94,11 @@ final class ReferenceHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void savePage(com.gentics.contentnode.rest.model.Page page) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageSaveRequest saveRequest = new PageSaveRequest();
 
 		saveRequest.setPage(page);
 		saveRequest.setUnlock(true);
-		GenericResponse saveResponse = pageResource.save(Integer.toString(page.getId()), saveRequest);
+		GenericResponse saveResponse = getPageResource().save(Integer.toString(page.getId()), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
@@ -117,16 +111,10 @@ final class ReferenceHelper {
 	 * @throws Exception if anything goes wrong.
 	 */
 	public static com.gentics.contentnode.rest.model.Page loadPage(int pageId) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
-		PageLoadResponse pageLoadResponse = pageResource.load(Integer.toString(pageId), false, false, false, false, false, false, false, false, false, false, null, null);
+		PageLoadResponse pageLoadResponse = getPageResource().load(Integer.toString(pageId), false, false, false, false, false, false, false, false, false, false, null, null);
 
 		assertEquals("Check the response code", ResponseCode.OK, pageLoadResponse.getResponseInfo().getResponseCode());
-        
+
 		return pageLoadResponse.getPage();
 	}
 	
@@ -137,13 +125,7 @@ final class ReferenceHelper {
 	 * @throws Exception if anything goes wrong.
 	 */
 	public static void publishPage(com.gentics.contentnode.rest.model.Page page) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
-		GenericResponse publishResponse = pageResource.publish(Integer.toString(page.getId()), null, new PagePublishRequest());
+		GenericResponse publishResponse = getPageResource().publish(Integer.toString(page.getId()), null, new PagePublishRequest());
 
 		assertEquals("Check the response code", ResponseCode.OK, publishResponse.getResponseInfo().getResponseCode());
 	}
@@ -211,12 +193,6 @@ final class ReferenceHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static com.gentics.contentnode.rest.model.Page createPage(int folderId, int templateId, int nodeId) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageCreateRequest createPageRequest = new PageCreateRequest();
 
 		if (nodeId != 0) {
@@ -224,13 +200,13 @@ final class ReferenceHelper {
 		}
 		createPageRequest.setFolderId(Integer.toString(folderId));
 		createPageRequest.setTemplateId(templateId);
-		PageLoadResponse createPageResponse = pageResource.create(createPageRequest);
+		PageLoadResponse createPageResponse = getPageResource().create(createPageRequest);
 
 		assertEquals("Check the reponse code", ResponseCode.OK, createPageResponse.getResponseInfo().getResponseCode());
 
 		// get the test page
 		com.gentics.contentnode.rest.model.Page testPage = createPageResponse.getPage();
-        
+
 		return testPage;
 	}
 	
@@ -242,20 +218,14 @@ final class ReferenceHelper {
 	 * @throws Exception if anything goes wrong.
 	 */
 	public static com.gentics.contentnode.rest.model.Tag createTag(int pageId) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		ContentTagCreateRequest tagCreateRequest = new ContentTagCreateRequest();
 
 		tagCreateRequest.setMagicValue(C.reference_test_data.page_tag_master_value);
-        
-		TagCreateResponse tagCreateResponse = pageResource.createTag(Integer.toString(pageId), 3, null, tagCreateRequest);
+
+		TagCreateResponse tagCreateResponse = getPageResource().createTag(Integer.toString(pageId), 3, null, tagCreateRequest);
 
 		assertEquals("Check the reponse code", ResponseCode.OK, tagCreateResponse.getResponseInfo().getResponseCode());
-        
+
 		return tagCreateResponse.getTag();
 	}
 	

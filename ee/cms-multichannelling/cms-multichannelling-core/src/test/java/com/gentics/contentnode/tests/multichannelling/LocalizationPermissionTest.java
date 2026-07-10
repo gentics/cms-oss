@@ -1,13 +1,31 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -34,13 +52,10 @@ import com.gentics.contentnode.rest.model.request.UnlocalizeRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCFileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCFolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.MCTestedType;
@@ -48,18 +63,6 @@ import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.i18n.CNI18nString;
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.supply;
 
 /**
  * Test cases for localization with restricted permissions
@@ -266,8 +269,8 @@ public class LocalizationPermissionTest {
 		LocalizableNodeObject<?> master = Trx.supply(() -> type.create(folder, template));
 		LocalizableNodeObject<?> localized = Trx.execute(o -> type.localize(o, testChannel), master);
 
-		String sid = Trx.supply(() -> ContentNodeRESTUtils.login("test", "test"));
-		try (Trx trx = new Trx(sid, user.getId())) {
+		Session session = Trx.supply(() -> ContentNodeRESTUtils.login("test", "test"));
+		try (Trx trx = new Trx(session, user.getId())) {
 			UnlocalizeRequest request = new UnlocalizeRequest();
 			request.setChannelId(testChannel.getId());
 			request.setRecursive(false);
@@ -318,9 +321,7 @@ public class LocalizationPermissionTest {
 				folderCreate.setName("Testfolder");
 				folderCreate.setMotherId(Integer.toString(folder.getId()));
 				folderCreate.setNodeId(testChannel.getId());
-				FolderResourceImpl folderResource = new FolderResourceImpl();
-				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.create(folderCreate);
+				response = getFolderResource().create(folderCreate);
 				break;
 			case file:
 			case image:
@@ -336,9 +337,7 @@ public class LocalizationPermissionTest {
 				PageCreateRequest pageCreate = new PageCreateRequest();
 				pageCreate.setFolderId(Integer.toString(folder.getId()));
 				pageCreate.setNodeId(testChannel.getId());
-				PageResourceImpl pageResource = new PageResourceImpl();
-				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.create(pageCreate);
+				response = getPageResource().create(pageCreate);
 				break;
 			}
 
@@ -396,36 +395,28 @@ public class LocalizationPermissionTest {
 				folderModel.setName("modified " + localObject.getName());
 				FolderSaveRequest folderSave = new FolderSaveRequest();
 				folderSave.setFolder(folderModel);
-				FolderResourceImpl folderResource = new FolderResourceImpl();
-				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.save(Integer.toString(localObject.getId()), folderSave);
+				response = getFolderResource().save(Integer.toString(localObject.getId()), folderSave);
 				break;
 			case file:
 				File file = new File();
 				file.setName("modified_" + localObject.getName());
 				FileSaveRequest fileSave = new FileSaveRequest();
 				fileSave.setFile(file);
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-				response = fileResource.save(localObject.getId(), fileSave);
+				response = getFileResource().save(localObject.getId(), fileSave);
 				break;
 			case image:
 				Image image = new Image();
 				image.setName("modified_" + localObject.getName());
 				ImageSaveRequest imageSave = new ImageSaveRequest();
 				imageSave.setImage(image);
-				ImageResourceImpl imageResource = new ImageResourceImpl();
-				imageResource.setTransaction(trx.getTransaction());
-				response = imageResource.save(localObject.getId(), imageSave);
+				response = getImageResource().save(localObject.getId(), imageSave);
 				break;
 			case page:
 				Page page = new Page();
 				page.setName("modified " + localObject.getName());
 				PageSaveRequest pageSave = new PageSaveRequest();
 				pageSave.setPage(page);
-				PageResourceImpl pageResource = new PageResourceImpl();
-				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.save(Integer.toString(localObject.getId()), pageSave);
+				response = getPageResource().save(Integer.toString(localObject.getId()), pageSave);
 				break;
 			}
 
@@ -473,24 +464,16 @@ public class LocalizationPermissionTest {
 
 			switch (type) {
 			case folder:
-				FolderResourceImpl folderResource = new FolderResourceImpl();
-				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				response = getFolderResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case file:
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-				response = fileResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				response = getFileResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case image:
-				ImageResourceImpl imageResource = new ImageResourceImpl();
-				imageResource.setTransaction(trx.getTransaction());
-				response = imageResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				response = getImageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case page:
-				PageResourceImpl pageResource = new PageResourceImpl();
-				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				response = getPageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			}
 
@@ -516,24 +499,16 @@ public class LocalizationPermissionTest {
 
 			switch (type) {
 			case folder:
-				FolderResourceImpl folderResource = new FolderResourceImpl();
-				folderResource.setTransaction(trx.getTransaction());
-				response = folderResource.delete(Integer.toString(masterObject.getId()), null, null);
+				response = getFolderResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case file:
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-				response = fileResource.delete(Integer.toString(masterObject.getId()), null, null);
+				response = getFileResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case image:
-				ImageResourceImpl imageResource = new ImageResourceImpl();
-				imageResource.setTransaction(trx.getTransaction());
-				response = imageResource.delete(Integer.toString(masterObject.getId()), null, null);
+				response = getImageResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case page:
-				PageResourceImpl pageResource = new PageResourceImpl();
-				pageResource.setTransaction(trx.getTransaction());
-				response = pageResource.delete(Integer.toString(masterObject.getId()), null, null);
+				response = getPageResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			}
 

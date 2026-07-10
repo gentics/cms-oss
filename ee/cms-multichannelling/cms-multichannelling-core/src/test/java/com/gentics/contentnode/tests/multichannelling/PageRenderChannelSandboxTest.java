@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
@@ -9,6 +10,8 @@ import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -18,10 +21,7 @@ import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.rest.model.Editor;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.rest.PageRenderSandboxTest;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 /**
  * Page tests for multichannelling support.
@@ -38,9 +38,6 @@ public class PageRenderChannelSandboxTest extends AbstractMultichannellingSandbo
 	@Test
 	public void testRenderNodeMetaPropertiesInChannel() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 		// Get the channel node that inherits the master node
 		Node channel = t.getObject(Node.class, channelId, true);
@@ -82,7 +79,7 @@ public class PageRenderChannelSandboxTest extends AbstractMultichannellingSandbo
 		page = t.getObject(Page.class, page.getId());
 
 		// Render the page
-		PageRenderResponse renderResponse = pageResource.render(
+		PageRenderResponse renderResponse = getPageResource().render(
 				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 		// Check the results
@@ -104,7 +101,7 @@ public class PageRenderChannelSandboxTest extends AbstractMultichannellingSandbo
 		page = t.getObject(Page.class, page.getId());
 
 		// Render the page
-		renderResponse = pageResource.render(
+		renderResponse = getPageResource().render(
 				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 		// Check the results

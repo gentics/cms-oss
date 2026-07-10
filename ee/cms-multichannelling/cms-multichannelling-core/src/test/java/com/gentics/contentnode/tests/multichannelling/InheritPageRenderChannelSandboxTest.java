@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
@@ -20,7 +21,6 @@ import com.gentics.contentnode.object.TagmapEntry;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 
 /**
  * Page tests for inherit page content and properties
@@ -31,7 +31,6 @@ public class InheritPageRenderChannelSandboxTest extends AbstractMultichannellin
 	private Template template;
 	private Node masterNode;
 	private Folder masterFolder;
-	private PageResourceImpl pageResource;
 	private Page masterPage;
 	private Page localizedPage;
 
@@ -48,9 +47,6 @@ public class InheritPageRenderChannelSandboxTest extends AbstractMultichannellin
 
 		masterFolder = masterNode.getFolder();
 		template = createTemplate(masterNode);
-		
-		pageResource = new PageResourceImpl();
-		pageResource.setTransaction(transaction);
 
 		masterPage = createPage("Master Page");
 		localizedPage = localize(masterPage, "Channel Page localized");
@@ -153,7 +149,7 @@ public class InheritPageRenderChannelSandboxTest extends AbstractMultichannellin
 	 * @throws Exception
 	 */
 	private PageRenderResponse createRenderResponse(boolean tagmap, boolean inherited) throws Exception {
-		PageRenderResponse response = pageResource.render(localizedPage.getId().toString(), channelId, null, false, null, LinksType.frontend, tagmap, inherited, false, 0);
+		PageRenderResponse response = getPageResource().render(localizedPage.getId().toString(), channelId, null, false, null, LinksType.frontend, tagmap, inherited, false, 0);
 		assertResponseCode(response);
 		return response;
 	}

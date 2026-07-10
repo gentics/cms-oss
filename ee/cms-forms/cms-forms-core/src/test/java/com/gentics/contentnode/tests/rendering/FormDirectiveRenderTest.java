@@ -455,7 +455,7 @@ public class FormDirectiveRenderTest implements ConfigModifier {
 				renderedTag = supply(() -> String.format(EXPECTED_PUBLISHED.get(templateCode), MeshPublisher.getMeshUuid(form)));
 				break;
 			default:
-				int sid = TransactionManager.getCurrentTransaction().getSession().getSessionId();
+				String sid = TransactionManager.getCurrentTransaction().getSession().getSessionId();
 				String uuid = MeshPublisher.getMeshUuid(form);
 
 				renderedTag = EXPECTED_PREVIEW.get(templateCode).formatted(form.getId(), sid, language, uuid, language);

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,11 +74,6 @@ public class PageSandboxTest {
 	private static final boolean PAGE_MODIFIED = false;
 
 	/**
-	 * PageResourceImpl that is used to call the server
-	 */
-	private PageResourceImpl pageResource = new PageResourceImpl();
-
-	/**
 	 * Set some features
 	 */
 	@Before
@@ -114,22 +110,21 @@ public class PageSandboxTest {
 	@Test
 	public void testSearchPageByLiveUrl() throws Exception {
 		Page page = createAndPublishPage();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 		String liveUrl = "blah/" + page.getFilename();
-		PageLoadResponse response = pageResource.search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), liveUrl);
+		PageLoadResponse response = getPageResource().search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), liveUrl);
 		assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 		assertNotNull("The page should have been found.", response.getPage());
 		assertEquals(page.getFilename(), response.getPage().getFileName());
 
-		response = pageResource.search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), liveUrl);
+		response = getPageResource().search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), liveUrl);
 		assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 		assertNotNull("The page should have been found.", response.getPage());
 		assertEquals(page.getFilename(), response.getPage().getFileName());
 
-		response = pageResource.search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), "bogus");
+		response = getPageResource().search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), "bogus");
 		assertEquals("Check for the correct response code", ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
 
-		response = pageResource.search(false, false, false, false, false, false, false, false, false, null, "bogus");
+		response = getPageResource().search(false, false, false, false, false, false, false, false, false, null, "bogus");
 		assertEquals("Check for the correct response code", ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
 	}
 
@@ -140,7 +135,7 @@ public class PageSandboxTest {
 	public void testGetPageStatus() throws Exception {
 
 		// load the page
-		com.gentics.contentnode.rest.model.Page page = pageResource.load(PAGE_ID, false, false, false, false, false, false, false, false, false, false, null, null).getPage();
+		com.gentics.contentnode.rest.model.Page page = getPageResource().load(PAGE_ID, false, false, false, false, false, false, false, false, false, false, null, null).getPage();
 
 		assertNotNull("Check for the page {" + PAGE_ID + "}", page);
 		assertEquals("Check for the correct online flag for page {" + PAGE_ID + "}", PAGE_ONLINE, page.isOnline());
@@ -210,16 +205,12 @@ public class PageSandboxTest {
 
 		assertEquals("Current User ID must match testtranslator's ID", translationUser.getId().intValue(), t.getUserId());
 
-		// translate page to language with permissions
-		PageResourceImpl pageRes = new PageResourceImpl();
-		pageRes.setTransaction(t);
-
-		PageLoadResponse result = pageRes.translate(page.getId(), destLanguage.getCode(), true, 0);
+		PageLoadResponse result = getPageResource().translate(page.getId(), destLanguage.getCode(), true, 0);
 
 		assertEquals("translation operation must be successful", ResponseCode.OK, result.getResponseInfo().getResponseCode());
 
 		// translate page to language without permissions
-		result = pageRes.translate(page.getId(), destLanguage2.getCode(), true, 0);
+		result = getPageResource().translate(page.getId(), destLanguage2.getCode(), true, 0);
 
 		assertEquals("translation must fail", ResponseCode.PERMISSION, result.getResponseInfo().getResponseCode());
 
@@ -280,7 +271,6 @@ public class PageSandboxTest {
 	@Test
 	public void testLoadChannelData() throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		pageResource.setTransaction(t);
 
 		Node master = ContentNodeTestDataUtils.createNode("Master", "master", "/Content.Node", null, false, false);
 		Node channel = ContentNodeTestDataUtils.createChannel(master, "Channel",  "channel", "/Content,Node");
@@ -298,7 +288,7 @@ public class PageSandboxTest {
 		create.setNodeId(ObjectTransformer.getInteger(master.getId(), null));
 		create.setFolderId(ObjectTransformer.getString(master.getFolder().getId(), null));
 		create.setTemplateId(ObjectTransformer.getInteger(template.getId(), null));
-		PageLoadResponse masterPageResponse = pageResource.create(create);
+		PageLoadResponse masterPageResponse = getPageResource().create(create);
 
 		// check master page mc settings
 		com.gentics.contentnode.rest.model.Page masterPage = masterPageResponse.getPage();
@@ -316,7 +306,7 @@ public class PageSandboxTest {
 		localizedCopy.save();
 		t.commit(false);
 
-		PageLoadResponse localizedPageResponse = pageResource.load(ObjectTransformer.getString(masterPage.getId(), null), false, false, false, false, false, false, false, false, false, false, ObjectTransformer.getInteger(channel.getId(), 0), null);
+		PageLoadResponse localizedPageResponse = getPageResource().load(ObjectTransformer.getString(masterPage.getId(), null), false, false, false, false, false, false, false, false, false, false, ObjectTransformer.getInteger(channel.getId(), 0), null);
 		com.gentics.contentnode.rest.model.Page localizedPage = localizedPageResponse.getPage();
 		assertNotNull("Localized page must not be null", localizedPage);
 		assertNotNull("ContentId must be set", localizedPage.getContentId());

@@ -1,5 +1,12 @@
 package com.gentics.contentnode.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getAuthResource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,9 +19,13 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.init.BcryptPasswords;
@@ -27,27 +38,12 @@ import com.gentics.contentnode.rest.model.request.LoginWithRsaRequest;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.AuthenticationResource;
-import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.RsaAuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.security.RsaTokenValidator;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.etc.StringUtils;
-import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests saving of a page into GCN by using the REST API.
@@ -166,9 +162,7 @@ public class AuthenticationSandboxTest {
 	 */
 	@Test
 	public void testLoginWithRsaToken() throws Exception {
-		AuthenticationResourceImpl authenticationResource = getAuthenticationResource();
 		RsaAuthenticationResourceImpl rsaAuthenticationResource  = new RsaAuthenticationResourceImpl();
-		rsaAuthenticationResource.initialize();
 		RsaTokenValidator rsaTokenValidator = rsaAuthenticationResource.getRsaTokenValidator();
 
 		// Load the private key from generic test utils
@@ -241,7 +235,7 @@ public class AuthenticationSandboxTest {
 		LoginRequest loginRequest = new LoginRequest();
 		loginRequest.setLogin("system");
 		loginRequest.setPassword(rsaTokenPassword);
-		response = authenticationResource.login(loginRequest, "0");
+		response = getAuthResource().login(loginRequest, "0");
 
 		assertEquals("Login with RSA token password has to be OK",
 				ResponseCode.OK, response.getResponseInfo().getResponseCode());
@@ -259,7 +253,6 @@ public class AuthenticationSandboxTest {
 		publicKeyFile.write(publicKey.getBytes());
 		publicKeyFile.close();
 
-		var authenticationResource = getAuthenticationResource();
 		var token = IOUtils.toString(getClass().getResource(JWT_PATH), StandardCharsets.UTF_8);
 		var request = new LoginRequest();
 
@@ -267,13 +260,13 @@ public class AuthenticationSandboxTest {
 		request.setLogin("system");
 		request.setPassword(token);
 
-		var response = authenticationResource.login(request, "0");
+		var response = getAuthResource().login(request, "0");
 
 		assertResponse(response, ResponseCode.NOTFOUND);
 
 		// Now try with valid support user name.
 		request.setLogin("support");
-		response = authenticationResource.login(request, "0");
+		response = getAuthResource().login(request, "0");
 
 		assertResponseOK(response);
 
@@ -329,12 +322,10 @@ public class AuthenticationSandboxTest {
 	 */
 	@Test
 	public void testHashPassword() throws Exception {
-		AuthenticationResource authenticationResource = getAuthenticationResource();
-
 		HashPasswordRequest hashPasswordRequest = new HashPasswordRequest();
 		hashPasswordRequest.setPassword(TESTPASSWORD);
 		HashPasswordResponse response =
-				authenticationResource.hashPassword(null, hashPasswordRequest, 0);
+				getAuthResource().hashPassword(null, hashPasswordRequest, 0);
 
 		assertEquals("Response code has to be OK", ResponseCode.OK,
 				response.getResponseInfo().getResponseCode());
@@ -408,13 +399,11 @@ public class AuthenticationSandboxTest {
 	 * @param sessionId     If to re-use an existing sessionId
 	 */
 	protected String testLogin(String userName, String password, ResponseCode responseCode, String sessionId)
-			throws TransactionException {
-		AuthenticationResource authenticationResource = getAuthenticationResource();
-
+			throws NodeException {
 		LoginRequest loginRequest = new LoginRequest();
 		loginRequest.setLogin(userName);
 		loginRequest.setPassword(password);
-		LoginResponse response = authenticationResource.login(loginRequest, sessionId);
+		LoginResponse response = getAuthResource().login(loginRequest, sessionId);
 
 		assertEquals("Login response code has to match expected value", responseCode,
 				response.getResponseInfo().getResponseCode());
@@ -424,19 +413,5 @@ public class AuthenticationSandboxTest {
 		}
 
 		return response.getSid();
-	}
-
-	/**
-	 * Get an authentication resource
-	 *
-	 * @return RsaAuthenticationResourceImpl
-	 * @throws TransactionException
-	 */
-	protected AuthenticationResourceImpl getAuthenticationResource() throws TransactionException {
-		AuthenticationResourceImpl authenticationResoure = new AuthenticationResourceImpl();
-		authenticationResoure.setTransaction(TransactionManager.getCurrentTransaction());
-		authenticationResoure.initialize();
-
-		return authenticationResoure;
 	}
 }

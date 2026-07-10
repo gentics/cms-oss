@@ -1,5 +1,22 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import org.junit.Test;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -17,7 +34,6 @@ import com.gentics.contentnode.rest.model.response.LegacyFileListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCFileResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
@@ -29,20 +45,6 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
-import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * File tests for multichannelling support.
@@ -214,9 +216,6 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		newFileFirst.save();
 		t.commit(false);
 
-		// Get folder resource so we could use rest api to retrieve files.
-		FileResource fileResource = ContentNodeRESTUtils.getFileResource();
-
 		// Get all files for our test folder in the channel we are working in.
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(ObjectTransformer.getInt(testFolder.getId(), -1)));
 		FileListParameterBean fileListParams = new FileListParameterBean().setNodeId(channelId);
@@ -225,7 +224,7 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		LegacyPagingParameterBean paging = new LegacyPagingParameterBean();
 		EditableParameterBean editableParameterBean = new EditableParameterBean();
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean();
-		FileListResponse fileListResponse = fileResource.list(
+		FileListResponse fileListResponse = getFileResource().list(
 			inFolder,
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -243,8 +242,7 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the file is inherited", !fileListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoint.
-		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-		LegacyFileListResponse legacyFileListResponse = folderResource.getFiles(
+		LegacyFileListResponse legacyFileListResponse = getFolderResource().getFiles(
 			inFolder.folderId,
 			inFolder,
 			fileListParams,
@@ -263,7 +261,7 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the file is inherited", !legacyFileListResponse.getFiles().get(0).isInherited());
 
 		// Get all files for test folder in the master node.
-		fileListResponse = fileResource.list(
+		fileListResponse = getFileResource().list(
 			inFolder,
 			new FileListParameterBean(),
 			filter.toFilterParameterBean(),
@@ -275,7 +273,7 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the file list contains elements", fileListResponse.getItems().size() == 0);
 
 		// Check again with legacy endpoints.
-		legacyFileListResponse = folderResource.getFiles(
+		legacyFileListResponse = getFolderResource().getFiles(
 			inFolder.folderId,
 			inFolder,
 			new FileListParameterBean(),
@@ -449,14 +447,13 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		File localizedCopy = Trx.supply(() -> ContentNodeTestDataUtils.localize(file, channel));
 
 		Integer copyId = Trx.supply(() -> {
-			FileResource resource = new FileResourceImpl();
 			FileCopyRequest request = new FileCopyRequest();
 			com.gentics.contentnode.rest.model.File fileModel = new com.gentics.contentnode.rest.model.File();
 			fileModel.setId(localizedCopy.getId());
 			request.setFile(fileModel);
 			request.setNewFilename("testfile_copy.txt");
 
-			FileUploadResponse response = resource.copyFile(request);
+			FileUploadResponse response = getFileResource().copyFile(request);
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			com.gentics.contentnode.rest.model.File copy = response.getFile();
@@ -498,14 +495,13 @@ public class FileChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		File localizedCopy = Trx.supply(() -> ContentNodeTestDataUtils.localize(file, channel1));
 
 		Integer copyId = Trx.supply(() -> {
-			FileResource resource = new FileResourceImpl();
 			FileCopyRequest request = new FileCopyRequest();
 			com.gentics.contentnode.rest.model.File fileModel = new com.gentics.contentnode.rest.model.File();
 			fileModel.setId(localizedCopy.getId());
 			request.setFile(fileModel);
 			request.setNewFilename("testfile_copy.txt");
 
-			FileUploadResponse response = resource.copyFile(request);
+			FileUploadResponse response = getFileResource().copyFile(request);
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			com.gentics.contentnode.rest.model.File copy = response.getFile();

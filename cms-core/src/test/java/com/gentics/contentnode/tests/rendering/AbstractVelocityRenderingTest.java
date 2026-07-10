@@ -3,6 +3,7 @@ package com.gentics.contentnode.tests.rendering;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
@@ -47,11 +48,11 @@ public class AbstractVelocityRenderingTest {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		String sessionToken = testContext.getContext().login("node", "node");
+		Session session = testContext.getContext().login("node", "node");
 		TransactionManager.getCurrentTransaction().commit();
 
 		testContext.getContext().getContentNodeFactory()
-				.startTransaction(sessionToken, true);
+				.startTransaction(session, true);
 
 		// Create node
 		node = ContentNodeTestDataUtils.createNode();

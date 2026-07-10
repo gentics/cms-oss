@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Page;
@@ -30,15 +31,15 @@ public class PageAssignMessagingSandboxTest extends AbstractMessagingSandboxTest
 		page.queuePublish(editor);
 
 		// Login test users
-		String editorSID = testContext.getContext().login("editor", "editor");
-		String publisherSID = testContext.getContext().login("publisher", "publisher");
+		Session editorSession = testContext.getContext().login("editor", "editor");
+		Session publisherSession = testContext.getContext().login("publisher", "publisher");
 
 		// Set the backend language to "en" for all users
-		setBackendLanguage("en", publisherSID);
-		setBackendLanguage("en", editorSID);
+		setBackendLanguage("en", publisherSession);
+		setBackendLanguage("en", editorSession);
 
 		// Invoke the assign call
-		try (Trx trx = new Trx(publisherSID, 0)) {
+		try (Trx trx = new Trx(publisherSession, 0)) {
 
 			MultiPageAssignRequest request = new MultiPageAssignRequest();
 			request.setMessage("Some Message");
@@ -46,8 +47,6 @@ public class PageAssignMessagingSandboxTest extends AbstractMessagingSandboxTest
 			request.setPageIds(Arrays.asList((page.getId().toString())));
 
 			PageResourceImpl pageResource = new PageResourceImpl();
-			pageResource.setSessionId(publisherSID);
-			pageResource.initialize();
 			GenericResponse response = pageResource.assign(request);
 			assertResponseOK(response);
 			trx.success();

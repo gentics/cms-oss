@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
@@ -60,12 +61,12 @@ public class AbstractMessagingSandboxTest  {
 	 * 
 	 * @param code
 	 *            code of the backend language ("de" or "en")
-	 * @param sid
-	 *            sid
+	 * @param session
+	 *            session
 	 * @throws Exception
 	 */
-	public void setBackendLanguage(String code, String sid) throws Exception {
-		try (Trx trx = new Trx(sid, 0)) {
+	public void setBackendLanguage(String code, Session session) throws Exception {
+		try (Trx trx = new Trx(session, 0)) {
 			I18nResourceImpl i18nRes = new I18nResourceImpl();
 
 			SetLanguageRequest setLangReq = new SetLanguageRequest();
@@ -81,16 +82,14 @@ public class AbstractMessagingSandboxTest  {
 	 * 
 	 * @param pageId
 	 *            page id
-	 * @param sid
-	 *            sid
+	 * @param session
+	 *            session
 	 * @throws Exception
 	 */
-	public void editPage(int pageId, String sid) throws Exception {
-		try (Trx trx = new Trx(sid, 0)) {
+	public void editPage(int pageId, Session session) throws Exception {
+		try (Trx trx = new Trx(session, 0)) {
 			PageResourceImpl pageRes = new PageResourceImpl();
 
-			pageRes.setSessionId(sid);
-			pageRes.initialize();
 			// load the page
 			PageLoadResponse pageLoadResp = pageRes.load(Integer.toString(pageId), true, false, false, false, false, false, false, false, false, false, null, null);
 
@@ -118,16 +117,14 @@ public class AbstractMessagingSandboxTest  {
 	 * 
 	 * @param pageId
 	 *            page id
-	 * @param sid
-	 *            sid
+	 * @param session
+	 *            session
 	 * @throws Exception
 	 */
-	public void publishPage(int pageId, String sid) throws Exception {
-		try (Trx trx = new Trx(sid, 0)) {
+	public void publishPage(int pageId, Session session) throws Exception {
+		try (Trx trx = new Trx(session, 0)) {
 			PageResourceImpl pageRes = new PageResourceImpl();
 
-			pageRes.setSessionId(sid);
-			pageRes.initialize();
 			PagePublishRequest pubReq = new PagePublishRequest();
 
 			pubReq.setAlllang(false);

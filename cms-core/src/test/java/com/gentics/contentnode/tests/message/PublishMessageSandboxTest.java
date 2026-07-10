@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 
@@ -40,25 +41,25 @@ public class PublishMessageSandboxTest extends AbstractMessagingSandboxTest {
 		});
 
 		// login as editor
-		String editorSID = testContext.getContext().login("editor", "editor");
+		Session editorSession = testContext.getContext().login("editor", "editor");
 		// login as publisher
-		String publisherSID = testContext.getContext().login("publisher", "publisher");
+		Session publisherSession = testContext.getContext().login("publisher", "publisher");
 
 		// set the backend language to "en" for all users
-		setBackendLanguage("en", editorSID);
-		setBackendLanguage("en", publisherSID);
+		setBackendLanguage("en", editorSession);
+		setBackendLanguage("en", publisherSession);
 
 		// modify the page
-		editPage(PAGE_ID, editorSID);
+		editPage(PAGE_ID, editorSession);
 
 		// let the editor publish the page
-		publishPage(PAGE_ID, editorSID);
+		publishPage(PAGE_ID, editorSession);
 
 		// check the messages
 		assertMessage(publisher, "editor", "editor editor wants to publish page ProcessTests/Page to translate|mod (53).");
 
 		// let the publisher publish the page
-		publishPage(PAGE_ID, publisherSID);
+		publishPage(PAGE_ID, publisherSession);
 
 		// check the messages
 		assertMessage(editor, "Publisher", "The page ProcessTests/Page to translate|mod (53) has been published.");

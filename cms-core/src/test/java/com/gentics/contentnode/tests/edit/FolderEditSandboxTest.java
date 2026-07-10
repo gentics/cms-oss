@@ -3,6 +3,7 @@
  */
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -20,7 +21,6 @@ import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.AbstractFolder;
 import com.gentics.contentnode.object.File;
@@ -35,7 +35,6 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -780,17 +779,5 @@ public class FolderEditSandboxTest {
 			assertTrue("The container of object.intag must belong to the same folder",
 					testObjectTag.getNodeObject().getId().equals(inTagobjectTag.getNodeObject().getId()));
 		}
-	}
-
-	/**
-	 * Get a folder resource
-	 * @return folder resource
-	 * @throws TransactionException
-	 */
-	protected FolderResource getFolderResource() throws TransactionException {
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return folderResource;
 	}
 }

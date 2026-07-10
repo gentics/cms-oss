@@ -3,6 +3,7 @@
  */
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -20,7 +21,6 @@ import org.junit.Test;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
@@ -37,7 +37,6 @@ import com.gentics.contentnode.rest.model.response.MultiTagCreateResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
@@ -89,10 +88,7 @@ public class TagCreateSandboxTest {
 		TagCreateResponse response = null;
 		ContentTagCreateRequest request = new ContentTagCreateRequest();
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		response = pageResource.createTag(PAGE_ID, CONSTRUCT_ID, null, request);
+		response = getPageResource().createTag(PAGE_ID, CONSTRUCT_ID, null, request);
 
 		assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
@@ -111,11 +107,8 @@ public class TagCreateSandboxTest {
 		TagCreateResponse response = null;
 		ContentTagCreateRequest request = new ContentTagCreateRequest();
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
 		request.setMagicValue(MAGIC_VALUE);
-		response = pageResource.createTag(PAGE_ID, CONSTRUCT_ID, null, request);
+		response = getPageResource().createTag(PAGE_ID, CONSTRUCT_ID, null, request);
 
 		assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
@@ -144,9 +137,7 @@ public class TagCreateSandboxTest {
 		for (int i = 1; i <= 12; i++) {
 			ContentTagCreateRequest request = new ContentTagCreateRequest();
 
-			PageResourceImpl pageResource = new PageResourceImpl();
-			pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-			response = pageResource.createTag(PAGE_ID, CONSTRUCT_ID, null, request);
+			response = getPageResource().createTag(PAGE_ID, CONSTRUCT_ID, null, request);
 
 			assertEquals("Check for the correct response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
@@ -172,9 +163,7 @@ public class TagCreateSandboxTest {
 		com.gentics.contentnode.object.Construct c = Creator.createConstruct("testcopytag", "karl", "testcopytag", Arrays.asList(part1));
 
 		com.gentics.contentnode.object.Page p = Creator.createPage("testpage", node.getFolder(), tpl, null);
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		TagCreateResponse response = pri.createTag(String.valueOf(p.getId()), (Integer) c.getId(), null, new ContentTagCreateRequest());
+		TagCreateResponse response = getPageResource().createTag(String.valueOf(p.getId()), (Integer) c.getId(), null, new ContentTagCreateRequest());
 		String tagname = response.getTag().getName();
 		ContentNodeRESTUtils.assertResponseOK(response);
 		t.commit(false);
@@ -190,7 +179,7 @@ public class TagCreateSandboxTest {
 		ContentTagCreateRequest request = new ContentTagCreateRequest();
 		request.setCopyPageId(String.valueOf(p.getId()));
 		request.setCopyTagname(tagname);
-		response = pri.createTag(String.valueOf(p.getId()), null, null, request);
+		response = getPageResource().createTag(String.valueOf(p.getId()), null, null, request);
 		ContentNodeRESTUtils.assertResponseOK(response);
 	}
 

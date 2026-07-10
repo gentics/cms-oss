@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest.file;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
 
@@ -24,7 +25,6 @@ import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
@@ -103,8 +103,7 @@ public class FileUploadPermissionsTest {
 		try (Trx trx = new Trx(createSession(testUser.getLogin()), true)) {
 			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true,
 					"testcontent");
-			FileResource resource = ContentNodeRESTUtils.getFileResource();
-			FileUploadResponse uploadResponse = resource.create(uploadMultiPart);
+			FileUploadResponse uploadResponse = getFileResource().create(uploadMultiPart);
 			asserter.accept(uploadResponse);
 		} finally {
 			if (uploadMultiPart != null) {

@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -97,7 +98,7 @@ public class VelomacroRenderSandboxTest {
 		List<PageRenderThread> threads = new ArrayList<PageRenderThread>(NUM_THREADS);
 
 		for (int i = 0; i < NUM_THREADS; i++) {
-			PageRenderThread thread = new PageRenderThread(t.getSessionId());
+			PageRenderThread thread = new PageRenderThread(t.getSession());
 			threads.add(thread);
 			thread.start();
 		}
@@ -183,15 +184,15 @@ public class VelomacroRenderSandboxTest {
 	public class PageRenderThread extends Thread {
 		protected Throwable e;
 
-		protected String sid;
+		protected Session session;
 
-		public PageRenderThread(String sid) {
-			this.sid = sid;
+		public PageRenderThread(Session session) {
+			this.session = session;
 		}
 
 		@Override
 		public void run() {
-			try (Trx trx = new Trx(sid, -1)) {
+			try (Trx trx = new Trx(session, -1)) {
 				for (Page page : pages) {
 					PageResource resource = new PageResourceImpl();
 

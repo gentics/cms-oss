@@ -29,8 +29,8 @@ import org.glassfish.jersey.server.ContainerRequest;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.util.MiscUtils;
@@ -63,17 +63,19 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 		// check whether sid/sessionSecret are valid
 		try {
 			SessionToken token = new SessionToken(sid, sessionSecret);
-			Session session = null;
-			try (Trx trx = new Trx(sid, null)) {
-				session = trx.getTransaction().getSession();
-				if (!token.authenticates(session)) {
-					throw new InvalidSessionIdException(sid);
+			Optional<DBSession> optSession = Trx.supply(() -> {
+				Optional<DBSession> opt = DBSession.load(token);
+				if (opt.isPresent()) {
+					opt.get().touch();
 				}
+				return opt;
+			});
 
-				session.touch();
-				trx.success();
+			if (optSession.isEmpty()) {
+				throw new InvalidSessionIdException(sid);
 			}
-			ContentNodeHelper.setSession(session);
+
+			ContentNodeHelper.setSession(optSession.get());
 		} catch (InvalidSessionIdException e) {
 			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("invalid sid").build());
 		} catch (NodeException e) {

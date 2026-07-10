@@ -138,7 +138,7 @@ public class CustomToolsTest {
 	@Test
 	public void testSIDReplacement() throws Exception {
 		try (Trx trx = new Trx(admin)) {
-			int sid = trx.getTransaction().getSession().getSessionId();
+			int sid = Integer.parseInt(trx.getTransaction().getSession().getSessionId());
 			AdminResource res = new AdminResourceImpl();
 			ToolsResponse toolsResponse = res.tools();
 

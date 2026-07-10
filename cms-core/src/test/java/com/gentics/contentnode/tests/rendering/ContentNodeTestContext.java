@@ -32,6 +32,7 @@ import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.NodeFactory;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -237,32 +238,32 @@ public class ContentNodeTestContext {
 	 * Starts a new transaction for the logged in user
 	 * @param login login
 	 * @param password password
-	 * @return A session ID
+	 * @return the session
 	 * @throws NodeException
 	 * @throws JobExecutionException 
 	 */
-	public String login(String login, String password) throws NodeException {
+	public Session login(String login, String password) throws NodeException {
 		if (transaction != null && transaction.isOpen()) {
 			transaction.commit();
 		}
 
-		String sid = null;
+		Session session = null;
 		try (Trx trx = new Trx()) {
 			if (!passwordHashJobrun) {
 				BcryptPasswords bcryptPasswords = new BcryptPasswords();
 				bcryptPasswords.execute();
 				passwordHashJobrun = true;
 			}
-			sid = ContentNodeRESTUtils.login(login, password);
+			session = ContentNodeRESTUtils.login(login, password);
 
 			trx.success();
 		}
 
-		transaction = factory.startTransaction(sid, true);
+		transaction = factory.startTransaction(session, true);
 		transaction.setRenderType(RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, 0));
 		ContentNodeHelper.setLanguageId(1);
 
-		return sid;
+		return session;
 	}
 
 	/**

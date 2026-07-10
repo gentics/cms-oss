@@ -5,12 +5,12 @@
  */
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -26,7 +26,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
-import org.dbunit.Assertion;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -59,7 +58,6 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 
@@ -948,18 +946,6 @@ public class PageEditSandboxTest {
 		assertFalse("Page variant must have a non-empty filename", StringUtils.isEmpty(variant2Filename));
 		assertFalse("Page variant must have a unique filename", variant2Filename.equals(filename));
 		assertFalse("Page variant must have a unique filename", variant2Filename.equals(variant1Filename));
-	}
-
-	/**
-	 * Get a page resource
-	 * @return page resource
-	 * @throws TransactionException
-	 */
-	protected PageResource getPageResource() throws TransactionException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return pageResource;
 	}
 
 	/**

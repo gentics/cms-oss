@@ -262,9 +262,9 @@ public class Trx implements AutoCloseable {
 	 * @return session
 	 * @throws NodeException
 	 */
-	protected static Session createSession(SystemUser user) throws NodeException {
+	protected static DBSession createSession(SystemUser user) throws NodeException {
 		try (Trx trx = new Trx()) {
-			Session session = new Session(user, "", "", null, 0);
+			DBSession session = new DBSession(user, "", "", null, 0);
 			trx.success();
 			return session;
 		}
@@ -280,24 +280,24 @@ public class Trx implements AutoCloseable {
 
 	/**
 	 * Create a new transaction with given session id and user id
-	 * @param sessionId session id
+	 * @param session session
 	 * @param userId user id
 	 * @throws NodeException
 	 */
-	public Trx(String sessionId, Integer userId) throws NodeException {
-		this(sessionId, userId, true);
+	public Trx(Session session, Integer userId) throws NodeException {
+		this(session, userId, true);
 	}
 
 	/**
 	 * Create a new transaction with given session id and user id, with or without using the db connection pool
-	 * @param sessionId session id
+	 * @param session session
 	 * @param userId user id
 	 * @param connectionPool true to get a db connection from the pool, false to create a new one
 	 * @throws NodeException
 	 */
-	public Trx(String sessionId, Integer userId, boolean connectionPool) throws NodeException {
+	public Trx(Session session, Integer userId, boolean connectionPool) throws NodeException {
 		previous = TransactionManager.getCurrentTransactionOrNull();
-		t = getContentNodeFactory().startTransaction(sessionId, userId, connectionPool);
+		t = getContentNodeFactory().startTransaction(session, userId, connectionPool);
 		previousSession = ContentNodeHelper.getSession();
 		ContentNodeHelper.setSession(t.getSession());
 		resetSession = true;
@@ -311,7 +311,7 @@ public class Trx implements AutoCloseable {
 	 */
 	public Trx(Session session, boolean connectionPool) throws NodeException {
 		previous = TransactionManager.getCurrentTransactionOrNull();
-		t = getContentNodeFactory().startTransaction(Integer.toString(session.getSessionId()), session.getUserId(), connectionPool);
+		t = getContentNodeFactory().startTransaction(session, session.getUserId(), connectionPool);
 		previousSession = ContentNodeHelper.getSession();
 		ContentNodeHelper.setSession(session);
 		resetSession = true;

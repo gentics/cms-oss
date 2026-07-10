@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -96,7 +96,7 @@ public class CrFragmentTest {
 			setPermissions(CrFragment.TYPE_CR_FRAGMENTS, Arrays.asList(nodeGroup, testGroup),
 					Permissions.get(PERM_VIEW, PERM_CONTENTREPOSITORY_CREATE).toString());
 		});
-		Session session = Trx.supply(() -> new Session(testUser, "", "", null, 0));
+		DBSession session = Trx.supply(() -> new DBSession(testUser, "", "", null, 0));
 		CrFragment created = null;
 		try (Trx trx = new Trx(session, true)) {
 			created = create(CrFragment.class, f -> {
@@ -127,7 +127,7 @@ public class CrFragmentTest {
 			setPermissions(CrFragment.TYPE_CR_FRAGMENTS, Arrays.asList(nodeGroup, testGroup),
 					Permissions.get(PERM_VIEW, PERM_CONTENTREPOSITORY_CREATE, PERM_CHANGE_PERM).toString());
 		});
-		Session session = Trx.supply(() -> new Session(testUser, "", "", null, 0));
+		DBSession session = Trx.supply(() -> new DBSession(testUser, "", "", null, 0));
 		CrFragment created = null;
 		try (Trx trx = new Trx(session, true)) {
 			created = create(CrFragment.class, f -> {

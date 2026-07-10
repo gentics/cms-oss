@@ -3,6 +3,7 @@
  */
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -403,17 +404,14 @@ public class PageTranslationSandboxTest {
 	 *            language of the page to create
 	 * @return the created page
 	 */
-	protected Page createPage(String language) throws TransactionException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
+	protected Page createPage(String language) throws NodeException {
 		// create the request to create a page
 		PageCreateRequest request = new PageCreateRequest();
 
 		request.setFolderId(Integer.toString(FOLDER_ID));
 		request.setLanguage(language);
 		// post the request and get the response
-		PageLoadResponse loadResponse = pageResource.create(request);
+		PageLoadResponse loadResponse = getPageResource().create(request);
 
 		TransactionManager.getCurrentTransaction().commit(false);
 
@@ -440,11 +438,8 @@ public class PageTranslationSandboxTest {
 	 * @return translated page
 	 */
 	protected Page translatePage(Page page, String language) throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
 		// post the request and get the response
-		PageLoadResponse loadResponse = pageResource.translate(page.getId(), language, true, 0);
+		PageLoadResponse loadResponse = getPageResource().translate(page.getId(), language, true, 0);
 
 		// check whether the action succeeded
 		assertSuccess(loadResponse);
@@ -472,11 +467,8 @@ public class PageTranslationSandboxTest {
 	 * @return loaded page (might be null)
 	 * @throws TransactionException
 	 */
-	protected Page loadPageWithTranslationStatus(Integer id) throws TransactionException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		PageLoadResponse loadResponse = pageResource.load(String.valueOf(id), false, false, false, false, false, false, true, false, false, false, null, null);
+	protected Page loadPageWithTranslationStatus(Integer id) throws NodeException {
+		PageLoadResponse loadResponse = getPageResource().load(String.valueOf(id), false, false, false, false, false, false, true, false, false, false, null, null);
 
 		// check whether the action succeeded
 		assertSuccess(loadResponse);
@@ -494,10 +486,7 @@ public class PageTranslationSandboxTest {
 		PageSaveRequest saveRequest = new PageSaveRequest(page);
 		saveRequest.setUnlock(unlock);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		GenericResponse response = 	pageResource.save(page.getId().toString(), saveRequest);
+		GenericResponse response = 	getPageResource().save(page.getId().toString(), saveRequest);
 
 		// check whether the action succeeded
 		assertSuccess(response);

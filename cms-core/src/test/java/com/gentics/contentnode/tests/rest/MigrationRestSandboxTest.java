@@ -19,7 +19,6 @@ import com.gentics.contentnode.rest.model.response.migration.MigrationResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationTagsResponse;
 import com.gentics.contentnode.rest.resource.impl.migration.MigrationResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.contentnode.factory.Transaction;
 
 /**
  * Tests for performing migrations over the REST API
@@ -94,9 +93,7 @@ public class MigrationRestSandboxTest {
 
 	@Before
 	public void setup() throws Exception {
-		Transaction t = testContext.startTransactionWithPermissions(true);
-
-		migrationResource.setTransaction(t);
+		testContext.startTransactionWithPermissions(true);
 	}
 
 	/**

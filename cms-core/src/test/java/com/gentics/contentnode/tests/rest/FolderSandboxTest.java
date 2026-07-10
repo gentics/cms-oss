@@ -2,6 +2,8 @@ package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.rest.util.MiscUtils.doSetPermissions;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -55,8 +57,6 @@ import com.gentics.contentnode.rest.model.response.PermBitsResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
@@ -766,27 +766,24 @@ public class FolderSandboxTest {
 	@Test
 	public void testgetSelectiveFolderTreeWithDeleted() throws Exception {
 		String id = Trx.supply(() -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 				// first create a new folder in the node
 				FolderCreateRequest request = new FolderCreateRequest();
 
 				request.setMotherId(Integer.toString(ROOT_FOLDER_ID));
 				request.setName("Delete Me");
-				FolderLoadResponse loadResponse = folderResource.create(request);
+				FolderLoadResponse loadResponse = getFolderResource().create(request);
 
 				assertEquals("Check response code", ResponseCode.OK, loadResponse.getResponseInfo().getResponseCode());
 
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, getFolderResource().delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});
 
 		Trx.consume(deletedFolderId -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 				InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(ROOT_FOLDER_ID)).setRecursive(true);
 				FolderListParameterBean folderListParams = new FolderListParameterBean().setTree(true).setRecursiveIds(Arrays.asList("57", "58", deletedFolderId));
 				LegacyFilterParameterBean filter = new LegacyFilterParameterBean();
@@ -795,7 +792,7 @@ public class FolderSandboxTest {
 				EditableParameterBean editable = new EditableParameterBean();
 				WastebinParameterBean wastebin = new WastebinParameterBean();
 
-				FolderListResponse response = folderResource.list(
+				FolderListResponse response = getFolderResource().list(
 					inFolder,
 					folderListParams,
 					filter.toFilterParameterBean(),
@@ -812,7 +809,7 @@ public class FolderSandboxTest {
 				assertEquals("Check number of deleted folder IDs", 1, deleted.size());
 
 				// Check again with legacy endpoints.
-				LegacyFolderListResponse legacyResponse = folderResource.getFolders(
+				LegacyFolderListResponse legacyResponse = getFolderResource().getFolders(
 					inFolder.folderId,
 					folderListParams.recursiveIds,
 					folderListParams.addPrivileges,
@@ -842,27 +839,24 @@ public class FolderSandboxTest {
 	@Test
 	public void testgetSelectiveFolderTreeWithNodeIdWithDeleted() throws Exception {
 		String id = Trx.supply(() -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 				// first create a new folder in the node
 				FolderCreateRequest request = new FolderCreateRequest();
 
 				request.setMotherId(Integer.toString(ROOT_FOLDER_ID));
 				request.setName("Delete Me");
-				FolderLoadResponse loadResponse = folderResource.create(request);
+				FolderLoadResponse loadResponse = getFolderResource().create(request);
 
 				assertEquals("Check response code", ResponseCode.OK, loadResponse.getResponseInfo().getResponseCode());
 
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, getFolderResource().delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});
 
 		Trx.consume(deletedFolderId -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 				InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(ROOT_FOLDER_ID)).setRecursive(true);
 				FolderListParameterBean folderListParams = new FolderListParameterBean().setRecursiveIds(Arrays.asList(NODE_ID + "/57", NODE_ID + "/58", NODE_ID + "/" + deletedFolderId));
 				LegacyFilterParameterBean filter = new LegacyFilterParameterBean();
@@ -871,7 +865,7 @@ public class FolderSandboxTest {
 				EditableParameterBean editable = new EditableParameterBean();
 				WastebinParameterBean wastebin = new WastebinParameterBean();
 
-				FolderListResponse response = folderResource.list(
+				FolderListResponse response = getFolderResource().list(
 					inFolder,
 					folderListParams,
 					filter.toFilterParameterBean(),
@@ -888,7 +882,7 @@ public class FolderSandboxTest {
 				assertEquals("Check number of deleted folder IDs", 1, deleted.size());
 
 				// Check again with legacy endpoints.
-				LegacyFolderListResponse legacyResponse = folderResource.getFolders(
+				LegacyFolderListResponse legacyResponse = getFolderResource().getFolders(
 					inFolder.folderId,
 					folderListParams.recursiveIds,
 					folderListParams.addPrivileges,
@@ -973,18 +967,16 @@ public class FolderSandboxTest {
 		testContext.getContext().login("test", "test");
 		t = testContext.getContext().getTransaction();
 
-		FolderResourceImpl folderResource = (FolderResourceImpl) ContentNodeRESTUtils.getFolderResource();
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(testFolderId));
 		FileListParameterBean fileListParams = new FileListParameterBean().setNodeId(NODE_ID);
 		LegacyFilterParameterBean filter = new LegacyFilterParameterBean().setSearch("");
 		LegacySortParameterBean sort = new LegacySortParameterBean().setSortBy("name").setSortOrder("asc");
 		LegacyPagingParameterBean pagingParams = new LegacyPagingParameterBean();
-		ImageResourceImpl imageResource = (ImageResourceImpl) ContentNodeRESTUtils.getImageResource();
 		EditableParameterBean editableParams = new EditableParameterBean();
 		WastebinParameterBean wastebinParams = new WastebinParameterBean();
 
 		// Now list all images and pages in this folder.
-		ImageListResponse imageListResponse = imageResource.list(
+		ImageListResponse imageListResponse = getImageResource().list(
 			inFolder,
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -997,7 +989,7 @@ public class FolderSandboxTest {
 		assertEquals("Check number of results", 1, imageListResponse.getNumItems());
 
 		// Check again with legacy endpoint.
-		LegacyFileListResponse legacyFileListResponse = folderResource.getImages(
+		LegacyFileListResponse legacyFileListResponse = getFolderResource().getImages(
 			inFolder.folderId,
 			inFolder,
 			fileListParams,
@@ -1010,7 +1002,7 @@ public class FolderSandboxTest {
 		assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
 		assertEquals("Check number of results", 1, legacyFileListResponse.getNumItems().intValue());
 
-		FolderObjectCountResponse countResponse = folderResource.getObjectCounts(
+		FolderObjectCountResponse countResponse = getFolderResource().getObjectCounts(
 			testFolderId,
 			NODE_ID,
 			null,
@@ -1021,7 +1013,7 @@ public class FolderSandboxTest {
 		assertEquals("Compare number of results with imagecount", countResponse.getImages(), imageListResponse.getNumItems());
 
 		//list recursively
-		imageListResponse = imageResource.list(
+		imageListResponse = getImageResource().list(
 			inFolder.setRecursive(true),
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -1039,7 +1031,7 @@ public class FolderSandboxTest {
 		}
 
 		// Check again with legacy endpoint
-		legacyFileListResponse = folderResource.getImages(
+		legacyFileListResponse = getFolderResource().getImages(
 			inFolder.folderId,
 			inFolder.setRecursive(true),
 			fileListParams,
@@ -1070,12 +1062,10 @@ public class FolderSandboxTest {
 		testContext.getContext().startTransaction();
 		testContext.getContext().login("test", "test");
 		t = TransactionManager.getCurrentTransaction();
-		imageResource.setTransaction(t);
-		folderResource.setTransaction(t);
 
 		// Now list all images and images in this folder again. The testuser
 		// should not be able to list images in the testfolder.
-		imageListResponse = imageResource.list(
+		imageListResponse = getImageResource().list(
 			inFolder.setRecursive(false),
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -1087,7 +1077,7 @@ public class FolderSandboxTest {
 		assertEquals("Check number of results", 0, imageListResponse.getNumItems());
 
 		// Check again with legacy endpoint.
-		legacyFileListResponse = folderResource.getImages(
+		legacyFileListResponse = getFolderResource().getImages(
 			inFolder.folderId,
 			inFolder.setRecursive(false),
 			fileListParams,
@@ -1099,7 +1089,7 @@ public class FolderSandboxTest {
 		assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
 		assertEquals("Check number of results", 0, legacyFileListResponse.getNumItems().intValue());
 
-		countResponse = folderResource.getObjectCounts(
+		countResponse = getFolderResource().getObjectCounts(
 			testFolderId,
 			NODE_ID,
 			null,
@@ -1110,7 +1100,7 @@ public class FolderSandboxTest {
 
 		//The subfolder still has viewing permissions.
 		//So a recursive listing of the testfolder should return one result.
-		imageListResponse = imageResource.list(
+		imageListResponse = getImageResource().list(
 			inFolder.setRecursive(true),
 			fileListParams,
 			filter.toFilterParameterBean(),
@@ -1122,7 +1112,7 @@ public class FolderSandboxTest {
 		assertEquals("Check number of results for recursive image search", 1, imageListResponse.getNumItems());
 
 		// Check again with legacy endpoint.
-		legacyFileListResponse = folderResource.getImages(
+		legacyFileListResponse = getFolderResource().getImages(
 			inFolder.folderId,
 			inFolder.setRecursive(true),
 			fileListParams,

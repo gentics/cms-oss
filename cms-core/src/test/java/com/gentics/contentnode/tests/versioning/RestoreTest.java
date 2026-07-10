@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.versioning;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
@@ -28,8 +29,6 @@ import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -104,8 +103,7 @@ public class RestoreTest {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			t.setTimestamp(3000);
 
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
 		});
 
 		Trx.operate(() -> {
@@ -157,8 +155,7 @@ public class RestoreTest {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			t.setTimestamp(3000);
 
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
 		});
 
 		Trx.operate(() -> {
@@ -212,8 +209,7 @@ public class RestoreTest {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			t.setTimestamp(3000);
 
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
 		});
 
 		Trx.operate(() -> {

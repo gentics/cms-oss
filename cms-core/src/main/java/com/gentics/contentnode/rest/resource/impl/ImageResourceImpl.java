@@ -1,8 +1,3 @@
-/*
- * @author norbert
- * @date 28.04.2010
- * @version $Id: ImageResource.java,v 1.1 2010-04-28 15:44:29 norbert Exp $
- */
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBody;
@@ -33,18 +28,6 @@ import java.util.stream.Collectors;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.operator.TransposeDescriptor;
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -52,13 +35,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.AutoCommit;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileFactory;
@@ -74,9 +58,9 @@ import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
-import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
@@ -116,6 +100,7 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.MiscUtils.PageUsage;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.LockType;
@@ -130,12 +115,26 @@ import com.gentics.lib.image.ResizeFilter;
 import com.gentics.lib.image.SmarterResizeFilter;
 import com.gentics.lib.log.NodeLogger;
 
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+
 /**
  * Resource for loading and manipulating Images in GCN
  * @author norbert
  */
 @Path("/image")
-public class ImageResourceImpl extends AuthenticatedContentNodeResource implements ImageResource {
+@Authenticated
+public class ImageResourceImpl implements ImageResource {
 
 	public static final String RESIZE_DEFAULT_TARGET_FORMAT = "png";
 
@@ -146,6 +145,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 */
 	public ImageResourceImpl() {}
 
+	@Override
 	@GET
 	public ImageListResponse list(
 			@BeanParam InFolderParameterBean inFolder,
@@ -154,17 +154,12 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		FolderResourceImpl folderResource = new FolderResourceImpl();
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(fileListParams.nodeId)) {
+			Transaction t = trx.getTransaction();
+			FolderResourceImpl folderResource = new FolderResourceImpl();
 
-		folderResource.setTransaction(t);
-
-		boolean channelIdSet = false;
-		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
-
-		try {
-			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
+			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin, inFolder.folderId)) {
 				com.gentics.contentnode.object.Folder folder = folderResource.getFolder(inFolder.folderId, false);
@@ -213,28 +208,10 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 				response.setStagingStatus(StagingUtil.checkStagingStatus(images, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 				return response;
 			}
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new ImageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new ImageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting files or images for folder " + inFolder.folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new ImageListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// reset transaction channel
-				t.resetChannel();
-			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#load(java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/load/{id}")
 	public ImageLoadResponse load(
@@ -243,13 +220,9 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@DefaultValue("false") @QueryParam("construct") boolean construct,
 			@QueryParam("nodeId") Integer nodeId, 
 			@QueryParam("package") String stagingPackageName
-			) {
-		boolean isChannelIdSet = false;
-		Transaction transaction = getTransaction();
+			) throws NodeException {
 
-		try {
-			// Set the nodeId, if provided
-			isChannelIdSet = setChannelToTransaction(nodeId);
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			// Load the image from GCN
 			ImageFile image = getImage(id, update, ObjectPermission.view);
 
@@ -269,35 +242,20 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			ImageLoadResponse response = new ImageLoadResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded image " + id), restImage);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(image, stagingPackageName));
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new ImageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new ImageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while loading file " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new ImageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while loading image " + id + ": " + e.getLocalizedMessage()), null);
-		} finally {
-			if (isChannelIdSet) {
-				transaction.resetChannel();
-			}
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/load")
-	public MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
-		Transaction t = getTransaction();
+	public MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws NodeException {
 		Set<Reference> references = new HashSet<>();
 
 		references.add(Reference.TAGS);
 		references.add(Reference.OBJECT_TAGS_VISIBLE);
 
-		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx ctrx = new ChannelTrx(request.getNodeId())) {
+			Transaction t = trx.getTransaction();
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<ImageFile> allImages = t.getObjects(ImageFile.class, request.getIds());
 
@@ -319,37 +277,28 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			MultiImageLoadResponse response = new MultiImageLoadResponse(returnedImages);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allImages, request.getPackage(), o -> o.getGlobalId().toString()));
 			return response;
-		} catch (NodeException e) {
-			return new MultiImageLoadResponse(
-				new Message(Type.CRITICAL, e.getLocalizedMessage()),
-				new ResponseInfo(ResponseCode.FAILURE, "Could not load images"));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#resize(com.gentics.contentnode.rest.model.request.ImageResizeRequest)
-	 */
+	@Override
 	@POST
 	@Path("/resize/")
-	public FileUploadResponse resize(ImageResizeRequest imageResizeRequest) {
+	public FileUploadResponse resize(ImageResizeRequest imageResizeRequest) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
 
-		Transaction t = getTransaction();
-		FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
-
-		Message message = new Message(Message.Type.CRITICAL, "Unknown error occured");
-		ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, "Unknown error occured");
-
-		try {
+			Message message = new Message(Message.Type.CRITICAL, "Unknown error occured");
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, "Unknown error occured");
 
 			if (imageResizeRequest.getImage() == null) {
-				throw new Exception("Please specify a image in your request.");
+				throw new NodeException("Please specify a image in your request.");
 			}
 
 			File file = (ContentFile) t.getObject(File.class, imageResizeRequest.getImage().getId(), true);
 
 			if (!file.isImage()) {
-				throw new Exception("The file with id {" + imageResizeRequest.getImage().getId() + "} is no image.");
+				throw new NodeException("The file with id {" + imageResizeRequest.getImage().getId() + "} is no image.");
 			}
 
 			if (imageResizeRequest.isCopyFile()) {
@@ -438,13 +387,13 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			boolean writerState = ImageUtils.write(image, validTargetFormat, boas);
 
 			if (!writerState) {
-				throw new Exception("Image could not be encoded. No appropriate writer found.");
+				throw new NodeException("Image could not be encoded. No appropriate writer found.");
 			}
 
 			byte[] buffer = boas.toByteArray();
 
 			if (buffer.length == 0) {
-				throw new Exception("Image could not be encoded. Aborting.");
+				throw new NodeException("Image could not be encoded. Aborting.");
 			}
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
@@ -459,42 +408,29 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			// Because the file maybe got copied, the requester want's to
 			// know the new file ID. That's why we return a FileUploadResponse.
 			return new FileUploadResponse(message, responseInfo, true, ModelBuilder.getFile(file, Arrays.asList(Reference.TAGS)));
+		} catch (NodeException e) {
+			throw e;
 		} catch (Exception e) {
-			log.error("Error while handling resize request", e);
-			try {
-				t.rollback(false);
-			} catch (TransactionException e1) {
-				log.warn("Error while rolling back while aborting resize call.", e);
-            }
-
-			message = new Message(Message.Type.CRITICAL, e.getMessage());
-			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-
-			if (e.getCause() != null) {
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
-			}
-
-			return new FileUploadResponse(message, responseInfo, false, null);
+			throw new NodeException(e);
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/rotate")
-	public ImageLoadResponse rotate(ImageRotateRequest request) {
-		Transaction t = getTransaction();
-		FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
+	public ImageLoadResponse rotate(ImageRotateRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
 
-		Message message = new Message(Message.Type.CRITICAL, "Unknown error occured");
-		ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, "Unknown error occured");
-
-		try {
+			Message message = new Message(Message.Type.CRITICAL, "Unknown error occured");
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, "Unknown error occured");
 			checkBody(request, r -> Pair.of("image", r.getImage()), r -> Pair.of("image.id", r.getImage().getId()), r -> Pair.of("rotate", r.getRotate()));
 
 			File file = MiscUtils.load(File.class, Integer.toString(request.getImage().getId()), ObjectPermission.edit);
 
 			if (!file.isImage()) {
-				throw new Exception("The file with id {" + request.getImage().getId() + "} is no image.");
+				throw new NodeException("The file with id {" + request.getImage().getId() + "} is no image.");
 			}
 
 			if (request.isCopyFile()) {
@@ -542,13 +478,13 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			boolean writerState = ImageUtils.write(image, validTargetFormat, boas);
 
 			if (!writerState) {
-				throw new Exception("Image could not be encoded. No appropriate writer found.");
+				throw new NodeException("Image could not be encoded. No appropriate writer found.");
 			}
 
 			byte[] buffer = boas.toByteArray();
 
 			if (buffer.length == 0) {
-				throw new Exception("Image could not be encoded. Aborting.");
+				throw new NodeException("Image could not be encoded. Aborting.");
 			}
 
 			ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
@@ -564,41 +500,22 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 
 			return new ImageLoadResponse(message, responseInfo,
 					ModelBuilder.getImage((ImageFile) file, Arrays.asList(Reference.TAGS)));
+		} catch (NodeException e) {
+			throw e;
 		} catch (Exception e) {
-			log.error("Error while handling rotate request", e);
-			try {
-				t.rollback(false);
-			} catch (TransactionException e1) {
-				log.warn("Error while rolling back while aborting rotate call.", e);
-            }
-
-			message = new Message(Message.Type.CRITICAL, e.getMessage());
-			responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
-
-			if (e.getCause() != null) {
-				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
-			}
-
-			return new ImageLoadResponse(message, responseInfo, null);
+			throw new NodeException(e);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource@loadContent(Integer id)
-	 */
+	@Override
 	@GET
 	@Path("/content/load/{id}")
 	@Produces("image/*")
 	public Response loadContent(@PathParam("id") Integer id) {
 		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
-		// return Response.ok(null, (MediaType)null).build();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#create(com.gentics.contentnode.rest.model.request.ImageCreateRequest)
-	 */
+	@Override
 	@POST
 	@Path("/create")
 	public ImageLoadResponse create(ImageCreateRequest request) {
@@ -613,7 +530,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 */
 	@POST
 	@Path("/move/{id}")
-	public GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) {
+	public GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) throws NodeException {
 		MultiObjectMoveRequest multiRequest = new MultiObjectMoveRequest();
 		multiRequest.setFolderId(request.getFolderId());
 		multiRequest.setNodeId(request.getNodeId());
@@ -628,8 +545,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 */
 	@POST
 	@Path("/move")
-	public GenericResponse move(MultiObjectMoveRequest request) {
-		try (AutoCommit trx = new AutoCommit()) {
+	public GenericResponse move(MultiObjectMoveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Folder target = t.getObject(Folder.class, request.getFolderId());
 
@@ -650,29 +567,15 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			}
 			trx.success();
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully moved files"));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while moving files: " + e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.ImageResource#save(java.lang.Integer, com.gentics.contentnode.rest.model.request.ImageSaveRequest)
-	 */
+	@Override
 	@POST
 	@Path("/save/{id}")
-	public GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request) {
-		Transaction t = getTransaction();
-
-		try {
+	public GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			// Get the image
 			com.gentics.contentnode.rest.model.Image restFile = request.getImage();
 
@@ -736,20 +639,10 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 
 			return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "saved image with id: " + image.getId()));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while saving image " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while saving image " + id + ": " + e.getLocalizedMessage()));
 		}
 	}
 
+	@Override
 	@POST
 	@Path("/content/save/{id}")
 	@Consumes("image/*")
@@ -757,14 +650,12 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.ImageResource#delete(java.lang.String, java.lang.Integer)
-	 */
+	@Override
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws NodeException {
 		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
-		try (ChannelTrx trx = new ChannelTrx(nodeId); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// get the image and check for permission to view and delete it
 			ImageFile image = getImage(id, false, ObjectPermission.view, ObjectPermission.delete);
 
@@ -808,172 +699,157 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
 					});
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while deleting image " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/delete/{id}")
-	public GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+	public GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return deleteFromWastebin(new IdSetRequest(id), waitMs);
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/delete")
-	public GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-		}
-
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("image.delete.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("images.delete.wastebin");
-			description.setParameter("0", ids.size());
-		}
-
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
-					List<ImageFile> images = new ArrayList<ImageFile>();
-					for (String id : ids) {
-						ImageFile image = getImage(id, false);
-
-						try (ChannelTrx cTrx = new ChannelTrx(image.getChannel())) {
-							image = getImage(id, false, ObjectPermission.view, ObjectPermission.wastebin);
-						}
-
-						if (!image.isDeleted()) {
-							I18nString message = new CNI18nString("image.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
-						}
-						images.add(image);
-					}
-
-					String imagePaths = I18NHelper.getPaths(images, 5);
-					for (ImageFile image : images) {
-						image.delete(true);
-					}
-
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(ids.size() == 1 ? "image.delete.wastebin.success" : "images.delete.wastebin.success");
-					message.setParameter("0", imagePaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
-				}
+	public GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
 			}
-		});
+
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("image.delete.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("images.delete.wastebin");
+				description.setParameter("0", ids.size());
+			}
+
+			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+						List<ImageFile> images = new ArrayList<ImageFile>();
+						for (String id : ids) {
+							ImageFile image = getImage(id, false);
+							
+							try (ChannelTrx cTrx = new ChannelTrx(image.getChannel())) {
+								image = getImage(id, false, ObjectPermission.view, ObjectPermission.wastebin);
+							}
+							
+							if (!image.isDeleted()) {
+								I18nString message = new CNI18nString("image.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+							images.add(image);
+						}
+						
+						String imagePaths = I18NHelper.getPaths(images, 5);
+						for (ImageFile image : images) {
+							image.delete(true);
+						}
+						
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(ids.size() == 1 ? "image.delete.wastebin.success" : "images.delete.wastebin.success");
+						message.setParameter("0", imagePaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
+					}
+				}
+			});
+		}
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/restore/{id}")
-	public GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+	public GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return restoreFromWastebin(new IdSetRequest(id), waitMs);
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/restore")
-	public GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-	}
-
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("image.restore.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("images.restore.wastebin");
-			description.setParameter("0", ids.size());
-		}
-
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
-					List<ImageFile> images = new ArrayList<ImageFile>();
-					for (String id : ids) {
-						ImageFile image = getImage(id, false);
-
-						try (ChannelTrx cTrx = new ChannelTrx(image.getChannel())) {
-							image = getImage(id, false, ObjectPermission.view, ObjectPermission.wastebin);
-						}
-
-						if (!image.isDeleted()) {
-							I18nString message = new CNI18nString("image.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
-						}
-
-						checkImplicitRestorePermissions(image);
-						images.add(image);
-					}
-
-					String imagePaths = I18NHelper.getPaths(images, 5);
-					for (ImageFile image : images) {
-						image.restore();
-					}
-
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(ids.size() == 1 ? "image.restore.wastebin.success" : "images.restore.wastebin.success");
-					message.setParameter("0", imagePaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
-				}
+	public GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
 			}
-		});
+
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("image.restore.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("images.restore.wastebin");
+				description.setParameter("0", ids.size());
+			}
+
+			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+						List<ImageFile> images = new ArrayList<ImageFile>();
+						for (String id : ids) {
+							ImageFile image = getImage(id, false);
+
+							try (ChannelTrx cTrx = new ChannelTrx(image.getChannel())) {
+								image = getImage(id, false, ObjectPermission.view, ObjectPermission.wastebin);
+							}
+
+							if (!image.isDeleted()) {
+								I18nString message = new CNI18nString("image.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+
+							MiscUtils.checkImplicitRestorePermissions(image);
+							images.add(image);
+						}
+
+						String imagePaths = I18NHelper.getPaths(images, 5);
+						for (ImageFile image : images) {
+							image.restore();
+						}
+
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(ids.size() == 1 ? "image.restore.wastebin.success" : "images.restore.wastebin.success");
+						message.setParameter("0", imagePaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
+					}
+				}
+			});
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getPrivileges(java.lang.Integer)
-	 */
+	@Override
 	@GET
 	@Path("/privileges/{id}")
-	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) {
+	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws NodeException {
 		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 	}
 
 	@GET
 	@Path("/usage/total")
 	@Override
-	public TotalUsageResponse getTotalFileUsageInfo(@QueryParam("id") List<Integer> imageId, @QueryParam("nodeId") Integer nodeId) {
+	public TotalUsageResponse getTotalFileUsageInfo(@QueryParam("id") List<Integer> imageId, @QueryParam("nodeId") Integer nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new TotalUsageResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully image usage for 0 images"));
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Map<Integer, Integer> masterMap = mapMasterImageIds(imageId);
-			return getTotalUsageInfo(masterMap, ContentFile.TYPE_IMAGE, nodeId);
-		} catch (Exception e) {
-			logger.error("Error while getting total usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + imageId.size() + " images" + e.getLocalizedMessage()));
+			return MiscUtils.getTotalUsageInfo(masterMap, ContentFile.TYPE_IMAGE, nodeId);
 		}
 	}
 
@@ -987,7 +863,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 * @throws NodeException
 	 */
 	protected Map<Integer, Integer> mapMasterImageIds(List<Integer> imageId) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
 			return imageId.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
@@ -1005,10 +881,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		return masterMap;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getFolderUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/folder")
 	public FolderUsageListResponse getFolderUsageInfo(
@@ -1018,27 +891,18 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("folders") @DefaultValue("true") boolean returnFolders) {
+			@QueryParam("folders") @DefaultValue("true") boolean returnFolders) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new FolderUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched folders using 0 images"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return getFolderUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFolders);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FolderUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + imageId.size() + " images" + e.getLocalizedMessage()), null, 0, 0);
+			return MiscUtils.getFolderUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFolders);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getPageUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/page")
 	public PageUsageListResponse getPageUsageInfo(
@@ -1049,27 +913,18 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel) {
+			@BeanParam PageModelParameterBean pageModel) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new PageUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched pages using 0 images"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
 			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, PageUsage.GENERAL, nodeId, returnPages, pageModel);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new PageUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + imageId.size() + " images" + e.getLocalizedMessage()), null, 0, 0);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getTemplateUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/template")
 	public TemplateUsageListResponse getTemplateUsageInfo(
@@ -1079,27 +934,18 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) {
+			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new TemplateUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 images"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
 			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnTemplates);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new TemplateUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + imageId.size() + " images" + e.getLocalizedMessage()), null, 0, 0);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getImageUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/image")
 	public FileUsageListResponse getImageUsageInfo(
@@ -1109,27 +955,18 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("images") @DefaultValue("true") boolean returnImages) {
+			@QueryParam("images") @DefaultValue("true") boolean returnImages) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new FileUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 images"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnImages, true);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FileUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + imageId.size() + " images" + e.getLocalizedMessage()), null, 0, 0);
+			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnImages, true);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource#getFileUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/file")
 	public FileUsageListResponse getFileUsageInfo(
@@ -1139,20 +976,14 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("files") @DefaultValue("true") boolean returnFiles) {
+			@QueryParam("files") @DefaultValue("true") boolean returnFiles) throws NodeException {
 		if (ObjectTransformer.isEmpty(imageId)) {
 			return new FileUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 images"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFiles, false);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + imageId.size() + " images", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FileUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + imageId.size() + " images" + e.getLocalizedMessage()), null, 0, 0);
+			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFiles, false);
 		}
 	}
 
@@ -1166,7 +997,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 	 * @throws NodeException
 	 */
 	protected List<Integer> getMasterImageIds(List<Integer> imageId) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
 			return imageId;

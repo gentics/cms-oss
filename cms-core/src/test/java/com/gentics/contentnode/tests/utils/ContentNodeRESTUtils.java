@@ -10,6 +10,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -126,8 +127,8 @@ public class ContentNodeRESTUtils {
 		LoginResponse response = getAuthResource().login(request, "0");
 		assertResponseOK(response);
 
-		int sid = Integer.parseInt(response.getSid());
-		return new DBSession(sid, TransactionManager.getCurrentTransaction());
+		SessionToken sessionToken = new SessionToken(response.getSid());
+		return new DBSession(sessionToken.getSessionId(), TransactionManager.getCurrentTransaction());
 	}
 
 	/**

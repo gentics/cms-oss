@@ -65,10 +65,6 @@ public class FilterPublishableObjectBean {
 					+ Arrays.toString(
 							PublishTypeDto.values());
 
-			if (value == null) {
-				throw new IllegalArgumentException(errormessage);
-			}
-
 			try {
 				return valueOf(value.toUpperCase());
 			} catch (Exception e) {

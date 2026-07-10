@@ -125,6 +125,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
@@ -132,6 +133,7 @@ import jakarta.ws.rs.core.Response.Status;
  * Resource for loading and manipulating Images in GCN
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/image")
 @Authenticated
 public class ImageResourceImpl implements ImageResource {
@@ -156,7 +158,6 @@ public class ImageResourceImpl implements ImageResource {
 			@BeanParam EditableParameterBean editableParams,
 			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(fileListParams.nodeId)) {
-			Transaction t = trx.getTransaction();
 			FolderResourceImpl folderResource = new FolderResourceImpl();
 
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
@@ -206,6 +207,7 @@ public class ImageResourceImpl implements ImageResource {
 					.page(pagingParams)
 					.to(new ImageListResponse());
 				response.setStagingStatus(StagingUtil.checkStagingStatus(images, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+				trx.success();
 				return response;
 			}
 		}
@@ -241,6 +243,7 @@ public class ImageResourceImpl implements ImageResource {
 
 			ImageLoadResponse response = new ImageLoadResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded image " + id), restImage);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(image, stagingPackageName));
+			trx.success();
 			return response;
 		}
 	}
@@ -276,6 +279,7 @@ public class ImageResourceImpl implements ImageResource {
 
 			MultiImageLoadResponse response = new MultiImageLoadResponse(returnedImages);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allImages, request.getPackage(), o -> o.getGlobalId().toString()));
+			trx.success();
 			return response;
 		}
 	}
@@ -405,6 +409,7 @@ public class ImageResourceImpl implements ImageResource {
 			message = new Message(Message.Type.SUCCESS, "Resizing was successful");
 			responseInfo = new ResponseInfo(ResponseCode.OK, "Resizing was successful");
 
+			trx.success();
 			// Because the file maybe got copied, the requester want's to
 			// know the new file ID. That's why we return a FileUploadResponse.
 			return new FileUploadResponse(message, responseInfo, true, ModelBuilder.getFile(file, Arrays.asList(Reference.TAGS)));
@@ -494,10 +499,10 @@ public class ImageResourceImpl implements ImageResource {
 
 			file = file.reload();
 
-			t.commit(false);
 			message = new Message(Message.Type.SUCCESS, "Rotating was successful");
 			responseInfo = new ResponseInfo(ResponseCode.OK, "Rotating was successful");
 
+			trx.success();
 			return new ImageLoadResponse(message, responseInfo,
 					ModelBuilder.getImage((ImageFile) file, Arrays.asList(Reference.TAGS)));
 		} catch (NodeException e) {
@@ -633,7 +638,7 @@ public class ImageResourceImpl implements ImageResource {
 			// save the file
 			image.save();
 
-			t.commit(false);
+			trx.success();
 
 			I18nString message = new CNI18nString("image.save.success");
 
@@ -686,7 +691,7 @@ public class ImageResourceImpl implements ImageResource {
 			}
 
 			final int imageId = image.getId();
-			return Operator.executeLocked(new CNI18nString("image.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLocked(new CNI18nString("image.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
@@ -699,6 +704,8 @@ public class ImageResourceImpl implements ImageResource {
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
 					});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -730,7 +737,7 @@ public class ImageResourceImpl implements ImageResource {
 				description.setParameter("0", ids.size());
 			}
 
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -763,6 +770,8 @@ public class ImageResourceImpl implements ImageResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -794,7 +803,7 @@ public class ImageResourceImpl implements ImageResource {
 				description.setParameter("0", ids.size());
 			}
 
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -829,6 +838,8 @@ public class ImageResourceImpl implements ImageResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -849,7 +860,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Map<Integer, Integer> masterMap = mapMasterImageIds(imageId);
-			return MiscUtils.getTotalUsageInfo(masterMap, ContentFile.TYPE_IMAGE, nodeId);
+			TotalUsageResponse response = MiscUtils.getTotalUsageInfo(masterMap, ContentFile.TYPE_IMAGE, nodeId);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -898,7 +911,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return MiscUtils.getFolderUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFolders);
+			FolderUsageListResponse response = MiscUtils.getFolderUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFolders);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -920,7 +935,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, PageUsage.GENERAL, nodeId, returnPages, pageModel);
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, PageUsage.GENERAL, nodeId, returnPages, pageModel);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -941,7 +958,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnTemplates);
+			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnTemplates);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -962,7 +981,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnImages, true);
+			FileUsageListResponse response = MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnImages, true);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -983,7 +1004,9 @@ public class ImageResourceImpl implements ImageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			imageId = getMasterImageIds(imageId);
-			return MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFiles, false);
+			FileUsageListResponse response = MiscUtils.getFileUsage(skipCount, maxItems, sortBy, sortOrder, ContentFile.TYPE_IMAGE, imageId, nodeId, returnFiles, false);
+			trx.success();
+			return response;
 		}
 	}
 

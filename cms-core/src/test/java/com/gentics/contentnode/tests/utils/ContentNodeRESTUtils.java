@@ -16,7 +16,6 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.AuthenticationResource;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
@@ -121,11 +120,10 @@ public class ContentNodeRESTUtils {
 	 * @throws NodeException
 	 */
 	public static Session login(String login, String password) throws NodeException {
-		AuthenticationResource resource = getAuthResource();
 		LoginRequest request = new LoginRequest();
 		request.setLogin(login);
 		request.setPassword(password);
-		LoginResponse response = resource.login(request, "0");
+		LoginResponse response = getAuthResource().login(request, "0");
 		assertResponseOK(response);
 
 		int sid = Integer.parseInt(response.getSid());

@@ -22,12 +22,15 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * API for reading from the policy map.
  */
 @Path("/policyMap")
+@Produces({ MediaType.APPLICATION_JSON })
 @Consumes("*/*")
 @Authenticated
 public class PolicyMapResourceImpl implements PolicyMapResource {
@@ -49,6 +52,7 @@ public class PolicyMapResourceImpl implements PolicyMapResource {
 			if (null == group) {
 				throw new EntityNotFoundException("No part type with id `" + typeId + "' and no default policy group");
 			}
+			trx.success();
 			return ModelBuilder.getPolicyGroupResponse(group);
 		}
 	}
@@ -67,6 +71,7 @@ public class PolicyMapResourceImpl implements PolicyMapResource {
 			if (null == policy) {
 				throw new EntityNotFoundException("Policy with given uri not found in policy map: `" + uri + "'");
 			}
+			trx.success();
 			return ModelBuilder.getPolicyResponse(policy);
 		} catch (URISyntaxException e) {
 			throw new NodeException(e);

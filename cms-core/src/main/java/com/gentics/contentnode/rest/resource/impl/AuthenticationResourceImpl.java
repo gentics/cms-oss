@@ -5,20 +5,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.Strings;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Cookie;
-import jakarta.ws.rs.core.HttpHeaders;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -32,7 +18,6 @@ import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
@@ -54,11 +39,25 @@ import com.gentics.lib.http.CookieHelper;
 import com.gentics.lib.http.CookieHelper.SameSite;
 import com.gentics.lib.log.NodeLogger;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+
 /**
  * Authentication Resource. This can be used to authenticate an existing SID.
  *
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/auth")
 public class AuthenticationResourceImpl extends AbstractLoginResource implements AuthenticationResource {
 
@@ -140,21 +139,19 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully validated given SID"));
 			response.setUser(ModelBuilder.getUser(trx.getTransaction().getObject(SystemUser.class, userId)));
+			trx.success();
 		} catch (Exception e) {
 			response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
 		}
 		return response;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#ssoLogin()
-	 */
 	@Override
 	@GET
 	@Path("/ssologin")
 	@Produces("text/plain; charset=UTF-8")
 	public String ssoLogin() {
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			SessionToken sessionToken = null;
 			// the request may not always be set (e.g. when testing)
@@ -193,6 +190,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 					String sameSiteString = ObjectTransformer.getString(prefs.getProperty(LoginService.CONFIGURATION_COOKIE_SAMESITE), null);
 					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, optSession.get().getSessionSecret(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
 				}
+				trx.success();
 				// return the sid as plaintext
 				return ObjectTransformer.getString(sessionToken.getSessionId(), "");
 			} else {
@@ -216,30 +214,30 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return ssoLogin();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#login(com.gentics.contentnode.rest.model.request.LoginRequest)
-	 */
 	@Override
 	@POST
 	@Path("/login")
-	public LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) {
-		String username = request.getLogin();
-		String password = request.getPassword();
+	public LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			String username = request.getLogin();
+			String password = request.getPassword();
 
-		LoginResponse response = tryLoginWithService(username, password, sidString);
+			LoginResponse response = tryLoginWithService(username, password, sidString);
 
-		if (response != null) {
+			if (response != null) {
+				return response;
+			}
+
+			var message = "No login service returned a response";
+
+			logger.error("Error while logging in user {" + username + "}: " + message);
+
+			response = new LoginResponse();
+			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, message));
+
+			trx.success();
 			return response;
 		}
-
-		var message = "No login service returned a response";
-
-		logger.error("Error while logging in user {" + username + "}: " + message);
-
-		response = new LoginResponse();
-		response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, message));
-
-		return response;
 	}
 
 	/**
@@ -267,9 +265,6 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return errorResponse;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#logout(java.lang.String)
-	 */
 	@Override
 	@POST
 	@Path("/logout/{sid}")
@@ -290,11 +285,13 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 						dbSession.logout();
 					}
 
+					trx.success();
 					return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
 				} else {
 					return new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
 				}
 			} else {
+				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
 			}
 		} catch (Exception e) {
@@ -321,10 +318,6 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#hashPassword(
-	 *            com.gentics.contentnode.rest.model.request.HashPasswordRequest)
-	 */
 	@Override
 	@POST
 	@Path("/hashpassword")
@@ -358,10 +351,6 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return response;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#matchPassword(
-	 *            com.gentics.contentnode.rest.model.request.MatchPasswordRequest)
-	 */
 	@Override
 	@POST
 	@Path("/matchpassword")

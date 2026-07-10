@@ -9,7 +9,9 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -55,6 +57,7 @@ import com.gentics.contentnode.validation.validator.ValidatorInstantiationExcept
  * REST API for validating user input.
  */
 @Path("/validate")
+@Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ "text/html; charset=UTF-8" })
 @Authenticated
 public class ValidationResourceImpl implements ValidationResource {
@@ -75,15 +78,17 @@ public class ValidationResourceImpl implements ValidationResource {
 	@Path("/tagPart/{partId}")
 	public Response validateTagPart(@PathParam("partId") int partId, String unsafe)
 			throws NodeException, ValidatorInstantiationException, ValidationException {
+		Part part = null;
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction transaction = TransactionManager.getCurrentTransaction();
-			Part part = transaction.getObject(Part.class, partId);
+			part = transaction.getObject(Part.class, partId);
 
 			if (null == part) {
 				throw new EntityNotFoundException("Unable to find part with partId `" + partId + "'");
 			}
-			return validate(new TagPartInputChannel(part), unsafe);
+			trx.success();
 		}
+		return validate(new TagPartInputChannel(part), unsafe);
 	}
 
 	@Override
@@ -275,6 +280,7 @@ public class ValidationResourceImpl implements ValidationResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			ValidationResult result = ValidationUtils.validate(inputChannel, unsafe);
 
+			trx.success();
 			return Response.ok().entity(ModelBuilder.getValidationResultResponse(result, formattedError)).build();
 		}
 	}

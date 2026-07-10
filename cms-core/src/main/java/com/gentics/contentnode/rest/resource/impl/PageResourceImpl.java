@@ -51,15 +51,12 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.AutoCommit;
 import com.gentics.contentnode.factory.ChannelTrx;
-import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.PageLanguageFallbackList;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.TransactionManager.ReturnValueExecutable;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
@@ -205,7 +202,6 @@ import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 
-import de.jkeylockmanager.manager.ReturnValueLockCallback;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -226,13 +222,9 @@ import jakarta.ws.rs.core.Response.Status;
  */
 @Path("/page")
 @Authenticated
+@Produces({ MediaType.APPLICATION_JSON })
 public class PageResourceImpl implements PageResource {
 	protected final static NodeLogger logger = NodeLogger.getNodeLogger(PageResourceImpl.class);
-
-	/**
-	 * Keyed lock to synchronize translation calls for the same contentset
-	 */
-	private static final TransactionLockManager<PageLoadResponse> translateLock = new TransactionLockManager<>();
 
 	/**
 	 * Helper method to transform tag references (like <node bla>)
@@ -745,6 +737,7 @@ public class PageResourceImpl implements PageResource {
 				response.setStagingStatus(
 						StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName,
 								o -> o.getGlobalId().toString(), pageListParams.languageVariants));
+				trx.success();
 				return response;
 			}
 		}
@@ -1037,7 +1030,6 @@ public class PageResourceImpl implements PageResource {
 		Page page = null;
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Transaction t = trx.getTransaction();
 			// first get the page and lock it (for checking the permission to
 			// save)
 			if (request.isClearOfflineAt() || request.isClearPublishAt()) {
@@ -1272,6 +1264,7 @@ public class PageResourceImpl implements PageResource {
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
 			response.setStagingStatus(StagingUtil.checkStagingStatus(page, stagingPackageName));
+			trx.success();
 			return response;
 		}
 	}
@@ -1332,6 +1325,7 @@ public class PageResourceImpl implements PageResource {
 								&& (!forUpdate || ObjectPermission.edit.checkObject(page));
 					}, fillWithNulls);
 
+			trx.success();
 			return new MultiPageLoadResponse(returnedPages);
 		}
 	}
@@ -1352,7 +1346,6 @@ public class PageResourceImpl implements PageResource {
 				return response;
 			}
 			Page page = ModelBuilder.getPage(request.getPage(), true);
-			ContentNodeFactory factory = ContentNodeFactory.getInstance();
 
 			NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig()
 					.getDefaultPreferences();
@@ -1375,6 +1368,7 @@ public class PageResourceImpl implements PageResource {
 						"Rendering the page preview failed"));
 			}
 			// TODO add the renderresult messages
+			trx.success();
 			return response;
 		}
 	}
@@ -1477,6 +1471,7 @@ public class PageResourceImpl implements PageResource {
 			GenericResponse response = new GenericResponse();
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, message));
 			t.addTransactional(messageSender);
+			trx.success();
 			return response;
 		}
 	}
@@ -1497,7 +1492,9 @@ public class PageResourceImpl implements PageResource {
 				.setKeepVersion(request.isKeepVersion())
 				.setNodeId(nodeId);
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			GenericResponse response = job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1506,8 +1503,6 @@ public class PageResourceImpl implements PageResource {
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			PagePublishRequest request) throws NodeException {
-		String restError = new CNI18nString("rest.general.error").toString();
-
 		GenericResponse response = new GenericResponse();
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -1589,6 +1584,7 @@ public class PageResourceImpl implements PageResource {
 
 			MiscUtils.addMessage(instantPublishingResult, response);
 
+			trx.success();
 			return response;
 		}
 	}
@@ -1633,7 +1629,7 @@ public class PageResourceImpl implements PageResource {
 			final int pageId = page.getId();
 			TransactionManager.getCurrentTransaction().commit(false);
 
-			return Operator.executeLocked(new CNI18nString("page.delete.job").toString(), 0,
+			GenericResponse response = Operator.executeLocked(new CNI18nString("page.delete.job").toString(), 0,
 					Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
@@ -1666,6 +1662,8 @@ public class PageResourceImpl implements PageResource {
 									new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
 					});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1698,7 +1696,7 @@ public class PageResourceImpl implements PageResource {
 				description = new CNI18nString("pages.delete.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
@@ -1751,6 +1749,8 @@ public class PageResourceImpl implements PageResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1783,7 +1783,7 @@ public class PageResourceImpl implements PageResource {
 				description = new CNI18nString("pages.restore.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
@@ -1837,6 +1837,8 @@ public class PageResourceImpl implements PageResource {
 					}
 				}
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1862,6 +1864,7 @@ public class PageResourceImpl implements PageResource {
 
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK,
 					"Cancelled editing of page : " + page.getId());
+			trx.success();
 			return new GenericResponse(null, responseInfo);
 		}
 	}
@@ -1899,7 +1902,7 @@ public class PageResourceImpl implements PageResource {
 			@QueryParam("version") Integer versionTimestamp) throws NodeException {
 		int version = ObjectTransformer.getInt(versionTimestamp, 0);
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited,
+			PageRenderResponse response = render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited,
 					publish, editable -> {
 						Transaction t = TransactionManager.getCurrentTransaction();
 						if (editable) {
@@ -1923,6 +1926,8 @@ public class PageResourceImpl implements PageResource {
 							return page;
 						}
 					});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1950,6 +1955,7 @@ public class PageResourceImpl implements PageResource {
 					false)) {
 				String content = page.render(RenderUtils.getPreviewTemplate(page, RenderType.EM_PREVIEW),
 						new RenderResult(), null, null, null, null);
+				trx.success();
 				return Response.status(Status.OK)
 						.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 						.entity(content).build();
@@ -1987,6 +1993,7 @@ public class PageResourceImpl implements PageResource {
 					return p;
 				}
 			});
+			trx.success();
 			return Response.status(Status.OK)
 					.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 					.entity(diff).build();
@@ -2011,6 +2018,7 @@ public class PageResourceImpl implements PageResource {
 			}, () -> {
 				return otherPage;
 			});
+			trx.success();
 			return Response.status(Status.OK)
 					.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 					.entity(diff).build();
@@ -2069,7 +2077,9 @@ public class PageResourceImpl implements PageResource {
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
 			com.gentics.contentnode.rest.model.Page page) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return renderTag(tag, nodeId, proxyprefix, linksType, () -> ModelBuilder.getPage(page, false));
+			PageRenderResponse response = renderTag(tag, nodeId, proxyprefix, linksType, () -> ModelBuilder.getPage(page, false));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2082,8 +2092,10 @@ public class PageResourceImpl implements PageResource {
 			@QueryParam("proxyprefix") String proxyprefix,
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return renderTag(tag, nodeId, proxyprefix, linksType,
+			PageRenderResponse response = renderTag(tag, nodeId, proxyprefix, linksType,
 					() -> getLockedPage(id, true, ObjectPermission.edit));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2274,6 +2286,7 @@ public class PageResourceImpl implements PageResource {
 				restTags.add(ModelBuilder.getTag(tag, false));
 			}
 			response.setTags(restTags);
+			trx.success();
 			return response;
 		} catch (NoSuchMethodException e) {
 			throw new NodeException(e);
@@ -2444,14 +2457,17 @@ public class PageResourceImpl implements PageResource {
 			@QueryParam("constructId") Integer constructId, @QueryParam("keyword") String keyword,
 			ContentTagCreateRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
+			TagCreateResponse response;
 			if (request.getCopyPageId() == null && request.getCopyTagname() == null) {
 				constructId = getConstructId(request, constructId, keyword);
 
-				return createTagFromConstruct(id, constructId, request.getMagicValue());
+				response = createTagFromConstruct(id, constructId, request.getMagicValue());
 			} else {
 				// copy the given tag
-				return copyTag(id, request.getCopyPageId(), request.getCopyTagname());
+				response = copyTag(id, request.getCopyPageId(), request.getCopyTagname());
 			}
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2587,6 +2603,7 @@ public class PageResourceImpl implements PageResource {
 
 			I18nString message = new CNI18nString("page.restore.success");
 
+			trx.success();
 			return new PageLoadResponse(new Message(Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "Successfully restored version {"
 							+ versionTimestamp + "} of page with id { " + id + " }"), restPage);
@@ -2642,6 +2659,7 @@ public class PageResourceImpl implements PageResource {
 									+ "} in page { " + pageId + " }"));
 
 			response.setTags(Arrays.asList(ModelBuilder.getTag(tagToRestore, false)));
+			trx.success();
 			return response;
 		}
 	}
@@ -2657,9 +2675,11 @@ public class PageResourceImpl implements PageResource {
 			Page page = getPage(Integer.toString(id), true);
 			Integer lockKey = ObjectTransformer.getInteger(page.getContentsetId(), 0);
 
-			return (PageLoadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.contentSet, lockKey), () -> {
+			PageLoadResponse response = (PageLoadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.contentSet, lockKey), () -> {
 				return translate(id, languageCode, locked, channelId, true);
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2679,7 +2699,6 @@ public class PageResourceImpl implements PageResource {
 	 */
 	private PageLoadResponse translate(Integer id, String languageCode, boolean locked,
 			Integer channelId, boolean requirePermission) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		boolean readOnly = !locked;
 
 		if (channelId == null) {
@@ -2754,6 +2773,7 @@ public class PageResourceImpl implements PageResource {
 			}
 
 			I18nString message = new CNI18nString("page.workflow.revoke.success");
+			trx.success();
 			return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "Successfully revoked last step of page "
 							+ id));
@@ -2784,6 +2804,7 @@ public class PageResourceImpl implements PageResource {
 				// TODO inform all users watching
 				workflow.delete();
 				I18nString message = new CNI18nString("page.workflow.delete.success");
+				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 						new ResponseInfo(ResponseCode.OK,
 								"Successfully removed the workflow of page " + id));
@@ -2808,6 +2829,7 @@ public class PageResourceImpl implements PageResource {
 				workflow.save();
 
 				I18nString message = new CNI18nString("page.workflow.decline.success");
+				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 						new ResponseInfo(ResponseCode.OK,
 								"Successfully updated the workflow of page " + id));
@@ -2855,6 +2877,7 @@ public class PageResourceImpl implements PageResource {
 			}
 			response.setResponseInfo(
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
+			trx.success();
 			return response;
 		}
 	}
@@ -2904,8 +2927,10 @@ public class PageResourceImpl implements PageResource {
 		}
 		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.TAG, nodeId, returnPages, pageModel);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2928,8 +2953,10 @@ public class PageResourceImpl implements PageResource {
 		}
 		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.VARIANT, nodeId, returnPages, pageModel);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2953,8 +2980,10 @@ public class PageResourceImpl implements PageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.GENERAL, nodeId, returnPages, pageModel);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -2977,8 +3006,10 @@ public class PageResourceImpl implements PageResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE,
+			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE,
 					pageId, nodeId, returnTemplates);
+			trx.success();
+			return response;
 		}
 	}
 
@@ -3042,6 +3073,7 @@ public class PageResourceImpl implements PageResource {
 				reduceList(items, skipCount, maxItems);
 				response.setPages(items);
 
+				trx.success();
 				return response;
 			}
 		}
@@ -3107,6 +3139,7 @@ public class PageResourceImpl implements PageResource {
 				reduceList(items, skipCount, maxItems);
 				response.setFiles(items);
 
+				trx.success();
 				return response;
 			}
 		}
@@ -3172,6 +3205,7 @@ public class PageResourceImpl implements PageResource {
 				reduceList(items, skipCount, maxItems);
 				response.setFiles(items);
 
+				trx.success();
 				return response;
 			}
 		}
@@ -3254,6 +3288,7 @@ public class PageResourceImpl implements PageResource {
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "The following page has been taken offline : " + page.getId());
 			response.addMessage(message);
 			response.setResponseInfo(responseInfo);
+			trx.success();
 			return response;
 		}
 	}
@@ -3301,9 +3336,11 @@ public class PageResourceImpl implements PageResource {
 
 			if (pageId != null) {
 				Integer foundNodeId = hit.getRight();
-				return load(Integer.toString(pageId), update, template, folder, languageVariants,
+				PageLoadResponse response = load(Integer.toString(pageId), update, template, folder, languageVariants,
 						pageVariants, workflow, translationStatus, versionInfo, disinherited, false,
 						foundNodeId, null);
+				trx.success();
+				return response;
 			} else {
 				I18nString message = new CNI18nString("page.notfound");
 				message.setParameter("0", liveUrl);
@@ -3688,6 +3725,7 @@ public class PageResourceImpl implements PageResource {
 				}
 			}
 
+			trx.success();
 			return out.toString();
 		} catch (Exception e) {
 			logger.error("Error while doing autocomplete for " + q, e);
@@ -3791,6 +3829,7 @@ public class PageResourceImpl implements PageResource {
 					}
 				}
 			});
+			trx.success();
 			if (response instanceof PageCopyResponse) {
 				return (PageCopyResponse) response;
 			} else {
@@ -3913,6 +3952,7 @@ public class PageResourceImpl implements PageResource {
 			response.setPages(restPages);
 
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
+			trx.success();
 			return response;
 		}
 	}
@@ -3923,7 +3963,7 @@ public class PageResourceImpl implements PageResource {
 	public GenericResponse pubqueueApprove(MultiPubqueueApproveRequest request,
 			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return Operator.execute(new CNI18nString("approve_publication").toString(), waitMs, () -> {
+			GenericResponse response = Operator.execute(new CNI18nString("approve_publication").toString(), waitMs, () -> {
 				Transaction t = TransactionManager.getCurrentTransaction();
 
 				MessageSender messageSender = new MessageSender();
@@ -4010,6 +4050,8 @@ public class PageResourceImpl implements PageResource {
 
 				return new GenericResponse(null, ResponseInfo.ok(""));
 			});
+			trx.success();
+			return response;
 		}
 	}
 
@@ -4040,7 +4082,6 @@ public class PageResourceImpl implements PageResource {
 						request.getFileName());
 				NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig()
 						.getDefaultPreferences();
-				@SuppressWarnings("unchecked")
 				Map<String, String> sanitizeCharacters = prefs.getPropertyMap("sanitize_character");
 				String replacementChararacter = prefs.getProperty("sanitize_replacement_character");
 				String[] preservedCharacters = prefs.getProperties("sanitize_allowed_characters");
@@ -4050,6 +4091,7 @@ public class PageResourceImpl implements PageResource {
 				suggestedFilename = PageFactory.suggestFilename(page);
 			}
 
+			trx.success();
 			return new PageFilenameSuggestResponse().setFileName(suggestedFilename);
 		}
 	}

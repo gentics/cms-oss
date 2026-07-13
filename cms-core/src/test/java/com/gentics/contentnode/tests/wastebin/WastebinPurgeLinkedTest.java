@@ -29,6 +29,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
@@ -84,8 +85,8 @@ public class WastebinPurgeLinkedTest {
 			p.setFolderId(node.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Page 2");
-			p.getContent().addContentTag(nodeConstructId);
-			PageURLPartType pageUrl = getPartType(PageURLPartType.class, p.getTag("both1"), "ds");
+			ContentTag contentTag = p.getContent().addContentTag(nodeConstructId);
+			PageURLPartType pageUrl = getPartType(PageURLPartType.class, contentTag, "ds");
 			pageUrl.setTargetPage(page1);
 		}));
 

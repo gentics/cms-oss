@@ -106,6 +106,12 @@ public class DBTestContext extends TestWatcher {
 	 */
 	public final static Integer USER_WITHOUT_PERMS = 27;
 
+	public final static int EDITOR_USER_ID = 26;
+
+	public final static int READER_USER_ID = 27;
+
+	public final static int PUBLISHER_USER_ID = 29;
+
 	/**
 	 * Timeout in (ms) for waiting on the dirtqueue worker
 	 */

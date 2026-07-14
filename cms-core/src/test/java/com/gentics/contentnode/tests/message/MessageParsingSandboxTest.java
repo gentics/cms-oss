@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.message;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -54,6 +55,8 @@ public class MessageParsingSandboxTest extends AbstractMessagingSandboxTest {
 	public void testParse() throws Exception {
 		Message msg = new Message(1, 1, message);
 
-		assertEquals("Check parsed message of " + message, expected, msg.getParsedMessage());
+		operate(() -> {
+			assertEquals("Check parsed message of " + message, expected, msg.getParsedMessage());
+		});
 	}
 }

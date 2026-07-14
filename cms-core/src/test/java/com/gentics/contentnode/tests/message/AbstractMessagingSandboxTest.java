@@ -1,17 +1,19 @@
 package com.gentics.contentnode.tests.message;
 
+import static com.gentics.contentnode.db.DBUtils.update;
+import static com.gentics.contentnode.factory.Trx.operate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-import com.gentics.contentnode.db.DBUtils;
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
@@ -24,6 +26,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.I18nResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MessagingResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -32,17 +35,22 @@ import com.gentics.contentnode.testutils.DBTestContext;
 public class AbstractMessagingSandboxTest  {
 
 	@ClassRule
-	public static DBTestContext testContext = new DBTestContext();
+	public static DBTestContext testContext = new DBTestContext().config(prefs -> {
+		// disable the feature "inbox_to_email"
+		prefs.setFeature("inbox_to_email", false);
+	});
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		TransactionManager.getCurrentTransaction().commit();
+	}
 
 	@Before
-	public void setUp() throws Exception {
-
+	public void setUp() throws NodeException {
 		// mark all current messages as "read"
-		DBUtils.executeUpdate("UPDATE msg SET oldmsg = ?", new Object[] { 1 });
-		TransactionManager.getCurrentTransaction().commit(false);
-
-		// disable the feature "inbox_to_email"
-		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature("inbox_to_email", false);
+		operate(() -> {
+			update("UPDATE msg SET oldmsg = ?", 1);
+		});
 	}
 
 	/**
@@ -66,14 +74,13 @@ public class AbstractMessagingSandboxTest  {
 	 * @throws Exception
 	 */
 	public void setBackendLanguage(String code, Session session) throws Exception {
-		try (Trx trx = new Trx(session, 0)) {
+		try (DBSessionClosure ses = new DBSessionClosure(session)) {
 			I18nResourceImpl i18nRes = new I18nResourceImpl();
 
 			SetLanguageRequest setLangReq = new SetLanguageRequest();
 
 			setLangReq.setCode(code);
 			assertResponseOK(i18nRes.setLanguage(setLangReq));
-			trx.success();
 		}
 	}
 
@@ -87,7 +94,7 @@ public class AbstractMessagingSandboxTest  {
 	 * @throws Exception
 	 */
 	public void editPage(int pageId, Session session) throws Exception {
-		try (Trx trx = new Trx(session, 0)) {
+		try (DBSessionClosure ses = new DBSessionClosure(session)) {
 			PageResourceImpl pageRes = new PageResourceImpl();
 
 			// load the page
@@ -108,7 +115,6 @@ public class AbstractMessagingSandboxTest  {
 			GenericResponse pageSaveResp = pageRes.save(Integer.toString(pageId), pageSaveReq);
 
 			assertResponseOK(pageSaveResp);
-			trx.success();
 		}
 	}
 
@@ -122,7 +128,7 @@ public class AbstractMessagingSandboxTest  {
 	 * @throws Exception
 	 */
 	public void publishPage(int pageId, Session session) throws Exception {
-		try (Trx trx = new Trx(session, 0)) {
+		try (DBSessionClosure ses = new DBSessionClosure(session)) {
 			PageResourceImpl pageRes = new PageResourceImpl();
 
 			PagePublishRequest pubReq = new PagePublishRequest();
@@ -132,7 +138,6 @@ public class AbstractMessagingSandboxTest  {
 			GenericResponse pubResp = pageRes.publish(Integer.toString(pageId), null, pubReq);
 
 			assertResponseOK(pubResp);
-			trx.success();
 		}
 	}
 
@@ -144,13 +149,12 @@ public class AbstractMessagingSandboxTest  {
 	 * @throws Exception
 	 */
 	public List<Message> listNewMessages(SystemUser user) throws Exception {
-		try (Trx trx = new Trx(user)) {
+		try (DBSessionClosure ses = new DBSessionClosure(user.getId())) {
 			MessagingResourceImpl msgRes = new MessagingResourceImpl();
 
 			GenericResponse msgListResp = msgRes.list(true);
 
 			assertResponseOK(msgListResp);
-			trx.success();
 			return msgListResp.getMessages();
 		}
 	}

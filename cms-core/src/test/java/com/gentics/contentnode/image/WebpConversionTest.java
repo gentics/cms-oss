@@ -1,5 +1,37 @@
 package com.gentics.contentnode.image;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.Resource;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.DBSession;
@@ -18,7 +50,6 @@ import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.resource.BinaryOutput;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.scheduler.ConvertImagesJob;
 import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
@@ -29,42 +60,12 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.testutils.GenericTestUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for WebP image conversion on upload and via the conversion job.
@@ -94,7 +95,9 @@ public class WebpConversionTest {
 		return data;
 	}
 
-	private static DBTestContext testContext = new DBTestContext();
+	private static DBTestContext testContext = new DBTestContext().config(prefs -> {
+		prefs.setProperty("contentnode.maxfilesize", "%d".formatted(5 * 1024 * 1024));
+	});
 	private static RESTAppContext restContext = new RESTAppContext(RESTAppContext.Type.jetty);
 	@ClassRule
 	public static RESTAppContext binarySourceContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryDataImageResource.class).build()));
@@ -125,9 +128,6 @@ public class WebpConversionTest {
 		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode("Master", "Master", ContentNodeTestDataUtils.PublishTarget.NONE, ContentNodeTestDataUtils.getLanguage("de"), ContentNodeTestDataUtils.getLanguage("en")));
 		folder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "testfolder"));
 		targetFolder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "targetfolder"));
-
-		NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences()
-			.setProperty("contentnode.maxfilesize", "%d".formatted(5 * 1024 * 1024));
 
 		Trx.consume(n -> n.activateFeature(Feature.WEBP_CONVERSION), node);
 

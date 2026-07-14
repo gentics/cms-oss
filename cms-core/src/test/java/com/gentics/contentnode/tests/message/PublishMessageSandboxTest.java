@@ -1,15 +1,14 @@
 package com.gentics.contentnode.tests.message;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.testutils.DBTestContext.EDITOR_USER_ID;
+import static com.gentics.contentnode.testutils.DBTestContext.PUBLISHER_USER_ID;
 
 import org.junit.Test;
 
-import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 
 /**
  * Test cases for inbox message when sending pages to the queue
@@ -23,43 +22,31 @@ public class PublishMessageSandboxTest extends AbstractMessagingSandboxTest {
 	 */
 	@Test
 	public void testPublishQueue() throws Exception {
-		SystemUser editor = Trx.supply(t -> {
-			List<Integer> ids = DBUtils.select("SELECT id FROM systemuser WHERE login = ?", ps -> {
-				ps.setString(1, "editor");
-			}, DBUtils.IDLIST);
-
-			assertThat(ids).as("User IDs").isNotEmpty();
-			return t.getObject(SystemUser.class, ids.get(0));
-		});
-		SystemUser publisher = Trx.supply(t -> {
-			List<Integer> ids = DBUtils.select("SELECT id FROM systemuser WHERE login = ?", ps -> {
-				ps.setString(1, "publisher");
-			}, DBUtils.IDLIST);
-
-			assertThat(ids).as("User IDs").isNotEmpty();
-			return t.getObject(SystemUser.class, ids.get(0));
-		});
-
-		// login as editor
-		Session editorSession = testContext.getContext().login("editor", "editor");
-		// login as publisher
-		Session publisherSession = testContext.getContext().login("publisher", "publisher");
+		SystemUser editor = supply(t -> t.getObject(SystemUser.class, EDITOR_USER_ID));
+		SystemUser publisher = Trx.supply(t -> t.getObject(SystemUser.class, PUBLISHER_USER_ID));
 
 		// set the backend language to "en" for all users
-		setBackendLanguage("en", editorSession);
-		setBackendLanguage("en", publisherSession);
+		try (DBSessionClosure ses = new DBSessionClosure(EDITOR_USER_ID)) {
+			setBackendLanguage("en", ses.getSession());
+		}
+		try (DBSessionClosure ses = new DBSessionClosure(PUBLISHER_USER_ID)) {
+			setBackendLanguage("en", ses.getSession());
+		}
 
-		// modify the page
-		editPage(PAGE_ID, editorSession);
-
-		// let the editor publish the page
-		publishPage(PAGE_ID, editorSession);
+		try (DBSessionClosure ses = new DBSessionClosure(EDITOR_USER_ID)) {
+			// modify the page
+			editPage(PAGE_ID, ses.getSession());
+			// let the editor publish the page
+			publishPage(PAGE_ID, ses.getSession());
+		}
 
 		// check the messages
 		assertMessage(publisher, "editor", "editor editor wants to publish page ProcessTests/Page to translate|mod (53).");
 
-		// let the publisher publish the page
-		publishPage(PAGE_ID, publisherSession);
+		try (DBSessionClosure ses = new DBSessionClosure(PUBLISHER_USER_ID)) {
+			// let the publisher publish the page
+			publishPage(PAGE_ID, ses.getSession());
+		}
 
 		// check the messages
 		assertMessage(editor, "Publisher", "The page ProcessTests/Page to translate|mod (53) has been published.");

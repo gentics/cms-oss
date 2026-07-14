@@ -6,6 +6,7 @@
 package com.gentics.contentnode.tests.edit;
 
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
+import static com.gentics.contentnode.testutils.DBTestContext.USER_WITH_PERMS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -59,6 +60,7 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -921,6 +923,7 @@ public class PageEditSandboxTest {
 		page = t.getObject(Page.class, page.getId());
 		String filename = page.getFilename();
 		assertFalse("Page filename must not be empty", StringUtils.isEmpty(filename));
+		t.commit();
 
 		// now create a page variant
 		PageResource res = getPageResource();
@@ -928,17 +931,20 @@ public class PageEditSandboxTest {
 		req.setFolderId(Integer.toString(FOLDER_ID));
 		req.setTemplateId(TEMPLATE_ID);
 		req.setVariantId(ObjectTransformer.getInt(page.getId(), 0));
-		PageLoadResponse response = res.create(req);
+		PageLoadResponse response;
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			response = res.create(req);
+		}
 		assertResponseOK(response);
 		String variant1Filename = response.getPage().getFileName();
-		t.commit();
 
 		assertFalse("Page variant must have a non-empty filename", StringUtils.isEmpty(variant1Filename));
 		assertFalse("Page variant must have a unique filename", variant1Filename.equals(filename));
 
 		// create another page variant
-		t = testContext.startTransactionWithPermissions(false);
-		res = getPageResource();
+		try (DBSessionClosure session = new DBSessionClosure(USER_WITH_PERMS)) {
+			res = getPageResource();
+		}
 		response = res.create(req);
 		assertResponseOK(response);
 		String variant2Filename = response.getPage().getFileName();

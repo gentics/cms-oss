@@ -696,6 +696,8 @@ public class DirtingSandboxTest {
 
 		pageY.save();
 
+		t.commit(false);
+
 		com.gentics.contentnode.rest.model.Page restpage = getPageResource().load(pageY.getId().toString(), true, false, false, false, false, false, false, false, false, false, null, null).getPage();
 		com.gentics.contentnode.rest.model.Overview overview = OverviewHelper.extractOverviewFromRestPage(restpage);
 		overview.setListType(ListType.PAGE);

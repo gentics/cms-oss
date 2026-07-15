@@ -1,15 +1,19 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.testutils.DBTestContext.USER_WITH_PERMS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.TagTypeMigrationMapping;
 import com.gentics.contentnode.rest.model.request.migration.MigrationTagsRequest;
@@ -18,6 +22,8 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.migration.MigrationResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationTagsResponse;
 import com.gentics.contentnode.rest.resource.impl.migration.MigrationResourceImpl;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -28,8 +34,8 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class MigrationRestSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
 	 * Valid page ID
@@ -91,9 +97,12 @@ public class MigrationRestSandboxTest {
 	 */
 	private MigrationResourceImpl migrationResource = new MigrationResourceImpl();
 
-	@Before
-	public void setup() throws Exception {
-		testContext.startTransactionWithPermissions(true);
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
+
+	@BeforeClass
+	public final static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
 	}
 
 	/**
@@ -103,17 +112,17 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testGetTagTypesInvalidType() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			MigrationTagsRequest request = new MigrationTagsRequest();
+			List<Integer> ids = new ArrayList<Integer>();
 
-		MigrationTagsRequest request = new MigrationTagsRequest();
-		List<Integer> ids = new ArrayList<Integer>();
+			ids.add(VALID_PAGE_ID);
+			request.setIds(ids);
+			request.setType("invalid type");
 
-		ids.add(VALID_PAGE_ID);
-		request.setIds(ids);
-		request.setType("invalid type");
-
-		MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
-
-		assertEquals("Check for the correct page response code", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
+			exceptionChecker.expect(NodeException.class, "Unrecognized object type encountered during tag type migration: invalid type");
+			migrationResource.getMigrationTagTypes(request);
+		}
 	}
 
 	/**
@@ -123,17 +132,17 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testGetTagTypesInvalidId() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			MigrationTagsRequest request = new MigrationTagsRequest();
+			List<Integer> ids = new ArrayList<Integer>();
 
-		MigrationTagsRequest request = new MigrationTagsRequest();
-		List<Integer> ids = new ArrayList<Integer>();
+			ids.add(INVALID_ID);
+			request.setIds(ids);
+			request.setType(PAGE);
 
-		ids.add(INVALID_ID);
-		request.setIds(ids);
-		request.setType(PAGE);
-
-		MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
-
-		assertEquals("Check for the correct page response code", ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
+			exceptionChecker.expect(EntityNotFoundException.class, "Die angegebene Seite wurde nicht gefunden.");
+			migrationResource.getMigrationTagTypes(request);
+		}
 	}
 
 	/**
@@ -143,18 +152,19 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testGetTagTypesValidPage() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			MigrationTagsRequest request = new MigrationTagsRequest();
+			List<Integer> ids = new ArrayList<Integer>();
 
-		MigrationTagsRequest request = new MigrationTagsRequest();
-		List<Integer> ids = new ArrayList<Integer>();
+			ids.add(VALID_PAGE_ID);
+			request.setIds(ids);
+			request.setType(PAGE);
 
-		ids.add(VALID_PAGE_ID);
-		request.setIds(ids);
-		request.setType(PAGE);
+			MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
 
-		MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
-
-		assertNotNull("Check that the request returned a non-null map of tags", response.getTagTypes());
-		assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			assertNotNull("Check that the request returned a non-null map of tags", response.getTagTypes());
+			assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+		}
 	}
 
 	/**
@@ -164,18 +174,19 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testGetTagTypesValidObject() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			MigrationTagsRequest request = new MigrationTagsRequest();
+			List<Integer> ids = new ArrayList<Integer>();
 
-		MigrationTagsRequest request = new MigrationTagsRequest();
-		List<Integer> ids = new ArrayList<Integer>();
+			ids.add(VALID_OBJECTDEF_ID);
+			request.setIds(ids);
+			request.setType(OBJECTDEFINITION);
 
-		ids.add(VALID_OBJECTDEF_ID);
-		request.setIds(ids);
-		request.setType(OBJECTDEFINITION);
+			MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
 
-		MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
-
-		assertNotNull("Check that the request returned a list of tags", response.getTagTypes());
-		assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			assertNotNull("Check that the request returned a list of tags", response.getTagTypes());
+			assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+		}
 	}
 
 	/**
@@ -185,18 +196,19 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testGetTagTypesValidTemplate() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			MigrationTagsRequest request = new MigrationTagsRequest();
+			List<Integer> ids = new ArrayList<Integer>();
 
-		MigrationTagsRequest request = new MigrationTagsRequest();
-		List<Integer> ids = new ArrayList<Integer>();
+			ids.add(VALID_TEMPLATE_ID);
+			request.setIds(ids);
+			request.setType(TEMPLATE);
 
-		ids.add(VALID_TEMPLATE_ID);
-		request.setIds(ids);
-		request.setType(TEMPLATE);
+			MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
 
-		MigrationTagsResponse response = migrationResource.getMigrationTagTypes(request);
-
-		assertNotNull("Check that the request returned a list of tags", response.getTagTypes());
-		assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			assertNotNull("Check that the request returned a list of tags", response.getTagTypes());
+			assertEquals("Check for the correct page response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+		}
 	}
 
 	/**
@@ -206,40 +218,40 @@ public class MigrationRestSandboxTest {
 	 */
 	@Test
 	public void testPerformValidContentTagMigration() throws Exception {
+		try (DBSessionClosure ses = new DBSessionClosure(USER_WITH_PERMS)) {
+			// Create mappings
+			TagTypeMigrationMapping mapping = new TagTypeMigrationMapping();
 
-		// Create mappings
-		TagTypeMigrationMapping mapping = new TagTypeMigrationMapping();
+			mapping.setFromTagTypeId(VALID_FROMTAGTYPEID);
+			mapping.setToTagTypeId(VALID_TOTAGTYPEID);
 
-		mapping.setFromTagTypeId(VALID_FROMTAGTYPEID);
-		mapping.setToTagTypeId(VALID_TOTAGTYPEID);
+			MigrationPartMapping partMapping = new MigrationPartMapping();
 
-		MigrationPartMapping partMapping = new MigrationPartMapping();
+			partMapping.setFromPartId(VALID_FROMPARTID);
+			partMapping.setToPartId(VALID_TOPARTID);
+			ArrayList<MigrationPartMapping> partMappings = new ArrayList<MigrationPartMapping>();
 
-		partMapping.setFromPartId(VALID_FROMPARTID);
-		partMapping.setToPartId(VALID_TOPARTID);
-		ArrayList<MigrationPartMapping> partMappings = new ArrayList<MigrationPartMapping>();
+			partMappings.add(partMapping);
+			mapping.setPartMappings(partMappings);
+			ArrayList<TagTypeMigrationMapping> mappings = new ArrayList<TagTypeMigrationMapping>();
 
-		partMappings.add(partMapping);
-		mapping.setPartMappings(partMappings);
-		ArrayList<TagTypeMigrationMapping> mappings = new ArrayList<TagTypeMigrationMapping>();
+			mappings.add(mapping);
 
-		mappings.add(mapping);
+			// Create list of objects to apply mappings to
+			ArrayList<Integer> objectList = new ArrayList<Integer>();
 
-		// Create list of objects to apply mappings to
-		ArrayList<Integer> objectList = new ArrayList<Integer>();
+			objectList.add(VALID_PAGE_ID);
 
-		objectList.add(VALID_PAGE_ID);
+			// Create request object
+			TagTypeMigrationRequest request = new TagTypeMigrationRequest();
 
-		// Create request object
-		TagTypeMigrationRequest request = new TagTypeMigrationRequest();
+			request.setMappings(mappings);
+			request.setType(PAGE);
+			request.setObjectIds(objectList);
 
-		request.setMappings(mappings);
-		request.setType(PAGE);
-		request.setObjectIds(objectList);
+			MigrationResponse response = migrationResource.performTagTypeMigration(request);
 
-		MigrationResponse response = migrationResource.performTagTypeMigration(request);
-
-		assertNotNull("Check that the job id was returned", response.getJobId());
+			assertNotNull("Check that the job id was returned", response.getJobId());
+		}
 	}
-
 }

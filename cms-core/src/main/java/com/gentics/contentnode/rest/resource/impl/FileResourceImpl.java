@@ -395,7 +395,7 @@ public class FileResourceImpl implements FileResource {
 			// can change the filename to anything else, but we ignore this case here.
 			String lockKey = FileFactory.sanitizeName(filename);
 
-			FileUploadResponse response = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName,lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
+			FileUploadResponse response = (FileUploadResponse) Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName,lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
 			trx.success();
 			return response;
 		} finally {
@@ -456,7 +456,7 @@ public class FileResourceImpl implements FileResource {
 					}
 
 					Integer finalFileId = fileId;
-					FileUploadResponse response = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, sanitizedFilename), () -> {
+					FileUploadResponse response = (FileUploadResponse) Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, sanitizedFilename), () -> {
 						if (finalFileId == null) {
 							// Create a new file
 							return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap(), false);
@@ -726,7 +726,7 @@ public class FileResourceImpl implements FileResource {
 
 			String lockKey = FileFactory.sanitizeName(sentFilename);
 
-			fileUploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
+			fileUploadResponse = (FileUploadResponse) Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, 0));
 			trx.success();
 		} finally {
 			if (multiPart != null) {
@@ -767,7 +767,7 @@ public class FileResourceImpl implements FileResource {
 
 			String lockKey = FileFactory.sanitizeName(request.getName());
 
-			FileUploadResponse uploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
+			GenericResponse genericResponse = Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
 				try (ChannelTrx ctrx = new ChannelTrx(nodeId)) {
 					AtomicReference<String> mediaType = new AtomicReference<>(detectedMimeType);
 					AtomicReference<java.io.File> tmpFile = new AtomicReference<>();
@@ -812,7 +812,13 @@ public class FileResourceImpl implements FileResource {
 				}
 			});
 			trx.success();
-			return uploadResponse;
+			if (genericResponse instanceof FileUploadResponse fileUploadResponse) {
+				return fileUploadResponse;
+			} else {
+				FileUploadResponse fileUploadResponse = new FileUploadResponse(null, genericResponse.getResponseInfo(), false);
+				fileUploadResponse.setMessages(genericResponse.getMessages());
+				return fileUploadResponse;
+			}
 		} catch (IOException e) {
 			throw new NodeException(e);
 		}
@@ -1368,7 +1374,7 @@ public class FileResourceImpl implements FileResource {
 				? FileFactory.sanitizeName(request.getNewFilename())
 				: FileFactory.sanitizeName(request.getFile().getName());
 
-			FileUploadResponse uploadResponse = (FileUploadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleFileCopyRequest(request));
+			FileUploadResponse uploadResponse = (FileUploadResponse) Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleFileCopyRequest(request));
 			trx.success();
 			return uploadResponse;
 		}
@@ -1408,7 +1414,7 @@ public class FileResourceImpl implements FileResource {
 			for (String id : request.getIds()) {
 				File toMove = getFile(id, false);
 				String lockKey = FileFactory.sanitizeName(toMove.getName());
-				GenericResponse response = Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
+				GenericResponse response = Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> {
 					OpResult result = toMove.move(target, ObjectTransformer.getInt(request.getNodeId(), 0));
 
 					if (result.getStatus() == OpResult.Status.OK) {
@@ -1532,7 +1538,7 @@ public class FileResourceImpl implements FileResource {
 			GenericResponse response;
 			if (!ObjectTransformer.isEmpty(restFile.getName())) {
 				String lockKey = FileFactory.sanitizeName(restFile.getName());
-				response = Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), save);
+				response = Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), save);
 			} else {
 				try {
 					response = save.call();
@@ -1574,7 +1580,7 @@ public class FileResourceImpl implements FileResource {
 				metaData.setFilename(sentFilename);
 
 				String lockKey = FileFactory.sanitizeName(sentFilename);
-				response = Operator.executeLocked("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, id));
+				response = Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, id));
 			} else {
 				response = handleMultiPartRequest(multiPart, metaData, id);
 			}
@@ -1619,7 +1625,7 @@ public class FileResourceImpl implements FileResource {
 			}
 
 			final int fileId = file.getId();
-			GenericResponse response = Operator.executeLocked(new CNI18nString("file.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLockedRethrowing(new CNI18nString("file.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {

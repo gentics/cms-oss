@@ -25,6 +25,7 @@ public class PageUsageSandboxTest extends AbstractPageDirtingTest {
 	@Test
 	public void testTotalCount() throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
+		t.commit(false);
 
 		Page page = t.getObject(Page.class, PAGE_ID, true);
 		TotalUsageResponse response = getPageResource().getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode().getId());
@@ -35,6 +36,7 @@ public class PageUsageSandboxTest extends AbstractPageDirtingTest {
 		Page pageVariant = page.createVariant();
 		pageVariant.setFilename("someExtra.html");
 		pageVariant.save();
+		t.commit(false);
 
 		response = getPageResource().getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode
 				().getId());

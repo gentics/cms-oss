@@ -24,6 +24,19 @@ public class DBSessionClosure implements AutoCloseable {
 	protected DBSession session;
 
 	/**
+	 * Create a dummy session for the given user
+	 * @param userId user ID
+	 * @return dummy session
+	 * @throws NodeException
+	 */
+	public static DBSession createSession(int userId) throws NodeException {
+		return supply(t -> {
+			SystemUser user = t.getObject(SystemUser.class, userId);
+			return new DBSession(user, "localhost", "JUnit Test", DBSession.createSessionSecret(), 0);
+		});
+	}
+
+	/**
 	 * Create a new session for the given user and set it as current session into {@link ContentNodeHelper}
 	 * @param userId user ID
 	 * @throws NodeException
@@ -32,10 +45,7 @@ public class DBSessionClosure implements AutoCloseable {
 		previousSession = ContentNodeHelper.getSession();
 
 		// create a dummy session for the user
-		session = supply(t -> {
-			SystemUser user = t.getObject(SystemUser.class, userId);
-			return new DBSession(user, "localhost", "JUnit Test", DBSession.createSessionSecret(), 0);
-		});
+		session = createSession(userId);
 		ContentNodeHelper.setSession(session);
 	}
 

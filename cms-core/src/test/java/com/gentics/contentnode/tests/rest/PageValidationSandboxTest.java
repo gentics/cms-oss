@@ -2,6 +2,8 @@ package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -15,8 +17,6 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.Page;
@@ -26,10 +26,7 @@ import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.validation.util.ValidationUtils;
@@ -129,9 +126,13 @@ public class PageValidationSandboxTest {
 				newPageData.setLanguage("<script>");
 			}
 
-			GenericResponse genericResponse = savePageAndcheckResponse(testPage.getId(), newPageData, ResponseCode.FAILURE);
-			assertEquals("The script tag is not allowed", true,
-					genericResponse.getResponseInfo().getResponseMessage().contains("The script tag is not allowed"));
+			try {
+				savePageAndcheckResponse(testPage.getId(), newPageData, ResponseCode.FAILURE);
+				fail("The expected NodeException was not thrown");
+			} catch (NodeException e) {
+				// this is expected
+				assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
+			}
 		}
 	}
 
@@ -163,9 +164,13 @@ public class PageValidationSandboxTest {
 
 		pageSaveRequest.getPage().setTags(tags);
 
-		GenericResponse genericResponse = savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.FAILURE);
-		assertEquals("The script tag is not allowed", true,
-				genericResponse.getResponseInfo().getResponseMessage().contains("The script tag is not allowed"));
+		try {
+			savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.FAILURE);
+			fail("Exüected NodeException was not thrown");
+		} catch (NodeException e) {
+			// this is expected
+			assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
+		}
 	}
 
 	/**

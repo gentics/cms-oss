@@ -110,6 +110,8 @@ public class ClientTest {
 	 */
 	@BeforeClass
 	public static void setUpOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+
 		// load group
 		UserGroup nodeGroup = Trx.supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();

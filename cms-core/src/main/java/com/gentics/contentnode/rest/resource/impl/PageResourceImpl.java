@@ -1902,35 +1902,57 @@ public class PageResourceImpl implements PageResource {
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
 			@QueryParam("publish") @DefaultValue("false") boolean publish,
 			@QueryParam("version") Integer versionTimestamp) throws NodeException {
-		int version = ObjectTransformer.getInt(versionTimestamp, 0);
 		try (Trx trx = ContentNodeHelper.trx()) {
-			PageRenderResponse response = render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited,
-					publish, editable -> {
-						Transaction t = TransactionManager.getCurrentTransaction();
-						if (editable) {
-							Page page = getLockedPage(id, true, ObjectPermission.edit);
-							return page;
-						} else if (version > 0) {
-
-							Page page = getPage(id, true, ObjectPermission.view);
-							t.prepareVersionedObjects(Page.class, Page.class, Collections.singletonMap(page.getId(), version));
-							Page versionedPage = t.getObject(Page.class, page.getId(), version);
-
-							if (versionedPage == null) {
-								I18nString message = new CNI18nString("page.notfound");
-								message.setParameter("0", id.toString());
-								throw new EntityNotFoundException(message.toString());
-							} else {
-								return versionedPage;
-							}
-						} else {
-							Page page =  getPage(id, true, ObjectPermission.view);
-							return page;
-						}
-					});
+			PageRenderResponse response = internalRender(id, nodeId, template, editMode, proxyprefix, linksType, tagmap,
+					inherited, publish, versionTimestamp);
 			trx.success();
 			return response;
 		}
+	}
+
+	/**
+	 * Internal render method
+	 * @param id
+	 * @param nodeId
+	 * @param template
+	 * @param editMode
+	 * @param proxyprefix
+	 * @param linksType
+	 * @param tagmap
+	 * @param inherited
+	 * @param publish
+	 * @param versionTimestamp
+	 * @return
+	 * @throws NodeException
+	 */
+	protected PageRenderResponse internalRender(String id, Integer nodeId, String template, boolean editMode,
+			String proxyprefix, LinksType linksType, boolean tagmap, boolean inherited, boolean publish,
+			Integer versionTimestamp) throws NodeException {
+		int version = ObjectTransformer.getInt(versionTimestamp, 0);
+		return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited, publish, editable -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			if (editable) {
+				Page page = getLockedPage(id, true, ObjectPermission.edit);
+				return page;
+			} else if (version > 0) {
+
+				Page page = getPage(id, true, ObjectPermission.view);
+				t.prepareVersionedObjects(Page.class, Page.class, Collections.singletonMap(page.getId(), version));
+				Page versionedPage = t.getObject(Page.class, page.getId(), version);
+
+				if (versionedPage == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				} else {
+					return versionedPage;
+				}
+			} else {
+				Page page = getPage(id, true, ObjectPermission.view);
+				return page;
+			}
+		});
+
 	}
 
 	@Override
@@ -2367,7 +2389,7 @@ public class PageResourceImpl implements PageResource {
 		Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 		// render the tag to collect all "embedded" tags
-		PageRenderResponse renderResponse = render(sourceId, null, "<node " + tagname + ">", true, null,
+		PageRenderResponse renderResponse = internalRender(sourceId, null, "<node " + tagname + ">", true, null,
 				LinksType.backend, false, false, false, 0);
 		if (ResponseCode.OK.equals(renderResponse.getResponseInfo()
 				.getResponseCode())) {

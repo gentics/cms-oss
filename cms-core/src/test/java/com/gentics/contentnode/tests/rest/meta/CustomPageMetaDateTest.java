@@ -3,7 +3,6 @@ package com.gentics.contentnode.tests.rest.meta;
 import static com.gentics.contentnode.events.DependencyManager.createDependency;
 import static com.gentics.contentnode.events.Events.UPDATE;
 import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.publish.PublishQueue.getDirtedObjectIds;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +16,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -30,6 +30,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 
 public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.Page, Page, PageCreateRequest> {
 
@@ -198,12 +199,11 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 		* @throws NodeException
 		*/
 	protected String render(int pageId, String property) throws NodeException {
-		try (Trx trx = new Trx(systemUser)) {
-				PageRenderResponse response = new PageResourceImpl().render(String.valueOf(pageId), 0, String.format("<node page.%s>", property), false, null,
-								LinksType.frontend, false, false, false, 0);
-				assertResponseCodeOk(response);
-				trx.success();
-				return response.getContent();
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			PageRenderResponse response = new PageResourceImpl().render(String.valueOf(pageId), 0, String.format("<node page.%s>", property), false, null,
+							LinksType.frontend, false, false, false, 0);
+			assertResponseCodeOk(response);
+			return response.getContent();
 		}
 	}
 
@@ -222,11 +222,13 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 
 		Page page = createMetaDated(createTime);
 
-		try (Trx trx = new Trx()) {
-			trx.at(publishTime);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(publishTime));
+
 			GenericResponse response = new PageResourceImpl().publish(String.valueOf(page.getId()), null, new PagePublishRequest());
 			assertResponseCodeOk(response);
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		try (Trx trx = new Trx()) {
@@ -236,18 +238,20 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 		}
 
 		updater.accept(page);
-		try (Trx trx = new Trx()) {
-			trx.at(updateTime);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 			GenericResponse response = new PageResourceImpl().save(String.valueOf(page.getId()), new PageSaveRequest(page));
 			assertResponseCodeOk(response);
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
-		try (Trx trx = new Trx()) {
-			trx.at(publishTime2);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(publishTime2));
 			GenericResponse response = new PageResourceImpl().publish(String.valueOf(page.getId()), null, new PagePublishRequest());
 			assertResponseCodeOk(response);
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		try {
@@ -272,8 +276,8 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 * @throws NodeException
 	 */
 	protected Page updatePage(int timestamp, int pageId, Consumer<PageSaveRequest> updater) throws NodeException {
-		try (Trx trx = new Trx()) {
-			trx.at(timestamp);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(timestamp));
 
 			Page update = new Page();
 			PageSaveRequest request = new PageSaveRequest(update);
@@ -283,7 +287,8 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 			GenericResponse response = new PageResourceImpl().save(String.valueOf(pageId), request);
 			assertResponseCodeOk(response);
 
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		return loadPage(pageId);
@@ -306,11 +311,9 @@ public class CustomPageMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 * @throws NodeException
 	 */
 	protected Page loadPage(String pageId) throws NodeException {
-		return supply(() -> {
-			PageLoadResponse response = new PageResourceImpl().load(pageId, false, false, false, false, false, false, false, false, false, false, 0, null);
-			assertResponseCodeOk(response);
-			return response.getPage();
-		});
+		PageLoadResponse response = new PageResourceImpl().load(pageId, false, false, false, false, false, false, false, false, false, false, 0, null);
+		assertResponseCodeOk(response);
+		return response.getPage();
 	}
 
 	@Override

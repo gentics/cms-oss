@@ -6,6 +6,7 @@
 package com.gentics.contentnode.etc;
 
 import java.util.Locale;
+import java.util.Optional;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Session;
@@ -68,6 +69,22 @@ public class ContentNodeHelper {
 	}
 
 	/**
+	 * Get the optional transaction timestamp
+	 * @return optional transaction timestamp
+	 */
+	public static Optional<Integer> getOptTrxTimestamp() {
+		return getSettings().getOptTrxTimestamp();
+	}
+
+	/**
+	 * Set the optional transaction timestamp
+	 * @param optTrxTimestamp optional transaction timestamp
+	 */
+	public static void setOptTrxTimestamp(Optional<Integer> optTrxTimestamp) {
+		getSettings().setOptTrxTimestamp(optTrxTimestamp);
+	}
+
+	/**
 	 * The language ID returned by {@link #getLanguageId()} isn't very useful
 	 * by itself, since it is merely a reference to a {@link UserLanguage}
 	 * instance.
@@ -94,6 +111,8 @@ public class ContentNodeHelper {
 
 		private Session session;
 
+		private Optional<Integer> optTrxTimestamp = Optional.empty();
+
 		/**
 		 * Get the current language id
 		 * @return current language id
@@ -119,6 +138,22 @@ public class ContentNodeHelper {
 			if (session != null) {
 				this.languageId = session.getLanguageId();
 			}
+		}
+
+		/**
+		 * Get the optional transaction timestamp
+		 * @return optional transaction timestamp
+		 */
+		public Optional<Integer> getOptTrxTimestamp() {
+			return optTrxTimestamp;
+		}
+
+		/**
+		 * Set the optional transaction timestamp
+		 * @param optTrxTimestamp optional transaction timestamp
+		 */
+		public void setOptTrxTimestamp(Optional<Integer> optTrxTimestamp) {
+			this.optTrxTimestamp = optTrxTimestamp;
 		}
 
 		/**
@@ -153,11 +188,14 @@ public class ContentNodeHelper {
 	 */
 	public static Trx trx() throws NodeException {
 		Session session = getSession();
+		Trx trx;
 		if (session != null) {
-			return new Trx(session, true);
+			trx = new Trx(session, true);
 		} else {
-			return new Trx();
+			trx = new Trx();
 		}
+		getOptTrxTimestamp().ifPresent(timestamp -> trx.at(timestamp));
+		return trx;
 	}
 
 	/**
@@ -167,10 +205,13 @@ public class ContentNodeHelper {
 	 * @throws NodeException
 	 */
 	public static Trx trx(Session session) throws NodeException {
+		Trx trx;
 		if (session != null) {
-			return new Trx(session, true);
+			trx = new Trx(session, true);
 		} else {
-			return new Trx();
+			trx = new Trx();
 		}
+		getOptTrxTimestamp().ifPresent(timestamp -> trx.at(timestamp));
+		return trx;
 	}
 }

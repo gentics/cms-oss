@@ -11,6 +11,7 @@ import java.util.Arrays;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -21,12 +22,14 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.i18n.CNI18nString;
@@ -43,6 +46,9 @@ public class FileUploadPermissionsTest {
 	private static Node nodeWithPerm;
 
 	private static Node nodeWithoutPerm;
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	/**
 	 * Setup test data
@@ -81,6 +87,7 @@ public class FileUploadPermissionsTest {
 	 */
 	@Test
 	public void testNoPermission() throws NodeException, ParseException, IOException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf den angegebenen Ordner.");
 		doUploadTest(nodeWithoutPerm, uploadResponse -> {
 			I18nString i18nMessage = new CNI18nString("folder.nopermission");
 			i18nMessage.setParameter("0", nodeWithoutPerm.getFolder().getId());

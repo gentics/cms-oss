@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
@@ -22,6 +22,7 @@ import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.ImageFile, Image, FileCreateRequest> {
@@ -36,11 +37,13 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	public Image createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
 		Image file = null;
 		GenericResponse response;
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(createTime);
+		int folderId = supply(() -> node.getFolder().getId());
+
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
 
 			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(node.getFolder().getId());
+			request.setFolderId(folderId);
 			request.setName(BinaryDataImageResource.ImageType.JPG.filename());
 			request.setSourceURL(appContext.getBaseUri() + "binary");
 			if (maybeInflater.isPresent()) {
@@ -49,14 +52,14 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 
 			response = ContentNodeRESTUtils.getFileResource().create(request);
 			assertResponseCodeOk(response);
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
-		try (Trx trx = new Trx(systemUser)) {
+
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
 			response = ContentNodeRESTUtils.getImageResource().load(String.valueOf(((FileUploadResponse) response).getFile().getId()), false, false, null, null);
 			assertResponseCodeOk(response);
 			file = ((ImageLoadResponse) response).getImage();
-
-			trx.success();
 		}
 
 		return file;
@@ -83,8 +86,8 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	@Override
 	public Image updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(updateTime);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 
 			Image update = new Image();
 			ImageSaveRequest request = new ImageSaveRequest();
@@ -96,7 +99,8 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 			GenericResponse response = new ImageResourceImpl().save(id, request);
 			assertResponseCodeOk(response);
 
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		return loadImage(String.valueOf(id));
@@ -109,13 +113,10 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	 * @throws NodeException
 	 */
 	protected Image loadImage(String pageId) throws NodeException {
-		return supply(() -> {
-			ImageLoadResponse response = ContentNodeRESTUtils.getImageResource().load(pageId, false, false, 0, null);
-			assertResponseCodeOk(response);
-			return response.getImage();
-		});
+		ImageLoadResponse response = ContentNodeRESTUtils.getImageResource().load(pageId, false, false, 0, null);
+		assertResponseCodeOk(response);
+		return response.getImage();
 	}
-
 
 	@Override
 	protected void updateName(FileCreateRequest model, String name) {

@@ -30,6 +30,7 @@ import org.junit.Test;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -49,6 +50,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -308,13 +310,13 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 			});
 		}, overviewPage.getId());
 
-		String renderedOverview = execute(systemUser, id -> {
-			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(overviewPage.getId()), null, "<node " + tagName.get() + ">", false, null,
 					LinksType.frontend, false, false, false, 0);
 			assertResponseCodeOk(response);
-			return response.getContent();
-		}, overviewPage.getId());
-		assertThat(renderedOverview).as("Rendered Overview").isEqualTo(expected);
+			String renderedOverview = response.getContent();
+			assertThat(renderedOverview).as("Rendered Overview").isEqualTo(expected);
+		}
 	}
 
 	/**
@@ -327,11 +329,13 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 	protected Page createPage(int timestamp, Consumer<PageCreateRequest> creator) throws NodeException {
 		Page page = null;
 
-		try (Trx trx = new Trx()) {
-			trx.at(timestamp);
+		int folderId = supply(() -> node.getFolder().getId());
+
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(timestamp));
 
 			PageCreateRequest request = new PageCreateRequest();
-			request.setFolderId(String.valueOf(node.getFolder().getId()));
+			request.setFolderId(String.valueOf(folderId));
 			request.setTemplateId(template.getId());
 
 			if (creator != null) {
@@ -342,7 +346,8 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 			assertResponseCodeOk(response);
 			page = response.getPage();
 
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		return page;

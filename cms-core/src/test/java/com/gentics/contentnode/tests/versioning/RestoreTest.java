@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -99,12 +101,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
 			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
-		});
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -151,12 +153,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
 			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
-		});
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -205,12 +207,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
 			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
-		});
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();

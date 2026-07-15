@@ -1698,7 +1698,7 @@ public class PageResourceImpl implements PageResource {
 				description = new CNI18nString("pages.delete.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
@@ -1785,7 +1785,7 @@ public class PageResourceImpl implements PageResource {
 				description = new CNI18nString("pages.restore.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest.page;
 
+import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
@@ -30,6 +31,7 @@ import com.gentics.contentnode.rest.model.response.LegacyPageListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -77,6 +79,11 @@ public class PublishQueueTest {
 		// create a page in the queue
 		try (Trx trx = new Trx(null, editorUser.getId())) {
 			queuedPage = createPage(folder, template, "In Queue");
+			trx.success();
+		}
+		consume(Page::unlock, queuedPage);
+
+		try (DBSessionClosure ses = new DBSessionClosure(editorUser.getId())) {
 			getPageResource().publish(queuedPage.getId().toString(), null, new PagePublishRequest());
 		}
 
@@ -90,7 +97,7 @@ public class PublishQueueTest {
 	 */
 	@Test
 	public void testQueue() throws NodeException {
-		try (Trx trx = new Trx(null, publisherUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(publisherUser.getId())) {
 			PageResourceImpl res = new PageResourceImpl();
 			LegacyPageListResponse response = res.pubqueue(0, -1, null, null, null);
 			assertThat(response.getResponseInfo().getResponseCode()).as("Response Code").isEqualTo(ResponseCode.OK);
@@ -104,7 +111,7 @@ public class PublishQueueTest {
 	 */
 	@Test
 	public void testQueueNoPermission() throws NodeException {
-		try (Trx trx = new Trx(null, editorUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(editorUser.getId())) {
 			PageResourceImpl res = new PageResourceImpl();
 			LegacyPageListResponse response = res.pubqueue(0, -1, null, null, null);
 			assertThat(response.getResponseInfo().getResponseCode()).as("Response Code").isEqualTo(ResponseCode.OK);

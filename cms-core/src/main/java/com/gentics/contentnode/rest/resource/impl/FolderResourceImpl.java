@@ -2424,7 +2424,7 @@ public class FolderResourceImpl implements FolderResource {
 				description = new CNI18nString("folders.delete.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -2491,7 +2491,7 @@ public class FolderResourceImpl implements FolderResource {
 				description = new CNI18nString("folders.restore.wastebin");
 				description.setParameter("0", ids.size());
 			}
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {

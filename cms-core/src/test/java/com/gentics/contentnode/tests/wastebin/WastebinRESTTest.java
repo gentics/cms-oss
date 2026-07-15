@@ -1,9 +1,26 @@
 package com.gentics.contentnode.tests.wastebin;
 
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.object.File;
@@ -43,30 +60,16 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 /**
  * Test cases for getting objects in the wastebin via the REST API
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = Feature.WASTEBIN)
 public class WastebinRESTTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -118,6 +121,10 @@ public class WastebinRESTTest {
 
 	private boolean useLegacyEndpoint;
 
+	private static Integer permUserId;
+
+	private static Integer noPermUserId;
+
 	/**
 	 * Get the test parameters
 	 * @return collection of test parameter sets
@@ -141,76 +148,85 @@ public class WastebinRESTTest {
 	 */
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-		prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), true);
-		node = ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.NONE);
-		t.commit(false);
+		testContext.getContext().getTransaction().commit();
+		node = supply(() -> ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.NONE));
 
 		// create two groups with users
-		UserGroup nodeGroup = t.getObject(UserGroup.class, 2);
-		UserGroup groupWithPermission = Creator.createUsergroup("With Wastebin Permission", "", nodeGroup);
-		Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission));
-		UserGroup groupWithoutPermission = Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup);
-		Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission));
+		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, 2));
+		UserGroup groupWithPermission = supply(() -> Creator.createUsergroup("With Wastebin Permission", "", nodeGroup));
+		permUserId = supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission)).getId());
+		UserGroup groupWithoutPermission = supply(() -> Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup));
+		noPermUserId = supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission)).getId());
 
-		// set permissions
-		PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithPermission), new Permission(PermHandler.PERM_VIEW,
-				PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_NODE_WASTEBIN).toString());
-		PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithoutPermission), new Permission(PermHandler.PERM_VIEW,
-				PermHandler.PERM_PAGE_VIEW).toString());
-		t.commit(false);
+		operate(() -> {
+			// set permissions
+			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithPermission), new Permission(PermHandler.PERM_VIEW,
+					PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_NODE_WASTEBIN).toString());
+			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithoutPermission), new Permission(PermHandler.PERM_VIEW,
+					PermHandler.PERM_PAGE_VIEW).toString());
+		});
 
 		// create folder structures
-		folder1 = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder 1");
-		folder11 = ContentNodeTestDataUtils.createFolder(folder1, "Folder 1.1");
-		folder12 = ContentNodeTestDataUtils.createFolder(folder1, "Folder 1.2");
-		folder2 = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder 2");
-		folder21 = ContentNodeTestDataUtils.createFolder(folder2, "Folder 2.1");
-		folder22 = ContentNodeTestDataUtils.createFolder(folder2, "Folder 2.2");
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			folder1 = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder 1");
+			folder11 = ContentNodeTestDataUtils.createFolder(folder1, "Folder 1.1");
+			folder12 = ContentNodeTestDataUtils.createFolder(folder1, "Folder 1.2");
+			folder2 = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder 2");
+			folder21 = ContentNodeTestDataUtils.createFolder(folder2, "Folder 2.1");
+			folder22 = ContentNodeTestDataUtils.createFolder(folder2, "Folder 2.2");
+			trx.success();
+		}
 
 		// create pages
-		Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Source", "Template");
-		page1 = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Page 1");
-		page2 = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Page 2");
-		page3 = ContentNodeTestDataUtils.createPage(folder1, template, "Page 3");
-		page4 = ContentNodeTestDataUtils.createPage(folder2, template, "Page 4");
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Source", "Template");
+			page1 = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Page 1");
+			page2 = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Page 2");
+			page3 = ContentNodeTestDataUtils.createPage(folder1, template, "Page 3");
+			page4 = ContentNodeTestDataUtils.createPage(folder2, template, "Page 4");
+			trx.success();
+		}
 
 		// create files
-		file1 = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile1.txt", "Contents".getBytes());
-		file2 = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile2.txt", "Contents".getBytes());
-		file3 = ContentNodeTestDataUtils.createFile(folder1, "testfile3.txt", "Contents".getBytes());
-		file4 = ContentNodeTestDataUtils.createFile(folder2, "testfile4.txt", "Contents".getBytes());
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			file1 = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile1.txt", "Contents".getBytes());
+			file2 = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile2.txt", "Contents".getBytes());
+			file3 = ContentNodeTestDataUtils.createFile(folder1, "testfile3.txt", "Contents".getBytes());
+			file4 = ContentNodeTestDataUtils.createFile(folder2, "testfile4.txt", "Contents".getBytes());
+			trx.success();
+		}
 
 		// create images
-		image1 = ContentNodeTestDataUtils.createFile(node.getFolder(), "blume1.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
-		image2 = ContentNodeTestDataUtils.createFile(node.getFolder(), "blume2.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
-		image3 = ContentNodeTestDataUtils.createFile(folder1, "blume3.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
-		image4 = ContentNodeTestDataUtils.createFile(folder2, "blume4.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			image1 = ContentNodeTestDataUtils.createFile(node.getFolder(), "blume1.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
+			image2 = ContentNodeTestDataUtils.createFile(node.getFolder(), "blume2.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
+			image3 = ContentNodeTestDataUtils.createFile(folder1, "blume3.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
+			image4 = ContentNodeTestDataUtils.createFile(folder2, "blume4.jpg", GenericTestUtils.getPictureResource("blume.jpg"), null);
+			trx.success();
+		}
 
 		// delete data
-		folder1.delete();
-		page1.delete();
-		file1.delete();
-		image1.delete();
-		t.commit(false);
+		operate(() -> {
+			folder1.delete();
+			page1.delete();
+			file1.delete();
+			image1.delete();
+		});
 
-		// reload objects, so that they get their deleted status set
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			folder1 = t.getObject(folder1);
-			folder11 = t.getObject(folder11);
-			folder12 = t.getObject(folder12);
-			page1 = t.getObject(page1);
-			page3 = t.getObject(page3);
-			file1 = t.getObject(file1);
-			file3 = t.getObject(file3);
-			image1 = t.getObject(image1);
-			image3 = t.getObject(image3);
-		}
+		operate(t -> {
+			// reload objects, so that they get their deleted status set
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				folder1 = t.getObject(folder1);
+				folder11 = t.getObject(folder11);
+				folder12 = t.getObject(folder12);
+				page1 = t.getObject(page1);
+				page3 = t.getObject(page3);
+				file1 = t.getObject(file1);
+				file3 = t.getObject(file3);
+				image1 = t.getObject(image1);
+				image3 = t.getObject(image3);
+			}
+		});
 	}
 
 	/**
@@ -222,15 +238,6 @@ public class WastebinRESTTest {
 		this.wastebin = wastebin;
 		this.wastebinPermission = wastebinPermission;
 		this.useLegacyEndpoint = useLegacyEndpoint;
-	}
-
-	@Before
-	public void setup() throws Exception {
-		if (wastebinPermission) {
-			testContext.getContext().login("perm", "perm");
-		} else {
-			testContext.getContext().login("noperm", "noperm");
-		}
 	}
 
 	/**
@@ -393,37 +400,40 @@ public class WastebinRESTTest {
 	 * @throws Exception
 	 */
 	protected List<? extends ContentNodeItem> getPages(boolean recursive, boolean wastebin, boolean useLegacyEndpoint) throws Exception {
-		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(node.getFolder().getId().toString()).setRecursive(recursive);
+		String folderId = supply(() -> node.getFolder().getId().toString());
+		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		WastebinParameterBean wastebinParams = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 		PageListParameterBean pageListParams = new PageListParameterBean();
 
-		if (useLegacyEndpoint) {
-			LegacyPageListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getPages(
-				inFolder.folderId,
+		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+			if (useLegacyEndpoint) {
+				LegacyPageListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getPages(
+						inFolder.folderId,
+						inFolder,
+						pageListParams,
+						new LegacyFilterParameterBean(),
+						new LegacySortParameterBean(),
+						new LegacyPagingParameterBean(),
+						new PublishableParameterBean(),
+						wastebinParams);
+
+				ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+
+				return legacyResponse.getPages();
+			}
+
+			PageListResponse response = ContentNodeRESTUtils.getPageResource().list(
 				inFolder,
 				pageListParams,
-				new LegacyFilterParameterBean(),
-				new LegacySortParameterBean(),
-				new LegacyPagingParameterBean(),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
 				new PublishableParameterBean(),
 				wastebinParams);
 
-			ContentNodeRESTUtils.assertResponseOK(legacyResponse);
-
-			return legacyResponse.getPages();
+			ContentNodeRESTUtils.assertResponseOK(response);
+			return response.getItems();
 		}
-
-		PageListResponse response = ContentNodeRESTUtils.getPageResource().list(
-			inFolder,
-			pageListParams,
-			new FilterParameterBean(),
-			new SortParameterBean(),
-			new PagingParameterBean(),
-			new PublishableParameterBean(),
-			wastebinParams);
-
-		ContentNodeRESTUtils.assertResponseOK(response);
-		return response.getItems();
 	}
 
 	/**
@@ -436,54 +446,57 @@ public class WastebinRESTTest {
 	 * @throws Exception
 	 */
 	protected List<? extends ContentNodeItem> getFolders(boolean recursive, boolean wastebin, boolean tree, boolean useLegacyEndpoint) throws Exception {
-		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(node.getFolder().getId().toString()).setRecursive(recursive);
+		String folderId = supply(() -> node.getFolder().getId().toString());
+		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		FolderListParameterBean folderListParams = new FolderListParameterBean().setTree(tree);
 		LegacySortParameterBean sort = new LegacySortParameterBean().setSortBy("asc");
 		WastebinParameterBean wastebinParams = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 		List<com.gentics.contentnode.rest.model.Folder> responseFolders;
 
-		if (useLegacyEndpoint) {
-			LegacyFolderListResponse response = ContentNodeRESTUtils.getFolderResource().getFolders(
-				inFolder.folderId,
-				folderListParams.recursiveIds,
-				folderListParams.addPrivileges,
-				inFolder,
-				folderListParams,
-				new LegacyFilterParameterBean(),
-				sort,
-				new LegacyPagingParameterBean(),
-				new EditableParameterBean(),
-				wastebinParams);
+		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+			if (useLegacyEndpoint) {
+				LegacyFolderListResponse response = ContentNodeRESTUtils.getFolderResource().getFolders(
+					inFolder.folderId,
+					folderListParams.recursiveIds,
+					folderListParams.addPrivileges,
+					inFolder,
+					folderListParams,
+					new LegacyFilterParameterBean(),
+					sort,
+					new LegacyPagingParameterBean(),
+					new EditableParameterBean(),
+					wastebinParams);
 
-			ContentNodeRESTUtils.assertResponseOK(response);
+				ContentNodeRESTUtils.assertResponseOK(response);
 
-			responseFolders = response.getFolders();
-		} else {
-			FolderListResponse response = ContentNodeRESTUtils.getFolderResource().list(
-				inFolder,
-				folderListParams,
-				new FilterParameterBean(),
-				sort.toSortParameterBean(),
-				new PagingParameterBean(),
-				new EditableParameterBean(),
-				wastebinParams);
+				responseFolders = response.getFolders();
+			} else {
+				FolderListResponse response = ContentNodeRESTUtils.getFolderResource().list(
+					inFolder,
+					folderListParams,
+					new FilterParameterBean(),
+					sort.toSortParameterBean(),
+					new PagingParameterBean(),
+					new EditableParameterBean(),
+					wastebinParams);
 
-			ContentNodeRESTUtils.assertResponseOK(response);
+				ContentNodeRESTUtils.assertResponseOK(response);
 
-			responseFolders = response.getItems();
-		}
-
-		if (tree) {
-			List<com.gentics.contentnode.rest.model.Folder> items = new ArrayList<>();
-			List<com.gentics.contentnode.rest.model.Folder> folders = new ArrayList<>(responseFolders);
-			while (!folders.isEmpty()) {
-				com.gentics.contentnode.rest.model.Folder folder = folders.remove(0);
-				items.add(folder);
-				folders.addAll(folder.getSubfolders());
+				responseFolders = response.getItems();
 			}
-			return items;
-		} else {
-			return responseFolders;
+
+			if (tree) {
+				List<com.gentics.contentnode.rest.model.Folder> items = new ArrayList<>();
+				List<com.gentics.contentnode.rest.model.Folder> folders = new ArrayList<>(responseFolders);
+				while (!folders.isEmpty()) {
+					com.gentics.contentnode.rest.model.Folder folder = folders.remove(0);
+					items.add(folder);
+					folders.addAll(folder.getSubfolders());
+				}
+				return items;
+			} else {
+				return responseFolders;
+			}
 		}
 	}
 
@@ -496,37 +509,40 @@ public class WastebinRESTTest {
 	 * @throws Exception
 	 */
 	protected List<? extends ContentNodeItem> getFiles(boolean recursive, boolean wastebin, boolean useLegacyEndpoint) throws Exception {
-		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(node.getFolder().getId().toString()).setRecursive(recursive);
+		String folderId = supply(() -> node.getFolder().getId().toString());
+		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 
-		if (useLegacyEndpoint) {
-			LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getFiles(
-				inFolder.folderId,
+		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+			if (useLegacyEndpoint) {
+				LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getFiles(
+					inFolder.folderId,
+					inFolder,
+					new FileListParameterBean(),
+					new LegacyFilterParameterBean(),
+					new LegacySortParameterBean(),
+					new LegacyPagingParameterBean(),
+					new EditableParameterBean(),
+					wastebinParameterBean);
+
+					ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+
+					return legacyResponse.getFiles();
+			}
+
+			FileListResponse response = ContentNodeRESTUtils.getFileResource().list(
 				inFolder,
 				new FileListParameterBean(),
-				new LegacyFilterParameterBean(),
-				new LegacySortParameterBean(),
-				new LegacyPagingParameterBean(),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
 				new EditableParameterBean(),
 				wastebinParameterBean);
 
-				ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+			ContentNodeRESTUtils.assertResponseOK(response);
 
-				return legacyResponse.getFiles();
+			return response.getItems();
 		}
-
-		FileListResponse response = ContentNodeRESTUtils.getFileResource().list(
-			inFolder,
-			new FileListParameterBean(),
-			new FilterParameterBean(),
-			new SortParameterBean(),
-			new PagingParameterBean(),
-			new EditableParameterBean(),
-			wastebinParameterBean);
-
-		ContentNodeRESTUtils.assertResponseOK(response);
-
-		return response.getItems();
 	}
 
 	/**
@@ -538,37 +554,40 @@ public class WastebinRESTTest {
 	 * @throws Exception
 	 */
 	protected List<? extends ContentNodeItem> getImages(boolean recursive, boolean wastebin, boolean useLegacyEndpoint) throws Exception {
-		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(node.getFolder().getId().toString()).setRecursive(recursive);
+		String folderId = supply(() -> node.getFolder().getId().toString());
+		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 
-		if (useLegacyEndpoint) {
-			LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getImages(
-				inFolder.folderId,
+		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+			if (useLegacyEndpoint) {
+				LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getImages(
+					inFolder.folderId,
+					inFolder,
+					new FileListParameterBean(),
+					new LegacyFilterParameterBean(),
+					new LegacySortParameterBean(),
+					new LegacyPagingParameterBean(),
+					new EditableParameterBean(),
+					wastebinParameterBean);
+
+				ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+
+				return legacyResponse.getFiles();
+			}
+
+			ImageListResponse response = ContentNodeRESTUtils.getImageResource().list(
 				inFolder,
 				new FileListParameterBean(),
-				new LegacyFilterParameterBean(),
-				new LegacySortParameterBean(),
-				new LegacyPagingParameterBean(),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
 				new EditableParameterBean(),
 				wastebinParameterBean);
 
-			ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+			ContentNodeRESTUtils.assertResponseOK(response);
 
-			return legacyResponse.getFiles();
+			return response.getItems();
 		}
-
-		ImageListResponse response = ContentNodeRESTUtils.getImageResource().list(
-			inFolder,
-			new FileListParameterBean(),
-			new FilterParameterBean(),
-			new SortParameterBean(),
-			new PagingParameterBean(),
-			new EditableParameterBean(),
-			wastebinParameterBean);
-
-		ContentNodeRESTUtils.assertResponseOK(response);
-
-		return response.getItems();
 	}
 
 	/**
@@ -610,16 +629,18 @@ public class WastebinRESTTest {
 	 */
 	protected FolderObjectCountResponse getObjectCounts() throws Exception {
 		FolderResource res = ContentNodeRESTUtils.getFolderResource();
-		Integer folderId = node.getFolder().getId();
+		Integer folderId = supply(() -> node.getFolder().getId());
 
-		FolderObjectCountResponse response = res.getObjectCounts(
-			folderId,
-			null,
-			null,
-			false,
-			new InFolderParameterBean().setFolderId(String.valueOf(folderId)),
-			new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude));
-		ContentNodeRESTUtils.assertResponseOK(response);
-		return response;
+		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+			FolderObjectCountResponse response = res.getObjectCounts(
+				folderId,
+				null,
+				null,
+				false,
+				new InFolderParameterBean().setFolderId(String.valueOf(folderId)),
+				new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude));
+			ContentNodeRESTUtils.assertResponseOK(response);
+			return response;
+		}
 	}
 }

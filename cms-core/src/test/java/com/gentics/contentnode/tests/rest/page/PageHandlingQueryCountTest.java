@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.Strings;
 import org.junit.Before;
@@ -28,7 +29,10 @@ import org.junit.runners.Parameterized.Parameters;
 import com.gentics.api.lib.cache.PortalCacheException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Operator;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.init.SyncDefaultPackage;
 import com.gentics.contentnode.object.Node;
@@ -156,8 +160,8 @@ public class PageHandlingQueryCountTest {
 
 	@Test
 	public void testCreate() throws NodeException {
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(140); Trx trx = trxAt(1000)) {
-			createPage();
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(140)) {
+			at(1000, () -> createPage());
 		}
 	}
 
@@ -171,158 +175,103 @@ public class PageHandlingQueryCountTest {
 		// batched in groups of 100 inserts each
 		int allowed = 170 + numTags * 16 / 100 + numTags * 2 / 100;
 
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
+		Page page = at(1000, () -> createPage());
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(2000)) {
-			createTags(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed)) {
+			at(2000, () -> createTags(page));
 		}
 	}
 
 	@Test
 	public void testUpdateTags() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		// number of allowed statements for updating values depends on the number of tags (values)
 		// base is 180 statements
 		// each updated value requires a single update statement
 		int allowed = 180 + numTags;
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(3000)) {
-			updateTags(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed)) {
+			at(3000, () -> updateTags(page));
 		}
 	}
 
 	@Test
 	public void testPutIntoWastebin() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = trxAt(3000)) {
-			putIntoWastebin(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100)) {
+			at(3000, () -> putIntoWastebin(page));
 		}
 	}
 
 	@Test
 	public void testRemoveFromWastebin() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
-		operate(t -> {
-			t.setTimestamp(3000 * 1000);
-			putIntoWastebin(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
+		at(3000, () -> putIntoWastebin(page));
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100); Trx trx = trxAt(4000)) {
-			removeFromWastebin(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(100)) {
+			at(4000, () -> removeFromWastebin(page));
 		}
 	}
 
 	@Test
 	public void testRestoreFromWastebin() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
-		operate(t -> {
-			t.setTimestamp(3000 * 1000);
-			putIntoWastebin(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
+		at(3000, () -> putIntoWastebin(page));
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(4000)) {
-			restoreFromWastebin(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150)) {
+			at(4000, () -> restoreFromWastebin(page));
 		}
 	}
 
 	@Test
 	public void testLoadPreview() throws NodeException, PortalCacheException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50); Trx trx = trxAt(3000)) {
-			load(page, false);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(50)) {
+			at(3000, () -> load(page, false));
 		}
 	}
 
 	@Test
 	public void testLoadEdit() throws NodeException, PortalCacheException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150); Trx trx = trxAt(3000)) {
-			load(page, true);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(150)) {
+			at(3000, () -> load(page, true));
 		}
 	}
 
 	@Test
 	public void testCancelNoChanges() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		operate(() -> load(page, true));
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(120); Trx trx = trxAt(3000)) {
-			GenericResponse response = getPageResource().cancel(page.getId(), null);
-			assertResponseCodeOk(response);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(120)) {
+			at(3000, () -> {
+				GenericResponse response = getPageResource().cancel(page.getId(), null);
+				assertResponseCodeOk(response);
+			});
 		}
 	}
 
 	@Test
 	public void testRenderPreview() throws NodeException, PortalCacheException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
@@ -333,14 +282,8 @@ public class PageHandlingQueryCountTest {
 
 	@Test
 	public void testRenderEdit() throws NodeException, PortalCacheException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
@@ -351,18 +294,9 @@ public class PageHandlingQueryCountTest {
 
 	@Test
 	public void testRenderVersion() throws NodeException, PortalCacheException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
-		operate(t -> {
-			t.setTimestamp(3000 * 1000);
-			updateTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
+		at(3000, () -> updateTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
@@ -373,23 +307,14 @@ public class PageHandlingQueryCountTest {
 
 	@Test
 	public void testRestoreVersion() throws NodeException {
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
-		operate(t -> {
-			t.setTimestamp(3000 * 1000);
-			updateTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
+		at(3000, () -> updateTags(page));
 
 		int allowed = 200 + numTags * 8 / 100;
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(4000)) {
-			restoreVersion(page, 2000);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed)) {
+			at(4000, () -> restoreVersion(page, 2000));
 		}
 	}
 
@@ -403,24 +328,14 @@ public class PageHandlingQueryCountTest {
 		// batched in groups of 100 inserts each
 		int allowed = 190 + numTags * 16 / 100 + numTags * 2 / 100;
 
-		Page page = supply(t -> {
-			t.setTimestamp(1000 * 1000);
-			return createPage();
-		});
-		operate(t -> {
-			t.setTimestamp(2000 * 1000);
-			createTags(page);
-		});
+		Page page = at(1000, () -> createPage());
+		at(2000, () -> createTags(page));
 
 		ContentNodeTestUtils.clearNodeObjectCache();
 
-		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed); Trx trx = trxAt(3000)) {
-			copy(page);
+		try (QueryCountAsserter asserter = QueryCountAsserter.allow(allowed)) {
+			at(3000, () -> copy(page));
 		}
-	}
-
-	protected Trx trxAt(int timestamp) throws NodeException {
-		return trxAt(null, timestamp);
 	}
 
 	protected Trx trxAt(SystemUser user, int timestamp) throws NodeException {
@@ -534,4 +449,24 @@ public class PageHandlingQueryCountTest {
 		PageCopyResponse response = getPageResource().copy(request, 0);
 		assertResponseCodeOk(response);
 	}
+
+	protected void at(int timestamp, Operator operator) throws NodeException {
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(timestamp));
+			operator.operate();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
+	}
+
+	protected <T> T at(int timestamp, Supplier<T> supplier) throws NodeException {
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(timestamp));
+			return supplier.supply();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
+
+	}
+
 }

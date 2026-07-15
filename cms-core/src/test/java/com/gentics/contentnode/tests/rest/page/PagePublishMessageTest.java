@@ -27,9 +27,11 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -59,6 +61,7 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
@@ -83,6 +86,9 @@ public class PagePublishMessageTest {
 
 	@ClassRule
 	public static MeshContext mesh = new MeshContext();
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	private static Message PAGE_PUBLISHED_MESSAGE = new Message().setType(Type.SUCCESS)
 			.setMessage("Die Seite 'Test Page' wurde veröffentlicht.");
@@ -495,6 +501,7 @@ public class PagePublishMessageTest {
 			trx.success();
 		}
 
+		exceptionChecker.expect(ReadOnlyException.class, "The page 'Test Page' cannot be modified, because it is currently locked by another user.");
 		// publish test page
 		GenericResponse response = execute(p -> {
 			PagePublishRequest request = new PagePublishRequest();

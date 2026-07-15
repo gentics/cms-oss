@@ -1,6 +1,7 @@
 package com.gentics.contentnode.rest.util;
 
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -36,7 +37,7 @@ import de.jkeylockmanager.manager.ReturnValueLockCallback;
 /**
  * Implementation of a callable, that can be sent to the background
  */
-public class RestCallable implements Callable<GenericResponse> {
+public class RestCallable<T extends GenericResponse> implements Callable<T> {
 	/**
 	 * Instant message time
 	 */
@@ -80,7 +81,12 @@ public class RestCallable implements Callable<GenericResponse> {
 	/**
 	 * Wrapped callable
 	 */
-	protected Callable<GenericResponse> wrapped;
+	protected Callable<T> wrapped;
+
+	/**
+	 * Response transformer
+	 */
+	protected Function<GenericResponse, T> responseTransformer;
 
 	/**
 	 * optional lock
@@ -109,10 +115,11 @@ public class RestCallable implements Callable<GenericResponse> {
 	 *            job description
 	 * @param wrapped
 	 *            wrapped callable, containing the job code
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @throws NodeException
 	 */
-	public RestCallable(String description, Callable<GenericResponse> wrapped) throws NodeException {
-		this(description, null, wrapped);
+	public RestCallable(String description, Callable<T> wrapped, Function<GenericResponse, T> responseTransformer) throws NodeException {
+		this(description, null, wrapped, responseTransformer);
 	}
 
 	/**
@@ -123,12 +130,14 @@ public class RestCallable implements Callable<GenericResponse> {
 	 * @param lock lock (may be null for no locking)
 	 * @param wrapped
 	 *            wrapped callable, containing the job code
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @throws NodeException
 	 */
-	public RestCallable(String description, Lock lock, Callable<GenericResponse> wrapped) throws NodeException {
+	public RestCallable(String description, Lock lock, Callable<T> wrapped, Function<GenericResponse, T> responseTransformer) throws NodeException {
 		this.jobId = Operator.jobIdGenerator.getAndIncrement();
 		this.description = description;
 		this.wrapped = wrapped;
+		this.responseTransformer = responseTransformer;
 		this.lock = lock;
 
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -159,16 +168,16 @@ public class RestCallable implements Callable<GenericResponse> {
 	 * Get the wrapped callable
 	 * @return wrapped callable
 	 */
-	public Callable<GenericResponse> getWrapped() {
+	public Callable<T> getWrapped() {
 		return wrapped;
 	}
 
 	@Override
-	public GenericResponse call() throws Exception {
+	public T call() throws Exception {
 		if (lock != null) {
-			GenericResponse response = lockManager.executeLocked(lock, new ReturnValueLockCallback<GenericResponse>() {
+			T response = lockManager.executeLocked(lock, new ReturnValueLockCallback<T>() {
 				@Override
-				public GenericResponse doInLock() {
+				public T doInLock() {
 					try {
 						return execute();
 					} catch (Exception e) {
@@ -191,38 +200,38 @@ public class RestCallable implements Callable<GenericResponse> {
 	 * @return response
 	 * @throws Exception
 	 */
-	protected GenericResponse execute() throws Exception {
+	protected T execute() throws Exception {
 		ContentNodeHelper.setLanguageId(languageId);
 		try (Trx trx = new Trx(session, userId)) {
 			try {
 				Operator.jobIsStarting(this);
-				GenericResponse result = wrapped.call();
+				T result = wrapped.call();
 				trx.success();
 				return handleInQueue(result);
 			} catch (EntityNotFoundException e) {
 				if (throwNodeException) {
 					throw e;
 				}
-				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
-						new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage())));
+				return handleInQueue(responseTransformer.apply(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+						new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()))));
 			} catch (InsufficientPrivilegesException e) {
 				InsufficientPrivilegesMapper.log(e);
 				if (throwNodeException) {
 					throw e;
 				}
-				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
-						new ResponseInfo(ResponseCode.PERMISSION, e.getMessage())));
+				return handleInQueue(responseTransformer.apply(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+						new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()))));
 			} catch (ReadOnlyException e) {
 				if (throwNodeException) {
 					throw e;
 				}
-				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
-						new ResponseInfo(ResponseCode.FAILURE, e.getMessage())));
+				return handleInQueue(responseTransformer.apply(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+						new ResponseInfo(ResponseCode.FAILURE, e.getMessage()))));
 			} catch (RestMappedException e) {
 				if (throwNodeException) {
 					throw e;
 				}
-				return handleInQueue(e.getRestResponse());
+				return handleInQueue(responseTransformer.apply(e.getRestResponse()));
 			} finally {
 				Operator.jobFinished(this);
 			}
@@ -249,7 +258,7 @@ public class RestCallable implements Callable<GenericResponse> {
 	 *            response to handle
 	 * @throws NodeException
 	 */
-	protected void handleInBackground(final GenericResponse response) throws NodeException {
+	protected void handleInBackground(final T response) throws NodeException {
 		if (queueResult != null) {
 			queueResult.handleResponse(response);
 		} else if (userId != null) {

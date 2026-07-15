@@ -1663,7 +1663,7 @@ public class PageResourceImpl implements PageResource {
 							return new GenericResponse(new Message(Type.INFO, message.toString()),
 									new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
-					});
+					}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}
@@ -1750,7 +1750,7 @@ public class PageResourceImpl implements PageResource {
 								new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}
@@ -1838,7 +1838,7 @@ public class PageResourceImpl implements PageResource {
 								new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}
@@ -2699,9 +2699,9 @@ public class PageResourceImpl implements PageResource {
 			Page page = getPage(Integer.toString(id), true);
 			Integer lockKey = ObjectTransformer.getInteger(page.getContentsetId(), 0);
 
-			PageLoadResponse response = (PageLoadResponse) Operator.executeLocked("", 0, Operator.lock(LockType.contentSet, lockKey), () -> {
+			PageLoadResponse response = Operator.executeLocked("", 0, Operator.lock(LockType.contentSet, lockKey), () -> {
 				return translate(id, languageCode, locked, channelId, true);
-			});
+			}, r -> new PageLoadResponse(r));
 			trx.success();
 			return response;
 		}
@@ -3763,8 +3763,8 @@ public class PageResourceImpl implements PageResource {
 	public PageCopyResponse copy(final PageCopyRequest request,
 			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			GenericResponse response = Operator.execute(new CNI18nString("nodecopy_pages").toString(),
-					waitMs, new Callable<GenericResponse>() {
+			PageCopyResponse response = Operator.execute(new CNI18nString("nodecopy_pages").toString(),
+					waitMs, new Callable<>() {
 				@Override
 				public PageCopyResponse call() throws Exception {
 					Transaction t = TransactionManager.getCurrentTransaction();
@@ -3852,16 +3852,9 @@ public class PageResourceImpl implements PageResource {
 						return response;
 					}
 				}
-			});
+			}, r -> new PageCopyResponse(r));
 			trx.success();
-			if (response instanceof PageCopyResponse) {
-				return (PageCopyResponse) response;
-			} else {
-				PageCopyResponse pageCopyResponse = new PageCopyResponse();
-				pageCopyResponse.setResponseInfo(response.getResponseInfo());
-				pageCopyResponse.setMessages(response.getMessages());
-				return pageCopyResponse;
-			}
+			return response;
 		}
 	}
 
@@ -4073,7 +4066,7 @@ public class PageResourceImpl implements PageResource {
 				}
 
 				return new GenericResponse(null, ResponseInfo.ok(""));
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}

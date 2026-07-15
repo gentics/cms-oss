@@ -180,8 +180,8 @@ public class FolderResourceImpl implements FolderResource {
 	@Path("/create")
 	public FolderLoadResponse create(FolderCreateRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			FolderLoadResponse response = (FolderLoadResponse) Operator.executeLocked("", 0,
-					Operator.lock(LockType.motherId, request.getMotherId()), () -> doCreate(request));
+			FolderLoadResponse response = Operator.executeLocked("", 0,
+					Operator.lock(LockType.motherId, request.getMotherId()), () -> doCreate(request), r -> new FolderLoadResponse(r));
 			trx.success();
 			return response;
 		}
@@ -2322,7 +2322,7 @@ public class FolderResourceImpl implements FolderResource {
 							return new GenericResponse(new Message(Type.SUCCESS, message.toString()), new ResponseInfo(
 									ResponseCode.OK, "Folder " + id + " was successfully saved."));
 						}
-					});
+					}, Function.identity());
 				}
 			}
 
@@ -2389,7 +2389,7 @@ public class FolderResourceImpl implements FolderResource {
 							I18nString message = new CNI18nString("folder.delete.success");
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
-					});
+					}, Function.identity());
 
 			trx.success();
 			return response;
@@ -2458,7 +2458,7 @@ public class FolderResourceImpl implements FolderResource {
 						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}
@@ -2524,7 +2524,7 @@ public class FolderResourceImpl implements FolderResource {
 						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}

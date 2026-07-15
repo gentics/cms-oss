@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -237,7 +238,7 @@ public class PackageResourceImpl implements PackageResource {
 				return ListBuilder.from(dependencies, (x) -> x)
 						.page(paging)
 						.to(consistencyCheckResult);
-			});
+			}, Function.identity());
 		}
 	}
 
@@ -322,7 +323,7 @@ public class PackageResourceImpl implements PackageResource {
 						String.format("Package %s: cms -> fs", name));
 
 				return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
-			}, e -> new WebApplicationException(e.getLocalizedMessage()));
+			}, e -> new WebApplicationException(e.getLocalizedMessage()), Function.identity());
 		}
 	}
 
@@ -356,7 +357,7 @@ public class PackageResourceImpl implements PackageResource {
 						String.format("Package %s: fs -> cms", name));
 
 				return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
-			}, e -> new WebApplicationException(e.getLocalizedMessage()));
+			}, e -> new WebApplicationException(e.getLocalizedMessage()), Function.identity());
 		}
 	}
 

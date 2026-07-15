@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
@@ -22,6 +22,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.tests.rest.file.BinaryDataResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File, FileCreateRequest> {
@@ -35,8 +36,8 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(updateTime);
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 
 			File update = new File();
 			FileSaveRequest request = new FileSaveRequest();
@@ -47,8 +48,8 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 			maybeCustomEDate.ifPresent(edate -> request.getFile().setCustomEdate(edate));
 			GenericResponse response = new FileResourceImpl().save(id, request);
 			assertResponseCodeOk(response);
-
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		return loadFile(String.valueOf(id));
@@ -58,11 +59,13 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	public File createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
 		File file = null;
 
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(createTime);
+		int folderId = supply(() -> node.getFolder().getId());
+
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
 
 			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(node.getFolder().getId());
+			request.setFolderId(folderId);
 			request.setSourceURL(appContext.getBaseUri() + "binary");
 
 			if (maybeInflater.isPresent()) {
@@ -71,8 +74,8 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
 			assertResponseCodeOk(response);
 			file = response.getFile();
-
-			trx.success();
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 		}
 
 		return file;
@@ -103,11 +106,9 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 * @throws NodeException
 	 */
 	protected File loadFile(String pageId) throws NodeException {
-		return supply(() -> {
-			FileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(pageId, false, false, 0, null);
-			assertResponseCodeOk(response);
-			return response.getFile();
-		});
+		FileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(pageId, false, false, 0, null);
+		assertResponseCodeOk(response);
+		return response.getFile();
 	}
 
 	@Override

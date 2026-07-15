@@ -203,6 +203,7 @@ public class RestCallable<T extends GenericResponse> implements Callable<T> {
 	protected T execute() throws Exception {
 		ContentNodeHelper.setLanguageId(languageId);
 		try (Trx trx = new Trx(session, userId)) {
+			trx.getTransaction().setTimestamp(trxTimestamp);
 			try {
 				Operator.jobIsStarting(this);
 				T result = wrapped.call();

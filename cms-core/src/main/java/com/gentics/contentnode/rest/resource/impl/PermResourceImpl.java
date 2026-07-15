@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.function.Function;
 
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -195,7 +196,7 @@ public class PermResourceImpl implements PermResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, req);
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}
@@ -211,7 +212,7 @@ public class PermResourceImpl implements PermResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, objId, req);
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}

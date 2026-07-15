@@ -580,7 +580,6 @@ public class ImageResourceImpl implements ImageResource {
 	@Path("/save/{id}")
 	public GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Transaction t = trx.getTransaction();
 			// Get the image
 			com.gentics.contentnode.rest.model.Image restFile = request.getImage();
 
@@ -691,7 +690,7 @@ public class ImageResourceImpl implements ImageResource {
 			}
 
 			final int imageId = image.getId();
-			GenericResponse response = Operator.executeLocked(new CNI18nString("image.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLockedRethrowing(new CNI18nString("image.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
@@ -703,7 +702,7 @@ public class ImageResourceImpl implements ImageResource {
 							I18nString message = new CNI18nString("image.delete.success");
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
-					});
+					}, Function.identity());
 			trx.success();
 			return response;
 		}
@@ -737,7 +736,7 @@ public class ImageResourceImpl implements ImageResource {
 				description.setParameter("0", ids.size());
 			}
 
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -769,7 +768,7 @@ public class ImageResourceImpl implements ImageResource {
 						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}
@@ -803,7 +802,7 @@ public class ImageResourceImpl implements ImageResource {
 				description.setParameter("0", ids.size());
 			}
 
-			GenericResponse response = Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
@@ -837,7 +836,7 @@ public class ImageResourceImpl implements ImageResource {
 						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
 				}
-			});
+			}, Function.identity());
 			trx.success();
 			return response;
 		}

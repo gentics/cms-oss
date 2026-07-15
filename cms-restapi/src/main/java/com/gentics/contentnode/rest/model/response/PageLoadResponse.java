@@ -34,6 +34,14 @@ public class PageLoadResponse extends GenericResponse {
 	public PageLoadResponse() {}
 
 	/**
+	 * Create instance as copy
+	 * @param other other instance
+	 */
+	public PageLoadResponse(GenericResponse other) {
+		super(other);
+	}
+
+	/**
 	 * Creates a PageLoadResponse with the provided single message and ResponseInfo.
 	 * 
 	 * @param message The messages that should be displayed to the user

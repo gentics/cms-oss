@@ -1380,7 +1380,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, I18NHelper.get("rest.node.delete.success", nodeId)),
 						new ResponseInfo(ResponseCode.OK, "deleted node with id {" + node.getId() + "}"));
-			});
+			}, java.util.function.Function.identity());
 		}
 	}
 
@@ -2240,7 +2240,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, message), new ResponseInfo(ResponseCode.OK, ""));
-			});
+			}, java.util.function.Function.identity());
 		}
 	}
 }

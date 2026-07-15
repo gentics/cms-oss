@@ -780,7 +780,7 @@ public class GroupResourceImpl implements GroupResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, req);
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}
@@ -849,7 +849,7 @@ public class GroupResourceImpl implements GroupResource {
 
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, instanceId, req);
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}

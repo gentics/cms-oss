@@ -7,23 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -46,21 +30,21 @@ import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredPerm;
 import com.gentics.contentnode.rest.model.ContentRepositoryFragmentListResponse;
 import com.gentics.contentnode.rest.model.ContentRepositoryListResponse;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
-import com.gentics.contentnode.rest.model.perm.PermType;
-import com.gentics.contentnode.rest.model.request.MeshRolesRequest;
 import com.gentics.contentnode.rest.model.TagmapEntryConsistencyResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryInconsistencyModel;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
+import com.gentics.contentnode.rest.model.perm.PermType;
+import com.gentics.contentnode.rest.model.request.MeshRolesRequest;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryFragmentResponse;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.MeshRolesResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
@@ -79,6 +63,20 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.lib.i18n.CNI18nString;
 
 import io.reactivex.Flowable;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 @Produces({ MediaType.APPLICATION_JSON })
 @Consumes({ MediaType.APPLICATION_JSON })
@@ -480,8 +478,8 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 	protected ContentRepositoryResponse internalCheck(String id, boolean repair, long waitMs) throws NodeException {
 		CNI18nString description = new CNI18nString(repair ? "repair": "check");
 		try (Trx trx = ContentNodeHelper.trx()) {
-		// find the object
-		ContentRepository cr = MiscUtils.load(ContentRepository.class, id, ObjectPermission.edit);
+			// find the object
+			ContentRepository cr = MiscUtils.load(ContentRepository.class, id, ObjectPermission.edit);
 
 			// set the check status to "running"
 			DBUtils.update("UPDATE contentrepository SET checkstatus = ?, checkresult = ? WHERE id = ?",
@@ -491,25 +489,21 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			trx.success();
 		}
 
-		GenericResponse opResponse = null;
 		try (Trx trx = ContentNodeHelper.trx()) {
-			opResponse = Operator.executeLocked(description.toString(), waitMs, null, () -> {
-		// check structure
+			ContentRepositoryResponse contentRepositoryResponse = Operator.executeLocked(description.toString(), waitMs, null, () -> {
+				// check structure
 				MiscUtils.load(ContentRepository.class, id).checkStructure(repair);
-				return new GenericResponse(null, ResponseInfo.ok(repair ? "Successfully repaired ContentRepository" : "Successfully checked ContentRepository"));
-			});
-			trx.success();
-		}
 
-		try (Trx trx = ContentNodeHelper.trx()) {
-			ContentRepositoryResponse response = new ContentRepositoryResponse();
-			ContentRepository checkedCr = MiscUtils.load(ContentRepository.class, id);
-			response.setContentRepository(ContentRepository.TRANSFORM2REST.apply(checkedCr));
-			response.setMessages(opResponse.getMessages());
-			response.setResponseInfo(opResponse.getResponseInfo());
+				ContentRepositoryResponse response = new ContentRepositoryResponse();
+				ContentRepository checkedCr = MiscUtils.load(ContentRepository.class, id);
+				response.setContentRepository(ContentRepository.TRANSFORM2REST.apply(checkedCr));
+				response.setResponseInfo(ResponseInfo.ok(repair ? "Successfully repaired ContentRepository" : "Successfully checked ContentRepository"));
+				return response;
+			}, ContentRepositoryResponse::new);
+
 			trx.success();
-			return response;
-	}
+			return contentRepositoryResponse;
+		}
 	}
 
 	/**

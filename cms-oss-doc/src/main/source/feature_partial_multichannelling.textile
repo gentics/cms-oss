@@ -1,0 +1,12 @@
+h2 Partial localization
+
+Bei der Lokalisierung von Seiten kann wahlweise die komplette Seite lokalisiert werden, oder nur ausgewählte Root-Tags.
+
+h3. Feature activation
+
+If you want to use this feature, you first have to enable it
+
+<javascript filename="conf/features.yml">
+feature:
+    partial_multichannelling: true
+</javascript>

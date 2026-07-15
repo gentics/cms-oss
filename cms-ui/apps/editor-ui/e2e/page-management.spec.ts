@@ -12,12 +12,13 @@ import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
     clickNotificationAction,
+    clickTableRow,
     CONTENT_REPOSITORY_MESH,
-    createClient,
     createClientFromPage,
     EntityImporter,
     findContextContent,
     findNotification,
+    findTableRowByText,
     FOLDER_A,
     GroupImportData,
     IMPORT_ID,
@@ -27,7 +28,6 @@ import {
     IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_USER,
     ImportPermissions,
-    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
     LANGUAGE_DE,
     LANGUAGE_EN,
@@ -1048,22 +1048,6 @@ test.describe('Page Management', () => {
             language: LANGUAGE_EN,
         };
 
-        await test.step('Specialized Test setup', async () => {
-            await IMPORTER.importData([NEW_PAGE]);
-
-            // Make sure to unlock the page after the test
-            TEARDOWNS.push(async () => {
-                const client = await createClientFromPage(page);
-                await client.page.update(IMPORTER.get(NEW_PAGE).id, { unlock: true, page: {} }).send();
-            });
-
-            // The template has to be unassigned from the folder, in order for this bug to occur
-            await IMPORTER.client.template.unlink(TEMPLATE.id, {
-                folderIds: [IMPORTER.get(FOLDER_A).id],
-                nodeId: IMPORTER.get(NODE_MINIMAL).id,
-            }).send();
-        });
-
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
@@ -1080,6 +1064,22 @@ test.describe('Page Management', () => {
             },
         ]);
 
+        await test.step('Specialized Test setup', async () => {
+            await IMPORTER.importData([NEW_PAGE]);
+
+            // Make sure to unlock the page after the test
+            TEARDOWNS.push(async () => {
+                const client = await createClientFromPage(page);
+                await client.page.update(IMPORTER.get(NEW_PAGE).id, { unlock: true, page: {} }).send();
+            });
+
+            // The template has to be unassigned from the folder, in order for this bug to occur
+            await IMPORTER.client.template.unlink(TEMPLATE.id, {
+                folderIds: [IMPORTER.get(FOLDER_A).id],
+                nodeId: IMPORTER.get(NODE_MINIMAL).id,
+            }).send();
+        });
+
         await navigateToFolder(page, IMPORTER.get(FOLDER_A).id);
         const list = findList(page, ITEM_TYPE_PAGE);
         const item = findItem(list, IMPORTER.get(NEW_PAGE).id);
@@ -1091,5 +1091,69 @@ test.describe('Page Management', () => {
         await expect(placeholder).toHaveText(TEMPLATE.name);
         await expect(properties.locator('.no-templates')).toBeVisible();
         await expect(properties.locator('.link-templates')).not.toBeAttached();
+    });
+
+    test('opens the tag-editor from the tag-list in read-only mode when no edit permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19653',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await test.step('Open tag-list', async () => {
+            await itemAction(item, 'properties');
+            await openTagList(page);
+        });
+
+        const tagListTable = page.locator('content-frame combined-properties-editor .item-tag-list gtx-table');
+        await expect(tagListTable).toBeVisible();
+        // Can't use IDs here, as they are ever changing, as these are sequential IDs of all tags from the system.
+        const tagRow = await findTableRowByText(tagListTable, 'header');
+        await clickTableRow(tagRow);
+
+        const editor = page.locator('gtx-tag-editor-modal gentics-tag-editor');
+        const body = editor.locator('.tag-property-editors');
+
+        await test.step('Validate tag-editor input state', async () => {
+            // TODO: Find a better way to wait for it to be rendered/stable
+            await page.waitForTimeout(3_000);
+
+            // All input/button elements collected together
+            const inputElements = [
+                ...(await body.locator('input,textarea,select,button').filter({ visible: true }).all()),
+                ...(await body.locator('gtx-radio-button input[type="radio"],gtx-checkbox input[type="checkbox"]').all()),
+            ];
+
+            // We should have all interactable elements now
+            expect(inputElements.length).toEqual(10);
+
+            // All of them should be disabled
+            for (const input of inputElements) {
+                await expect.poll(() => {
+                    return input.evaluate((el) => el.hasAttribute('disabled') || el.hasAttribute('readonly'));
+                }, {
+                    message: 'element should be disabled or readonly',
+                }).toBe(true);
+            }
+        });
+
+        const footer = editor.locator('.footer');
+        const buttons = footer.locator('gtx-button');
+        await expect(buttons).toHaveCount(1);
+        await expect(buttons).toHaveAttribute('data-action', 'close');
     });
 });

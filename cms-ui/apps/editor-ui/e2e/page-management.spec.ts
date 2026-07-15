@@ -10,10 +10,13 @@ import {
 import {
     clickModalAction,
     clickNotificationAction,
+    clickTableRow,
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
     findContextContent,
     findNotification,
+    findTableRowById,
+    findTableRowByText,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -39,7 +42,8 @@ import {
     SCHEDULE_PUBLISHER,
     TestSize,
     UserImportData,
-    waitForResponseFrom
+    wait,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
@@ -89,28 +93,28 @@ test.describe('Page Management', () => {
         [IMPORT_ID]: 'singleLanguageNode',
 
         node: {
-            name : 'Single Language',
-            publishDir : '',
-            binaryPublishDir : '',
-            pubDirSegment : true,
-            publishImageVariants : false,
-            host : 'singlelanguage.localhost',
-            publishFs : false,
-            publishFsPages : false,
-            publishFsFiles : false,
-            publishContentMap : true,
-            publishContentMapPages : true,
-            publishContentMapFiles : true,
-            publishContentMapFolders : true,
+            name: 'Single Language',
+            publishDir: '',
+            binaryPublishDir: '',
+            pubDirSegment: true,
+            publishImageVariants: false,
+            host: 'singlelanguage.localhost',
+            publishFs: false,
+            publishFsPages: false,
+            publishFsFiles: false,
+            publishContentMap: true,
+            publishContentMapPages: true,
+            publishContentMapFiles: true,
+            publishContentMapFolders: true,
             urlRenderWayPages: NodeUrlMode.AUTOMATIC,
             urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
-            omitPageExtension : false,
-            pageLanguageCode : NodePageLanguageCode.FILENAME,
-            meshPreviewUrlProperty : '',
+            omitPageExtension: false,
+            pageLanguageCode: NodePageLanguageCode.FILENAME,
+            meshPreviewUrlProperty: '',
         },
         description: 'single language test',
 
-        languages : ['en'],
+        languages: ['en'],
         templates: [
             '57a5.5db4acfa-3224-11ef-862c-0242ac110002',
         ],
@@ -177,7 +181,7 @@ test.describe('Page Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(node)!.id);
+            await selectNode(page, IMPORTER.get(node).id);
         });
     }
 
@@ -322,21 +326,21 @@ test.describe('Page Management', () => {
     });
 
     test('should not be possible to edit the page properties without permissions', {
-            annotation: [{
-                type: 'ticket',
-                description: 'SUP-19638',
-            }],
-        }, async ({ page }) => {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19638',
+        }],
+    }, async ({ page }) => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                 ],
-            }
+            },
         ]);
 
         const list = findList(page, ITEM_TYPE_PAGE);
@@ -742,7 +746,7 @@ test.describe('Page Management', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19560',
-        }]
+        }],
     }, async ({ page }) => {
         await setupWithPermissions(page, [
             {
@@ -955,7 +959,7 @@ test.describe('Page Management', () => {
                 realid: `${IMPORTER.get(TEST_TRANSLATION).id}`,
                 nodeid: `${IMPORTER.get(NODE_MINIMAL).id}`,
             },
-        })
+        });
         await expect(contentFrame).not.toBeAttached();
         await expect(previewAction).toBeVisible();
         await previewAction.click();
@@ -976,7 +980,7 @@ test.describe('Page Management', () => {
         // Register the route BEFORE navigation so it intercepts the initial page list load
         // triggered by selectNode inside setupWithPermissions.
         // This simulates the exact format the REST API returns (Java int, Unix seconds).
-        await page.route(url => matchesUrl(url, '/rest/folder/getPages/*'), async (route) => {
+        await page.route((url) => matchesUrl(url, '/rest/folder/getPages/*'), async (route) => {
             const response = await route.fetch();
             const body = await response.json();
             const lockedPage = body.pages?.find((p: any) => p.id === TEST_PAGE.id);
@@ -1012,5 +1016,68 @@ test.describe('Page Management', () => {
             await expect(contextMenu).not.toContainText('years ago');
             await expect(contextMenu).not.toContainText('Jahren');
         });
+    });
+
+    test('opens the tag-editor from the tag-list in read-only mode when no edit permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19653',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await test.step('Open tag-list', async () => {
+            await itemAction(item, 'properties');
+            await openTagList(page);
+        });
+
+        const tagListTable = page.locator('content-frame combined-properties-editor .item-tag-list gtx-table');
+        await expect(tagListTable).toBeVisible();
+        // Can't use IDs here, as they are ever changing, as these are sequential IDs of all tags from the system.
+        const tagRow = await findTableRowByText(tagListTable, 'header');
+        await clickTableRow(tagRow);
+
+        const editor = page.locator('gtx-tag-editor-modal gentics-tag-editor');
+        const body = editor.locator('.tag-property-editors');
+
+        await test.step('Validate tag-editor input state', async () => {
+            // TODO: Find a better way to wait for it to be rendered/stable
+            await page.waitForTimeout(3_000);
+
+            // All input/button elements collected together
+            const inputElements = [
+                ...(await body.locator('input,textarea,select,button').filter({ visible: true }).all()),
+                ...(await body.locator('gtx-radio-button input[type="radio"],gtx-checkbox input[type="checkbox"]').all()),
+            ];
+
+            // We should have all interactable elements now
+            expect(inputElements.length).toEqual(10);
+
+            // All of them should be disabled
+            for (const input of inputElements) {
+                await expect.poll(() => {
+                    return input.evaluate((el) => el.hasAttribute('disabled') || el.hasAttribute('readonly'));
+                }, {
+                    message: 'element should be disabled or readonly',
+                }).toBe(true);
+            }
+        });
+
+        const footer = editor.locator('.footer');
+        const buttons = footer.locator('gtx-button');
+        await expect(buttons).toHaveCount(1);
+        await expect(buttons).toHaveAttribute('data-action', 'close');
     });
 });

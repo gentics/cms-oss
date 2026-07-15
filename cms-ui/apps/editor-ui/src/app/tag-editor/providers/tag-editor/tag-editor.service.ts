@@ -100,14 +100,15 @@ export class TagEditorService {
         // Since the ContentFrame uses the currentNode object when opening a page,
         // we can assume that the entity has already been loaded.
         const node = this.entityResolver.getNode(this.appState.now.editor.nodeId);
+        const readOnly = options?.readOnly || (tag.rootTag && tag.inherited);
 
         const tagEditorContext = this.createTagEditorContext({
             tag: tag,
             tagType: tagType,
             tagOwner: page,
             node: node,
-            readOnly: tag.rootTag && tag.inherited,
-            withDelete: options?.withDelete ?? tagType.editorControlStyle === EditorControlStyle.CLICK,
+            readOnly: readOnly,
+            withDelete: !readOnly && (options?.withDelete ?? tagType.editorControlStyle === EditorControlStyle.CLICK),
             tagOwnerFromIFrame: true,
         });
 

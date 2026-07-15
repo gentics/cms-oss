@@ -276,20 +276,43 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
     });
 }
 
+/**
+ * Helper function to find the source-element for further chaining.
+ * Usually used in other functions, to get a locator you know the node-type of.
+ * @example ```ts
+ * // Helper function to click our special button
+ * async function clickSpecialButton(source: Page | Locator): Promise<void> {
+ *      const btn = await getSourceLocator(source, 'my-cool-button');
+ *      await btn.first().locator('.button-container a').click();
+ * }
+ *
+ * // Would click the first button it would find
+ * await clickSpecialButton(page);
+ * // Would click the first button in the header
+ * await clickSpecialButton(page.locator('header'));
+ * // Would do the exact same as the one above
+ * await clickSpecialButton(page.locator('header my-cool-button'));
+ * // Would click our especially cool button
+ * await clickSpecialButton(page.locator('my-cool-button.very-cool'));
+ * ```
+ * @param source Source element from where it should search from
+ * @param nodeName The nodeName of source element we search for
+ * @returns A Locator which points to the searched nodeName element
+ */
 export async function getSourceLocator(source: Page | Locator, nodeName: string): Promise<Locator> {
-    if (
-        typeof (source as Page).reload === 'function'
-        || await (source as Locator).evaluate(
-            (el, args) => el == null
-              || typeof el !== 'object'
-              || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase(),
-            { nodeName },
-        )
-    ) {
+    // Determine if it's a page by checking if it has the reload function
+    if (typeof (source as Page).reload === 'function') {
         return source.locator(nodeName);
     }
 
-    return source as Locator;
+    // Check if the source is already the source we are looking for.
+    const sourceIsOtherType = await (source as Locator).evaluate((el, args) => {
+        return el == null
+          || typeof el !== 'object'
+          || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase();
+    }, { nodeName });
+
+    return sourceIsOtherType ? source.locator(nodeName) : source as Locator;
 }
 
 /**
@@ -494,7 +517,7 @@ export function copyText(page: Page, text: string): Promise<void> {
 export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
     const tabs = group.locator('.properties-tabs');
     const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
-    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
     if (isActive) {
         return;
     }

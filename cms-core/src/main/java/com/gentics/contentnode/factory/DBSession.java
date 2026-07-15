@@ -205,8 +205,7 @@ public class DBSession implements Session {
 		this.sessionId = sessionId;
 		this.userId = userId;
 		this.languageId = languageId;
-		// FIXME
-		this.language = null;
+		this.language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;;
 		this.sessionSecret = sessionSecret;
 	}
 

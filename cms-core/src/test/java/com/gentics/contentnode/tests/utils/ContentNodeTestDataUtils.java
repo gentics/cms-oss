@@ -44,6 +44,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.portalnode.connector.PortalConnectorFactory;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
@@ -1483,7 +1484,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException {
 		final NodeObject nodeObject;
 
 		byte[] data= "File contents".getBytes();
@@ -1503,7 +1504,11 @@ public class ContentNodeTestDataUtils {
 			break;
 		case ImageFile.TYPE_IMAGE:
 			InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg");
-			nodeObject = ContentNodeTestDataUtils.createImage(folder, name, IOUtils.toByteArray(inputStream), channel);
+			try {
+				nodeObject = ContentNodeTestDataUtils.createImage(folder, name, IOUtils.toByteArray(inputStream), channel);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
 			break;
 		default:
 			Assert.fail("createNodeObject can't create an NodeObject for type " + objectType);
@@ -1532,7 +1537,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException {
 		return createNodeObject(objectType, folder, name, null, false);
 	}
 
@@ -1817,8 +1822,6 @@ public class ContentNodeTestDataUtils {
 	 */
 	public static Map<String, com.gentics.contentnode.rest.model.Tag> loadRestNodeObjectAndCheckIfTagExists(
 			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		Map<String, com.gentics.contentnode.rest.model.Tag> restTags = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
@@ -1868,8 +1871,6 @@ public class ContentNodeTestDataUtils {
 	 */
 	public static GenericResponse saveRestNodeObjectPropertyTagsAndAssert(int objectType, Integer nodeObjectId,
 			Map<String, com.gentics.contentnode.rest.model.Tag> restTags, ResponseCode reponseCode) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		GenericResponse genericResponse = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
@@ -2348,16 +2349,21 @@ public class ContentNodeTestDataUtils {
 			String name, Integer folderId, Integer nodeId, String description, Boolean overwrite,
 			String data) throws ParseException, TransactionException {
 
-		Transaction t = TransactionManager.getCurrentTransaction();
+		Session session = ContentNodeHelper.getSession();
+		String sessionId = session.getSessionId();
+		String sessionSecret = "";
+		if (session instanceof DBSession dbSession) {
+			sessionSecret = dbSession.getSessionSecret();
+		}
 
 		@SuppressWarnings("resource")
 		MultiPart multiPart = new MultiPart()
 			.bodyPart(createformDataBodyPart("form-data; name=\"folderId\"", folderId.toString(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"nodeId\"", nodeId.toString(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-					t.getSessionId(), null))
+					sessionId, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-					((DBSession)t.getSession()).getSessionSecret(), null))
+					sessionSecret, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", name, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"description\"", description, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + name + "\"",

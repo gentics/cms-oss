@@ -271,28 +271,24 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	public GenericResponse logout(@PathParam("sid") String sid,
 			@QueryParam("allSessions") @DefaultValue("false") boolean allSessions) {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Session session = ContentNodeHelper.getSession();
+			SessionToken sessionToken = new SessionToken(sid, getSessionSecret());
+			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-			if (session instanceof DBSession dbSession) {
-				if (Strings.CS.equals(sid, dbSession.getSessionId())) {
-					if (allSessions) {
-						dbSession.logoutAllSessions();
-						// Remove the session secret cookie
-						CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
-								"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
-					} else {
-						// Simply log out the current session
-						dbSession.logout();
-					}
-
-					trx.success();
-					return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
+			if (optSession.isPresent()) {
+				if (allSessions) {
+					optSession.get().logoutAllSessions();
+					// Remove the session secret cookie
+					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
+							"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
 				} else {
-					return new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
+					// Simply log out the current session
+					optSession.get().logout();
 				}
-			} else {
+
 				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
+			} else {
+				return new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
 			}
 		} catch (Exception e) {
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.FAILURE, "Error while logout"));

@@ -34,7 +34,7 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.db.SQLExecutor;
 
-public class AbstractPageDirtingTest {
+public abstract class AbstractPageDirtingTest {
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();

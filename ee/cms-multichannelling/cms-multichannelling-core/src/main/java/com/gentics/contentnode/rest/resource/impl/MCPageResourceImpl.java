@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -260,7 +261,7 @@ public class MCPageResourceImpl implements MCPageResource {
 			}
 
 			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000L,
-					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial));
+					Operator.lock(LockType.channelSet, page.getChannelSetId()), new LocalizePageCallable(id, request.getChannelId(), false, partial), Function.identity());
 		}
 	}
 
@@ -375,7 +376,7 @@ public class MCPageResourceImpl implements MCPageResource {
 					new CNI18nString("localizejob").toString(),
 					AbstractContentNodeResource.getJobForegroundTime(null) * 1000L,
 					Operator.lock(LockType.channelSet, page.getChannelSetId()),
-					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId)
+					new LocalizeRootTagCallable(pageId, page.getChannel().getId(), tagId), Function.identity()
 			);
 		}
 	}
@@ -575,7 +576,7 @@ public class MCPageResourceImpl implements MCPageResource {
 						return DisinheritRestUtil.set(Page.class, id, request, true);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 
@@ -618,7 +619,7 @@ public class MCPageResourceImpl implements MCPageResource {
 						return DisinheritRestUtil.set(Page.class, ids, request);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 

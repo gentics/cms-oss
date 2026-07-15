@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
@@ -242,7 +243,7 @@ public class MCImageResourceImpl implements MCImageResource {
 			}
 
 			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
-					Operator.lock(LockType.channelSet, imageFile.getChannelSetId()), new LocalizeImageCallable(id, request.getChannelId(), false));
+					Operator.lock(LockType.channelSet, imageFile.getChannelSetId()), new LocalizeImageCallable(id, request.getChannelId(), false), Function.identity());
 		}
 	}
 
@@ -388,7 +389,7 @@ public class MCImageResourceImpl implements MCImageResource {
 						return DisinheritRestUtil.set(ImageFile.class, id, request, true);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 
@@ -431,7 +432,7 @@ public class MCImageResourceImpl implements MCImageResource {
 						return DisinheritRestUtil.set(ImageFile.class, ids, request);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 }

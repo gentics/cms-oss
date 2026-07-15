@@ -9,18 +9,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,7 +22,6 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeSetup;
-import com.gentics.contentnode.etc.NodeSetup.NODESETUP_KEY;
 import com.gentics.contentnode.etc.NodeSetupValuePair;
 import com.gentics.contentnode.exception.MissingFieldException;
 import com.gentics.contentnode.factory.Transaction;
@@ -75,6 +64,17 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.NodeObjectFilter;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.PermissionFilter;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Implementation of {@link LinkCheckerResource}
@@ -492,7 +492,7 @@ public class LinkCheckerResourceImpl implements LinkCheckerResource {
 
 				ModelBuilder.addMessagesFromOpResult(opResult, response);
 				return response;
-			});
+			}, Function.identity());
 
 			trx.success();
 			return resp;

@@ -39,6 +39,8 @@ import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.POST;
@@ -167,7 +169,7 @@ public class TranslationResourceImpl implements TranslationResource {
 				response.addMessage(new Message(Message.Type.SUCCESS, resultMessage.toString()));
 
 				return response;
-			});
+			}, Function.identity());
 		}
 	}
 

@@ -1,0 +1,2 @@
+Sending of instant messages for completion or failure of requests, which were
+continued in the background has been made more reliable.

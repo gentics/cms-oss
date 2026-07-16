@@ -1,22 +1,36 @@
 package com.gentics.contentnode.tests.rest.util;
 
+import static com.gentics.contentnode.db.DBUtils.update;
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.rest.util.Operator.Lock;
 import com.gentics.contentnode.rest.util.Operator.LockType;
@@ -35,6 +49,11 @@ import de.jkeylockmanager.manager.exception.KeyLockManagerTimeoutException;
 public class OperatorTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
+
+	@After
+	public void tearDown() throws NodeException {
+		operate(() -> update("DELETE FROM msg"));
+	}
 
 	/**
 	 * Test queue where one job takes longer than the overall timeout
@@ -233,6 +252,66 @@ public class OperatorTest {
 			builder.execute("", 0);
 			builder.add("", () -> new GenericResponse());
 		});
+	}
+
+	/**
+	 * Test whether jobs that succeed in the background will always send appropriate instant messages
+	 * @throws NodeException
+	 * @throws InterruptedException
+	 */
+	@Test
+	public void testBackgroundMessages() throws NodeException, InterruptedException {
+		int numJobs = 100;
+		long maxWaitMs = 60_000;
+
+		CountDownLatch latch = new CountDownLatch(numJobs);
+		for (int i = 0; i < numJobs; i++) {
+			String jobDescription = "Job #%d".formatted(i);
+			GenericResponse response = supply(() -> {
+				return Operator.executeLocked(jobDescription, 1, Operator.lock(LockType.channelSet, numJobs), () -> {
+					Thread.sleep(100);
+					latch.countDown();
+					return new GenericResponse(new Message(Type.SUCCESS, "%s succeeded".formatted(jobDescription)), ResponseInfo.ok(""));
+				});
+			});
+
+			consume(r -> {
+				assertThat(r).as("Response").hasCode(ResponseCode.OK).isInBackground().containsMessage(Type.INFO, "job_sent_to_background", jobDescription);
+			}, response);
+		}
+
+		assertThat(latch.await(maxWaitMs, TimeUnit.MILLISECONDS)).as("All jobs finished successfully").isTrue();
+
+		List<Message> messages;
+		long start = System.currentTimeMillis();
+		do {
+			messages = supply(t -> {
+				return DBUtils.select("SELECT * FROM msg WHERE to_user_id = ? ORDER BY timestamp DESC", ps -> {
+					ps.setInt(1, 1);
+				}, res -> {
+					List<Message> list = new ArrayList<>();
+					while (res.next()) {
+						com.gentics.contentnode.messaging.Message nodeMsg = new com.gentics.contentnode.messaging.Message(
+								res.getInt("from_user_id"), res.getInt("to_user_id"), res.getString("msg"));
+						com.gentics.contentnode.rest.model.response.Message msg = new com.gentics.contentnode.rest.model.response.Message();
+						msg.setId(res.getInt("id"));
+						msg.setMessage(nodeMsg.getParsedMessage());
+						msg.setSender(ModelBuilder.getUser(t.getObject(SystemUser.class, res.getInt("from_user_id"))));
+						msg.setTimestamp(res.getLong("timestamp"));
+						msg.setInstantMessage(!msg.isExpired(res.getInt("instanttime")));
+						msg.setType(Type.INFO);
+						list.add(msg);
+					}
+					return list;
+				});
+			});
+
+			if (messages.size() != numJobs) {
+				Thread.sleep(100);
+			}
+		} while (messages.size() != numJobs && (System.currentTimeMillis() - start) <= maxWaitMs);
+
+		assertThat(messages).as("List of messages").hasSize(numJobs);
 	}
 
 	/**

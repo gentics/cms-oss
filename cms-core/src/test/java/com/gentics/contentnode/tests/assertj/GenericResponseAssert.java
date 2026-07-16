@@ -57,4 +57,22 @@ public class GenericResponseAssert extends AbstractAssert<GenericResponseAssert,
 		assertThat(msgString).as("Translated message").isNotEqualTo(key);
 		return myself;
 	}
+
+	/**
+	 * Assert that the response was pushed to background
+	 * @return fluent API
+	 */
+	public GenericResponseAssert isInBackground() {
+		assertThat(actual.isInBackground()).as("".formatted("%s background flag".formatted(descriptionText()))).isTrue();
+		return myself;
+	}
+
+	/**
+	 * Assert that the response was not pushed to background
+	 * @return fluent API
+	 */
+	public GenericResponseAssert isNotInBackground() {
+		assertThat(actual.isInBackground()).as("".formatted("%s background flag".formatted(descriptionText()))).isFalse();
+		return myself;
+	}
 }

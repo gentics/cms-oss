@@ -51,7 +51,7 @@
                 "cypressConfig": "libs/ui-core/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "image-editor-demo:build"
+                "devServerTarget": "component-tests-harness:build"
             }
         }
     }

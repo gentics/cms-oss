@@ -17,8 +17,6 @@
 <div
   class="accordion-content"
   [class.open]="open"
-  [@slide]="open ? 'open' : 'closed'"
-  (@slide.done)="slideAnimationDone()"
   >
   @if (showContent) {
     <ng-content></ng-content>

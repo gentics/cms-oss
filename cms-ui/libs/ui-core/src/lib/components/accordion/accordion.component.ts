@@ -1,4 +1,3 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import { booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, TemplateRef } from '@angular/core';
 import { ChangesOf } from '../../common';
 import { BaseComponent } from '../base-component/base.component';
@@ -11,19 +10,6 @@ import { BaseComponent } from '../base-component/base.component';
     templateUrl: './accordion.component.html',
     styleUrls: ['./accordion.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('slide', [
-            state('open', style({
-                maxHeight: '*',
-                marginTop: '1rem',
-            })),
-            state('closed', style({
-                maxHeight: '0px',
-                marginTop: '0px',
-            })),
-            transition('* <=> *', animate('200ms')),
-        ]),
-    ],
     standalone: false,
 })
 export class AccordionComponent extends BaseComponent implements OnChanges {

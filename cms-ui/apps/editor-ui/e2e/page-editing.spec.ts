@@ -47,6 +47,7 @@ import {
     AUTH,
 } from './common';
 import {
+    addTemporaryAlohaPlugin,
     createExternalLink,
     createInternalLink,
     editorAction,
@@ -1567,6 +1568,46 @@ test.describe('Page Editing', () => {
                 // Check again now
                 await checkKeys(14);
             });
+        });
+        test.describe('CharacterPicker', () => {
+            const SLOT_CHARACTER_GRID = 'characterPicker';
+            const CHARACTER_CELL = '.symbol-grid-cell';
+
+            test('should display available characters and character should have a title', async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+
+                await expect(characterCells.first()).toBeVisible();
+
+                for (const character of await characterCells.all()) {
+                    await expect(character).toHaveAttribute('title');
+                }
+            });
+
+            test('should be able to select a character', async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+                const lastCharacter = characterCells.last();
+                const expectedCharacter = await lastCharacter.locator('.symbol-grid-cell-content').textContent();
+
+                await lastCharacter.click();
+
+                await expect(mainEditable).toContainText(expectedCharacter ?? '');
+            });
+
+            async function editPageAndOpenCharacterGrid(page) {
+                await addTemporaryAlohaPlugin(page, "common/characterpicker");
+                editingPage = IMPORTER.get(PAGE_ONE);
+
+                await openEditingPageInEditmode(page);
+                await mainEditable.click();
+                await mainEditable.clear();
+                
+                await selectEditorTab(page, 'insert');
+                await findAlohaComponent(page, { slot: SLOT_CHARACTER_GRID }).click();
+            }
         });
     });
 

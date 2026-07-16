@@ -727,20 +727,6 @@ export function getValidation(schema: ISchema, id: string): IValidation {
   return {};
 }
 
-export function getBinaryURL(formid: string, binaryValue: string, businessObjectID?: string) {
-  // TODO anBasePath
-  const anBasePath = "";
-  let url = anBasePath + "form/" + encodeURIComponent(formid);
-  if (businessObjectID !== null && businessObjectID !== "") {
-    if (typeof businessObjectID === "undefined") {
-      businessObjectID = "";
-    }
-    url = url + `/businessObject/${encodeURIComponent(businessObjectID)}`;
-  }
-  url = url + "/binary/" + encodeURIComponent(binaryValue);
-  return url;
-}
-
 /**
  * retrieves and returnes the stored value of a given formGridnOption. If storedValue is
  * empty it returns the default Value 'X'

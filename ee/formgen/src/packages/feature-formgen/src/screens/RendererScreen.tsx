@@ -810,10 +810,11 @@ const RendererScreen: React.FC<{
       // sometimes not everything is loaded yet, so it's a good idea to wait a few ms here before catching click events
       if (Platform.OS == 'web') {
         document.body.addEventListener('click', (e) => {
-          const clickedElement = e.target as HTMLElement;
+          const target = e.target as HTMLElement;
+          const clickedLink = target.closest('a');
           if (
-            clickedElement.tagName.toLowerCase() === 'a' &&
-            !clickedElement.closest('#root')
+            clickedLink &&
+            !clickedLink.closest('#root')
           ) {
             if (
               !uiState.isReadOnlyForm &&
@@ -822,7 +823,7 @@ const RendererScreen: React.FC<{
             ) {
               e.preventDefault();
               const overlayLeaveExtraProps: IOverlayLeaveExtraProps = {
-                link: clickedElement.getAttribute('href') || '',
+                link: clickedLink.getAttribute('href') || '',
               };
 
               setClickedLinkOutside({

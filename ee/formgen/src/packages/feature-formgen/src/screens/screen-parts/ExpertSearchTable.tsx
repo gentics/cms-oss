@@ -587,7 +587,7 @@ export function ExpertSearchTable(props: interfaces.IExpertSearch) {
     if (!props.hasSearched && shouldAutoSearch) {
       props.handleExpertSearch?.();
     }
-  }, [props.hasSearched, shouldAutoSearch, props.handleExpertSearch]);
+  }, [props.hasSearched, shouldAutoSearch]);
 
   useEffect(() => {
     if (props.formState.expertMultipleHandler != triggerFormEndpointMultiple) {

@@ -147,9 +147,7 @@ function BinaryElement(props: IFormComponentAttributes) {
           ? props.restService.ANGetBinaryURL(
             props.formState.formid,
             formFile.value,
-            props.formState.businessObjectID,
-            350,
-            200,
+            props.formState.businessObjectID
           )
           : formFile.uri,
       ext: fileExt,

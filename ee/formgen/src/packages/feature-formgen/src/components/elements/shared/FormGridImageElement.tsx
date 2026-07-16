@@ -161,7 +161,8 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
   const explicitW = typeof img?.width === 'number' ? img.width : undefined;
   const explicitH = typeof img?.height === 'number' ? img.height : undefined;
   const baseW = containerW > 0 ? containerW : screenW;
-  const targetW = explicitW ? Math.min(baseW, explicitW) : baseW;
+  const naturalW = (explicitH && ratio && !explicitW) ? Math.round(explicitH / ratio) : undefined;
+  const targetW = explicitW ? Math.min(baseW, explicitW) : naturalW ? Math.min(baseW, naturalW) : baseW;
   const targetH = explicitH;
   const lockedViewportHRef = useRef<number | undefined>(undefined);
 
@@ -211,8 +212,8 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
       return;
     }
     Image.prefetch(resolvedUrl).catch(() => undefined);
-    // Versuche die Bildgröße nur zu ermitteln, wenn keine feste Höhe definiert ist
-    if (typeof img?.height !== 'number') {
+    // Skip getSize only when both dimensions are explicitly provided
+    if (typeof img?.height !== 'number' || typeof img?.width !== 'number') {
       Image.getSize(
         resolvedUrl,
         (w, h) => {
@@ -225,7 +226,7 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
         },
       );
     }
-  }, [resolvedUrl, isSvg, isGif, img?.height, targetH]);
+  }, [resolvedUrl, isSvg, isGif, img?.height, img?.width, targetH]);
 
   // Timeout-Fallback: Wenn auf Android bei GIF innerhalb von 5s kein onLoad/onError -> Fehlermeldung
   const [loaded, setLoaded] = useState(false);

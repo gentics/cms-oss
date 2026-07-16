@@ -38,8 +38,8 @@ function isAbsolute(url: string): boolean {
 
 function appendSizeParams(url: string, width?: number | 'auto', height?: number | 'auto'): string {
   const params: string[] = [];
-  if (typeof width === 'number') params.push(`w=${width}`);
-  if (typeof height === 'number') params.push(`h=${height}`);
+  if (typeof width === 'number' && width > 0) params.push(`w=${width}`);
+  if (typeof height === 'number' && height > 0) params.push(`h=${height}`);
   if (params.length === 0) return url;
   const hasQuery = url.includes('?');
   return `${url}${hasQuery ? '&' : '?'}${params.join('&')}`;
@@ -615,8 +615,8 @@ FormGridImageElement.getSummaryValue = function (
       ? baseResolved
       : appendSizeParams(
           baseResolved,
-          typeof img.width === 'number' ? img.width : undefined,
-          typeof img.height === 'number' ? img.height : undefined,
+          typeof img.width === 'number' && img.width > 0 ? img.width : undefined,
+          typeof img.height === 'number' && img.height > 0 ? img.height : undefined,
         );
     const alt = (img.alt ? getI18nText(state, img.alt) : '') || '';
     const cap = img.caption ? getI18nText(state, img.caption) : '';

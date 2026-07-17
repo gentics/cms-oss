@@ -223,7 +223,7 @@ public class ContentNodeRESTUtils {
 
 				if (!ObjectTransformer.isEmpty(expectedMessages)) {
 					assertThat(List.of(new Message(Message.Type.CRITICAL, e.getLocalizedMessage())))
-							.as("Exception messages").containsOnly(expectedMessages);
+							.as("Exception messages").usingRecursiveFieldByFieldElementComparatorOnFields("message", "type").containsOnly(expectedMessages);
 				}
 			} else {
 				fail("Unexpected exception thrown", e);

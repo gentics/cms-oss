@@ -15,13 +15,13 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.rest.model.token.APITokenCreationRequest;
-import com.gentics.contentnode.rest.model.token.APITokenDataModel;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
 
 /**
  * Factory for management of API Tokens
  */
-public class APITokenFactory {
+public class ApiTokenFactory {
 	/**
 	 * Byte count for generated tokens
 	 */
@@ -35,7 +35,7 @@ public class APITokenFactory {
 	/**
 	 * Select clause
 	 */
-	protected final static String SELECT_CLAUSE = "SELECT id, name, cdate, expires, last_used FROM %s".formatted(TABLE_NAME);
+	protected final static String SELECT_CLAUSE = "SELECT id, user_id, name, cdate, expires, last_used FROM %s".formatted(TABLE_NAME);
 
 	/**
 	 * SQL to insert a new record
@@ -48,14 +48,15 @@ public class APITokenFactory {
 	protected final static String DELETE_SQL = "DELETE FROM %s WHERE id = ?".formatted(TABLE_NAME);
 
 	/**
-	 * Instance of {@link HandleSelectResultSet} which creates an instance of {@link APITokenDataModel} from the current row of the {@link ResultSet}
+	 * Instance of {@link HandleSelectResultSet} which creates an instance of {@link ApiTokenDataModel} from the current row of the {@link ResultSet}
 	 */
-	protected final static DBUtils.HandleSelectResultSet<ResolvableAPITokenDataModel> ROW_HANDLER = rs -> {
-		ResolvableAPITokenDataModel model = new ResolvableAPITokenDataModel();
+	protected final static DBUtils.HandleSelectResultSet<ResolvableApiTokenDataModel> ROW_HANDLER = rs -> {
+		ResolvableApiTokenDataModel model = new ResolvableApiTokenDataModel();
 		int now = TransactionManager.getCurrentTransaction().getUnixTimestamp();
 		int expiry = rs.getInt("expires");
 		model
 			.setId(rs.getInt("id"))
+			.setUserId(rs.getInt("user_id"))
 			.setName(rs.getString("name"))
 			.setCdate(rs.getInt("cdate"))
 			.setExpires(expiry)
@@ -98,7 +99,7 @@ public class APITokenFactory {
 	 * @return stored instance
 	 * @throws NodeException
 	 */
-	public final static ResolvableAPITokenDataModel create(APITokenCreationRequest request, int userId, String token)
+	public final static ResolvableApiTokenDataModel create(ApiTokenCreationRequest request, int userId, String token)
 			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		int cDate = t.getUnixTimestamp();
@@ -114,7 +115,7 @@ public class APITokenFactory {
 
 		int id = ids.get(0);
 
-		Optional<ResolvableAPITokenDataModel> optData = DBUtils.select(SELECT_CLAUSE + " WHERE id = ?", pst -> {
+		Optional<ResolvableApiTokenDataModel> optData = DBUtils.select(SELECT_CLAUSE + " WHERE id = ?", pst -> {
 			pst.setInt(1, id);
 		}, DBUtils.getFirst(ROW_HANDLER));
 
@@ -132,7 +133,7 @@ public class APITokenFactory {
 	 * @return optional token instance
 	 * @throws NodeException
 	 */
-	public final static Optional<ResolvableAPITokenDataModel> load(int userId, int tokenId) throws NodeException {
+	public final static Optional<ResolvableApiTokenDataModel> load(int userId, int tokenId) throws NodeException {
 		return DBUtils.select(SELECT_CLAUSE + " WHERE id = ? AND user_id = ?", pst -> {
 			pst.setInt(1, tokenId);
 			pst.setInt(2, userId);
@@ -145,7 +146,7 @@ public class APITokenFactory {
 	 * @return list of tokens
 	 * @throws NodeException
 	 */
-	public final static List<ResolvableAPITokenDataModel> list(int userId) throws NodeException {
+	public final static List<ResolvableApiTokenDataModel> list(int userId) throws NodeException {
 		return DBUtils.select(SELECT_CLAUSE + " WHERE user_id = ?", pst -> {
 			pst.setInt(1, userId);
 		}, DBUtils.getAll(ROW_HANDLER));
@@ -158,5 +159,17 @@ public class APITokenFactory {
 	 */
 	public final static void delete(int tokenId) throws NodeException {
 		DBUtils.update(DELETE_SQL, tokenId);
+	}
+
+	/**
+	 * Load the token with the given hash. Only return the token if it is still valid (not expired)
+	 * @param hash token hash
+	 * @return optional token instance
+	 * @throws NodeException
+	 */
+	public final static Optional<ResolvableApiTokenDataModel> load(String hash) throws NodeException {
+		return DBUtils.select(SELECT_CLAUSE + " WHERE token_hash = ?", pst -> {
+			pst.setString(1, hash);
+		}, DBUtils.getFirst(ROW_HANDLER)).filter(ResolvableApiTokenDataModel::isValid);
 	}
 }

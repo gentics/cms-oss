@@ -26,8 +26,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.auth.APITokenFactory;
-import com.gentics.contentnode.auth.ResolvableAPITokenDataModel;
+import com.gentics.contentnode.auth.ApiTokenFactory;
+import com.gentics.contentnode.auth.ResolvableApiTokenDataModel;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.PrepareStatement;
 import com.gentics.contentnode.distributed.DistributionUtil;
@@ -96,10 +96,10 @@ import com.gentics.contentnode.rest.model.response.log.ActionModel;
 import com.gentics.contentnode.rest.model.response.log.ActionModelList;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntry;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntryList;
-import com.gentics.contentnode.rest.model.token.APITokenCreationRequest;
-import com.gentics.contentnode.rest.model.token.APITokenCreationResponse;
-import com.gentics.contentnode.rest.model.token.APITokenDataModel;
-import com.gentics.contentnode.rest.model.token.APITokenListResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
+import com.gentics.contentnode.rest.model.token.ApiTokenListResponse;
 import com.gentics.contentnode.rest.resource.AdminResource;
 import com.gentics.contentnode.rest.resource.parameter.ActionLogParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.DirtQueueParameterBean;
@@ -835,7 +835,7 @@ public class AdminResourceImpl implements AdminResource {
 	@Override
 	@POST
 	@Path("/token")
-	public APITokenCreationResponse createAPIToken(APITokenCreationRequest request) throws NodeException {
+	public ApiTokenCreationResponse createAPIToken(ApiTokenCreationRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			// request body must be present and contain a name
 			MiscUtils.checkBody(request, b -> Pair.of("name", b.getName()));
@@ -853,11 +853,11 @@ public class AdminResourceImpl implements AdminResource {
 			}
 
 			// create the token
-			String token = APITokenFactory.createToken();
+			String token = ApiTokenFactory.createToken();
 
-			APITokenDataModel data = APITokenFactory.create(request, trx.getTransaction().getUserId(), token);
+			ApiTokenDataModel data = ApiTokenFactory.create(request, trx.getTransaction().getUserId(), token);
 
-			APITokenCreationResponse response = new APITokenCreationResponse()
+			ApiTokenCreationResponse response = new ApiTokenCreationResponse()
 					.setData(data)
 					.setToken(token);
 			response.setResponseInfo(ResponseInfo.ok("Successfully created API Token"));
@@ -870,17 +870,17 @@ public class AdminResourceImpl implements AdminResource {
 	@Override
 	@GET
 	@Path("/token")
-	public APITokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+	public ApiTokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			List<ResolvableAPITokenDataModel> list = APITokenFactory.list(trx.getTransaction().getUserId());
+			List<ResolvableApiTokenDataModel> list = ApiTokenFactory.list(trx.getTransaction().getUserId());
 
 			trx.success();
-			return ListBuilder.from(list, APITokenDataModel.class::cast)
+			return ListBuilder.from(list, ApiTokenDataModel.class::cast)
 				.filter(ResolvableFilter.get(filter, "name"))
 				.sort(ResolvableComparator.get(sorting, "id", "name", "cdate", "expires", "lastUsed", "valid"))
 				.page(paging)
-				.to(new APITokenListResponse());
+				.to(new ApiTokenListResponse());
 		}
 	}
 
@@ -889,14 +889,14 @@ public class AdminResourceImpl implements AdminResource {
 	@Path("/token/{id}")
 	public GenericResponse deleteAPIToken(@PathParam("id") int tokenId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Optional<ResolvableAPITokenDataModel> optToken = APITokenFactory.load(trx.getTransaction().getUserId(), tokenId);
+			Optional<ResolvableApiTokenDataModel> optToken = ApiTokenFactory.load(trx.getTransaction().getUserId(), tokenId);
 
 			if (optToken.isEmpty()) {
 				throw new EntityNotFoundException(
 						I18NHelper.get("apitoken.notfound", String.valueOf(tokenId)));
 			}
 
-			APITokenFactory.delete(tokenId);
+			ApiTokenFactory.delete(tokenId);
 
 			trx.success();
 			return new GenericResponse(null, ResponseInfo.ok("Successfully deleted token %d".formatted(tokenId)));

@@ -1,16 +1,14 @@
 package com.gentics.contentnode.tests.rest.client;
 
+import static com.gentics.contentnode.db.DBUtils.firstInt;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import jakarta.ws.rs.client.ClientRequestContext;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
@@ -25,6 +23,7 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.ApiTokenFactory;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -45,11 +44,18 @@ import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
+
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Test cases for the RestClient
@@ -82,6 +88,26 @@ public class ClientTest {
 	 * Test user
 	 */
 	private static SystemUser testUser;
+
+	/**
+	 * Invalid APIToken
+	 */
+	private static String invalidApiToken;
+
+	/**
+	 * Valid APIToken
+	 */
+	private static String validApiToken;
+
+	/**
+	 * Expired APIToken
+	 */
+	private static String expiredApiToken;
+
+	/**
+	 * Endless APIToken
+	 */
+	private static String endlessApiToken;
 
 	/**
 	 * Test node
@@ -124,6 +150,23 @@ public class ClientTest {
 		testUser = Trx.supply(() -> {
 			return Creator.createUser(LOGIN, PASSWORD, "Tester", "Tester", "", Arrays.asList(nodeGroup));
 		});
+
+		// create an invalid APIToken
+		invalidApiToken = ApiTokenFactory.createToken();
+
+		// create valid APIToken for test user
+		validApiToken = ApiTokenFactory.createToken();
+		int tomorrow = (int) (System.currentTimeMillis() / 1000) + 24 * 60 * 60;
+		operate(() -> ApiTokenFactory.create(new ApiTokenCreationRequest().setName("Valid Test Token").setExpires(tomorrow), testUser.getId(), validApiToken));
+
+		// create expired APIToken for test user
+		expiredApiToken = ApiTokenFactory.createToken();
+		int yesterday = (int) (System.currentTimeMillis() / 1000) - 24 * 60 * 60;
+		operate(() -> ApiTokenFactory.create(new ApiTokenCreationRequest().setName("Expired Test Token").setExpires(yesterday), testUser.getId(), expiredApiToken));
+
+		// create endless APIToken for test user
+		endlessApiToken = ApiTokenFactory.createToken();
+		operate(() -> ApiTokenFactory.create(new ApiTokenCreationRequest().setName("Endless Test Token").setExpires(0), testUser.getId(), endlessApiToken));
 
 		// create test node
 		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
@@ -340,5 +383,69 @@ public class ClientTest {
 					GenericResponse.class);
 			client.get().assertResponse(deleteResponse);
 		}
+	}
+
+	/**
+	 * Test usage of invalid API Token
+	 * @throws RestException 
+	 */
+	@Test(expected = NotAuthorizedException.class)
+	public void testInvalidApiToken() throws RestException {
+		RestClient client = new RestClient(restContext.getBaseUri());
+		client.setApiToken(invalidApiToken);
+		client.base().path("user").path("me").request().get(UserLoadResponse.class);
+	}
+
+	/**
+	 * Test usage of valid API Token
+	 * @throws RestException
+	 */
+	@Test
+	public void testValidApiToken() throws NodeException, RestException {
+		// reset "last_used" of the token
+		operate(() -> DBUtils.update("UPDATE api_token SET last_used = ? WHERE token_hash = ?", 0, ApiTokenFactory.hash(validApiToken)));
+
+		RestClient client = new RestClient(restContext.getBaseUri());
+		client.setApiToken(validApiToken);
+		UserLoadResponse response = client.base().path("user").path("me").request().get(UserLoadResponse.class);
+		assertThat(response.getUser()).as("Me").hasFieldOrPropertyWithValue("login", testUser.getLogin());
+
+		int lastUsed = supply(() -> DBUtils.select("SELECT last_used FROM api_token WHERE token_hash = ?", pst -> {
+			pst.setString(1, ApiTokenFactory.hash(validApiToken));
+		}, firstInt("last_used")));
+
+		assertThat(lastUsed).as("Timestamp of last token usage").isGreaterThan(0);
+	}
+
+	/**
+	 * Test usage of expired API Token
+	 * @throws RestException 
+	 */
+	@Test(expected = NotAuthorizedException.class)
+	public void testExpiredApiToken() throws RestException {
+		RestClient client = new RestClient(restContext.getBaseUri());
+		client.setApiToken(expiredApiToken);
+		client.base().path("user").path("me").request().get(UserLoadResponse.class);
+	}
+
+	/**
+	 * Test usage of endless API Token
+	 * @throws RestException
+	 */
+	@Test
+	public void testEndlessApiToken() throws NodeException, RestException {
+		// reset "last_used" of the token
+		operate(() -> DBUtils.update("UPDATE api_token SET last_used = ? WHERE token_hash = ?", 0, ApiTokenFactory.hash(endlessApiToken)));
+
+		RestClient client = new RestClient(restContext.getBaseUri());
+		client.setApiToken(endlessApiToken);
+		UserLoadResponse response = client.base().path("user").path("me").request().get(UserLoadResponse.class);
+		assertThat(response.getUser()).as("Me").hasFieldOrPropertyWithValue("login", testUser.getLogin());
+
+		int lastUsed = supply(() -> DBUtils.select("SELECT last_used FROM api_token WHERE token_hash = ?", pst -> {
+			pst.setString(1, ApiTokenFactory.hash(endlessApiToken));
+		}, firstInt("last_used")));
+
+		assertThat(lastUsed).as("Timestamp of last token usage").isGreaterThan(0);
 	}
 }

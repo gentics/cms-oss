@@ -1,13 +1,17 @@
 package com.gentics.contentnode.tests.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
@@ -177,6 +181,52 @@ public class ContentNodeRESTUtils {
 			for (int i = 0; i < expectedMessages.length; i++) {
 				assertEquals("Check message type #" + i, expectedMessages[i].getType(), response.getMessages().get(i).getType());
 				assertEquals("Check message #" + i, expectedMessages[i].getMessage(), response.getMessages().get(i).getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Assert that the method from the supplier returns a successful response
+	 * @param <T> result type
+	 * @param supplier supplier generating the result
+	 * @param expectedResponseMessage optional expected response message
+	 * @param expectedMessages optional user messages expected in the response
+	 * @return result
+	 * @throws NodeException
+	 */
+	public static <T extends GenericResponse> T assertSuccess(Supplier<T> supplier, String expectedResponseMessage, Message... expectedMessages) throws NodeException {
+		T response = supplier.supply();
+		assertResponse(response, ResponseCode.OK, expectedResponseMessage, expectedMessages);
+		return response;
+	}
+
+	/**
+	 * Assert that the method from the supplier fails either by returning a failed result or throwing an exception
+	 * @param <T> result type
+	 * @param supplier supplier generating the result
+	 * @param expectedErrorClazz expected class of the thrown exception
+	 * @param expectedCode expected error code
+	 * @param expectedResponseMessage optional expected response message
+	 * @param expectedMessages optional user messages expected in the response or the throws error
+	 */
+	public static <T extends GenericResponse> void assertError(Supplier<T> supplier,
+			Class<? extends NodeException> expectedErrorClazz, ResponseCode expectedCode,
+			String expectedResponseMessage, Message... expectedMessages) {
+		try {
+			T response = supplier.supply();
+			assertResponse(response, expectedCode, expectedResponseMessage, expectedMessages);
+		} catch (NodeException e) {
+			if (e.getClass().isAssignableFrom(expectedErrorClazz)) {
+				if (StringUtils.isNotBlank(expectedResponseMessage)) {
+					assertThat(e.getMessage()).as("Exception message").isEqualTo(expectedResponseMessage);
+				}
+
+				if (!ObjectTransformer.isEmpty(expectedMessages)) {
+					assertThat(List.of(new Message(Message.Type.CRITICAL, e.getLocalizedMessage())))
+							.as("Exception messages").containsOnly(expectedMessages);
+				}
+			} else {
+				fail("Unexpected exception thrown", e);
 			}
 		}
 	}

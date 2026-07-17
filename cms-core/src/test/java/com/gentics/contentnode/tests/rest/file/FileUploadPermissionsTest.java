@@ -1,24 +1,34 @@
 package com.gentics.contentnode.tests.rest.file;
 
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.i18n.I18nString;
-import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
@@ -27,16 +37,16 @@ import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.lib.i18n.CNI18nString;
 
 /**
  * Test cases for permission checking for file uploads
  */
+@RunWith(Parameterized.class)
 public class FileUploadPermissionsTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -47,8 +57,7 @@ public class FileUploadPermissionsTest {
 
 	private static Node nodeWithoutPerm;
 
-	@Rule
-	public ExceptionChecker exceptionChecker = new ExceptionChecker();
+	private static Auth authentication;
 
 	/**
 	 * Setup test data
@@ -58,6 +67,7 @@ public class FileUploadPermissionsTest {
 	public static void setupOnce() throws NodeException {
 		UserGroup nodeAdminGroup = Trx.supply(() -> TransactionManager.getCurrentTransaction().getObject(UserGroup.class, 2));
 		testUser = Trx.supply(() -> Creator.createUser("login", "password", "Tester", "Tester", "", Arrays.asList(nodeAdminGroup)));
+		authentication = new Auth(testUser);
 
 		try (Trx trx = new Trx(createSession(testUser.getLogin()), true)) {
 			nodeWithPerm = createNode();
@@ -65,6 +75,14 @@ public class FileUploadPermissionsTest {
 
 		nodeWithoutPerm = Trx.supply(() -> createNode());
 	}
+
+	@Parameters(name = "{index}: auth {0}")
+	public static Collection<Object[]> data() {
+		return Stream.of(AuthType.LOGIN, AuthType.TOKEN).map(type -> new Object[] { type }).collect(Collectors.toList());
+	}
+
+	@Parameter(0)
+	public AuthType type;
 
 	/**
 	 * Test uploading a file with permission
@@ -74,9 +92,8 @@ public class FileUploadPermissionsTest {
 	 */
 	@Test
 	public void testPermission() throws NodeException, ParseException, IOException {
-		doUploadTest(nodeWithPerm, uploadResponse -> {
-			ContentNodeRESTUtils.assertResponseOK(uploadResponse);
-		});
+		FileUploadResponse response = authentication.withAuth(type, () -> assertSuccess(doUploadTest(nodeWithPerm), ""));
+		assertThat(response).as("Response").hasFieldOrPropertyWithValue("file.creator.id", testUser.getId());
 	}
 
 	/**
@@ -87,14 +104,9 @@ public class FileUploadPermissionsTest {
 	 */
 	@Test
 	public void testNoPermission() throws NodeException, ParseException, IOException {
-		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf den angegebenen Ordner.");
-		doUploadTest(nodeWithoutPerm, uploadResponse -> {
-			I18nString i18nMessage = new CNI18nString("folder.nopermission");
-			i18nMessage.setParameter("0", nodeWithoutPerm.getFolder().getId());
-
-			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.PERMISSION, i18nMessage.toString(),
-					new Message(Type.CRITICAL, i18nMessage.toString()));
-		});
+		String msg = I18NHelper.get("folder.nopermission");
+		authentication.withAuth(type, () -> assertError(doUploadTest(nodeWithoutPerm),
+				InsufficientPrivilegesException.class, ResponseCode.PERMISSION, msg, new Message(Type.CRITICAL, msg)));
 	}
 
 	/**
@@ -102,20 +114,16 @@ public class FileUploadPermissionsTest {
 	 * @param node node
 	 * @param asserter asserter for the upload response
 	 * @throws NodeException
-	 * @throws ParseException
-	 * @throws IOException
 	 */
-	protected void doUploadTest(Node node, Consumer<FileUploadResponse> asserter) throws NodeException, ParseException, IOException {
-		MultiPart uploadMultiPart = null;
-		try (Trx trx = new Trx(createSession(testUser.getLogin()), true)) {
-			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true,
-					"testcontent");
-			FileUploadResponse uploadResponse = getFileResource().create(uploadMultiPart);
-			asserter.accept(uploadResponse);
-		} finally {
-			if (uploadMultiPart != null) {
-				uploadMultiPart.close();
+	protected Supplier<FileUploadResponse> doUploadTest(Node node) throws NodeException {
+		int folderId = supply(() -> node.getFolder().getId());
+		return () -> {
+			try (MultiPart uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt",
+					folderId, node.getId(), "", true, "testcontent")) {
+				return getFileResource().create(uploadMultiPart);
+			} catch (IOException | ParseException e) {
+				throw new NodeException(e);
 			}
-		}
+		};
 	}
 }

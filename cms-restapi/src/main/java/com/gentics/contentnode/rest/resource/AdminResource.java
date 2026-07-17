@@ -28,9 +28,9 @@ import com.gentics.contentnode.rest.model.response.log.ActionLogEntryList;
 import com.gentics.contentnode.rest.model.response.log.ActionLogTypeList;
 import com.gentics.contentnode.rest.model.response.log.ActionModelList;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntryList;
-import com.gentics.contentnode.rest.model.token.APITokenCreationRequest;
-import com.gentics.contentnode.rest.model.token.APITokenCreationResponse;
-import com.gentics.contentnode.rest.model.token.APITokenListResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenListResponse;
 import com.gentics.contentnode.rest.resource.parameter.ActionLogParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.DirtQueueParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -331,7 +331,7 @@ public interface AdminResource {
 	 */
 	@POST
 	@Path("/token")
-	APITokenCreationResponse createAPIToken(APITokenCreationRequest request) throws Exception;
+	ApiTokenCreationResponse createAPIToken(ApiTokenCreationRequest request) throws Exception;
 
 	/**
 	 * Get the list of API Tokens for the current user
@@ -345,7 +345,7 @@ public interface AdminResource {
 	 */
 	@GET
 	@Path("/token")
-	APITokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+	ApiTokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**

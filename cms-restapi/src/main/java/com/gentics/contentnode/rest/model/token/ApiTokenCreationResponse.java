@@ -5,12 +5,12 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 /**
  * Response containing the created token
  */
-public class APITokenCreationResponse extends GenericResponse {
+public class ApiTokenCreationResponse extends GenericResponse {
 	private static final long serialVersionUID = -4651294677958860376L;
 
 	private String token;
 
-	private APITokenDataModel tokenData;
+	private ApiTokenDataModel tokenData;
 
 	/**
 	 * Token
@@ -25,7 +25,7 @@ public class APITokenCreationResponse extends GenericResponse {
 	 * @param token token
 	 * @return fluent API
 	 */
-	public APITokenCreationResponse setToken(String token) {
+	public ApiTokenCreationResponse setToken(String token) {
 		this.token = token;
 		return this;
 	}
@@ -34,7 +34,7 @@ public class APITokenCreationResponse extends GenericResponse {
 	 * API Token data
 	 * @return token data
 	 */
-	public APITokenDataModel getData() {
+	public ApiTokenDataModel getData() {
 		return tokenData;
 	}
 
@@ -43,7 +43,7 @@ public class APITokenCreationResponse extends GenericResponse {
 	 * @param token token
 	 * @return fluent API
 	 */
-	public APITokenCreationResponse setData(APITokenDataModel tokenData) {
+	public ApiTokenCreationResponse setData(ApiTokenDataModel tokenData) {
 		this.tokenData = tokenData;
 		return this;
 	}

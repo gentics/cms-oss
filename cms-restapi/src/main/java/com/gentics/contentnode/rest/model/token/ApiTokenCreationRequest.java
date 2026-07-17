@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Request to create a new API Token for the current user
  */
-public class APITokenCreationRequest implements Serializable {
+public class ApiTokenCreationRequest implements Serializable {
 	private static final long serialVersionUID = 5883346357733120180L;
 
 	protected String name;
@@ -25,7 +25,7 @@ public class APITokenCreationRequest implements Serializable {
 	 * @param name name
 	 * @return fluent API
 	 */
-	public APITokenCreationRequest setName(String name) {
+	public ApiTokenCreationRequest setName(String name) {
 		this.name = name;
 		return this;
 	}
@@ -43,7 +43,7 @@ public class APITokenCreationRequest implements Serializable {
 	 * @param expires expiry date
 	 * @return fluent API
 	 */
-	public APITokenCreationRequest setExpires(int expires) {
+	public ApiTokenCreationRequest setExpires(int expires) {
 		this.expires = expires;
 		return this;
 	}

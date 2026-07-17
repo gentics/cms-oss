@@ -5,13 +5,18 @@ import java.io.Serializable;
 /**
  * Model for an API Token
  */
-public class APITokenDataModel implements Serializable {
+public class ApiTokenDataModel implements Serializable {
 	private static final long serialVersionUID = 6322580482053154169L;
 
 	/**
 	 * Token ID
 	 */
 	private int id;
+
+	/**
+	 * User ID
+	 */
+	private int userId;
 
 	/**
 	 * Token name
@@ -51,8 +56,26 @@ public class APITokenDataModel implements Serializable {
 	 * @param id ID
 	 * @return fluent API
 	 */
-	public APITokenDataModel setId(int id) {
+	public ApiTokenDataModel setId(int id) {
 		this.id = id;
+		return this;
+	}
+
+	/**
+	 * User ID
+	 * @return user Id
+	 */
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * Set the user ID
+	 * @param userId user ID
+	 * @return fluent API
+	 */
+	public ApiTokenDataModel setUserId(int userId) {
+		this.userId = userId;
 		return this;
 	}
 
@@ -69,7 +92,7 @@ public class APITokenDataModel implements Serializable {
 	 * @param name name
 	 * @return fluent API
 	 */
-	public APITokenDataModel setName(String name) {
+	public ApiTokenDataModel setName(String name) {
 		this.name = name;
 		return this;
 	}
@@ -87,7 +110,7 @@ public class APITokenDataModel implements Serializable {
 	 * @param cdate creation date
 	 * @return fluent API
 	 */
-	public APITokenDataModel setCdate(int cdate) {
+	public ApiTokenDataModel setCdate(int cdate) {
 		this.cdate = cdate;
 		return this;
 	}
@@ -105,7 +128,7 @@ public class APITokenDataModel implements Serializable {
 	 * @param expires expiry date
 	 * @return fluent API
 	 */
-	public APITokenDataModel setExpires(int expires) {
+	public ApiTokenDataModel setExpires(int expires) {
 		this.expires = expires;
 		return this;
 	}
@@ -123,7 +146,7 @@ public class APITokenDataModel implements Serializable {
 	 * @param lastUsed date
 	 * @return fluent API
 	 */
-	public APITokenDataModel setLastUsed(int lastUsed) {
+	public ApiTokenDataModel setLastUsed(int lastUsed) {
 		this.lastUsed = lastUsed;
 		return this;
 	}
@@ -141,7 +164,7 @@ public class APITokenDataModel implements Serializable {
 	 * @param valid flag
 	 * @return fluent API
 	 */
-	public APITokenDataModel setValid(boolean valid) {
+	public ApiTokenDataModel setValid(boolean valid) {
 		this.valid = valid;
 		return this;
 	}

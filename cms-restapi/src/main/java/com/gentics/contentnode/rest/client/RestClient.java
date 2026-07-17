@@ -53,6 +53,7 @@ public class RestClient {
 	// cookie handler (for storing cookies per client)
 	private CookieHandler cookieHandler = new CookieManager();
 	private String sid;
+	private String apiToken;
 	private JerseyClient jerseyClient;
 
 	/**
@@ -94,6 +95,9 @@ public class RestClient {
 				for (String value : entry.getValue()) {
 					requestContext.getHeaders().add(entry.getKey(), value);
 				}
+			}
+			if (apiToken != null) {
+				requestContext.getHeaders().add("Authorization", "Bearer %s".formatted(apiToken));
 			}
 		}).register((ClientResponseFilter) (requestContext, responseContext) -> {
 			cookieHandler.put(requestContext.getUri(), responseContext.getHeaders());
@@ -230,13 +234,15 @@ public class RestClient {
 	 * Provides access to the WebTarget that is used as the base for all commands to the server
 	 *
 	 * @return The base resource, with the active SID already set
-	 * @throws RestException If no valid SID is registered with the client
+	 * @throws RestException If no valid APIToken and no valid SID is registered with the client
 	 */
 	public WebTarget base() throws RestException {
-		if (sid != null) {
+		if (apiToken != null) {
+			return base;
+		} else if (sid != null) {
 			return base.queryParam("sid", sid);
 		} else {
-			throw new AuthRequiredRestException("No valid SID is associated with this client. Log in first!");
+			throw new AuthRequiredRestException("No valid APIToken or valid SID is associated with this client. Log in first!");
 		}
 	}
 
@@ -253,6 +259,14 @@ public class RestClient {
 	 */
 	public void setSid(String sid) {
 		this.sid = sid;
+	}
+
+	/**
+	 * Set the API Token, that should be used
+	 * @param apiToken api token
+	 */
+	public void setApiToken(String apiToken) {
+		this.apiToken = apiToken;
 	}
 
 	/**

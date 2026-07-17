@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
@@ -636,6 +637,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		localPage.setChannelInfo(channelId, channelSetId);
 
 		localPage.save();
+		localPage.unlock();
 		t.commit(false);
 
 		// Create an inherited test folder in the master
@@ -646,14 +648,14 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		inheritedPage.setTemplateId(C.page_channel_test.new_page_template_id);
 
 		inheritedPage.save();
+		inheritedPage.unlock();
 		t.commit(false);
 
 		// Test deleting the local folder in the channel
 		assertEquals("Check response code", ResponseCode.OK, getPageResource().delete(localPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Test deleting the inherited folder in the channel from the master (should error out)
-		assertEquals("Check response code", ResponseCode.FAILURE,
-				getPageResource().delete(inheritedPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+		assertError(() -> getPageResource().delete(inheritedPage.getId().toString(), channelId, null), NodeException.class, ResponseCode.FAILURE, "Can't delete an inherated page, the page has to be deleted in the master node.");
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,

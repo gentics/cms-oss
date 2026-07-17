@@ -9,7 +9,9 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
 import static com.gentics.contentnode.perm.PermHandler.setPermissions;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.update;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
@@ -41,6 +43,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
@@ -49,13 +52,13 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.request.PageOfflineRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -223,14 +226,12 @@ public class TimeManagementRestTest {
 	@Test
 	public void testSetPublishAt() throws NodeException {
 		// call the endpoint
-		GenericResponse response = supply(testUser, () -> {
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
 			PagePublishRequest request = new PagePublishRequest();
 			request.setAt(futureTimestamp);
-			return new PageResourceImpl().publish(Integer.toString(testPage.getId()), testNode.getId(), request);
-		});
+			assertSuccess(() -> getPageResource().publish(Integer.toString(testPage.getId()), testNode.getId(), request), "");
+		}
 
-		// the request should succeed in any case
-		assertResponseOK(response);
 		operate(() -> {
 			testPage = testPage.reload();
 			if (effectivePublishPermission) {
@@ -250,14 +251,12 @@ public class TimeManagementRestTest {
 	@Test
 	public void testSetOfflinehAt() throws NodeException {
 		// call the endpoint
-		GenericResponse response = supply(testUser, () -> {
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
 			PageOfflineRequest request = new PageOfflineRequest();
 			request.setAt(futureTimestamp);
-			return new PageResourceImpl().takeOffline(Integer.toString(testPage.getId()), request);
-		});
+			assertSuccess(() -> getPageResource().takeOffline(Integer.toString(testPage.getId()), request), "");
+		}
 
-		// the request should succeed in any case
-		assertResponseOK(response);
 		operate(() -> {
 			testPage = testPage.reload();
 			if (effectivePublishPermission) {
@@ -281,19 +280,17 @@ public class TimeManagementRestTest {
 		}).unlock().publish(futureTimestamp).build();
 
 		// call the endpoint to clear the "publish at" time
-		GenericResponse response = supply(testUser, () -> {
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
 			PageSaveRequest request = new PageSaveRequest();
 			request.setPage(new com.gentics.contentnode.rest.model.Page());
 			request.setClearPublishAt(true);
 			request.setUnlock(true);
-			return new PageResourceImpl().save(Integer.toString(testPage.getId()), request);
-		});
-
-		// the request will only succeed if the user has "publish" permission
-		if (effectivePublishPermission) {
-			assertResponseOK(response);
-		} else {
-			ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION);
+			Supplier<GenericResponse> method = () -> getPageResource().save(Integer.toString(testPage.getId()), request);
+			if (effectivePublishPermission) {
+				assertSuccess(method, "");
+			} else {
+				assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "");
+			}
 		}
 
 		operate(() -> {
@@ -319,19 +316,17 @@ public class TimeManagementRestTest {
 		}).unlock().takeOffline(futureTimestamp).build();
 
 		// call the endpoint to clear the "offline at" time
-		GenericResponse response = supply(testUser, () -> {
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
 			PageSaveRequest request = new PageSaveRequest();
 			request.setPage(new com.gentics.contentnode.rest.model.Page());
 			request.setClearOfflineAt(true);
 			request.setUnlock(true);
-			return new PageResourceImpl().save(Integer.toString(testPage.getId()), request);
-		});
-
-		// the request will only succeed if the user has "publish" permission
-		if (effectivePublishPermission) {
-			assertResponseOK(response);
-		} else {
-			ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION);
+			Supplier<GenericResponse> method = () -> getPageResource().save(Integer.toString(testPage.getId()), request);
+			if (effectivePublishPermission) {
+				assertSuccess(method, "");
+			} else {
+				assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "");
+			}
 		}
 
 		operate(() -> {

@@ -2,11 +2,14 @@ package com.gentics.contentnode.tests.multichannelling;
 
 import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +28,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -38,6 +42,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Page;
@@ -313,7 +318,7 @@ public class LocalizationPermissionTest {
 		Node testChannel = channelWithPerm ? channel : otherChannel;
 
 		try (Trx trx = new Trx(user)) {
-			GenericResponse response = null;
+			Supplier<GenericResponse> method = null;
 
 			switch (type) {
 			case folder:
@@ -321,54 +326,53 @@ public class LocalizationPermissionTest {
 				folderCreate.setName("Testfolder");
 				folderCreate.setMotherId(Integer.toString(folder.getId()));
 				folderCreate.setNodeId(testChannel.getId());
-				response = getFolderResource().create(folderCreate);
+				method = () -> getFolderResource().create(folderCreate);
 				break;
 			case file:
 			case image:
-				MultiPart fileMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart(
-						"testfile.txt", folder.getId(), testChannel.getId(), "", false, "testcontent");
-				try {
-					response = new FileResourceImpl().create(fileMultiPart);
-				} finally {
-					fileMultiPart.cleanup();
-				}
+				method = () -> {
+					try (MultiPart fileMultiPart =  ContentNodeTestDataUtils.createRestFileUploadMultiPart("testfile.txt",
+							folder.getId(), testChannel.getId(), "", false, "testcontent")) {
+						return new FileResourceImpl().create(fileMultiPart);
+					} catch (ParseException | IOException e) {
+						throw new NodeException(e);
+					}
+				};
 				break;
 			case page:
 				PageCreateRequest pageCreate = new PageCreateRequest();
 				pageCreate.setFolderId(Integer.toString(folder.getId()));
 				pageCreate.setNodeId(testChannel.getId());
-				response = getPageResource().create(pageCreate);
+				method = () -> getPageResource().create(pageCreate);
 				break;
 			}
 
 			if (create && (restricted == Restricted.none || (restricted == Restricted.channel && testChannel.equals(channel)))) {
-				ContentNodeRESTUtils.assertResponseOK(response);
+				assertSuccess(method, null);
 			} else if (!create && (restricted == Restricted.none || (restricted == Restricted.channel && testChannel.equals(channel)))) {
 				switch (type) {
 				case folder:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, "Insufficient permissions to create folder");
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "Insufficient permissions to create folder");
 					break;
 				case page:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, String.format("Insufficient permission to create pages in folder %d", folder.getId()));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "Insufficient permission to create pages in folder %d".formatted(folder.getId()));
 					break;
 				case file:
 				case image:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.FAILURE, String.format("You don't have permission to create files in the folder with id 189.", folder.getId()));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.FAILURE, "You don't have permission to create files in the folder with id %d.".formatted(folder.getId()));
 					break;
 				}
 			} else {
 				switch (type) {
 				case folder:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.FAILURE,
-							"Error while creating new folder: " + new CNI18nString(String.format("%s.nopermission", type.toString())).toString());
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.FAILURE, "Error while creating new folder: " + I18NHelper.get("%s.nopermission".formatted(type)));
 					break;
 				case page:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION,
-							String.format("Insufficient permission to create pages in folder %d", folder.getId()));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "Insufficient permission to create pages in folder %d".formatted(folder.getId()));
 					break;
 				case file:
 				case image:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, I18NHelper.get("folder.nopermission"));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, I18NHelper.get("folder.nopermission"));
 					break;
 				}
 			}
@@ -387,7 +391,7 @@ public class LocalizationPermissionTest {
 		Trx.consume(LocalizableNodeObject::unlock, localObject);
 
 		try (Trx trx = new Trx(user)) {
-			GenericResponse response = null;
+			Supplier<GenericResponse> method = null;
 
 			switch (type) {
 			case folder:
@@ -395,53 +399,53 @@ public class LocalizationPermissionTest {
 				folderModel.setName("modified " + localObject.getName());
 				FolderSaveRequest folderSave = new FolderSaveRequest();
 				folderSave.setFolder(folderModel);
-				response = getFolderResource().save(Integer.toString(localObject.getId()), folderSave);
+				method = () -> getFolderResource().save(Integer.toString(localObject.getId()), folderSave);
 				break;
 			case file:
 				File file = new File();
 				file.setName("modified_" + localObject.getName());
 				FileSaveRequest fileSave = new FileSaveRequest();
 				fileSave.setFile(file);
-				response = getFileResource().save(localObject.getId(), fileSave);
+				method = () -> getFileResource().save(localObject.getId(), fileSave);
 				break;
 			case image:
 				Image image = new Image();
 				image.setName("modified_" + localObject.getName());
 				ImageSaveRequest imageSave = new ImageSaveRequest();
 				imageSave.setImage(image);
-				response = getImageResource().save(localObject.getId(), imageSave);
+				method = () -> getImageResource().save(localObject.getId(), imageSave);
 				break;
 			case page:
 				Page page = new Page();
 				page.setName("modified " + localObject.getName());
 				PageSaveRequest pageSave = new PageSaveRequest();
 				pageSave.setPage(page);
-				response = getPageResource().save(Integer.toString(localObject.getId()), pageSave);
+				method = () -> getPageResource().save(Integer.toString(localObject.getId()), pageSave);
 				break;
 			}
 
 			if (create && (restricted == Restricted.none || (restricted == Restricted.channel && testChannel.equals(channel)))) {
-				ContentNodeRESTUtils.assertResponseOK(response);
+				assertSuccess(method, null);
 			} else if (!create && (restricted == Restricted.none || (restricted == Restricted.channel && testChannel.equals(channel)))) {
 				switch (type) {
 				case folder:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, String.format("Insufficient permissions to save Folder %d", localObject.getId()));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, String.format("Insufficient permissions to save Folder %d", localObject.getId()));
 					break;
 				case page:
 				case file:
 				case image:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, new CNI18nString(String.format("%s.nopermission", type.toString())).toString());
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, I18NHelper.get("%s.nopermission".formatted(type)));
 					break;
 				}
 			} else {
 				switch (type) {
 				case folder:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, String.format("Insufficient permissions to save Folder %d", localObject.getId()));
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "Insufficient permissions to save Folder %d".formatted(localObject.getId()));
 					break;
 				case page:
 				case file:
 				case image:
-					ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, new CNI18nString(String.format("%s.nopermission", type.toString())).toString());
+					assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, I18NHelper.get("%s.nopermission".formatted(type)));
 					break;
 				}
 			}
@@ -460,27 +464,27 @@ public class LocalizationPermissionTest {
 		Trx.consume(LocalizableNodeObject::unlock, localObject);
 
 		try (Trx trx = new Trx(user)) {
-			GenericResponse response = null;
+			Supplier<GenericResponse> method = null;
 
 			switch (type) {
 			case folder:
-				response = getFolderResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				method = () -> getFolderResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case file:
-				response = getFileResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				method = () -> getFileResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case image:
-				response = getImageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				method = () -> getImageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			case page:
-				response = getPageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
+				method = () -> getPageResource().delete(Integer.toString(localObject.getId()), testChannel.getId(), null);
 				break;
 			}
 
 			if (delete && (restricted == Restricted.none || (restricted == Restricted.channel && testChannel.equals(channel)))) {
-				ContentNodeRESTUtils.assertResponseOK(response);
+				assertSuccess(method, null);
 			} else {
-				ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, new CNI18nString(String.format("%s.nopermission", type.toString())).toString());
+				assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, I18NHelper.get("%s.nopermission".formatted(type)));
 			}
 			trx.success();
 		}
@@ -495,27 +499,27 @@ public class LocalizationPermissionTest {
 		supply(() -> type.localize(masterObject, testChannel));
 
 		try (Trx trx = new Trx(user)) {
-			GenericResponse response = null;
+			Supplier<GenericResponse> method = null;
 
 			switch (type) {
 			case folder:
-				response = getFolderResource().delete(Integer.toString(masterObject.getId()), null, null);
+				method = () -> getFolderResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case file:
-				response = getFileResource().delete(Integer.toString(masterObject.getId()), null, null);
+				method = () -> getFileResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case image:
-				response = getImageResource().delete(Integer.toString(masterObject.getId()), null, null);
+				method = () -> getImageResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			case page:
-				response = getPageResource().delete(Integer.toString(masterObject.getId()), null, null);
+				method = () -> getPageResource().delete(Integer.toString(masterObject.getId()), null, null);
 				break;
 			}
 
 			if (delete && restricted == Restricted.none) {
-				ContentNodeRESTUtils.assertResponseOK(response);
+				assertSuccess(method, null);
 			} else {
-				ContentNodeRESTUtils.assertResponse(response, ResponseCode.PERMISSION, new CNI18nString(String.format("%s.nopermission", type.toString())).toString());
+				assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, I18NHelper.get("%s.nopermission".formatted(type)));
 			}
 			trx.success();
 		}

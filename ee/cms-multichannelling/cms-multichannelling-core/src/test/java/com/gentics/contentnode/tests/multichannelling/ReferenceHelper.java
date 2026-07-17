@@ -69,24 +69,24 @@ final class ReferenceHelper {
 	 */
 	public static Page localizeAndPublishPageWithChangedContentTag(int channelId, int pageId, com.gentics.contentnode.rest.model.Tag tag) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
 		com.gentics.contentnode.object.Page localCopyPage = (com.gentics.contentnode.object.Page) page.copy();
-        
+
 		localCopyPage.setChannelInfo(channelId, page.getChannelSetId());
 		localCopyPage.save();
 		localCopyPage.publish();
 		t.commit(false);
-        
+
 		com.gentics.contentnode.rest.model.Page restLocalizedPage = ReferenceHelper.loadPage(ObjectTransformer.getInt(localCopyPage.getId(), -1));
 
 		restLocalizedPage.getTags().get(tag.getName()).getProperties().get("text").setStringValue(C.reference_test_data.page_tag_channel_value);
-        
+
 		savePage(restLocalizedPage);
-        
+
 		return localCopyPage;
 	}
-	
+
 	/**
 	 * Save {@link com.gentics.contentnode.rest.model.Page}.
 	 * 
@@ -100,9 +100,11 @@ final class ReferenceHelper {
 		saveRequest.setUnlock(true);
 		GenericResponse saveResponse = getPageResource().save(Integer.toString(page.getId()), saveRequest);
 
+		TransactionManager.getCurrentTransaction().commit(false);
+
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
-	
+
 	/**
 	 * Load page, using REST interface.
 	 * 
@@ -127,6 +129,8 @@ final class ReferenceHelper {
 	public static void publishPage(com.gentics.contentnode.rest.model.Page page) throws Exception {
 		GenericResponse publishResponse = getPageResource().publish(Integer.toString(page.getId()), null, new PagePublishRequest());
 
+		TransactionManager.getCurrentTransaction().commit(false);
+
 		assertEquals("Check the response code", ResponseCode.OK, publishResponse.getResponseInfo().getResponseCode());
 	}
 	
@@ -145,7 +149,7 @@ final class ReferenceHelper {
 		normalTemplate.setSource(initalSource);
 		normalTemplate.save();
 		t.commit(false);
-        
+
 		return normalTemplate;
 	}
 	
@@ -207,6 +211,8 @@ final class ReferenceHelper {
 		// get the test page
 		com.gentics.contentnode.rest.model.Page testPage = createPageResponse.getPage();
 
+		TransactionManager.getCurrentTransaction().commit(false);
+
 		return testPage;
 	}
 	
@@ -225,6 +231,8 @@ final class ReferenceHelper {
 		TagCreateResponse tagCreateResponse = getPageResource().createTag(Integer.toString(pageId), 3, null, tagCreateRequest);
 
 		assertEquals("Check the reponse code", ResponseCode.OK, tagCreateResponse.getResponseInfo().getResponseCode());
+
+		TransactionManager.getCurrentTransaction().commit(false);
 
 		return tagCreateResponse.getTag();
 	}

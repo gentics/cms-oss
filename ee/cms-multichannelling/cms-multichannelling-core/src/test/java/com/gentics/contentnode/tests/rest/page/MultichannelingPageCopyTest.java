@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.rest.page;
 
 import static com.gentics.api.lib.etc.ObjectTransformer.getInteger;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -24,6 +26,7 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.perm.PermissionStore;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.request.page.PageCopyRequest;
 import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -33,6 +36,7 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -337,25 +341,18 @@ public class MultichannelingPageCopyTest extends AbstractPageCopyTest {
 		PermHandler.setPermissions(Node.TYPE_NODE, getInteger(nodeA.getFolder().getId(),-1), groupsWithNoPerm, new Permission(PermHandler.FULL_PERM).toString());
 		PermissionStore.initialize(true);
 		t.commit(false);
-		testContext.getContext().startTransaction(getInteger(testUser.getId(),-1));
 
-		// Prepare copy request
-		PageCopyRequest copyRequest = new PageCopyRequest();
-		copyRequest.setCreateCopy(ENABLED);
-		copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(),-1));
-		addTargetFolder(copyRequest, targetFolder);
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Prepare copy request
+			PageCopyRequest copyRequest = new PageCopyRequest();
+			copyRequest.setCreateCopy(ENABLED);
+			copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(),-1));
+			addTargetFolder(copyRequest, targetFolder);
 
-		// Invoke copy call
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageCopyResponse response = pageResource.copy(copyRequest, 0);
-		assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
-		assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
-				.getResponseMessage());
-		CNI18nString expectedString = new CNI18nString("page_copy.missing_create_perms_for_target");
-		expectedString.addParameter(I18NHelper.getLocation(targetFolder));
-		assertMessage(response, expectedString);
-		assertEquals("No pages should have been copied and added to the reponse", 0, response.getPages().size());
-
+			// Invoke copy call
+			assertError(() -> getPageResource().copy(copyRequest, 0), InsufficientPrivilegesException.class,
+					ResponseCode.FAILURE, "Error during copy process. Please check the messages.");
+		}
 	}
 
 	/**
@@ -510,23 +507,23 @@ public class MultichannelingPageCopyTest extends AbstractPageCopyTest {
 		PermHandler.setPermissions(Node.TYPE_CHANNEL, getInteger(channel.getFolder().getId(),-1), groupsWithNoPerm, new Permission(PermHandler.EMPTY_PERM).toString());
 		PermissionStore.initialize(true);
 		t.commit(false);
-		testContext.getContext().startTransaction(getInteger(testUser.getId(),-1));
 
-		// Prepare the copy request
-		PageCopyRequest copyRequest = new PageCopyRequest();
-		copyRequest.setCreateCopy(ENABLED);
-		copyRequest.getSourcePageIds().add(getInteger(localizedSourcePage.getId(),-1));
-		addTargetFolder(copyRequest, nodeB.getFolder());
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Prepare the copy request
+			PageCopyRequest copyRequest = new PageCopyRequest();
+			copyRequest.setCreateCopy(ENABLED);
+			copyRequest.getSourcePageIds().add(getInteger(localizedSourcePage.getId(),-1));
+			addTargetFolder(copyRequest, nodeB.getFolder());
 
-		// Invoke copy call
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageCopyResponse response = pageResource.copy(copyRequest, 0);
-		assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
+			// Invoke copy call
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			PageCopyResponse response = pageResource.copy(copyRequest, 0);
+			assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
 
-		testContext.getContext().startTransaction();
-		assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
-				.getResponseMessage());
-		assertEquals(expectedMessage, response.getMessages().get(0).getMessage());
+			assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
+					.getResponseMessage());
+			assertEquals(expectedMessage, response.getMessages().get(0).getMessage());
+		}
 	}
 
 	/**

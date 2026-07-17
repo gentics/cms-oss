@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -400,9 +401,9 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertEquals("Check response code", ResponseCode.OK,
 				getFolderResource().delete(localFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
-		// Test deleting the inherited folder in the channel from the master (should error out)
-		assertEquals("Check response code", ResponseCode.FAILURE,
-				getFolderResource().delete(inheritedFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+		assertError(() -> getFolderResource().delete(inheritedFolder.getId().toString(), channelId, null),
+				NodeException.class, ResponseCode.FAILURE,
+				"Can't delete an inherated folder, the folder has to be deleted in the master node.");
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,

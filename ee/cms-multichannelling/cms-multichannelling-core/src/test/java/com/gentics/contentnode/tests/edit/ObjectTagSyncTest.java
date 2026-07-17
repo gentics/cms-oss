@@ -113,12 +113,10 @@ public class ObjectTagSyncTest {
 	 * @throws NodeException
 	 */
 	protected static Page translate(Page source, ContentLanguage language) throws NodeException {
-		return supply(t -> {
-			PageLoadResponse response = getPageResource().translate(source.getId(), language.getCode(), false, null);
-			assertResponseOK(response);
+		PageLoadResponse response = getPageResource().translate(source.getId(), language.getCode(), false, null);
+		assertResponseOK(response);
 
-			return t.getObject(Page.class, response.getPage().getId());
-		});
+		return supply(t -> t.getObject(Page.class, response.getPage().getId()));
 	}
 
 	/**
@@ -128,16 +126,14 @@ public class ObjectTagSyncTest {
 	 * @throws NodeException
 	 */
 	protected static Page variant(Page source) throws NodeException {
-		return supply(t -> {
-			PageCreateRequest request = new PageCreateRequest();
-			request.setFolderId(Integer.toString(node.getFolder().getId()));
-			request.setTemplateId(template.getId());
-			request.setVariantId(source.getId());
-			PageLoadResponse response = getPageResource().create(request);
-			assertResponseOK(response);
+		PageCreateRequest request = new PageCreateRequest();
+		request.setFolderId(Integer.toString(supply(() -> node.getFolder().getId())));
+		request.setTemplateId(template.getId());
+		request.setVariantId(source.getId());
+		PageLoadResponse response = getPageResource().create(request);
+		assertResponseOK(response);
 
-			return t.getObject(Page.class, response.getPage().getId());
-		});
+		return supply(t -> t.getObject(Page.class, response.getPage().getId()));
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -40,12 +42,15 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.perm.PermissionStore;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -121,11 +126,8 @@ public class PageSandboxTest {
 		assertNotNull("The page should have been found.", response.getPage());
 		assertEquals(page.getFilename(), response.getPage().getFileName());
 
-		response = getPageResource().search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), "bogus");
-		assertEquals("Check for the correct response code", ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
-
-		response = getPageResource().search(false, false, false, false, false, false, false, false, false, null, "bogus");
-		assertEquals("Check for the correct response code", ResponseCode.NOTFOUND, response.getResponseInfo().getResponseCode());
+		assertError(() -> getPageResource().search(false, false, false, false, false, false, false, false, false, page.getNode().getId(), "bogus"), EntityNotFoundException.class, ResponseCode.NOTFOUND, "");
+		assertError(() -> getPageResource().search(false, false, false, false, false, false, false, false, false, null, "bogus"), EntityNotFoundException.class, ResponseCode.NOTFOUND, "");
 	}
 
 	/**
@@ -195,26 +197,18 @@ public class PageSandboxTest {
 
 		// Create new user
 		SystemUser translationUser = Creator.createUser("testtranslator", "testtranslator", "test", "translator", "blah@rg.hh", Arrays.asList(new UserGroup[]{translatorGroup}));
-
-		// Commit & restart transaction as testtranslator
-		testContext.getContext().startTransaction(translationUser.getId());
-		t = testContext.getContext().getTransaction();
-
 		// Re-synchronize Permission store with database contents changed previously
 		PermissionStore.initialize(true);
-
-		assertEquals("Current User ID must match testtranslator's ID", translationUser.getId().intValue(), t.getUserId());
-
-		PageLoadResponse result = getPageResource().translate(page.getId(), destLanguage.getCode(), true, 0);
-
-		assertEquals("translation operation must be successful", ResponseCode.OK, result.getResponseInfo().getResponseCode());
-
-		// translate page to language without permissions
-		result = getPageResource().translate(page.getId(), destLanguage2.getCode(), true, 0);
-
-		assertEquals("translation must fail", ResponseCode.PERMISSION, result.getResponseInfo().getResponseCode());
-
 		t.commit();
+
+		// test for the translation user
+		try (DBSessionClosure ses = new DBSessionClosure(translationUser.getId())) {
+			// translate page to language with permissions
+			assertSuccess(() -> getPageResource().translate(page.getId(), destLanguage.getCode(), true, 0), "");
+			// translate page to language without permissions
+			assertError(() -> getPageResource().translate(page.getId(), destLanguage2.getCode(), true, 0), InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "");
+		}
+
 	}
 
 	/**
@@ -301,6 +295,7 @@ public class PageSandboxTest {
 		assertTrue("Page must be a master", masterPage.isMaster());
 
 		// localize the page
+		t.commit(false);
 		Page localizedCopy = (Page)t.getObject(Page.class, masterPage.getId()).copy();
 		localizedCopy.setChannelInfo(channel.getId(), t.getObject(Page.class, masterPage.getId()).getChannelSetId());
 		localizedCopy.save();

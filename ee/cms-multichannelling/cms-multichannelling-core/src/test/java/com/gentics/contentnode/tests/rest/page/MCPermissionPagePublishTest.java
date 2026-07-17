@@ -1,7 +1,9 @@
 package com.gentics.contentnode.tests.rest.page;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
@@ -21,7 +23,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.factory.AutoCommit;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -32,19 +34,21 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for channel specific permissions and page publish
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = Feature.MULTICHANNELLING)
 public class MCPermissionPagePublishTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -75,9 +79,9 @@ public class MCPermissionPagePublishTest {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		testContext.getContext().setFeature(Feature.MULTICHANNELLING, true);
+		testContext.getContext().getTransaction().commit();
 
-		try (AutoCommit ac = new AutoCommit()) {
+		try (Trx trx = new Trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			adminGroup = t.getObject(UserGroup.class, 2);
 			assertNotNull("AdminGroup must exist");
@@ -89,7 +93,7 @@ public class MCPermissionPagePublishTest {
 			testUser.getUserGroups().add(adminGroup);
 			testUser.save();
 
-			ac.success();
+			trx.success();
 		}
 
 		try (Trx trx = new Trx(null, ObjectTransformer.getInt(testUser.getId(), 0))) {
@@ -178,16 +182,14 @@ public class MCPermissionPagePublishTest {
 		}
 
 		// publish the page
-		try (Trx trx = new Trx(null, ObjectTransformer.getInt(testUser.getId(), 0))) {
-			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-
-			GenericResponse response = pageResource.publish(ObjectTransformer.getString(page.getId(), ""), channel.getId(), new PagePublishRequest());
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			String pageId = String.valueOf(page.getId());
+			Supplier<GenericResponse> method = () -> getPageResource().publish(pageId, channel.getId(), new PagePublishRequest());
 
 			if (viewPermission) {
-				ContentNodeRESTUtils.assertResponseOK(response);
+				assertSuccess(method, "");
 			} else {
-				assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.PERMISSION,
-						response.getResponseInfo().getResponseCode());
+				assertError(method, InsufficientPrivilegesException.class, ResponseCode.PERMISSION, "");
 			}
 		}
 

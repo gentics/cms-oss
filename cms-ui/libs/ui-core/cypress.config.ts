@@ -6,5 +6,8 @@ export default defineConfig({
     component: {
         ...nxComponentTestingPreset(__filename),
         ...createComponentReporterOptions('libs', 'ui-core', false),
+        // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+        // intermittently run 0 tests in CI. Remove this line to opt back in.
+        justInTimeCompile: false,
     },
 });

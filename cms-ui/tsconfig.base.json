@@ -68,7 +68,11 @@
             "@gentics/cms-rest-clients-angular/testing": [
                 "./libs/cms-rest-clients-angular/src/lib/testing/index.ts"
             ]
-        }
+        },
+        "noUncheckedSideEffectImports": false,
+        "types": ["*"],
+        "esModuleInterop": false,
+        "ignoreDeprecations": "6.0"
     },
     "exclude": ["node_modules", "tmp"]
 }

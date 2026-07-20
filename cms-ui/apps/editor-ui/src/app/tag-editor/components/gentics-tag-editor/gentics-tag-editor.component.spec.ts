@@ -67,7 +67,7 @@ describe('GenticsTagEditorComponent', () => {
     });
 
     it('creates the correct number of tag property editors and initializes them correctly',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             // Create the TagPropertyEditor spies and make sure that the spied methods are called in the right order.
@@ -76,7 +76,7 @@ describe('GenticsTagEditorComponent', () => {
             const writeChangedValuesSpies: jasmine.Spy[] = [];
             let validatorSpy: jasmine.Spy;
             let currTagPropertyEditorIndex = 0;
-            spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     if (componentType === TextTagPropertyEditor) {
                         const index = currTagPropertyEditorIndex;
@@ -227,11 +227,11 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('editTag() enables the OK button when all mandatory TagProperties have been filled and disables it again when that property is emptied',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<TagPropertyEditor>) => {
                     registerOnChangeSpies.push(
                         spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
@@ -283,11 +283,11 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('throws an error when a TagPropertyEditor tries to edit a non-editable TagProperty',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<TagPropertyEditor>) => {
                     registerOnChangeSpies.push(
                         spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
@@ -315,13 +315,13 @@ describe('GenticsTagEditorComponent', () => {
 
     it('correctly validates and communicates changes by one TagPropertyEditor to all TagPropertyEditors '
       + 'and editTag() resolves the promise correctly on OK click',
-    componentTest(() => TestComponent, (fixture, instance) => {
+    componentTest(() => TestComponent, async (fixture, instance) => {
         fixture.detectChanges();
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
         const writeChangedValuesSpies: jasmine.Spy[] = [];
         let validatorSpy: jasmine.Spy;
-        spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
             (componentType, componentInstance: ComponentRef<any>) => {
                 if (componentType === TextTagPropertyEditor) {
                     registerOnChangeSpies.push(
@@ -438,13 +438,13 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('does not communicate changes that fail validation, editTag() disables the OK button, and re-enables it when all properties are valid',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
             let validatorSpy: jasmine.Spy;
-            spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     if (componentType === TextTagPropertyEditor) {
                         registerOnChangeSpies.push(
@@ -622,12 +622,12 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('editTag() rejects the promise correctly when Cancel is clicked',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     registerOnChangeSpies.push(
                         spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
@@ -687,7 +687,7 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('prevents an onTagPropertyChanged() infinite loop',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
@@ -695,7 +695,7 @@ describe('GenticsTagEditorComponent', () => {
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     registerOnChangeSpies.push(
                         spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
@@ -751,7 +751,7 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('prevents an onTagPropertyChanged() call during initialization',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
@@ -762,7 +762,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // The registerOnChange() method of TagPropertyEditor 2 should trigger onTagPropertyChanged()
             let currPropEditorIndex = 0;
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     const index = currPropEditorIndex;
                     let onChangeSpy = spyOn(componentInstance.instance, 'registerOnChange');
@@ -796,7 +796,7 @@ describe('GenticsTagEditorComponent', () => {
     );
 
     it('catches errors thrown by a TagPropertyEditor during initialization',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
 
             const errorHandler: ErrorHandler = TestBed.inject(ErrorHandler);
@@ -804,7 +804,7 @@ describe('GenticsTagEditorComponent', () => {
             const expectedError = new Error('error during init');
 
             let initSpy: jasmine.Spy;
-            spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
+            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
                 (componentType, componentInstance: ComponentRef<any>) => {
                     if (!initSpy) {
                         initSpy = spyOn(componentInstance.instance, 'initTagPropertyEditor').and
@@ -824,7 +824,7 @@ describe('GenticsTagEditorComponent', () => {
         }),
     );
 
-    it('editTagLive() calls onTagChangeFn with the current properties after every valid change', componentTest(() => TestComponent, (fixture, instance) => {
+    it('editTagLive() calls onTagChangeFn with the current properties after every valid change', componentTest(() => TestComponent, async (fixture, instance) => {
         const origTag = getMockedTag();
         const context = getMockedTagEditorContext(origTag);
         const tagPart0Key = origTag.tagType.parts[0].keyword;
@@ -839,7 +839,7 @@ describe('GenticsTagEditorComponent', () => {
         (propertiesAfterChange1[tagPart2Key] as StringTagPartProperty).stringValue = 'Changed value of tagProperty2';
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
-        spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
             (componentType, componentInstance: ComponentRef<any>) => {
                 if (componentType === TextTagPropertyEditor) {
                     registerOnChangeSpies.push(
@@ -891,7 +891,7 @@ describe('GenticsTagEditorComponent', () => {
         expect(reportedChangedStates[1]).toEqual(propertiesAfterChange1);
     }));
 
-    it('editTagLive() calls onTagChangeFn with null after an invalid change', componentTest(() => TestComponent, (fixture, instance) => {
+    it('editTagLive() calls onTagChangeFn with null after an invalid change', componentTest(() => TestComponent, async (fixture, instance) => {
         const origTag = getMockedTag();
         const context = getMockedTagEditorContext(origTag);
         const tagPart0Key = origTag.tagType.parts[0].keyword;
@@ -907,7 +907,7 @@ describe('GenticsTagEditorComponent', () => {
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
         let validatorSpy: jasmine.Spy;
-        spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
             (componentType, componentInstance: ComponentRef<any>) => {
                 if (componentType === TextTagPropertyEditor) {
                     registerOnChangeSpies.push(
@@ -970,7 +970,7 @@ describe('GenticsTagEditorComponent', () => {
         expect(reportedChangedStates[2]).toEqual(propertiesAfterValidChange1);
     }));
 
-    it('editTagLive() does not report changes that did not modify anything', componentTest(() => TestComponent, (fixture, instance) => {
+    it('editTagLive() does not report changes that did not modify anything', componentTest(() => TestComponent, async (fixture, instance) => {
         const origTag = getMockedTag();
         const context = getMockedTagEditorContext(origTag);
         const tagPart0Key = origTag.tagType.parts[0].keyword;
@@ -983,7 +983,7 @@ describe('GenticsTagEditorComponent', () => {
         (propertiesAfterRealChange[tagPart2Key] as StringTagPartProperty).stringValue = 'Changed value of tagProperty2';
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
-        spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
+        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
             (componentType, componentInstance: ComponentRef<any>) => {
                 if (componentType === TextTagPropertyEditor) {
                     registerOnChangeSpies.push(

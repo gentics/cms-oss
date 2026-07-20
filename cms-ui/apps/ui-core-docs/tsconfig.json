@@ -2,7 +2,8 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "moduleResolution": "bundler",
-        "module": "preserve"
+        "module": "preserve",
+        "ignoreDeprecations": "6.0"
     },
     "references": [
         {

@@ -8,6 +8,9 @@ export default defineConfig({
         indexHtmlFile: './cypress/support/component-index.html',
         video: false,
         screenshotOnRunFailure: false,
+        // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+        // intermittently run 0 tests in CI. Remove this line to opt back in.
+        justInTimeCompile: false,
     },
     ...createComponentReporterOptions('apps', 'admin-ui', false),
 });

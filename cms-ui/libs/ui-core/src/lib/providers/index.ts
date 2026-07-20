@@ -6,3 +6,4 @@ export * from './overlay-host/overlay-host.service';
 export * from './page-file-drag-handler/page-file-drag-handler.service';
 export * from './size-tracker/size-tracker.service';
 export * from './user-agent/user-agent-ref';
+export * from './observable-view-container-ref/observableViewContainerRef';

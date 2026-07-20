@@ -22,7 +22,6 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.tests.rest.file.BinaryDataResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.File, File, FileCreateRequest> {
@@ -36,49 +35,49 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
+		systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 
-			File update = new File();
-			FileSaveRequest request = new FileSaveRequest();
-			request.setFile(update);
-			maybeDate.ifPresent(cdate -> request.getFile().setCdate(cdate));
-			maybeEDate.ifPresent(edate -> request.getFile().setEdate(edate));
-			maybeCustomCDate.ifPresent(cdate -> request.getFile().setCustomCdate(cdate));
-			maybeCustomEDate.ifPresent(edate -> request.getFile().setCustomEdate(edate));
-			GenericResponse response = new FileResourceImpl().save(id, request);
-			assertResponseCodeOk(response);
-		} finally {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
-		}
+				File update = new File();
+				FileSaveRequest request = new FileSaveRequest();
+				request.setFile(update);
+				maybeDate.ifPresent(cdate -> request.getFile().setCdate(cdate));
+				maybeEDate.ifPresent(edate -> request.getFile().setEdate(edate));
+				maybeCustomCDate.ifPresent(cdate -> request.getFile().setCustomCdate(cdate));
+				maybeCustomEDate.ifPresent(edate -> request.getFile().setCustomEdate(edate));
+				GenericResponse response = new FileResourceImpl().save(id, request);
+				assertResponseCodeOk(response);
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+			}
+		});
 
 		return loadFile(String.valueOf(id));
 	}
 
 	@Override
 	public File createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
-		File file = null;
-
 		int folderId = supply(() -> node.getFolder().getId());
 
-		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
+		return systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
 
-			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(folderId);
-			request.setSourceURL(appContext.getBaseUri() + "binary");
+				FileCreateRequest request = new FileCreateRequest();
+				request.setFolderId(folderId);
+				request.setSourceURL(appContext.getBaseUri() + "binary");
 
-			if (maybeInflater.isPresent()) {
-				maybeInflater.get().accept(request);
+				if (maybeInflater.isPresent()) {
+					maybeInflater.get().accept(request);
+				}
+				FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
+				assertResponseCodeOk(response);
+				return response.getFile();
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 			}
-			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
-			assertResponseCodeOk(response);
-			file = response.getFile();
-		} finally {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
-		}
-
-		return file;
+		});
 	}
 
 	/**

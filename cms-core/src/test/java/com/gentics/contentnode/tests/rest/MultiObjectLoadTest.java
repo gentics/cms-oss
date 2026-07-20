@@ -35,10 +35,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
@@ -52,7 +52,8 @@ import com.gentics.contentnode.rest.model.response.MultiFileLoadResponse;
 import com.gentics.contentnode.rest.model.response.MultiFolderLoadResponse;
 import com.gentics.contentnode.rest.model.response.MultiImageLoadResponse;
 import com.gentics.contentnode.rest.model.response.MultiPageLoadResponse;
-import com.gentics.contentnode.testutils.DBSessionClosure;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -78,11 +79,17 @@ public class MultiObjectLoadTest {
 
 	private final static int NON_EXISTENT = 0;
 
-	protected static int noPermsUserId;
+	protected static SystemUser noPermsUser;
 
-	protected static int roUserId;
+	protected static Auth noPermsUserAuth;
 
-	protected static int rwUserId;
+	protected static SystemUser roUser;
+
+	protected static Auth roUserAuth;
+
+	protected static SystemUser rwUser;
+
+	protected static Auth rwUserAuth;
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -99,25 +106,30 @@ public class MultiObjectLoadTest {
 	@Parameter(2)
 	public boolean fillWithNulls;
 
-	/**
-	 * Current session
-	 */
-	protected Session session;
+	@Parameter(3)
+	public AuthType authType;
 
-	@Parameters(name = "{index}: permission {0}, forUpdate {1}, fillWithNulls {2}")
+	/**
+	 * Current authentication
+	 */
+	protected Auth authentication;
+
+	@Parameters(name = "{index}: permission {0}, forUpdate {1}, fillWithNulls {2}, auth {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 
 		for (TestPermission perm: TestPermission.values()) {
-			for (Boolean forUpdate : Arrays.asList(true, false)) {
-				for (Boolean fillWithNulls : Arrays.asList(true, false)) {
-					data.add(new Object[] { perm, forUpdate, fillWithNulls });
+			for (Boolean forUpdate : List.of(true, false)) {
+				for (Boolean fillWithNulls : List.of(true, false)) {
+					for (AuthType authType : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+						data.add(new Object[] { perm, forUpdate, fillWithNulls, authType });
+					}
 				}
 			}
 		}
 		return data;
 	}
-	
+
 	@BeforeClass
 	public static void setUpOnce() throws Exception {
 		testContext.getContext().getTransaction().commit();
@@ -132,13 +144,16 @@ public class MultiObjectLoadTest {
 			"No permissions group", roGroup.getId()));
 
 		operate(() -> {
-			rwUserId = createSystemUser(
-					"Read", "Write", "", RW_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(rwGroup)).getId();
-			roUserId = createSystemUser(
-					"Read", "Only", "", RO_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(roGroup)).getId();
-			noPermsUserId = createSystemUser(
-					"No", "Permissions", "", NO_PERMS_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(noPermsGroup)).getId();
+			rwUser = createSystemUser(
+					"Read", "Write", "", RW_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(rwGroup));
+			roUser = createSystemUser(
+					"Read", "Only", "", RO_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(roGroup));
+			noPermsUser = createSystemUser(
+					"No", "Permissions", "", NO_PERMS_USER_LOGIN, DEFAULT_PASSWORD, Arrays.asList(noPermsGroup));
 		});
+		rwUserAuth = new Auth(rwUser);
+		roUserAuth = new Auth(roUser);
+		noPermsUserAuth = new Auth(noPermsUser);
 
 		unrestrictedFolder = supply(() -> createFolder(rootFolder, "unrestricted"));
 		restrictedFolder = supply(() -> createFolder(rootFolder, "restricted"));
@@ -176,16 +191,16 @@ public class MultiObjectLoadTest {
 	public void setup() throws NodeException {
 		switch (permission) {
 		case ReadOnly:
-			session = DBSessionClosure.createSession(roUserId);
+			authentication = roUserAuth;
 			break;
 
 		case ReadWrite:
-			session = DBSessionClosure.createSession(rwUserId);
+			authentication = rwUserAuth;
 			break;
 
 		case None:
 		default:
-			session = DBSessionClosure.createSession(noPermsUserId);
+			authentication = noPermsUserAuth;
 			break;
 		}
 	}
@@ -223,7 +238,7 @@ public class MultiObjectLoadTest {
 		int unrestrictedFileId = supply(() -> createFile(unrestrictedFolder, "unrestrictedFile", "Unrestricted File Contents".getBytes()).getId());
 		int restrictedFileId = supply(() -> createFile(restrictedFolder, "restrictedFile", "Restricted File Contents".getBytes()).getId());
 
-		try (DBSessionClosure ses = new DBSessionClosure(session)) {
+		authentication.withAuth(authType, () -> {
 			MultiObjectLoadRequest request = new MultiObjectLoadRequest();
 
 			request.setIds(Arrays.asList(unrestrictedFileId, restrictedFileId, NON_EXISTENT));
@@ -234,7 +249,7 @@ public class MultiObjectLoadTest {
 
 			assertResponseOK(response);
 			checkResult(files, unrestrictedFileId, restrictedFileId);
-		}
+		});
 	}
 
 	@Test
@@ -251,7 +266,7 @@ public class MultiObjectLoadTest {
 			image,
 			null).getId());
 
-		try (DBSessionClosure ses = new DBSessionClosure(session)) {
+		authentication.withAuth(authType, () -> {
 			MultiObjectLoadRequest request = new MultiObjectLoadRequest();
 
 			request.setIds(Arrays.asList(unrestrictedImageId, restrictedImageId, NON_EXISTENT));
@@ -262,12 +277,12 @@ public class MultiObjectLoadTest {
 
 			assertResponseOK(response);
 			checkResult(files, unrestrictedImageId, restrictedImageId);
-		}
+		});
 	}
 
 	@Test
 	public void testLoadFolders() throws Exception {
-		try (DBSessionClosure ses = new DBSessionClosure(session)) {
+		authentication.withAuth(authType, () -> {
 			MultiFolderLoadRequest request = new MultiFolderLoadRequest();
 			int unrestrictedFolderId = unrestrictedFolder.getId();
 			int restrictedFolderId = restrictedFolder.getId();
@@ -280,7 +295,7 @@ public class MultiObjectLoadTest {
 
 			assertResponseOK(response);
 			checkResult(files, unrestrictedFolderId, restrictedFolderId);
-		}
+		});
 	}
 
 	@Test
@@ -295,7 +310,7 @@ public class MultiObjectLoadTest {
 			"restrictedPage"));
 		consume(Page::unlock, restrictedPage);
 
-		try (DBSessionClosure ses = new DBSessionClosure(session)) {
+		authentication.withAuth(authType, () -> {
 			MultiPageLoadRequest request = new MultiPageLoadRequest();
 			request.setIds(Arrays.asList(unrestrictedPage.getId(), restrictedPage.getId(), 0));
 			request.setForUpdate(forUpdate);
@@ -305,6 +320,6 @@ public class MultiObjectLoadTest {
 
 			assertResponseOK(response);
 			checkResult(files, unrestrictedPage.getId(), restrictedPage.getId());
-		}
+		});
 	}
 }

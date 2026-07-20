@@ -1818,10 +1818,10 @@ public class ContentNodeTestDataUtils {
 	 * @param nodeObjectId
 	 * @param responseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
 	public static Map<String, com.gentics.contentnode.rest.model.Tag> loadRestNodeObjectAndCheckIfTagExists(
-			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws Exception {
+			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws NodeException {
 		Map<String, com.gentics.contentnode.rest.model.Tag> restTags = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
@@ -1864,13 +1864,11 @@ public class ContentNodeTestDataUtils {
 	 * @param objectType
 	 * @param nodeObjectId
 	 * @param restTags
-	 * @param shouldFail
-	 * @param reponseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	public static GenericResponse saveRestNodeObjectPropertyTagsAndAssert(int objectType, Integer nodeObjectId,
-			Map<String, com.gentics.contentnode.rest.model.Tag> restTags, ResponseCode reponseCode) throws Exception {
+	public static GenericResponse saveRestNodeObjectPropertyTags(int objectType, Integer nodeObjectId,
+			Map<String, com.gentics.contentnode.rest.model.Tag> restTags) throws NodeException {
 		GenericResponse genericResponse = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
@@ -1909,8 +1907,6 @@ public class ContentNodeTestDataUtils {
 			genericResponse = getImageResource().save(nodeObjectId, imageSaveRequest);
 			break;
 		}
-
-		ContentNodeTestUtils.assertResponseCode(genericResponse, reponseCode);
 
 		return genericResponse;
 	}

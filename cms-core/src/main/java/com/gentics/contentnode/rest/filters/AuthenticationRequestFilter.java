@@ -25,6 +25,7 @@ import com.gentics.contentnode.auth.ResolvableApiTokenDataModel;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.ApiTokenSession;
 import com.gentics.contentnode.factory.DBSession;
+import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.rest.util.MiscUtils;
@@ -72,6 +73,8 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 			} else {
 				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("").build());
 			}
+		} catch (InvalidSessionIdException e) {
+			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("").build());
 		} catch (NodeException e) {
 			NodeLogger.getNodeLogger(getClass()).error(e);
 			requestContext.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(MiscUtils.serverError()).build());

@@ -38,6 +38,15 @@ public class DBSessionClosure implements AutoCloseable {
 
 	/**
 	 * Create a new session for the given user and set it as current session into {@link ContentNodeHelper}
+	 * @param user user
+	 * @throws NodeException
+	 */
+	public DBSessionClosure(SystemUser user) throws NodeException {
+		this(user.getId());
+	}
+
+	/**
+	 * Create a new session for the given user and set it as current session into {@link ContentNodeHelper}
 	 * @param userId user ID
 	 * @throws NodeException
 	 */

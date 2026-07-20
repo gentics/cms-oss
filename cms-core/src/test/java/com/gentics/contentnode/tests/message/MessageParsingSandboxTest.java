@@ -9,6 +9,7 @@ import java.util.Collection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.contentnode.messaging.Message;
@@ -18,11 +19,7 @@ import com.gentics.contentnode.messaging.Message;
  */
 @RunWith(Parameterized.class)
 public class MessageParsingSandboxTest extends AbstractMessagingSandboxTest {
-	private String message;
-
-	private String expected;
-
-	@Parameters
+	@Parameters(name = "{index}: message: {0}")
 	public static Collection<String[]> getMessages() throws Exception {
 		return Arrays.asList(new String[] { "<userid 1>", "Gentics .Node"}, new String[] { "<userid 2>", "Gentics Support"},
 				new String[] { "<userid 1>, <userid 2>", "Gentics .Node, Gentics Support"}, new String[] { "prefix<userid 1>", "prefixGentics .Node"},
@@ -41,15 +38,11 @@ public class MessageParsingSandboxTest extends AbstractMessagingSandboxTest {
 			"|Gentics Support|DirtingTests/Target/Pages/SimplePage (1)|Gentics .Node|DirtingTests/Target/Pages/Target-Files[Garbage.data]/Target[Garbage.data].name (2)|"});
 	}
 
-	/**
-	 * Create an instance
-	 * @param message message to parse
-	 * @param expected expected parsed message
-	 */
-	public MessageParsingSandboxTest(String message, String expected) {
-		this.message = message;
-		this.expected = expected;
-	}
+	@Parameter(0)
+	public String message;
+
+	@Parameter(1)
+	public String expected;
 
 	@Test
 	public void testParse() throws Exception {

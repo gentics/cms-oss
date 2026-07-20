@@ -2,6 +2,7 @@ package com.gentics.contentnode.tests.wastebin;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -12,11 +13,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.contentnode.etc.Feature;
@@ -42,7 +45,6 @@ import com.gentics.contentnode.rest.model.response.LegacyFileListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyPageListResponse;
 import com.gentics.contentnode.rest.model.response.PageListResponse;
-import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -56,11 +58,12 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PublishableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.Creator;
-import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
@@ -115,27 +118,23 @@ public class WastebinRESTTest {
 
 	private static File image4;
 
-	private boolean wastebin;
+	private static Auth permUserAuth;
 
-	private boolean wastebinPermission;
-
-	private boolean useLegacyEndpoint;
-
-	private static Integer permUserId;
-
-	private static Integer noPermUserId;
+	private static Auth noPermUserAuth;
 
 	/**
 	 * Get the test parameters
 	 * @return collection of test parameter sets
 	 */
-	@Parameters(name = "{index}: wastebin {0}, permission {1}, legacy endpoint {2}")
+	@Parameters(name = "{index}: wastebin {0}, permission {1}, legacy endpoint {2}, auth {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
-		for (boolean wastebin : Arrays.asList(true, false)) {
-			for (boolean wastebinPermission : Arrays.asList(true, false)) {
-				for (boolean useLegacyEndpoint : Arrays.asList(true, false)) {
-					data.add(new Object[] { wastebin, wastebinPermission, useLegacyEndpoint });
+		for (boolean wastebin : List.of(true, false)) {
+			for (boolean wastebinPermission : List.of(true, false)) {
+				for (boolean useLegacyEndpoint : List.of(true, false)) {
+					for (AuthType auth : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+						data.add(new Object[] { wastebin, wastebinPermission, useLegacyEndpoint, auth });
+					}
 				}
 			}
 		}
@@ -154,9 +153,9 @@ public class WastebinRESTTest {
 		// create two groups with users
 		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, 2));
 		UserGroup groupWithPermission = supply(() -> Creator.createUsergroup("With Wastebin Permission", "", nodeGroup));
-		permUserId = supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission)).getId());
+		permUserAuth = new Auth(supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission))));
 		UserGroup groupWithoutPermission = supply(() -> Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup));
-		noPermUserId = supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission)).getId());
+		noPermUserAuth = new Auth(supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission))));
 
 		operate(() -> {
 			// set permissions
@@ -229,15 +228,23 @@ public class WastebinRESTTest {
 		});
 	}
 
-	/**
-	 * Create a test instance
-	 * @param wastebin true to fetch objects from wastebin, false if not
-	 * @param wastebinPermission true to test with wastebin permission, false to test without
-	 */
-	public WastebinRESTTest(boolean wastebin, boolean wastebinPermission, boolean useLegacyEndpoint) {
-		this.wastebin = wastebin;
-		this.wastebinPermission = wastebinPermission;
-		this.useLegacyEndpoint = useLegacyEndpoint;
+	@Parameter(0)
+	public boolean wastebin;
+
+	@Parameter(1)
+	public boolean wastebinPermission;
+
+	@Parameter(2)
+	public boolean useLegacyEndpoint;
+
+	@Parameter(3)
+	public AuthType type;
+
+	protected Auth authentication;
+
+	@Before
+	public void setup() {
+		authentication = wastebinPermission ? permUserAuth : noPermUserAuth;
 	}
 
 	/**
@@ -405,7 +412,7 @@ public class WastebinRESTTest {
 		WastebinParameterBean wastebinParams = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 		PageListParameterBean pageListParams = new PageListParameterBean();
 
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		return authentication.withAuth(type, () -> {
 			if (useLegacyEndpoint) {
 				LegacyPageListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getPages(
 						inFolder.folderId,
@@ -416,24 +423,24 @@ public class WastebinRESTTest {
 						new LegacyPagingParameterBean(),
 						new PublishableParameterBean(),
 						wastebinParams);
-
+				
 				ContentNodeRESTUtils.assertResponseOK(legacyResponse);
 
 				return legacyResponse.getPages();
 			}
 
 			PageListResponse response = ContentNodeRESTUtils.getPageResource().list(
-				inFolder,
-				pageListParams,
-				new FilterParameterBean(),
-				new SortParameterBean(),
-				new PagingParameterBean(),
-				new PublishableParameterBean(),
-				wastebinParams);
-
+					inFolder,
+					pageListParams,
+					new FilterParameterBean(),
+					new SortParameterBean(),
+					new PagingParameterBean(),
+					new PublishableParameterBean(),
+					wastebinParams);
+			
 			ContentNodeRESTUtils.assertResponseOK(response);
 			return response.getItems();
-		}
+		});
 	}
 
 	/**
@@ -451,34 +458,34 @@ public class WastebinRESTTest {
 		FolderListParameterBean folderListParams = new FolderListParameterBean().setTree(tree);
 		LegacySortParameterBean sort = new LegacySortParameterBean().setSortBy("asc");
 		WastebinParameterBean wastebinParams = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
-		List<com.gentics.contentnode.rest.model.Folder> responseFolders;
 
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		return authentication.withAuth(type, () -> {
+			List<com.gentics.contentnode.rest.model.Folder> responseFolders;
 			if (useLegacyEndpoint) {
 				LegacyFolderListResponse response = ContentNodeRESTUtils.getFolderResource().getFolders(
-					inFolder.folderId,
-					folderListParams.recursiveIds,
-					folderListParams.addPrivileges,
-					inFolder,
-					folderListParams,
-					new LegacyFilterParameterBean(),
-					sort,
-					new LegacyPagingParameterBean(),
-					new EditableParameterBean(),
-					wastebinParams);
+						inFolder.folderId,
+						folderListParams.recursiveIds,
+						folderListParams.addPrivileges,
+						inFolder,
+						folderListParams,
+						new LegacyFilterParameterBean(),
+						sort,
+						new LegacyPagingParameterBean(),
+						new EditableParameterBean(),
+						wastebinParams);
 
 				ContentNodeRESTUtils.assertResponseOK(response);
 
 				responseFolders = response.getFolders();
 			} else {
 				FolderListResponse response = ContentNodeRESTUtils.getFolderResource().list(
-					inFolder,
-					folderListParams,
-					new FilterParameterBean(),
-					sort.toSortParameterBean(),
-					new PagingParameterBean(),
-					new EditableParameterBean(),
-					wastebinParams);
+						inFolder,
+						folderListParams,
+						new FilterParameterBean(),
+						sort.toSortParameterBean(),
+						new PagingParameterBean(),
+						new EditableParameterBean(),
+						wastebinParams);
 
 				ContentNodeRESTUtils.assertResponseOK(response);
 
@@ -497,7 +504,7 @@ public class WastebinRESTTest {
 			} else {
 				return responseFolders;
 			}
-		}
+		});
 	}
 
 	/**
@@ -513,36 +520,36 @@ public class WastebinRESTTest {
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		return authentication.withAuth(type, () -> {
 			if (useLegacyEndpoint) {
 				LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getFiles(
-					inFolder.folderId,
-					inFolder,
-					new FileListParameterBean(),
-					new LegacyFilterParameterBean(),
-					new LegacySortParameterBean(),
-					new LegacyPagingParameterBean(),
-					new EditableParameterBean(),
-					wastebinParameterBean);
+						inFolder.folderId,
+						inFolder,
+						new FileListParameterBean(),
+						new LegacyFilterParameterBean(),
+						new LegacySortParameterBean(),
+						new LegacyPagingParameterBean(),
+						new EditableParameterBean(),
+						wastebinParameterBean);
 
-					ContentNodeRESTUtils.assertResponseOK(legacyResponse);
+				ContentNodeRESTUtils.assertResponseOK(legacyResponse);
 
-					return legacyResponse.getFiles();
+				return legacyResponse.getFiles();
 			}
 
 			FileListResponse response = ContentNodeRESTUtils.getFileResource().list(
-				inFolder,
-				new FileListParameterBean(),
-				new FilterParameterBean(),
-				new SortParameterBean(),
-				new PagingParameterBean(),
-				new EditableParameterBean(),
-				wastebinParameterBean);
+					inFolder,
+					new FileListParameterBean(),
+					new FilterParameterBean(),
+					new SortParameterBean(),
+					new PagingParameterBean(),
+					new EditableParameterBean(),
+					wastebinParameterBean);
 
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			return response.getItems();
-		}
+		});
 	}
 
 	/**
@@ -558,7 +565,7 @@ public class WastebinRESTTest {
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(folderId).setRecursive(recursive);
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude);
 
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		return authentication.withAuth(type, () -> {
 			if (useLegacyEndpoint) {
 				LegacyFileListResponse legacyResponse = ContentNodeRESTUtils.getFolderResource().getImages(
 					inFolder.folderId,
@@ -587,7 +594,7 @@ public class WastebinRESTTest {
 			ContentNodeRESTUtils.assertResponseOK(response);
 
 			return response.getItems();
-		}
+		});
 	}
 
 	/**
@@ -628,11 +635,10 @@ public class WastebinRESTTest {
 	 * @throws Exception
 	 */
 	protected FolderObjectCountResponse getObjectCounts() throws Exception {
-		FolderResource res = ContentNodeRESTUtils.getFolderResource();
 		Integer folderId = supply(() -> node.getFolder().getId());
-
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
-			FolderObjectCountResponse response = res.getObjectCounts(
+	
+		return authentication.withAuth(type, () -> {
+			FolderObjectCountResponse response = getFolderResource().getObjectCounts(
 				folderId,
 				null,
 				null,
@@ -641,6 +647,6 @@ public class WastebinRESTTest {
 				new WastebinParameterBean().setWastebinSearch(wastebin ? WastebinSearch.include : WastebinSearch.exclude));
 			ContentNodeRESTUtils.assertResponseOK(response);
 			return response;
-		}
+		});
 	}
 }

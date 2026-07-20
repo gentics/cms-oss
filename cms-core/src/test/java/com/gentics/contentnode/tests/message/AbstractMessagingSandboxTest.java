@@ -32,7 +32,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 /**
  * Abstract Testclass for messaging tests
  */
-public class AbstractMessagingSandboxTest  {
+public abstract class AbstractMessagingSandboxTest  {
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext().config(prefs -> {

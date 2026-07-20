@@ -1,6 +1,9 @@
 package com.gentics.contentnode.tests.rest.meta;
 
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 
 import java.util.Optional;
@@ -17,12 +20,9 @@ import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.contentnode.object.ImageFile, Image, FileCreateRequest> {
@@ -35,34 +35,31 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 
 	@Override
 	public Image createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
-		Image file = null;
-		GenericResponse response;
 		int folderId = supply(() -> node.getFolder().getId());
 
-		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
+		FileUploadResponse fileUploadResponse = systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
 
-			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(folderId);
-			request.setName(BinaryDataImageResource.ImageType.JPG.filename());
-			request.setSourceURL(appContext.getBaseUri() + "binary");
-			if (maybeInflater.isPresent()) {
-				maybeInflater.get().accept(request);
+				FileCreateRequest request = new FileCreateRequest();
+				request.setFolderId(folderId);
+				request.setName(BinaryDataImageResource.ImageType.JPG.filename());
+				request.setSourceURL(appContext.getBaseUri() + "binary");
+				if (maybeInflater.isPresent()) {
+					maybeInflater.get().accept(request);
+				}
+
+				return assertSuccess(() -> getFileResource().create(request), null);
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 			}
+		});
 
-			response = ContentNodeRESTUtils.getFileResource().create(request);
-			assertResponseCodeOk(response);
-		} finally {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
-		}
-
-		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
-			response = ContentNodeRESTUtils.getImageResource().load(String.valueOf(((FileUploadResponse) response).getFile().getId()), false, false, null, null);
-			assertResponseCodeOk(response);
-			file = ((ImageLoadResponse) response).getImage();
-		}
-
-		return file;
+		return systemUserAuth.withAuth(authType, () -> {
+			ImageLoadResponse imageLoadResponse = assertSuccess(() -> getImageResource()
+					.load(String.valueOf(fileUploadResponse.getFile().getId()), false, false, null, null), null);
+			return imageLoadResponse.getImage();
+		});
 	}
 
 	/**
@@ -86,22 +83,22 @@ public class CustomImageMetaDateTest extends CustomMetaDateTest<com.gentics.cont
 	@Override
 	public Image updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
+		systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 
-			Image update = new Image();
-			ImageSaveRequest request = new ImageSaveRequest();
-			request.setImage(update);
-			maybeDate.ifPresent(cdate -> request.getImage().setCdate(cdate));
-			maybeEDate.ifPresent(edate -> request.getImage().setEdate(edate));
-			maybeCustomCDate.ifPresent(cdate -> request.getImage().setCustomCdate(cdate));
-			maybeCustomEDate.ifPresent(edate -> request.getImage().setCustomEdate(edate));
-			GenericResponse response = new ImageResourceImpl().save(id, request);
-			assertResponseCodeOk(response);
-
-		} finally {
-			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
-		}
+				Image update = new Image();
+				ImageSaveRequest request = new ImageSaveRequest();
+				request.setImage(update);
+				maybeDate.ifPresent(cdate -> request.getImage().setCdate(cdate));
+				maybeEDate.ifPresent(edate -> request.getImage().setEdate(edate));
+				maybeCustomCDate.ifPresent(cdate -> request.getImage().setCustomCdate(cdate));
+				maybeCustomEDate.ifPresent(edate -> request.getImage().setCustomEdate(edate));
+				assertSuccess(() -> getImageResource().save(id, request), null);
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+			}
+		});
 
 		return loadImage(String.valueOf(id));
 	}

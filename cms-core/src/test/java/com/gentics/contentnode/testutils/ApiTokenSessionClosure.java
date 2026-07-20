@@ -33,7 +33,7 @@ public class ApiTokenSessionClosure implements AutoCloseable {
 		String tokenHash = ApiTokenFactory.hash(token);
 		Optional<ResolvableApiTokenDataModel> optToken = supply(() -> ApiTokenFactory.load(tokenHash));
 		if (optToken.isPresent()) {
-			ApiTokenSession session = new ApiTokenSession(optToken.get());
+			ApiTokenSession session = supply(() -> new ApiTokenSession(optToken.get()));
 			ContentNodeHelper.setSession(session);
 		} else {
 			throw new InvalidSessionIdException(token);

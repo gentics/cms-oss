@@ -12,13 +12,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.contentnode.etc.Feature;
@@ -35,13 +38,14 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.Creator;
-import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.etc.StringUtils;
@@ -64,24 +68,22 @@ public class WastebinActionsTest {
 
 	private static Template template;
 
-	private TestedType type;
+	private static Auth permUserAuth;
 
-	private boolean wastebinPermission;
-
-	private static Integer permUserId;
-
-	private static Integer noPermUserId;
+	private static Auth noPermUserAuth;
 
 	/**
 	 * Get the test parameters
 	 * @return collection of test parameter sets
 	 */
-	@Parameters(name = "{index}: test: {0}, permission: {1}")
+	@Parameters(name = "{index}: test: {0}, permission: {1}, auth: {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
 		for (TestedType type : TestedType.values()) {
-			for (boolean wastebinPermission : Arrays.asList(true, false)) {
-				data.add(new Object[] {type, wastebinPermission});
+			for (boolean wastebinPermission : List.of(true, false)) {
+				for (AuthType authType : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+					data.add(new Object[] {type, wastebinPermission, authType});
+				}
 			}
 		}
 		return data;
@@ -100,9 +102,9 @@ public class WastebinActionsTest {
 		// create two groups with users
 		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, 2));
 		UserGroup groupWithPermission = supply(() -> Creator.createUsergroup("With Wastebin Permission", "", nodeGroup));
-		permUserId = supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission)).getId());
+		permUserAuth = new Auth(supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission))));
 		UserGroup groupWithoutPermission = supply(() -> Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup));
-		noPermUserId = supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission)).getId());
+		noPermUserAuth = new Auth(supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission))));
 
 		// set permissions
 		operate(() -> {
@@ -115,14 +117,20 @@ public class WastebinActionsTest {
 		template = supply(() -> ContentNodeTestDataUtils.createTemplate(node.getFolder(), "", "Template"));
 	}
 
-	/**
-	 * Create a test instance
-	 * @param type tested type
-	 * @param wastebinPermission true for wastebin permission
-	 */
-	public WastebinActionsTest(TestedType type, boolean wastebinPermission) {
-		this.type = type;
-		this.wastebinPermission = wastebinPermission;
+	@Parameter(0)
+	public TestedType type;
+
+	@Parameter(1)
+	public boolean wastebinPermission;
+
+	@Parameter(2)
+	public AuthType authType;
+
+	protected Auth authentication;
+
+	@Before
+	public void setup() {
+		authentication = wastebinPermission ? permUserAuth : noPermUserAuth;
 	}
 
 	/**
@@ -150,9 +158,9 @@ public class WastebinActionsTest {
 		if (!wastebinPermission) {
 			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.deleteFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
 		operate(t -> {
 			// check whether removing worked
@@ -198,9 +206,9 @@ public class WastebinActionsTest {
 		if (!wastebinPermission) {
 			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(TestedType.folder.deleteFromWastebin(folder), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
 		operate(t -> {
 			// check whether removing worked
@@ -245,9 +253,9 @@ public class WastebinActionsTest {
 		if (!wastebinPermission) {
 			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
 		operate(t -> {
 			// check whether restoring worked
@@ -298,9 +306,9 @@ public class WastebinActionsTest {
 		if (!wastebinPermission) {
 			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
 		// check whether restoring worked
 		operate(t -> {
@@ -355,9 +363,9 @@ public class WastebinActionsTest {
 		if (!wastebinPermission) {
 			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
-		try (DBSessionClosure ses = new DBSessionClosure(wastebinPermission ? permUserId : noPermUserId)) {
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
 		operate(t -> {
 			// check whether restoring worked

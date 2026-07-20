@@ -41,6 +41,8 @@ import com.gentics.testutils.GenericTestUtils;
 public class ImageResourceListTest extends AbstractListSortAndFilterTest<Image> {
 	private static Node node;
 
+	private static int nodeRootFolder;
+
 	private static List<String> pictureNames = Arrays.asList("uniqa.jpg", "bild2.jpg", "blume.jpg", "blume2.jpeg",
 			"Cammarano.jpg", "dreamtime.jpg", "flower.gif", "Highlight-Bus.jpg", "Highlight-Bus-OK.jpg",
 			"Highlight-Luftfahrt.jpeg", "image-dpi66x44-res311x211.jpg", "image-dpi66x44-res311x211.png",
@@ -60,6 +62,7 @@ public class ImageResourceListTest extends AbstractListSortAndFilterTest<Image> 
 		AbstractListSortAndFilterTest.setupOnce();
 
 		node = supply(() -> createNode());
+		nodeRootFolder = supply(() -> node.getFolder().getId());
 	}
 
 	@Parameters(name = "{index}: sortBy {0}, ascending {2}, filter {3}")
@@ -85,7 +88,7 @@ public class ImageResourceListTest extends AbstractListSortAndFilterTest<Image> 
 	@Override
 	protected Image createItem() throws NodeException {
 		return supply(() -> ModelBuilder.getImage(Builder.create(ImageFile.class, f -> {
-			f.setFolderId(node.getFolder().getId());
+			f.setFolderId(nodeRootFolder);
 			f.setName(randomStringGenerator.generate(5, 10));
 			f.setDescription(randomStringGenerator.generate(10, 20));
 			f.setFileStream(GenericTestUtils.getPictureResource(getRandomEntry(pictureNames)));
@@ -98,7 +101,7 @@ public class ImageResourceListTest extends AbstractListSortAndFilterTest<Image> 
 	protected AbstractListResponse<Image> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging)
 			throws NodeException {
 		return new ImageResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)),
 				new FileListParameterBean(), filter, sort, paging, new EditableParameterBean(),
 				new WastebinParameterBean());
 	}

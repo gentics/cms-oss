@@ -1,6 +1,6 @@
 package com.gentics.api.lib.resolving;
 
-import com.gentics.lib.util.ClassHelper;
+import org.apache.commons.beanutils.PropertyUtils;
 
 /**
  * Extension to the {@link Resolvable} that adds default implementations to the methods, which
@@ -11,7 +11,7 @@ public interface IResolvableBean extends Resolvable {
 	default Object get(String key) {
 		// simply call the getter on the object
 		try {
-			return ClassHelper.invokeGetter(this, key);
+			return PropertyUtils.getProperty(this, key);
 		} catch (Exception e) {
 			return null;
 		}

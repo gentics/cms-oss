@@ -21,6 +21,7 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.impl.AdminResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
@@ -115,6 +116,15 @@ public class ContentNodeRESTUtils {
 	 */
 	public static TemplateResourceImpl getTemplateResource() throws NodeException {
 		return new TemplateResourceImpl();
+	}
+
+	/**
+	 * Get a admin resource
+	 * @return admin resource
+	 * @throws NodeException
+	 */
+	public static AdminResourceImpl getAdminResource() throws NodeException {
+		return new AdminResourceImpl();
 	}
 
 	/**

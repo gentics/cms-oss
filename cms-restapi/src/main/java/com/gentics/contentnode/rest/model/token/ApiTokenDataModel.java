@@ -1,6 +1,7 @@
 package com.gentics.contentnode.rest.model.token;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Model for an API Token
@@ -167,5 +168,31 @@ public class ApiTokenDataModel implements Serializable {
 	public ApiTokenDataModel setValid(boolean valid) {
 		this.valid = valid;
 		return this;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id, userId, name, cdate, expires, lastUsed, valid);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ApiTokenDataModel other) {
+			return id == other.id
+					&& userId == other.userId
+					&& Objects.equals(name, other.name)
+					&& cdate == other.cdate
+					&& expires == other.expires
+					&& lastUsed == other.lastUsed
+					&& valid == other.valid;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "ApiToken '%s'. Id: %d, User: %d, Created: %d, Expires: %d, Last Used: %d, Valid: %b.".formatted(name,
+				id, userId, cdate, expires, lastUsed, valid);
 	}
 }

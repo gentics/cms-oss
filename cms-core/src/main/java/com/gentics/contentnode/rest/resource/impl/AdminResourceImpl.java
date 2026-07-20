@@ -877,7 +877,7 @@ public class AdminResourceImpl implements AdminResource {
 
 			trx.success();
 			return ListBuilder.from(list, ApiTokenDataModel.class::cast)
-				.filter(ResolvableFilter.get(filter, "name"))
+				.filter(ResolvableFilter.get(filter, "id", "name"))
 				.sort(ResolvableComparator.get(sorting, "id", "name", "cdate", "expires", "lastUsed", "valid"))
 				.page(paging)
 				.to(new ApiTokenListResponse());

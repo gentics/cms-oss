@@ -51,17 +51,16 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "libs/cms-components/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "editor-ui:build",
-                "watch": false
+                "devServerTarget": "component-tests-harness:build"
             },
             "configurations": {
                 "ci": {
                     "quiet": true,
-                    "cypressConfig": "libs/cms-components/cypress.config.ci.ts",
-                    "devServerTarget": "editor-ui:build:ci"
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
+                    "devServerTarget": "component-tests-harness:build:ci"
                 }
             }
         }

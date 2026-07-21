@@ -1,7 +1,7 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
-        "moduleResolution": "node10",
+        "moduleResolution": "node16",
         "allowJs": true,
         "outDir": "../../dist/out-tsc",
         "module": "commonjs",
@@ -12,8 +12,14 @@
         "**/*.ts",
         "**/*.js",
         "../cypress.config.ts",
-        "../**/*.cy.ts",
-        "../**/*.cy.js",
-        "../**/*.d.ts"
+        "../src/**/*.cy.ts",
+        "../src/**/*.cy.js",
+        "../src/**/*.d.ts"
+    ],
+    "exclude": [
+        "**/*.spec.ts",
+        "../src/test.ts",
+        "../testing/**/*",
+        "../build/**/*"
     ]
 }

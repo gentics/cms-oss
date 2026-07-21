@@ -7,14 +7,14 @@
     <div class="input-container small-12 columns">
       @if (enterDisplayText) {
         <gtx-input
-          property-name="displayText"
+          data-control="displayText"
           [label]="('rich_content.display_text' | gtxI18n) + '*'"
           formControlName="displayText"
         ></gtx-input>
       }
       <gtx-select
         [label]="('rich_content.link_type' | gtxI18n) + '*'"
-        property-name="linkType"
+        data-control="linkType"
         formControlName="linkType"
         >
         @for (type of RichContentLinkType | gtxValues; track type) {
@@ -25,7 +25,7 @@
       </gtx-select>
       <gtx-select
         [label]="'rich_content.link_target' | gtxI18n"
-        property-name="target"
+        data-control="target"
         formControlName="target"
         >
         @for (target of AVAILABLE_TARGETS; track target.value) {
@@ -37,7 +37,7 @@
       @if (form.controls.itemId.enabled) {
         <gtx-browse-box
             class="item-browser"
-            property-name="item"
+            data-control="item"
             [label]="(('rich_content.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
             [disabled]="disabled"
             [clearable]="false"
@@ -49,7 +49,7 @@
       }
       @if (form.controls.url.enabled) {
         <gtx-input
-          property-name="url"
+          data-control="url"
           [label]="('rich_content.link_url' | gtxI18n) + '*'"
           formControlName="url"
         ></gtx-input>

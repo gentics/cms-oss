@@ -140,16 +140,15 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/admin-ui/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "admin-ui:build",
-                "watch": false
+                "devServerTarget": "admin-ui:build"
             },
             "configurations": {
                 "ci": {
                     "quiet": true,
-                    "cypressConfig": "apps/admin-ui/cypress.config.ci.ts",
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
                     "devServerTarget": "admin-ui:build:ci"
                 }
             }

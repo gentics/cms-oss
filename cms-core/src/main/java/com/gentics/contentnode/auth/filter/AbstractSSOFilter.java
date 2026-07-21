@@ -766,7 +766,7 @@ public abstract class AbstractSSOFilter implements Filter {
 			}
 
 			// create and add the session secret cookie
-			Cookie sessionSecretCookie = new Cookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret());
+			Cookie sessionSecretCookie = new Cookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getCookieValue());
 
 			sessionSecretCookie.setPath("/");
 
@@ -779,9 +779,6 @@ public abstract class AbstractSSOFilter implements Filter {
 
 				parameterMap.put(name, request.getParameterValues(name));
 			}
-
-			// set the sid as parameter
-			parameterMap.put("sid", new String[] { ObjectTransformer.getString(session.getSessionId(), null)});
 		}
 
 		/* (non-Javadoc)

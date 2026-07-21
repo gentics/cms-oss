@@ -904,7 +904,7 @@ public class PackageResourceImpl implements PackageResource {
 			UUID uuid = ChangeWatchService.register(nodeId, id);
 
 			Transaction t = TransactionManager.getCurrentTransaction();
-			return FileUtil.stream2String(in, "UTF-8").replaceAll("\\{\\{uuid\\}\\}", uuid.toString()).replaceAll("\\{\\{sid\\}\\}", t.getSessionId())
+			return FileUtil.stream2String(in, "UTF-8").replaceAll("\\{\\{uuid\\}\\}", uuid.toString())
 					.replaceAll("\\{\\{time\\}\\}", Long.toString(System.currentTimeMillis()));
 		}
 	}

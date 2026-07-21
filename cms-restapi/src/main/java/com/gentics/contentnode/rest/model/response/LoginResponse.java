@@ -8,29 +8,10 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class LoginResponse extends AuthenticationResponse {
 
-	/**
-	 * Session ID
-	 */
-	private String sid;
+	private static final long serialVersionUID = -5241126069170279247L;
 
 	/**
 	 * Create an instance
 	 */
 	public LoginResponse() {}
-
-	/**
-	 * Get the session id
-	 * @return session id
-	 */
-	public String getSid() {
-		return sid;
-	}
-
-	/**
-	 * Set the session id
-	 * @param sid session id
-	 */
-	public void setSid(String sid) {
-		this.sid = sid;
-	}
 }

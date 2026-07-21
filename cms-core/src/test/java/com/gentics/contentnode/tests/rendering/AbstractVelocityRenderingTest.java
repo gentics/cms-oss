@@ -1,9 +1,15 @@
 package com.gentics.contentnode.tests.rendering;
 
+import static com.gentics.contentnode.db.DBUtils.firstInt;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
+
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-import com.gentics.contentnode.factory.Session;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
@@ -12,12 +18,15 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 
-public class AbstractVelocityRenderingTest {
+/**
+ * Abstract base class for velocity rendering tests
+ */
+public abstract class AbstractVelocityRenderingTest {
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -41,31 +50,33 @@ public class AbstractVelocityRenderingTest {
 	 * Page
 	 */
 	protected static Page page;
+
+	protected static SystemUser user;
+
 	/**
 	 * Name of the editable tag
 	 */
 	public final static String VTL_TAGNAME = "vtltag";
 
+
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		Session session = testContext.getContext().login("node", "node");
-		TransactionManager.getCurrentTransaction().commit();
-
-		testContext.getContext().getContentNodeFactory()
-				.startTransaction(session, true);
+		testContext.getContext().getTransaction().commit();
 
 		// Create node
-		node = ContentNodeTestDataUtils.createNode();
-		//
-		// Create velocity construct that renders the given template
-		construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-		//
-		// // Create template using the construct
-		template = createTemplate(node.getFolder(), construct);
-		//
-		// // Create a page
-		page = createPage(node.getFolder(), template);
+		node = supply(() -> createNode());
 
+		// Create velocity construct that renders the given template
+		construct = supply(() ->  createVelocityConstruct(node));
+
+		// Create template using the construct
+		template = supply(() -> createTemplate(node.getFolder(), construct));
+
+		// Create a page
+		page = supply(() -> createPage(node.getFolder(), template));
+
+		user = supply(t -> t.getObject(SystemUser.class, DBUtils.select("SELECT id FROM systemuser WHERE login = ?",
+				pst -> pst.setString(1, "node"), firstInt("id"))));
 	}
 
 	/**
@@ -73,9 +84,9 @@ public class AbstractVelocityRenderingTest {
 	 * 
 	 * @param vtl
 	 *            template
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	protected static void updateConstruct(String vtl) throws Exception {
+	protected static void updateConstruct(String vtl) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		for (Part part : construct.getParts()) {
@@ -96,10 +107,10 @@ public class AbstractVelocityRenderingTest {
 	 * @param construct
 	 *            construct of the template tag
 	 * @return template
-	 * @throws Exception
+	 * @throws NodeException
 	 */
 	protected static Template createTemplate(Folder folder, Construct construct)
-			throws Exception {
+			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		Template template = t.createObject(Template.class);
@@ -125,10 +136,10 @@ public class AbstractVelocityRenderingTest {
 	 * @param template
 	 *            template of the page
 	 * @return page
-	 * @throws Exception
+	 * @throws NodeException
 	 */
 	protected static Page createPage(Folder folder, Template template)
-			throws Exception {
+			throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		Page page = t.createObject(Page.class);

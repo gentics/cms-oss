@@ -121,7 +121,7 @@ public class PublishWorker implements Runnable {
 		ContentNodeHelper.setLanguageId(2);
 
 		// this will give us a new RenderType
-		RenderType renderType = RenderType.getDefaultRenderType(configuration.getDefaultPreferences(), RenderType.EM_PUBLISH, null, -1);
+		RenderType renderType = RenderType.getDefaultRenderType(configuration.getDefaultPreferences(), RenderType.EM_PUBLISH, -1);
 		NodePreferences prefs = configuration.getDefaultPreferences();
 
 		renderType.setRenderUrlFactory(

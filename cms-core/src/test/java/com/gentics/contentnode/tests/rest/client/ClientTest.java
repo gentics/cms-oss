@@ -221,9 +221,6 @@ public class ClientTest {
 		RestClient client = new RestClient(restContext.getBaseUri());
 		client.login(LOGIN, PASSWORD);
 
-		// assert successful login
-		assertThat(client.getSid()).as("SID").isNotNull().isNotEmpty();
-
 		int numSessions = Trx.supply(() -> DBUtils.select("SELECT count(*) c FROM systemsession WHERE user_id = ? AND secret != ''", st -> {
 			st.setInt(1, testUser.getId());
 		}, rs -> {
@@ -241,8 +238,6 @@ public class ClientTest {
 
 		client.logout();
 
-		// SID must be reset now
-		assertThat(client.getSid()).as("SID after logout").isNull();
 		// user must not have systemsession
 		numSessions = Trx.supply(() -> DBUtils.select("SELECT count(*) c FROM systemsession WHERE user_id = ? AND secret != ''", st -> {
 			st.setInt(1, testUser.getId());

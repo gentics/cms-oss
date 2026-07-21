@@ -196,9 +196,9 @@ public final class ContentNodeTestUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences preferences = t.getNodeConfig().getDefaultPreferences();
 
-		RenderType renderType = RenderType.getDefaultRenderType(preferences, editMode, t.getSessionId(), 0);
+		RenderType renderType = RenderType.getDefaultRenderType(preferences, editMode, 0);
 
-		renderType.setRenderUrlFactory(new DynamicUrlFactory(t.getSessionId()));
+		renderType.setRenderUrlFactory(new DynamicUrlFactory());
 		if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
 			renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, Boolean.TRUE);
 		}

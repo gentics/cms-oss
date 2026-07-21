@@ -541,13 +541,12 @@ public abstract class MeshPortalPreviewTestBase {
 
 		Integer nodeId = Trx.supply(() -> node.getId());
 		Integer pageId = Trx.supply(() -> page.getId());
-		String sid = "thisisthesid";
-		String expectedUrl = String.format("/alohapage?nodeid=%d&language=1&sid=%s&real=newview&realid=%d", nodeId, sid, pageId);
+		String expectedUrl = String.format("/alohapage?nodeid=%d&language=1&real=newview&realid=%d", nodeId, pageId);
 		String preview = null;
 		try (FeatureClosure f = new FeatureClosure(Feature.MANAGELINKURL_ONLYFORPUBLISH, true)) {
 			preview = Trx.supply(t -> {
 				RenderType r = new RenderType();
-				r.setRenderUrlFactory(new DynamicUrlFactory(sid));
+				r.setRenderUrlFactory(new DynamicUrlFactory());
 				t.setRenderType(r);
 				return RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA);
 			});

@@ -146,15 +146,15 @@ public class GenticsImageStoreServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String sessionId = request.getParameter(SessionToken.SESSION_ID_QUERY_PARAM_NAME) + getSessionSecretFromCookie(request.getCookies());
+		String sessionSecret = getSessionSecretFromCookie(request.getCookies());
 
-		if (ObjectTransformer.isEmpty(sessionId)) {
+		if (ObjectTransformer.isEmpty(sessionSecret)) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
 		try {
-			SessionToken sessionToken = new SessionToken(sessionId);
+			SessionToken sessionToken = new SessionToken(sessionSecret);
 
 			Optional<DBSession> optSession = Trx.supply(() -> DBSession.load(sessionToken));
 			if (optSession.isEmpty()) {

@@ -1819,7 +1819,7 @@ public class FolderResourceImpl implements FolderResource {
 
 				// set a rendertype to the transaction
 				NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-				RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+				RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, 0);
 
 				t.setRenderType(renderType);
 
@@ -1829,7 +1829,7 @@ public class FolderResourceImpl implements FolderResource {
 
 				// generate the url factory
 				if (links == LinksType.backend) {
-					urlFactory = new DynamicUrlFactory(t.getSessionId());
+					urlFactory = new DynamicUrlFactory();
 				} else if (links == LinksType.frontend) {
 					// TODO linkways must be fetched from the configuration
 					urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);
@@ -1929,7 +1929,7 @@ public class FolderResourceImpl implements FolderResource {
 
 			// set a rendertype to the transaction
 			NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-			RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+			RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, 0);
 
 			t.setRenderType(renderType);
 
@@ -1939,7 +1939,7 @@ public class FolderResourceImpl implements FolderResource {
 
 			// generate the url factory
 			if (links == LinksType.backend) {
-				urlFactory = new DynamicUrlFactory(t.getSessionId());
+				urlFactory = new DynamicUrlFactory();
 			} else if (links == LinksType.frontend) {
 				// TODO linkways must be fetched from the configuration
 				urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);

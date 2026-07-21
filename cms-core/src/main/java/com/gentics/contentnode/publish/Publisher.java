@@ -482,7 +482,7 @@ public class Publisher implements Runnable {
 				// when doing this for a test, we do use the connection pool, because tests will start/stop many publish processes in a short time, and this might exhaust the available ports on the system or the database
 				t = factory.startTransaction(ObjectTransformer.getBoolean(System.getProperty("com.gentics.contentnode.testmode"), false), isMultithreaded);
 				t.setTimestamp(timestamp);
-				RenderType renderType = RenderType.getDefaultRenderType(getConfiguration().getDefaultPreferences(), RenderType.EM_PUBLISH, null, -1);
+				RenderType renderType = RenderType.getDefaultRenderType(getConfiguration().getDefaultPreferences(), RenderType.EM_PUBLISH, -1);
 
 				renderType.setRenderUrlFactory(
 						new StaticUrlFactory(RenderType.parseLinkWay(prefs.getProperty("contentnode.linkway")),
@@ -983,7 +983,7 @@ public class Publisher implements Runnable {
 		try {
 			t = factory.startTransaction(true);
 			t.setTimestamp(timestamp);
-			RenderType renderType = RenderType.getDefaultRenderType(getConfiguration().getDefaultPreferences(), RenderType.EM_PUBLISH, null, -1);
+			RenderType renderType = RenderType.getDefaultRenderType(getConfiguration().getDefaultPreferences(), RenderType.EM_PUBLISH, -1);
 
 			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderType.parseLinkWay(prefs.getProperty("contentnode.linkway")), RenderType
 					.parseLinkWay(prefs.getProperty("contentnode.linkway_file")), prefs.getProperty("contentnode.linkway_file_path")));

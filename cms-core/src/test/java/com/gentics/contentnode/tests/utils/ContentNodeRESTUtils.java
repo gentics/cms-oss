@@ -12,13 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Supplier;
-import com.gentics.contentnode.factory.DBSession;
-import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.factory.SessionToken;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.AdminResourceImpl;
@@ -29,6 +23,7 @@ import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 
@@ -128,21 +123,12 @@ public class ContentNodeRESTUtils {
 	}
 
 	/**
-	 * Perform login for the given luser credentials
-	 * @param login login
-	 * @param password password
-	 * @return session
+	 * Get a perm resource
+	 * @return perm resource
 	 * @throws NodeException
 	 */
-	public static Session login(String login, String password) throws NodeException {
-		LoginRequest request = new LoginRequest();
-		request.setLogin(login);
-		request.setPassword(password);
-		LoginResponse response = getAuthResource().login(request, "0");
-		assertResponseOK(response);
-
-		SessionToken sessionToken = new SessionToken(response.getSid());
-		return new DBSession(sessionToken.getSessionId(), TransactionManager.getCurrentTransaction());
+	public static PermResourceImpl getPermResource() throws NodeException {
+		return new PermResourceImpl();
 	}
 
 	/**

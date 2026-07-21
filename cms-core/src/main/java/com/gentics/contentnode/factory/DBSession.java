@@ -188,7 +188,7 @@ public class DBSession implements Session {
 		final int allowedSince = TransactionManager.getCurrentTransaction().getUnixTimestamp() - sessionAge;
 
 		int sessionId = sessionToken.sessionId;
-		String secret = StringUtils.firstNonBlank(sessionToken.sessionSecret, sessionToken.tokenSecret);
+		String secret = StringUtils.firstNonBlank(sessionToken.sessionSecret);
 
 		if (sessionId <= 0 || StringUtils.isBlank(secret)) {
 			return Optional.empty();
@@ -368,8 +368,8 @@ public class DBSession implements Session {
 		}
 	}
 
-	public String getSessionId() {
-		return String.valueOf(sessionId);
+	public int getId() {
+		return sessionId;
 	}
 
 	public int getUserId() {
@@ -386,6 +386,14 @@ public class DBSession implements Session {
 
 	public String getSessionSecret() {
 		return sessionSecret;
+	}
+
+	/**
+	 * Get the value of the session secret cookie
+	 * @return session secret cookie value
+	 */
+	public String getCookieValue() {
+		return "%d%s".formatted(sessionId, sessionSecret);
 	}
 
 	/**

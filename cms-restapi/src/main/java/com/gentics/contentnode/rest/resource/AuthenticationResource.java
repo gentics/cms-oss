@@ -3,19 +3,15 @@ package com.gentics.contentnode.rest.resource;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
-import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 
 /**
@@ -23,17 +19,6 @@ import jakarta.ws.rs.core.Context;
  */
 @Path("/auth")
 public interface AuthenticationResource {
-
-	/**
-	 * Validate the given SID
-	 *
-	 * @param sid
-	 *            sid + gcn_session_secret (taken from the GCN_SESSION_SECRET cookie) to validate
-	 * @return response containing validation result and (possibly) a user
-	 */
-	@GET
-	@Path("/validate/{sid}")
-	AuthenticationResponse validate(@PathParam("sid") String sid);
 
 	/**
 	 * Perform a login to the system with SSO systems
@@ -58,21 +43,19 @@ public interface AuthenticationResource {
 	 * If the user is successfully authenticated, create a new session and send back the sid.
 	 * If a new sessionSecret is created, set it as a cookie
 	 * @param request    login request (contains the login credentials)
-	 * @param sidString  Optional: Existing sid number, the stored secret must match the cookie
 	 * @return login     response
 	 */
 	@POST
 	@Path("/login")
-	LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) throws Exception;
+	LoginResponse login(LoginRequest request) throws Exception;
 
 	/**
 	 * Do a logout for the current session
 	 * @return generic response
 	 */
 	@POST
-	@Path("/logout/{sid}")
-	GenericResponse logout(@PathParam("sid") String sid,
-			@QueryParam("allSessions") @DefaultValue("0") boolean allSessions);
+	@Path("/logout")
+	GenericResponse logout() throws Exception;
 
 	/**
 	 * Create a hash of the given password and userID
@@ -86,8 +69,7 @@ public interface AuthenticationResource {
 	@Path("/hashpassword")
 	HashPasswordResponse hashPassword(
 			@Context HttpServletRequest httpServletRequest,
-			HashPasswordRequest hashPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId);
+			HashPasswordRequest hashPasswordRequest);
 
 	/**
 	 * Checks if the given password matches the given hash
@@ -100,8 +82,7 @@ public interface AuthenticationResource {
 	@Path("/matchpassword")
 	GenericResponse matchPassword(
 			@Context HttpServletRequest httpServletRequest,
-			MatchPasswordRequest matchPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId);
+			MatchPasswordRequest matchPasswordRequest);
 
 	/**
 	 * Returns the global prefix

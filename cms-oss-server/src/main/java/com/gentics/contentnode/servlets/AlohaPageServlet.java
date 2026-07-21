@@ -232,10 +232,10 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 
 			try (WastebinFilter filter = wastebin.set()) {
 				NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-				RenderType renderType = RenderType.getDefaultRenderType(preferences, renderMode, t.getSessionId(), 0);
+				RenderType renderType = RenderType.getDefaultRenderType(preferences, renderMode, 0);
 
 				if (backendUrls) {
-					renderType.setRenderUrlFactory(new DynamicUrlFactory(t.getSessionId()));
+					renderType.setRenderUrlFactory(new DynamicUrlFactory());
 					renderType.setParameter(AlohaRenderer.LINKS_TYPE, "backend");
 				} else {
 					// TODO linkways must be fetched from the configuration

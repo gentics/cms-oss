@@ -42,6 +42,7 @@ import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.events.QueueEntryType;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -581,9 +582,11 @@ public class AdminResourceImpl implements AdminResource {
 				default:
 					break;
 				}
+				String sid = Optional.ofNullable(trx.getTransaction()).map(Transaction::getSession).map(Session::getId)
+						.map(id -> Integer.toString(id)).orElse("");
 				QueueEntry entry = new QueueEntry(timestamp, 0, type.getCode(), eventMask,
 						(String[]) properties.toArray(new String[properties.size()]), 0,
-						trx.getTransaction().getSessionId());
+						sid);
 				entry.store(ContentNodeFactory.getInstance());
 				ActionLogger.logCmd(ActionLogger.MAINTENANCE, type.getCode(), 0, 0, info);
 			}
@@ -783,8 +786,8 @@ public class AdminResourceImpl implements AdminResource {
 			// when maintenance mode was activated, all other user sessions will be invalidated
 			if (request.getMaintenance() == Boolean.TRUE) {
 				Session session = trx.getTransaction().getSession();
-				if (session != null) {
-					DBUtils.update("UPDATE systemsession SET secret = ? WHERE id != ?", "", session.getSessionId());
+				if (session instanceof DBSession dbSession) {
+					DBUtils.update("UPDATE systemsession SET secret = ? WHERE id != ?", "", dbSession.getId());
 				}
 			}
 

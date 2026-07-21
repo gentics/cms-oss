@@ -644,9 +644,7 @@
 		},
 
 		/**
-		 * Similar to `_ajax', except that it prefixes the ajax url with the
-		 * current session's `sid', and will trigger an
-		 * `authentication-required' event if the session is not authenticated.
+		 * Similar to `_ajax',
 		 *
 		 * @ignore
 		 * @TODO(petro): Consider simplifiying this function signature to read:
@@ -666,66 +664,9 @@
 				return;
 			}
 
-			if (!GCN.sid) {
-				var cancel;
-
-				if (settings.error) {
-					/**
-					 * @ignore
-					 */
-					cancel = function (error) {
-						GCN.handleError(
-							error || GCN.createError('AUTHENTICATION_FAILED'),
-							settings.error
-						);
-					};
-				} else {
-					/**
-					 * @ignore
-					 */
-					cancel = function (error) {
-						if (error) {
-							GCN.error(error.code, error.message, error.data);
-						} else {
-							GCN.error('AUTHENTICATION_FAILED');
-						}
-					};
-				}
-
-				GCN.afterNextAuthentication(function () {
-					that._authAjax(settings);
-				});
-
-				if (GCN.usingSSO) {
-					// First, try to automatically authenticate via
-					// Single-SignOn
-					GCN.loginWithSSO(GCN.onAuthenticated, function () {
-						// ... if SSO fails, then fallback to requesting user
-						// credentials: broadcast `authentication-required'
-						// message.
-						GCN.authenticate(cancel);
-					});
-				} else {
-					// Trigger the `authentication-required' event to request
-					// user credentials.
-					GCN.authenticate(cancel);
-				}
-
-				return;
-			}
-
-			// Append "?sid=..." or "&sid=..." if needed.
-
 			var urlFragment = settings.url.substr(
 				GCN.settings.BACKEND_PATH.length
 			);
-			var isSidInUrl = /[\?\&]sid=/.test(urlFragment);
-			if (!isSidInUrl) {
-				var isFirstParam = (jQuery.inArray('?',
-					urlFragment.split('')) === -1);
-				settings.url += (isFirstParam ? '?' : '&') + 'sid='
-				             +  (GCN.sid || '');
-			}
 
 			this._ajax(settings);
 		},

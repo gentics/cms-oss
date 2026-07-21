@@ -104,6 +104,8 @@ public class VelocityDirectivesTest {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
+
 		// Create node
 		node = supply(() -> createNode("testnode", "Test Node", PublishTarget.NONE));
 
@@ -128,14 +130,14 @@ public class VelocityDirectivesTest {
 		}).build();
 
 		// Create a page
-		create(Page.class, p -> {
+		page = create(Page.class, p -> {
 			p.setFolderId(node.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Testpage");
 		}).unlock().build();
 
 		// create a target template
-		create(Template.class, tmpl -> {
+		targetTemplate = create(Template.class, tmpl -> {
 			tmpl.setFolderId(node.getFolder().getId());
 			tmpl.setMlId(1);
 			tmpl.setName("Target Template");

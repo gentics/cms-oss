@@ -64,6 +64,6 @@ public class PageAssignMessagingSandboxTest extends AbstractMessagingSandboxTest
 			assertThat(reloadedPage).isModified();
 		});
 		SystemUser editor = supply(t -> t.getObject(SystemUser.class, EDITOR_USER_ID));
-		assertMessage(editor, "Publisher", "The page ProcessTests/Page to translate (53) has been taken into revision.\n\n--\n\nSome Message");
+		assertMessage(editor, "Publisher", "Die Seite ProcessTests/Page to translate (53) wurde in Arbeit zurückgestellt.\n\n--\n\nSome Message");
 	}
 }

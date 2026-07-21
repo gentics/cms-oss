@@ -32,11 +32,8 @@ import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.NodeFactory;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.init.BcryptPasswords;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.parser.ContentRenderer;
@@ -47,7 +44,6 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.jaxb.JAXBHelper;
@@ -226,44 +222,11 @@ public class ContentNodeTestContext {
 			transaction.commit();
 		}
 		transaction = factory.startTransaction(null, userId, true);
-		RenderType renderType = RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, 0);
+		RenderType renderType = RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, 0);
 		renderType.setHandleDependencies(false);
 		transaction.setRenderType(renderType);
 		transaction.setPublishCacheEnabled(false);
 		ContentNodeHelper.setLanguageId(1);
-	}
-
-	/**
-	 * Perform login with the given user credentials.
-	 * Starts a new transaction for the logged in user
-	 * @param login login
-	 * @param password password
-	 * @return the session
-	 * @throws NodeException
-	 * @throws JobExecutionException 
-	 */
-	public Session login(String login, String password) throws NodeException {
-		if (transaction != null && transaction.isOpen()) {
-			transaction.commit();
-		}
-
-		Session session = null;
-		try (Trx trx = new Trx()) {
-			if (!passwordHashJobrun) {
-				BcryptPasswords bcryptPasswords = new BcryptPasswords();
-				bcryptPasswords.execute();
-				passwordHashJobrun = true;
-			}
-			session = ContentNodeRESTUtils.login(login, password);
-
-			trx.success();
-		}
-
-		transaction = factory.startTransaction(session, true);
-		transaction.setRenderType(RenderType.getDefaultRenderType(getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, 0));
-		ContentNodeHelper.setLanguageId(1);
-
-		return session;
 	}
 
 	/**

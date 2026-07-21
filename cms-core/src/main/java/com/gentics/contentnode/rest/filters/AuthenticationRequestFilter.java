@@ -3,21 +3,10 @@ package com.gentics.contentnode.rest.filters;
 import static com.gentics.contentnode.factory.Trx.supply;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.server.ContainerRequest;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.ApiTokenFactory;
@@ -39,7 +28,6 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
@@ -112,11 +100,10 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 	 * @throws NodeException
 	 */
 	private Optional<? extends Session> trySessionSecretSession(ContainerRequestContext requestContext) throws NodeException {
-		String sid = getSid(requestContext);
 		String sessionSecret = getSessionSecret();
 
-		if (!StringUtils.isEmpty(sid)) {
-			SessionToken token = new SessionToken(sid, sessionSecret);
+		if (!StringUtils.isEmpty(sessionSecret)) {
+			SessionToken token = new SessionToken(sessionSecret);
 			Optional<DBSession> optSession = DBSession.load(token);
 			if (optSession.isPresent()) {
 				optSession.get().touch();
@@ -125,49 +112,6 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 		}
 
 		return Optional.empty();
-	}
-
-	/**
-	 * Extract the session id from the URI
-	 * @param requestContext request context
-	 * @return sid or null
-	 */
-	private String getSid(ContainerRequestContext requestContext) {
-		Optional<String> optionalQueryParamSid = Optional.ofNullable(uriInfo.getQueryParameters().get(SessionToken.SESSION_ID_QUERY_PARAM_NAME))
-				.flatMap(values -> values.stream().findFirst());
-		if (optionalQueryParamSid.isPresent()) {
-			return optionalQueryParamSid.get();
-		}
-
-		Optional<String> optionalRefererSid = Optional.ofNullable(headers.getHeaderString("Referer")).map(this::getSidFromReferer);
-		if (optionalQueryParamSid.isPresent()) {
-			return optionalRefererSid.get();
-		}
-
-		// check whether request is multipart/form-data
-		if (MediaTypes.typeEqual(requestContext.getMediaType(), MediaType.MULTIPART_FORM_DATA_TYPE) && requestContext.hasEntity() && requestContext instanceof ContainerRequest) {
-			ContainerRequest containerRequest = (ContainerRequest) requestContext;
-			containerRequest.bufferEntity();
-			FormDataMultiPart data = containerRequest.readEntity(FormDataMultiPart.class);
-			return Optional.ofNullable(data.getField("sid")).map(FormDataBodyPart::getValue).orElse(null);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Try to get the sid from the referer
-	 * @param referer referer
-	 * @return SID or null if not found
-	 */
-	private String getSidFromReferer(String referer) {
-		try {
-			List<NameValuePair> queryParams = URLEncodedUtils.parse(new URI(referer), StandardCharsets.UTF_8);
-			return queryParams.stream().filter(pair -> SessionToken.SESSION_ID_QUERY_PARAM_NAME.equals(pair.getName())).map(NameValuePair::getValue)
-					.findFirst().orElse(null);
-		} catch (URISyntaxException e) {
-			return null;
-		}
 	}
 
 	/**

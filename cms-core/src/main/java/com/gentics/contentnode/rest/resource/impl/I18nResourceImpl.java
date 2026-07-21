@@ -79,7 +79,8 @@ public class I18nResourceImpl implements I18nResource {
 						Response.status(Status.OK).entity(new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid language code provided"))).build());
 			}
 
-			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", language.getId(), trx.getTransaction().getSession().getSessionId());
+			// FIXME should we move the language into the user object?
+//			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", language.getId(), trx.getTransaction().getSession().getSessionId());
 			trx.success();
 
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully modified language"));

@@ -1352,7 +1352,7 @@ public class PageResourceImpl implements PageResource {
 			NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig()
 					.getDefaultPreferences();
 			RenderType renderType = RenderType.getDefaultRenderType(preferences,
-					RenderType.EM_LIVEPREVIEW, t.getSessionId(), 0);
+					RenderType.EM_LIVEPREVIEW, 0);
 			renderType.setRenderUrlFactory(new StaticUrlFactory(
 					RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null));
 			renderType.setFrontEnd(true);
@@ -2153,20 +2153,18 @@ public class PageResourceImpl implements PageResource {
 	 *
 	 * @param linksType       Type link
 	 * @param editMode        One of the RenderType constants
-	 * @param sessionId       Transaction session id
 	 * @param nodePreferences Preferences for the node
 	 * @param readOnly        should be read only
 	 * @return Render Type
 	 * @throws NodeException
 	 */
 	private RenderType createRenderType(LinksType linksType, int editMode,
-			String sessionId, NodePreferences nodePreferences, boolean readOnly) throws NodeException {
-		RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, editMode, sessionId,
-				0);
+			NodePreferences nodePreferences, boolean readOnly) throws NodeException {
+		RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, editMode, 0);
 
 		switch (linksType) {
 			case backend:
-				renderType.setRenderUrlFactory(new DynamicUrlFactory(sessionId));
+				renderType.setRenderUrlFactory(new DynamicUrlFactory());
 				renderType.setParameter(AlohaRenderer.LINKS_TYPE, "backend");
 				break;
 			case frontend:
@@ -2552,7 +2550,7 @@ public class PageResourceImpl implements PageResource {
 
 			// render all tags
 			RenderType renderType = createRenderType(LinksType.backend, RenderType.EM_ALOHA,
-					t.getSessionId(), t.getNodeConfig().getDefaultPreferences(), false);
+					t.getNodeConfig().getDefaultPreferences(), false);
 			t.setRenderType(renderType);
 			RenderResult renderResult = new RenderResult();
 			t.setRenderResult(renderResult);
@@ -4151,8 +4149,7 @@ public class PageResourceImpl implements PageResource {
 			// set the RR for the current transaction, so that parameters are not reset
 			t.setRenderResult(renderResult);
 
-			RenderType renderType = createRenderType(linksType, RenderType.EM_ALOHA, t.getSessionId(),
-					nodePreferences, false);
+			RenderType renderType = createRenderType(linksType, RenderType.EM_ALOHA, nodePreferences, false);
 			t.setRenderType(renderType);
 
 			Page page = pageSupplier.supply();
@@ -4260,8 +4257,7 @@ public class PageResourceImpl implements PageResource {
 				renderTypeValue = readOnly ? RenderType.EM_ALOHA_READONLY : RenderType.EM_ALOHA;
 			}
 
-			RenderType renderType = createRenderType(linksType, renderTypeValue, t.getSessionId(),
-					nodePreferences, readOnly);
+			RenderType renderType = createRenderType(linksType, renderTypeValue, nodePreferences, readOnly);
 			t.setRenderType(renderType);
 
 			Page page;
@@ -4286,8 +4282,7 @@ public class PageResourceImpl implements PageResource {
 
 					// we need to reset the rendertype, since editmode is different now
 					renderTypeValue = readOnly ? RenderType.EM_ALOHA_READONLY : RenderType.EM_ALOHA;
-					renderType = createRenderType(linksType, renderTypeValue, t.getSessionId(),
-							nodePreferences, readOnly);
+					renderType = createRenderType(linksType, renderTypeValue, nodePreferences, readOnly);
 					t.setRenderType(renderType);
 				}
 			}
@@ -4308,7 +4303,7 @@ public class PageResourceImpl implements PageResource {
 			if (inherited && page.isLocalized()) {
 				RenderResult renderResultInherit = new RenderResult();
 				RenderType renderTypeInherit = createRenderType(linksType, renderTypeValue,
-						t.getSessionId(), nodePreferences, true);
+						nodePreferences, true);
 
 				t.setRenderResult(renderResultInherit);
 				t.setRenderType(renderTypeInherit);

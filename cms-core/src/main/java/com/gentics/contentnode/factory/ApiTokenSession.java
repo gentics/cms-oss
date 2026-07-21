@@ -18,11 +18,11 @@ public class ApiTokenSession implements Session {
 
 	private Language language;
 
+	private int id;
+
 	private int userId;
 
 	private int languageId;
-
-	private String sessionId;
 
 	/**
 	 * Create an instance from the given token
@@ -30,6 +30,7 @@ public class ApiTokenSession implements Session {
 	 * @throws NodeException
 	 */
 	public ApiTokenSession(ApiTokenDataModel dataModel) throws NodeException {
+		id = dataModel.getId();
 		userId = dataModel.getUserId();
 
 		// set the language Id of the last session of the user or 1
@@ -39,7 +40,6 @@ public class ApiTokenSession implements Session {
 				}, firstInt("language")), 1);
 
 		language = new CNDictionary(languageId).asLanguage();
-		sessionId = "APIToken:%d".formatted(dataModel.getId());
 
 		// touch the API Token
 		update("UPDATE api_token SET last_used = ? WHERE id = ?",
@@ -52,6 +52,11 @@ public class ApiTokenSession implements Session {
 	}
 
 	@Override
+	public int getId() {
+		return id;
+	}
+
+	@Override
 	public int getUserId() {
 		return userId;
 	}
@@ -59,10 +64,5 @@ public class ApiTokenSession implements Session {
 	@Override
 	public int getLanguageId() {
 		return languageId;
-	}
-
-	@Override
-	public String getSessionId() {
-		return sessionId;
 	}
 }

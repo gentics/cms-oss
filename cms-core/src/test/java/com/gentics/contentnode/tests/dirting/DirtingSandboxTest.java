@@ -776,7 +776,6 @@ public class DirtingSandboxTest {
 	 * @throws Exception
 	 */
 	protected void testDeleteConstruct(boolean enabled) throws Exception {
-		testContext.getContext().login("node", "node");
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		Node node = ContentNodeTestDataUtils.createNode("testnode", "Testnode", PublishTarget.FILESYSTEM);

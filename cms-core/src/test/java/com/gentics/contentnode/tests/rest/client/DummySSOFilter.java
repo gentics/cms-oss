@@ -43,10 +43,9 @@ public class DummySSOFilter implements ContainerRequestFilter {
 
 				DBSession session = new DBSession(systemUser, "localhost", "Dummy User Agent", null, 0);
 				UriBuilder builder = requestContext.getUriInfo().getRequestUriBuilder();
-				builder.replaceQueryParam(SessionToken.SESSION_ID_QUERY_PARAM_NAME, session.getSessionId());
 				requestContext.setRequestUri(builder.build());
 				requestContext.getHeaders().add(HttpHeaders.COOKIE,
-						new NewCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret()).toString());
+						new NewCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getCookieValue()).toString());
 			});
 		} catch (Exception e) {
 			throw new IOException(e);

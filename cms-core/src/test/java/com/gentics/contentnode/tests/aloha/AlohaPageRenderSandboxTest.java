@@ -105,8 +105,8 @@ public class AlohaPageRenderSandboxTest {
 
 		NodePreferences preferences = t.getNodeConfig().getDefaultPreferences();
 
-		renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA, t.getSessionId(), 0);
-		renderType.setRenderUrlFactory(new DynamicUrlFactory(t.getSessionId()));
+		renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA, 0);
+		renderType.setRenderUrlFactory(new DynamicUrlFactory());
 		renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, Boolean.TRUE);
 
 		t.setRenderType(renderType);
@@ -135,9 +135,7 @@ public class AlohaPageRenderSandboxTest {
 		// TODO: comparing the rendered page with an expected result
 		// is not a good way to test. This will fail too often when
 		// something is changed.
-		
-		// ignore the session ID
-		result = result.replaceAll(t.getSessionId(), "");
+
 		// ignore any script includes
 		result = result.replaceAll("<script.*?src=.*?</script>\n", "");
 		// ignore timestamps

@@ -1,1 +1,1 @@
-<img src='/GenticsImageStore/auto/50/cropandresize/smart/10/15/30/35/rest/file/content/load/#IMAGEID#?sid=1&nodeId=#NODEID#&fingerprint=#IMAGEMD5#'>
+<img src='/GenticsImageStore/auto/50/cropandresize/smart/10/15/30/35/rest/file/content/load/#IMAGEID#?nodeId=#NODEID#&fingerprint=#IMAGEMD5#'>

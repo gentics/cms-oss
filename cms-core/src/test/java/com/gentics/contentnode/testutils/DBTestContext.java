@@ -630,7 +630,7 @@ public class DBTestContext extends TestWatcher {
 		Transaction t = context.getContentNodeFactory().startTransaction(session, true);
 		context.setTransaction(t);
 
-		RenderType renderType = RenderType.getDefaultRenderType(context.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, t.getSessionId(), 0);
+		RenderType renderType = RenderType.getDefaultRenderType(context.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, 0);
 
 		renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINK_AUTO, RenderUrl.LINK_AUTO, null));
 		t.setRenderType(renderType);

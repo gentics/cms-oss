@@ -44,12 +44,10 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.portalnode.connector.PortalConnectorFactory;
 import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -1686,11 +1684,8 @@ public class ContentNodeTestDataUtils {
 	 */
 	public static ContentRepository createContentRepositoryWithDatsource(
 			String name, boolean mccr, Boolean instant, Node node) throws NodeException{
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		Map<String, String> handleProperties = createDatasource(node, mccr);
 		ContentRepository cr = createContentRepository(name, mccr, instant, handleProperties.get("url"));
-
 		return cr;
 	}
 
@@ -2345,21 +2340,10 @@ public class ContentNodeTestDataUtils {
 			String name, Integer folderId, Integer nodeId, String description, Boolean overwrite,
 			String data) throws ParseException, TransactionException {
 
-		Session session = ContentNodeHelper.getSession();
-		String sessionId = session.getSessionId();
-		String sessionSecret = "";
-		if (session instanceof DBSession dbSession) {
-			sessionSecret = dbSession.getSessionSecret();
-		}
-
 		@SuppressWarnings("resource")
 		MultiPart multiPart = new MultiPart()
 			.bodyPart(createformDataBodyPart("form-data; name=\"folderId\"", folderId.toString(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"nodeId\"", nodeId.toString(), null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-					sessionId, null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-					sessionSecret, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", name, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"description\"", description, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + name + "\"",

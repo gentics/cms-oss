@@ -1,9 +1,16 @@
 package com.gentics.contentnode.tests.rendering;
 
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.Builder.create;
+import static com.gentics.contentnode.tests.utils.Builder.update;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,8 +23,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
@@ -99,86 +104,83 @@ public class VelocityDirectivesTest {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		testContext.getContext().login("node", "node");
-
 		// Create node
-		node = ContentNodeTestDataUtils.createNode("testnode", "Test Node", PublishTarget.NONE);
+		node = supply(() -> createNode("testnode", "Test Node", PublishTarget.NONE));
 
 		// Create velocity construct that renders the given template
-		int vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, "vtl", "vtl");
+		int vtlConstructId = supply(() -> createVelocityConstruct(node, "vtl", "vtl"));
 
 		// Create template using the construct
-		Transaction t = TransactionManager.getCurrentTransaction();
-		template = t.createObject(Template.class);
-		template.setFolderId(node.getFolder().getId());
-		template.setMlId(1);
-		template.setName("Template");
-		template.setSource("<node vtl>");
-		TemplateTag vtlTag = t.createObject(TemplateTag.class);
-		vtlTag.setConstructId(vtlConstructId);
-		vtlTag.setEnabled(true);
-		vtlTag.setName("vtl");
-		vtlTag.setPublic(false);
-		template.getTemplateTags().put(vtlTag.getName(), vtlTag);
-		template.save();
-		t.commit(false);
+		template = create(Template.class, tmpl -> {
+			tmpl.setFolderId(node.getFolder().getId());
+			tmpl.setMlId(1);
+			tmpl.setName("Template");
+			tmpl.setSource("<node vtl>");
+
+			TemplateTag vtlTag = create(TemplateTag.class, tt -> {
+				tt.setConstructId(vtlConstructId);
+				tt.setEnabled(true);
+				tt.setName("vtl");
+				tt.setPublic(false);
+			}).doNotSave().build();
+
+			tmpl.getTemplateTags().put(vtlTag.getName(), vtlTag);
+		}).build();
 
 		// Create a page
-		page = t.createObject(Page.class);
-		page.setFolderId(node.getFolder().getId());
-		page.setTemplateId(template.getId());
-		page.setName("Testpage");
-		page.save();
-		t.commit(false);
+		create(Page.class, p -> {
+			p.setFolderId(node.getFolder().getId());
+			p.setTemplateId(template.getId());
+			p.setName("Testpage");
+		}).unlock().build();
 
 		// create a target template
-		targetTemplate = t.createObject(Template.class);
-		targetTemplate.setFolderId(node.getFolder().getId());
-		targetTemplate.setMlId(1);
-		targetTemplate.setName("Target Template");
-		targetTemplate.setSource("<node vtl>");
-		templateTag = t.createObject(TemplateTag.class);
-		templateTag.setConstructId(vtlConstructId);
-		templateTag.setEnabled(true);
-		templateTag.setName("vtl");
-		templateTag.setPublic(true);
-		templateTag.getValues().getByKeyname("template").setValueText("This is the target template tag");
-		targetTemplate.getTemplateTags().put(templateTag.getName(), templateTag);
-		targetTemplate.save();
-		t.commit(false);
+		create(Template.class, tmpl -> {
+			tmpl.setFolderId(node.getFolder().getId());
+			tmpl.setMlId(1);
+			tmpl.setName("Target Template");
+			tmpl.setSource("<node vtl>");
+
+			templateTag = create(TemplateTag.class, tt -> {
+				tt.setConstructId(vtlConstructId);
+				tt.setEnabled(true);
+				tt.setName("vtl");
+				tt.setPublic(true);
+				tt.getValues().getByKeyname("template").setValueText("This is the target template tag");
+			}).doNotSave().build();
+
+			tmpl.getTemplateTags().put(templateTag.getName(), templateTag);
+		}).build();
 
 		// create a target page
-		targetPage = t.createObject(Page.class);
-		targetPage.setFolderId(node.getFolder().getId());
-		targetPage.setTemplateId(targetTemplate.getId());
-		targetPage.setName("Target Page");
-		targetPage.getContentTag("vtl").getValues().getByKeyname("template").setValueText("This is the target content tag");
-		targetPage.save();
-		targetPage.publish();
-		t.commit(false);
+		targetPage = create(Page.class, p -> {
+			p.setFolderId(node.getFolder().getId());
+			p.setTemplateId(targetTemplate.getId());
+			p.setName("Target Page");
+			p.getContentTag("vtl").getValues().getByKeyname("template").setValueText("This is the target content tag");
+		}).unlock().publish().build();
 
 		// create a target file
-		targetFile = t.createObject(File.class);
-		targetFile.setFileStream(new ByteArrayInputStream("File contents".getBytes()));
-		targetFile.setFolderId(node.getFolder().getId());
-		targetFile.setName("targetfile.txt");
-		targetFile.save();
-		t.commit(false);
+		targetFile = create(File.class, f -> {
+			f.setFileStream(new ByteArrayInputStream("File contents".getBytes()));
+			f.setFolderId(node.getFolder().getId());
+			f.setName("targetfile.txt");
+		}).build();
 
 		// create a target image
-		targetImage = t.createObject(ImageFile.class);
-		targetImage.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
-		targetImage.setFolderId(node.getFolder().getId());
-		targetImage.setName("blume.jpg");
-		targetImage.save();
-		t.commit(false);
+		try (InputStream in = GenericTestUtils.getPictureResource("blume.jpg")) {
+			targetImage = create(ImageFile.class, i -> {
+				i.setFileStream(in);
+				i.setFolderId(node.getFolder().getId());
+				i.setName("blume.jpg");
+			}).build();
+		}
 	}
 
 	/**
 	 * Get the test parameters
 	 * @return collection of test parameter sets
 	 */
-	@SuppressWarnings("unchecked")
 	@Parameters(name = "{index}: PartType: {0}, rendermode: {1}, template: {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
@@ -217,42 +219,53 @@ public class VelocityDirectivesTest {
 	 */
 	@Test
 	public void test() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		template = t.getObject(Template.class, template.getId(), true);
-		template.getTemplateTag("vtl").getValues().getByKeyname("template").setValueText(StringUtils.readStream(getClass().getResourceAsStream(vtl)));
-		template.save();
-		t.commit(false);
+		try (InputStream in = getClass().getResourceAsStream(vtl)) {
+			String content = StringUtils.readStream(in);
+			template = update(template, tmpl -> {
+				tmpl.getTemplateTag("vtl").getValues().getByKeyname("template").setValueText(content);
+			}).build();
+		}
 
-		int testedConstruct = ContentNodeTestDataUtils.createConstruct(node, partTypeClass, partTypeClass.getSimpleName().toLowerCase(), "part");
+		int testedConstruct = supply(() -> createConstruct(node, partTypeClass, partTypeClass.getSimpleName().toLowerCase(), "part"));
 
-		page = t.getObject(Page.class, page.getId(), true);
-		page.setTemplateId(template.getId());
-		page.getContent().getTags().clear();
-		ContentTag testedTag = page.getContent().addContentTag(testedConstruct);
-		testedTag.setName("testtag");
-		ContentNodeTestDataUtils.fillValue(testedTag.getValues().getByKeyname("part"), "Test text", true, Arrays.asList("one", "two", "three"), targetPage.getContentTag("vtl"), templateTag,
-				targetFile, node, node.getFolder(), targetImage, targetPage);
-		testedTag.setEnabled(true);
-		page.save();
-		t.commit(false);
+		page = update(page, p -> {
+			p.setTemplateId(template.getId());
+			p.getContent().getTags().clear();
+			ContentTag testedTag = p.getContent().addContentTag(testedConstruct);
+			testedTag.setName("testtag");
+			ContentNodeTestDataUtils.fillValue(testedTag.getValues().getByKeyname("part"), "Test text", true, Arrays.asList("one", "two", "three"), targetPage.getContentTag("vtl"), templateTag,
+					targetFile, node, node.getFolder(), targetImage, targetPage);
+			testedTag.setEnabled(true);
+		}).build();
 
-		page = t.getObject(Page.class, page.getId());
-		RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), renderMode, "sid", -1);
-		t.setRenderType(renderType);
-		// set the url factory
-		renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
+		String content = supply(t -> {
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), renderMode, -1);
+			t.setRenderType(renderType);
+			// set the url factory
+			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
 
-		RenderResult renderResult = new RenderResult();
-		String content = page.render(renderResult);
-
+			RenderResult renderResult = new RenderResult();
+			return page.render(renderResult);
+		});
 		assertFalse("Content must not be empty", ObjectTransformer.isEmpty(content));
 
-		template.getTemplateTag("vtl").getValues().getByKeyname("template")
-				.setValueText(StringUtils.readStream(getClass().getResourceAsStream("compare_" + vtl)));
-		template.save();
-		t.commit(false);
+		try (InputStream in = getClass().getResourceAsStream("compare_" + vtl)) {
+			String vtlContent = StringUtils.readStream(in);
+			template = update(template, tmpl -> {
+				tmpl.getTemplateTag("vtl").getValues().getByKeyname("template").setValueText(vtlContent);
+			}).build();
+		}
 
-		String oldContent = page.render(renderResult);
+		String oldContent = supply(t -> {
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), renderMode, -1);
+			t.setRenderType(renderType);
+			// set the url factory
+			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
+
+			RenderResult renderResult = new RenderResult();
+			return page.render(renderResult);
+		});
+
 		assertEquals("Check rendered content", oldContent, content);
 	}
 }

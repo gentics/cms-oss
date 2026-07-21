@@ -3,8 +3,6 @@ package com.gentics.contentnode.rest.resource.impl;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang3.Strings;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -15,38 +13,31 @@ import com.gentics.contentnode.etc.NodeSetup;
 import com.gentics.contentnode.etc.NodeSetupValuePair;
 import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
-import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
-import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
-import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.security.AccessControlService;
 import com.gentics.lib.http.CookieHelper;
 import com.gentics.lib.http.CookieHelper.SameSite;
 import com.gentics.lib.log.NodeLogger;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.HttpHeaders;
@@ -71,34 +62,10 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	 */
 	protected AccessControlService accessControlService = new AccessControlService("restapi");
 
-
-	/**
-	 * Session id that is injected by JAX-RS.
-	 */
-	private String sessionId;
-
 	/**
 	 * Session Secret from the Session Secret Cookie
 	 */
 	private String sessionSecret;
-
-	/**
-	 * Set the sessionId for this request.
-	 * 
-	 * @param sessionId Id of the session to use for this ContentNodeResource
-	 */
-	@QueryParam("sid")
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-
-	/**
-	 * Get the session Id of the current request
-	 * @return The session Id of the current request
-	 */
-	public String getSessionId() {
-		return sessionId;
-	}
 
 	@Context
 	public void setSessionSecretFromCookie(HttpHeaders headers) {
@@ -124,28 +91,6 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return sessionSecret;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#validate(java.lang.String)
-	 */
-	@Override
-	@GET
-	@Path("/validate/{sid}")
-	public AuthenticationResponse validate(@PathParam("sid") String sid) {
-		AuthenticationResponse response = new AuthenticationResponse();
-
-		// check the SID
-		try (Trx trx = ContentNodeHelper.trx()) {
-			int userId = validateSID(sid);
-
-			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully validated given SID"));
-			response.setUser(ModelBuilder.getUser(trx.getTransaction().getObject(SystemUser.class, userId)));
-			trx.success();
-		} catch (Exception e) {
-			response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
-		}
-		return response;
-	}
-
 	@Override
 	@GET
 	@Path("/ssologin")
@@ -158,7 +103,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 			if (getRequest() != null) {
 				sessionToken = new SessionToken(getRequest());
 			} else {
-				sessionToken = new SessionToken(getSessionId(), getSessionSecret());
+				sessionToken = new SessionToken(getSessionSecret());
 			}
 			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
@@ -188,7 +133,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 				if (getResponse() != null) {
 					NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 					String sameSiteString = ObjectTransformer.getString(prefs.getProperty(LoginService.CONFIGURATION_COOKIE_SAMESITE), null);
-					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, optSession.get().getSessionSecret(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
+					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, optSession.get().getCookieValue(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
 				}
 				trx.success();
 				// return the sid as plaintext
@@ -217,12 +162,12 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	@Override
 	@POST
 	@Path("/login")
-	public LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) throws NodeException {
+	public LoginResponse login(LoginRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			String username = request.getLogin();
 			String password = request.getPassword();
 
-			LoginResponse response = tryLoginWithService(username, password, sidString);
+			LoginResponse response = tryLoginWithService(username, password);
 
 			if (response != null) {
 				return response;
@@ -244,10 +189,9 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	 * Search a login implementation that is able to perform a login
 	 * @param username user login
 	 * @param password user password
-	 * @param sid session id
 	 * @return Login response if login was successfully
 	 */
-	private LoginResponse tryLoginWithService(String username, String password, String sid) {
+	private LoginResponse tryLoginWithService(String username, String password) {
 		LoginResponse errorResponse = null;
 
 		for (LoginService service : LOGIN_SERVICE_LOADER) {
@@ -268,49 +212,21 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	@Override
 	@POST
 	@Path("/logout/{sid}")
-	public GenericResponse logout(@PathParam("sid") String sid,
-			@QueryParam("allSessions") @DefaultValue("false") boolean allSessions) {
+	public GenericResponse logout() throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			SessionToken sessionToken = new SessionToken(sid, getSessionSecret());
+			SessionToken sessionToken = new SessionToken(getSessionSecret());
 			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
 			if (optSession.isPresent()) {
-				if (allSessions) {
-					optSession.get().logoutAllSessions();
-					// Remove the session secret cookie
-					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
-							"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
-				} else {
-					// Simply log out the current session
-					optSession.get().logout();
-				}
+				optSession.get().logout();
+				CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
+						"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
 
 				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
 			} else {
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
 			}
-		} catch (Exception e) {
-			return new GenericResponse(null, new ResponseInfo(ResponseCode.FAILURE, "Error while logout"));
-		}
-	}
-
-
-
-	/**
-	 * Validate the given SID
-	 * @param sid sid to validate
-	 * @return user id
-	 * @throws Exception if the SID cannot be validated
-	 */
-	protected int validateSID(String sid) throws Exception {
-		Session session = ContentNodeHelper.getSession();
-
-		int userId = session.getUserId();
-		if (userId > 0 && Strings.CS.equals(sid, session.getSessionId())) {
-			return userId;
-		} else {
-			throw new NodeException("SessionToken does not authenticate the session");
 		}
 	}
 
@@ -319,16 +235,15 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	@Path("/hashpassword")
 	public HashPasswordResponse hashPassword(
 			@Context HttpServletRequest httpServletRequest,
-			HashPasswordRequest hashPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId) {
+			HashPasswordRequest hashPasswordRequest) {
 		HashPasswordResponse response = new HashPasswordResponse();
 
 		String password = hashPasswordRequest.getPassword();
 		int userId      = hashPasswordRequest.getUserId();
 
 		try {
-			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest, sessionId)) {
-				throw new InvalidSessionIdException(Integer.toString(sessionId));
+			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest)) {
+				throw new InvalidSessionIdException("");
 			}
 
 			// Hash the plain text password
@@ -352,13 +267,12 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	@Path("/matchpassword")
 	public GenericResponse matchPassword(
 			@Context HttpServletRequest httpServletRequest,
-			MatchPasswordRequest matchPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId) {
+			MatchPasswordRequest matchPasswordRequest) {
 		GenericResponse response = new GenericResponse();
 
 		try {
-			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest, sessionId)) {
-				throw new InvalidSessionIdException(Integer.toString(sessionId));
+			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest)) {
+				throw new InvalidSessionIdException("");
 			}
 
 			if (SystemUserFactory.passwordMatches(
@@ -405,11 +319,10 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	 * Checks if the session is authenticated or the IP from the HttpServletRequest
 	 * is whitelisted.
 	 * @param httpServletRequest The HTTP servlet request from jersey
-	 * @param sessionId          Session ID
 	 * @return True if granted
 	 * @throws NodeException
 	 */
-	protected final boolean isAuthenticatedOrIpWhiteListed(HttpServletRequest httpServletRequest, int sessionId)
+	protected final boolean isAuthenticatedOrIpWhiteListed(HttpServletRequest httpServletRequest)
 			throws NodeException {
 		// Access to this method will only be granted if the IP
 		// is whitelisted or a valid session exists.
@@ -427,8 +340,8 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 			}
 
 			// Allow if authentication is authenticated
-			if (!accessVerified && sessionId > 0) {
-				SessionToken sessionToken = new SessionToken(sessionId, getSessionSecret());
+			if (!accessVerified) {
+				SessionToken sessionToken = new SessionToken(getSessionSecret());
 				Optional<DBSession> optSession = DBSession.load(sessionToken);
 
 				if (optSession.isPresent()) {

@@ -526,7 +526,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		// add the proxyURL as general setting
 		settings.put("proxyUrl",
-				prefs.getProperty("stag_prefix") + "?sid=" + t.getSessionId() + "&do=19191&url=");
+				prefs.getProperty("stag_prefix") + "?do=19191&url=");
 
 		// Log levels
 		ObjectNode logSettings = mapper.createObjectNode();
@@ -580,7 +580,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		ObjectNode linkCheckerPlugin = mapper.createObjectNode();
 
 		linkCheckerPlugin.put("proxyUrl",
-				prefs.getProperty("stag_prefix") + "?sid=" + t.getSessionId() + "&do=19191&url=");
+				prefs.getProperty("stag_prefix") + "?do=19191&url=");
 		plugins.put("linkchecker", linkCheckerPlugin);
 
 		for (AlohaPluginService service : alohaPluginServiceLoader) {
@@ -592,7 +592,6 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		plugins.put("gcn", cnIntegrationPlugin);
 
-		cnIntegrationPlugin.put("sid", t.getSessionId());
 		cnIntegrationPlugin.put("buildRootTimestamp", buildRootTimestamp);
 		cnIntegrationPlugin.put("gcnLibVersion", gcnJSLibVersion);
 		cnIntegrationPlugin.put("webappPrefix", webappPrefix);

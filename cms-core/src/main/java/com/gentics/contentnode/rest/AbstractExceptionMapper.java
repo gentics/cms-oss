@@ -39,13 +39,24 @@ public abstract class AbstractExceptionMapper {
 	}
 
 	/**
+	 * Try to rollback the current transaction
+	 * @param e exception
+	 */
+	protected void tryRollback(Exception e) {
+		tryRollback(e, true);
+	}
+
+	/**
 	 * Try to rollback the current transaction.
 	 * 
 	 * @param e
 	 *            root cause exception
+	 * @param log true to log an error
 	 */
-	protected void tryRollback(Exception e) {
-		logger.error("Error in request", e);
+	protected void tryRollback(Exception e, boolean log) {
+		if (log) {
+			logger.error("Error in request", e);
+		}
 		Transaction t;
 		t = TransactionManager.getCurrentTransactionOrNull();
 		if (t != null) {

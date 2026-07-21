@@ -1,5 +1,9 @@
 package com.gentics.contentnode.tests.rendering;
 
+import static com.gentics.contentnode.db.DBUtils.firstInt;
+import static com.gentics.contentnode.db.DBUtils.select;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
@@ -11,8 +15,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -20,7 +24,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
@@ -31,14 +34,15 @@ import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Tests for rendering velocity tags containing macros
  */
 public class VelomacroRenderSandboxTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
 	 * Number of different templates
@@ -58,58 +62,43 @@ public class VelomacroRenderSandboxTest {
 	/**
 	 * Node for the test data
 	 */
-	protected Node node;
+	protected static Node node;
+
+	private static Integer userId;
 
 	/**
 	 * Collection of templates
 	 */
-	protected Collection<Template> templates = new ArrayList<Template>();
+	protected static Collection<Template> templates = new ArrayList<Template>();
 
 	/**
 	 * Collection of test pages
 	 */
-	protected Collection<Page> pages = new ArrayList<Page>();
+	protected static Collection<Page> pages = new ArrayList<Page>();
 
-	@Before
-	public void setUp() throws Exception {
-		testContext.getContext().login("node", "node");
-		node = createNode("Test Node", "test", "/Content.Node", null, false, false, false);
-		Folder root = node.getFolder();
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
 
-		for (int i = 0; i < NUM_TEMPLATES; i++) {
-			String name = "Template" + i;
-			templates.add(createVelocityTemplate(node, name, generateVTL(name)));
-		}
+		operate(() -> {
+			node = createNode("Test Node", "test", "/Content.Node", null, false, false, false);
+			Folder root = node.getFolder();
 
-		for (int i = 0; i < NUM_PAGES_PER_TEMPLATE; i++) {
-			for (Template template : templates) {
-				pages.add(createPage(root, template, "Page " + i + " of " + template.getName()));
+			for (int i = 0; i < NUM_TEMPLATES; i++) {
+				String name = "Template" + i;
+				templates.add(createVelocityTemplate(node, name, generateVTL(name)));
 			}
-		}
-	}
 
-	/**
-	 * Test rendering the pages using velocity macros in several threads
-	 * @throws Exception
-	 */
-	@Test
-	public void testRendering() throws Throwable {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		List<PageRenderThread> threads = new ArrayList<PageRenderThread>(NUM_THREADS);
+			for (int i = 0; i < NUM_PAGES_PER_TEMPLATE; i++) {
+				for (Template template : templates) {
+					pages.add(createPage(root, template, "Page " + i + " of " + template.getName()));
+				}
+			}
+		});
 
-		for (int i = 0; i < NUM_THREADS; i++) {
-			PageRenderThread thread = new PageRenderThread(t.getSession());
-			threads.add(thread);
-			thread.start();
-		}
-
-		for (PageRenderThread thread : threads) {
-			thread.join();
-		}
-
-		for (PageRenderThread thread : threads) {
-			thread.assertSuccess();
-		}
+		userId = supply(() -> select("SELECT id FROM systemuser WHERE login = ?", pst -> {
+			pst.setString(1, "node");
+		}, firstInt("id")));
 	}
 
 	/**
@@ -120,7 +109,7 @@ public class VelomacroRenderSandboxTest {
 	 * @return template
 	 * @throws NodeException
 	 */
-	protected Template createVelocityTemplate(Node node, String name, String vtl) throws NodeException {
+	protected static Template createVelocityTemplate(Node node, String name, String vtl) throws NodeException {
 		int vtlConstructId = createVelocityConstruct(node, "velocity", "vtl");
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Template template = t.createObject(Template.class);
@@ -128,7 +117,7 @@ public class VelomacroRenderSandboxTest {
 		template.setMlId(1);
 		template.setName(name);
 		template.setSource("<node velocity>");
-
+	
 		TemplateTag tag = t.createObject(TemplateTag.class);
 		tag.setConstructId(vtlConstructId);
 		tag.setEnabled(true);
@@ -136,10 +125,10 @@ public class VelomacroRenderSandboxTest {
 		tag.setPublic(false);
 		getPartType(TextPartType.class, tag, "template").getValueObject().setValueText(vtl);
 		template.getTemplateTags().put("velocity", tag);
-
+	
 		template.save();
 		t.commit(false);
-
+	
 		return t.getObject(Template.class, template.getId());
 	}
 
@@ -151,7 +140,7 @@ public class VelomacroRenderSandboxTest {
 	 * @return page
 	 * @throws NodeException
 	 */
-	protected Page createPage(Folder folder, Template template, String name) throws NodeException {
+	protected static Page createPage(Folder folder, Template template, String name) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = t.createObject(Page.class);
 		page.setFolderId(folder.getId());
@@ -167,7 +156,7 @@ public class VelomacroRenderSandboxTest {
 	 * @param name template name
 	 * @return vtl
 	 */
-	protected String generateVTL(String name) {
+	protected static String generateVTL(String name) {
 		StringBuilder vtl = new StringBuilder();
 		vtl.append("#testmacro(1 10)##\n");
 		vtl.append("#macro(testmacro $level $max)##\n");
@@ -181,6 +170,31 @@ public class VelomacroRenderSandboxTest {
 		return vtl.toString();
 	}
 
+	/**
+	 * Test rendering the pages using velocity macros in several threads
+	 * @throws Exception
+	 */
+	@Test
+	public void testRendering() throws Throwable {
+		List<PageRenderThread> threads = new ArrayList<PageRenderThread>(NUM_THREADS);
+
+		try (DBSessionClosure ses = new DBSessionClosure(userId)) {
+			for (int i = 0; i < NUM_THREADS; i++) {
+				PageRenderThread thread = new PageRenderThread(ses.getSession());
+				threads.add(thread);
+				thread.start();
+			}
+
+			for (PageRenderThread thread : threads) {
+				thread.join();
+			}
+
+			for (PageRenderThread thread : threads) {
+				thread.assertSuccess();
+			}
+		}
+	}
+
 	public class PageRenderThread extends Thread {
 		protected Throwable e;
 
@@ -192,7 +206,7 @@ public class VelomacroRenderSandboxTest {
 
 		@Override
 		public void run() {
-			try (Trx trx = new Trx(session, -1)) {
+			try (DBSessionClosure ses = new DBSessionClosure(session)) {
 				for (Page page : pages) {
 					PageResource resource = new PageResourceImpl();
 

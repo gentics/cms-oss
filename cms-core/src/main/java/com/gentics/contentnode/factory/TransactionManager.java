@@ -1154,13 +1154,6 @@ public final class TransactionManager {
 		}
 
 		/*
-		 * @see com.gentics.lib.base.factory.Transaction#getSessionId()
-		 */
-		public String getSessionId() {
-			return Optional.ofNullable(session).map(Session::getSessionId).orElse(null);
-		}
-
-		/*
 		 * (non-Javadoc)
 		 * @see com.gentics.lib.base.factory.Transaction#getUserId()
 		 */

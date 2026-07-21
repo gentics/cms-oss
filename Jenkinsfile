@@ -166,6 +166,10 @@ spec:
                         version = MavenHelper.getVersion()
                     }
                     helmVersion = version
+                    if (Boolean.valueOf(params.deployTesting)) {
+                        //helm version need a semantic version ci-devtest is not valid - prefix test versions with 0-
+                        helmVersion = "0-${helmVersion}"
+                    }
 
                     // Merge the hotfix branch if building a release branch
                     if (params.mergeHotfixBranch && branchName.startsWith("release-")) {

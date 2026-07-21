@@ -29,9 +29,6 @@ const PROVIDERS: any[] = [
                 basePath: '/rest',
             },
         });
-        appState.select((state) => state.auth.sid).subscribe((sid) => {
-            client.setSessionId(sid);
-        });
 
         return keycloak.checkKeycloakAuth().then(() => {
             // No additonal setup required

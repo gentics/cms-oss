@@ -7,7 +7,7 @@ import { AlohaModule } from '@gentics/cms-components/aloha';
 import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
-import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
+import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { FormGridModule } from '@gentics/form-grid';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
@@ -70,9 +70,6 @@ import { UploadConflictService } from './providers/upload-conflict/upload-confli
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 import { UsersnapService } from './providers/usersnap/usersnap.service';
 import { FormListLoaderService } from './providers';
-
-export const getSidFromAppState = (appState: ApplicationStateService): Observable<number> =>
-    appState.select((state) => state.auth.sid);
 
 export const createLanguageObservable = (appState: ApplicationStateService): Observable<GcmsUiLanguage> =>
     appState.select((state) => state.ui.language);
@@ -141,11 +138,6 @@ const PROVIDERS = [
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
     GcmsUiServicesProvider,
     { provide: GCMS_UI_SERVICES_PROVIDER, useClass: GcmsUiServicesProvider },
-    {
-        provide: GCMS_API_SID,
-        useFactory: getSidFromAppState,
-        deps: [ApplicationStateService],
-    },
 ];
 
 @NgModule({

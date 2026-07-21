@@ -5,7 +5,6 @@ import { getExampleEditableTag, getMockTagEditorTranslator } from '../../../../t
 import { TagEditorContextImpl } from './tag-editor-context-impl';
 
 const READ_ONLY = false;
-const SID = 7890;
 const VAR_CONTEXTS: VariableTagEditorContext[] = [
     { uiLanguage: 'de' },
     { uiLanguage: 'en' },
@@ -61,12 +60,11 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('TagEditorContext.create() works', () => {
-        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
+        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, false);
         expect(context.editedTag).toBe(TAG);
         expect(context.readOnly).toBe(READ_ONLY);
         expect(context.page).toBe(PAGE);
         expect(context.node).toBe(NODE);
-        expect(context.sid).toBe(SID);
         expect(context.translator).toBe(translator);
         expect(context.validator).toBeTruthy();
         expect(context.variableContext).toBe(variableContext$);
@@ -81,7 +79,7 @@ describe('TagEditorContextImpl', () => {
         let emissionsCount = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, true);
+        const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, true);
         expect(context.withDelete).toBe(true);
         context.variableContext.subscribe((varContext) => {
             ++emissionsCount;
@@ -99,7 +97,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('clone() works', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, true);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, true);
         const clone = src.clone();
 
         // The following properties should be deep copies.
@@ -116,7 +114,6 @@ describe('TagEditorContextImpl', () => {
 
         // SID and translator are immutable and thus the same, the others are undefined.
         expect(clone.readOnly).toBe(READ_ONLY);
-        expect(clone.sid).toBe(SID);
         expect(clone.translator).toBe(translator);
         expect(clone.gcmsUiServices).toEqual(gcmsUiServices);
         expect(clone.gcmsUiServices).not.toBe(gcmsUiServices);
@@ -127,7 +124,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('openRepositoryBrowser() works in a clone', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, false);
         const clone = src.clone();
 
         clone.gcmsUiServices.openRepositoryBrowser({ allowedSelection: 'page', selectMultiple: false });
@@ -136,7 +133,7 @@ describe('TagEditorContextImpl', () => {
     });
 
     it('openImageEditor() works in a clone', () => {
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, false);
         const clone = src.clone();
 
         clone.gcmsUiServices.openImageEditor({ nodeId: 1, imageId: 415 });
@@ -150,7 +147,7 @@ describe('TagEditorContextImpl', () => {
         let emissionsCountClone2 = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, false);
         const clone1 = src.clone();
         const clone2 = clone1.clone();
 
@@ -193,7 +190,7 @@ describe('TagEditorContextImpl', () => {
         let emissionsCountClone2 = 0;
         let expectedVarContext: VariableTagEditorContext = VAR_CONTEXTS[0];
 
-        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, false);
+        const src = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, translator, variableContext$, gcmsUiServices, false);
         const clone1 = src.clone();
         const clone2 = clone1.clone();
 

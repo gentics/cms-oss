@@ -419,8 +419,8 @@ export interface AbstractAdminAPI extends BasicAPI {
 
 export interface AbstractAuthenticationAPI extends BasicAPI {
     login: (data: LoginRequest, params?: LoginOptions) => LoginResponse;
-    logout: (sid: string | number) => Response;
-    validate: (sid: string | number) => ValidateSidResponse;
+    logout: () => Response;
+    validate: () => ValidateSidResponse;
     ssoLogin: (bearerToken: string) => string;
 }
 

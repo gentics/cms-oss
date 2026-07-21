@@ -110,7 +110,6 @@ describe('TagEditorService', () => {
         expect(tagEditorContext.page).toEqual(expectedData.tagOwner as any);
         expect(tagEditorContext.node).toEqual(expectedData.node);
         expect(tagEditorContext.readOnly).toBe(expectedData.readOnly);
-        expect(tagEditorContext.sid).toBe(state.now.auth.sid);
         expect(tagEditorContext.translator instanceof TranslatorImpl).toBeTruthy();
         let actualContext: VariableTagEditorContext = null;
         tagEditorContext.variableContext.subscribe((context) => actualContext = context);

@@ -9,13 +9,11 @@ import { API_BASE_URL, expectOneRequest, respondTo } from '../testing/http-test-
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 import { ApiBase, CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE, HttpRequestOptions } from './api-base.service';
 
-const TEST_SID = 1234;
 const TEST_URL = 'some/url';
 
 describe('ApiBase', () => {
 
     let apiBase: ApiBase;
-    let sid$: Observable<number>;
     let http: HttpClient;
     let httpTestingController: HttpTestingController;
     let uploaderFactory: MockUploaderFactory;
@@ -30,8 +28,7 @@ describe('ApiBase', () => {
         httpTestingController = TestBed.inject(HttpTestingController);
         uploaderFactory = new MockUploaderFactory();
         errorHandler = new MockErrorHandler();
-        sid$ = new BehaviorSubject(TEST_SID);
-        apiBase = new ApiBase(http, uploaderFactory as any as FileUploaderFactory, API_BASE_URL, sid$, errorHandler);
+        apiBase = new ApiBase(http, uploaderFactory as any as FileUploaderFactory, API_BASE_URL, errorHandler);
 
         // Don't show debug error log in karma output
         originalConsoleError = console.error;
@@ -79,7 +76,6 @@ describe('ApiBase', () => {
         it('adds the current SID to the request URL', () => {
             http.get = jasmine.createSpy('HttpClient.get').and.callFake(
                 (url: string, options: HttpRequestOptions) => {
-                    expect(options.params.get('sid')).toBe(TEST_SID.toString());
                     return NEVER;
                 });
             apiBase.get(TEST_URL);
@@ -350,7 +346,6 @@ describe('ApiBase', () => {
         it('adds the current SID to the request URL', () => {
             http.post = jasmine.createSpy('HttpClient.post').and.callFake(
                 (url: string, body: any, options: HttpRequestOptions) => {
-                    expect(options.params.get('sid')).toBe(TEST_SID.toString());
                     return NEVER;
                 });
             apiBase.post(TEST_URL, 'body');
@@ -641,7 +636,6 @@ describe('ApiBase', () => {
         it('adds the current SID to the request URL', () => {
             http.put = jasmine.createSpy('HttpClient.put').and.callFake(
                 (url: string, body: any, options: HttpRequestOptions) => {
-                    expect(options.params.get('sid')).toBe(TEST_SID.toString());
                     return NEVER;
                 });
             apiBase.put(TEST_URL, 'body');
@@ -933,7 +927,6 @@ describe('ApiBase', () => {
         it('adds the current SID to the request URL', () => {
             http.delete = jasmine.createSpy('HttpClient.delete').and.callFake(
                 (url: string, options: HttpRequestOptions) => {
-                    expect(options.params.get('sid')).toBe(TEST_SID.toString());
                     return NEVER;
                 });
             apiBase.delete(TEST_URL);
@@ -1225,7 +1218,6 @@ describe('ApiBase', () => {
 
             expect(uploader.setOptions).toHaveBeenCalledWith(jasmine.objectContaining({
                 parameters: jasmine.objectContaining({
-                    sid: TEST_SID,
                 }),
             }));
         });

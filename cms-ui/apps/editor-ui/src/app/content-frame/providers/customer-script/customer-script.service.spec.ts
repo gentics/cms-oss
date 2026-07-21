@@ -43,7 +43,6 @@ describe('CustomerScriptService', () => {
     const mockLanguage = { id: 5, code: 'en' } as any;
     const mockAppState: MockAppState = {
         auth: {
-            sid: 123,
             user: {
                 id: 99,
             } as any,
@@ -250,7 +249,6 @@ describe('CustomerScriptService', () => {
                 currentItem: mockPage,
                 editMode: EditMode.EDIT,
                 pageLanguage: mockLanguage,
-                sid: 123,
                 uiLanguage: 'en',
                 uiVersion: '1.2.3',
                 userId: 99,

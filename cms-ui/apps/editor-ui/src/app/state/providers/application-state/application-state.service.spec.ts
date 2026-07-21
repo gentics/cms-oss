@@ -40,7 +40,6 @@ describe('ApplicationStateService', () => {
             loggingOut: false,
             changingPassword: false,
             user: null,
-            sid: null,
             lastError: null,
             keycloakAvailable: null,
             keycloakError: null,
@@ -57,7 +56,7 @@ describe('ApplicationStateService', () => {
 
         expect(emittedValues.length).toBe(1);
         appState.dispatch(new LoginStart());
-        appState.dispatch(new LoginSuccess(7777, getExampleUserData({ id: 1234 })));
+        appState.dispatch(new LoginSuccess(getExampleUserData({ id: 1234 })));
 
         expect(emittedValues.length).toBe(2);
         expect(emittedValues[1]).toBe(1234);
@@ -83,7 +82,7 @@ describe('ApplicationStateService', () => {
         appState.dispatch(new LoginStart());
         expect(emittedValues.length).toBe(1);
 
-        appState.dispatch(new LoginSuccess(7777, getExampleUserData({ id: 1234 })));
+        appState.dispatch(new LoginSuccess(getExampleUserData({ id: 1234 })));
         expect(emittedValues.length).toBe(1);
 
         appState.dispatch(new LogoutStart());
@@ -99,9 +98,8 @@ describe('ApplicationStateService', () => {
         appState.dispatch(new LoginStart());
         expect(appState.now.auth.loggingIn).toBe(true);
 
-        appState.dispatch(new LoginSuccess(7777, getExampleUserData({ id: 1234 })));
+        appState.dispatch(new LoginSuccess(getExampleUserData({ id: 1234 })));
         expect(appState.now.auth.user?.id).toBe(1234);
-        expect(appState.now.auth.sid).toBe(7777);
 
         appState.dispatch(new LogoutStart());
         expect(appState.now.auth.loggingOut).toBe(true);
@@ -110,7 +108,6 @@ describe('ApplicationStateService', () => {
         expect(appState.now.auth.loggingOut).toBe(false);
         expect(appState.now.auth.isLoggedIn).toBe(false);
         expect(appState.now.auth.user).toEqual(null);
-        expect(appState.now.auth.sid).toBe(null);
     });
 
     it('can mock the application state for testing', () => {

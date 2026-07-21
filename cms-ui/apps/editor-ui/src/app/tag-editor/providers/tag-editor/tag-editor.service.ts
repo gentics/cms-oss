@@ -202,7 +202,6 @@ export class TagEditorService {
         const variableContext$: Observable<VariableTagEditorContext> = this.appState.select((state) => ({
             uiLanguage: state.ui.language,
         }));
-        const sid = this.appState.now.auth.sid;
         const translator = new TranslatorImpl(this.translateService);
 
         return TagEditorContextImpl.create(
@@ -210,7 +209,6 @@ export class TagEditorService {
             editTagInfo.readOnly,
             rawTagOwner,
             rawNode,
-            sid,
             translator,
             variableContext$,
             gcmsUiServices,

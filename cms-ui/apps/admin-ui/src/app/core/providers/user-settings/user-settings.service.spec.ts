@@ -152,7 +152,6 @@ describe('UserSettingsService', () => {
                     user: {
                         id: userId,
                     },
-                    sid: userId + 1,
                 },
             });
             if (runTick) {

@@ -23,7 +23,7 @@ class TestAction {
 
 @ActionDeclaration('test' as any)
 class DecoratedTestAction1 {
-    constructor(public sid: number) { }
+    constructor() { }
 }
 
 @ActionDeclaration('test' as any)
@@ -74,7 +74,6 @@ class TestStateModule {
     @ActionDefinition(DecoratedTestAction1)
     runDecoratedTestAction1(ctx: StateContext<TestStateModel>, action: DecoratedTestAction1): void {
         ctx.patchState({
-            aNumber: action.sid,
         });
     }
 
@@ -186,7 +185,7 @@ describe('StateUtils', () => {
             const runDecoratedTestAction1Spy = spyOn(testModule, 'runDecoratedTestAction1').and.callThrough();
             const runDecoratedTestAction2Spy = spyOn(testModule, 'runDecoratedTestAction2').and.callThrough();
 
-            const action1 = new DecoratedTestAction1(4711);
+            const action1 = new DecoratedTestAction1();
             store.dispatch(action1);
             // Make sure that the correct handler method has been called with the right parameters.
             expect(runDecoratedTestAction1Spy).toHaveBeenCalledTimes(1);

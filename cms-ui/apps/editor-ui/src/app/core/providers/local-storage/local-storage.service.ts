@@ -71,17 +71,6 @@ export class LocalStorage {
         this.set(`USER-${userId}_${key}`, value);
     }
 
-    /**
-     * Current user session id.
-     */
-    getSid(): number {
-        return Number(this.get('sid'));
-    }
-
-    setSid(val: number): void {
-        this.set('sid', val);
-    }
-
     getUiLanguage(): GcmsUiLanguage {
         return this.get('uiLanguage');
     }

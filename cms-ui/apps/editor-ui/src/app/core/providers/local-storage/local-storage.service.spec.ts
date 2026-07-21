@@ -137,16 +137,4 @@ describe('LocalStorage:', () => {
         });
     });
 
-    it('getSid returns sid from localStorage', () => {
-        mockStorageProvider.getItem = jasmine.createSpy('getItem').and.returnValue('42');
-        const sid = localStorage.getSid();
-        expect(mockStorageProvider.getItem).toHaveBeenCalledWith(LOCAL_STORAGE_PREFIX + 'sid');
-        expect(sid).toBe(42);
-    });
-
-    it('setSid invokes setItem with correct parameters', () => {
-        localStorage.setSid(42);
-        expect(mockStorageProvider.setItem).toHaveBeenCalledWith(LOCAL_STORAGE_PREFIX + 'sid', '42');
-    });
-
 });

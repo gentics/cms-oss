@@ -22,13 +22,13 @@ describe('AuthApi', () => {
     });
 
     it('logout() sends the correct POST request', () => {
-        authApi.logout(9999);
-        expect(apiBase.post).toHaveBeenCalledWith('auth/logout/9999', '');
+        authApi.logout();
+        expect(apiBase.post).toHaveBeenCalledWith('auth/logout', '');
     });
 
     it('validate() sends the correct GET request', () => {
-        authApi.validate(9999);
-        expect(apiBase.get).toHaveBeenCalledWith('user/me?sid=9999');
+        authApi.validate();
+        expect(apiBase.get).toHaveBeenCalledWith('user/me');
     });
 
 });

@@ -107,8 +107,6 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     private handleSsoResponse(result: string): void {
         if (/^\d+$/.test(result)) {
             console.log('Logging in via Single-Sign-On');
-            const sid = Number.parseInt(result, 10);
-            this.localStorage.setSid(sid);
             this.authActions.validateSession();
         }
     }

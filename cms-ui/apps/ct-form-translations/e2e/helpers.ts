@@ -206,22 +206,20 @@ export async function clickDiscardAndConfirm(page: Page): Promise<void> {
 }
 
 /**
- * Navigates to the form-translations tool using the supplied session id
- * (in the URL, as the CMS shell would do when embedding the tool).
+ * Navigates to the form-translations tool
  *
  * Uses the `ENV_E2E_APP_PATH` env that `createConfiguration` sets up — i.e.
- * the same base URL as for the regular `navigateToApp` helper, but with
- * `?sid=…` instead of `?skip-sso#/`.
+ * the same base URL as for the regular `navigateToApp` helper
  */
-export async function navigateToToolWithSid(page: Page, sid: string): Promise<void> {
-    await test.step(`Navigate to tool with SID "${sid}"`, async () => {
+export async function navigateToTool(page: Page): Promise<void> {
+    await test.step(`Navigate to tool`, async () => {
         let appPath = process.env['E2E_APP_PATH'] ?? '/tools/form-translations/';
         if (appPath === '/') {
             appPath = '';
         } else if (appPath.endsWith('/')) {
             appPath = appPath.slice(0, -1);
         }
-        await page.goto(`${appPath}/?sid=${encodeURIComponent(sid)}`);
+        await page.goto(`${appPath}/`);
     });
 }
 

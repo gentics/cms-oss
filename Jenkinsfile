@@ -159,12 +159,13 @@ spec:
                     def mvnProjects   = ""
                     def mvnArguments  = ""
 
-                    version          = params.forceVersion
+                    version          = MavenHelper.getVersion()
                     branchName       = GitHelper.fetchCurrentBranchName()
 
-                    if (!version && params.runReleaseBuild) {
-                        version = MavenHelper.getVersion()
+                    if (params.forceVersion != ""){
+                        version = params.forceVersion
                     }
+                    
                     helmVersion = version
                     if (Boolean.valueOf(params.deployTesting)) {
                         //helm version need a semantic version ci-devtest is not valid - prefix test versions with 0-

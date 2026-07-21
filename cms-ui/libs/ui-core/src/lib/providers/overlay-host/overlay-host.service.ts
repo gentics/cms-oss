@@ -1,6 +1,5 @@
-import { ComponentRef, EmbeddedViewRef, Injectable, Optional, SkipSelf, TemplateRef, Type, ViewContainerRef, ViewRef } from '@angular/core';
+import { Injectable, Optional, SkipSelf, ViewContainerRef } from '@angular/core';
 import { SizeTrackerService } from '../size-tracker/size-tracker.service';
-import { ObservableViewContainerRef } from '@gentics/ui-core';
 
 /**
  * The OverlayHostService is used to get a reference to the ViewConainerRef of the
@@ -34,8 +33,7 @@ export class OverlayHostService {
      * Should not be used by any other component.
      */
     registerHostView(viewContainerRef: ViewContainerRef): void {
-        this.hostView = new ObservableViewContainerRef(viewContainerRef);
-        //this.hostView = viewContainerRef;
+        this.hostView = viewContainerRef;
         if (0 < this.promiseResolveFns.length) {
             this.resolveHostView();
         }
@@ -57,7 +55,7 @@ export class OverlayHostService {
     }
 
     private resolveHostView(): void {
-        this.promiseResolveFns.forEach(resolve => resolve(this.hostView));
+        this.promiseResolveFns.forEach((resolve) => resolve(this.hostView));
         this.promiseResolveFns = [];
     }
 }

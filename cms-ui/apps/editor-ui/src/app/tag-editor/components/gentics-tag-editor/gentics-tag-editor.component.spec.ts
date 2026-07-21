@@ -23,7 +23,6 @@ import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { TagEditorHostComponent } from '../..';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
@@ -36,8 +35,11 @@ import { ValidationErrorInfoComponent } from '../shared/validation-error-info/va
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TextTagPropertyEditor } from '../tag-property-editors/text-tag-property-editor/text-tag-property-editor.component';
 import { GenticsTagEditorComponent } from './gentics-tag-editor.component';
+import { spyWithOriginalFn } from '../../../../testing/spy-with-original';
 
 describe('GenticsTagEditorComponent', () => {
+
+    let resolver: TagPropertyEditorResolverService;
 
     beforeEach(() => {
         configureComponentTest({
@@ -64,6 +66,8 @@ describe('GenticsTagEditorComponent', () => {
                 mockPipes('objTagName'),
             ],
         });
+
+        resolver = TestBed.inject(TagPropertyEditorResolverService);
     });
 
     it('creates the correct number of tag property editors and initializes them correctly',
@@ -76,40 +80,52 @@ describe('GenticsTagEditorComponent', () => {
             const writeChangedValuesSpies: jasmine.Spy[] = [];
             let validatorSpy: jasmine.Spy;
             let currTagPropertyEditorIndex = 0;
-            await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    if (componentType === TextTagPropertyEditor) {
-                        const index = currTagPropertyEditorIndex;
-                        const origInit = componentInstance.instance.initTagPropertyEditor.bind(componentInstance.instance);
-                        initTagPropEditorSpies.push(
-                            spyOn(componentInstance.instance, 'initTagPropertyEditor').and.callFake((...args: any[]) => {
-                                expect(registerOnChangeSpies[index].calls.count()).toBe(0);
-                                expect(writeChangedValuesSpies[index].calls.count()).toBe(0);
-                                origInit(...args);
-                            }),
-                        );
-                        const origRegister = componentInstance.instance.registerOnChange.bind(componentInstance.instance);
-                        registerOnChangeSpies.push(
-                            spyOn(componentInstance.instance, 'registerOnChange').and.callFake((...args: any[]) => {
-                                expect(initTagPropEditorSpies[index].calls.count()).toBe(1);
-                                expect(writeChangedValuesSpies[index].calls.count()).toBe(0);
-                                origRegister(...args);
-                            }),
-                        );
-                        writeChangedValuesSpies.push(
-                            spyOn(componentInstance.instance, 'writeChangedValues').and.stub(),
-                        );
-                        ++currTagPropertyEditorIndex;
-                    }
-                    if (componentType === GenticsTagEditorComponent) {
-                        const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                        const origEditTag = tagEditor.editTag.bind(tagEditor);
-                        spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
-                            validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
-                            return origEditTag(tag, context);
-                        });
-                    }
+
+            spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                const ref = original(container);
+
+                const tagEditor = ref.instance;
+                const origEditTag = tagEditor.editTag.bind(tagEditor);
+                spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
+                    validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
+                    return origEditTag(tag, context);
                 });
+
+                return ref;
+            });
+
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                const index = currTagPropertyEditorIndex;
+                const origInit = ref.instance.initTagPropertyEditor.bind(ref.instance);
+                initTagPropEditorSpies.push(
+                    spyOn(ref.instance, 'initTagPropertyEditor').and.callFake((...args: any[]) => {
+                        expect(registerOnChangeSpies[index].calls.count()).toBe(0);
+                        expect(writeChangedValuesSpies[index].calls.count()).toBe(0);
+                        origInit(...args);
+                    }),
+                );
+                const origRegister = ref.instance.registerOnChange.bind(ref.instance);
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callFake((...args: any[]) => {
+                        expect(initTagPropEditorSpies[index].calls.count()).toBe(1);
+                        expect(writeChangedValuesSpies[index].calls.count()).toBe(0);
+                        origRegister(...args);
+                    }),
+                );
+                writeChangedValuesSpies.push(
+                    spyOn(ref.instance, 'writeChangedValues').and.stub(),
+                );
+                ++currTagPropertyEditorIndex;
+
+                return ref;
+            });
 
             const tag = getMockedTag();
             const tagPart0Key = tag.tagType.parts[0].keyword;
@@ -231,12 +247,20 @@ describe('GenticsTagEditorComponent', () => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<TagPropertyEditor>) => {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                });
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+                );
+
+                return ref;
+            });
 
             const tag = getMockedTag();
             const context = getMockedTagEditorContext(tag);
@@ -287,12 +311,20 @@ describe('GenticsTagEditorComponent', () => {
             fixture.detectChanges();
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<TagPropertyEditor>) => {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                });
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+                );
+
+                return ref;
+            });
 
             const tag = getMockedTag();
             const context = getMockedTagEditorContext(tag);
@@ -321,25 +353,36 @@ describe('GenticsTagEditorComponent', () => {
         const registerOnChangeSpies: jasmine.Spy[] = [];
         const writeChangedValuesSpies: jasmine.Spy[] = [];
         let validatorSpy: jasmine.Spy;
-        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-            (componentType, componentInstance: ComponentRef<any>) => {
-                if (componentType === TextTagPropertyEditor) {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                    writeChangedValuesSpies.push(
-                        spyOn(componentInstance.instance, 'writeChangedValues').and.callThrough(),
-                    );
-                }
-                if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                    const origEditTag = tagEditor.editTag.bind(tagEditor);
-                    spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
-                        validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
-                        return origEditTag(tag, context);
-                    });
-                }
+
+        spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+            const ref = original(container, part);
+
+            // Not the type we look for
+            if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                return ref;
+            }
+
+            registerOnChangeSpies.push(
+                spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+            );
+            writeChangedValuesSpies.push(
+                spyOn(ref.instance, 'writeChangedValues').and.callThrough(),
+            );
+
+            return ref;
+        });
+        spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+            const ref = original(container);
+
+            const tagEditor = ref.instance;
+            const origEditTag = tagEditor.editTag.bind(tagEditor);
+            spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
+                validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
+                return origEditTag(tag, context);
             });
+
+            return ref;
+        });
 
         const origTag = getMockedTag();
         const context = getMockedTagEditorContext(origTag);
@@ -444,25 +487,36 @@ describe('GenticsTagEditorComponent', () => {
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
             let validatorSpy: jasmine.Spy;
-            await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    if (componentType === TextTagPropertyEditor) {
-                        registerOnChangeSpies.push(
-                            spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                        );
-                        writeChangedValuesSpies.push(
-                            spyOn(componentInstance.instance, 'writeChangedValues').and.callThrough(),
-                        );
-                    }
-                    if (componentType === GenticsTagEditorComponent) {
-                        const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                        const origEditTag = tagEditor.editTag.bind(tagEditor);
-                        spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
-                            validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
-                            return origEditTag(tag, context);
-                        });
-                    }
+
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+                );
+                writeChangedValuesSpies.push(
+                    spyOn(ref.instance, 'writeChangedValues').and.callThrough(),
+                );
+
+                return ref;
+            });
+            spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                const ref = original(container);
+
+                const tagEditor = ref.instance;
+                const origEditTag = tagEditor.editTag.bind(tagEditor);
+                spyOn(tagEditor, 'editTag').and.callFake((tag: EditableTag, context: TagEditorContext) => {
+                    validatorSpy = spyOn(context.validator, 'validateTagProperty').and.callThrough();
+                    return origEditTag(tag, context);
                 });
+
+                return ref;
+            });
 
             const origTag = getMockedTag();
             const tagPart0Key = origTag.tagType.parts[0].keyword;
@@ -627,15 +681,23 @@ describe('GenticsTagEditorComponent', () => {
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                    writeChangedValuesSpies.push(
-                        spyOn(componentInstance.instance, 'writeChangedValues').and.callThrough(),
-                    );
-                });
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+                );
+                writeChangedValuesSpies.push(
+                    spyOn(ref.instance, 'writeChangedValues').and.callThrough(),
+                );
+
+                return ref;
+            });
 
             const origTag = getMockedTag();
             const context = getMockedTagEditorContext(origTag);
@@ -695,15 +757,23 @@ describe('GenticsTagEditorComponent', () => {
 
             const registerOnChangeSpies: jasmine.Spy[] = [];
             const writeChangedValuesSpies: jasmine.Spy[] = [];
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                    writeChangedValuesSpies.push(
-                        spyOn(componentInstance.instance, 'writeChangedValues').and.callThrough(),
-                    );
-                });
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                registerOnChangeSpies.push(
+                    spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+                );
+                writeChangedValuesSpies.push(
+                    spyOn(ref.instance, 'writeChangedValues').and.callThrough(),
+                );
+
+                return ref;
+            });
 
             const origTag = getMockedTag();
             const context = getMockedTagEditorContext(origTag);
@@ -762,31 +832,39 @@ describe('GenticsTagEditorComponent', () => {
 
             // The registerOnChange() method of TagPropertyEditor 2 should trigger onTagPropertyChanged()
             let currPropEditorIndex = 0;
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    const index = currPropEditorIndex;
-                    let onChangeSpy = spyOn(componentInstance.instance, 'registerOnChange');
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
 
-                    const writeChangedValuesSpy = spyOn(componentInstance.instance, 'writeChangedValues').and.callFake(() => {
-                        if (writeChangedValuesSpy.calls.count() > 1) {
-                            fail('onTagPropertyChanged() call should not be allowed during initialization');
-                        }
-                    });
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
 
-                    if (index !== 2) {
-                        onChangeSpy = onChangeSpy.and.callThrough();
-                    } else {
-                        onChangeSpy = onChangeSpy.and.callFake((onChangeFn: TagPropertiesChangedFn) => {
-                            const change: Partial<TagPropertyMap> = { };
-                            change[tag.tagType.parts[index].keyword] = {
-                                ...tag.properties[tag.tagType.parts[index].keyword],
-                                stringValue: 'Changed from registerOnChange()',
-                            } as StringTagPartProperty;
-                            onChangeFn(change);
-                        });
+                const index = currPropEditorIndex;
+                let onChangeSpy = spyOn(ref.instance, 'registerOnChange');
+
+                const writeChangedValuesSpy = spyOn(ref.instance, 'writeChangedValues').and.callFake(() => {
+                    if (writeChangedValuesSpy.calls.count() > 1) {
+                        fail('onTagPropertyChanged() call should not be allowed during initialization');
                     }
-                    ++currPropEditorIndex;
                 });
+
+                if (index !== 2) {
+                    onChangeSpy = onChangeSpy.and.callThrough();
+                } else {
+                    onChangeSpy = onChangeSpy.and.callFake((onChangeFn: TagPropertiesChangedFn) => {
+                        const change: Partial<TagPropertyMap> = { };
+                        change[tag.tagType.parts[index].keyword] = {
+                            ...tag.properties[tag.tagType.parts[index].keyword],
+                            stringValue: 'Changed from registerOnChange()',
+                        } as StringTagPartProperty;
+                        onChangeFn(change);
+                    });
+                }
+                ++currPropEditorIndex;
+
+                return ref;
+            });
 
             instance.tagEditorHost.editTag(tag, context);
             fixture.detectChanges();
@@ -804,13 +882,21 @@ describe('GenticsTagEditorComponent', () => {
             const expectedError = new Error('error during init');
 
             let initSpy: jasmine.Spy;
-            await spyOnDynamicallyCreatedComponent([TextTagPropertyEditor],
-                (componentType, componentInstance: ComponentRef<any>) => {
-                    if (!initSpy) {
-                        initSpy = spyOn(componentInstance.instance, 'initTagPropertyEditor').and
-                            .callFake(() => { throw expectedError; });
-                    }
-                });
+            spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+                const ref = original(container, part);
+
+                // Not the type we look for
+                if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                    return ref;
+                }
+
+                if (!initSpy) {
+                    initSpy = spyOn(ref.instance, 'initTagPropertyEditor').and
+                        .callFake(() => { throw expectedError; });
+                }
+
+                return ref;
+            });
 
             const origTag = getMockedTag();
             const context = getMockedTagEditorContext(origTag);
@@ -839,22 +925,32 @@ describe('GenticsTagEditorComponent', () => {
         (propertiesAfterChange1[tagPart2Key] as StringTagPartProperty).stringValue = 'Changed value of tagProperty2';
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
-        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-            (componentType, componentInstance: ComponentRef<any>) => {
-                if (componentType === TextTagPropertyEditor) {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                }
-                if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                    const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
-                    spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
-                        spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
-                        return origEditTagLive(tag, context, onTagChangeFn);
-                    });
-                }
+        spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+            const ref = original(container, part);
+
+            // Not the type we look for
+            if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                return ref;
+            }
+
+            registerOnChangeSpies.push(
+                spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+            );
+
+            return ref;
+        });
+        spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+            const ref = original(container);
+
+            const tagEditor = ref.instance;
+            const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
+            spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
+                spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
+                return origEditTagLive(tag, context, onTagChangeFn);
             });
+
+            return ref;
+        });
 
         const reportedChangedStates: TagPropertyMap[] = [];
         const onTagChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties);
@@ -907,22 +1003,32 @@ describe('GenticsTagEditorComponent', () => {
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
         let validatorSpy: jasmine.Spy;
-        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-            (componentType, componentInstance: ComponentRef<any>) => {
-                if (componentType === TextTagPropertyEditor) {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                }
-                if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                    const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
-                    spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
-                        validatorSpy = spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
-                        return origEditTagLive(tag, context, onTagChangeFn);
-                    });
-                }
+        spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+            const ref = original(container, part);
+
+            // Not the type we look for
+            if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                return ref;
+            }
+
+            registerOnChangeSpies.push(
+                spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+            );
+
+            return ref;
+        });
+        spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+            const ref = original(container);
+
+            const tagEditor = ref.instance;
+            const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
+            spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
+                validatorSpy = spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
+                return origEditTagLive(tag, context, onTagChangeFn);
             });
+
+            return ref;
+        });
 
         const reportedChangedStates: TagPropertyMap[] = [];
         const onChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties);
@@ -983,22 +1089,32 @@ describe('GenticsTagEditorComponent', () => {
         (propertiesAfterRealChange[tagPart2Key] as StringTagPartProperty).stringValue = 'Changed value of tagProperty2';
 
         const registerOnChangeSpies: jasmine.Spy[] = [];
-        await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent, TextTagPropertyEditor],
-            (componentType, componentInstance: ComponentRef<any>) => {
-                if (componentType === TextTagPropertyEditor) {
-                    registerOnChangeSpies.push(
-                        spyOn(componentInstance.instance, 'registerOnChange').and.callThrough(),
-                    );
-                }
-                if (componentType === GenticsTagEditorComponent) {
-                    const tagEditor = <GenticsTagEditorComponent> componentInstance.instance;
-                    const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
-                    spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
-                        spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
-                        return origEditTagLive(tag, context, onTagChangeFn);
-                    });
-                }
+        spyWithOriginalFn(resolver, 'createPropertyEditor', (original, container, part) => {
+            const ref = original(container, part);
+
+            // Not the type we look for
+            if (!(ref.instance instanceof TextTagPropertyEditor)) {
+                return ref;
+            }
+
+            registerOnChangeSpies.push(
+                spyOn(ref.instance, 'registerOnChange').and.callThrough(),
+            );
+
+            return ref;
+        });
+        spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+            const ref = original(container);
+
+            const tagEditor = ref.instance;
+            const origEditTagLive = tagEditor.editTagLive.bind(tagEditor);
+            spyOn(tagEditor, 'editTagLive').and.callFake((tag: EditableTag, context: TagEditorContext, onTagChangeFn: TagChangedFn) => {
+                spyOn(context.validator, 'validateTagProperty').and.returnValue(getValidationSuccess());
+                return origEditTagLive(tag, context, onTagChangeFn);
             });
+
+            return ref;
+        });
 
         const reportedChangedStates: TagPropertyMap[] = [];
         const onTagChangeHandler: TagChangedFn = (tagProperties) => reportedChangedStates.push(tagProperties);

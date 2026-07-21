@@ -1,7 +1,7 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { readFileSync } from 'node:fs';
+import { isAbsolute, normalize, resolve } from 'node:path';
 
-function DefineVersionPlugin(pluginOptions) {
+export default function DefineVersionPlugin(pluginOptions) {
     return {
         name: 'define-version',
         setup(build) {
@@ -14,13 +14,13 @@ function DefineVersionPlugin(pluginOptions) {
             }
 
             let pkgPath = pluginOptions.packageFile;
-            if (!path.isAbsolute(pluginOptions.packageFile)) {
-                pkgPath = path.normalize(path.resolve(__dirname, '../..', pkgPath));
+            if (!isAbsolute(pluginOptions.packageFile)) {
+                pkgPath = normalize(resolve(import.meta.dirname, '../..', pkgPath));
             }
 
             let rawPkg;
             try {
-                rawPkg = fs.readFileSync(pkgPath);
+                rawPkg = readFileSync(pkgPath);
             } catch (err) {
                 throw new Error(`Could not read package file: ${pkgPath}!`, { cause: err });
             }
@@ -54,5 +54,3 @@ function DefineVersionPlugin(pluginOptions) {
         },
     };
 }
-
-module.exports = DefineVersionPlugin;

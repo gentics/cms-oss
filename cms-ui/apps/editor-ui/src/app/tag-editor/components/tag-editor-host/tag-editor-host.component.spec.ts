@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { tick } from '@angular/core/testing';
+import { TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { I18nService } from '@gentics/cms-components';
 import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
@@ -9,7 +9,6 @@ import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
-import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
@@ -20,13 +19,18 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TagEditorHostComponent } from './tag-editor-host.component';
+import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
+import { spyWithOriginalFn } from '../../../../testing/spy-with-original';
 
 describe('TagEditorHostComponent', () => {
+
+    let resolver: TagPropertyEditorResolverService;
 
     beforeEach(() => {
         configureComponentTest({
             imports: [GenticsUICoreModule.forRoot()],
             providers: [
+                TagPropertyEditorResolverService,
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: I18nService, useClass: MockI18nService },
@@ -41,6 +45,8 @@ describe('TagEditorHostComponent', () => {
                 mockPipes('objTagName'),
             ],
         });
+
+        resolver = TestBed.inject(TagPropertyEditorResolverService);
     });
 
     describe('editTag()', () => {
@@ -54,10 +60,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (tag: TagEditorResult) => void = null;
-                await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
                         new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -110,10 +120,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (tag: TagEditorResult) => void = null;
-                await spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
                         new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -162,10 +176,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let reject: (error?: any) => void = null;
-                await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise((resolveFn, rejectFn) => reject = rejectFn),
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
+                        new Promise((_, rejectFn) => reject = rejectFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -213,10 +231,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (error?: any) => void = null;
-                await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise((resolveFn, rejectFn) => resolve = resolveFn),
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
+                        new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -287,9 +309,13 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagLiveSpy: jasmine.Spy = null;
                 let onChangeFn: TagChangedFn;
-                await spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagLiveSpy = spyOn(componentInstance.instance, 'editTagLive').and
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagLiveSpy = spyOn(ref.instance, 'editTagLive').and
                         .callFake((tag, context, changeFn) => onChangeFn = changeFn);
+
+                    return ref;
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];
@@ -321,9 +347,13 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagLiveSpy: jasmine.Spy = null;
                 let onChangeFn: TagChangedFn;
-                await spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
-                    editTagLiveSpy = spyOn(componentInstance.instance, 'editTagLive').and
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagLiveSpy = spyOn(ref.instance, 'editTagLive').and
                         .callFake((tag, context, changeFn) => onChangeFn = changeFn);
+
+                    return ref;
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];

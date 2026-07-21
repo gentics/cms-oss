@@ -1,4 +1,4 @@
-import { ComponentFactory, ComponentFactoryResolver, Injectable, Type } from '@angular/core';
+import { ComponentRef, Injectable, Type, ViewContainerRef } from '@angular/core';
 import { TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import { TagPart, TagPartType } from '@gentics/cms-models';
 import { CustomTagPropertyEditorHostComponent } from '../../components/custom-tag-property-editor-host/custom-tag-property-editor-host.component';
@@ -18,6 +18,8 @@ import { PageUrlTagPropertyEditor } from '../../components/tag-property-editors/
 import { SelectTagPropertyEditor } from '../../components/tag-property-editors/select-tag-property-editor/select-tag-property-editor.component';
 import { TagRefTagPropertyEditor } from '../../components/tag-property-editors/tagref-tag-property-editor/tagref-tag-property-editor.component';
 import { TextTagPropertyEditor } from '../../components/tag-property-editors/text-tag-property-editor/text-tag-property-editor.component';
+import { GenticsTagEditorComponent } from '../../components/gentics-tag-editor/gentics-tag-editor.component';
+import { CustomTagEditorHostComponent } from '../../components/custom-tag-editor-host/custom-tag-editor-host.component';
 
 // Maps the TagPartTypes to their TagPropertyEditor components.
 const DEFAULT_EDITORS = new Map<TagPartType, Type<TagPropertyEditor>>();
@@ -62,15 +64,20 @@ DEFAULT_EDITORS.set(TagPartType.Handlebars, TextTagPropertyEditor);
 /**
  * Looks up the ComponentFactory for the TagPropertyEditor that is configured for
  * a particular TagPartType.
+ * Mainly used as abstraction layer and to make it easier to create stubs/mocks in tests.
  */
 @Injectable()
 export class TagPropertyEditorResolverService {
 
-    private componentFactories = new Map<Type<TagPropertyEditor>, ComponentFactory<TagPropertyEditor>>();
+    createGenticsTagEditor(container: ViewContainerRef): ComponentRef<GenticsTagEditorComponent> {
+        return container.createComponent(GenticsTagEditorComponent);
+    }
 
-    constructor(private componentFactoryResolver: ComponentFactoryResolver) { }
+    createCustomTagEditor(container: ViewContainerRef): ComponentRef<CustomTagEditorHostComponent> {
+        return container.createComponent(CustomTagEditorHostComponent);
+    }
 
-    resolveTagPropertyEditorFactory(tagPart: TagPart): ComponentFactory<TagPropertyEditor> {
+    createPropertyEditor(container: ViewContainerRef, tagPart: TagPart): ComponentRef<any> | null {
         let componentType: Type<TagPropertyEditor>;
         if (!tagPart.externalEditorUrl) {
             componentType = DEFAULT_EDITORS.get(tagPart.typeId);
@@ -82,12 +89,6 @@ export class TagPropertyEditorResolverService {
             componentType = CustomTagPropertyEditorHostComponent;
         }
 
-        let componentFactory = this.componentFactories.get(componentType);
-        if (!componentFactory) {
-            componentFactory = this.componentFactoryResolver.resolveComponentFactory(componentType);
-            this.componentFactories.set(componentType, componentFactory);
-        }
-        return componentFactory;
+        return container.createComponent(componentType);
     }
-
 }

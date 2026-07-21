@@ -40,7 +40,7 @@ describe('TagPropertyEditorHostComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
             const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
-            spyOn(resolverService, 'resolveTagPropertyEditorFactory').and.callThrough();
+            const resolverSpy = spyOn(resolverService, 'createPropertyEditor').and.callThrough();
             expect(tagPart).toBeTruthy();
             expect(instance.tagPart).toBeFalsy();
 
@@ -53,15 +53,15 @@ describe('TagPropertyEditorHostComponent', () => {
             fixture.detectChanges();
             tick();
 
-            expect(resolverService.resolveTagPropertyEditorFactory).toHaveBeenCalledWith(tagPart);
+            expect(resolverSpy).toHaveBeenCalledTimes(1);
+            expect(resolverSpy.calls.first().args[1]).toBe(tagPart);
             expect(fixture.debugElement.query(By.directive(TextTagPropertyEditor))).toBeTruthy();
         }),
     );
 
-    it('properly distroys the TagPropertyEditor component',
+    it('properly destroys the TagPropertyEditor component',
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
-            const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
             expect(tagPart).toBeTruthy();
             expect(instance.tagPart).toBeFalsy();
 

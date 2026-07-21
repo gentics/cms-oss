@@ -48,6 +48,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @ConfigBy(FormResourceListTest.class)
 public class FormResourceListTest extends AbstractListSortAndFilterTest<FormModel> implements ConfigModifier {
 	private static Node node;
+	private static Integer nodeRootFolder;
 	private static FormTypeConfigurationMap config;
 	private static List<String> formTypes;
 
@@ -61,6 +62,7 @@ public class FormResourceListTest extends AbstractListSortAndFilterTest<FormMode
 		AbstractListSortAndFilterTest.setupOnce();
 
 		node = supply(() -> createNode(Feature.FORMS));
+		nodeRootFolder = supply(() -> node.getFolder().getId());
 		config = FormConfigProvider.getConfig();
 
 		formTypes = new ArrayList<>(config.keySet());
@@ -94,7 +96,7 @@ public class FormResourceListTest extends AbstractListSortAndFilterTest<FormMode
 	protected FormModel createItem() throws NodeException {
 		return supply(() -> FormResourceImpl.TRANSFORM2REST.apply(Builder.create(Form.class, f -> {
 			f.setFormType(randomFormType());
-			f.setFolderId(node.getFolder().getId());
+			f.setFolderId(nodeRootFolder);
 			f.setName(randomStringGenerator.generate(5, 10));
 			f.setDescription(randomStringGenerator.generate(10, 20));
 		}).build()));
@@ -119,7 +121,7 @@ public class FormResourceListTest extends AbstractListSortAndFilterTest<FormMode
 		}
 
 		return new FormResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())), formFilter, sort,
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)), formFilter, sort,
 				paging, new WastebinParameterBean(), new PublishableParameterBean());
 	}
 

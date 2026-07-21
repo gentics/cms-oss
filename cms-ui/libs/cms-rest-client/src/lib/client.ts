@@ -1,4 +1,4 @@
-import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
+import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT } from './internal';
 import {
     GCMSAdminAPI,
     GCMSAuthenticationAPI,
@@ -64,7 +64,6 @@ export class GCMSRestClient implements GCMSRootAPI {
     constructor(
         public driver: GCMSClientDriver,
         public config: GCMSRestClientConfig = DEFAULT_CONFIG,
-        public sid: undefined | null | number | string = null,
     ) { }
 
     protected prepareRequest(
@@ -85,9 +84,6 @@ export class GCMSRestClient implements GCMSRootAPI {
         // If a session-id is configured, append it to each request.
         if (queryParams == null || typeof queryParams !== 'object') {
             queryParams = {};
-        }
-        if (this.sid) {
-            queryParams[QUERY_PARAM_SID] = `${this.sid}`;
         }
 
         stringifyPagingSortOptions(queryParams);
@@ -226,8 +222,8 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public auth: GCMSAuthenticationAPI = {
         login: (data, params) => this.executeMappedJsonRequest(POST, '/auth/login', data, params),
-        logout: (sid) => this.executeMappedJsonRequest(POST, `/auth/logout/${sid}`),
-        validate: (sid) => this.executeMappedJsonRequest(GET, `/auth/validate/${sid}`),
+        logout: () => this.executeMappedJsonRequest(POST, `/auth/logout`),
+        validate: () => this.executeMappedJsonRequest(GET, `/auth/validate`),
         ssoLogin: (bearerToken) => this.executeRawRequest(GET, '/auth/ssologin', {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             Authorization: `Bearer ${bearerToken}`,

@@ -149,7 +149,6 @@ export class InheritanceEditorComponent implements OnChanges, OnDestroy {
                     real: 'newedit',
                     realid: pageId,
                     nodeid: nodeId,
-                    sid: this.appState.now.auth.sid,
                     type: 'json',
                 },
                 observe: 'body',

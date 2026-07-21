@@ -754,7 +754,6 @@ export interface QueueApproveResponse extends Response {
  * The response received from an auth request to `auth/login`
  */
 export interface LoginResponse extends Response {
-    sid: number;
     user: User<Raw>;
 }
 

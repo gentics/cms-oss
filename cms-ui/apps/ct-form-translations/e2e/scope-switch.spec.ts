@@ -10,7 +10,7 @@ import {
     fillCell,
     findScopeTab,
     findTableRow,
-    navigateToToolWithSid,
+    navigateToTool,
     waitForToolReady,
 } from './helpers';
 
@@ -43,8 +43,7 @@ test.describe('form-translations · Scope Switching', () => {
         });
 
         await test.step('Open tool', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToTool(page);
             await waitForToolReady(page);
         });
     });

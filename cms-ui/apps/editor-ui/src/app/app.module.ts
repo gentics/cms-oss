@@ -30,10 +30,6 @@ const PROVIDERS: any[] = [
             },
         });
 
-        appState.select((state) => state.auth.sid).subscribe((sid) => {
-            client.setSessionId(sid);
-        });
-
         return keycloak.checkKeycloakAuth().then(() => {
             // No additonal setup required
             // This is just an empty body so the app init works as expected

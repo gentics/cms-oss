@@ -491,11 +491,10 @@ export class PermissionService {
         nodeId: number,
         languageId: number | string | null,
     ): Observable<EditorPermissions> {
-        const sid = this.appState.now.auth.sid;
 
         // Cache pending requests to the API, so multiple calls to forFolderInLanguage only request once.
         const cache = this.pendingApiRequests;
-        const cacheKey = `${nodeId}-${folderId}-${sid}`;
+        const cacheKey = `${nodeId}-${folderId}`;
 
         if (!cache[cacheKey]) {
             cache[cacheKey] = this.api.permissions.getFolderPermissions(folderId, nodeId).pipe(

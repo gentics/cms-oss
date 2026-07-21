@@ -83,7 +83,6 @@ test.describe('Messages', () => {
                 context: page.request,
                 isPageContext: true,
             });
-            client.sid = login.sid;
             const res = await client.message.list().send();
             for (const msg of res.messages) {
                 await client.message.delete(msg.id).send();

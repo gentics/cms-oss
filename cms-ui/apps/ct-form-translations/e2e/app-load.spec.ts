@@ -7,7 +7,7 @@ import {
     findScopeTabBar,
     findTable,
     findToolbar,
-    navigateToToolWithSid,
+    navigateToTool,
     waitForToolReady,
 } from './helpers';
 
@@ -48,9 +48,7 @@ test.describe('form-translations · App Load', () => {
 
         await test.step('Open tool with system session', async () => {
             /* setupTest already triggered auto-login on the importer client. */
-            const sid = String(IMPORTER.client?.sid);
-            expect(sid, 'Importer should have a valid SID after setupTest').not.toBe('null');
-            await navigateToToolWithSid(page, sid);
+            await navigateToTool(page);
             await waitForToolReady(page);
         });
     });
@@ -77,13 +75,5 @@ test.describe('form-translations · App Load', () => {
 
     test('should NOT show the save bar on a fresh load (no unsaved changes)', async ({ page }) => {
         await expect(page.locator('[data-region="save-bar"]')).toHaveAttribute('data-visible', 'false');
-    });
-});
-
-test.describe('form-translations · App Load · invalid session', () => {
-    test('should render the no-session error when accessed without a SID', async ({ page }) => {
-        await navigateToToolWithSid(page, '');
-        await page.locator('[data-name="no-session"]').waitFor({ state: 'visible' });
-        await expect(page.locator('[data-name="no-session"]')).toBeVisible();
     });
 });

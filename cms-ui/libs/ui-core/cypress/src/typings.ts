@@ -1,10 +1,12 @@
 import type { ComponentFixture } from '@angular/core/testing';
-import type { MountResponse } from 'cypress/angular';
+import type { mount, MountResponse } from 'cypress/angular';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
         interface Chainable<Subject> {
+            // We have to define mount here ourself already
+            mount: typeof mount;
             /**
              * Detects the changes of the currently mounted component (if it can be found),
              * of from the provided MountResponse/ComponentFixture as parameter.

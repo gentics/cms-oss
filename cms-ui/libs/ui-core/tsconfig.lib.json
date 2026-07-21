@@ -7,15 +7,12 @@
         "inlineSources": true,
         "types": ["jasmine"]
     },
-    "include": ["src/**/*.ts", "testing/src/**/*.ts"],
+    "include": ["src/**/*.ts", "testing/src/**/*.ts", " cypress/src/**/*.ts"],
     "exclude": [
-        "cypress/**/*",
-        "cypress.*.ts",
-        "**/*.spec.ts",
-        "**/*.cy.ts",
+        "cypress/fixtures/**/*",
+        "cypress/support/**/*",
         "cypress.config.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "**/*.spec.ts",
+        "**/*.cy.ts"
     ]
 }

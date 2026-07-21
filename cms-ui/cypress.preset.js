@@ -99,6 +99,7 @@ module.exports = {
         mergedConfig.devServer.options.projectConfig.buildOptions.stylePreprocessorOptions.includePaths.push(
             resolve(__dirname, "libs",),
             resolve(__dirname, "node_modules"),
+            resolve(__dirname, type, name, 'src/styles'),
         );
 
         return mergedConfig;

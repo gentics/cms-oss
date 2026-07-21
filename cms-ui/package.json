@@ -111,6 +111,7 @@
     "@angular-devkit/build-angular": "21.2.9",
     "@angular-devkit/core": "21.2.9",
     "@angular-devkit/schematics": "21.2.9",
+    "@angular/build": "21.2.9",
     "@angular/cli": "21.2.11",
     "@angular/compiler-cli": "21.2.9",
     "@angular/language-service": "21.2.9",
@@ -157,7 +158,7 @@
     "@typescript-eslint/utils": "^8.46.4",
     "angular-eslint": "21.3.1",
     "autoprefixer": "^10.4.0",
-    "cypress": "15.9.0",
+    "cypress": "^15.9.0",
     "cypress-multi-reporters": "^1.6.4",
     "dotenv": "^16.4.7",
     "elastic-types": "^0.1.5",
@@ -205,7 +206,8 @@
     "tsx": "^4.19.4",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.46.4",
-    "verdaccio": "6.6.0"
+    "verdaccio": "6.6.0",
+    "webpack-merge": "^5.8.0"
   },
   "nx": {
     "includedScripts": []

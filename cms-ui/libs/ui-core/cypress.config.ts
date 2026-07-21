@@ -1,10 +1,9 @@
 import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 import { defineConfig } from 'cypress';
-import { createComponentReporterOptions } from '../../cypress.preset';
+import { createComponentTestConfiguration } from '../../cypress.preset';
 
 export default defineConfig({
-    component: {
+    component: createComponentTestConfiguration('libs', 'ui-core', false, {
         ...nxComponentTestingPreset(__filename),
-        ...createComponentReporterOptions('libs', 'ui-core', false),
-    },
+    }),
 });

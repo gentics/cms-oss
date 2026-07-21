@@ -120,8 +120,7 @@
           >
           <gtx-checkbox
             class="selection-checkbox"
-            [value]="selected[row.id] === true"
-            [indeterminate]="selected[row.id] === CHECKBOX_STATE_INDETERMINATE"
+            [value]="selected[row.id]"
             [disabled]="disabled"
             (valueChange)="updateRowSelection(row, $event)"
           ></gtx-checkbox>

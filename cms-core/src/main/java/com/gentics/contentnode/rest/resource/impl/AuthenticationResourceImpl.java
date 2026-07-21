@@ -18,16 +18,19 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.AuthenticationResource;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.security.AccessControlService;
 import com.gentics.lib.http.CookieHelper;
 import com.gentics.lib.http.CookieHelper.SameSite;
@@ -89,6 +92,28 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 
 	public String getSessionSecret() {
 		return sessionSecret;
+	}
+
+	@Override
+	@GET
+	@Path("/validate")
+	public AuthenticationResponse validate() throws NodeException {
+		AuthenticationResponse response = new AuthenticationResponse();
+
+		// check the session
+		try (Trx trx = ContentNodeHelper.trx()) {
+			SessionToken sessionToken = new SessionToken(getSessionSecret());
+			Optional<DBSession> optSession = DBSession.load(sessionToken);
+
+			if (optSession.isPresent()) {
+				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully validated session"));
+				response.setUser(ModelBuilder.getUser(trx.getTransaction().getObject(SystemUser.class, optSession.get().getUserId())));
+			} else {
+				throw new InvalidSessionIdException(sessionSecret);
+			}
+			trx.success();
+		}
+		return response;
 	}
 
 	@Override
@@ -211,7 +236,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 
 	@Override
 	@POST
-	@Path("/logout/{sid}")
+	@Path("/logout")
 	public GenericResponse logout() throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			SessionToken sessionToken = new SessionToken(getSessionSecret());

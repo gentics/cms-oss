@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 import com.gentics.contentnode.rest.model.request.HashPasswordRequest;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.request.MatchPasswordRequest;
+import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.HashPasswordResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
@@ -19,6 +20,14 @@ import jakarta.ws.rs.core.Context;
  */
 @Path("/auth")
 public interface AuthenticationResource {
+	/**
+	 * Validate the session
+	 *
+	 * @return response containing validation result and (possibly) a user
+	 */
+	@GET
+	@Path("/validate")
+	AuthenticationResponse validate() throws Exception;
 
 	/**
 	 * Perform a login to the system with SSO systems

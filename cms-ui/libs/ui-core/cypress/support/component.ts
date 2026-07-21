@@ -1,17 +1,15 @@
 import { mount } from 'cypress/angular';
+import { registerMount } from '../src';
+import './commands';
 
-// add component testing only related command here, such as mount
+// Only setup mount in here, everything else in commands
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        interface Chainable<Subject> {
+        interface Chainable {
             mount: typeof mount;
         }
     }
 }
 
-Cypress.Commands.add('mount', mount);
-
-// Custom commands only after the mount, as we override them there
-import './commands';
+registerMount(mount);

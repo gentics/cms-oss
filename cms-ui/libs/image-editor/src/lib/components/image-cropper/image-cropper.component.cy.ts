@@ -1,17 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
+import { Pipe } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipe } from '@gentics/ui-core/testing/mock-pipe';
+import '@gentics/ui-core/cypress';
 import { createOutputSpy } from 'cypress/angular';
 import { getCropperConstructor } from '../../gentics-ui-image-editor.module';
 import { AspectRatio, AspectRatios, CropperConstructor } from '../../models';
 import { CropperService } from '../../providers';
 import { ImageCropperComponent } from './image-cropper.component';
 
-describe('ImageCropperComponent', () => {
-    it('should render the cropper library correctly', () => {
-        const DND_OFFSET: [number, number] = [-10, -20];
+function mockPipe(name: string): Pipe {
+    return Pipe({ name, standalone: false })(
+        class MockPipe {
+            transform(input: any): any {
+                return input;
+            }
+        },
+    );
+}
 
-        cy.mount(ImageCropperComponent, {
+describe('ImageCropperComponent', () => {
+    beforeEach(() => {
+        TestBed.configureTestingModule({
             imports: [
                 GenticsUICoreModule.forRoot(),
             ],
@@ -20,6 +30,13 @@ describe('ImageCropperComponent', () => {
                 CropperService,
                 { provide: CropperConstructor, useFactory: getCropperConstructor },
             ],
+        });
+    });
+
+    it('should render the cropper library correctly', () => {
+        const DND_OFFSET: [number, number] = [-10, -20];
+
+        cy.mount(ImageCropperComponent, {
             componentProperties: {
                 src: './assets/portrait.jpg',
                 enabled: true,

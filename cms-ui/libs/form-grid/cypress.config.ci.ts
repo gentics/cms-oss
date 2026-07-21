@@ -3,7 +3,7 @@ import { defineConfig } from 'cypress';
 import { createComponentTestConfiguration } from '../../cypress.preset';
 
 export default defineConfig({
-    component: createComponentTestConfiguration('libs', 'cms-components', false, {
+    component: createComponentTestConfiguration('libs', 'form-grid', true, {
         ...nxComponentTestingPreset(__filename),
     }),
 });

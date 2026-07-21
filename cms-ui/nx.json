@@ -270,7 +270,7 @@
         },
         "@nx/cypress:cypress": {
             "inputs": ["default", "cypressTests", "^default"],
-            "cache": false,
+            "cache": true,
             "parallelism": true,
             "configurations": {
                 "watch": {

@@ -3,24 +3,28 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "app",
-    "sourceRoot": "apps/component-tests-harness/src",
+    "sourceRoot": "{projectRoot}/src",
     "tags": [],
     "targets": {
         "build": {
             "executor": "@nx/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
             "options": {
-                "outputPath": "dist/apps/component-tests-harness",
-                "index": "apps/component-tests-harness/src/index.html",
-                "main": "apps/component-tests-harness/src/main.ts",
-                "tsConfig": "apps/component-tests-harness/tsconfig.app.json",
-                "inlineStyleLanguage": "scss",
+                "outputPath": "dist/{projectRoot}",
+                "index": "{projectRoot}/src/index.html",
+                "main": "{projectRoot}/src/main.ts",
+                "tsConfig": "{projectRoot}/tsconfig.app.json",
                 "buildOptimizer": false,
                 "optimization": false,
                 "vendorChunk": true,
                 "extractLicenses": false,
                 "sourceMap": true,
                 "namedChunks": true
+            },
+            "configurations": {
+                "ci": {
+                    "progress": false
+                }
             }
         }
     }

@@ -41,5 +41,8 @@
     "ngx-pagination": "^6.0.3",
     "sortablejs": "^1.15.2"
   },
+  "optionalDependencies": {
+    "cypress": "^15.9.0"
+  },
   "sideEffects": false
 }

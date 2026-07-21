@@ -2,13 +2,13 @@
     @if (file.type === 'file') {
         <div class="file-preview">
             <div class="file-icon" [ngClass]="fileExtension || ''">
-                <icon>insert_drive_file</icon>
                 @if (fileExtension) {
                     <span
                         class="extension"
                         [ngClass]="'len-' + fileExtension?.length"
                     >{{ fileExtension | uppercase }}</span>
                 }
+                <icon>insert_drive_file</icon>
             </div>
             <div class="file-details">
                 <div class="name">{{ file.name }}</div>
@@ -124,8 +124,8 @@
                         [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
                         [overrideParams]="{ FOLDERID: file.folderId, NODEID: nodeId }"
                         [accept]="acceptedFiles()"
-                        (fileSelect)="replaceFile($event, uploadBar)"
-                        (fileSelectReject)="replaceFile($event, uploadBar)"
+                        (fileSelect)="replaceFile($event)"
+                        (fileSelectReject)="replaceFile($event)"
                     >
                         <icon left>file_upload</icon>
                         <span>{{ ('editor.upload_new_' + file.type + '_button') | gtxI18n }}</span>

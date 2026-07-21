@@ -2,7 +2,8 @@ devtools:
   synchronizer:
     class: com.gentics.contentnode.devtools.FileMonitorWatcher
     interval: 100
-max_filesize: "4G"
+# Max filesize in bytes - set to 10MB
+maxfilesize: 104857601
 no_max_filesize:
   - "Node Super Admin"
   - "Editor"

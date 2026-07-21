@@ -14,6 +14,7 @@ import {
     ENV_E2E_KEYCLOAK_URL,
 } from './config';
 import { hasMatchingParams, matchesPath } from './utils';
+import { ClickOptions } from './playwright-types';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
@@ -494,10 +495,19 @@ export function copyText(page: Page, text: string): Promise<void> {
 export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
     const tabs = group.locator('.properties-tabs');
     const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
-    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
     if (isActive) {
         return;
     }
 
     await langTab.click();
+}
+
+export async function uploadFileFromInput(page: Page, fileInput: Locator, files: string[], clickOptions?: ClickOptions): Promise<void> {
+    const fileChooserPromise = page.waitForEvent('filechooser');
+
+    await fileInput.click(clickOptions);
+    const fileChooser = await fileChooserPromise;
+
+    await fileChooser.setFiles(files);
 }

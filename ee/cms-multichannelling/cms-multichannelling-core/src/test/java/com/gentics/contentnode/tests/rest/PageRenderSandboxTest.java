@@ -417,8 +417,7 @@ public class PageRenderSandboxTest {
 			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node page.url>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
-			assertContent("/alohapage?nodeid=5&language=2&sid=" + TransactionManager.getCurrentTransaction().getSession().getSessionId()
-					+ "&real=newview&realid=45", renderResponse.getContent());
+			assertContent("/alohapage?nodeid=5&language=2&real=newview&realid=45", renderResponse.getContent());
 			trx.success();
 		}
 	}
@@ -784,7 +783,7 @@ public class PageRenderSandboxTest {
 
 		try (Trx trx = new Trx(user)) {
 			Transaction t = trx.getTransaction();
-			RenderType renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_ALOHA, t.getSessionId(), 0);
+			RenderType renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_ALOHA, 0);
 			renderType.setParameter(AlohaRenderer.LINKS_TYPE, "backend");
 
 			renderType.setEditMode(RenderType.EM_ALOHA);

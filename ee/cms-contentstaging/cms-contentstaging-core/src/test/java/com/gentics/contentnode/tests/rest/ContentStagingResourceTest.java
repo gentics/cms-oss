@@ -1153,10 +1153,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		try (Trx trx = new Trx(createSession(user.getLogin()), true);
 				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort());
 				FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-							trx.getTransaction().getSessionId(), null))
-					.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-							((DBSession)trx.getTransaction().getSession()).getSessionSecret(), null))
+			multiPart
 					.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", file.getName(), null))
 					.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + file.getName() + "\"",
 							file, MediaType.APPLICATION_OCTET_STREAM_TYPE));
@@ -1175,11 +1172,7 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		try (Trx trx = new Trx(createSession(user.getLogin()), true);
 				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort());
 				FormDataMultiPart multiPart = new FormDataMultiPart()) {
-			multiPart.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-							trx.getTransaction().getSessionId(), null))
-					.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-							((DBSession)trx.getTransaction().getSession()).getSessionSecret(), null))
-					.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", file.getName(), null))
+			multiPart.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", file.getName(), null))
 					.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + file.getName() + "\"",
 							file, MediaType.APPLICATION_OCTET_STREAM_TYPE));
 			ContentPackageLoadResponse fileUploadResponse = new ContentStagingResourceImpl().upload(newPackageName, multiPart);

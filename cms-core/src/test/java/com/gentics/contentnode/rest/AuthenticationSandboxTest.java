@@ -137,7 +137,7 @@ public class AuthenticationSandboxTest {
 		systemUser.save();
 		TransactionManager.getCurrentTransaction().commit(false);
 
-		testLogin(systemUser.getLogin(), TESTPASSWORD, ResponseCode.OK, "");
+		testLogin(systemUser.getLogin(), TESTPASSWORD, ResponseCode.OK);
 	}
 
 	/**
@@ -151,7 +151,7 @@ public class AuthenticationSandboxTest {
 		systemUser.save();
 		TransactionManager.getCurrentTransaction().commit(false);
 
-		testLogin(systemUser.getLogin(), TESTPASSWORD, ResponseCode.NOTFOUND, "");
+		testLogin(systemUser.getLogin(), TESTPASSWORD, ResponseCode.NOTFOUND);
 	}
 
 	/**
@@ -235,7 +235,7 @@ public class AuthenticationSandboxTest {
 		LoginRequest loginRequest = new LoginRequest();
 		loginRequest.setLogin("system");
 		loginRequest.setPassword(rsaTokenPassword);
-		response = getAuthResource().login(loginRequest, "0");
+		response = getAuthResource().login(loginRequest);
 
 		assertEquals("Login with RSA token password has to be OK",
 				ResponseCode.OK, response.getResponseInfo().getResponseCode());
@@ -260,13 +260,13 @@ public class AuthenticationSandboxTest {
 		request.setLogin("system");
 		request.setPassword(token);
 
-		var response = getAuthResource().login(request, "0");
+		var response = getAuthResource().login(request);
 
 		assertResponse(response, ResponseCode.NOTFOUND);
 
 		// Now try with valid support user name.
 		request.setLogin("support");
-		response = getAuthResource().login(request, "0");
+		response = getAuthResource().login(request);
 
 		assertResponseOK(response);
 
@@ -325,7 +325,7 @@ public class AuthenticationSandboxTest {
 		HashPasswordRequest hashPasswordRequest = new HashPasswordRequest();
 		hashPasswordRequest.setPassword(TESTPASSWORD);
 		HashPasswordResponse response =
-				getAuthResource().hashPassword(null, hashPasswordRequest, 0);
+				getAuthResource().hashPassword(null, hashPasswordRequest);
 
 		assertEquals("Response code has to be OK", ResponseCode.OK,
 				response.getResponseInfo().getResponseCode());
@@ -379,39 +379,24 @@ public class AuthenticationSandboxTest {
 		systemUser.save();
 		TransactionManager.getCurrentTransaction().commit(false);
 
-		String sessionId = testLogin(systemUser.getLogin(), actualPassword, responseCode, "");
-
-		if (sessionId.length() > 15) {
-			// Woops, this also contains the secret, let's strip it!
-			sessionId = sessionId.substring(0, sessionId.length() - 15);
-		}
-
-		// Login again with the existing session ID, just to see if that works too
-		testLogin(systemUser.getLogin(), actualPassword, responseCode, sessionId);
+		testLogin(systemUser.getLogin(), actualPassword, responseCode);
 	}
 
 	/*
-	 * Sends a login request and returns the SID
+	 * Sends a login request
 	 *
 	 * @param userName      Login user name
 	 * @param password      Plain text password
 	 * @param responseCode  Response Code (ie. ResponseCode.OK)
-	 * @param sessionId     If to re-use an existing sessionId
 	 */
-	protected String testLogin(String userName, String password, ResponseCode responseCode, String sessionId)
+	protected void testLogin(String userName, String password, ResponseCode responseCode)
 			throws NodeException {
 		LoginRequest loginRequest = new LoginRequest();
 		loginRequest.setLogin(userName);
 		loginRequest.setPassword(password);
-		LoginResponse response = getAuthResource().login(loginRequest, sessionId);
+		LoginResponse response = getAuthResource().login(loginRequest);
 
 		assertEquals("Login response code has to match expected value", responseCode,
 				response.getResponseInfo().getResponseCode());
-
-		if (responseCode != ResponseCode.OK) {
-			return "0";
-		}
-
-		return response.getSid();
 	}
 }

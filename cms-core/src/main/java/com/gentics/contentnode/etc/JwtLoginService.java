@@ -2,7 +2,6 @@ package com.gentics.contentnode.etc;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -30,6 +29,7 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTProcessor;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -109,7 +109,7 @@ public class JwtLoginService extends AbstractLoginService {
 		try {
 			systemUser = performLogin(systemUser.getLogin(), null, response, false, factory);
 
-			response.setSid(createUserSession(systemUser, servletRequest, servletResponse));
+			createUserSession(systemUser, servletRequest, servletResponse);
 			response.setUser(ModelBuilder.getUser(systemUser));
 		} catch (NodeException e) {
 			logger.error("Could not create user session for \"%s\": %s".formatted(systemUser.getLogin(), e.getMessage()), e);

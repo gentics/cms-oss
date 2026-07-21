@@ -29,7 +29,6 @@ import org.junit.runners.Parameterized.Parameters;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Supplier;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -274,8 +273,7 @@ public class LocalizationPermissionTest {
 		LocalizableNodeObject<?> master = Trx.supply(() -> type.create(folder, template));
 		LocalizableNodeObject<?> localized = Trx.execute(o -> type.localize(o, testChannel), master);
 
-		Session session = Trx.supply(() -> ContentNodeRESTUtils.login("test", "test"));
-		try (Trx trx = new Trx(session, user.getId())) {
+		try (Trx trx = new Trx(user)) {
 			UnlocalizeRequest request = new UnlocalizeRequest();
 			request.setChannelId(testChannel.getId());
 			request.setRecursive(false);

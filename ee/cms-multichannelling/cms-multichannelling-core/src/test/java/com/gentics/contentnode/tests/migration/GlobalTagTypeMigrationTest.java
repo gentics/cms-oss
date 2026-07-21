@@ -158,9 +158,6 @@ public class GlobalTagTypeMigrationTest {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		t.getNodeConfig().getDefaultPreferences().setFeature(Feature.MULTICHANNELLING.toString().toLowerCase(), true);
 
-		testContext.getContext().login("node", "node");
-		t = TransactionManager.getCurrentTransaction();
-
 		// create nodes
 		master = ContentNodeTestDataUtils.createNode("master", "Master Node", PublishTarget.NONE);
 		channel = ContentNodeTestDataUtils.createChannel(master, "Channel", "channel", "/", PublishTarget.NONE);

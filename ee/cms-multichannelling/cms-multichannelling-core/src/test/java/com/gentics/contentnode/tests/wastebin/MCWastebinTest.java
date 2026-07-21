@@ -26,7 +26,6 @@ import org.junit.Test;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -98,7 +97,6 @@ public class MCWastebinTest {
 	/**
 	 * Session of the testuser
 	 */
-	private static Session session;
 	private static ContentLanguage german;
 	private static ContentLanguage english;
 
@@ -111,7 +109,6 @@ public class MCWastebinTest {
 		master = Trx.supply(() -> ContentNodeTestDataUtils.createNode("master", "Master Node", PublishTarget.NONE, german, english));
 		channel = Trx.supply(() -> ContentNodeTestDataUtils.createChannel(master, "Channel Node", "channel", "/"));
 		subChannel = Trx.supply(() -> ContentNodeTestDataUtils.createChannel(channel, "Subchannel Node", "subchannel", "/"));
-		session = ContentNodeRESTUtils.login(TEST_LOGIN, TEST_PASSWORD);
 	}
 
 	/**
@@ -488,7 +485,7 @@ public class MCWastebinTest {
 
 		// move the master into the channel
 		Trx.operate(() -> {
-			try (Trx trx = new Trx(session, testUser.getId())) {
+			try (Trx trx = new Trx(testUser)) {
 				FolderResource res = new FolderResourceImpl();
 				FolderMoveRequest request = new FolderMoveRequest();
 				request.setFolderId(master.getFolder().getId());
@@ -603,7 +600,7 @@ public class MCWastebinTest {
 
 		// move the master into the channel
 		Trx.operate(() -> {
-			try (Trx trx = new Trx(session, testUser.getId())) {
+			try (Trx trx = new Trx(testUser)) {
 				FolderResource res = new FolderResourceImpl();
 				FolderMoveRequest request = new FolderMoveRequest();
 				request.setFolderId(targetFolder.getId());

@@ -1,7 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -27,11 +28,8 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.TranslationServiceLoaderUtil;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.HTMLTextPartType;
@@ -41,6 +39,8 @@ import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.TagCreateRequest;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -56,15 +56,21 @@ public class TranslationResourceImplIntegrationTest {
 	static int textConstructId;
 	static int linkConstructId;
 	static SystemUser user;
+	static Auth userAuth;
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
+
 	@Parameter(0)
 	public String contentFileName;
+
+	@Parameter(1)
+	public AuthType authType;
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {
 		testContext.getContext().getTransaction().commit();
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));
+		userAuth = new Auth(user);
 
 		final var node = supply(
 				() -> createNode("node", "Node", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
@@ -74,28 +80,24 @@ public class TranslationResourceImplIntegrationTest {
 		linkConstructId = supply(
 				() -> createConstruct(node, FileURLPartType.class, textKeyword, "link1"));
 
-		changeSessionLanguage();
 		TranslationServiceLoaderUtil.reloadService();
-	}
-
-	private static void changeSessionLanguage() throws NodeException {
-		operate(user, t -> {
-			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?",
-					getLanguage("en").getId(),
-					t.getSession().getSessionId());
-		});
 	}
 
 	/**
 	 * Get test variation data
 	 * @return variation data
 	 */
-	@Parameters(name = "{index}: contentFileName {0}")
+	@Parameters(name = "{index}: contentFileName {0}, auth {1}")
 	public static Collection<Object[]> data() {
 		final var basePath = "/translate";
 		Collection<Object[]> data = new ArrayList<>();
-		data.add(new Object[] {basePath + "/simple-website.txt"});
-		data.add(new Object[] {basePath + "/content-tag.txt"});
+
+		for (String contentFileName : List.of(basePath + "/simple-website.txt", basePath + "/content-tag.txt")) {
+			for (AuthType authType : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+				data.add(new Object[] { contentFileName, authType });
+			}
+		}
+
 		return data;
 	}
 
@@ -105,7 +107,7 @@ public class TranslationResourceImplIntegrationTest {
 		final var sourceLanguage = "de";
 		final var targetLanguage = "en";
 
-		try (Trx trx = new Trx(user)) {
+		userAuth.withAuth(authType, () -> {
 			var pageToTranslate = createPage(sourceLanguage);
 			createTags(pageToTranslate, contentFileName);
 
@@ -125,7 +127,7 @@ public class TranslationResourceImplIntegrationTest {
 
 			assertThat(translatedPage.getLanguage()).isEqualTo(targetLanguage);
 			assertThat(pageTags).hasSizeGreaterThanOrEqualTo(3);
-		}
+		});
 	}
 
 	/**
@@ -134,7 +136,7 @@ public class TranslationResourceImplIntegrationTest {
 	 * @param page            page to add the tags
 	 * @param contentFileName
 	 */
-	private void createTags(Page page, String contentFileName) throws IOException, NodeException {
+	private void createTags(Page page, String contentFileName) throws NodeException {
 		var createTagsRequest = new MultiTagCreateRequest();
 		var create = new HashMap<String, TagCreateRequest>();
 		addTagCreateRequest(create, "content1", null, textKeyword,
@@ -145,14 +147,15 @@ public class TranslationResourceImplIntegrationTest {
 
 		createTagsRequest.setCreate(create);
 
-		var response = getPageResource().createTags(page.getId().toString(), createTagsRequest);
-		assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+		assertSuccess(() -> getPageResource().createTags(page.getId().toString(), createTagsRequest), null);
 	}
 
-	private String readContentFromFile(String fileName) throws IOException {
+	private String readContentFromFile(String fileName) throws NodeException {
 		StringWriter writer = new StringWriter();
 		try (InputStream in = getClass().getResourceAsStream(fileName)) {
 			IOUtils.copy(in, writer, Charset.forName("UTF-8"));
+		} catch (IOException e) {
+			throw new NodeException(e);
 		}
 		return writer.toString();
 	}
@@ -174,21 +177,15 @@ public class TranslationResourceImplIntegrationTest {
 	 * @return the created page
 	 */
 	private Page createPage(String language) throws NodeException {
-		try (Trx trx = new Trx(user)) {
-			PageResourceImpl pageResource = new PageResourceImpl();
-			PageCreateRequest pageCreateRequest = new PageCreateRequest();
-			pageCreateRequest.setFolderId(Integer.toString(FOLDER_ID));
-			pageCreateRequest.setLanguage(language);
-			pageCreateRequest.setPageName("Meine Seite");
+		PageCreateRequest pageCreateRequest = new PageCreateRequest();
+		pageCreateRequest.setFolderId(Integer.toString(FOLDER_ID));
+		pageCreateRequest.setLanguage(language);
+		pageCreateRequest.setPageName("Meine Seite");
 
-			PageLoadResponse loadResponse = pageResource.create(pageCreateRequest);
-			TransactionManager.getCurrentTransaction().commit(false);
+		PageLoadResponse loadResponse = assertSuccess(() -> getPageResource().create(pageCreateRequest), null);
 
-			assertThat(loadResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
-			assertThat(loadResponse.getPage()).isNotNull();
-			assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
-			return loadResponse.getPage();
-		}
+		assertThat(loadResponse.getPage()).isNotNull();
+		assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
+		return loadResponse.getPage();
 	}
-
 }

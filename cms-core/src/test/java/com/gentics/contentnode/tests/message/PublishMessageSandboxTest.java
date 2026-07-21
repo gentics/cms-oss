@@ -41,7 +41,7 @@ public class PublishMessageSandboxTest extends AbstractMessagingSandboxTest {
 		}
 
 		// check the messages
-		assertMessage(publisher, "editor", "editor editor wants to publish page ProcessTests/Page to translate|mod (53).");
+		assertMessage(publisher, "editor", "editor editor möchte die Seite ProcessTests/Page to translate|mod (53) veröffentlichen.");
 
 		try (DBSessionClosure ses = new DBSessionClosure(PUBLISHER_USER_ID)) {
 			// let the publisher publish the page
@@ -49,6 +49,6 @@ public class PublishMessageSandboxTest extends AbstractMessagingSandboxTest {
 		}
 
 		// check the messages
-		assertMessage(editor, "Publisher", "The page ProcessTests/Page to translate|mod (53) has been published.");
+		assertMessage(editor, "Publisher", "Die Seite ProcessTests/Page to translate|mod (53) wurde veröffentlicht.");
 	}
 }

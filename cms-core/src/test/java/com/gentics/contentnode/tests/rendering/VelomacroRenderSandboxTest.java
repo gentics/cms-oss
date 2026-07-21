@@ -27,6 +27,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.TextPartType;
@@ -64,7 +65,7 @@ public class VelomacroRenderSandboxTest {
 	 */
 	protected static Node node;
 
-	private static Integer userId;
+	private static SystemUser user;
 
 	/**
 	 * Collection of templates
@@ -80,7 +81,11 @@ public class VelomacroRenderSandboxTest {
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
 
-		operate(() -> {
+		user = supply(t -> t.getObject(SystemUser.class, select("SELECT id FROM systemuser WHERE login = ?", pst -> {
+			pst.setString(1, "node");
+		}, firstInt("id"))));
+
+		operate(user, () -> {
 			node = createNode("Test Node", "test", "/Content.Node", null, false, false, false);
 			Folder root = node.getFolder();
 
@@ -95,10 +100,6 @@ public class VelomacroRenderSandboxTest {
 				}
 			}
 		});
-
-		userId = supply(() -> select("SELECT id FROM systemuser WHERE login = ?", pst -> {
-			pst.setString(1, "node");
-		}, firstInt("id")));
 	}
 
 	/**
@@ -178,7 +179,7 @@ public class VelomacroRenderSandboxTest {
 	public void testRendering() throws Throwable {
 		List<PageRenderThread> threads = new ArrayList<PageRenderThread>(NUM_THREADS);
 
-		try (DBSessionClosure ses = new DBSessionClosure(userId)) {
+		try (DBSessionClosure ses = new DBSessionClosure(user)) {
 			for (int i = 0; i < NUM_THREADS; i++) {
 				PageRenderThread thread = new PageRenderThread(ses.getSession());
 				threads.add(thread);
@@ -213,7 +214,7 @@ public class VelomacroRenderSandboxTest {
 					PageRenderResponse renderResponse = resource.render(ObjectTransformer.getString(page.getId(), null), null, null, false, null,
 							LinksType.frontend, false, false, false, 0);
 					assertResponseOK(renderResponse);
-					assertEquals("Check rendered content", StringUtils.repeat(page.getTemplate().getName(), 10), renderResponse.getContent());
+					assertEquals("Check rendered content", StringUtils.repeat(supply(() -> page.getTemplate().getName()), 10), renderResponse.getContent());
 				}
 			} catch (Throwable e) {
 				this.e = e;

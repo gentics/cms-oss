@@ -12,6 +12,7 @@ import {
     openContext,
     reroute,
     selectDateInPicker,
+    uploadFileFromInput,
     wait
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
@@ -130,14 +131,8 @@ export async function uploadFiles(
 
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
-            // Filechooser is a lot simpler, as it can handle native files
-            const fileChooserPromise = page.waitForEvent('filechooser');
             const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-            await uploadButton.waitFor({ state: 'visible' });
-            await uploadButton.click();
-            const fileChooser = await fileChooserPromise;
-
-            await fileChooser.setFiles(files.map((f) => f.fixturePath));
+            await uploadFileFromInput(page, uploadButton, files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response

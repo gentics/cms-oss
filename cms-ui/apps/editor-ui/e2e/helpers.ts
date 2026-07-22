@@ -6,13 +6,16 @@ import {
     clickModalAction,
     dismissNotifications,
     FixtureFile,
+    FOLDER_A,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
     openContext,
     reroute,
     selectDateInPicker,
-    wait
+    wait,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -318,7 +321,7 @@ export async function createInternalLink(
 
         // If the handler didn't confirm/close the modal, we do it now
         if (await repoBrowser.isVisible()) {
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
         }
 
         // Fill out rest of the form
@@ -611,7 +614,7 @@ export function findColorPickerPaletteColor(picker: Locator, color: string): Loc
 }
 
 export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
-    return picker.locator(`.palette .palette-entry`).nth(index);
+    return picker.locator('.palette .palette-entry').nth(index);
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
@@ -633,3 +636,14 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
     });
 }
 
+export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {
+    await test.step(`Navigating to folder: ${folderId}`, async () => {
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const folder = findItem(list, folderId);
+        // Use the wildcard here instead, since if we used a globalId for the selector, the breadcrumb would
+        // still be loaded with the local ID, causing this to fail otherwise.
+        const breadcrumbReq = waitForResponseFrom(page, 'GET', '/rest/folder/breadcrumb/*');
+        await folder.locator('.item-primary .item-name-router-link').click();
+        await breadcrumbReq;
+    });
+}

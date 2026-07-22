@@ -321,6 +321,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
                 if (params.type === 'page') {
                     options['langvars'] = true;
+                    options['template'] = true;
                 }
                 if (<FolderItemOrNodeType> params.type !== 'node') {
                     options['construct'] = true;

@@ -287,7 +287,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
     /* VARIANTS
      * ---------------------------------------------------------------------- */
 
-    /** This page's ID in the {@link pageVariants} */
+    /** This page's ID in the {@link Page.pageVariants} */
     readonly contentSetId: number;
 
     /**
@@ -296,7 +296,7 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
      */
     readonly pageVariants?: Normalizable<T, Page<Raw>, number>[];
 
-    /** Corresponds to the language id. May be used with the {@link languageVariants} */
+    /** Corresponds to the language id. May be used with the {@link Page.languageVariants} */
     readonly contentGroupId: number;
 
     /** Language variants */

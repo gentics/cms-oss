@@ -861,7 +861,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
-        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
+        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/unlink/${id}`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),
 
         listTagStatus: (id, options) => this.executeMappedJsonRequest(GET, `/template/${id}/tagstatus`, null, options),

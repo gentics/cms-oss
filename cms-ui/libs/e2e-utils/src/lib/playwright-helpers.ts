@@ -14,6 +14,7 @@ import {
     ENV_E2E_KEYCLOAK_URL,
 } from './config';
 import { hasMatchingParams, matchesPath } from './utils';
+import { createClient } from './importer';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
@@ -494,10 +495,21 @@ export function copyText(page: Page, text: string): Promise<void> {
 export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
     const tabs = group.locator('.properties-tabs');
     const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
-    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
     if (isActive) {
         return;
     }
 
     await langTab.click();
+}
+
+export async function createClientFromPage(page: Page): Promise<GCMSRestClient> {
+    const client = await createClient({
+        context: page.request,
+        isPageContext: true,
+    });
+    const sid: string = await page.evaluate(() => window.localStorage.getItem('GCMSUI_sid'));
+    client.sid = parseInt(JSON.parse(sid), 10);
+
+    return client;
 }

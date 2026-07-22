@@ -1,7 +1,16 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { MockI18nPipe } from '@gentics/cms-components/testing';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { MountResponse } from 'cypress/angular';
 import { CopyValueComponent } from './copy-value.component';
+
+@Pipe({
+    name: 'gtxI18n',
+    standalone: false,
+})
+export class MockI18nPipe implements PipeTransform {
+    transform(query: string, ...args: any[]): string {
+        return query;
+    }
+}
 
 describe('CopyValueComponent', () => {
 

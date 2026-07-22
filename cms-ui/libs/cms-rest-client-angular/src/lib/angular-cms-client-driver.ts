@@ -78,7 +78,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         }).pipe(
             map((res) => {
                 if (res.ok) {
-                    return res.body as Blob;
+                    return res.body;
                 }
 
                 throw new HttpErrorResponse({
@@ -196,7 +196,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         body?: string | FormData,
     ): NGGCMSRestClientRequest<string> {
         const obs = this.createStringRequest(request, body, (str) => str);
-        return this.createClientResponse(obs, request) as any;
+        return this.createClientResponse(obs, request);
     }
 
     performDownloadRequest(

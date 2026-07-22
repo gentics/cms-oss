@@ -143,7 +143,7 @@ function BinaryElement(props: IFormComponentAttributes) {
 
   const classifySource = (b: IBinary): BinarySource => {
     if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
-    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('FormInstanceContent|') || String(b.value).startsWith('ActaNovaDocument|')) return BinarySource.ACTANOVA;
     if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
     return BinarySource.LOCAL;
   };
@@ -337,6 +337,7 @@ function BinaryElement(props: IFormComponentAttributes) {
         onLink={() => {
           Linking.openURL(binaryLink);
         }}
+        showDelete={props.editable}
         showDownload={(binaryLink !== '')}
         onRemove={async () => {
           await formEventsUtils.handleBinaryDelete(

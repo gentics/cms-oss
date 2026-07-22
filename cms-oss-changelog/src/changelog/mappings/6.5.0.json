@@ -1,0 +1,14 @@
+{
+  "version": "6.5.0",
+  "date": "06.07.2026",
+  "changeLogEntryFileNames": [
+    "8804.GPU-2257.manualchange",
+    "8803.GPU-2257.enhancement",
+    "8805.GPU-2257.manualchange",
+    "8793.SUP-20008.security"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "12.05.2026",
+    "alohaeditor-version": "2.1.17"
+  }
+}

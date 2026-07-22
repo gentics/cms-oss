@@ -5,7 +5,11 @@
     "files.associations": {
         "*.es": "json",
         "part.*.html": "velocity",
-        "*.textile": "asciidoc"
+        "*.textile": "asciidoc",
+        // Force regular JSON, not with comments, as *somewhere* in the building process,
+        // this causes the entire build system to just break.
+        "tsconfig.json": "json",
+        "tsconfig.*.json": "json"
     },
     // Plugin Settings
     "redhat.telemetry.enabled": false,
@@ -13,14 +17,10 @@
     "[typescript]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
-    "typescript.preferences.autoImportFileExcludePatterns": [
-        "@angular/compiler",
-        "hammerjs"
-    ],
     "[javascript]": {
-        "editor.defaultFormatter": "vscode.typescript-language-features"
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
-    "javascript.preferences.autoImportFileExcludePatterns": [
+    "js/ts.preferences.autoImportFileExcludePatterns": [
         "@angular/compiler",
         "hammerjs"
     ],
@@ -35,5 +35,6 @@
         {
             "mode": "auto"
         }
-    ]
+    ],
+    "nxConsole.nxWorkspacePath": "cms-ui"
 }

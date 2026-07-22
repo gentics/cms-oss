@@ -19,7 +19,7 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing';
-import { deepFreeze } from '@gentics/ui-core/utils/deep-freeze/deep-freeze';
+import { deepFreeze } from '@gentics/common';
 import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

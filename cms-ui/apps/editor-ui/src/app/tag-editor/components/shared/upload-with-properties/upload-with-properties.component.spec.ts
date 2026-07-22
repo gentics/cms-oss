@@ -3,7 +3,7 @@ import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { File as FileModel, Folder } from '@gentics/cms-models';
-import { getExampleFileObjectData, getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFileObjectData, getExampleFolderData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';

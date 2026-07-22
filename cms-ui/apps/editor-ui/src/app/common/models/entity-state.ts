@@ -25,7 +25,7 @@ export interface EntityState {
     contentPackage: IndexById<ContentPackageBO<Normalized>>;
     file: IndexById<File<Normalized>>;
     folder: IndexById<Folder<Normalized>>;
-    form: IndexById<Form<Normalized>>;
+    form: IndexById<Form>;
     group: IndexById<Group<Normalized>>;
     image: IndexById<Image<Normalized>>;
     language: IndexById<Language>;

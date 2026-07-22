@@ -17,8 +17,9 @@
                 <div class="column">
                   <gtx-checkbox
                     class="left"
-                    [checked]="areAllSelected(itemType)"
-                  (change)="$event ? selectAllItems(itemType) : deselectAllItems(itemType)"></gtx-checkbox>
+                    [value]="areAllSelected(itemType)"
+                    (valueChange)="$event ? selectAllItems(itemType) : deselectAllItems(itemType)"
+                ></gtx-checkbox>
                   @if (selectedItems[itemType].length) {
                     <div>
                       {{ 'editor.item_count_header_selected' | gtxI18n: {
@@ -45,9 +46,9 @@
                   <div class="column">
                     <gtx-checkbox
                       class="left"
-                      [checked]="isSelected(itemType, item.id)"
-                      (change)="$event ? selectItem(itemType, item.id) : deselectItem(itemType, item.id)">
-                    </gtx-checkbox>
+                      [value]="isSelected(itemType, item.id)"
+                      (valueChange)="$event ? selectItem(itemType, item.id) : deselectItem(itemType, item.id)"
+                    ></gtx-checkbox>
                     <div class="item-name">{{ item.name }}
                       @if (getChannelName(item.channelId)) {
                         <span class="localization-label localized info-text">

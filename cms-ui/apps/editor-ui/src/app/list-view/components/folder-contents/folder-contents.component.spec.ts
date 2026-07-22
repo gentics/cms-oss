@@ -5,13 +5,13 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { I18nNotificationService, TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, PermissionResponse, ResponseCode } from '@gentics/cms-models';
+import { AccessControlledType, FormTypeConfigurationListResponse, PermissionResponse, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -38,6 +38,7 @@ import {
     IconCheckbox,
     ImageThumbnailComponent,
     ItemBreadcrumbsComponent,
+    ItemListHeaderComponent,
     ItemListRowComponent,
     ItemStatusLabelComponent,
     LanguageContextSelectorComponent,
@@ -50,7 +51,12 @@ import {
 import { MasonryItemDirective } from '../../../shared/directives/masonry-item/masonry-item.directive';
 import {
     AllItemsSelectedPipe,
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
     FileSizePipe,
+    FilterItemsPipe,
     GetInheritancePipe,
     HighlightPipe,
     ImageDimensionsPipe,
@@ -78,15 +84,9 @@ import {
     WastebinActionsService,
 } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
-import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
-import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
-import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
-import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ListService } from '../../providers/list/list.service';
 import { FolderContentsComponent } from '../folder-contents/folder-contents.component';
 import { GridItemComponent } from '../grid-item/grid-item.component';
-import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from '../item-list/item-list.component';
 
 const PERMISSIONS = {
@@ -231,7 +231,7 @@ class MockMapPermissionsPipe implements PipeTransform {
     transform(): EditorPermissions {
         return {
             ...getNoPermissions(),
-        } as any;
+        };
     }
 }
 
@@ -293,22 +293,30 @@ class MockSplitViewContainer {
     }
 }
 
-class MockClient {
+class MockClient implements Partial<GCMSRestClientService> {
     page = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['page']> as any;
 
     file = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['file']> as any;
 
     image = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['image']> as any;
 
     form = {
         get: () => throwError('not mocked'),
-    };
+        listConfigurations: () => of({
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+            },
+            hasMoreItems: false,
+            items: [],
+            numItems: 0,
+        } as FormTypeConfigurationListResponse),
+    } as Partial<GCMSRestClientService['form']> as any;
 
     folder = {
         get: () => throwError('not mocked'),
@@ -369,7 +377,7 @@ class MockClient {
                 responseMessage: 'Successfully loaded breadcrumb',
             },
         }),
-    };
+    } as Partial<GCMSRestClientService['folder']> as any;
 
     permission = {
         getInstance: () => of({
@@ -381,7 +389,7 @@ class MockClient {
             privilegeMap: {},
             permissionsMap: {},
         } as PermissionResponse),
-    };
+    } as Partial<GCMSRestClientService['permission']> as any;
 }
 
 class MockLocalStorage implements Partial<LocalStorage> {

@@ -33,7 +33,6 @@ import { TextTagPropertyEditor } from './components/tag-property-editors/text-ta
 import { ObjectTagNamePipe } from './pipes/object-tag-name/object-tag-name.pipe';
 import { TagPropertyLabelPipe } from './pipes/tag-property-label/tag-property-label.pipe';
 import { FormgeneratorApiService } from './providers/formgenerator-api/formgenerator-api.service';
-import { IFrameStylesService } from './providers/iframe-styles/iframe-styles.service';
 import { TagEditorService } from './providers/tag-editor/tag-editor.service';
 import { TagPropertyEditorResolverService } from './providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 
@@ -73,7 +72,6 @@ export const PIPES: any[] = [
 
 export const PROVIDERS: any[] = [
     FormgeneratorApiService,
-    IFrameStylesService,
     TagEditorService,
     TagPropertyEditorResolverService,
 ];

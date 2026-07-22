@@ -2,9 +2,6 @@
 import type { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { AbstractControl } from '@angular/forms';
 
-/** A Symbol which inicates that the JSON value is invalid/could not be parsed correctly. */
-export const JSON_VALUE_INVALID = Symbol('invald-json');
-
 // Angular Validators
 export const VALIDATOR_PATTERN_PROPERTY = 'pattern';
 

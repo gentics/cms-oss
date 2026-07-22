@@ -18,8 +18,8 @@
         [folderId]="item.motherId"
         [languages]="languages"
         [disableLanguageSelect]="true"
-        [showDetailProperties]="true"
         [initialValue]="itemClean"
+        [configuration]="formConfiguration"
         [formControl]="control"
         (initialValueChange)="forwardItemCleanChange($event)"
       ></gtx-form-properties>

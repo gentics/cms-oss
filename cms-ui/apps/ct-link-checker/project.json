@@ -107,18 +107,36 @@
             "continuous": true
         },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": [
+                    "zone.js",
+                    "zone.js/testing",
+                    "{projectRoot}/src/polyfills.ts"
+                ],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "{projectRoot}/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test ct-link-checker --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": [
+                        "junit"
+                    ],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
         },

@@ -3,21 +3,202 @@
 :host {
     display: block;
     position: relative;
+    --gtx-track-color: #{$gtx-color-mid-gray};
+    --gtx-thumb-color: #{$gtx-color-primary};
+    --gtx-indicator-color: #{$gtx-color-light-gray};
 
-    > label {
-        position: absolute;
-        top: -20px;
+    .range-content {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+
+        &.gecko {
+            .input-container input[type='range'] {
+                width: calc(100% + 14px);
+                margin-left: -7px;
+            }
+        }
+    }
+
+    label {
         display: block;
+        font-size: 0.85em;
+        max-width: 100%;
         color: $gtx-color-dark-gray;
         transition: color 0.2s;
     }
 
-    > .range-field {
-        margin: 20px 0;
+    .range-field {
+        width: 100%;
+        height: min-content;
+        position: relative;
+
+        &.with-bounds {
+            padding-bottom: 1.2rem;
+        }
+
+        &.focused {
+            .indicator-container .thumb {
+                border-radius: 50% 50% 50% 0;
+                transform: scale(1, 1) rotate(-45deg);
+
+                .value {
+                    color: $input-background;
+                    margin-left: -1px;
+                    margin-top: 6px;
+                    font-size: 10px;
+                }
+            }
+        }
     }
 
-    // remove the value label in IE11
-    input[type=range]::-ms-tooltip {
+    .indicator-container {
+        position: absolute;
+        top: 0.6rem;
+        left: 0;
+        width: 100%;
+        height: 17px;
+
+        .indicator-stripes {
+            display: block;
+            width: calc(100% + 1px);
+            height: 100%;
+            background-image: linear-gradient(
+                to right,
+                $gtx-color-light-gray 1px,
+                transparent 1px
+            );
+            background-repeat: repeat;
+            /* Firefox doesn't support the type */
+            background-size: calc(100% / var(--gtx-step-count));
+            border-right: 1px $gtx-color-light-gray solid;
+        }
+
+        .thumb {
+            position: absolute;
+            height: 27px;
+            width: 27px;
+            top: -33px;
+            margin-left: -13px;
+            left: var(--gtx-thumb-offset);
+            border: none;
+            border-radius: 50%;
+            background-color: var(--gtx-thumb-color);
+
+            transform: scale(0, 0) rotate(-45deg);
+            transform-origin: 50% 50%;
+
+            transition: transform 200ms cubic-bezier(1, 0, 0, 1), left 50ms;
+            will-change: transform, left;
+
+            .value {
+                display: block;
+                width: 27px;
+                text-align: center;
+                color: $gtx-color-primary;
+                font-size: 0;
+                transform: rotate(45deg);
+            }
+        }
+    }
+
+    .bounds-container {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: baseline;
+        justify-content: space-between;
+
+        user-select: none;
+
+        color: $gtx-color-mid-gray;
+        font-size: 0.8rem;
+        line-height: 1;
+    }
+
+    .input-container {
+        padding: 0.35rem 0;
+        height: 17px;
+        box-sizing: content-box;
+        position: relative;
+
+        input[type='range'] {
+            margin: 0;
+            width: 100%;
+        }
+    }
+
+    // WebKit
+    input[type='range'] {
+        -webkit-appearance: none;
+    }
+
+    input[type='range']::-webkit-slider-runnable-track {
+        height: 3px;
+        background: var(--gtx-track-color);
+        border: none;
+        outline: 1px solid transparent;
+        transition: 150ms;
+    }
+
+    input[type='range']:focus::-webkit-slider-runnable-track {
+        background: color-mix(in oklab, var(--gtx-track-color) 90%, white);
+        outline-color: color-mix(in oklab, var(--gtx-thumb-color) 50%, transparent);
+    }
+
+    input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        border: none;
+        height: 13px;
+        width: 13px;
+        border-radius: 50%;
+        background-color: var(--gtx-thumb-color);
+        transform-origin: 50% 50%;
+        margin: -5px 0 0 0;
+        transition: all 0.3s, left 50ms;
+        position: absolute;
+        left: calc(clamp(0%, var(--gtx-thumb-offset), 100%) - 7px);
+    }
+
+    // FireFox
+    input[type='range'] {
+        /* fix for FF unable to apply focus style bug  */
+        border: 1px solid transparent;
+        /*required for proper track sizing in FF*/
+        height: 3px;
+        box-sizing: content-box;
+    }
+
+    input[type='range']::-moz-range-track {
+        height: 3px;
+        background: var(--gtx-track-color);
+        border: none;
+        width: calc(100% - 14px);
+        outline: 1px solid transparent;
+        transition: 150ms;
+    }
+
+    input[type='range']:focus::-moz-range-track {
+        background: color-mix(in oklab, var(--gtx-track-color) 90%, white);
+        outline-color: color-mix(in oklab, var(--gtx-thumb-color) 50%, transparent);
+    }
+
+    input[type='range']::-moz-range-thumb {
+        border: none;
+        height: 13px;
+        width: 13px;
+        border-radius: 50%;
+        background: var(--gtx-thumb-color);
+    }
+
+    input[type='range']:-moz-focusring {
         display: none;
     }
 
@@ -41,7 +222,10 @@
     }
 
     &[disabled] input::-webkit-slider-thumb {
-        background-color: gray;
+        background-color: $gtx-color-dark-gray;
+    }
+    &[disabled] input::-moz-range-thumb {
+        background-color: $gtx-color-dark-gray;
     }
 
     &.ng-touched.ng-invalid {
@@ -51,24 +235,6 @@
 
         label {
             color: $gtx-color-alert;
-        }
-    }
-
-    input[type=range] + .thumb {
-        transition: transform 200ms cubic-bezier(1, 0, 0, 1);
-        will-change: transform, left;
-        height: 30px;
-        width: 30px;
-        top: -23px;
-        margin-left: -15px;
-        transform: scale(0, 0) rotate(-45deg);
-
-        &.active {
-            transform: scale(1, 1) rotate(-45deg);
-        }
-
-        &.hidden {
-            display: none;
         }
     }
 }

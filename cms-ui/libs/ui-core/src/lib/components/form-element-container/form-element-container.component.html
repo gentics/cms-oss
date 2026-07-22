@@ -1,0 +1,21 @@
+<div
+    class="element-container"
+    [class.active]="active"
+    [class.disabled]="disabled"
+    [class.readonly]="readonly"
+>
+    <ng-content select="label" />
+
+    <div
+        class="box-wrapper"
+        [attr.tabindex]="focusable && !disabled ? 0 : null"
+        (keypress)="handleKeyPress($event)"
+        (blur)="handleBlur($event)"
+        (focus)="handleFocus($event)"
+    >
+        <div class="box-content" (click)="handleClick()">
+            <ng-content />
+        </div>
+        <ng-content select=".addon-button" />
+    </div>
+</div>

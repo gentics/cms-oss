@@ -1,26 +1,29 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { booleanAttribute, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { cancelEvent } from '@gentics/common';
 import { KeyCode } from '../../common';
-import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils';
+import { generateFormProvider } from '../../utils';
 
 /**
  * The SearchBar component should be the primary search input for the app. It should be
  * located near the top of the screen, below the [TopBar](#/top-bar).
  *
  * ```html
- * <gtx-search-bar [query]="searchQuery"
- *                 (change)="onChange($event)"
- *                 (search)="search($event)">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     [query]="searchQuery"
+ *     (change)="onChange($event)"
+ *     (search)="search($event)"
+ * ></gtx-search-bar>
  * ```
  *
  * ## Use With NgModel
  * The search query can be bound with `NgModel`, which can be useful for implementing a reset function:
  *
  * ```html
- * <gtx-search-bar [(ngModel)]="searchQuery"
- *                 (clear)="searchQuery = ''">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     [(ngModel)]="searchQuery"
+ *     (clear)="searchQuery = ''"
+ * ></gtx-search-bar>
  * ```
  *
  * ## Content Projection
@@ -29,7 +32,7 @@ import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils'
  *
  * ```html
  * <gtx-search-bar>
- *      <div class="chip">Tag 1<i class="material-icons">close</i></div>
+ *      <div class="chip">Tag 1<icon>close</icon></div>
  * </gtx-search-bar>
  * ```
  *
@@ -37,9 +40,10 @@ import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils'
  * Icons in the `<gtx-search-bar>` can be replaced with custom ones.
  *
  * ```html
- * <gtx-search-bar submitIcon="filter_list"
- *                 clearIcon="undo">
- * </gtx-search-bar>
+ * <gtx-search-bar
+ *     submitIcon="filter_list"
+ *     clearIcon="undo"
+ * ></gtx-search-bar>
  * ```
  */
 @Component({
@@ -47,11 +51,10 @@ import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils'
     templateUrl: './search-bar.component.html',
     styleUrls: ['./search-bar.component.scss'],
     providers: [generateFormProvider(SearchBarComponent)],
-    standalone: false
+    standalone: false,
 })
-export class SearchBarComponent implements ControlValueAccessor, OnChanges {
+export class SearchBarComponent implements ControlValueAccessor {
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly cancelEvent = cancelEvent;
 
     /**
@@ -88,7 +91,7 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
      * Setting this attribute will prevent the "clear" button from being displayed
      * when the query is non-empty.
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public hideClearButton: boolean;
 
     /**
@@ -113,6 +116,7 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
     private cvaChange: (value: string) => void = () => {
         // noop
     };
+
     private cvaTouch: () => void = () => {
         // noop
     };
@@ -120,12 +124,6 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
     constructor(
         private changeDetector: ChangeDetectorRef,
     ) { }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (changes.hideClearButton) {
-            this.hideClearButton = coerceToBoolean(this.hideClearButton);
-        }
-    }
 
     doSearch(): void {
         this.search.emit(this.query);
@@ -140,12 +138,20 @@ export class SearchBarComponent implements ControlValueAccessor, OnChanges {
         }
     }
 
-    onInputChange(event: string): void {
-        this.query = event;
-        if (typeof event === 'string') {
-            this.cvaChange(event);
-            this.change.emit(event);
+    onInputChange(event: InputEvent): void {
+        cancelEvent(event);
+
+        if (typeof this.cvaTouch === 'function') {
+            this.cvaTouch();
         }
+
+        const newVal = (event.target as HTMLInputElement).value || '';
+        if (this.query === newVal) {
+            return;
+        }
+        this.query = newVal;
+        this.cvaChange(newVal);
+        this.change.emit(newVal);
     }
 
     onInputBlur(event: string): void {

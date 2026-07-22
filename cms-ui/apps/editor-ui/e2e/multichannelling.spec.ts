@@ -47,10 +47,10 @@ import {
     wait,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/common';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectEditorTab, selectNode, setupHelperWindowFunctions } from './helpers';
 
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -190,13 +190,12 @@ test.describe('Multichannelling', () => {
             let editButton: Locator;
 
             await test.step('Tag Setup', async () => {
-                // Select correct editor tab
-                const tabs = page.locator('content-frame gtx-page-editor-tabs');
-                await tabs.locator(`[data-id="${TAB_ID_CONSTRUCTS}"]`).click();
-
                 // Focus the editable and clear the content
                 await editor.click();
                 await editor.clear();
+
+                // Select correct editor tab
+                await selectEditorTab(page, TAB_ID_CONSTRUCTS);
 
                 // Insert the overview tag
                 const category = page.locator('content-frame .editor-toolbar gtx-construct-controls .construct-category[data-id="2"]');
@@ -411,6 +410,21 @@ test.describe('Multichannelling', () => {
                 expect(resData.page.tags[testTag.name].inherited).toBe(true);
             });
         });
+
+        test('should show both localization options when trying to edit an inherited page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19609',
+            }],
+        }, async ({ page }) => {
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, testPage.id);
+            await itemAction(item, 'edit');
+
+            const modal = page.locator('gtx-modal-dialog');
+            await expect(modal.locator('.modal-footer [data-action="localize"]')).toBeVisible();
+            await expect(modal.locator('.modal-footer [data-action="partial-localize"]')).toBeVisible();
+        });
     });
 
     test.describe('Localization', () => {
@@ -488,6 +502,22 @@ test.describe('Multichannelling', () => {
             await expect(notifications.locator('.message')).toContainText(backgroundMessage);
 
             await expect(item.locator('.item-primary .inherited-icon')).toBeVisible();
+        });
+
+        test('should show only full localization option when trying to edit an inherited page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19609',
+            }],
+        }, async ({ page }) => {
+            const TEST_PAGE = IMPORTER.get(PAGE_FOUR);
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, TEST_PAGE.id);
+            await itemAction(item, 'edit');
+
+            const modal = page.locator('gtx-modal-dialog');
+            await expect(modal.locator('.modal-footer [data-action="localize"]')).toBeVisible();
+            await expect(modal.locator('.modal-footer [data-action="partial-localize"]')).not.toBeAttached();
         });
     });
 });

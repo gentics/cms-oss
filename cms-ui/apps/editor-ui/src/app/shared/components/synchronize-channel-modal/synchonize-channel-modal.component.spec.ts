@@ -1,18 +1,18 @@
 import { Component, EventEmitter, Injectable, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { ChannelSyncRequest, Feature, File, Folder, Image, Node, Normalized, Page } from '@gentics/cms-models';
+import { CheckboxState } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
-import { componentTest } from '../../../../testing/component-test';
+import { componentTest, MockApiBase } from '../../../../testing';
 import { ApiBase } from '../../../core/providers/api';
-import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { replaceInState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { SynchronizeChannelModal } from './synchonize-channel-modal.component';
-import { MockI18nPipe } from '@gentics/cms-components/testing';
 
 describe('SynchronizeChannelModal', () => {
 
@@ -106,11 +106,11 @@ describe('SynchronizeChannelModal', () => {
     });
 
     function getObjectTypeSection(fixture: ComponentFixture<SynchronizeChannelModal>):
-    { labels: string[], checkboxes: MockCheckbox[], checked: string[] } {
+    { labels: string[]; checkboxes: MockCheckbox[]; checked: string[] } {
         const rows = fixture.debugElement.queryAll(By.css('.affected-objects-row'));
-        const checkboxes = rows.map(row => row.query(By.directive(MockCheckbox)).componentInstance);
-        const checked = checkboxes.filter(cb => cb.checked).map(cb => cb.label);
-        const labels = checkboxes.map(cb => cb.label);
+        const checkboxes: MockCheckbox[] = rows.map((row) => row.query(By.directive(MockCheckbox)).componentInstance);
+        const checked = checkboxes.filter((cb) => cb.value).map((cb) => cb.label);
+        const labels = checkboxes.map((cb) => cb.label);
         expect(labels).toEqual(['folder', 'page', 'file', 'image', 'template']);
         return { checkboxes, checked, labels };
     }
@@ -118,8 +118,8 @@ describe('SynchronizeChannelModal', () => {
     const getConfirmButton = (fixture: ComponentFixture<SynchronizeChannelModal>): MockButton => fixture.debugElement
         .query(By.css('.modal-footer'))
         .queryAll(By.directive(MockButton))
-        .map(debugElement => debugElement.componentInstance as MockButton)
-        .filter(btn => btn.type === 'default')[0];
+        .map((debugElement) => debugElement.componentInstance as MockButton)
+        .filter((btn) => btn.type === 'default')[0];
 
     it('can be created',
         componentTest(() => SynchronizeChannelModal, (fixture, modal) => {
@@ -149,7 +149,7 @@ describe('SynchronizeChannelModal', () => {
             fixture.detectChanges();
 
             const recursive: MockCheckbox = fixture.debugElement.query(By.css('.recursive-checkbox')).componentInstance;
-            expect(recursive.checked).toBe(false);
+            expect(recursive.value).toBe(false);
         }),
     );
 
@@ -160,7 +160,7 @@ describe('SynchronizeChannelModal', () => {
 
             fixture.detectChanges();
 
-            const {checked} = getObjectTypeSection(fixture);
+            const { checked } = getObjectTypeSection(fixture);
             expect(checked).toEqual(['folder', 'page', 'file', 'image', 'template']);
         }),
     );
@@ -172,7 +172,7 @@ describe('SynchronizeChannelModal', () => {
 
             fixture.detectChanges();
 
-            const {checked} = getObjectTypeSection(fixture);
+            const { checked } = getObjectTypeSection(fixture);
             expect(checked).toEqual(['folder', 'page', 'file', 'image', 'template']);
         }),
     );
@@ -273,7 +273,7 @@ describe('SynchronizeChannelModal', () => {
             expect(folderActions.getChannelSyncReport).toHaveBeenCalledTimes(1);
 
             const recursive: MockCheckbox = fixture.debugElement.query(By.css('.recursive-checkbox')).componentInstance;
-            recursive.change.emit();
+            recursive.valueChange.emit();
             expect(folderActions.getChannelSyncReport).toHaveBeenCalledTimes(2);
         }),
     );
@@ -346,7 +346,7 @@ describe('SynchronizeChannelModal', () => {
             modal.item = { type: 'folder', id: 1234 } as Folder;
 
             let modalResult: ChannelSyncRequest;
-            modal.registerCloseFn(result => modalResult = result);
+            modal.registerCloseFn((result) => modalResult = result);
 
             fixture.detectChanges();
 
@@ -369,7 +369,7 @@ describe('SynchronizeChannelModal', () => {
             modal.item = { type: 'page', id: 1234 } as Page;
 
             let modalResult: ChannelSyncRequest;
-            modal.registerCloseFn(result => modalResult = result);
+            modal.registerCloseFn((result) => modalResult = result);
 
             fixture.detectChanges();
             getConfirmButton(fixture).click.emit();
@@ -391,13 +391,13 @@ describe('SynchronizeChannelModal', () => {
             modal.item = { type: 'folder', id: 1234 } as Folder;
 
             let lastModalResult: ChannelSyncRequest;
-            modal.registerCloseFn(result => lastModalResult = result);
+            modal.registerCloseFn((result) => lastModalResult = result);
             fixture.detectChanges();
 
             const { checkboxes } = getObjectTypeSection(fixture);
-            checkboxes[0].change.emit(); // toggle folders to "off"
-            checkboxes[2].change.emit(); // toggle files to "off"
-            checkboxes[4].change.emit(); // toggle templates to "off"
+            checkboxes[0].valueChange.emit(); // toggle folders to "off"
+            checkboxes[2].valueChange.emit(); // toggle files to "off"
+            checkboxes[4].valueChange.emit(); // toggle templates to "off"
 
             expect(modal.selectedTypes).toEqual({
                 folder: false,
@@ -418,7 +418,7 @@ describe('SynchronizeChannelModal', () => {
 
             expect(lastModalResult).toEqual(expected);
 
-            checkboxes[4].change.emit(); // toggle templates to "on"
+            checkboxes[4].valueChange.emit(); // toggle templates to "on"
             getConfirmButton(fixture).click.emit();
             expected.types.push('template');
 
@@ -455,9 +455,9 @@ class MockProgressBar {
     standalone: false,
 })
 class MockCheckbox {
-    @Input() checked: boolean;
+    @Input() value: CheckboxState;
     @Input() label: string;
-    @Output() change = new EventEmitter();
+    @Output() valueChange = new EventEmitter<CheckboxState>();
 }
 
 @Component({
@@ -478,5 +478,6 @@ class SpyFolderActionsService {
     constructor() {
         spyOn(this as any, 'getChannelSyncReport').and.callThrough();
     }
+
     getChannelSyncReport(folderId: number, channelId: number, recursive: boolean): void { }
 }

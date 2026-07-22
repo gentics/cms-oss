@@ -1,17 +1,21 @@
 @if (!readOnly) {
   <div class="list-header">
-    <gtx-checkbox [checked]="areAllSelected()"
-      (change)="toggleSelectall()"
-    [label]="'common.select_all_label' | gtxI18n"></gtx-checkbox>
+    <gtx-checkbox
+        [value]="areAllSelected()"
+        [label]="'common.select_all_label' | gtxI18n"
+        (valueChange)="toggleSelectall()"
+    ></gtx-checkbox>
   </div>
 }
 
 @for (page of pages; track page.id) {
   <gtx-contents-list-item>
     @if (!readOnly) {
-      <gtx-checkbox class="row-checkbox"
-        [checked]="selected[page.id]"
-      (change)="toggleSelect(page.id, $event)"></gtx-checkbox>
+      <gtx-checkbox
+        class="row-checkbox"
+        [value]="selected[page.id]"
+        (valueChange)="toggleSelect(page.id, $event)"
+    ></gtx-checkbox>
     }
     @if (readOnly) {
       <i class="material-icons page-icon" [attr.translate]="'no'"

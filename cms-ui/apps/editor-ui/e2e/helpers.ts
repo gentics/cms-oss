@@ -6,12 +6,14 @@ import {
     clickModalAction,
     dismissNotifications,
     FixtureFile,
+    ITEM_TYPE_FORM,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
     openContext,
     reroute,
     selectDateInPicker,
+    wait,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -19,7 +21,11 @@ import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
 
 export function findList(page: Page, type: string): Locator {
-    return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    if (type === ITEM_TYPE_FORM) {
+        return page.locator('gtx-form-list');
+    } else {
+        return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    }
 }
 
 export function findRepoBrowserList(repoBrowser: Locator, type: string): Locator {
@@ -311,7 +317,14 @@ export async function createInternalLink(
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
         await repoHandler(repoBrowser);
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+
+        // Wait a bit, as the handler could have closed the repo-browser on it's own
+        await wait(50);
+
+        // If the handler didn't confirm/close the modal, we do it now
+        if (await repoBrowser.isVisible()) {
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+        }
 
         // Fill out rest of the form
         await formHandler(form);
@@ -376,7 +389,16 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
          * @returns The range if it was possible to create, otherwise `null`.
          */
         function createRange(element: HTMLElement, start: number, end: number | null = null): Range | null {
+            if (!element || !element.textContent) {
+                return null;
+            }
+
             const size = element.textContent.length;
+
+            // Clip the start inbounds
+            if (start > size) {
+                start = size;
+            }
 
             // When a positive end is provided, it has to be greater than the start position.
             if (end != null && end > -1 && end < start) {
@@ -519,6 +541,16 @@ export async function expectItemLanguageCode(item: Locator, languageCode: string
     await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
 }
 
+export function pageListRowLanguage(item: Locator, lang: string): Locator {
+    return item.locator(`page-language-indicator [data-action="page-language"][data-id="${lang}"]`);
+}
+
+export async function setListLanguage(list: Locator, lang: string): Promise<void> {
+    const langSelector = list.locator('language-context-selector');
+    const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+    await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+}
+
 export async function openToolOrAction(page: Page, id: string): Promise<void> {
     const context = await openContext(page.locator('gtx-top-bar gtx-actions-selector gtx-dropdown-list'));
     const btn = context.locator(`.action-button[data-tool-id="${id}"], .action-button[data-action-id="${id}"]`);
@@ -573,7 +605,7 @@ export async function setStringChipValue(chip: Locator, value: string | number):
 }
 
 export async function setDateChipValue(chip: Locator, value: Date): Promise<void> {
-    await chip.locator('.gtx-chip-input-value-inner-date').click();
+    await chip.locator('.gtx-chip-input-value-inner-date .box-wrapper').click();
     const datePickerModal = chip.page().locator('gtx-date-time-picker-modal');
     await selectDateInPicker(datePickerModal, value);
     await clickModalAction(datePickerModal, 'confirm');
@@ -584,7 +616,7 @@ export function findColorPickerPaletteColor(picker: Locator, color: string): Loc
 }
 
 export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
-    return picker.locator(`.palette .palette-entry`).nth(index);
+    return picker.locator('.palette .palette-entry').nth(index);
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
@@ -606,3 +638,113 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
     });
 }
 
+export async function fgFindPaletteItem(grid: Locator, paletteId: string, isControl: boolean): Promise<Locator> {
+    const leftSidePanel = grid.locator('.editor-panel.editor-panel--left');
+
+    // If it isn't expanded, we have to open it, otherwise we can't see the controls
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    if (!leftSidePanel.evaluate((el) => el.classList.contains('expanded'))) {
+        await leftSidePanel.locator('.panel-header .panel-toggle-btn').click();
+    }
+
+    return leftSidePanel.locator(`.palette .palette-item[data-element-type="${paletteId}"][data-is-control="${isControl ? 'true' : 'false'}"]`);
+}
+
+interface FGDropTarget {
+    position?: number;
+    containerId?: string;
+}
+
+interface FGElement {
+    id: string;
+    rect: DOMRect;
+}
+
+const DRAG_THRESHOLD = 2;
+
+export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, target?: FGDropTarget): Promise<Locator> {
+    let containerEl: Locator;
+    if (!target?.containerId) {
+        containerEl = grid.locator('.editor-main .editor-drop-container.editor-drop-container--root');
+    } else {
+        containerEl = grid.locator(`.editor-main .editor-drop-container[data-drop-container-id="${target.containerId}"]`);
+    }
+
+    const containerRect = await containerEl.evaluate((el) => el.getBoundingClientRect());
+    const entries: FGElement[] = await containerEl.evaluate((el) => {
+        return Array.from(el.children).map((child) => {
+            return {
+                id: child.getAttribute('data-element-id'),
+                rect: child.getBoundingClientRect(),
+            };
+        });
+    });
+
+    let targetPosition: { x: number; y: number };
+    // If no position was provided, or it out of bounds, we default to adding it to the end
+    // of the container.
+    if (
+        target?.position == null
+        || (target.position >= entries.length)
+        || entries.length === 0
+    ) {
+        if (entries.length > 0) {
+            const ent = entries[entries.length - 1];
+            targetPosition = {
+                x: (ent.rect.x - containerRect.x) + ent.rect.width + DRAG_THRESHOLD,
+                y: (ent.rect.y - containerRect.x) + ent.rect.height + DRAG_THRESHOLD,
+            };
+        } else {
+            targetPosition = {
+                x: DRAG_THRESHOLD,
+                y: DRAG_THRESHOLD,
+            };
+        }
+    } else {
+        const ent = entries[target.position];
+        targetPosition = {
+            x: (ent.rect.x - containerRect.x) + DRAG_THRESHOLD,
+            y: (ent.rect.y - containerRect.x) + DRAG_THRESHOLD,
+        };
+    }
+
+    await item.dragTo(containerEl, {
+        targetPosition,
+    });
+
+    if (entries.length === 0) {
+        return containerEl.locator('> .form-item');
+    }
+
+    return containerEl.locator('> .form-item')
+        .filter({
+            hasNot: containerEl.locator(entries.map((ent) => `> .form-item[data-element-id="${ent.id}"]`).join(',')),
+        });
+}
+
+export async function fgAddControl(grid: Locator, controlId: string, target?: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, controlId, true);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, blockId, false);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export function fgFindEditSidebar(grid: Locator): Locator {
+    return grid.locator('.editor-panel.editor-panel--right');
+}
+
+export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
+    await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
+    return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}

@@ -1,7 +1,7 @@
-import { getExampleEditableTag, getMockTagEditorTranslator } from '@editor-ui/testing/test-tag-editor-data.mock';
 import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
-import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { getExampleEditableTag, getMockTagEditorTranslator } from '../../../../testing';
 import { TagEditorContextImpl } from './tag-editor-context-impl';
 
 const READ_ONLY = false;
@@ -56,9 +56,7 @@ describe('TagEditorContextImpl', () => {
                 'executeRawRequest',
                 'executeBlobRequest',
             ]),
-            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
-            restRequestGET: jasmine.createSpy('restRequestGET'),
-            restRequestPOST: jasmine.createSpy('restRequestPOST'),
+            openTagEditor: jasmine.createSpy('openTagEditor'),
         };
     });
 
@@ -85,7 +83,7 @@ describe('TagEditorContextImpl', () => {
 
         const context = TagEditorContextImpl.create(TAG, READ_ONLY, PAGE, NODE, SID, translator, variableContext$, gcmsUiServices, true);
         expect(context.withDelete).toBe(true);
-        context.variableContext.subscribe(varContext => {
+        context.variableContext.subscribe((varContext) => {
             ++emissionsCount;
             expect(varContext).toBe(expectedVarContext);
         });
@@ -156,20 +154,20 @@ describe('TagEditorContextImpl', () => {
         const clone1 = src.clone();
         const clone2 = clone1.clone();
 
-        src.variableContext.subscribe(varContext => {
+        src.variableContext.subscribe((varContext) => {
             ++emissionsCountSrc;
             expect(varContext).toBe(expectedVarContext);
         });
         expect(emissionsCountSrc).toEqual(1);
 
-        clone1.variableContext.subscribe(varContext => {
+        clone1.variableContext.subscribe((varContext) => {
             ++emissionsCountClone1;
             expect(varContext).toEqual(expectedVarContext);
             expect(varContext).not.toBe(expectedVarContext);
         });
         expect(emissionsCountClone1).toEqual(1);
 
-        clone2.variableContext.subscribe(varContext => {
+        clone2.variableContext.subscribe((varContext) => {
             ++emissionsCountClone2;
             expect(varContext).toEqual(expectedVarContext);
             expect(varContext).not.toBe(expectedVarContext);
@@ -200,7 +198,7 @@ describe('TagEditorContextImpl', () => {
         const clone2 = clone1.clone();
 
         // Subscribe to the second clone first
-        clone2.variableContext.subscribe(varContext => {
+        clone2.variableContext.subscribe((varContext) => {
             ++emissionsCountClone2;
             expect(varContext).toEqual(expectedVarContext);
             expect(varContext).not.toBe(expectedVarContext);
@@ -213,7 +211,7 @@ describe('TagEditorContextImpl', () => {
         expect(emissionsCountClone2).toEqual(2);
 
         // Now subscribe to the src observable.
-        src.variableContext.subscribe(varContext => {
+        src.variableContext.subscribe((varContext) => {
             ++emissionsCountSrc;
             expect(varContext).toBe(expectedVarContext);
         });
@@ -226,7 +224,7 @@ describe('TagEditorContextImpl', () => {
         expect(emissionsCountSrc).toEqual(2);
 
         // Now subscribe to clone1.
-        clone1.variableContext.subscribe(varContext => {
+        clone1.variableContext.subscribe((varContext) => {
             ++emissionsCountClone1;
             expect(varContext).toEqual(expectedVarContext);
             expect(varContext).not.toBe(expectedVarContext);

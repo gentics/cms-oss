@@ -121,3 +121,13 @@ gtx-checkbox > div {
 .gtx-table-cell-boolean-false {
     color: $gtx-color-alert;
 }
+
+.gtx-form-section-title {
+    margin-top: 10px;
+    border-bottom: 1px solid $gtx-color-mid-gray;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+}

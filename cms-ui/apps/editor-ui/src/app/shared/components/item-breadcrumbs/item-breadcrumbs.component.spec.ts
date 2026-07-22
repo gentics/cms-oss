@@ -7,7 +7,7 @@ import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

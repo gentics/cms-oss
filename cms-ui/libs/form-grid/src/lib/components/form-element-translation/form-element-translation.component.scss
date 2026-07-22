@@ -1,0 +1,42 @@
+@import 'ui-core/src/styles/variables';
+
+:host {
+    display: block;
+}
+
+.language-select {
+    padding-bottom: 0.5rem;
+}
+
+.translation-section {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+}
+
+.translation-section-title {
+    display: block;
+    font-weight: bold;
+}
+
+.translation-definition,
+.translation-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.translation-settings {
+    .translation-section-title {
+        order: 1;
+        display: none;
+    }
+
+    .has-settings {
+        order: 2;
+
+        + .translation-section-title {
+            display: block;
+        }
+    }
+}

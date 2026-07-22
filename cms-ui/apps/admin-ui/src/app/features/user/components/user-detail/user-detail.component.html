@@ -19,13 +19,11 @@
         <div class="gtx-entity-details-tab-content-body">
           @if (fgProperties) {
             <form
-              class="properties"
-              [formGroup]="fgProperties"
-              class="buttons-form flex-row row"
-              >
-              <div class="small-12 medium-9 flex-row">
-                <div class="input-container small-12 medium-6 columns">
-                  <gtx-input
+                [formGroup]="fgProperties"
+                class="inline-form buttons-form flex-row"
+            >
+                <gtx-input
+                    class="input-container small-12 medium-6 columns"
                     type="text"
                     [required]="true"
                     maxlength="255"
@@ -34,24 +32,10 @@
                     formControlName="login"
                     gtxActionAllowed="user.updateUserInstance"
                     [aaInstanceId]="currentEntity?.id"
-                    [disabled]="fgProperties.disabled">
-                  </gtx-input>
-                </div>
-                <div class="small-12 medium-6 columns">
-                  <gtx-button
-                    class="gtx-btn-password"
-                    flat
-                    type="primary"
-                    size="medium"
-                    (click)="btnSetPasswordClick()"
-                    gtxActionAllowed="user.updateUserInstance"
-                    [aaInstanceId]="currentEntity?.id"[disabled]="fgProperties.disabled"
-                    >
-                    <icon left>vpn_key</icon> {{ 'common.set_new_password_button' | gtxI18n }}
-                  </gtx-button>
-                </div>
-                <div class="input-container small-12 medium-6 columns">
-                  <gtx-input
+                ></gtx-input>
+
+                <gtx-input
+                    class="small-12 medium-6 columns"
                     type="text"
                     maxlength="255"
                     [required]="false"
@@ -60,12 +44,24 @@
                     formControlName="email"
                     gtxActionAllowed="user.updateUserInstance"
                     [aaInstanceId]="currentEntity?.id"
-                    [disabled]="fgProperties.disabled">
-                  </gtx-input>
-                </div>
+                ></gtx-input>
+
+                <gtx-button
+                    class="gtx-btn-password small-12 medium-6 columns"
+                    flat
+                    type="primary"
+                    size="medium"
+                    (click)="btnSetPasswordClick()"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"[disabled]="fgProperties.disabled"
+                    >
+                    <icon left>vpn_key</icon> {{ 'common.set_new_password_button' | gtxI18n }}
+                </gtx-button>
+
                 <div class="small-12 medium-6 columns"></div>
-                <div class="input-container small-12 medium-6 columns">
-                  <gtx-input
+
+                <gtx-input
+                    class="small-12 medium-6 columns"
                     type="text"
                     [required]="true"
                     maxlength="255"
@@ -74,11 +70,10 @@
                     formControlName="firstName"
                     gtxActionAllowed="user.updateUserInstance"
                     [aaInstanceId]="currentEntity?.id"
-                    [disabled]="fgProperties.disabled">
-                  </gtx-input>
-                </div>
-                <div class="input-container small-12 medium-6 columns">
-                  <gtx-input
+                ></gtx-input>
+
+                <gtx-input
+                    class="small-12 medium-6 columns"
                     type="text"
                     [required]="true"
                     maxlength="255"
@@ -87,11 +82,10 @@
                     formControlName="lastName"
                     gtxActionAllowed="user.updateUserInstance"
                     [aaInstanceId]="currentEntity?.id"
-                    [disabled]="fgProperties.disabled">
-                  </gtx-input>
-                </div>
-                <div class="input-container medium-12 columns">
-                  <gtx-textarea
+                ></gtx-input>
+
+                <gtx-textarea
+                    class="small-12 medium-6 columns"
                     [required]="false"
                     maxlength="255"
                     [label]="'shared.description' | gtxI18n"
@@ -99,10 +93,7 @@
                     formControlName="description"
                     gtxActionAllowed="user.updateUserInstance"
                     [aaInstanceId]="currentEntity?.id"
-                    [disabled]="fgProperties.disabled">
-                  </gtx-textarea>
-                </div>
-              </div>
+                ></gtx-textarea>
             </form>
           }
         </div>

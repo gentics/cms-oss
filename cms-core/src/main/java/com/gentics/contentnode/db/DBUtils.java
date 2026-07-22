@@ -5,6 +5,7 @@
  */
 package com.gentics.contentnode.db;
 
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -1077,6 +1078,58 @@ public final class DBUtils {
 			}
 			return list;
 		};
+	}
+
+	/**
+	 * Check whether the given table exists.
+	 * @param tableName table name
+	 * @return true when the table exists, false if not
+	 * @throws NodeException
+	 */
+	public static boolean tableExists(String tableName) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		try {
+			DatabaseMetaData metaData = t.getConnection().getMetaData();
+			boolean upperCaseIdentifiers = metaData.storesUpperCaseIdentifiers();
+
+			if (upperCaseIdentifiers) {
+				tableName = org.apache.commons.lang3.StringUtils.toRootUpperCase(tableName);
+			}
+
+			try (ResultSet tableDefs = metaData.getTables(null, t.getDBHandle().getDbSchema(), tableName, null)) {
+				return tableDefs.next();
+			}
+		} catch (SQLException e) {
+			throw new NodeException("Error while getting metadata", e);
+		}
+	}
+
+	/**
+	 * Check whether the given table exists and contains the given column
+	 * @param tableName table name
+	 * @param columnName column name
+	 * @return true if the table exists and contains the column, false if not
+	 * @throws NodeException
+	 */
+	public static boolean columnExists(String tableName, String columnName) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		try {
+			DatabaseMetaData metaData = t.getConnection().getMetaData();
+			boolean upperCaseIdentifiers = metaData.storesUpperCaseIdentifiers();
+
+			if (upperCaseIdentifiers) {
+				tableName = org.apache.commons.lang3.StringUtils.toRootUpperCase(tableName);
+				columnName = org.apache.commons.lang3.StringUtils.toRootUpperCase(columnName);
+			}
+
+			try (ResultSet fieldDefs = metaData.getColumns(null, t.getDBHandle().getDbSchema(), tableName,
+					columnName)) {
+				return fieldDefs.next();
+			}
+
+		} catch (SQLException e) {
+			throw new NodeException("Error while getting metadata", e);
+		}
 	}
 
 	/**

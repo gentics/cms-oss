@@ -19,6 +19,7 @@ import {
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     IMPORT_TYPE_USER,
     ImportPermissions,
     ITEM_TYPE_PAGE,
@@ -33,13 +34,14 @@ import {
     onRequest,
     openContext,
     PAGE_ONE,
+    PageTranslationImportData,
     pickSelectValue,
     SCHEDULE_PUBLISHER,
     TestSize,
     UserImportData,
     waitForResponseFrom
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { cloneWithSymbols } from '@gentics/common';
 import { expect, Locator, Page, Response, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
@@ -51,7 +53,9 @@ import {
     itemAction,
     openObjectPropertyEditor,
     openTagList,
+    pageListRowLanguage,
     selectNode,
+    setListLanguage,
 } from './helpers';
 
 test.describe('Page Management', () => {
@@ -234,12 +238,10 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         const header = list.locator('.header-controls');
-        const langSelector = list.locator('language-context-selector');
 
         async function testLanguage(lang: string): Promise<void> {
             await test.step(`Should pre-select language "${lang}" correctly`, async () => {
-                const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
-                await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
+                await setListLanguage(list, lang);
                 await header.locator('[data-action="create-new-item"]').click();
                 const modal = page.locator('create-page-modal');
                 await expect(modal.locator('gtx-page-properties [formControlName="language"] .view-value')).toHaveAttribute('data-value', lang);
@@ -249,6 +251,43 @@ test.describe('Page Management', () => {
 
         await testLanguage(LANGUAGE_DE);
         await testLanguage(LANGUAGE_EN);
+    });
+
+    test('should display the active language in the language selector immediately on page load', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19610',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const langSelectorButton = list.locator('language-context-selector [data-context-trigger]');
+
+        await test.step('Language selector should be visible and show the active language immediately without any interaction', async () => {
+            await expect(langSelectorButton).toBeVisible();
+            await expect(langSelectorButton).toHaveAttribute('data-id', /.+/);
+        });
+
+        await test.step('Language selector should still reflect the correct language after switching and reloading', async () => {
+            await setListLanguage(list, LANGUAGE_DE);
+            await expect(langSelectorButton).toHaveAttribute('data-id', LANGUAGE_DE);
+
+            await page.reload();
+
+            await expect(langSelectorButton).toBeVisible();
+            await expect(langSelectorButton).toHaveAttribute('data-id', LANGUAGE_DE);
+        });
     });
 
     test('should be possible to edit the page properties', async ({ page }) => {
@@ -835,12 +874,6 @@ test.describe('Page Management', () => {
 
         const list = findList(page, ITEM_TYPE_PAGE);
         let createReq: Promise<Response>;
-        let listOptions = list.locator('[data-action="open-list-context"]');
-
-        await test.step('Change Status Icon Settings', async () => {
-            const dropdown = await openContext(listOptions);
-            await dropdown.locator('gtx-dropdown-item[data-action="toggle-status-icons"]').click();
-        });
 
         await test.step('Create a new Page', async () => {
             await list.locator('.header-controls [data-action="create-new-item"] button').click();
@@ -869,5 +902,115 @@ test.describe('Page Management', () => {
         });
 
         await expectItemPublished(pageItem);
+    });
+
+    test('should be able to preview a page language', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19770',
+        }],
+    }, async ({ page }) => {
+        const TRANSLATION_LANG = LANGUAGE_DE;
+        const TEST_TRANSLATION: PageTranslationImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+            [IMPORT_ID]: `${NAMESPACE}_${TEST_PAGE[IMPORT_ID]}_${TRANSLATION_LANG}`,
+
+            language: TRANSLATION_LANG,
+            pageId: PAGE_ONE[IMPORT_ID],
+            pageName: 'Translation Test 123',
+        };
+
+        await IMPORTER.importData([
+            TEST_TRANSLATION,
+        ]);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        // We have to make sure the language is in english as "default", otherwise we won't find it
+        await setListLanguage(list, LANGUAGE_EN);
+
+        const item = findItem(list, TEST_PAGE.id);
+        const langIndicator = pageListRowLanguage(item, TRANSLATION_LANG);
+        const contentFrame = page.locator('content-frame');
+
+        await expect(langIndicator).toBeVisible();
+        const langContext = await openContext(langIndicator);
+        const previewAction = langContext.locator('[data-action="preview"]');
+
+        // Should load the preview-mode of the translated page
+        const alohaLoadReq = waitForResponseFrom(page, 'GET', '/alohapage', {
+            params: {
+                real: 'newview',
+                realid: `${IMPORTER.get(TEST_TRANSLATION).id}`,
+                nodeid: `${IMPORTER.get(NODE_MINIMAL).id}`,
+            },
+        })
+        await expect(contentFrame).not.toBeAttached();
+        await expect(previewAction).toBeVisible();
+        await previewAction.click();
+
+        await expect(contentFrame).toBeVisible();
+        await alohaLoadReq;
+    });
+
+    test('should display a recent relative time for a locked page, not a time decades in the past', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19877',
+        }],
+    }, async ({ page }) => {
+        // Unix timestamp in seconds as returned by the REST API (Java int) — 30 seconds ago
+        const lockedSinceSeconds = Math.round(Date.now() / 1000) - 30;
+
+        // Register the route BEFORE navigation so it intercepts the initial page list load
+        // triggered by selectNode inside setupWithPermissions.
+        // This simulates the exact format the REST API returns (Java int, Unix seconds).
+        await page.route(url => matchesUrl(url, '/rest/folder/getPages/*'), async (route) => {
+            const response = await route.fetch();
+            const body = await response.json();
+            const lockedPage = body.pages?.find((p: any) => p.id === TEST_PAGE.id);
+            if (lockedPage) {
+                lockedPage.locked = true;
+                lockedPage.lockedSince = lockedSinceSeconds;
+                lockedPage.lockedBy = { id: 1, firstName: 'Admin', lastName: 'User' };
+            }
+            await route.fulfill({ json: body });
+        });
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await test.step('Open the lock state contextmenu', async () => {
+            await item.locator('item-status-label .status-label').click();
+        });
+
+        await test.step('Verify lock time is not displayed as decades in the past', async () => {
+            const contextMenu = page.locator('item-state-contextmenu');
+            await expect(contextMenu).toBeVisible();
+            await expect(contextMenu).not.toContainText('years ago');
+            await expect(contextMenu).not.toContainText('Jahren');
+        });
     });
 });

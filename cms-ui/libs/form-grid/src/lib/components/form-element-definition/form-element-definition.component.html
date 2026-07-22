@@ -1,0 +1,40 @@
+<div class="definition-section">
+    <div class="definition-row">
+        <gtx-form-element-container [disabled]="true">
+            <label>{{ 'form_grid.definition_control_type' | gtxI18n }}</label>
+            <span>{{ elementConfig().labelI18n | gtxI18nObject}}</span>
+        </gtx-form-element-container>
+    </div>
+
+    <div class="definition-checkboxes">
+        <gtx-checkbox
+            data-control="mandatory"
+            [label]="'form_grid.definition_mandatory' | gtxI18n"
+            [value]="elementSchema().mandatory ?? false"
+            [disabled]="mode() !== FormGridEditMode.FULL"
+            (valueChange)="updateElementSchema({ mandatory: $event === true })"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            data-control="updateOnChange"
+            [label]="'form_grid.definition_sync_on_change' | gtxI18n"
+            [value]="elementSchema().updateOnChange ?? false"
+            [disabled]="mode() !== FormGridEditMode.FULL"
+            (valueChange)="updateElementSchema({ updateOnChange: $event === true })"
+        ></gtx-checkbox>
+    </div>
+
+    <gtx-dynamic-form-settings
+        class="schema-settings"
+        [config]="config()"
+        [settings]="visibleSettings()"
+        [element]="element()"
+        [elementConfig]="elementConfig()"
+        [elementSchema]="elementSchema()"
+        [disabled]="mode() === FormGridEditMode.NONE"
+        [languages]="languages()"
+        (validChange)="validChange.emit($event)"
+        (elementChange)="element.set($event)"
+        (elementSchemaChange)="updateElementSchema($event)"
+    />
+</div>

@@ -14,7 +14,7 @@
         [label]="'editor.general_properties_label' | gtxI18n"
         (select)="onTabChange(ITEM_PROPERTIES_TAB)"
       ></gtx-tab-pane>
-      @if (item.type == 'form') {
+      @if (item.type === 'form' && formConfiguration != null && !formConfiguration.external) {
         <gtx-tab-pane
           hideStatusIcon
           [disabled]="!(item?.online)"
@@ -85,6 +85,7 @@
               [templates]="itemProps.templates"
               [languages]="itemProps.languages"
               [itemClean]="itemClean"
+              [formConfiguration]="formConfiguration"
               (valueChange)="handlePropChanges($event)"
               (itemCleanChange)="forwardItemCleanChange($event)"
             ></gtx-properties-editor>
@@ -94,7 +95,7 @@
       @if (activeTabId === ITEM_REPORTS_TAB) {
         <div class="form-reports">
           <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | gtxI18n }}</h2>
-          <form-reports-list [form]="item"></form-reports-list>
+          <form-reports-list [form]="item" [formConfig]="formConfiguration"></form-reports-list>
         </div>
       }
       @if (activeTabId === ITEM_TAG_LIST_TAB) {
@@ -141,9 +142,9 @@
                 <div class="activate-obj-prop">
                   <gtx-checkbox
                     [label]="'editor.obj_prop_active_label' | gtxI18n"
-                    [checked]="editedObjectProperty?.active"
+                    [value]="editedObjectProperty?.active"
                     [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
-                    (change)="toggleDisplayContent()"
+                    (valueChange)="toggleDisplayContent()"
                   ></gtx-checkbox>
                 </div>
               }

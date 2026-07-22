@@ -7,7 +7,27 @@ define([
 ) {
     'use strict';
 
-    function internalOpenDialog(config, resolveFn) {
+    /**
+     * @typedef {object} ConfirmDialogOptions
+     * @property {string} title The title of the dialog
+     * @property {string=} text The text value of the dialog body. May only be present if `html` is not provided.
+     * @property {string=} html The HTML value of the dialog body. May only be present if `text` is not provided.
+     * @property {()=>any=} yes Function to call when the dialog was confirmed.
+     * @property {()=>any=} no Function to call when the dialog was denied.
+     * @property {(boolean)=>any=} answer Function to call when the dialog was ansered. The value is a boolean, which indicates if it was confirmed.
+     * @property {()=>any=} close Function to call when the dialog was closed.
+     * @property {string=} cls CSS Class which is applied to the dialog.
+     * @property {object.<string, (boolean?)=>any>=} buttons Object which has the button-label as key and a function to call as value when the button was pressed.
+     */
+
+    /**
+     * Opens the dialog via the GCMSUI-Bridge
+     * @param {object} config Configuration for the `GCMSUI.openDialog` function.
+     * @param {(boolean)=>void} resolveFn Function which is called when the dialog was closed by one of the buttons.
+     * @param {()=>} closeFn Function which is called when the dialog is closed by any means.
+     * @returns 
+     */
+    function internalOpenDialog(config, resolveFn, closeFn) {
         var control;
 
         window.GCMSUI.openDialog(config)
@@ -21,7 +41,7 @@ define([
                 }
             })
             .catch(function (err) {
-                // TODO: Handle error
+                closeFn();
             });
 
         return function () {
@@ -66,6 +86,9 @@ define([
             }
             return window.GCMSUI.openDynamicModal(config);
         },
+        /**
+         * @param {ConfirmDialogOptions} config configuration for the dialog
+         */
         openConfirmDialog: function (config) {
             if (!window.GCMSUI) {
                 return Promise.reject(new Error('GCMSUI is not defined!'));
@@ -95,6 +118,13 @@ define([
                 }
                 if (typeof config.answer === 'function') {
                     config.answer(didConfirm);
+                }
+                if (typeof config.close === 'function') {
+                    config.close();
+                }
+            }, function() {
+                if (typeof config.close === 'function') {
+                    config.close();
                 }
             });
         },

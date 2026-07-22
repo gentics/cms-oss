@@ -155,6 +155,7 @@ public class ContentNodeMeshCRUtils {
 	 * @param client mesh rest client
 	 */
 	public static void cleanMesh(MeshRestClient client) {
+		MeshPublisher.clearCachedData();
 		// delete all projects
 		ProjectListResponse projects = client.findProjects().blockingGet();
 		for (ProjectResponse project : projects.getData()) {

@@ -1,16 +1,23 @@
 {
     "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "strict": false,
+        "noImplicitOverride": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": true,
+        "module": "preserve"
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": false,
+        "strictInputAccessModifiers": false,
+        "strictTemplates": false
+    },
     "files": [],
     "include": [],
-    "angularCompilerOptions": {
-        "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
-        "strictTemplates": false,
-        "strictInjectionParameters": true,
-        "enableResourceInlining": false,
-        "compilationMode": "partial"
-    },
     "references": [
         {
             "path": "./tsconfig.lib.json"

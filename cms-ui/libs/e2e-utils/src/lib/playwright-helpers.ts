@@ -1,6 +1,7 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
-import { GCMSRestClient } from '@gentics/cms-rest-client';
-import test, { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
+import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { errors } from 'playwright';
+import test, { Disposable, expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
@@ -142,17 +143,28 @@ export function waitForResponseFrom(
 
     return page.waitForResponse(matchRequest(method, path, options), { timeout })
         .catch((err) => {
-            // The actual class isn't publicly available, which is why we have to do this hacky workaround.
-            if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
-                const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
+            let reqErrMsg: string;
+            if (path instanceof RegExp) {
+                reqErrMsg = `"${method}" matching "${path.source}"`;
+            } else {
+                reqErrMsg = `"${method} ${path}"`;
+            }
+
+            if (Object.keys(options?.params ?? {}).length > 0) {
+                reqErrMsg += ` with params ${JSON.stringify(options.params)}`;
+            }
+
+            if (err instanceof errors.TimeoutError) {
+                const timeoutStr = timeout >= 1000 ? (timeout / 1000).toFixed(2) + 's' : (timeout + 'ms');
                 if (path instanceof RegExp) {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 } else {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 }
-                if (Object.keys(options?.params ?? {}).length > 0) {
-                    err.message += ` with params ${JSON.stringify(options.params)}`;
-                }
+            }
+
+            if (err instanceof GCMSRestClientRequestError) {
+                err.message = `Request ${reqErrMsg}, failed with status-code ${err.responseCode}: ${err.message}`;
             }
 
             throw err;
@@ -206,7 +218,6 @@ export function findContextContent(page: Page, id: string): Locator {
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
-    await element.waitFor({ state: 'visible' });
     await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
 
     const id = await element.getAttribute(ATTR_CONTEXT_ID);
@@ -251,7 +262,7 @@ export async function pickSelectValue(select: Locator, values: string | number |
  * @param dataProvider Optional provider which will get the data for the user.
  * @returns Promise from `page.route`.
  */
-export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<void> {
+export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<Disposable> {
     return page.route((url) => matchesPath(url, '/rest/user/me/data'), (route, req) => {
         // Only re-route requests to load user-data
         if (req.method() !== 'GET') {
@@ -454,8 +465,7 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
 
 export async function pickDate(source: Locator, date?: Date): Promise<void> {
     const dateTimePicker = await getSourceLocator(source, 'gtx-date-time-picker');
-    const input = dateTimePicker.locator('gtx-input');
-    await input.click();
+    await dateTimePicker.locator('.box-wrapper').click();
 
     const modal = source.page().locator('gtx-date-time-picker-modal');
 
@@ -494,7 +504,7 @@ export function copyText(page: Page, text: string): Promise<void> {
 export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
     const tabs = group.locator('.properties-tabs');
     const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
-    const isActive = await langTab.evaluate(el => el.classList.contains('is-active'));
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
     if (isActive) {
         return;
     }

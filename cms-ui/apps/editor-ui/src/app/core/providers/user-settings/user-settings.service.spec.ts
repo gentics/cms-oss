@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -23,7 +23,6 @@ class MockFolderActions {
     setItemsPerPage = jasmine.createSpy('setItemsPerPage');
     setRepositoryBrowserDisplayFields = jasmine.createSpy('setRepositoryBrowserDisplayFields');
     setDisplayAllPageLanguages = jasmine.createSpy('setDisplayAllPageLanguages');
-    setDisplayStatusIcons = jasmine.createSpy('setDisplayStatusIcons');
     setDisplayImagesGridView = jasmine.createSpy('setDisplayImagesGridView');
     setShowPath = jasmine.createSpy('setShowPath');
     getExistingItems = jasmine.createSpy('getExistingItems');

@@ -1110,4 +1110,28 @@ public final class ContentNodeTestUtils {
 	public static Triple<Integer, Integer, Integer> perm(TypePerms type, PermType permType) {
 		return Triple.of(type.type(), 0, permType.getBit());
 	}
+
+	/**
+	 * Create a set containing all possible subsets of the given set (including the set itself and the empty set)
+	 * @param <T> type
+	 * @param set set of objects
+	 * @return set of subsets
+	 */
+	public static <T> Set<Set<T>> allSubsets(Set<T> set) {
+		Set<Set<T>> result = new HashSet<>();
+		List<T> elements = new ArrayList<>(set);
+		int n = elements.size();
+
+		for (int mask = 0; mask < (1 << n); mask++) {
+			Set<T> subset = new HashSet<>();
+			for (int i = 0; i < n; i++) {
+				if ((mask & (1 << i)) != 0) {
+					subset.add(elements.get(i));
+				}
+			}
+			result.add(subset);
+		}
+
+		return result;
+	}
 }

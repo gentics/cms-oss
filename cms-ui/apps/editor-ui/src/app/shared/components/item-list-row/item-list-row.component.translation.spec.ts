@@ -8,7 +8,7 @@ import {
     Normalized,
     Page,
 } from '@gentics/cms-models';
-import { getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageDataNormalized } from '@gentics/cms-models/testing';
 import { ModalService } from '@gentics/ui-core';
 import { WindowRef } from 'ngx-autosize';
 import { ItemLanguageClickEvent } from '../../../common/models';

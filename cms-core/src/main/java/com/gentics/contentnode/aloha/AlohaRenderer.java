@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Level;
@@ -60,8 +61,6 @@ import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.perm.PermHandler;
-import com.gentics.contentnode.render.FormDirective;
-import com.gentics.contentnode.render.FormRendering;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.TemplateRenderer;
@@ -86,6 +85,7 @@ import com.gentics.lib.log.NodeLogger;
  * @author floriangutmann
  */
 public class AlohaRenderer implements TemplateRenderer {
+	public final static String FORMS_PREVIEW_CLASS = "gcn-form-preview";
 
 	/**
 	 * Logger
@@ -1080,7 +1080,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @return true iff forms feature is active and the start tag is the forms preview tag
 	 */
 	protected static boolean isFormsPreviewTag(String startTag) {
-		return getClasses(startTag).contains(FormRendering.FORMS_PREVIEW_CLASS);
+		return getClasses(startTag).contains(FORMS_PREVIEW_CLASS);
 	}
 
 	/*
@@ -1147,6 +1147,27 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		return removeAlohaPlaceHolders(template);
+	}
+
+	public List<String> getScriptUrls() {
+		List<String> scriptUrls = new ArrayList<>();
+
+		scriptUrls.add("/alohaeditor/gcmsui-scripts-launcher.js");
+
+		if (StringUtils.isEqual(System.getProperty(BUILD_TIMESTAMP), "DEV")) {
+			List<String> script = List.of("%s/lib/require.js", "%s/lib/vendor/jquery-3.7.0.js",
+					"%s/lib/vendor/jquery.layout.js", "%s/lib/aloha-jquery-noconflict.js", "%s/lib/aloha.js");
+			scriptUrls.addAll(script.stream().map(s -> s.formatted(System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)))
+					.collect(Collectors.toList()));
+		} else {
+			scriptUrls.add("%s/lib/aloha.js".formatted(System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+		}
+
+		return scriptUrls;
+	}
+
+	public List<String> getCSSUrls() {
+		return List.of("%s/css/aloha.css".formatted(System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
 	}
 
 	/**
@@ -1237,7 +1258,13 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * @throws TransactionException
 	 */
 	private String getAlohaCSSFiles(Transaction t, Node node) throws TransactionException {
-		return String.format("<link rel=\"stylesheet\" href=\"%s/css/aloha.css\" />", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM));
+		StringBuilder scripts = new StringBuilder();
+
+		for (String url : getCSSUrls()) {
+			scripts.append("<link rel=\"stylesheet\" href=\"%s\" />".formatted(url));
+		}
+
+		return scripts.toString();
 	}
 
 	/**
@@ -1252,17 +1279,12 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		StringBuilder scripts = new StringBuilder();
 
-		scripts.append("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n");
-
-		if (StringUtils.isEqual(System.getProperty(BUILD_TIMESTAMP), "DEV")) {
-			scripts.append(String.format("<script src=\"%s/lib/require.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery-3.7.0.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-//			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery-1.7.2.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery.layout.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/aloha-jquery-noconflict.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
-		} else {
-			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
+		for (String url : getScriptUrls()) {
+			if (url.endsWith("/aloha.js")) {
+				scripts.append("<script src=\"%s\" data-aloha-plugins=\"%s\"></script>\n".formatted(url, alohaPlugins));
+			} else {
+				scripts.append("<script src=\"%s\"></script>\n".formatted(url));
+			}
 		}
 
 		return scripts.toString();

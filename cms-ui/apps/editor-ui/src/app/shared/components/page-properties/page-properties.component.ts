@@ -7,10 +7,9 @@ import {
     OnChanges,
     OnInit,
     Output,
-    SimpleChange
+    SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     EditablePageProps,
     Feature,
@@ -19,8 +18,9 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { cancelEvent } from '@gentics/common';
 import {
-    cancelEvent,
+    BaseFormPropertiesComponent,
     createMultiValuePatternValidator,
     FormProperties,
     generateFormProvider,
@@ -53,7 +53,7 @@ export enum PagePropertiesMode {
     standalone: false,
 })
 export class PagePropertiesComponent
-    extends BasePropertiesComponent<EditablePageProps>
+    extends BaseFormPropertiesComponent<EditablePageProps>
     implements OnInit, OnChanges {
 
     public readonly PagePropertiesMode = PagePropertiesMode;

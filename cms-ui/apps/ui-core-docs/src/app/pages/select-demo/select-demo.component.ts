@@ -23,6 +23,7 @@ export class SelectDemoPage {
     ];
     selectVal = 'bar';
     selectNewVal = 'baz';
+    selectAllVal = [];
     clearableSelectVal: string = null;
     placeholderSelectVal: string = null;
     selectGroup: any;

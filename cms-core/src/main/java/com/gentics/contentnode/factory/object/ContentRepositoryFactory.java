@@ -862,7 +862,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 					l.error("");
 				}
 
-				try (MeshPublisher mp = new MeshPublisher(this)) {
+				try (MeshPublisher mp = new MeshPublisher(this, true, true)) {
 					valid &= mp.checkStatus();
 
 					if (valid) {

@@ -2033,6 +2033,7 @@ public class ModelBuilder {
 		node.setEditorVersion(nodeNode.getEditorversion());
 		node.setDefaultFileFolderId(getId(nodeNode.getDefaultFileFolder(), null));
 		node.setDefaultImageFolderId(getId(nodeNode.getDefaultImageFolder(), null));
+		node.setDefaultFormFolderId(getId(nodeNode.getDefaultFormFolder(), null));
 		node.setUrlRenderWayPages(nodeNode.getUrlRenderWayPages());
 		node.setUrlRenderWayFiles(nodeNode.getUrlRenderWayFiles());
 		node.setOmitPageExtension(nodeNode.isOmitPageExtension());

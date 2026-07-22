@@ -1,7 +1,5 @@
-import { TAGMAP_ENTRY_ATTRIBUTES_MAP, TagMapEntryBO } from '@admin-ui/common';
-import { PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import {
     AnyModelType,
     NormalizableEntityTypesMap,
@@ -11,15 +9,17 @@ import {
     TagmapEntryPropertiesObjectType,
 } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap } from 'rxjs/operators';
+import { TAGMAP_ENTRY_ATTRIBUTES_MAP, TagMapEntryBO } from '../../../common';
+import { PermissionsService, TagMapEntryTableLoaderOptions, TagMapEntryTableLoaderService } from '../../../core';
+import { AppStateService } from '../../../state';
 import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import {
     CreateTagmapEntryModalComponentMode,
     CreateUpdateTagmapEntryModalComponent,
     TagmapEntryDisplayFields,
-} from '../create-update-tagmapentry-modal';
+} from '../create-update-tagmapentry-modal/create-update-tagmapentry-modal.component';
 
 const EDIT_ACTION = 'edit';
 const FRAGMENT_COLUMN_ID = 'fragmentName';

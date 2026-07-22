@@ -19,6 +19,7 @@ export function trimTrailingSlash(path: string): string {
     return path.substring(0, path.length - 1);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function parseJSONSafe(data: any): any {
     if (data == null || typeof data !== 'string') {
         return data;

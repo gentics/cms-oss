@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { I18nNotificationService, InitializableServiceBase, I18nService } from '@gentics/cms-components';
+import { I18nNotificationService, I18nService, InitializableServiceBase } from '@gentics/cms-components';
 import {
     EditMode,
     ModalCloseError,
@@ -10,15 +10,15 @@ import {
 } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
-    CmsFormData,
-    CmsFormElement,
     DependencyItemTypePlural,
+    EditableFormData,
     Favourite,
     Feature,
     File as FileModel,
     Folder,
     FolderItemType,
     Form,
+    I18nString,
     Image,
     InheritableItem,
     InheritanceRequest,
@@ -27,13 +27,13 @@ import {
     ItemsGroupedByChannelId,
     Node,
     NodeFeature,
-    Normalized,
     Page,
     Raw,
+	ItemPermissions,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash-es';
+import { isEqual, omit, pick } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, take, takeUntil } from 'rxjs/operators';
 import { EditorPermissions, StageableItem } from '../../../common/models';
@@ -60,14 +60,15 @@ import {
     UsageActionsService,
     WastebinActionsService,
 } from '../../../state';
-import { ApiError } from '../api';
 import { DecisionModalsService } from '../decision-modals/decision-modals.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { FavouritesService } from '../favourites/favourites.service';
+import { FormListLoaderService } from '../form-list-loader/form-list-loader.service';
 import { LocalizationMap } from '../localizations/localizations.service';
 import { NavigationInstruction, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
+import { DataSourceApi } from '@gentics/cms-rest-clients-angular';
 
 /**
  * Encapsulates the logic for the various context-menu functions which are shared amongst a number of context menus.
@@ -95,6 +96,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         private repositoryBrowserClient: RepositoryBrowserClient,
         private templateActions: TemplateActionsService,
         private contentStagingActions: ContentStagingActionsService,
+        private formListLoader: FormListLoaderService,
     ) {
         super();
         // Actual way to initialize the service is only done in the admin-ui
@@ -115,7 +117,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     editItem(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, EditMode.EDIT).navigate());
+            .then(({ item, nodeId, editMode }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, editMode || EditMode.EDIT).navigate());
     }
 
     editInheritance(page: Page, activeNodeId: number): void {
@@ -263,8 +265,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
-        let deleteResult: { succeeded: number; failed: number; error: ApiError } | null = null;
-        let updateResult: { succeeded: number; failed: number; error: ApiError } | null = null;
+        let deleteResult: { succeeded: number; failed: number; error: Error } | null = null;
+        let updateResult: { succeeded: number; failed: number; error: Error } | null = null;
 
         let deleteIds: number[] = [];
         let unlocalizeIds: number[] = [];
@@ -278,7 +280,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             Object.keys(selectResult.deleteForms).forEach((id) => {
                 const formId = parseInt(id, 10);
                 const languageCodesToDelete = selectResult.deleteForms[formId];
-                const form = items.find((i) => i.id === formId) as Form<Normalized>;
+                const form = items.find((i) => i.id === formId) as Form;
 
                 if (
                     !Array.isArray(languageCodesToDelete)
@@ -292,11 +294,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     return;
                 }
 
+                const languagesToKeep = form.languages.filter((l) => !languageCodesToDelete.includes(l));
+
                 updateItems.push({
                     itemId: formId,
                     payload: {
-                        languages: form.languages.filter((l) => !languageCodesToDelete.includes(l)),
-                        data: this.removeLanguagesFromFormData(structuredClone(form.data), languageCodesToDelete),
+                        languages: languagesToKeep,
+                        data: this.deleteLanguagesFromFormData(form.data, languageCodesToDelete),
                     },
                 });
             });
@@ -314,7 +318,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // filter only localizations that has been deleted and put them to array of IDs
             // forms cannot be localized
             if (type !== 'form') {
-                deleteIds.forEach((id) => { localizationIdsDeleted[id] = selectResult.localizations[id]; });
+                deleteIds.forEach((id) => {
+                    localizationIdsDeleted[id] = selectResult.localizations[id];
+                });
                 localizationIds = localizationIdsDeleted && this.flattenMap(localizationIdsDeleted);
             }
         }
@@ -347,7 +353,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         if (deleteResult && deleteResult.failed) {
             this.showMultiDeleteErrorNotification(type, deleteResult.failed, deleteResult.error);
         }
-        await this.folderActions.refreshList(type);
+        if (type === 'form') {
+            this.formListLoader.reload();
+        } else {
+            await this.folderActions.refreshList(type);
+        }
         await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
 
         return removedItemIds;
@@ -406,6 +416,52 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         await Promise.all(requests);
     }
 
+    private purgeKeysFrom(data: any, keysToDelete: string[]): any {
+        if (data == null || typeof data !== 'object') {
+            return data;
+        }
+        if (Array.isArray(data)) {
+            return data.map((el) => this.purgeKeysFrom(el, keysToDelete));
+        }
+
+        const returnVal = {};
+
+        for (const key of Object.keys((data))) {
+            if (keysToDelete.includes(key)) {
+                continue;
+            }
+
+            returnVal[key] = this.purgeKeysFrom(data[key], keysToDelete);
+        };
+
+        return returnVal;
+    }
+
+    private deleteLanguagesFromFormData(data: Partial<EditableFormData>, languagesToDelete: string[]): Partial<EditableFormData> {
+        const copy = structuredClone(data);
+
+        copy.adminEmailSubject = this.purgeKeysFrom(copy.adminEmailSubject, languagesToDelete);
+        copy.successUrlI18n = this.purgeKeysFrom(copy.successUrlI18n, languagesToDelete);
+
+        Object.values(copy.schema?.properties || {}).forEach((prop) => {
+            Object.keys(prop).forEach((key) => {
+                prop[key] = this.purgeKeysFrom(prop[key], languagesToDelete);
+            });
+        });
+
+        for (const page of (copy['ui-schema']?.pages || [])) {
+            page.pagename = this.purgeKeysFrom(page.pagename, languagesToDelete);
+
+            for (const el of page.elements) {
+                Object.keys(el).forEach((key) => {
+                    el[key] = this.purgeKeysFrom(el[key], languagesToDelete);
+                });
+            }
+        }
+
+        return copy;
+    }
+
     /**
      * Delete items from favourites list
      */
@@ -460,19 +516,19 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     this.notification.show({
                         message,
                         translationParams: {
-                            count: deleteResult && deleteResult.succeeded || 0,
+                            count: deleteResult?.succeeded || 0,
                             unlocalizedCount: unlocalizeIds.length,
                             _type: type,
                         },
                         type: 'default',
                         delay: 5000,
-                        action: isUndoablePerFeature && undoAction || null,
+                        action: (isUndoablePerFeature && undoAction) || null,
                     });
                 }),
             );
     }
 
-    private showMultiDeleteErrorNotification(type: string, failed: number, error: ApiError): void {
+    private showMultiDeleteErrorNotification(type: string, failed: number, error: Error): void {
         this.notification.show({
             message: 'message.items_deleted_error',
             translationParams: {
@@ -498,7 +554,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .then(() => {
                 // refresh folder content list to display new TimeManagement settings
                 this.folderActions.refreshList('page');
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
             })
             .catch((err) => {
                 if (!wasClosedByUser(err)) {
@@ -579,7 +635,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // Wait half a second to let the server unlock the pages
             await new Promise((resolve) => setTimeout(resolve, 500));
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
-            const languages = new Set([...response.queued, ...response.takenOffline].map(page => page.language));
+            const languages = new Set([...response.queued, ...response.takenOffline].map((page) => page.language));
             await this.folderActions.refreshList('page', Array.from(languages));
         } catch (error) {
             this.errorHandler.catch(error);
@@ -594,7 +650,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         try {
             await this.folderActions.takeFormsOffline(formIds);
             await this.state.dispatch(new ChangeListSelectionAction('form', 'clear')).toPromise();
-            await this.folderActions.refreshList('form');
+            this.formListLoader.reload();
         } catch (error) {
             this.errorHandler.catch(error);
         }
@@ -633,9 +689,10 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             return;
         }
 
+		const body = this.i18n.instant(['modal.choose_localization_type_body','modal.localization_type_description']) as any;
         this.modalService.dialog({
             title: this.i18n.instant('modal.choose_localization_type_title'),
-            body: this.i18n.instant('modal.choose_localization_type_body'),
+            body: Object.keys(body).map(key => body[key]).join('<br>'),
             buttons: [
                 {
                     id: 'cancel',
@@ -739,7 +796,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const { activeFolder, activeNode } = this.state.now.folder;
 
         if (folder.id === activeFolder && folder.nodeId === activeNode) {
-            this.folderActions.refreshList(itemType);
+            if (itemType === 'form') {
+                this.formListLoader.reload();
+            } else {
+                this.folderActions.refreshList(itemType);
+            }
             return Promise.resolve();
         } else {
             return this.navigationService.list(folder.nodeId, folder.id).navigate();
@@ -891,7 +952,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         return this.folderActions.publishForms(formsToPublish)
             .then(({ queued, published }) => {
                 this.state.dispatch(new ChangeListSelectionAction('form', 'clear'));
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
                 return published.map((form) => form.id);
             });
     }
@@ -1048,63 +1109,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     private isDeleted(item: Item): boolean {
         if (item) {
             return EntityStateUtil.stateDeleted(item);
-        }
-    }
-
-    private removeLanguagesFromFormData(formData: CmsFormData, languages: string[]): CmsFormData {
-        if (formData.elements) {
-        formData.elements.forEach((element: CmsFormElement) => {
-            this.removeLanguagesFromFormElement(element, languages);
-        });
-        }
-        if (formData.mailsubject_i18n) {
-            for (const language of languages) {
-                delete formData.mailsubject_i18n[language];
-            }
-        }
-        if (formData.mailtemp_i18n) {
-            for (const language of languages) {
-                delete formData.mailtemp_i18n[language];
-            }
-        }
-        return formData;
-    }
-
-    private removeLanguagesFromFormElement(element: CmsFormElement, languages: string[]): void {
-        this.removeLanguagesFromObject(element, languages);
-    }
-
-    private removeLanguagesFromObject(object: object, languages: string[]): void {
-        Object.keys(object).forEach((propertyName: string) => {
-            const property = object[propertyName];
-
-            if (propertyName.endsWith('_i18n')) {
-                if (!property || typeof property !== 'object') {
-                    return;
-                }
-
-                for (const language of languages) {
-                    delete property[language];
-                }
-
-                return;
-            }
-
-            if (!!property && typeof property === 'object') {
-                this.removeLanguagesFromObject(property, languages);
-            } else if (!!property && Array.isArray(property)) {
-                this.removeLanguagesFromArray(property, languages);
-            }
-        });
-    }
-
-    private removeLanguagesFromArray(array: any[], languages: string[]): void {
-        for (const entry of array) {
-            if (!!entry && typeof entry === 'object') {
-                this.removeLanguagesFromObject(entry, languages);
-            } else if (!!entry && Array.isArray(entry)) {
-                this.removeLanguagesFromArray(entry, languages);
-            }
         }
     }
 }

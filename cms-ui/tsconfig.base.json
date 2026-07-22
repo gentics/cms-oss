@@ -8,13 +8,11 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "importHelpers": true,
-        "target": "es2015",
+        "target": "es2022",
         "module": "esnext",
         "lib": ["es2024", "dom"],
         "skipLibCheck": true,
         "skipDefaultLibCheck": true,
-        "baseUrl": ".",
-        "outDir": "dist/out-tsc",
         "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true,
         "useDefineForClassFields": false,
@@ -22,52 +20,54 @@
         "noImplicitOverride": false,
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
+        "strictNullChecks": false,
         "noFallthroughCasesInSwitch": false,
         "strictPropertyInitialization": false,
         "paths": {
-            "@admin-ui": ["apps/admin-ui/src/app"],
-            "@admin-ui/*": ["apps/admin-ui/src/app/*"],
-            "@admin-ui/testing": ["apps/admin-ui/src/testing"],
-            "@admin-ui/testing/*": ["apps/admin-ui/src/testing/*"],
-            "@editor-ui/testing": ["apps/editor-ui/src/testing"],
-            "@editor-ui/testing/*": ["apps/editor-ui/src/testing/*"],
-            "@gentics/aloha-models": ["libs/aloha-models/src/public-api"],
-            "@gentics/cms-components": ["libs/cms-components/src/public-api"],
-            "@gentics/cms-components/auth": ["libs/cms-components/auth/src/public-api.ts"],
-            "@gentics/cms-components/testing": [
-                "libs/cms-components/src/testing"
-            ],
+            "@admin-ui": ["./apps/admin-ui/src/app"],
+            "@admin-ui/testing": ["./apps/admin-ui/src/testing/index.ts"],
+            "@admin-ui/*": ["./apps/admin-ui/src/app/*"],
+            "@gentics/common": ["./libs/common/src/index.ts"],
+            "@gentics/common/rxjs": ["./libs/common/src/rxjs.ts"],
+            "@gentics/aloha-models": ["./libs/aloha-models/src/index.ts"],
+            "@gentics/cms-models": ["./libs/cms-models/src/index.ts"],
+            "@gentics/cms-models/testing": ["./libs/cms-models/src/testing.ts"],
             "@gentics/cms-integration-api-models": [
-                "libs/cms-integration-api-models/src/public-api"
+                "./libs/cms-integration-api-models/src/index.ts"
             ],
-            "@gentics/cms-models": ["libs/cms-models/src/public-api"],
-            "@gentics/cms-models/*": ["libs/cms-models/src/lib/*"],
-            "@gentics/cms-rest-client": ["libs/cms-rest-client/src/public-api"],
+            "@gentics/cms-rest-client": ["./libs/cms-rest-client/src/index.ts"],
+            "@gentics/cms-rest-client/testing": [
+                "./libs/cms-rest-client/src/testing.ts"
+            ],
             "@gentics/cms-rest-client-angular": [
-                "libs/cms-rest-client-angular/src/public-api"
+                "./libs/cms-rest-client-angular/src/index.ts"
             ],
             "@gentics/cms-rest-client-angular/testing": [
-                "libs/cms-rest-client-angular/src/lib/testing"
+                "./libs/cms-rest-client-angular/testing/src/index.ts"
             ],
-            "@gentics/cms-rest-client/*": ["libs/cms-rest-client/src/lib/*"],
+            "@gentics/ui-core": ["./libs/ui-core/src/index.ts"],
+            "@gentics/ui-core/testing": ["./libs/ui-core/testing/src/index.ts"],
+            "@gentics/ui-core/cypress": ["./libs/ui-core/cypress/src/index.ts"],
+            "@gentics/image-editor": ["./libs/image-editor/src/index.ts"],
+            "@gentics/cms-components": ["./libs/cms-components/src/index.ts"],
+            "@gentics/cms-components/testing": [
+                "./libs/cms-components/testing/src/index.ts"
+            ],
+            "@gentics/cms-components/aloha": [
+                "./libs/cms-components/aloha/src/index.ts"
+            ],
+            "@gentics/cms-components/auth": [
+                "./libs/cms-components/auth/src/index.ts"
+            ],
+            "@gentics/e2e-utils": ["./libs/e2e-utils/src/index.ts"],
+            "@gentics/form-grid": ["./libs/form-grid/src/index.ts"],
             "@gentics/cms-rest-clients-angular": [
-                "libs/cms-rest-clients-angular/src/public-api"
-            ],
-            "@gentics/cms-rest-clients-angular/*": [
-                "libs/cms-rest-clients-angular/src/lib/*"
+                "./libs/cms-rest-clients-angular/src/index.ts"
             ],
             "@gentics/cms-rest-clients-angular/testing": [
-                "libs/cms-rest-clients-angular/src/testing"
-            ],
-            "@gentics/form-generator": ["libs/form-generator/src/public-api"],
-            "@gentics/image-editor": ["libs/image-editor/src/public-api"],
-            "@gentics/ui-core": ["libs/ui-core/src/public-api"],
-            "@gentics/ui-core/*": ["libs/ui-core/src/lib/*"],
-            "@gentics/ui-core/testing": ["libs/ui-core/src/lib/testing"],
-            "@gentics/ui-core/testing/*": ["libs/ui-core/src/lib/testing/*"],
-            "@gentics/e2e-utils": ["libs/e2e-utils/src/index.ts"],
-            "@gentics/e2e-utils/*": ["libs/e2e-utils/src/lib/*"],
+                "./libs/cms-rest-clients-angular/src/lib/testing/index.ts"
+            ]
         }
     },
-    "exclude": ["node_modules", "tmp", "dist"]
+    "exclude": ["node_modules", "tmp"]
 }

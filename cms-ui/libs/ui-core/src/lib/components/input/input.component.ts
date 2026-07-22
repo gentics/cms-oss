@@ -7,22 +7,21 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { cancelEvent, generateFormProvider } from '../../utils';
+import { cancelEvent } from '@gentics/common';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 /**
  * E-mail validator regex from Angular 8
- *
  * @todo Implement with validators
  * @see https://github.com/angular/angular/blob/8.2.9/packages/forms/src/validators.ts#L60
  */
-const EMAIL_REGEXP =
-    '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'+
-    '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
+const EMAIL_REGEXP
+    = '^(?=.{1,254}$)(?=.{1,64}@)[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]'
+      + '+(\\.[-!#$%&\'*+/0-9=?A-Z^_`a-z{|}~]+)*@[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$';
 
 /**
  * Telephone number validator regex
- *
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/26516985
  */
@@ -30,7 +29,6 @@ const TEL_REGEXP = '^([()\\- x+]*d[()\\- x+]*){4,16}$';
 
 /**
  * URL validator regex
- *
  * @todo Implement with validators
  * @see https://stackoverflow.com/a/52017332
  */
@@ -56,7 +54,7 @@ const URL_REGEXP = '(^|\\s)((https?:\\/\\/)?[\\w-]+(\\.[\\w-]+)+\\.?(:\\d+)?(\\/
     styleUrls: ['./input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(InputComponent)],
-    standalone: false
+    standalone: false,
 })
 export class InputComponent extends BaseFormElementComponent<string | number> implements OnInit {
 
@@ -141,33 +139,13 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
     public type: 'text' | 'number' | 'password' | 'tel' | 'email' | 'url' = 'text';
 
     /**
-     * Fires when the input loses focus.
-     * @deprecated Will be removed in next major version, and therefore a bubbled `blur` event from the
-     * browser may occur instead, which has a different value.
-     */
-    @Output()
-    public blur = new EventEmitter<string | number>();
-
-    /**
-     * Fires when the input gains focus.
-     * @deprecated Will be removed in next major version, and therefore a bubbled `focus` event from the
-     * browser may occur instead, which has a different value.
-     */
-    @Output()
-    public focus = new EventEmitter<string | number>();
-
-    /**
-     * Fires whenever a char is entered into the field.
-     * @deprecated Use `valueChange` instead.
-     */
-    @Output()
-    public change = new EventEmitter<string | number>();
-
-    /**
      * Fires when the value has been cleared via the `clearable` button.
      */
     @Output()
     public valueCleared = new EventEmitter<void>();
+
+    /** If the input is currently focused */
+    public focused = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -198,11 +176,6 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
 
     protected onValueChange(): void {
         // No op
-    }
-
-    public override triggerChange(value: string | number): void {
-        super.triggerChange(value);
-        this.change.emit(this.getFinalValue());
     }
 
     public handleKeyDown(event: KeyboardEvent): void {
@@ -250,14 +223,14 @@ export class InputComponent extends BaseFormElementComponent<string | number> im
         this.triggerChange(parsed);
     }
 
-    public onBlur(e: Event): void {
-        cancelEvent(e);
-        this.triggerTouch();
-        this.blur.emit(this.value);
+    public override handleBlur(event?: Event): void {
+        this.focused = false;
+        super.handleBlur(event);
     }
 
-    public onFocus(e: Event): void {
-        this.focus.emit(this.value);
+    public override handleFocus(event?: Event): void {
+        this.focused = true;
+        super.handleFocus(event);
     }
 
     public clear(): void {

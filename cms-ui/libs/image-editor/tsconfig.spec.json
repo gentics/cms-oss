@@ -1,17 +1,15 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "jasmine",
-            "node"
-        ]
+        "moduleResolution": "bundler",
+        "module": "es2015",
+        "target": "es2015",
+        "types": ["jasmine", "node", "jquery"]
     },
-    "files": [
-        "src/test.ts",
-        "src/polyfills.ts"
-    ],
-    "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
+    "include": ["src/**/*.ts"],
+    "exclude": [
+        "cypress/**/*",
+        "cypress.*.ts",
+        "src/**/*.cy.ts"
     ]
 }

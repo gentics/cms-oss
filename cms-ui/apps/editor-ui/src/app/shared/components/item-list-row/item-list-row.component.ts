@@ -24,6 +24,7 @@ import {
 } from '@gentics/cms-models';
 import { BaseComponent, ChangesOf, ModalService } from '@gentics/ui-core';
 import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '../../../common/models';
+import { FormListLoaderService } from '../../../core/providers';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -41,7 +42,7 @@ import { UsageModalComponent } from '../usage-modal/usage-modal.component';
 
 type AllowedItemType
     = | Folder<Raw | Normalized>
-      | Form<Raw | Normalized>
+      | Form
       | Page<Raw | Normalized>
       | File<Raw | Normalized>
       | Image<Raw | Normalized>
@@ -66,7 +67,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public nodeId: number;
 
     @Input()
-    public itemInEditor: any;
+    public activeItemId: number;
 
     @Input()
     public icon: string;
@@ -76,6 +77,9 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     @Input()
     public itemType: FolderItemType;
+
+    @Input()
+    public external = false;
 
     @Input()
     public permissions: FolderPermissionData;
@@ -108,7 +112,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
     public showDeleted: boolean;
 
     @Input()
-    public showStatusIcons: boolean;
+    public showStatusIcons = true;
 
     @Input()
     public canBeSelected = true;
@@ -146,7 +150,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     /** Emits if a form language icon is clicked */
     @Output()
-    public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language }>();
+    public formLanguageIconClick = new EventEmitter<{ form: Form; language: Language }>();
 
     public languageState: LanguageState;
     public itemIdDeleted = false;
@@ -161,6 +165,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         private decisionModals: DecisionModalsService,
         private folderActions: FolderActionsService,
         private wastebinActions: WastebinActionsService,
+        private formListLoader: FormListLoaderService,
     ) {
         super(changeDetector);
     }
@@ -175,11 +180,17 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         let itemLang: Language;
         let available: boolean;
 
+        this.itemIdDeleted = this.item != null
+          && PublishableStateUtil.stateDeleted(this.item);
+
         if (this.item.type === 'page') {
             itemLang = this.nodeLanguages.find((lang) => lang.code === (this.item as Page).language);
             available = !!itemLang;
         } else if (this.item.type === 'form') {
-            itemLang = this.nodeLanguages.find((lang) => (lang.id === this.appState.now.folder.activeFormLanguage && ((this.item as Form).languages.includes(lang.code))));
+            itemLang = this.nodeLanguages.find((lang) => (
+                lang.id === this.appState.now.folder.activeFormLanguage
+                && ((this.item as Form).languages.includes(lang.code))
+            ));
             if (!itemLang) {
                 itemLang = this.nodeLanguages.find((lang) => (this.item as Form).languages.includes(lang.code));
             }
@@ -189,13 +200,9 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
             return;
         }
 
-        this.itemIdDeleted = this.item != null
-          && PublishableStateUtil.stateDeleted(this.item);
-
         this.languageState = {
             ...itemLang,
             available,
-            deleted: this.itemIdDeleted,
             inherited:
                 this.item != null
                 && PublishableStateUtil.stateInherited(this.item),
@@ -216,6 +223,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
                 && PublishableStateUtil.stateInQueue(this.item),
             staged: this.item != null
               && this.stagingMap?.[this.item.globalId]?.included,
+            deleted: this.itemIdDeleted,
         };
     }
 
@@ -254,8 +262,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
-        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
+        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId })
             .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }
@@ -356,7 +363,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
         await this.folderActions.updateFormLanguage(item, language);
         await this.folderActions.setActiveFormLanguage(language.id);
-        await this.folderActions.refreshList('form');
+        this.formListLoader.reload();
         this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
     }
 
@@ -373,7 +380,7 @@ export class ItemListRowComponent extends BaseComponent implements OnChanges {
         this.pageLanguageIconClick.emit({ page: pageRaw, language: data.language });
     }
 
-    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language }): void {
+    onFormLanguageIconClicked(data: { item: Form; language: Language }): void {
         const formRaw = this.entityResolver.denormalizeEntity('form', data.item);
         this.formLanguageIconClick.emit({ form: formRaw, language: data.language });
     }

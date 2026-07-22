@@ -1,5 +1,6 @@
 import {
     AccessControlledType,
+    AlohaResourceInformationResponse,
     AssignEntityToContentPackageOptions,
     BackgroundJobResponse,
     BaseListOptionsWithPaging,
@@ -111,6 +112,7 @@ import {
     FormCreateRequest,
     FormCreateResponse,
     FormDataListOptions,
+    FormDataListResponse,
     FormDownloadInfoResponse,
     FormListOptions,
     FormListResponse,
@@ -118,6 +120,12 @@ import {
     FormPublishRequest,
     FormResponse,
     FormSaveRequest,
+    FormTranslations,
+    FormTranslationsLanguagesResponse,
+    FormTranslationsResponse,
+    FormTypeConfigirationListOptions,
+    FormTypeConfigurationListResponse,
+    FormTypeConfigurationResponse,
     FormUnpublishRequest,
     GcmsPermission,
     GenericItemResponse,
@@ -373,9 +381,13 @@ import {
     ValidateSidResponse,
     VersionResponse,
     WastebinDeleteOptions,
-    WastebinRestoreOptions
+    WastebinRestoreOptions,
+    FormExportOptions,
 } from '@gentics/cms-models';
-import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
+import {
+    LoginResponse as MeshLoginResponse,
+    NodeResponse as MeshNodeResponse
+} from '@gentics/mesh-models';
 import { BasicAPI } from './common';
 
 type SearchableType = 'page' | 'image' | 'file' | 'folder' | 'form';
@@ -647,7 +659,7 @@ export interface AbstractFolderAPI extends BasicAPI {
     templates: (id: number | string, options?: FolderListOptions) => FolderTemplateListResponse;
 
     setStartpage: (id: number | string, body: FolderStartpageRequest) => Response;
-    sanitizePublshDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
+    sanitizePublishDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
 
     inheritanceStatus: (id: number | string, options?: InheritanceStatusOptions) => InheritanceResponse;
     multipleInheritanceStatus: (options: MultiInheritanceStatusOptions) => MultipleInheritanceResponse;
@@ -687,25 +699,55 @@ export interface AbstractFormAPI extends BasicAPI {
     removeScheduledPublish: (id: number | string) => FormResponse;
     removeScheduledUnpublish: (id: number | string) => FormResponse;
 
+    listConfigurations: (options?: FormTypeConfigirationListOptions) => FormTypeConfigurationListResponse;
+    getConfiguration: (type: string) => FormTypeConfigurationResponse;
+    assignConfiguration: (type: string, nodeId: number | string) => Response;
+    unassignConfiguration: (type: string, nodeId: number | string) => Response;
+
+    /**
+     * Languages available for form-engine placeholder translations.
+     * The list is global — there is no per-form-type variant.
+     */
+    listTranslationLanguages: () => FormTranslationsLanguagesResponse;
+
+    /** Load the global form-engine placeholder translations. */
+    listTranslations: () => FormTranslationsResponse;
+
+    /**
+     * Persist a partial form-translations diff. Only the keys/languages
+     * contained in `body` are written; everything else is left untouched.
+     */
+    updateTranslations: (body: FormTranslations) => FormTranslationsResponse;
+
+    /** Load the placeholder translations specific to a form type. */
+    listTypeTranslations: (type: string) => FormTranslationsResponse;
+
+    /** Persist a partial form-translations diff for a specific form type. */
+    updateTypeTranslations: (type: string, body: FormTranslations) => FormTranslationsResponse;
+
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
-    createExport: (id: number | string) => FormDownloadInfoResponse;
+    createExport: (id: number | string, options?: FormExportOptions) => FormDownloadInfoResponse;
     binariesStatus: (id: number | string) => FormDownloadInfoResponse;
     createBinaries: (id: number | string) => FormDownloadInfoResponse;
     downloadData: (id: number | string, downloadUuid: string) => Blob;
 
     previewSaved: (id: number | string, language: string) => string;
-    previewModel: (id: number | string, language: string, body: Form<Raw>) => string;
+    previewModel: (id: number | string, language: string, body: Form) => string;
 
     listVersions: (id: number | string) => FormListResponse;
     getVersion: (id: number | string, version: string) => FormResponse;
 
-    listData: (id: number | string, options?: FormDataListOptions) => NodeListResponse;
-    getData: (id: number | string, dataUuid: string) => NodeResponse;
+    listData: (id: number | string, options?: FormDataListOptions) => FormDataListResponse;
+    getData: (id: number | string, dataUuid: string) => MeshNodeResponse;
     deleteData: (id: number | string, dataUuid: string) => void;
     getDataBinary: (id: number | string, dataUuid: string, binaryField: string) => Blob;
 
     restoreFromWastebin: (id: number | string, options?: WastebinRestoreOptions) => Response;
     deleteFromWastebin: (id: number | string, options?: WastebinDeleteOptions) => Response;
+
+    usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
+    usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
+    usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
 }
 
 export interface AbstractGroupAPI extends BasicAPI {
@@ -794,6 +836,7 @@ export interface AbstractImageAPI extends BasicAPI {
 
 export interface AbstractInfoAPI extends BasicAPI {
     getMaintenanceMode: () => MaintenanceModeResponse;
+    getAlohaResources: () => AlohaResourceInformationResponse;
 }
 
 export interface AbstractLanguageAPI extends BasicAPI {
@@ -1081,7 +1124,7 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 export interface AbstractTranslationAPI extends BasicAPI {
     translateText: (data: TranslationTextRequest) => TranslationResponse;
-    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>;
+    translatePage: (pageId: number, params: TranslationRequestOptions) => PageResponse;
 }
 
 export interface AbstractPublishProtocolAPI extends BasicAPI {

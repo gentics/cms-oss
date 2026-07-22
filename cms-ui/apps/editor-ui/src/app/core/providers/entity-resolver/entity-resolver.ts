@@ -54,7 +54,7 @@ export class EntityResolver implements OnDestroy {
         return this.getEntity('file', id);
     }
 
-    getForm(id: number): Form<Normalized> {
+    getForm(id: number): Form {
         return this.getEntity('form', id);
     }
 

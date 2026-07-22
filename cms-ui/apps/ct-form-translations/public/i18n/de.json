@@ -1,0 +1,32 @@
+{
+    "tool": {
+        "app_title": "Formular-Übersetzungen",
+        "app_subtitle": "Pflege der Sprachausgaben für die Form Engine",
+        "global_translations_title": "Globale Übersetzungen",
+        "global_translations_desc": "Diese Übersetzungen gelten für <strong>alle Formulartypen</strong> und können auf Typ-Ebene überschrieben werden.",
+        "scope_translations_title": "Formulartyp: {{name}}",
+        "scope_translations_desc": "Spezifische Übersetzungen für den Formulartyp <strong>„{{name}}“</strong>. Überschreibt globale Werte.",
+        "search_placeholder": "Platzhalter suchen …",
+        "filter_type_all": "Alle",
+        "filter_type_incomplete": "Unvollständig",
+        "placeholder_display_count": "{{shown}} von {{total}} Platzhalter",
+        "legend_saved": "gespeichert",
+        "legend_dirty": "geändert",
+        "legend_empty": "leer",
+        "table_column_placeholder": "Platzhalter",
+        "table_no_matches_title": "Keine passenden Platzhalter gefunden",
+        "table_no_matches_desc": "Suchbegriff oder Filter anpassen.",
+        "unsaved_count": "{{count}} ungespeicherte Änderung(en)",
+        "confirm_discard_title": "Alle Änderungen verwerfen?",
+        "confirm_scope_switch_desc": "Ungespeicherte Änderungen im aktuellen Bereich verwerfen?",
+        "translation_load_error": "Die Initialdaten konnten nicht geladen werden.",
+        "languages_load_error": "Sprachen konnten nicht geladen werden.",
+        "form_type_load_error": "Formulartypen konnten nicht geladen werden.",
+        "scope_translations_load_error": "Übersetzungen für „{{scope}}“ konnten nicht geladen werden.",
+        "save_success": "{{count}} Übersetzung(en) gespeichert.",
+        "save_error": "Speichern fehlgeschlagen.",
+        "discard_success": "Änderungen verworfen.",
+        "missing_session_title": "Keine gültige Sitzung",
+        "missing_session_desc": "Bitte öffnen Sie dieses Tool aus dem Gentics CMS heraus."
+    }
+}

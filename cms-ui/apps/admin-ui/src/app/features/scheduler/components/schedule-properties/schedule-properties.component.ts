@@ -1,11 +1,10 @@
-import { ScheduleTaskDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, Schedule, ScheduleTaskBO } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ScheduleTaskDataService } from '../../../../shared';
 
 export enum SchedulePropertiesMode {
     UPDATE = 'update',
@@ -21,9 +20,9 @@ export enum SchedulePropertiesMode {
         generateFormProvider(SchedulePropertiesComponent),
         generateValidatorProvider(SchedulePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class SchedulePropertiesComponent extends BasePropertiesComponent<Schedule> implements OnInit {
+export class SchedulePropertiesComponent extends BaseFormPropertiesComponent<Schedule> implements OnInit {
 
     @Input()
     public mode: SchedulePropertiesMode = SchedulePropertiesMode.UPDATE;
@@ -44,7 +43,7 @@ export class SchedulePropertiesComponent extends BasePropertiesComponent<Schedul
         super.ngOnInit();
 
         this.tasks$ = this.taskData.watchAllEntities().pipe(
-            map(tasks => tasks.map(task => {
+            map((tasks) => tasks.map((task) => {
                 (task as any).id = Number(task.id);
                 return task;
             })),

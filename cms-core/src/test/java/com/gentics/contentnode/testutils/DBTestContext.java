@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -248,8 +250,10 @@ public class DBTestContext extends TestWatcher {
 	@Override
 	protected void starting(Description description) {
 		try {
-			before();
-			setFeatures(description);
+			before(description);
+
+			setFeaturesFromEnv();
+			applyAnnotation(description, GCNFeature.class, this::setFeatures);
 		} catch (Throwable e) {
 			throw new RuntimeException(e);
 		}
@@ -257,9 +261,10 @@ public class DBTestContext extends TestWatcher {
 
 	/**
 	 * Setup the test context
+	 * @param description
 	 * @throws Throwable
 	 */
-	protected void before() throws Throwable {
+	protected void before(Description description) throws Throwable {
 		logger.debug("Before invoked. Setup starting..");
 		String prefixHash = TestEnvironment.getRandomHash(10);
 		gcnBasePath = new File(System.getProperty("java.io.tmpdir"), "random_" + prefixHash);
@@ -278,7 +283,7 @@ public class DBTestContext extends TestWatcher {
 			throw new NodeException("Waited too long for the connection properties from gcn-testdb-manager");
 		}
 
-		setupGCN(gcnBasePath, connectionProperties);
+		setupGCN(description, gcnBasePath, connectionProperties);
 
 		if (startDirtQueueWorker) {
 			getContext().getContentNodeFactory().startDirtQueueWorker();
@@ -288,12 +293,15 @@ public class DBTestContext extends TestWatcher {
 	}
 
 	/**
-	 * Set Features according to the method annotations
-	 *
-	 * @param description
+	 * If the testclass (or a supertype) or the test from the description is annotated with the given annotation, call the handler with it
+	 * @param <A> annotation type
+	 * @param description test description
+	 * @param annotationClass annotation class
+	 * @param handler handler
 	 * @throws NodeException
 	 */
-	protected void setFeatures(Description description) throws NodeException {
+	protected <A extends Annotation> void applyAnnotation(Description description, Class<A> annotationClass,
+			Consumer<A> handler) throws NodeException {
 		Class<?> testClass = description.getTestClass();
 		if (testClass != null) {
 			List<Class<?>> classes = new ArrayList<>();
@@ -303,10 +311,32 @@ public class DBTestContext extends TestWatcher {
 			}
 			Collections.reverse(classes);
 			for (Class<?> clazz : classes) {
-				setFeatures(clazz.getAnnotation(GCNFeature.class));
+				A annotation = clazz.getAnnotation(annotationClass);
+				if (annotation != null) {
+					handler.accept(annotation);
+				}
 			}
 		}
-		setFeatures(description.getAnnotation(GCNFeature.class));
+		A annotation = description.getAnnotation(annotationClass);
+		if (annotation != null) {
+			handler.accept(annotation);
+		}
+	}
+
+	/**
+	 * Set features set via an env variable
+	 * @throws NodeException
+	 */
+	protected void setFeaturesFromEnv() throws NodeException {
+		NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
+		Optional.ofNullable(System.getenv(ENV_TEST_FEATURES)).ifPresent(env -> {
+			for (String name : env.split(",")) {
+				Feature feature = Feature.getByName(org.apache.commons.lang3.StringUtils.trim(name));
+				if (feature != null) {
+					prefs.setFeature(feature, true);
+				}
+			}
+		});
 	}
 
 	/**
@@ -319,14 +349,6 @@ public class DBTestContext extends TestWatcher {
 	 */
 	protected void setFeatures(GCNFeature featureAnnotation) throws NodeException {
 		NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
-		Optional.ofNullable(System.getenv(ENV_TEST_FEATURES)).ifPresent(env -> {
-			for (String name : env.split(",")) {
-				Feature feature = Feature.getByName(org.apache.commons.lang3.StringUtils.trim(name));
-				if (feature != null) {
-					prefs.setFeature(feature, true);
-				}
-			}
-		});
 
 		if (featureAnnotation != null) {
 			for (Feature feature : featureAnnotation.set()) {
@@ -417,6 +439,7 @@ public class DBTestContext extends TestWatcher {
 	 * Setup various stuff for gcn. This method will also setup a text context
 	 * and
 	 *
+	 * @param description
 	 * @param basePath
 	 * @param cmsDatabaseSettings
 	 * @throws NodeException
@@ -427,7 +450,7 @@ public class DBTestContext extends TestWatcher {
 	 * @throws IOException
 	 * @throws JSchException
 	 */
-	private void setupGCN(File basePath, Properties cmsDatabaseSettings)
+	private void setupGCN(Description description, File basePath, Properties cmsDatabaseSettings)
 			throws NodeException, PortalCacheException, SQLUtilException, JDBCMalformedURLException, IOException, SQLException {
 
 		Map<String, Object> overwriteConfig = new HashMap<>();
@@ -470,6 +493,21 @@ public class DBTestContext extends TestWatcher {
 		if (configModificator != null) {
 			configModificator.accept(mapPrefs);
 		}
+
+		applyAnnotation(description, ConfigBy.class, annotation -> {
+			try {
+				Class<? extends ConfigModifier>[] classes = annotation.value();
+				if (classes != null) {
+					for (Class<? extends ConfigModifier> clazz : classes) {
+						ConfigModifier modifier = clazz.getDeclaredConstructor().newInstance();
+						modifier.accept(mapPrefs);
+					}
+				}
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException e) {
+				throw new NodeException(e);
+			}
+		});
 
 		// clear the node caches
 		PortalCache cache = PortalCache.getCache(NodeFactory.CACHEREGION);

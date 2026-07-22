@@ -3,7 +3,7 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
@@ -188,7 +188,7 @@ export const GROUP_ROOT: GroupImportData = {
             perms: [
                 { type: GcmsPermission.UPDATE, value: false },
             ],
-        } as ImportPermissions)),
+        })),
         {
             type: AccessControlledType.CONSTRUCT_ADMIN,
             perms: [
@@ -412,7 +412,7 @@ export const PAGE_ONE: PageImportData = {
     ...createPage(NODE_MINIMAL, NODE_MINIMAL, BASIC_TEMPLATE_ID, 'One'),
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,
@@ -443,7 +443,7 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
     pageName: 'Seite Eins',
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,
@@ -501,9 +501,7 @@ export const FORM_ONE: FormImportData = {
 
     name: 'Form One',
     description: 'Test Form one',
-    data: {
-        type: CmsFormType.GENERIC,
-    },
+    formType: 'generic',
 };
 
 export const FORM_TWO: FormImportData = {
@@ -517,9 +515,9 @@ export const FORM_TWO: FormImportData = {
 
     name: 'Form Two',
     description: 'Test Form two',
+    formType: 'generic',
     data: {
-        type: CmsFormType.GENERIC,
-        mailsubject_i18n: {
+        adminEmailSubject: {
             de: 'Betreff',
             en: 'Subject',
         },

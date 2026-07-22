@@ -17,6 +17,7 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
+import { FolderPermissionData } from './permissions';
 
 export interface RepositoryBrowserDataServiceOptions extends Omit<SerializableRepositoryBrowserOptions, 'allowedSelection'> {
     allowedSelection: AllowedSelection;
@@ -34,7 +35,7 @@ export interface RepositoryBrowserDataServiceAPI {
     readonly files$: Observable<File<Raw>[]>;
     readonly filter$: Observable<string>;
     readonly folders$: Observable<Folder<Raw>[]>;
-    readonly forms$: Observable<Form<Raw>[]>;
+    readonly forms$: Observable<Form[]>;
     readonly hasPermissions$: Observable<boolean>;
     readonly images$: Observable<Image<Raw>[]>;
     readonly isDisplayingFavourites$: Observable<boolean>;
@@ -53,6 +54,7 @@ export interface RepositoryBrowserDataServiceAPI {
     readonly startPageId$: Observable<number | undefined>;
     readonly tags$: Observable<Tag[]>;
     readonly templates$: Observable<Template<Raw>[]>;
+    readonly folderPermissions$: Observable<FolderPermissionData>;
     changeFolder(folder: number | Folder): void;
     changeNode(node: number | Node | 'favourites'): void;
     changeParent(newParent: Folder | Page | Template | Node): void;

@@ -11,8 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -2147,6 +2150,11 @@ public interface Folder
 		protected String searchString;
 
 		/**
+		 * Form types (may be null or empty)
+		 */
+		protected Set<String> formTypes;
+
+		/**
 		 * When set true, only forms last edited by the current user are returned
 		 */
 		protected boolean editor = false;
@@ -2248,6 +2256,16 @@ public interface Folder
 		 * Create an empty form search (will find all forms)
 		 */
 		public FormSearch() {}
+
+		/**
+		 * Set the form types
+		 * @param formTypes form types
+		 * @return this object (for chaining)
+		 */
+		public FormSearch setFormTypes(Set<String> formTypes) {
+			this.formTypes = formTypes;
+			return this;
+		}
 
 		/**
 		 * Set the search string
@@ -2512,7 +2530,7 @@ public interface Folder
 		 * @return true when the search is empty, false if not
 		 */
 		public boolean isEmpty() {
-			return StringUtils.isEmpty(searchString) && !editor && !creator
+			return StringUtils.isEmpty(searchString) && formTypes == null && !editor && !creator
 					&& !publisher && editors == null && creators == null && publishers == null
 					&& editedBefore == 0 && editedSince == 0 && createdBefore == 0 && createdSince == 0 && publishedBefore == 0 && publishedSince == 0
 					&& !recursive && online == null && modified == null && planned == null && wastebin == Wastebin.EXCLUDE;
@@ -2524,6 +2542,14 @@ public interface Folder
 		 */
 		public String getSearchString() {
 			return searchString;
+		}
+
+		/**
+		 * Get the form types
+		 * @return form types
+		 */
+		public Set<String> getFormTypes() {
+			return formTypes;
 		}
 
 		/**

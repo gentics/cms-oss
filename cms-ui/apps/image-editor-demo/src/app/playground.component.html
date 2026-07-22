@@ -45,11 +45,11 @@
         </div>
         <h3>Crop Aspect Ratio settings:</h3>
         <div class="inputs-row">
-            <gtx-checkbox [(ngModel)]="disableOriginal" label="Disable Original" (change)="updateAspectRatios()"></gtx-checkbox>
-            <gtx-checkbox [(ngModel)]="disableSquare" label="Disable Square" (change)="updateAspectRatios()"></gtx-checkbox>
-            <gtx-checkbox [(ngModel)]="disableFree" label="Disable Free" (change)="updateAspectRatios()"></gtx-checkbox>
-            <gtx-checkbox [(ngModel)]="custom169" label="Add 16:9" (change)="updateAspectRatios()"></gtx-checkbox>
-            <gtx-checkbox [(ngModel)]="custom32" label="Add 3:2" (change)="updateAspectRatios()"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="disableOriginal" label="Disable Original" (valueChange)="updateAspectRatios()"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="disableSquare" label="Disable Square" (valueChange)="updateAspectRatios()"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="disableFree" label="Disable Free" (valueChange)="updateAspectRatios()"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="custom169" label="Add 16:9" (valueChange)="updateAspectRatios()"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="custom32" label="Add 3:2" (valueChange)="updateAspectRatios()"></gtx-checkbox>
         </div>
 
     </div>

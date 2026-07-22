@@ -2,30 +2,20 @@ package com.gentics.contentnode.tests.publish.instant;
 
 import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.execute;
-import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.create;
-import static com.gentics.contentnode.tests.utils.Builder.update;
-import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
 import com.gentics.contentnode.rest.model.request.NodeSaveRequest;
@@ -34,56 +24,13 @@ import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.NodeLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
-import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Test cases for handling unknown host errors during instant publishing
  */
 @GCNFeature(set = {Feature.INSTANT_CR_PUBLISHING})
-public class InstantPublishingErrorHandlingTest {
-	@ClassRule
-	public final static DBTestContext testContext = new DBTestContext();
-	private static Node node;
-	private static ContentRepository cr;
-	private static Template template;
-
-	@BeforeClass
-	public final static void setupOnce() throws NodeException {
-		testContext.getContext().getTransaction().commit();
-
-		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY));
-		int crId = createMeshCR("invalid.host", 4711, "bla");
-
-		cr = supply(t -> t.getObject(ContentRepository.class, crId));
-
-		node = update(node, n -> {
-			n.setContentrepositoryId(crId);
-		}).build();
-
-		cr = update(cr, upd -> {
-			upd.setInstantPublishing(true);
-		}).build();
-
-		template = create(Template.class, t -> {
-			t.setName("Template");
-			t.setMlId(1);
-			t.setFolderId(node.getFolder().getId());
-		}).build();
-	}
-
-	@Before
-	public void setup() throws NodeException {
-		operate(t -> {
-			t.setInstantPublishingEnabled(false);
-			clear(node);
-		});
-
-		update(supply(() -> node.getFolder()), upd -> {
-			upd.setName("Node");
-		}).build();
-	}
+public class InstantPublishingErrorHandlingTest extends AbstractInstantPublishingTest {
 
 	/**
 	 * Test updating a node (actually the root folder)

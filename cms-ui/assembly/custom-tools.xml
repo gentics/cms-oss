@@ -23,6 +23,22 @@
 				<include>3rdpartylicenses.txt</include>
 			</includes>
 		</fileSet>
+
+        <fileSet>
+			<directory>${basedir}/dist/apps/ct-form-translations/browser</directory>
+			<outputDirectory>/form-translations</outputDirectory>
+			<includes>
+				<include>**</include>
+			</includes>
+		</fileSet>
+
+        <fileSet>
+			<directory>${basedir}/dist/apps/ct-form-translations</directory>
+			<outputDirectory>/form-translations</outputDirectory>
+			<includes>
+				<include>3rdpartylicenses.txt</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 
 	<includeBaseDirectory>false</includeBaseDirectory>

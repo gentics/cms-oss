@@ -37,7 +37,7 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
     styleUrls: ['./date-time-picker.component.scss'],
     providers: [generateFormProvider(DateTimePickerComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DateTimePickerComponent
     extends BaseFormElementComponent<number>
@@ -55,7 +55,7 @@ export class DateTimePickerComponent
 
     /** If true the clear button is displayed, which allows the user to clear the selected date. */
     @Input()
-    public clearable = false;
+    public clearable: boolean = null;
 
     /** Value to set on the ngModel when the DatePicker is cleared. */
     @Input()
@@ -137,7 +137,6 @@ export class DateTimePickerComponent
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.momentValue = unix(timestamp);
         this.updateDisplayValue();
     }

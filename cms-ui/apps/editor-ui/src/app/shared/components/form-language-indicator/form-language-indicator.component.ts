@@ -74,9 +74,6 @@ export class FormLanguageIndicatorComponent
     @Input({ required: true })
     public languages: Language[];
 
-    @Input()
-    public activeLanguage: Language;
-
     @Input({ required: true })
     public form: Form;
 
@@ -115,7 +112,6 @@ export class FormLanguageIndicatorComponent
     public hasUntranslated: boolean;
     public expanded = false;
 
-    public inCurrentLanguage: boolean;
     public variants: VariantState[] = [];
 
     constructor(
@@ -128,12 +124,6 @@ export class FormLanguageIndicatorComponent
     ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.expandByDefault) {
             this.expanded = this.expandByDefault;
-        }
-
-        if (changes.activeLanguage || changes.form) {
-            this.inCurrentLanguage = this.form != null
-              && this.activeLanguage != null
-              && this.form.languages.includes(this.activeLanguage.code);
         }
 
         if (changes.expandByDefault || changes.form || changes.languages || changes.stagingMap) {

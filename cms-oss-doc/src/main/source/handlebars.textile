@@ -209,13 +209,13 @@ This helper will include a CMS form into the tag.
 General usage is:
 
 <shell>
-{{{gtx_form form [type=value] [previewRoot=value] [showResults=value] [templateContext]=value }}}
+{{{gtx_form form [type=value] [previewRoot=value] [showResults=value] }}}
 </shell>
 
 or (as block helper)
 
 <shell>
-{{#gtx_form [type=value] [previewRoot=value] [showResults=value] [templateContext]=value}}
+{{#gtx_form form [type=value] [previewRoot=value] [showResults=value] }}
 {{{this}}}
 {{else}}
     no-form-block
@@ -228,7 +228,6 @@ With the parameters
 | +form+ | Reference to the form | _mandatory_ |
 | +type+ | Type of used portal. Must be either *java* or *php* | *java* |
 | +previewRoot+ | HTML Element, which should be rendered as root element for the preview | *div* |
-| +templateContext+ | Additional path segments for templates used to render the form. The actual path used is the +templatesPath+ (from plugin configuration) + +/templateContext+. | (empty) |
 | +showResults+     | Boolean flag to force rendering results of a poll instead of the form itself. (This has no effect on non-poll forms.) | *false* |
 | +no-form-block+ | Block that is rendered when no form was selected. | (empty) |
 

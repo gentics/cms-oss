@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.translate.CharSequenceTranslator;
 import org.apache.commons.text.translate.EntityArrays;
@@ -61,6 +62,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.SemaphoreMap;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.AnyChannelTrx;
@@ -214,6 +216,7 @@ import com.gentics.mesh.core.rest.tag.TagFamilyCreateRequest;
 import com.gentics.mesh.core.rest.tag.TagFamilyResponse;
 import com.gentics.mesh.core.rest.tag.TagListUpdateRequest;
 import com.gentics.mesh.core.rest.tag.TagReference;
+import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.parameter.GenericParameters;
 import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
@@ -514,6 +517,70 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected static GenericParameters doNotWaitForIdle = new GenericParametersImpl();
 
+	/**
+	 * Service loader for {@link MeshPublisherService}s
+	 */
+	private final static ServiceLoaderUtil<MeshPublisherService> meshPublisherServiceLoader = ServiceLoaderUtil
+			.load(MeshPublisherService.class);
+
+	/**
+	 * Flag that is set, when the client is a Mesh admin
+	 */
+	protected static MeshDataCache<Boolean> clientIsAdmin = new MeshDataCache<>(client -> {
+		Boolean adminFlag = client.me().blockingGet().getAdmin();
+		return adminFlag != null ? adminFlag.booleanValue() : false;
+	}, false);
+
+	/**
+	 * Role map single
+	 */
+	protected static MeshDataCache<Single<Map<String, String>>> roleMapSingle = new MeshDataCache<>(client -> {
+		Single<Map<String, String>> value = client.findRoles().toSingle()
+				.map(response -> response.getData().stream().filter(role -> !"admin".equals(role.getName()))
+						.collect(Collectors.toMap(RoleResponse::getName, RoleResponse::getUuid)))
+				.cache();
+		value.subscribe();
+		return value;
+	});
+
+	/**
+	 * Server Info
+	 */
+	protected static MeshDataCache<Single<MeshServerInfoModel>> serverInfo = new MeshDataCache<>(client -> {
+		@SuppressWarnings("deprecation")
+		Single<MeshServerInfoModel> value = client.getApiInfo().toSingle().cache();
+		value.subscribe();
+		return value;
+	});
+
+	/**
+	 * Mesh Status
+	 */
+	@SuppressWarnings("deprecation")
+	protected static MeshDataCache<MeshStatus> meshStatus = new MeshDataCache<>(client -> {
+		return client.meshStatus().blockingGet().getStatus();
+	});
+
+	/**
+	 * Schemas and Projects were checked OK
+	 */
+	protected static MeshDataCache<Boolean> schemasAndProjectsOk = new MeshDataCache<>(client -> {
+		return false;
+	}, false);
+
+	/**
+	 * Mesh Project Data
+	 */
+	protected static MeshDataCache<Map<String, MeshProjectData>> meshProjectData = new MeshDataCache<>(client -> {
+		return Collections.synchronizedMap(new HashMap<>());
+	});
+
+	/**
+	 * Micronode Publisher Data
+	 */
+	protected static MeshDataCache<MeshMicronodePublisher.MeshMicronodePublisherData> meshMicronodeData = new MeshDataCache<>(
+			client -> null);
+
 	static {
 		schemaNames.put(Folder.TYPE_FOLDER, FOLDER_SCHEMA);
 		schemaNames.put(Page.TYPE_PAGE, PAGE_SCHEMA);
@@ -562,11 +629,6 @@ public class MeshPublisher implements AutoCloseable {
 	protected MeshRestClient client;
 
 	/**
-	 * Flag that is set, when the client is a Mesh admin
-	 */
-	protected boolean clientIsAdmin;
-
-	/**
 	 * Mesh host
 	 */
 	protected String host;
@@ -599,24 +661,9 @@ public class MeshPublisher implements AutoCloseable {
 	protected Set<MeshProject> alternativeProjects = new HashSet<>();
 
 	/**
-	 * Role map single
-	 */
-	protected Single<Map<String, String>> roleMapSingle;
-
-	/**
 	 * Role map
 	 */
 	protected Map<String, String> roleMap;
-
-	/**
-	 * Server Info
-	 */
-	protected Single<MeshServerInfoModel> serverInfo;
-
-	/**
-	 * Flag, which is set when publishing into Mesh SQL
-	 */
-	protected boolean meshSql = false;
 
 	/**
 	 * Flag to mark whether an error was found
@@ -680,11 +727,6 @@ public class MeshPublisher implements AutoCloseable {
 	 * Configured call timeout (in seconds)
 	 */
 	protected long callTimeout = DEFAULT_TIMEOUT;
-
-	/**
-	 * Flag, which is set to true, when the Mesh Server supports publishing (and setting role permission) on create/update requests
-	 */
-	protected boolean supportsPublishOnCreate = false;
 
 	/**
 	 * Counter for requests to get a single node from Mesh
@@ -1106,12 +1148,60 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Create a new map containing the entries of the given map with the values converted.
+	 * If the given map is null, the function will return null
+	 * @param <T> type of the keys
+	 * @param <U> type of the resulting values
+	 * @param <W> type of the original values
+	 * @param map map to convert
+	 * @param valueConverter value converter
+	 * @return converted map
+	 */
+	protected static <T, U, W> Map<T, U> convertMap(Map<T, W> map, java.util.function.Function<W, U> valueConverter) {
+		return convertMap(map, java.util.function.Function.identity(), valueConverter);
+	}
+
+	/**
+	 * Create a new map containing the entries of the given map with keys and values converted.
+	 * If the given map is null, the function will return null
+	 * @param <T> type of the resulting keys
+	 * @param <U> type of the resulting values
+	 * @param <V> type of the original keys
+	 * @param <W> type of the original values
+	 * @param map map to convert
+	 * @param keyConverter key converter
+	 * @param valueConverter value converted
+	 * @return converted map
+	 */
+	protected static <T, U, V, W> Map<T, U> convertMap(Map<V, W> map, java.util.function.Function<V, T> keyConverter,
+			java.util.function.Function<W, U> valueConverter) {
+		return Optional.ofNullable(map)
+				.map(m -> m.entrySet().stream().map(
+						entry -> Map.entry(keyConverter.apply(entry.getKey()), valueConverter.apply(entry.getValue())))
+						.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())))
+				.orElse(null);
+	}
+
+	/**
+	 * Clear cached data
+	 */
+	public static void clearCachedData() {
+		clientIsAdmin.clear();
+		roleMapSingle.clear();
+		serverInfo.clear();
+		meshStatus.clear();
+		schemasAndProjectsOk.clear();
+		meshProjectData.clear();
+		meshMicronodeData.clear();
+	}
+
+	/**
 	 * Create an instance of the MeshPublisher
 	 * @param cr ContentRepository
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr) throws NodeException {
-		this(cr, true);
+		this(cr, true, false);
 	}
 
 	/**
@@ -1121,6 +1211,17 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr, boolean connect) throws NodeException {
+		this(cr, connect, false);
+	}
+
+	/**
+	 * Create an instance of the MeshPublisher
+	 * @param cr ContentRepository
+	 * @param connect true if the client shall be created, false if not
+	 * @param forceRefreshCachedData true to force refreshing of cached data
+	 * @throws NodeException
+	 */
+	public MeshPublisher(ContentRepository cr, boolean connect, boolean forceRefreshCachedData) throws NodeException {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.ATTRIBUTE_DIRTING)) {
 			throw new NodeException(
 					String.format("Publishing to mesh requires feature %s to be activated, but feature %s is inactive.",
@@ -1174,6 +1275,8 @@ public class MeshPublisher implements AutoCloseable {
 			}
 		}
 
+		Optional.ofNullable(meshMicronodeData.get(this)).ifPresent(micronodePublisher::setData);
+
 		if (connect) {
 			if (ObjectTransformer.isEmpty(password)) {
 				throw new RestMappedException(I18NHelper.get("meshcr.apitoken.missing", cr.getName())).setMessageType(Message.Type.CRITICAL)
@@ -1196,20 +1299,11 @@ public class MeshPublisher implements AutoCloseable {
 				client.setLogin(username, password).login().blockingGet();
 			}
 
-			// check whether the client is an admin
-			Boolean adminFlag = client.me().blockingGet().getAdmin();
-			clientIsAdmin = adminFlag != null ? adminFlag.booleanValue() : false;
-
-			roleMapSingle = client.findRoles().toSingle().map(response -> response.getData().stream().filter(role -> !"admin".equals(role.getName()))
-					.collect(Collectors.toMap(RoleResponse::getName, RoleResponse::getUuid))).cache();
-			roleMapSingle.subscribe();
-
-			serverInfo = client.getApiInfo().toSingle().cache();
-			serverInfo.subscribe();
-
-			// determine, whether the Mesh version supports publishing (and setting roles) with the save requests
-			meshSql = !serverInfo.blockingGet().getDatabaseVendor().contains("orientdb");
-			supportsPublishOnCreate = getMeshServerVersion().isGreaterOrEqual(meshSql ? FIRST_MESH_SQL_VERSION_WITH_PUBLISH_ON_CREATE : FIRST_MESH_VERSION_WITH_PUBLISH_ON_CREATE);
+			// initialize some data if empty
+			clientIsAdmin.init(this, forceRefreshCachedData);
+			roleMapSingle.init(this, forceRefreshCachedData);
+			serverInfo.init(this, forceRefreshCachedData);
+			meshStatus.init(this, forceRefreshCachedData);
 		} else {
 			micronodePublisher.initForPreview();
 		}
@@ -1271,6 +1365,12 @@ public class MeshPublisher implements AutoCloseable {
 
 			alternativeProjects.addAll(cr.getNodes().stream().map(n -> new MeshProject(n)).collect(Collectors.toSet()));
 		}
+
+		Optional.ofNullable(meshProjectData.get(this)).ifPresent(cachedData -> {
+			projectMap.values().forEach(project -> {
+				Optional.ofNullable(cachedData.get(project.name)).ifPresent(project::setData);
+			});
+		});
 	}
 
 	/**
@@ -1450,7 +1550,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return status
 	 */
 	public MeshStatus getStatus() {
-		return client.meshStatus().blockingGet().getStatus();
+		return meshStatus.get(this);
 	}
 
 	/**
@@ -1466,6 +1566,14 @@ public class MeshPublisher implements AutoCloseable {
 			error(String.format("Mesh status is %s", status));
 		}
 		return status == MeshStatus.READY;
+	}
+
+	/**
+	 * Were schemas and projects checked OK
+	 * @return check result
+	 */
+	public boolean schemasAndProjectsOk() {
+		return schemasAndProjectsOk.get(this);
 	}
 
 	/**
@@ -1495,6 +1603,7 @@ public class MeshPublisher implements AutoCloseable {
 
 			error("Inconsistent setting of \"publish directory segment\" found for assigned nodes:\n  Nodes with \"publish directory segment\": %s\n  Nodes without \"publish directory segment\": %s",
 					namesWith, namesWithout);
+			schemasAndProjectsOk.set(this, false);
 			return false;
 		}
 
@@ -1572,6 +1681,7 @@ public class MeshPublisher implements AutoCloseable {
 		// we cannot create an inexistent project, if schemas were not repaired successfully
 		if (!success.get() && repair) {
 			error("Skip checking project, since repairing schemas was not successful");
+			schemasAndProjectsOk.set(this, success.get());
 			return success.get();
 		}
 
@@ -1586,7 +1696,6 @@ public class MeshPublisher implements AutoCloseable {
 		// Since Mesh-SQL is case-insensitive when loading projects by name,
 		// alternative projects with the same name apart from case which are
 		// already in the project map must also be ignored.
-		if (meshSql) {
 			Set<String> projectNames = projectMap.values().stream()
 				.map(p -> p.name)
 				.filter(Objects::nonNull)
@@ -1594,12 +1703,17 @@ public class MeshPublisher implements AutoCloseable {
 				.collect(Collectors.toSet());
 
 			alternativeProjects.removeIf(p -> p.name == null || projectNames.contains(p.name.toLowerCase()));
-		}
 
 		for (MeshProject project : alternativeProjects) {
 			project.validate(Collections.emptyMap(), false, new AtomicBoolean());
 		}
 
+		meshMicronodeData.set(this, micronodePublisher.getData());
+
+		meshProjectData.set(this,
+				projectMap.values().stream().collect(Collectors.toUnmodifiableMap(p -> p.name, p -> p.getData())));
+
+		schemasAndProjectsOk.set(this, success.get());
 		return success.get();
 	}
 
@@ -1832,7 +1946,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * Check whether any jobs exist in Mesh, which are "RUNNING", "QUEUED" or "STARTING" and trigger job processing (just in case)
 	 */
 	public void triggerJobProcessing() {
-		if (clientIsAdmin) {
+		if (clientIsAdmin.get(this)) {
 			JobListResponse jobsList = client.findJobs().blockingGet();
 			List<JobStatus> stati = Arrays.asList(JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.STARTING);
 			if (jobsList.getData().stream().filter(job -> stati.contains(job.getStatus())).findAny().isPresent()) {
@@ -2331,7 +2445,8 @@ public class MeshPublisher implements AutoCloseable {
 
 			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE, Action.HIDE);
 			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
-			Map<String, Set<String>> toDelete = new HashMap<>();
+			// toDelete maps uuids to sets of objects to be deleted
+			Map<String, Set<ObjectToDelete>> toDelete = new HashMap<>();
 
 			if (checkedNode != null) {
 				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, deleteOfflineMap.keySet()), checkedNode.getId());
@@ -2349,13 +2464,7 @@ public class MeshPublisher implements AutoCloseable {
 
 					deleteOfflineMap.remove(form.getId());
 					if (!cr.mustContain(form, checkedNode)) {
-						String meshUuid = getMeshUuid(form);
-						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
-							for (String lang : languages) {
-								offline(project, branch, objectType, meshUuid, lang);
-							}
-							return Completable.complete();
-						}).blockingAwait();
+						offline(project, branch, form, null);
 					}
 				}
 				List<Form> removeForms = t.getObjects(Form.class, removeMap.keySet());
@@ -2367,12 +2476,7 @@ public class MeshPublisher implements AutoCloseable {
 					removeMap.remove(form.getId());
 					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
-						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
-							for (String lang : languages) {
-								remove(project, branch, objectType, 0, meshUuid, lang);
-							}
-							return Completable.complete();
-						}).blockingAwait();
+						remove(project, branch, objectType, 0, meshUuid, null, Map.of("formType", form.getFormType()), true);
 					}
 				}
 			}
@@ -2384,19 +2488,16 @@ public class MeshPublisher implements AutoCloseable {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
-				String meshUuid = null;
-				String meshLanguage = null;
 				if (entry.getValue() != null) {
-					for (String value : entry.getValue()) {
-						if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
-							meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
-						} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
-							meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
-						}
+					Map<String, String> additionalData = entry.getValue().stream().filter(attr -> attr.contains(":")).map(attr -> {
+						String[] parts = attr.split(Pattern.quote(":"), 2);
+						return Pair.of(parts[0], parts[1]);
+					}).collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+					String meshUuid = additionalData.get("uuid");
+					String meshLanguage = additionalData.get("language");
+					if (meshUuid != null) {
+						toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(new ObjectToDelete(meshLanguage, additionalData));
 					}
-				}
-				if (meshUuid != null) {
-					toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
 				}
 			}
 
@@ -2413,8 +2514,10 @@ public class MeshPublisher implements AutoCloseable {
 					if (cr.mustContain(object, checkedNode)) {
 						String meshUuid = getMeshUuid(object);
 						if (toDelete.containsKey(meshUuid)) {
-							if (object instanceof Page) {
-								toDelete.getOrDefault(meshUuid, Collections.emptySet()).remove(getMeshLanguage(object));
+							if (object instanceof Page page) {
+								String meshLanguage = getMeshLanguage(page);
+								toDelete.getOrDefault(meshUuid, Collections.emptySet())
+										.removeIf(o -> Strings.CI.equals(o.language, meshLanguage));
 							} else {
 								toDelete.remove(meshUuid);
 							}
@@ -2423,16 +2526,16 @@ public class MeshPublisher implements AutoCloseable {
 				}
 			}
 
-			for (Entry<String, Set<String>> entry : toDelete.entrySet()) {
+			for (Entry<String, Set<ObjectToDelete>> entry : toDelete.entrySet()) {
 				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
 
 				String meshUuid = entry.getKey();
-				Set<String> languages = entry.getValue();
-				for (String language : languages) {
-					remove(project, checkedNode, objectType, 0, meshUuid, language, true);
+				Set<ObjectToDelete> toDeleteSet = entry.getValue();
+				for (ObjectToDelete o : toDeleteSet) {
+					remove(project, checkedNode, objectType, 0, meshUuid, o.language, o.additionalData, true);
 				}
 			}
 		}
@@ -2479,10 +2582,26 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+		remove(project, node, objectType, objectId, meshUuid, meshLanguage, null, withSemaphore);
+	}
+
+	/**
+	 * Try to remove an object from mesh
+	 * @param project mesh project
+	 * @param node node from which to remove the object
+	 * @param objectType object type
+	 * @param objectId internal object id
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param additionalData optional additional data
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @throws NodeException
+	 */
+	public void remove(MeshProject project, Node node, int objectType, int objectId, String meshUuid, String meshLanguage, Map<String, String> additionalData, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, withSemaphore);
+			remove(project, project.enforceBranch(node.getId()), objectType, objectId, meshUuid, meshLanguage, additionalData, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, withSemaphore);
+			remove(project, (VersioningParameters)null, objectType, objectId, meshUuid, meshLanguage, additionalData, withSemaphore);
 		}
 	}
 
@@ -2497,7 +2616,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage) throws NodeException {
-		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, true);
+		remove(project, branch, objectType, objectId, meshUuid, meshLanguage, null, true);
 	}
 
 	/**
@@ -2508,21 +2627,20 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param objectId internal object id
 	 * @param meshUuid mesh UUID
 	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param additionalData optional additional data
 	 * @param withSemaphore whether the acquire a semaphore
 	 * @throws NodeException
 	 */
-	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, int objectId, String meshUuid,
+			String meshLanguage, Map<String, String> additionalData, boolean withSemaphore) throws NodeException {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
 		try {
 			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 			if (objectType == Form.TYPE_FORM) {
-				// forms are removed via the forms plugin
-				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid)).toCompletable()
-					.onErrorResumeNext(throwable -> {
-						return ifNotFound(throwable, () -> Completable.complete());
-					}).blockingAwait();
+				// forms are removed via the service implementation
+				meshPublisherServiceLoader.callForFirstMatching(s -> s.handles(Form.class), s -> s.delete(this, project, meshUuid, additionalData));
 			} else if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
@@ -2567,13 +2685,15 @@ public class MeshPublisher implements AutoCloseable {
 	 * Try to take an object offline in mesh
 	 * @param project mesh project
 	 * @param branch optional branch parameter
-	 * @param objectType object type
-	 * @param meshUuid mesh UUID
+	 * @param object object to take offline
 	 * @param meshLanguage mesh Language (null to delete all language variants)
 	 * @throws NodeException
 	 */
-	public void offline(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
+	public void offline(MeshProject project, VersioningParameters branch, NodeObject object, String meshLanguage) throws NodeException {
 		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
+		int objectType = object.getTType();
+		String meshUuid = getMeshUuid(object);
+
 		try {
 			logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
 			if (objectType == Page.TYPE_PAGE && meshLanguage != null) {
@@ -2588,14 +2708,8 @@ public class MeshPublisher implements AutoCloseable {
 					}).blockingAwait();
 				}
 			} else if (objectType == Form.TYPE_FORM) {
-				if (meshLanguage != null) {
-					// forms are taken offline via the forms plugin
-					client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s/online/%s",
-							encodeSegment(project.name), meshUuid, encodeSegment(meshLanguage))).toCompletable()
-							.onErrorResumeNext(throwable -> {
-								return ifNotFound(throwable, () -> Completable.complete());
-							}).blockingAwait();
-				}
+				meshPublisherServiceLoader.callForFirstMatching(s -> s.handles(Form.class),
+						s -> s.takeOffline(this, project, object));
 			} else {
 				// for folders and files, there is only one language version, so take the node offline
 				if (branch != null) {
@@ -2710,33 +2824,12 @@ public class MeshPublisher implements AutoCloseable {
 					controller.runRenderTask(() -> {
 						try {
 							Trx.operate(trx -> {
-								try (LangTrx lTrx = new LangTrx("en");
-										RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, form, controller.publishProcess,
-												controller.publishProcess, controller.publishProcess)) {
-
-									ObjectNode data = (ObjectNode) form.getData();
-									JsonNode downloadUrl = data == null ? null : data.get("downloadBaseUrl");
-
-									if (downloadUrl == null || !downloadUrl.isTextual() || StringUtils.isEmpty(downloadUrl.asText())) {
-										NodePreferences prefs = trx.getNodeConfig().getDefaultPreferences();
-										String downloadBaseUrl = String.format(
-											"%s/editor/#proxy%srest/form/%d/data",
-											prefs.getProperty("cn_external_server"),
-											prefs.getProperty("portletapp_prefix"),
-											form.getId());
-
-										data.put("downloadBaseUrl", downloadBaseUrl);
-									}
-
-									FormWriteTask task = new FormWriteTask(form, nodeId, this);
-									// task.project is the current project of the node, not necessarily the desired project
-									task.project = project;
-									// target project is the desired project
-									task.targetProject = project;
-									task.reportToPublishQueue = reportToPublishQueue;
-
-									logger.debug(String.format("Put task %s into queue", task));
-									controller.putWriteTask(task);
+								Optional<AbstractWriteTask> optionalTask = meshPublisherServiceLoader.execForFirstMatching(s -> s.handles(form),
+										s -> s.createWriteTask(this, project, form, nodeId, controller.publishProcess,
+												reportToPublishQueue));
+								if (optionalTask.isPresent()) {
+									logger.debug(String.format("Put task %s into queue", optionalTask.get()));
+									controller.putWriteTask(optionalTask.get());
 								}
 							});
 							controller.renderTasks.finish();
@@ -2900,7 +2993,7 @@ public class MeshPublisher implements AutoCloseable {
 									file.getFilesizeFromBinary(),
 									file.getFilename(),
 									file.getFiletype(),
-									supportsPublishOnCreate,
+									true,
 									task.project.enforceBranch(task.nodeId))
 								.toSingle();
 						});
@@ -2915,10 +3008,7 @@ public class MeshPublisher implements AutoCloseable {
 								NodeUpdateRequest update = new NodeUpdateRequest();
 								update.setLanguage(getMeshLanguage(image));
 								update.setVersion("draft");
-
-								if (supportsPublishOnCreate) {
 									update.setPublish(true);
-								}
 
 								update.getFields().put("binarycontent", new BinaryFieldImpl().setFocalPoint(image.getFpX(), image.getFpY()));
 								return client.updateNode(task.project.name, task.uuid, update, task.project.enforceBranch(task.nodeId))
@@ -2957,7 +3047,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.get(this).blockingGet()));
 		}
 		return roleMap;
 	}
@@ -2967,7 +3057,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return server version
 	 */
 	public CmpProductVersion getMeshServerVersion() {
-		return new CmpProductVersion(serverInfo.blockingGet().getMeshVersion());
+		return new CmpProductVersion(serverInfo.get(this).blockingGet().getMeshVersion());
 	}
 
 	/**
@@ -3272,170 +3362,6 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		return renderedEntries;
-	}
-
-	/**
-	 * Render the form in the given language
-	 * @param form form
-	 * @param language language
-	 * @return rendered form
-	 * @throws NodeException
-	 */
-	public String render(Form form, String language) throws NodeException {
-		JsonNode data = renderFormTextUrls(form.getData(language), language);
-		String projectName = getMeshProjectName(form.getOwningNode());
-		String uuid = getMeshUuid(form);
-
-		RestModel dataAsModel = new RestModel() {
-			@Override
-			public String toJson(boolean minify) {
-				return data.toString();
-			}
-		};
-
-		return client.post(String.format("/%s/plugins/forms/forms/%s/preview", encodeSegment(projectName), uuid),
-				dataAsModel, FormsPluginRenderResponse.class).toSingle().doOnSubscribe(disp -> {
-					MeshPublisher.logger.debug(String.format("Rendering preview of form %s, language %s, json: %s", uuid, language, data));
-				}).blockingGet().getHtml();
-	}
-
-	/**
-	 * Render URLS in text fields of the given form.
-	 * 
-	 * @param form
-	 * @param language
-	 * @return
-	 * @throws NodeException
-	 */
-	public static final JsonNode renderFormTextUrls(JsonNode form, String language) throws NodeException {
-		if (form == null) {
-			return form;
-		}
-		for (Iterator<Entry<String, JsonNode>> i = form.fields(); i.hasNext();) {
-			Entry<String, JsonNode> entry = i.next(); 
-			if (entry.getValue() == null) {
-				continue;
-			}
-			switch (entry.getValue().getNodeType()) {
-			case STRING:
-				String newValue = renderFormTextUrls(entry.getValue().asText(), language);
-				((ObjectNode)form).put(entry.getKey(), newValue);
-				break;
-			case OBJECT:
-				JsonNode newNode = renderFormTextUrls(entry.getValue(), language);
-				((ObjectNode)form).replace(entry.getKey(), newNode);
-				break;
-			case ARRAY:
-				ArrayNode anode = ((ArrayNode)entry.getValue());
-				for (int ii = 0; ii < anode.size(); ii++) {
-					anode.set(ii, renderFormTextUrls(anode.get(ii), language));
-				}
-				break;
-			default:
-				break;
-			}
-		}
-		return form;
-	}
-
-	/**
-	 * Render URLS in text, if any.
-	 * 
-	 * @param text
-	 * @param language
-	 * @return
-	 * @throws NodeException
-	 */
-	public static final String renderFormTextUrls(String text, String language) throws NodeException {
-		if (text == null) {
-			// TODO check allow_links if possible
-			return text;
-		}
-		String linkPattern = "\\{\\{"
-				+ "[\\s]*(LINK)[\\s]*"
-				+ "[|]"
-				+ "[\\s]*(?<linkType>(PAGE|FILE|URL))"
-				+ "[:]("
-					+ "?:(?<=URL:)(?<url>[^|]*)|(?<!URL:)"
-					+ "(?<nodeId>[a-zA-Z0-9\\-\\.]+)"
-					+ "[:]"
-					+ "(?<itemId>[a-zA-Z0-9\\-\\.]+)"
-					+ "(?:[:](?<langCode>[a-zA-Z]{2}))?"
-				+ ")[\\s]*[|][\\s]*"
-				+ "(?<displayText>[^|]*)"
-				+ "[\\s]*(?:[|][\\s]*(?<target>(_blank|_self|_top|_unfencedTop|_parent)))?[\\s]*"
-				+ "\\}\\}";
-		Pattern pattern = Pattern.compile(linkPattern);
-		Matcher matcher = pattern.matcher(text);
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Deque<String> matches = new ArrayDeque<>(1);
-			Transaction t = trx.getTransaction();
-			while (matcher.find()) {
-				String linkType = matcher.group("linkType");
-				String nodeId = matcher.group("nodeId");
-				String itemId = matcher.group("itemId");
-				String displayText = matcher.group("displayText");
-				Optional<String> maybeUrl = Optional.ofNullable(matcher.group("url"));
-				Optional<String> maybeLangCode = Optional.ofNullable(matcher.group("langCode")).or(() -> Optional.ofNullable(language));
-				Optional<String> maybeTarget = Optional.ofNullable(matcher.group("target"));
-				Node channelOrNode = t.getObject(Node.class, nodeId);
-				Optional<Disinheritable<?>> maybeRenderedObject = Optional.empty();
-				if ("FILE".equals(linkType)) {
-					maybeRenderedObject = Optional.ofNullable(t.getObject(File.class, itemId));
-					if (maybeRenderedObject.isEmpty()) {
-						maybeRenderedObject = Optional.ofNullable(t.getObject(ImageFile.class, itemId));
-					}
-				} else if ("PAGE".equals(linkType)) {
-					maybeRenderedObject = Optional.ofNullable(t.getObject(Page.class, itemId));
-					if (maybeLangCode.isPresent()) {
-						try {
-							Optional<Disinheritable<?>> maybeLocPage = maybeRenderedObject.map(Page.class::cast).flatMap(page -> {
-								try {
-									return Optional.ofNullable(page.getLanguageVariant(maybeLangCode.get(), channelOrNode.getId()));
-								} catch (NodeException e) {
-									throw new IllegalStateException(e);
-								}
-							});
-							if (maybeLocPage.isPresent()) {
-								maybeRenderedObject = maybeLocPage;
-							} else {
-								logger.warn(String.format("No '%s' localization found for %s", maybeLangCode.get(), maybeRenderedObject));
-							}
-						} catch (Throwable e) {
-							if (e.getCause() instanceof NodeException) {
-								throw (NodeException) e.getCause();
-							} else {
-								throw e;
-							}
-						}
-					}
-				} else if ("URL".equals(linkType) && maybeUrl.isEmpty()) {
-					throw new NodeException("No URL provided for " + matcher.toString());
-				}
-				String url;
-				if ("URL".equals(linkType)) {
-					url = maybeUrl.get();
-				} else {
-					Disinheritable<?> renderedObject = maybeRenderedObject.get();
-					if (!(renderedObject.getChannel() != null && renderedObject.getChannel().getId().intValue() == channelOrNode.getId().intValue()) 
-							&& !(renderedObject.getNode() != null && renderedObject.getNode().getId().intValue() == channelOrNode.getId().intValue())) {
-						// TODO more meaningful error / logging
-						throw new NodeException("Wrong node / channel for " + matcher.toString());
-					}
-					url = MeshURLRenderer.renderDisinheritableUrl(renderedObject);
-				}
-				matches.addLast(String.format("<a href='%s' %s>%s</a>", 
-						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(url)), 
-						maybeTarget.map(target -> "target='" + target + "'").orElse(org.apache.commons.lang3.StringUtils.EMPTY), 
-						Matcher.quoteReplacement(UrlEscapeUtils.unescapeUrl(displayText))
-					));
-			}
-			String link;
-			while ((link = matches.poll()) != null) {
-				text = text.replaceFirst(linkPattern, link);
-			}
-		}
-		return text;
 	}
 
 	/**
@@ -4168,12 +4094,10 @@ public class MeshPublisher implements AutoCloseable {
 		request.setSchema(new SchemaReferenceImpl().setName(task.schema));
 		request.setFields(task.fields);
 
-		if (supportsPublishOnCreate) {
 			request.setPublish(true);
 			if (task.roles != null) {
 				request.setGrant(createPermissionUpdateRequests(task));
 			}
-		}
 
 		boolean supportsAlternativeLanguages = supportsAlternativeLanguages(task.objType, true) && task.alternativeMeshLanguages != null;
 		GenericParameters params = supportsAlternativeLanguages
@@ -4190,10 +4114,8 @@ public class MeshPublisher implements AutoCloseable {
 						start.set(System.currentTimeMillis());
 						saveNodeCounter.incrementAndGet();
 					})
-					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
-					.flatMap(node -> publish(task, node))
 					.doOnError(t -> {
 						if (!task.postponable || !isRecoverable(t)) {
 							String message = String.format("Error while performing task '%s' for '%s'", task, cr.getName());
@@ -4317,27 +4239,6 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Set role permissions
-	 * @param task write task
-	 * @param node node response (from the save request)
-	 * @return single node response
-	 */
-	protected Single<NodeResponse> setRolePermissions(WriteTask task, NodeResponse node) {
-		if (task.roles == null) {
-			return Single.just(node);
-		}
-
-		if (supportsPublishOnCreate) {
-			return Single.just(node);
-		}
-
-		return ensureRoles(task.roles)
-			.andThen(updatePermissions(task, node.getUuid()))
-			.andThen(task.project.setPermissions(task.roles))
-			.andThen(Single.just(node));
-	}
-
-	/**
 	 * Create the request that will perform the permission update requests.
 	 *
 	 * @param task The current write task.
@@ -4406,21 +4307,6 @@ public class MeshPublisher implements AutoCloseable {
 		} else {
 			return Single.just(node);
 		}
-	}
-
-	/**
-	 * Publish the node
-	 * @param task write task
-	 * @param node node response (from the save request)
-	 * @return single node response
-	 */
-	protected Single<NodeResponse> publish(WriteTask task, NodeResponse node) {
-		if (supportsPublishOnCreate) {
-			return Single.just(node);
-		}
-
-		return client.publishNodeLanguage(task.project.name, task.uuid, task.language, task.project.enforceBranch(task.nodeId)).toSingle()
-				.flatMap(status -> Single.just(node));
 	}
 
 	/**
@@ -4858,6 +4744,45 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		/**
+		 * Get a copy the data from the instance as {@link MeshProjectData}
+		 * @return data copy
+		 */
+		protected MeshProjectData getData() {
+			return new MeshProjectData(hostname, pathPrefix, https, uuid, rootNodeUuid,
+					Optional.ofNullable(defaultBranch).map(BranchResponse::toJson).orElse(null),
+					Optional.ofNullable(defaultBranchParameter).map(VersioningParameters::getParameters).orElse(null),
+					convertMap(branchMap, BranchResponse::toJson),
+					convertMap(branchParamMap, VersioningParameters::getParameters),
+					new HashSet<>(rolesWithPermissions), latestTagUuid);
+		}
+
+		/**
+		 * Set the data from the instance of {@link MeshProjectData}
+		 * @param data data to set
+		 */
+		protected void setData(MeshProjectData data) {
+			this.hostname = data.hostname;
+			this.pathPrefix = data.pathPrefix;
+			this.https = data.https;
+			this.rootNodeUuid = data.rootNodeUuid;
+			this.defaultBranch = Optional.ofNullable(data.defaultBranch)
+					.map(json -> JsonUtil.readValue(json, BranchResponse.class)).orElse(null);
+			this.defaultBranchParameter = Optional.ofNullable(data.defaultBranchParameter).map(map -> {
+				VersioningParameters params = new VersioningParametersImpl();
+				params.getParameters().putAll(map);
+				return params;
+			}).orElse(null);
+			this.branchMap = convertMap(data.branchMap, json -> JsonUtil.readValue(json, BranchResponse.class));
+			this.branchParamMap = convertMap(data.branchParamMap, map -> {
+				VersioningParameters params = new VersioningParametersImpl();
+				params.getParameters().putAll(map);
+				return params;
+			});
+			this.rolesWithPermissions = new HashSet<>(data.rolesWithPermissions);
+			this.latestTagUuid = data.latestTagUuid;
+		}
+
+		/**
 		 * Check whether the project exists
 		 * @return true if the project exists
 		 */
@@ -4892,6 +4817,14 @@ public class MeshPublisher implements AutoCloseable {
 		 */
 		protected void validate(Map<String, SchemaResponse> schemaMap, boolean repair, AtomicBoolean success) throws NodeException {
 			info(String.format("Start checking project %s", name));
+
+			// reset data
+			rootNodeUuid = null;
+			defaultBranch = null;
+			defaultBranchParameter = null;
+			branchMap.entrySet().forEach(entry -> entry.setValue(null));
+			branchParamMap.clear();
+			rolesWithPermissions.clear();
 
 			Function<? super Throwable, ? extends SingleSource<? extends Optional<ProjectResponse>>> errorHandler = t -> {
 				return ifNotFound(t, () -> {
@@ -5079,62 +5012,10 @@ public class MeshPublisher implements AutoCloseable {
 					}
 				}
 
-				// if feature forms is activated, check whether plugin is active for node
-				if (node != null && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, node)) {
-					List<String> expectedLanguages = node.getLanguages().stream().map(ContentLanguage::getCode).collect(Collectors.toList());
-					String languagesUrl = String.format("/%s/plugins/forms/languages", encodeSegment(currentProjectName));
-
-					info("Checking forms plugin for project %s", currentProjectName);
-					FormsPluginStatusResponse formsStatus = client
-							.get(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
-									FormsPluginStatusResponse.class)
-							.toSingle().onErrorReturn(t -> {
-								return ifNotFound(t, () -> {
-									error("Could not check forms plugin. Maybe plugin is not deployed or incompatible.");
-									FormsPluginStatusResponse response = new FormsPluginStatusResponse();
-									response.setActive(false);
-									return response;
-								});
-							}).blockingGet();
-					if (formsStatus.getActive() == Boolean.TRUE) {
-						info("Forms plugin is active for project %s", currentProjectName);
-
-						FormsPluginLanguages formsPluginLanguages = client.get(languagesUrl, FormsPluginLanguages.class)
-								.blockingGet();
-						if (!Objects.deepEquals(expectedLanguages, formsPluginLanguages.getLanguages())) {
-							if (repair) {
-								info("Setting forms plugin languages to %s for project %s", expectedLanguages, currentProjectName);
-								formsPluginLanguages.setLanguages(expectedLanguages);
-								client.put(languagesUrl, formsPluginLanguages, FormsPluginLanguages.class).blockingAwait();
-							} else {
-								error("Forms plugin languages for project %s should be %s, but are %s",
-										currentProjectName, expectedLanguages, formsPluginLanguages.getLanguages());
-								success.set(false);
-							}
-						}
-					} else {
-						if (repair) {
-							info("Activating forms plugin for project %s", currentProjectName);
-							formsStatus = client
-									.put(String.format("/%s/plugins/forms/active", encodeSegment(currentProjectName)),
-											FormsPluginStatusResponse.class)
-									.blockingGet();
-							if (formsStatus.getActive() == Boolean.TRUE) {
-								info("Activated forms plugin for project %s", currentProjectName);
-
-								info("Setting forms plugin languages to %s for project %s", expectedLanguages, currentProjectName);
-								FormsPluginLanguages formsPluginLanguages = new FormsPluginLanguages().setLanguages(expectedLanguages);
-								client.put(languagesUrl, formsPluginLanguages, FormsPluginLanguages.class).blockingAwait();
-							} else {
-								error("Could not activate forms plugin for project %s", currentProjectName);
-								success.set(false);
-							}
-						} else {
-							error("Forms plugin is not active for project %s", currentProjectName);
-							success.set(false);
-						}
-					}
-				}
+				// let all validation services also validate
+				final String finalCurrentProjectName = currentProjectName;
+				meshPublisherServiceLoader.call(service -> service.validate(MeshPublisher.this, this,
+						finalCurrentProjectName, repair, success));
 
 				if (success.get()) {
 					info(String.format("Project %s is valid", name));
@@ -5697,5 +5578,100 @@ public class MeshPublisher implements AutoCloseable {
 		public static final String unescapeUrl(final String input) {
 			return UNESCAPE_URL.translate(input);
 		}
+	}
+
+	/**
+	 * Record for objects, which have to be deleted
+	 */
+	protected record ObjectToDelete(String language, Map<String, String> additionalData) {}
+
+	/**
+	 * Class for contentrepository specific cache for data
+	 * @param <T> type of the cached data
+	 */
+	protected static final class MeshDataCache<T> {
+		/**
+		 * Cached data per contentrepository ID
+		 */
+		protected Map<Integer, T> cached = Collections.synchronizedMap(new HashMap<>());
+
+		/**
+		 * Method to initialize the data
+		 */
+		protected java.util.function.Function<MeshRestClient, T> initMethod;
+
+		/**
+		 * Defautl value
+		 */
+		protected T defaultValue;
+
+		/**
+		 * Create instance with init method and null as default value
+		 * @param initMethod init method
+		 */
+		public MeshDataCache(java.util.function.Function<MeshRestClient, T> initMethod) {
+			this(initMethod, null);
+		}
+
+		/**
+		 * Create instance with init method and a default value
+		 * @param initMethod init method
+		 * @param defaultValue default value
+		 */
+		public MeshDataCache(java.util.function.Function<MeshRestClient, T> initMethod, T defaultValue) {
+			this.initMethod = initMethod;
+			this.defaultValue = defaultValue;
+		}
+
+		/**
+		 * Clear the data
+		 */
+		public void clear() {
+			cached.clear();
+		}
+
+		/**
+		 * Initialize the data for the given publisher, when current data is not present or the forceRefresh flag is set
+		 * @param publisher publisher
+		 * @param forceRefresh true to refresh the data in any case
+		 */
+		protected void init(MeshPublisher publisher, boolean forceRefresh) {
+			Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId).ifPresent(id -> {
+				if (forceRefresh) {
+					cached.put(id, initMethod.apply(publisher.client));
+				} else {
+					cached.computeIfAbsent(id, k -> initMethod.apply(publisher.client));
+				}
+			});
+		}
+
+		/**
+		 * Get the data for the given publisher
+		 * @param publisher publisher
+		 * @return data (may be null)
+		 */
+		protected T get(MeshPublisher publisher) {
+			return Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId)
+					.map(id -> cached.getOrDefault(id, defaultValue)).orElse(defaultValue);
+		}
+
+		/**
+		 * Set the data for the given publisher
+		 * @param publisher publisher
+		 * @param value value to set
+		 */
+		protected void set(MeshPublisher publisher, T value) {
+			Optional.ofNullable(publisher).map(p -> p.cr).map(ContentRepository::getId)
+					.ifPresent(id -> cached.put(id, value));
+		}
+	}
+
+	/**
+	 * Record of data used in {@link MeshProject}
+	 */
+	protected static record MeshProjectData(String hostname, String pathPrefix, Boolean https, String uuid,
+			String rootNodeUuid, String defaultBranch, Map<String, String> defaultBranchParameter,
+			Map<Node, String> branchMap, Map<Integer, Map<String, String>> branchParamMap,
+			Set<String> rolesWithPermissions, String latestTagUuid) {
 	}
 }

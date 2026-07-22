@@ -7,7 +7,7 @@ import {
     PermissionResponse, PermissionsMapCollection,
     PrivilegeMap,
 } from '@gentics/cms-models';
-import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, Observable, of as observableOf, of } from 'rxjs';
 import { first } from 'rxjs/operators';

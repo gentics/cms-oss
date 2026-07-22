@@ -65,6 +65,9 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     public item: InheritableItem;
 
     @Input()
+    public external = false;
+
+    @Input()
     public isFolderStartPage = false;
 
     @Input()
@@ -363,7 +366,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
         return {
             edit: !this.isDeleted && showEditButton,
             properties: !this.isDeleted,
-            copy: !this.isDeleted && (isPage || isFile || isImage || isForm),
+            copy: !this.external && !this.isDeleted && (isPage || isFile || isImage || isForm),
             createVariation: isPage && !this.isDeleted && userCan.create,
             pageVersions: isPage && !this.isDeleted && userCan.view,
             publishProtocol: (isPage || isForm) && !this.isDeleted && userCan.view,
@@ -381,8 +384,8 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
             synchronizeChannel: this.multiChannelingEnabled && !isForm && !this.isDeleted && canBeSynchronizedToParentNode,
             requestTranslation: !this.isDeleted && showRequestTranslationButton,
             linkTemplates: !this.isDeleted && isFolder && userCan.edit && templatePermissions ? templatePermissions.link : false,
-            delete: !this.isDeleted && (isMaster || isForm) && !inherited && userCan.delete,
-            restore: this.wastebinEnabled && this.isDeleted && !inherited && userCan.delete,
+            delete: !this.external && !this.isDeleted && (isMaster || isForm) && !inherited && userCan.delete,
+            restore: !this.external && this.wastebinEnabled && this.isDeleted && !inherited && userCan.delete,
             unlocalize: this.multiChannelingEnabled && !isForm && !this.isDeleted && isLocalized && userCan.unlocalize,
             takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited) && canPublish,
             publish: !this.isDeleted && ((isPage && canPublish) || (isForm && this.permissions.form.publish)),

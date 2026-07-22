@@ -4,16 +4,24 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/admin-ui/src",
-    "tags": ["app", "ui", "angular"],
+    "tags": [
+        "app",
+        "ui",
+        "angular"
+    ],
     "targets": {
         "build": {
             "executor": "@nx/angular:application",
-            "outputs": ["{options.outputPath}"],
+            "outputs": [
+                "{options.outputPath}"
+            ],
             "options": {
                 "outputPath": "dist/apps/admin-ui",
                 "index": "apps/admin-ui/src/index.html",
                 "browser": "apps/admin-ui/src/main.ts",
-                "polyfills": ["apps/admin-ui/src/polyfills.ts"],
+                "polyfills": [
+                    "apps/admin-ui/src/polyfills.ts"
+                ],
                 "tsConfig": "apps/admin-ui/tsconfig.app.json",
                 "assets": [
                     {
@@ -22,7 +30,9 @@
                         "output": "assets"
                     }
                 ],
-                "styles": ["apps/admin-ui/src/styles/styles.scss"],
+                "styles": [
+                    "apps/admin-ui/src/styles/styles.scss"
+                ],
                 "stylePreprocessorOptions": {
                     "includePaths": [
                         "apps/admin-ui/src/styles",
@@ -31,26 +41,10 @@
                     ],
                     "sass": {
                         "silenceDeprecations": [
-                            "call-string",
-                            "elseif",
-                            "moz-document",
-                            "relative-canonical",
-                            "new-global",
-                            "color-module-compat",
-                            "slash-div",
-                            "bogus-combinators",
-                            "function-units",
-                            "duplicate-var-flags",
-                            "null-alpha",
-                            "abs-percent",
-                            "fs-importer-cwd",
-                            "css-function-mixin",
                             "mixed-decls",
-                            "color-4-api",
                             "color-functions",
-                            "legacy-js-api",
-                            "import",
-                            "global-builtin"
+                            "global-builtin",
+                            "import"
                         ]
                     }
                 },
@@ -64,13 +58,13 @@
                     "moment-timezone",
                     "semver"
                 ],
-                "aot": true,
                 "fileReplacements": [
                     {
                         "replace": "apps/admin-ui/src/environments/environment.ts",
                         "with": "apps/admin-ui/src/environments/environment.prod.ts"
                     }
                 ],
+                "aot": true,
                 "outputHashing": "all",
                 "optimization": true,
                 "sourceMap": false,
@@ -110,41 +104,60 @@
             "continuous": true
         },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": [
+                    "zone.js",
+                    "zone.js/testing",
+                    "{projectRoot}/src/polyfills.ts"
+                ],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/admin-ui/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test admin-ui --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": [
+                        "junit"
+                    ],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
         },
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/admin-ui/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "admin-ui:build",
-                "watch": false
+                "devServerTarget": "admin-ui:build"
             },
             "configurations": {
                 "ci": {
                     "quiet": true,
-                    "cypressConfig": "apps/admin-ui/cypress.config.ci.ts",
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
                     "devServerTarget": "admin-ui:build:ci"
                 }
             }
         },
         "e2e": {
             "executor": "@nx/playwright:playwright",
-            "outputs": ["{workspaceRoot}/.playwright/admin-ui"],
+            "outputs": [
+                "{workspaceRoot}/.playwright/admin-ui"
+            ],
             "options": {
                 "config": "apps/admin-ui/playwright.config.ts",
                 "skipInstall": true

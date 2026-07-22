@@ -11,6 +11,7 @@ define([
 	'PubSub',
 	'aloha/ephemera',
 	'block/block',
+	'block/dragbehavior',
 	'gcn/gcn-util',
 	'gcn/gcn-tags',
 	'ui/dialog',
@@ -21,6 +22,7 @@ define([
 	PubSub,
 	Ephemera,
 	Block,
+	DragBehavior,
 	Util,
 	Tags,
 	Dialog,
@@ -256,7 +258,7 @@ define([
 			// Make the block dragable on default
 			$blockHandleContainer.addClass('aloha-block-draghandle');
 
-			var dragHandle$ = $('<div>', {
+			var $dragHandle = $('<div>', {
 				class: 'gcn-construct-drag-handle aloha-block-handle',
 			}).append($('<i>', {
 				class: 'material-symbols-outlined aloha-block-button-icon',
@@ -264,7 +266,7 @@ define([
 			})).appendTo($blockHandleContainer);
 
 			if (!$block.hasClass('ui-draggable-disabled')) {
-				dragHandle$.addClass('aloha-block-draghandle');
+				$dragHandle.addClass('aloha-block-draghandle');
 			}
 		}
 
@@ -373,6 +375,10 @@ define([
 			block: block,
 			$el: $block,
 		});
+
+		if (block.isDraggable()) {
+			DragBehavior.follow(block);
+		}
 	}
 
 	/**
@@ -456,12 +462,21 @@ define([
 		 * @param {String} name Name of the tag
 		 */
 		confirmedDestroy: function (destroyFn, name) {
+			if (this._dialogOpen) {
+				return;
+			}
+			this._dialogOpen = true;
+			var that = this;
+
 			Dialog.confirm({
 				title: 'Gentics CMS',
 				text: i18n.t('delete.confirm')
 					.replace('$1', typeof name !== 'string' || name.trim().length < 1 ? '' : ' "' + name + '"'),
 				yes: function () {
 					destroyFn();
+				},
+				close: function() {
+					that._dialogOpen = false;
 				}
 			});
 		},

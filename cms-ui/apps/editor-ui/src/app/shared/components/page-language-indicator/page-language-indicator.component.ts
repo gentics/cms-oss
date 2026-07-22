@@ -243,6 +243,8 @@ export class PageLanguageIndicatorComponent
                     const tmpVal = this.page.languageVariants[lang.id];
                     if (typeof tmpVal === 'number') {
                         variantPage = this.appState.now.entities.page[tmpVal];
+                    } else if (tmpVal != null && typeof tmpVal === 'object') {
+                        variantPage = tmpVal;
                     }
                 }
             }

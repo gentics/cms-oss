@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { DirtQueueListOptions, DirtQueueResponse, DirtQueueSummaryResponse, PublishInfo, PublishQueue, Response } from '@gentics/cms-models';
-import { RequestMethod } from '@gentics/cms-rest-client';
+import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { catchError, MonoTypeOperatorFunction, Observable, tap, throwError } from 'rxjs';
 import { ErrorHandler } from '../error-handler';
@@ -53,15 +53,16 @@ export class AdminHandlerService {
 
     reloadConfiguration(): Observable<Response> {
         return this.client.admin.reloadConfiguration().pipe(
-            tap(() => this.notification.show({
-                type: 'success',
-                message: 'shared.reload_configuration_success',
-            })),
+            tap((response) => this.notification.showFromResponse(response)),
             catchError((error) => {
-                this.notification.show({
-                    type: 'alert',
-                    message: 'shared.reload_configuration_failed',
-                });
+                if (error instanceof GCMSRestClientRequestError) {
+                    this.notification.showFromResponse(error.data);
+                } else {
+                    this.notification.show({
+                        type: 'alert',
+                        message: 'shared.reload_configuration_failed',
+                    });
+                }
                 return throwError(() => error);
             }),
         );

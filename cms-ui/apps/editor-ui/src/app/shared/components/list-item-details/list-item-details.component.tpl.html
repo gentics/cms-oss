@@ -1,11 +1,16 @@
 <div class="fields-wrapper" #fieldsWrapper>
   @if (isDeleted) {
-    <detail-chip class="deleted">
+    <detail-chip class="deleted" data-id="deleted">
       {{ 'editor.item_page_status_deleted_label' | gtxI18n:{
         name: getUserName(item),
         date: (item?.deleted?.at | gtxI18nDate),
         time: (item?.deleted?.at | gtxI18nDate:'time')
       } }}
+    </detail-chip>
+  }
+  @if (item.type === 'form') {
+    <detail-chip data-id="form-type">
+        {{ 'editor.form_type_detail_label' | gtxI18n:{ type: item.formTypeName } }}
     </detail-chip>
   }
   @for (field of fields; track field) {
@@ -14,7 +19,7 @@
         @switch (field) {
           @case ('pdate') {
             @if ((item.type === 'page' || item.type === 'form') && item.pdate && item.pdate > 0) {
-              <detail-chip>
+              <detail-chip data-id="published">
                 {{ 'editor.published_label' | gtxI18n:{
                     publisher: (item.publisher | userFullName),
                     date: (item.pdate | gtxI18nDate),
@@ -25,7 +30,7 @@
           }
           @case ('unpublishedDate') {
             @if ((item.type === 'page' || item.type === 'form') && item.unpublishedDate && item.unpublishedDate > 0) {
-              <detail-chip>
+              <detail-chip data-id="unpublished">
                 {{ 'editor.unpublished_label' | gtxI18n:{
                     unpublisher: (item.unpublisher | userFullName),
                     date: (item.unpublishedDate | gtxI18nDate),
@@ -36,89 +41,89 @@
           }
           @case ('at') {
             @if (getFormattedTimeMgmtValue(item, field) | async) {
-              <detail-chip>
+              <detail-chip data-id="publish-at">
                 {{ 'editor.publish_planned_publish_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
               </detail-chip>
             }
           }
           @case ('offlineAt') {
             @if (getFormattedTimeMgmtValue(item, field) | async) {
-              <detail-chip>
+              <detail-chip data-id="offline-at">
                 {{ 'editor.publish_planned_take_offline_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
               </detail-chip>
             }
           }
           @case ('queuedPublish') {
             @if (getFormattedTimeMgmtValue(item, field) | async) {
-              <detail-chip>
+              <detail-chip data-id="queued-publish">
                 {{ 'editor.publish_queue_publish_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
               </detail-chip>
             }
           }
           @case ('queuedOffline') {
             @if (getFormattedTimeMgmtValue(item, field) | async) {
-              <detail-chip>
+              <detail-chip data-id="queued-offline">
                 {{ 'editor.publish_queue_take_offline_at_date_label' | gtxI18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
               </detail-chip>
             }
           }
           @case ('creator') {
-            <detail-chip>
+            <detail-chip data-id="creator">
               {{ 'common.creator_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
           }
           @case ('editor') {
-            <detail-chip>
+            <detail-chip data-id="editor">
               {{ 'common.editor_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
           }
           @case ('cdate') {
-            <detail-chip>
+            <detail-chip data-id="cdate">
               {{ 'common.date_created_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
           }
           @case ('customCdate') {
-            <detail-chip>
+            <detail-chip data-id="custom-cdate">
               {{ 'common.date_custom_created_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : (item['cdate'] | gtxI18nDate) }}
             </detail-chip>
           }
           @case ('edate') {
-            <detail-chip>
+            <detail-chip data-id="edate">
               {{ 'common.date_edited_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
           }
           @case ('customEdate') {
-            <detail-chip>
+            <detail-chip data-id="custom-edate">
               {{ 'common.date_custom_edited_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : (item['edate'] | gtxI18nDate) }}
             </detail-chip>
           }
           @case ('fileSize') {
-            <detail-chip>
+            <detail-chip data-id="file-size">
               {{ item[field] | filesize }}
             </detail-chip>
           }
           @case ('pageStatus') {
-            <detail-chip>
+            <detail-chip data-id="page-status">
               {{ item[field] }}
             </detail-chip>
           }
           @case ('priority') {
-            <detail-chip>
+            <detail-chip data-id="priority">
               Priority: {{ item[field] }}
             </detail-chip>
           }
           @case ('template') {
-            <detail-chip>
+            <detail-chip data-id="template">
               <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ item.template?.name }}
             </detail-chip>
           }
           @case ('fileType') {
-            <detail-chip>
+            <detail-chip data-id="file-type">
               <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i> {{ item[field] }}
             </detail-chip>
           }
           @case ('usage') {
-            <detail-chip (click)="usageClicked($event, item)" class="usage">
+            <detail-chip (click)="usageClicked($event, item)" class="usage" data-id="usage">
               <span>{{ 'common.usage_label' | gtxI18n }}:</span>
               @if (item?.usage?.total != null) {
                 <span class="usage-count">{{ item.usage.total }}</span>
@@ -128,19 +133,19 @@
             </detail-chip>
           }
           @default {
-            <detail-chip>
+            <detail-chip [attr.data-id]="field">
               {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
             </detail-chip>
           }
           @case ('globalId') {
-            <detail-chip>
+            <detail-chip data-id="global-id">
               {{ 'editor.item_global_id_label' | gtxI18n }}:<br>{{ item[field] }}
             </detail-chip>
           }
           @case ('inheritance') {
             @let inheritance = item | getInheritance;
             @if (inheritance != null) {
-            <detail-chip>
+            <detail-chip data-id="inheritance">
                 <icon [ngClass]="'inheritance-icon-' + inheritance"></icon> {{ ('common.inheritance_label_' + inheritance) | gtxI18n }}
             </detail-chip>
             }

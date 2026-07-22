@@ -1,29 +1,29 @@
 <div
-  #wrapper
-  class="icon-checkbox-wrapper"
-  [class.checked]="selected"
-  [class.disabled]="disabled"
-  >
-  <div class="item-icon">
-    @if (icon || !image) {
-      <icon>{{ icon }}</icon>
-    } @else {
-      <image-thumbnail
-        [image]="image"
-        [nodeId]="nodeId"
-        [width]="wrapper.clientWidth"
-        [maxHeight]="wrapper.clientHeight" >
-      </image-thumbnail>
-    }
+    #wrapper
+    class="icon-checkbox-wrapper"
+    [class.checked]="selected"
+    [class.disabled]="disabled"
+>
+  <div class="position-container item-icon">
+        @if (icon || !image) {
+            <icon>{{ icon }}</icon>
+        } @else {
+            <image-thumbnail
+                [image]="image"
+                [nodeId]="nodeId"
+                [width]="wrapper.clientWidth"
+                [maxHeight]="wrapper.clientHeight" >
+            </image-thumbnail>
+        }
   </div>
 
-  @if (selected || !disabled) {
-    <div class="item-checkbox">
-      <gtx-checkbox
-        [checked]="selected"
-        [disabled]="disabled"
-        (change)="checkboxClicked($event)"
-      ></gtx-checkbox>
-    </div>
-  }
+    @if (selected || !disabled) {
+        <div class="position-container item-checkbox">
+            <gtx-checkbox
+                [value]="selected"
+                [disabled]="disabled"
+                (valueChange)="checkboxClicked($event)"
+            ></gtx-checkbox>
+        </div>
+    }
 </div>

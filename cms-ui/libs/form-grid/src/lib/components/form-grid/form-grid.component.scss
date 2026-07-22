@@ -1,0 +1,332 @@
+@import 'ui-core/src/styles/variables';
+
+:host {
+    display: block;
+    height: 100%;
+    min-height: 0;
+    /* allows inner scroll containers to size correctly */
+
+    /* widths controlled via CSS variables so transitions stay smooth */
+    --left-w: 280px;
+    --right-w: 33%;
+    --collapsed-w: 56px;
+
+    --left-panel-width: var(--collapsed-w);
+    --right-panel-width: var(--collapsed-w);
+}
+
+/* --- Collapsible shell (CSS-only) --- */
+.editor-shell {
+    height: 100%;
+    min-height: 0;
+
+    &.right-panel-wide {
+        --right-panel-width: var(--right-w);
+    }
+
+    &.left-panel-expanded {
+        --left-panel-width: var(--left-w);
+    }
+
+    &.no-right-panel {
+        --right-panel-width: 0;
+    }
+
+    &.no-left-panel,
+    &.mode-none {
+        --left-panel-width: 0;
+    }
+
+    &:not(.editor-active) .editor-main {
+        display: none;
+    }
+
+    &:not(.preview-active) .preview-main {
+        display: none;
+    }
+}
+
+.editor-body {
+    display: grid;
+    grid-template-columns: var(--left-panel-width) 1fr var(--right-panel-width);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    transition: grid-template-columns 280ms cubic-bezier(0.2, 0.9, 0.2, 1);
+
+    .root-container {
+        height: 100%;
+    }
+}
+
+/* When an element is selected, give the right panel more room */
+.editor-shell.right-panel-wide .editor-body {
+    --right-w: 640px;
+}
+
+.editor-shell.no-right-panel .editor-body {
+    --right-w: 0px;
+}
+
+.editor-panel {
+    background: #ffffff;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+
+    &.editor-panel--left {
+        border-right: 1px solid #e5e5e5;
+
+        .panel-header {
+            justify-content: flex-end;
+
+            .panel-header-title {
+                margin-right: auto;
+            }
+        }
+    }
+
+    &.editor-panel--right {
+        border-left: 1px solid #e5e5e5;
+    }
+
+    .panel-content,
+    .panel-header-title {
+        opacity: 0;
+    }
+
+    &.expanded {
+        .panel-content,
+        .panel-header-title {
+            opacity: 1;
+        }
+
+        .panel-toggle-btn icon {
+            transform: rotateZ(180deg);
+        }
+    }
+
+    .panel-header {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+    }
+
+    .panel-divider {
+        height: 1px;
+        width: 100%;
+        margin: 14px 0;
+        background: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0));
+    }
+
+    .panel-segment-title,
+    .panel-header-title {
+        font-weight: 900;
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, 0.6);
+        margin: 2px 0 12px;
+    }
+
+    .panel-header-title {
+        margin: 0;
+        font-size: 14px;
+        text-transform: none;
+    }
+
+    .panel-content {
+        padding: 12px 14px 14px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 1.75rem;
+        height: 100%;
+    }
+}
+
+.editor-main {
+    padding: 8px;
+    overflow: auto;
+    min-width: 0;
+    min-height: 0;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-container {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.page-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.palette {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.palette-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+    cursor: grab;
+    user-select: none;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .palette-item--label {
+        font-weight: 800;
+        font-size: 0.9rem;
+        color: #111;
+    }
+
+    .palette-item--insert {
+        display: none;
+    }
+
+    .palette-item--description {
+        font-size: 0.8rem;
+        color: #111;
+    }
+
+    &:hover {
+        background: #f7f7f7;
+    }
+
+    &:active {
+        cursor: grabbing;
+        transform: translateY(1px);
+    }
+}
+
+:host::ng-deep gtx-form-grid-elements-container .palette-item {
+    flex: 0 1 calc(50% - var(--drag-gap-compensation, 0px));
+
+    .palette-item--label {
+        display: none;
+    }
+
+    .palette-item--insert {
+        display: flex !important;
+        visibility: visible;
+    }
+
+    &.container-element {
+        flex: 0 1 calc(100% - var(--drag-gap-compensation, 0px));
+    }
+}
+
+.insert-item {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 13px 15px 10px 20px;
+    gap: 0.5rem;
+
+    .insert-item--top {
+        width: 100%;
+    }
+
+    .insert-item--text {
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .tag {
+        display: flex;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+        align-items: center;
+        width: max-content;
+    }
+
+    .tag-type {
+        background-color: $gtx-color-primary;
+    }
+
+    .tag-text {
+        vertical-align: middle;
+    }
+}
+
+.list-container {
+    padding: 1rem;
+    padding-right: 0;
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex: 1;
+    min-height: 0;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.element-tabs::ng-deep {
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    > gtx-tab {
+        &.is-active {
+            flex: 1 1;
+            min-height: 1px;
+        }
+        &:not(.is-active) {
+            display: none;
+        }
+
+        > .tab-content {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-wrap: nowrap;
+            flex-direction: column;
+            overflow: auto;
+
+            > * {
+                display: block;
+                height: 100%;
+            }
+        }
+    }
+
+    .tab-links .tab-link {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}
+
+.element-tabs.missing-translations::ng-deep .tab-links .tab-link[data-id="translations"] icon {
+    color: $gtx-color-warning;
+}

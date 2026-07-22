@@ -529,6 +529,23 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 		}
 
+		id = ObjectTransformer.getInt(reqNode.getDefaultFormFolderId(), 0);
+		if (id > 0) {
+			Folder formFolder = null;
+
+			try (ChannelTrx trx = new ChannelTrx(node)) {
+				formFolder = t.getObject(Folder.class, id);
+			}
+
+			if (formFolder == null) {
+				errors.add("invalid default form folder id");
+				msg = new CNI18nString("rest.node.invalid.folderid");
+				response.addMessage(
+						new Message(Type.CRITICAL, "defaultFormFolderId", msg.toString()));
+				ret = false;
+			}
+		}
+
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT) && !node.isPubDirSegment() && reqNode.isPubDirSegment() == Boolean.TRUE) {
 			Folder pubDirSegmentConflict = FolderFactory.checkPubDirUniqueness(node.getFolder());
 			if (pubDirSegmentConflict != null) {
@@ -683,6 +700,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	 *
 	 * @param fileFolderId The id of the default file folder
 	 * @param imageFolderId The id of the default image folder
+	 * @param formFolderId The id of the default form folder
 	 * @param node The node that is currently changed
 	 * @param response The response object of the current request
 	 * @param save true if the node shall be saved
@@ -692,7 +710,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	 *
 	 * @throws NodeException On internal errors
 	 */
-	private boolean setDefaultFolders(Integer fileFolderId, Integer imageFolderId, Node node, GenericResponse response, boolean save)
+	private boolean setDefaultFolders(Integer fileFolderId, Integer imageFolderId, Integer formFolderId, Node node, GenericResponse response, boolean save)
 			throws NodeException {
 		CNI18nString msg;
 		boolean allOk = true;
@@ -736,6 +754,26 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				}
 			} else {
 				node.setDefaultImageFolder(null);
+			}
+		}
+
+		if (formFolderId != null) {
+			int id = ObjectTransformer.getInt(formFolderId, 0);
+
+			if (id > 0) {
+				Folder folder = MultichannellingFactory.getChannelVariant(t.getObject(Folder.class, id), node);
+
+				if (folder == null) {
+					msg = new CNI18nString("rest.node.invalid.folderid");
+					response.addMessage(
+							new Message(Type.CRITICAL, "defaultFormFolderId", msg.toString()));
+					allOk = false;
+				} else {
+					node.setDefaultFormFolder(folder);
+					nodeChanged = true;
+				}
+			} else {
+				node.setDefaultFormFolder(null);
 			}
 		}
 
@@ -1030,8 +1068,8 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			boolean defaultFoldersOk = setDefaultFolders(
 				reqNode.getDefaultFileFolderId(),
 				reqNode.getDefaultImageFolderId(),
-				node,
-				response, true);
+				reqNode.getDefaultFormFolderId(),
+				node, response, true);
 
 			if (!defaultFoldersOk) {
 				response.setNode(null);
@@ -1280,7 +1318,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				}
 			}
 
-			if (!setDefaultFolders(reqNode.getDefaultFileFolderId(), reqNode.getDefaultImageFolderId(), node, response, false)) {
+			if (!setDefaultFolders(reqNode.getDefaultFileFolderId(), reqNode.getDefaultImageFolderId(), reqNode.getDefaultFormFolderId(), node, response, false)) {
 				response.setResponseInfo(
 						new ResponseInfo(ResponseCode.INVALIDDATA, "node saving failed"));
 				return response;

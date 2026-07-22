@@ -6,7 +6,7 @@
   <div class="flex-container">
     <gtx-checkbox
       [(ngModel)]="allPermsGranted"
-      (change)="onAllPermsToggle($event)"
+      (valueChange)="onAllPermsToggle($event)"
       [label]="'group.all_perms'| gtxI18n"
       [disabled]="!hasEditPermissionRight()"
     ></gtx-checkbox>
@@ -31,7 +31,7 @@
             @for (perm of permissions; track perm.label) {
               <gtx-checkbox
                 [(ngModel)]="perm.value"
-                (change)="onPermToggle()"
+                (valueChange)="onPermToggle()"
                 [label]="perm.label | gtxI18n"
                 [disabled]="!perm.editable"
               ></gtx-checkbox>

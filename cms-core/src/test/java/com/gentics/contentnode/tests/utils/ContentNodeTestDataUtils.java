@@ -157,6 +157,11 @@ public class ContentNodeTestDataUtils {
 	public final static int NODE_GROUP_ID = 2;
 
 	/**
+	 * Generic form type
+	 */
+	public final static String GENERIC_TYPE = "generic";
+
+	/**
 	 * Create a construct with a single visible editable part
 	 * @param node node
 	 * @param clazz parttype class
@@ -1217,6 +1222,7 @@ public class ContentNodeTestDataUtils {
 		return create(
 			Form.class,
 			form -> {
+				form.setFormType(GENERIC_TYPE);
 				form.setFolderId(folder.getId());
 				form.setName(name);
 			});

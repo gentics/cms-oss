@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -8,7 +7,6 @@ import {
     OnInit,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     ContentRepository,
     ContentRepositoryType,
@@ -19,6 +17,7 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
+    BaseFormPropertiesComponent,
     createPropertyPatternValidator,
     FormProperties,
     generateFormProvider,
@@ -47,7 +46,7 @@ const PUBLISH_MAP_CONTROLS: (keyof EditableNodeProps)[] = [
 
 export enum NodePropertiesMode {
     CREATE = 'create',
-    EDIT = 'edit'
+    EDIT = 'edit',
 }
 
 /**
@@ -62,10 +61,10 @@ export enum NodePropertiesMode {
         generateFormProvider(NodePropertiesComponent),
         generateValidatorProvider(NodePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class NodePropertiesComponent
-    extends BasePropertiesComponent<EditableNodeProps>
+    extends BaseFormPropertiesComponent<EditableNodeProps>
     implements OnInit, OnDestroy {
 
     public readonly NodePropertiesMode = NodePropertiesMode;
@@ -73,7 +72,7 @@ export class NodePropertiesComponent
     public readonly NodeUrlMode = NodeUrlMode;
 
     /** selectable options for node input hostnameType */
-    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string }[] = [
         {
             id: NodeHostnameType.VALUE,
             label: 'editor.node_hostname_type_value',
@@ -113,17 +112,17 @@ export class NodePropertiesComponent
             this.initLinkedDir();
         }
 
-        this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
+        this.subscriptions.push(this.client.contentRepository.list().subscribe((res) => {
             this.contentRepositories = res.items;
             if (this.form) {
-                this.configureForm(this.form.value as any, false);
+                this.configureForm(this.form.value, false);
             }
             this.changeDetector.markForCheck();
         }));
     }
 
     public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     protected createForm(): FormGroup {
@@ -143,15 +142,16 @@ export class NodePropertiesComponent
             ]),
             defaultFileFolderId: new FormControl(this.safeValue('defaultFileFolderId')),
             defaultImageFolderId: new FormControl(this.safeValue('defaultImageFolderId')),
+            defaultFormFolderId: new FormControl(this.safeValue('defaultFormFolderId')),
             disablePublish: new FormControl(this.safeValue('disablePublish') ?? false),
             publishFs: new FormControl(this.safeValue('publishFs') ?? false),
             publishFsPages: new FormControl(this.safeValue('publishFsPages') ?? false),
             publishFsFiles: new FormControl(this.safeValue('publishFsFiles') ?? false),
-            publishDir: new FormControl(this.safeValue('publishDir') || '',  [
+            publishDir: new FormControl(this.safeValue('publishDir') || '', [
                 Validators.maxLength(255),
                 // createRegexValidator(NODE_PATH_REGEXP),
             ]),
-            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || '',  [
+            binaryPublishDir: new FormControl(this.safeValue('binaryPublishDir') || '', [
                 Validators.maxLength(255),
                 // createRegexValidator(NODE_PATH_REGEXP),
             ]),
@@ -161,7 +161,6 @@ export class NodePropertiesComponent
             publishContentMapFolders: new FormControl(this.safeValue('publishContentMapFolders') ?? false),
             urlRenderWayPages: new FormControl(this.safeValue('urlRenderWayPages') || 0),
             urlRenderWayFiles: new FormControl(this.safeValue('urlRenderWayFiles') || 0),
-            contentRepositoryId: new FormControl(this.safeValue('contentRepositoryId')),
         });
     }
 
@@ -169,13 +168,13 @@ export class NodePropertiesComponent
         loud = !!loud;
         const options = { emitEvent: loud, onlySelf: true };
 
-        setControlsEnabled(this.form, CR_CONTROLS, !this.disabled && value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, CR_CONTROLS, !this.disabled && this.item?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, !this.disabled && value?.publishContentMap, options);
         setControlsEnabled(this.form, FS_CONTROLS, !this.disabled && value?.publishFs, options);
 
         let cr: ContentRepository | null = null;
-        if (this.form.value.contentRepositoryId > 0) {
-            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+        if (this.item?.contentRepositoryId > 0) {
+            cr = this.contentRepositories.find((cr) => cr.id === this.item.contentRepositoryId);
         }
         const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
         const isProjectPerNode = cr?.projectPerNode;
@@ -194,10 +193,10 @@ export class NodePropertiesComponent
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap
-            && !this.previousPublishCr
-            && !tmpValue?.publishContentMapFiles
-            && !tmpValue?.publishContentMapFolders
-            && !tmpValue?.publishContentMapPages
+          && !this.previousPublishCr
+          && !tmpValue?.publishContentMapFiles
+          && !tmpValue?.publishContentMapFolders
+          && !tmpValue?.publishContentMapPages
         ) {
             this.form.patchValue({
                 publishContentMapFiles: true,
@@ -259,7 +258,7 @@ export class NodePropertiesComponent
             this.form.controls.binaryPublishDir.setValue(value.publishDir, {
                 emitEvent: loud,
             });
-            this.triggerChange(this.form.value as any);
+            this.triggerChange(this.form.value);
         }
     }
 

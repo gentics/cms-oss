@@ -15,7 +15,7 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
     getExampleUserData,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { NgxsModule } from '@ngxs/store';
 import { normalize } from 'normalizr';
 import { Subscription } from 'rxjs';
@@ -97,7 +97,6 @@ describe('FolderStateModule', () => {
             activeLanguage: null,
             activeFormLanguage: null,
             displayAllLanguages: false,
-            displayStatusIcons: false,
             displayDeleted: false,
             displayImagesGridView: true,
             lastError: '',

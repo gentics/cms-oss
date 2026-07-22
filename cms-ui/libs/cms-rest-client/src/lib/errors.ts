@@ -33,12 +33,12 @@ export class GCMSRestClientRequestError extends Error {
         message: string,
         public request: GCMSRestClientRequestData,
         public responseCode: number,
-        public rawBody?: string,
-        public data?: Response,
-        public bodyError?: Error,
+        public rawBody?: string | null,
+        public data?: Response | null,
+        public bodyError?: Error | null,
     ) {
         super (message);
-        this[GCMS_ERROR_INSTANCE] = true;
+        (this as any)[GCMS_ERROR_INSTANCE] = true;
     }
 
     /**
@@ -84,7 +84,7 @@ export class GCMSRestClientAbortError extends Error {
         public request: GCMSRestClientRequestData,
     ) {
         super(`The request "${request.method} ${request.url}" has been canceled`);
-        this[GCMS_ABORT_INSTANCE] = true;
+        (this as any)[GCMS_ABORT_INSTANCE] = true;
     }
 
     /**

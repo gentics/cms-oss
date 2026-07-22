@@ -64,6 +64,7 @@
           [searching]="!!(search$ | async)"
           [canBeSelected]="allowed[type] && (type !== 'folder' || !isPickingFolder)"
           [selected]="selected$ | async"
+            [folderPermissions]="folderPermissions$ | async"
           (select)="selectItem($event)"
           (deselect)="deselectItem($event)"
           (itemClick)="itemClicked($event)"

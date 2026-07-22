@@ -58,7 +58,7 @@ export class ContentStagingApi {
     }
 
     getImportErrors(name: string): Observable<ContentPackageErrorResponse> {
-        return this.apiBase.get(`content/package/${name}/import/errors`, {});
+        return this.apiBase.get(`content/package/${name}/import/errors`, {}) as any;
     }
 
     uploadContentPackage(name: string, file: File): Observable<ContentPackageResponse> {

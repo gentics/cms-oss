@@ -1,6 +1,6 @@
 import { ActionDeclaration } from '@gentics/cms-components';
 import { Raw, User } from '@gentics/cms-models';
-import { deepFreeze } from '@gentics/ui-core';
+import { deepFreeze } from '@gentics/common';
 import { KeycloakError } from './errors';
 
 export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';

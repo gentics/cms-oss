@@ -38,6 +38,34 @@ export function createFormSaveDisabledTracker(formGroup: AbstractControl): Obser
     );
 }
 
+export function createJSONValidator(): ValidatorFn {
+	return (control) => {
+		const value = control.value;
+	    control.hasError('errorIsInvalidJson');
+	    const validationError = { errorIsInvalidJson: true };
+
+	    // if input is empty, there is no error
+	    if (!value) {
+	        return null;
+	    }
+
+	    if (typeof value === 'string') {
+	        let parsed: object;
+	        try {
+	            parsed = JSON.parse(value);
+	            if (parsed != null && typeof parsed === 'object') {
+	                return null;
+	            }
+	        } catch (error) {
+	            return validationError;
+	        }
+	    }
+
+	    // if in doubt, return error
+	    return validationError;
+	};
+}
+
 export function createBlacklistValidator(blacklist: any[] | (() => any[])): ValidatorFn {
     return (control) => {
         let blacklistToCheck: any[];

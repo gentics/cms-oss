@@ -1,6 +1,7 @@
 {
     "extends": "./tsconfig.json",
     "files": ["src/main.ts", "src/polyfills.ts"],
+    "include": ["src/**/*.ts"],
     "exclude": [
         "src/test.ts",
         "src/testing/**",
@@ -8,11 +9,8 @@
         "**/*.spec.ts",
         "**/*.worker.ts",
         "cypress/**/*",
-        "cypress.config.ts",
+        "cypress.*.ts",
         "e2e/**/*",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "**/*.cy.ts"
     ]
 }

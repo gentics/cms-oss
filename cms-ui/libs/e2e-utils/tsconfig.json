@@ -5,21 +5,19 @@
         "forceConsistentCasingInFileNames": true,
         "strict": false,
         "importHelpers": true,
-        "noImplicitOverride": true,
-        "noImplicitReturns": true,
+        "noImplicitOverride": false,
+        "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "types": [
-            "node",
-            "jquery",
-            "playwright"
-        ]
+        "noPropertyAccessFromIndexSignature": false
     },
     "files": [],
     "include": [],
     "references": [
         {
             "path": "./tsconfig.lib.json"
+        },
+        {
+            "path": "./tsconfig.spec.json"
         }
     ]
 }

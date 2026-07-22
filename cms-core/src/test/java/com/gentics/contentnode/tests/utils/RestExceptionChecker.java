@@ -45,6 +45,14 @@ public class RestExceptionChecker implements TestRule {
 		this.expectedMessage = expectedMessage;
 	}
 
+	/**
+	 * Check whether the rule expects an exception
+	 * @return true when an exception is expected, false if not
+	 */
+	public boolean expectsException() {
+		return this.expected != null;
+	}
+
 	@Override
 	public Statement apply(Statement base, Description description) {
 		return new Statement() {

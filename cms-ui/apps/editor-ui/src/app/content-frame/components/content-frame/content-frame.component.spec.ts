@@ -14,9 +14,9 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Params } from '@angular/router';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { CmsComponentsModule, I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
-import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
+import { AlohaResourceInformationResponse, Construct, FolderListResponse, Form, FormTypeConfigurationResponse, ItemWithObjectTags, Language, Node, Page, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFormData,
@@ -25,12 +25,12 @@ import {
     getExampleNodeDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
-import { BehaviorSubject, NEVER, Observable, of as observableOf } from 'rxjs';
+import { BehaviorSubject, NEVER, Observable, of as observableOf, of, Subject } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -56,6 +56,9 @@ import { CustomerScriptService } from '../../providers/customer-script/customer-
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { NodePropertiesComponent } from '../node-properties/node-properties.component';
 import { ContentFrameComponent } from './content-frame.component';
+import { DEFAULT_RESPONDER } from '@gentics/cms-rest-client/testing';
+import { AlohaIntegrationService, AlohaModule } from '@gentics/cms-components/aloha';
+import { provideTranslateService } from '@ngx-translate/core';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -474,8 +477,16 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
     tick();
 }
 
+class MockAlohaIntegrationService implements Partial<AlohaIntegrationService> {
+    public loadResources(): void {}
+    public ready$ = new BehaviorSubject<boolean>(false);
+    public windowLoaded$ = new BehaviorSubject<boolean>(false);
+    public constructs$? = new Subject<Construct[]>();
+}
+
 describe('ContentFrameComponent', () => {
     let api: MockApi;
+    let client: GCMSTestRestClientService;
 
     let origDebounce: any;
 
@@ -507,8 +518,12 @@ describe('ContentFrameComponent', () => {
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: AlohaIntegrationService, useClass: MockAlohaIntegrationService },
                 MockCanSaveService,
                 ResourceUrlBuilder,
+                ...provideTranslateService({
+                    lang: 'en',
+                }),
             ],
             declarations: [
                 ContentFrameComponent,
@@ -528,6 +543,7 @@ describe('ContentFrameComponent', () => {
             ],
             imports: [
                 GenticsUICoreModule.forRoot(),
+                CmsComponentsModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
             ],
@@ -535,9 +551,25 @@ describe('ContentFrameComponent', () => {
 
         appState = TestBed.inject(ApplicationStateService) as any;
         api = TestBed.inject(Api) as any;
+        client = TestBed.inject(GCMSRestClientService) as any;
         folderActions = TestBed.inject(FolderActionsService) as any;
         canSaveService = TestBed.inject(MockCanSaveService);
         route = TestBed.inject(ActivatedRoute) as any;
+
+        spyOn(client.form, 'getConfiguration').and.callFake((type) => {
+            return of({
+                responseInfo: {
+                    responseCode: ResponseCode.OK,
+                },
+                item: {
+                    type,
+                    name: {},
+                    controls: {},
+                    flows: [],
+                    pluginName: 'example',
+                },
+            } as FormTypeConfigurationResponse);
+        });
 
         // Make sure we're marking the test as logged in, otherwise nothing will be displayed/rendered
         appState.mockState({

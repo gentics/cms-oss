@@ -181,18 +181,18 @@
                 class="x"
                 [min]="resizeService.minWidth$ | async"
                 [max]="resizeService.maxWidth$ | async"
-                [thumbLabel]="false"
+                [showThumb]="false"
                 [(ngModel)]="resizeRangeValueX"
-                (change)="previewResizeWidth($event)"
+                (valueChange)="previewResizeWidth($event)"
               ></gtx-range>
               <gtx-range
                 class="y"
                 [min]="resizeService.minHeight$ | async"
                 [max]="resizeService.maxHeight$ | async"
-                [thumbLabel]="false"
+                [showThumb]="false"
                 [disabled]="scaleRatioLocked"
                 [(ngModel)]="resizeRangeValueY"
-                (change)="previewResizeHeight($event)"
+                (valueChange)="previewResizeHeight($event)"
               ></gtx-range>
             </div>
             <icon>photo_size_select_actual</icon>

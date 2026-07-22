@@ -7,33 +7,44 @@
     "tags": ["lib", "angular", "publish"],
     "targets": {
         "build": {
-            "executor": "@nx/angular:ng-packagr-lite",
+            "executor": "@nx/angular:package",
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json",
-                "project": "libs/cms-rest-clients-angular/ng-package.json"
+                "project": "libs/cms-rest-clients-angular/ng-package.json",
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
             },
             "configurations": {
-                "production": {},
-                "development": {
-                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
+                "production": {
+                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json"
                 },
-                "ci": {}
+                "development": {}
             },
             "defaultConfiguration": "production"
         },
+        "lint": {
+            "executor": "@nx/eslint:lint"
+        },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-rest-clients-angular --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": ["zone.js", "zone.js/testing"],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": ["{projectRoot}/src/styles"]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-rest-clients-angular --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-rest-clients-angular --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": ["junit"],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
         }

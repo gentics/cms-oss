@@ -43,7 +43,7 @@ public class AdminResourceGetActionLogTypesTest extends AbstractListSortAndFilte
 	}
 
 	@Override
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super ActionLogType> items) throws NodeException {
 		operate(() ->  items.addAll(Flowable.fromIterable(ActionLogger.LOGGED_TYPES).map(TypePerms.TRANSFORM2REST::apply).toList()
 				.blockingGet()));
 	}

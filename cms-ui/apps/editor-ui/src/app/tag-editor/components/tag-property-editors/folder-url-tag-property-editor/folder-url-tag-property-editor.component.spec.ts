@@ -2,7 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowseBoxComponent } from '@gentics/cms-components';
+import { BrowseBoxComponent, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -13,16 +13,14 @@ import {
     TagPartType,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../../testing';
-import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
+import { componentTest, configureComponentTest, getMockedTagEditorContext, MockApiBase, mockEditableTag } from '../../../../../testing';
 import { ApiBase } from '../../../../core/providers/api';
-import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
@@ -78,6 +76,10 @@ class MockFolderActions { }
 
 class MockUploadConflictService { }
 
+function getDisplayValue(fixture: ComponentFixture<any>): string {
+    return (fixture.nativeElement as HTMLElement).querySelector('.display-value')?.textContent || '';
+}
+
 /**
  * TODO: Implement tests after feature release in Dec 2018.
  */
@@ -103,6 +105,7 @@ describe('FolderUrlTagPropertyEditor', () => {
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: GCMS_UI_SERVICES_PROVIDER, useValue: null },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -202,16 +205,17 @@ describe('FolderUrlTagPropertyEditor', () => {
             const browseBox = browseBoxElement.componentInstance as BrowseBoxComponent;
             expect(browseBox.label).toEqual(tagPart.name); // Here it is expected that the element is not mandatory.
             expect(browseBox.disabled).toBe(context.readOnly);
+            const displayValue = getDisplayValue(fixture);
 
             if (origTagProperty.folderId) {
                 if (origTagProperty.folderId === FOLDER_A.id) {
-                    expect(browseBox.displayValue).toEqual(FOLDER_A.name);
+                    expect(displayValue).toEqual(FOLDER_A.name);
                 } else {
                     // Simulated removed file
-                    expect(browseBox.displayValue).toEqual('editor.folder_not_found');
+                    expect(displayValue).toEqual('editor.folder_no_selection');
                 }
             } else {
-                expect(browseBox.displayValue).toEqual('editor.folder_no_selection');
+                expect(displayValue).toEqual('editor.folder_no_selection');
             }
 
             // If an image was pre-selected, make sure that is has been loaded.

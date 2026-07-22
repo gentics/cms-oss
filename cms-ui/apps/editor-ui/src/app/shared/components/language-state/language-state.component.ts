@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { Language } from "@gentics/cms-models";
-import { LanguageState, UIMode } from "../../../common/models";
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { Language } from '@gentics/cms-models';
+import { LanguageState, UIMode } from '../../../common/models';
 
 @Component({
     selector: 'gtx-language-state',
@@ -16,7 +16,7 @@ export class LanguageStateComponent {
     @Input({ required: true })
     public language: Language;
 
-    @Input({ required: true })
+    @Input()
     public activeLanguage: Language;
 
     @Input({ required: true })

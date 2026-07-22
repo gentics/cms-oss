@@ -1,7 +1,7 @@
 import {Component, ViewEncapsulation} from '@angular/core';
 
 /**
- * A wrapper around items that appear in the list pane of the SplitViewComponent.
+ * A generic list entry
  *
  * Two component-specific classes can be used:
  *
@@ -13,14 +13,18 @@ import {Component, ViewEncapsulation} from '@angular/core';
  * ```html
  * <gtx-contents-list-item *ngFor="let item of listItems">
  *     <!-- this will be styled as a circular icon -->
- *     <div class="item-avatar"><i class="material-icons">{{ item.icon }}</i></div>
+ *     <div class="item-avatar"><icon>{{ item.icon }}</icon></div>
  *     <!-- this will stretch to use all available space -->
  *     <div class="item-primary"><a [routerLink]="[item.route]">{{ item.title }}</a></div>
  *     <!-- these will use remaining space to the right -->
- *     <i class="material-icons show-on-hover">edit</i>
- *     <i class="material-icons show-on-hover">star</i>
+ *     <div class="show-on-hover">
+ *         <icon>edit</icon>
+ *         <icon>star</icon>
+ *     </div>
  * </gtx-contents-list-item>
  * ```
+ * @deprecated Glorified css class, which does not need to be a component.
+ * In a future release the component will simply be removed by a css class instead.
  */
 @Component({
     selector: 'gtx-contents-list-item',

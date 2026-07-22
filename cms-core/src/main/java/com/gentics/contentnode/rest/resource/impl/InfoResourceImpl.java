@@ -7,8 +7,10 @@ import jakarta.ws.rs.core.MediaType;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.rest.model.response.AlohaFilesResponse;
 import com.gentics.contentnode.rest.model.response.MaintenanceResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -39,5 +41,14 @@ public class InfoResourceImpl implements InfoResource {
 			return new MaintenanceResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while getting info: " + e.getLocalizedMessage()));
 		}
+	}
+
+	@Override
+	@GET
+	@Path("/aloha")
+	public AlohaFilesResponse getAlohaEditorFiles() {
+		AlohaRenderer alohaRenderer = new AlohaRenderer();
+		return new AlohaFilesResponse(null, ResponseInfo.ok("")).setCssFiles(alohaRenderer.getCSSUrls())
+				.setJsFiles(alohaRenderer.getScriptUrls());
 	}
 }

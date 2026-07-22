@@ -1,11 +1,11 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
 import {
     getExamplePageData,
     getExamplePageDataNormalized,
     getExampleUserData,
     getExampleUserDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
+import { NgxsModule } from '@ngxs/store';
 import { ItemsInfo, PublishQueueState } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';

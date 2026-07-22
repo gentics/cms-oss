@@ -1,4 +1,5 @@
 import { AccessControlledType, Feature, GcmsPermission, KeycloakConfiguration, Response, ResponseCode, Variant } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     EntityImporter,
     GroupImportData,
@@ -15,7 +16,6 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, test } from '@playwright/test';
 
 test.describe('Login', () => {

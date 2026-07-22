@@ -10,15 +10,18 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { I18nNotificationService, I18nService, discard } from '@gentics/cms-components';
-import { EditMode } from '@gentics/cms-integration-api-models';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { AlohaIntegrationService } from '@gentics/cms-components/aloha';
+import { CNParentWindow, CNWindow, EditMode } from '@gentics/cms-integration-api-models';
 import {
-    CmsFormType,
     File as FileModel,
     Folder,
     FolderItemOrNodeType,
     FolderItemType,
     Form,
+    FormSchema,
+    FormTypeConfiguration,
+    FormUISchema,
     Image,
     InheritableItem,
     ItemNormalized,
@@ -30,10 +33,10 @@ import {
     Normalized,
     Page,
     Raw,
-    Tags,
     User,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { FormGridEditMode, FormGridViewMode } from '@gentics/form-grid';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce, isEqual } from 'lodash-es';
 import {
@@ -69,6 +72,7 @@ import {
     noItemPermissions,
 } from '../../../common/models';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
+import { FormListLoaderService } from '../../../core/providers';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -97,8 +101,7 @@ import {
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
-import { BLANK_PAGE, CNParentWindow, CNWindow } from '../../models/content-frame';
-import { AlohaIntegrationService } from '../../providers';
+import { BLANK_PAGE, createDefaultFormPageName } from '../../models/content-frame';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
@@ -125,9 +128,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     static _debounce = debounce;
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
-    public readonly CMS_FORM_TYPE = CmsFormType;
     public readonly EditMode = EditMode;
     public readonly LocalizationType = LocalizationType;
+    public readonly FormGridEditMode = FormGridEditMode;
 
     @ViewChild('iframe', { static: true })
     private iframe: ElementRef<HTMLIFrameElement>;
@@ -148,7 +151,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     imageResizedOrCropped = false;
     objectPropertyModified = false;
     modifiedObjectPropertyValid: boolean;
-    currentItem: ItemNormalized;
+    currentItem: ItemNormalized | Form;
     currentItemPath = '';
     currentItemClean = true;
 
@@ -158,6 +161,11 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     editMode: EditMode;
     // currently only used by form editor (not properties editing)
     itemValid = false;
+
+    // Form properties
+    currentFormConfig: FormTypeConfiguration;
+    formPageIndex = 0;
+    formViewMode: FormGridViewMode = FormGridViewMode.EDITOR;
 
     iframeUrl: string;
     /** Hacky subject to debounce too fast URL changes, which may mess up the edit mode. */
@@ -233,6 +241,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private tagEditorService: TagEditorService,
         private aloha: AlohaIntegrationService,
         private urlBuilder: ResourceUrlBuilder,
+        private formListLoader: FormListLoaderService,
     ) { }
 
     ngOnInit(): void {
@@ -326,10 +335,39 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     options['construct'] = true;
                 }
 
-                const itemLoaded = (item: InheritableItem) => {
+                const itemLoaded = (item: InheritableItem | Form) => {
                     if (this.currentItem && this.currentItem?.id !== item?.id) {
                         this.cancelEditingDebounced(this.currentItem);
                     }
+                    if (item.type === 'form') {
+                        if ((item as Form).data == null) {
+                            (item as Form).data = {
+                                formWidth: 12,
+                            } as any;
+                        }
+
+                        if ((item as Form).data.schema == null) {
+                            (item as Form).data.schema = {
+                                key: '',
+                                version: '',
+                                properties: {},
+                            };
+                        }
+                        if ((item as Form).data['ui-schema'] == null) {
+                            (item as Form).data['ui-schema'] = {
+                                key: '',
+                                version: '',
+                                pages: [{
+                                    pagename: createDefaultFormPageName(),
+                                    elements: [],
+                                }],
+                            };
+                        };
+
+                        // Always valid
+                        this.setItemValidity(true);
+                    }
+
                     this.currentItem = item as any;
                     this.currentItemClean = true;
                     this.onItemUpdate();
@@ -374,6 +412,8 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isInherited$ = this.activeNode$.pipe(
             map((activeNode) => activeNode && activeNode.inheritedFromId !== activeNode.id),
         );
+
+        this.aloha.loadResources();
 
         this.subscriptions.push(this.aloha.ready$.subscribe((ready) => {
             this.alohaReady = ready;
@@ -452,6 +492,18 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 && a.nodeId === b.nodeId,
             ),
             filter((state) => state.itemId != null && state.itemType != null),
+            switchMap((state) => {
+                if (state.itemType === 'form') {
+                    return this.client.form.getConfiguration((this.currentItem as Form).formType).pipe(
+                        map((res) => {
+                            this.currentFormConfig = res.item;
+                            this.changeDetector.markForCheck();
+                            return state;
+                        }),
+                    );
+                }
+                return of(state);
+            }),
             withLatestFrom(this.appState.select((state) => state.folder.activeNodeLanguages.list)),
             filter(([, langs]) => langs?.length > 0),
             switchMap(([state]) => {
@@ -486,7 +538,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         );
 
         this.subscriptions.push(this.frameUrlSub.pipe(
-            distinctUntilChanged(isEqual), // Ignore the URL if it's the same
+            distinctUntilChanged<string>(isEqual), // Ignore the URL if it's the same
             debounceTime(100), // Debounce it, as otherwise the iframe may load the wrong one (depends on browser)
         ).subscribe((newUrl) => {
             this.iframeUrl = newUrl.toString();
@@ -618,12 +670,6 @@ span.diff-html-added {
         return;
     }
 
-    formChange(form: Form): void {
-        this.currentItem = form;
-        this.onItemUpdate();
-        this.setContentModified(true, false);
-    }
-
     onItemUpdate(): void {
         this.tagEditorService.forceCloseTagEditor();
         this.isLocked = this.isLockedByAnother();
@@ -687,43 +733,11 @@ span.diff-html-added {
         if (!this.currentItem) {
             return null;
         }
-        if (this.currentItem.type === 'page') {
-            return this.entityResolver.getLanguage((this.currentItem as Page).contentGroupId);
+        if (this.currentItem.type !== 'page') {
+            return null;
         }
 
-        if (this.currentItem.type !== 'form') {
-            return;
-        }
-
-        const form = this.currentItem as Form;
-        const { activeFormLanguage: currentLanguageId, activeNodeLanguages } = this.appState.now.folder;
-        const nodeLanguages = activeNodeLanguages.list.map((nlid) => {
-            return this.entityResolver.getLanguage(nlid);
-        });
-        const currentLanguage = this.entityResolver.getLanguage(currentLanguageId);
-        if (currentLanguage && form.languages.includes(currentLanguage.code)) {
-            return currentLanguage;
-        }
-
-        const fallbackLanguageCodes = Array.isArray(form.languages) && form.languages.length > 0 && form.languages;
-        if (!fallbackLanguageCodes) {
-            throw new Error(`Form with ID ${form.id} has no translation defined in form.languages.`);
-        }
-
-        const fallbackLanguages = form.languages
-            .filter((l) => nodeLanguages.map((nl) => nl.code).includes(l))
-            .map((formlanguageInNodeCode) => {
-                return Object.values(this.appState.now.entities.language)
-                    .find((stateLanguage) => stateLanguage.code === formlanguageInNodeCode);
-            });
-
-        if (!Array.isArray(fallbackLanguages) || fallbackLanguages.length === 0) {
-            throw new Error(
-                `Form with ID ${form.id} has no translation in a language which is configured for Node with ID ${this.currentNode.id}.`,
-            );
-        }
-
-        return fallbackLanguages[0];
+        return this.entityResolver.getLanguage((this.currentItem as Page).contentGroupId);
     }
 
     /**
@@ -894,6 +908,16 @@ span.diff-html-added {
             : (item.lockedBy as User)?.id !== currentUserId;
     }
 
+    public updateFormSchema(changes: FormSchema): void {
+        (this.currentItem as Form).data.schema = changes;
+        this.markContentAsModifiedInState(true);
+    }
+
+    public updateFormUiSchema(changes: FormUISchema): void {
+        (this.currentItem as Form).data['ui-schema'] = changes;
+        this.markContentAsModifiedInState(true);
+    }
+
     public handleItemSave(behaviour: SaveBehaviour): Promise<any> | undefined {
         switch (behaviour) {
             case SaveBehaviour.REGULAR:
@@ -1056,6 +1080,7 @@ span.diff-html-added {
                 })
                     .then(() => {
                         this.currentItemClean = true;
+                        this.formListLoader.reload();
                         this.changeDetector.markForCheck();
 
                         this.notification.show({
@@ -1258,8 +1283,7 @@ span.diff-html-added {
         const form = this.currentItem as Form;
         return this.folderActions.publishForms([form])
             .then(() => {
-                // refresh content list to update state changes
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
                 if (closeEditor) {
                     this.closeEditor();
                 }
@@ -1395,21 +1419,20 @@ span.diff-html-added {
      */
     private saveForm(): Promise<any> {
         const id = this.currentItem.id;
-        const currentForm = this.currentItem as Form<Normalized>;
-        const payload = {
-            name: currentForm.name,
-            description: currentForm.description,
-            successPageId: currentForm.successPageId,
-            successNodeId: currentForm.successNodeId,
-            languages: currentForm.languages,
-            data: currentForm.data,
-        };
+        const currentForm = this.currentItem as Form;
         this.appState.dispatch(new StartSavingAction());
 
-        return this.client.form.update(id, payload).pipe(
+        return this.client.form.update(id, {
+            data: {
+                ...currentForm.data,
+            },
+            name: currentForm.name,
+            description: currentForm.description,
+            languages: currentForm.languages,
+        }).pipe(
             tap(() => {
                 this.appState.dispatch(new SaveSuccessAction());
-                this.folderActions.refreshList('form');
+                this.formListLoader.reload();
 
                 this.notification.show({
                     id: `form-save-success-with-publish:${this.currentItem.id}`,
@@ -1559,7 +1582,7 @@ span.diff-html-added {
         this.frameUrlSub.next(new URL(this.urlBuilder.stateToUrl(state, this.currentItem), window.location as any).toString());
     }
 
-    private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form<Normalized> | Node<Normalized>): boolean {
+    private allTagsHaveConstructs(item: ItemWithObjectTags<Normalized> | Form | Node<Normalized>): boolean {
         const constructs = [];
         if (item.type === 'node' || item.type === 'form') {
             return true;

@@ -23,6 +23,7 @@ import {
     findList,
     getAlohaIFrame,
     itemAction,
+    selectEditorTab,
     selectNode,
 } from './helpers';
 
@@ -83,6 +84,7 @@ test.describe('Link Checker', () => {
         // Activate the toolbar
         await content.click();
 
+        await selectEditorTab(page, 'formatting');
         const insertLinkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
         await insertLinkButton.click();
 
@@ -126,6 +128,7 @@ test.describe('Link Checker', () => {
         // Activate the toolbar
         await content.click();
 
+        await selectEditorTab(page, 'formatting');
         const insertLinkButton = findAlohaComponent(page, { slot: 'insertLink', type: 'toggle-split-button' });
         await insertLinkButton.click();
 

@@ -5,8 +5,10 @@
         [ngClass]="[size || '', type || '']"
         [class.btn-flat]="!!flat || !!icon"
         [class.btn-icon]="!!icon"
-        [type]="buttonType"
+        [type]="submit ? 'submit' : 'button'"
         [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
         (click)="preventDisabledClick($event)"
     >
         <ng-content></ng-content>

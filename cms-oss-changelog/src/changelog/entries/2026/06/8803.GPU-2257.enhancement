@@ -1,0 +1,35 @@
+New additions to the @npm@ packages
+
+
+h5. @gentics/common
+
+
+New package which contains common utility functions, models, and the sorts.
+
+@RxJS@ utilities are in a separate entrypoint, available under <code>@gentics/common/rxjs</code>.
+
+
+h5. @gentics/ui-core
+
+
+New component @gtx-form-element-container@ which is a container component for form-elements,
+to provide consistent styling and usage across all form-elements.
+
+
+New base components @BaseFormPropertiesComponent@ and @BaseFormListComponent@ which have been moved here from the <code>@gentics/cms-components</code> package.
+
+
+h5. @gentics/cms-components
+
+
+Added new @gtxI18nObject@ pipe to translate @I18nString@ objects easily.
+
+
+New entrypoint @aloha@ which contains the Aloha-Editor integration to work with angular. Available under <code>@gentics/cms-components/aloha</code>.
+
+
+h5. @gentics/form-grid
+
+
+New package which replaces the old <code>@gentics/form-generator</code> package.
+Contains the implementation for the new form management in Gentics CMS.

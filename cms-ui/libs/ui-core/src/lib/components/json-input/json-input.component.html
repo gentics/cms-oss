@@ -9,6 +9,7 @@
     [name]="name"
     [id]="id"
     [value]="rawValue"
-    (blur)="handleBlur()"
+    (focus)="handleFocus($event)"
+    (blur)="handleBlur($event)"
     (valueChange)="updateRawValue($event)"
 ></gtx-textarea>

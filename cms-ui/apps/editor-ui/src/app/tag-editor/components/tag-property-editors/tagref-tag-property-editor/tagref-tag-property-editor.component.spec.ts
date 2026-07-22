@@ -1,18 +1,25 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowseBoxComponent } from '@gentics/cms-components';
+import { BrowseBoxComponent, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, PageTagTagPartProperty, ResponseCode, TagPart, TagPartType, TagPropertyType, TemplateTagTagPartProperty } from '@gentics/cms-models';
-import { getExamplePageData, getExampleTemplateData } from '@gentics/cms-models/testing/test-data.mock';
+import {
+    EditableTag,
+    PageTagTagPartProperty,
+    ResponseCode,
+    TagPart,
+    TagPartType,
+    TagPropertyType,
+    TemplateTagTagPartProperty,
+} from '@gentics/cms-models';
+import { getExamplePageData, getExampleTemplateData } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../../testing';
+import { componentTest, configureComponentTest, MockApiBase } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { Api, ApiBase } from '../../../../core/providers/api';
-import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';
@@ -67,6 +74,10 @@ class MockI18nService {
 
 class MockFolderActions { }
 
+function getDisplayValue(fixture: ComponentFixture<any>): string {
+    return (fixture.nativeElement as HTMLElement).querySelector('.display-value')?.textContent || '';
+}
+
 /**
  * TODO: Implement tests after feature release in Dec 2018.
  */
@@ -88,6 +99,7 @@ describe('TagRefTagPropertyEditor', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
+                { provide: GCMS_UI_SERVICES_PROVIDER, useValue: null },
                 Api,
                 TagPropertyEditorResolverService,
             ],
@@ -98,6 +110,7 @@ describe('TagRefTagPropertyEditor', () => {
                 TagRefTagPropertyEditor,
                 TestComponent,
                 ValidationErrorInfoComponent,
+                TagPropertyLabelPipe,
             ],
         });
     });
@@ -123,7 +136,8 @@ describe('TagRefTagPropertyEditor', () => {
 
             instance.tagPart = tagPart;
             fixture.detectChanges();
-            tick();
+            tick(2000);
+            fixture.detectChanges();
 
             const editorElement = fixture.debugElement.query(By.directive(TagRefTagPropertyEditor));
             expect(editorElement).toBeTruthy();
@@ -244,64 +258,75 @@ describe('TagRefTagPropertyEditor', () => {
             const editor: TagRefTagPropertyEditor = editorElement.componentInstance;
             editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
             editor.registerOnChange(() => null);
+            editorElement.injector.get(ChangeDetectorRef).detectChanges();
+            editorElement.injector.get(ChangeDetectorRef).markForCheck();
             fixture.detectChanges(); // detect changes after calling initTagPropertyEditor() (!= ngOnInit) s.t. the displayValue$ observable is subscribed to
-            tick();
+            tick(2000);
 
             // Make sure that the BrowseBox displays the correct initial values.
             const browseBoxElement = editorElement.query(By.directive(BrowseBoxComponent));
             expect(browseBoxElement).toBeTruthy();
             const browseBox = browseBoxElement.componentInstance as BrowseBoxComponent;
+            fixture.detectChanges();
+            browseBoxElement.injector.get(ChangeDetectorRef).detectChanges();
+            browseBoxElement.injector.get(ChangeDetectorRef).markForCheck();
+            tick(2000);
             expect(browseBox.label).toEqual(tagPart.name); // Here it is expected that the element is not mandatory.
             expect(browseBox.disabled).toBe(context.readOnly);
+            const displayValue = getDisplayValue(fixture);
 
             if (origTagProperty.type === TagPropertyType.PAGETAG) {
                 if (origTagProperty.pageId) {
                     const tag = PAGE_A.tags['content'];
                     if (origTagProperty.pageId === PAGE_A.id && origTagProperty.contentTagId === tag.id) {
-                        expect(browseBox.displayValue).toEqual(`${tag.name} - ${TAG_TYPE.name}`);
+                        expect(displayValue).toEqual(`${tag.name}`);
                         expect(getTagTypeSpy.calls.argsFor(0)[0]).toEqual(tag.constructId, 'wrong ID used for tag type');
                     } else {
                         // Simulated removed tag
-                        expect(browseBox.displayValue).toEqual('editor.tag_not_found_in_page');
+                        expect(displayValue).toEqual('editor.tag_no_selection');
                     }
                 } else {
-                    expect(browseBox.displayValue).toEqual('editor.tag_no_selection');
+                    expect(displayValue).toEqual('editor.tag_no_selection');
                 }
 
                 // If an image was pre-selected, make sure that is has been loaded.
-                let callIndex = 1;
-                if (origTagProperty.pageId) {
-                    expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.pageId, 'wrong page ID loaded');
-                    expect(getItemSpy.calls.argsFor(0)[1]).toEqual('page', 'wrong item type loaded');
-                    expect(getItemSpy.calls.argsFor(0)[2]).toEqual({ folder: false, template: false }, 'wrong options');
-                    ++callIndex;
-                }
+                // Disabled: Browse box doesn't load these anymore, especially since it's a deprecated feature anyways.
+                //
+                // let callIndex = 1;
+                // if (origTagProperty.pageId) {
+                //     expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.pageId, 'wrong page ID loaded');
+                //     expect(getItemSpy.calls.argsFor(0)[1]).toEqual('page', 'wrong item type loaded');
+                //     expect(getItemSpy.calls.argsFor(0)[2]).toEqual({ folder: false, template: false }, 'wrong options');
+                //     ++callIndex;
+                // }
 
-                expect(getItemSpy.calls.count()).toBe(callIndex);
+                // expect(getItemSpy.calls.count()).toBe(callIndex);
 
             } else if (origTagProperty.type === TagPropertyType.TEMPLATETAG) {
                 if (origTagProperty.templateId) {
                     const tag = TEMPLATE_A.templateTags['content'];
                     if (origTagProperty.templateId === TEMPLATE_A.id && origTagProperty.templateTagId === tag.id) {
-                        expect(browseBox.displayValue).toEqual(`${tag.name} - ${TAG_TYPE.name}`);
+                        expect(displayValue).toEqual(`${tag.name}`);
                         expect(getTagTypeSpy.calls.argsFor(0)[0]).toEqual(tag.constructId, 'wrong ID used for tag type');
                     } else {
                         // Simulated removed tag
-                        expect(browseBox.displayValue).toEqual('editor.tag_not_found_in_template');
+                        expect(displayValue).toEqual('editor.tag_no_selection');
                     }
                 } else {
-                    expect(browseBox.displayValue).toEqual('editor.tag_no_selection');
+                    expect(displayValue).toEqual('editor.tag_no_selection');
                 }
 
                 // If an image was pre-selected, make sure that is has been loaded.
-                let callIndex = 1;
-                if (origTagProperty.templateId) {
-                    expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.templateId, 'wrong template ID loaded');
-                    expect(getItemSpy.calls.argsFor(0)[1]).toEqual('template', 'wrong item type loaded');
-                    ++callIndex;
-                }
+                // Disabled: Browse box doesn't load these anymore, especially since it's a deprecated feature anyways.
+                //
+                // let callIndex = 1;
+                // if (origTagProperty.templateId) {
+                //     expect(getItemSpy.calls.argsFor(0)[0]).toEqual(origTagProperty.templateId, 'wrong template ID loaded');
+                //     expect(getItemSpy.calls.argsFor(0)[1]).toEqual('template', 'wrong item type loaded');
+                //     ++callIndex;
+                // }
 
-                expect(getItemSpy.calls.count()).toBe(callIndex);
+                // expect(getItemSpy.calls.count()).toBe(callIndex);
             }
 
             getItemSpy.and.stub();

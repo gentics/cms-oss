@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { UserUpdateRequest } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export enum MeshUserPropertiesMode {
     CREATE = 'create',
@@ -18,9 +17,9 @@ export enum MeshUserPropertiesMode {
         generateFormProvider(MeshUserPropertiesComponent),
         generateValidatorProvider(MeshUserPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpdateRequest> implements OnChanges {
+export class MeshUserPropertiesComponent extends BaseFormPropertiesComponent<UserUpdateRequest> implements OnChanges {
 
     public readonly MeshUserPropertiesMode = MeshUserPropertiesMode;
 

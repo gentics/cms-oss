@@ -1,3 +1,4 @@
+import { NgModule, provideZoneChangeDetection } from '@angular/core';
 import { getTestBed } from '@angular/core/testing';
 import {
     BrowserTestingModule,
@@ -12,9 +13,14 @@ import { getInstance, setInstance } from './lib/common';
 // Correct the timezone, as in the CI it might be different
 setInstance(getInstance().tz('Europe/Vienna'));
 
+@NgModule({
+    providers: [provideZoneChangeDetection()],
+})
+class AppTestingModule {}
+
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(
-    BrowserTestingModule,
+    [BrowserTestingModule, AppTestingModule],
     platformBrowserTesting(), {
         teardown: { destroyAfterEach: false },
     },

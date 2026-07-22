@@ -1,4 +1,4 @@
-import { InjectionToken } from "@angular/core";
+import { InjectionToken } from '@angular/core';
 
 export interface IFileDropAreaOptions {
     /**
@@ -25,7 +25,7 @@ export interface IFileDropAreaOptions {
 export const DEFAULT_FILE_DROP_AREA_OPTIONS: IFileDropAreaOptions = {
     accept: '*',
     disabled: false,
-    multiple: true
+    multiple: true,
 };
 
 export interface IDraggedFile {
@@ -37,4 +37,3 @@ export interface IDraggedFile {
  * @internal
  */
 export const FILE_DROPAREA_DRAG_EVENT_TARGET = new InjectionToken('FILE_DROPAREA_DRAG_EVENT_TARGET');
-

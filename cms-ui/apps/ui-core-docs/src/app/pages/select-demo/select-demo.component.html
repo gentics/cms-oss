@@ -350,6 +350,29 @@
   </div>
 </gtx-demo-block>
 
+<gtx-demo-block demoTitle="Select-All Select">
+  <div class="demo-result">
+    <div class="column small-8">
+      <gtx-select label="Select" [(ngModel)]="selectAllVal" [selectAll]="true" [multiple]="true">
+        @for (item of options; track item) {
+          <gtx-option [value]="item"></gtx-option>
+        }
+      </gtx-select>
+    </div>
+    <div class="column small-4">
+      Value: <code>{{ selectAllVal | json }}</code>
+    </div>
+  </div>
+  <div class="demo-code">
+    <gtx-highlighted-code language="HTML" code='
+        <gtx-select label="Select" [(ngModel)]="selectAllVal" [selectAll]="true" [multiple]="true">
+            <gtx-option *ngFor="let item of options" [value]="item"></gtx-option>
+        </gtx-select>
+        Value: <code>(( selectAllVal | json ))</code>
+    '></gtx-highlighted-code>
+  </div>
+</gtx-demo-block>
+
 <gtx-demo-block demoTitle="Select with placeholder">
   <div class="demo-result">
     <div class="column small-8">

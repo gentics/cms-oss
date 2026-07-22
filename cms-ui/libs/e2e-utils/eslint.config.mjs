@@ -10,6 +10,7 @@ export default [
                 {
                     ignoredFiles: [
                         '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
+                        '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
                     ],
                 },
             ],
@@ -18,9 +19,4 @@ export default [
             parser: await import('jsonc-eslint-parser'),
         },
     },
-    {
-        rules: {
-            'import-x/no-nodejs-modules': 'off'
-        }
-    }
 ];

@@ -279,6 +279,9 @@ public final class I18NHelper {
 	 * @throws NodeException
 	 */
 	public static String get(Map<String, String> i18nMap) throws NodeException {
+		if (i18nMap == null) {
+			return null;
+		}
 		UserLanguage language = UserLanguageFactory.getById(ContentNodeHelper.getLanguageId(), true);
 		return i18nMap.get(language.getCode());
 	}

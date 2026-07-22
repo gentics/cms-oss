@@ -78,6 +78,7 @@ import com.gentics.mesh.core.rest.schema.impl.MicroschemaReferenceImpl;
 import com.gentics.mesh.core.rest.schema.impl.NodeFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.NumberFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
+import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 
 import io.reactivex.Completable;
@@ -174,6 +175,26 @@ public class MeshMicronodePublisher {
 	 */
 	public MeshMicronodePublisher(MeshPublisher publisher) {
 		this.publisher = publisher;
+	}
+
+	/**
+	 * Get the data of this instance as {@link MeshMicronodePublisherData}
+	 * @return data
+	 */
+	protected MeshMicronodePublisherData getData() {
+		return new MeshMicronodePublisherData(MeshPublisher.convertMap(microschemaMap, MicroschemaResponse::toJson),
+				filters, combinedFilter);
+	}
+
+	/**
+	 * Set the data from the given {@link MeshMicronodePublisherData}
+	 * @param data data to set
+	 */
+	protected void setData(MeshMicronodePublisherData data) {
+		microschemaMap = MeshPublisher.convertMap(data.microschemaMap,
+				json -> JsonUtil.readValue(json, MicroschemaResponse.class));
+		filters = data.filters;
+		combinedFilter = data.combinedFilter;
 	}
 
 	/**
@@ -959,5 +980,12 @@ public class MeshMicronodePublisher {
 		}
 
 		return allDone;
+	}
+
+	/**
+	 * Record holding the data
+	 */
+	public final static record MeshMicronodePublisherData(Map<String, String> microschemaMap,
+			Map<String, NodeObjectFilter> filters, OrFilter combinedFilter) {
 	}
 }

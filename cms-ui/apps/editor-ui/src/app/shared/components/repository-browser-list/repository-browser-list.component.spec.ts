@@ -1,7 +1,7 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
@@ -25,10 +25,11 @@ import {
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
     getExampleTemplateDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { NEVER, Observable } from 'rxjs';
+import { componentTest } from '../../../../testing/component-test';
+import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { FolderApi } from '../../../core/providers/api';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -58,6 +59,7 @@ describe('RepositoryBrowserList', () => {
     beforeEach(() => {
         configureComponentTest({
             imports: [
+                HttpClientTestingModule,
                 GenticsUICoreModule.forRoot(),
             ],
             providers: [

@@ -210,6 +210,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             buttons.sort((a, b) => a.label.localeCompare(b.label));
 
             return {
+                id: 'products',
                 i18nLabel: 'editor.product_tools_label',
                 buttons: [buttons],
             };
@@ -235,6 +236,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
                 buttons.sort((a, b) => a.label.localeCompare(b.label));
 
                 return {
+                    id: 'custom-tools',
                     i18nLabel: 'editor.custom_tools_label',
                     buttons: [buttons],
                 };

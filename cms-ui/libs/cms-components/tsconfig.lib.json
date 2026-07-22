@@ -1,24 +1,22 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": ["node", "jquery"],
-        "moduleResolution": "bundler"
+        "types": ["node", "jquery", "jasmine"]
     },
     "include": [
         "src/**/*.ts",
+        "testing/src/**/*.ts",
+        "aloha/src/**/*.ts",
         "auth/src/**/*.ts"
     ],
     "exclude": [
-        "test.ts",
-        "**/*.spec.ts",
         "cypress/**/*",
-        "cypress.config.ts",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "cypress.*.ts",
+        "**/*.spec.ts",
+        "**/*.cy.ts"
     ]
 }

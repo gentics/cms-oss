@@ -2,6 +2,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { I18nNotificationService } from '@gentics/cms-components';
 import {
+    AccessControlledType,
     AllowedSelection,
     AllowedSelectionType,
     Favourite,
@@ -22,6 +23,7 @@ import {
     Page,
     PageListOptions,
     PageResponse,
+    PrivilegeMap,
     Raw,
     RepoItem,
     RepositoryBrowserSorting,
@@ -30,9 +32,10 @@ import {
     Tag,
     Template,
     TemplateResponse,
-    TotalUsageResponse
+    TotalUsageResponse,
 } from '@gentics/cms-models';
-import { cloneWithSymbols } from '@gentics/ui-core';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { cloneWithSymbols } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
@@ -48,6 +51,7 @@ import {
     filter,
     map,
     mapTo,
+    mergeMap,
     publishReplay,
     refCount,
     skip,
@@ -57,7 +61,7 @@ import {
     take,
     tap,
 } from 'rxjs/operators';
-import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '../../../common/models';
+import { FolderPermissionData, RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -140,6 +144,10 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     private currentContentLanguageSubject = new BehaviorSubject<Language>(undefined);
     currentContentLanguage$ = this.currentContentLanguageSubject.asObservable();
 
+    /** Same as `currentContentLanguageSubject`, just for forms specifically, as these are managed separately */
+    private currentFormLanguageSubject = new BehaviorSubject<Language>(undefined);
+    currentFormLanguage$ = this.currentFormLanguageSubject.asObservable();
+
     /** Emits the current filter term when it changes */
     filter$ = new BehaviorSubject('');
 
@@ -192,12 +200,13 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     startPageId$: Observable<number | undefined>;
 
     folders$: Observable<Folder<Raw>[]>;
-    forms$: Observable<Form<Raw>[]>;
+    forms$: Observable<Form[]>;
     pages$: Observable<Page<Raw>[]>;
     files$: Observable<File<Raw>[]>;
     images$: Observable<Image<Raw>[]>;
     templates$: Observable<Template<Raw>[]>;
     tags$: Observable<Tag[]>;
+    folderPermissions$: Observable<FolderPermissionData>;
 
     private allowed: AllowedSelection;
     private currentParent$ = new BehaviorSubject<Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>>(undefined);
@@ -220,6 +229,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
 
     constructor(
         private api: Api,
+        private client: GCMSRestClientService,
         private errorHandler: ErrorHandler,
         private appState: ApplicationStateService,
         private entitityResolver: EntityResolver,
@@ -364,6 +374,11 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         this.fetchContentsFromAPI();
     }
 
+    setFormLanguage(lang: Language): void {
+        this.currentFormLanguageSubject.next(lang);
+        this.fetchContentsFromAPI();
+    }
+
     setSearch(search: string): void {
         if (search !== this.search$.value) {
             const mightSearchPage = this.allowed.contenttag || this.allowed.page;
@@ -405,7 +420,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
     getTotalUsageForCurrentItemsOfType(type: 'file' | 'form' | 'image' | 'page'): void {
         // emits current item of given type immediately due to publishReplay in filteredItems$.
         // typescript would trip over more specific union types at the filter function below, thus we use these super type
-        let itemsOfType$: Observable<InheritableItem<Raw>[]> | null = null;
+        let itemsOfType$: Observable<(InheritableItem<Raw> | Form)[]> | null = null;
         switch (type) {
             case 'file':
                 itemsOfType$ = this.files$;
@@ -441,7 +456,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
                     .filter((key: number) => !isNaN(key));
 
                 const updatedItems: RepoItem[] = this.items$.value.map((item: RepoItem) => {
-                    const clone = cloneWithSymbols(item);
+                    const clone = cloneWithSymbols(item) as any;
                     if (clone.type === type) {
                         if (idsWithUsage.includes(clone.id)) {
                             clone.usage = usage[clone.id];
@@ -485,10 +500,14 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         }
         if (contentLanguage) {
             this.currentContentLanguageSubject.next(contentLanguage);
+            this.currentFormLanguageSubject.next(contentLanguage);
         } else {
             // set content language per default to current folder language, if the node supports languages.
             const activeLanguage = this.entitityResolver.getLanguage(this.appState.now.folder.activeLanguage);
             this.currentContentLanguageSubject.next(activeLanguage);
+
+            const activeFormLang = this.entitityResolver.getLanguage(this.appState.now.folder.activeFormLanguage);
+            this.currentFormLanguageSubject.next(activeFormLang);
         }
 
         if (options.startFolder != null) {
@@ -563,7 +582,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         );
 
         this.folders$ = itemStream<Folder<Raw>>((item) => item.type === 'folder');
-        this.forms$ = itemStream<Form<Raw>>((item) => item.type === 'form');
+        this.forms$ = itemStream<Form>((item) => item.type === 'form');
         this.pages$ = itemStream<Page<Raw>>((item) => item.type === 'page');
         this.files$ = itemStream<File<Raw>>((item) => item.type === 'file');
         this.images$ = itemStream<Image<Raw>>((item) => item.type === 'image');
@@ -571,8 +590,33 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
         this.tags$ = itemStream<Tag>((item) => item.type === 'TEMPLATETAG' || item.type === 'CONTENTTAG');
 
         this.startPageId$ = this.currentParent$.pipe(
-            map((parent) => parent && parent.type === 'folder' && parent.startPageId || undefined),
+            map((parent) => parent?.type === 'folder' ? parent.startPageId : undefined),
             distinctUntilChanged(isEqual),
+        );
+
+        this.folderPermissions$ = combineLatest([
+            this.currentParent$.asObservable(),
+            this.currentNodeId$,
+        ]).pipe(
+            filter(([parent]) => parent.type === 'folder'),
+            map(([folder, nodeId]) => [folder.id, nodeId]),
+            distinctUntilChanged(isEqual),
+            mergeMap(([folderId, nodeId]) => this.client.permission.getInstance(AccessControlledType.FOLDER, folderId, { map: true, nodeId: nodeId })),
+            map((res) => {
+                const normalizedPrivileges: PrivilegeMap = {
+                    privileges: res.privilegeMap.privileges,
+                    languages: (res.privilegeMap.languages || []).reduce((acc, data) => {
+                        acc[data.language.id] = data.privileges;
+                        return acc;
+                    }, {}),
+                };
+                return {
+                    privileges: normalizedPrivileges,
+                    permissions: res.permissionsMap,
+                };
+            }),
+            publishReplay(1),
+            refCount(),
         );
 
         this.subscriptions.push(
@@ -823,7 +867,7 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             }
 
             case 'page': {
-                const requestTemplate = (itemType === 'page' && this.allowed.template || this.allowed.templatetag);
+                const requestTemplate = (itemType === 'page' && (this.allowed.template || this.allowed.templatetag));
                 let listOptions: PageListOptions = { ...listOptionsWithSorting };
 
                 if (requestTemplate) {

@@ -4,8 +4,9 @@
   @if (canBeSelected) {
     <div class="checkbox-wrapper">
       <gtx-checkbox
-        [checked]="isSelected"
-      (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
+        [value]="isSelected"
+        (valueChange)="toggleSelect.emit(!isSelected)"
+      ></gtx-checkbox>
     </div>
   }
   @if (!canBeSelected) {

@@ -64,18 +64,6 @@ export interface GCMSUI {
         imagestoreUrl: string;
     };
     /**
-     * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     */
-    restRequestGET: (endpoint: string, params?: object) => Promise<object>;
-    /**
-     * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
-     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
-     * the documentation, e.g. `/folder/create`.
-     */
-    restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
-    /**
      * Tells the editor whether the page content has been modified. When set to `true`, the
      * "save" button will be enabled.
      */

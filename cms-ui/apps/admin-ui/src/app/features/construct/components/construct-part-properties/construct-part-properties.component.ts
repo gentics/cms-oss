@@ -1,8 +1,4 @@
 import {
-    createBlacklistValidator,
-    createI18nRequiredValidator,
-} from '@admin-ui/common';
-import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -13,10 +9,10 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
 import {
-    CmsI18nValue,
     DataSource,
+    I18nString,
     Language,
     MarkupLanguage,
     OverviewSetting,
@@ -31,8 +27,12 @@ import {
     TagPropertyType,
     MarkupLanguageType,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    createBlacklistValidator,
+    createI18nRequiredValidator,
+	createJSONValidator,
+} from '../../../../common';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -43,7 +43,7 @@ export interface TagPartPropertiesFormData {
     /** Part keyword */
     keyword: string;
     /** Name in the current language */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 
     /** Order index of part (legacy/ portentially to be deprecated) */
     partOrder: number;
@@ -144,7 +144,7 @@ const TRANSLATED_NAME_PROP = Symbol('translated-name');
     standalone: false,
 })
 export class ConstructPartPropertiesComponent
-    extends BasePropertiesComponent<TagPartPropertiesFormData>
+    extends BaseFormPropertiesComponent<TagPartPropertiesFormData>
     implements OnChanges {
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
@@ -270,7 +270,7 @@ export class ConstructPartPropertiesComponent
             defaultProperty: new FormControl(null),
 
             /** JSON schema (for JSON type only) */
-            jsonSchema: new FormControl(null, GtxJsonValidator),
+            jsonSchema: new FormControl(null, createJSONValidator()),
             // ///// TYPE-DEPENDANT:
 
             // ///// ONLY for HTML/Text inputs

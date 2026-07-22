@@ -1,8 +1,7 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-language-properties',
@@ -15,7 +14,7 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
     ],
     standalone: false
 })
-export class LanguagePropertiesComponent extends BasePropertiesComponent<Language> {
+export class LanguagePropertiesComponent extends BaseFormPropertiesComponent<Language> {
 
     protected createForm(): FormGroup<any> {
         return new FormGroup<any>({

@@ -374,7 +374,7 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
           )
         ) : (
           objectFit === 'none' ? (
-            <View style={[{ width: viewportW, height: lockedViewportHRef.current ?? viewportH ?? natDpH ?? fallbackSquareH, overflow: 'hidden', position: 'relative' }, mapAlign(align)]}>
+            <View style={[{ width: viewportW, height: lockedViewportHRef.current ?? viewportH ?? natDpH ?? fallbackSquareH, overflow: 'hidden', position: 'relative', marginInline: 'auto' }, mapAlign(align)]}>
               {!loaded && !localErrMsg && (
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                   <FormElementLoader loading={true} />
@@ -385,7 +385,40 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
                   <AndpIcon name="warning" size={warningIconSize} style={{ color: standardElement.validationError.color }} />
                 </View>
               ) : (
-              <Pressable accessibilityRole="imagebutton" onPress={handlePressImage} style={{ alignSelf: 'stretch' }}>
+              <Pressable accessibilityRole="imagebutton" onPress={handlePressImage} style={{ alignItems: 'center'}}>
+                {Platform.OS === 'web' ? (
+                  // Web: RNW bildet resizeMode="center" als Scale-Down (getBackgroundSize) ab, nicht als
+                  // Originalgröße-Crop. Für echtes object-fit: none rendern wir daher ein natives <img>.
+                  React.createElement('img', {
+                    src: dataUri || resolvedUrl,
+                    alt: alt || '',
+                    draggable: false,
+                    onLoad: (e: any) => {
+                      try {
+                        const imgEl = e?.currentTarget || e?.target;
+                        if (imgEl && imgEl.naturalWidth && imgEl.naturalHeight) {
+                          setNatW((p) => p ?? imgEl.naturalWidth);
+                          setNatH((p) => p ?? imgEl.naturalHeight);
+                          // ratio für naturalW (Box-Breite bei fixer Höhe) – auch wenn targetH gesetzt ist
+                          setRatio((r) => r ?? imgEl.naturalHeight / imgEl.naturalWidth);
+                        }
+                      } catch {}
+                      if (localErrMsg) setLocalErrMsg('');
+                      setLoaded(true);
+                    },
+                    onError: () => {
+                      setLocalErrMsg(t('form_image_invalidImageUrl'));
+                      setLoaded(true);
+                    },
+                    style: {
+                      width: viewportW,
+                      height: lockedViewportHRef.current ?? viewportH ?? natDpH ?? fallbackSquareH,
+                      objectFit: 'none',
+                      objectPosition: 'center',
+                      display: 'block',
+                    },
+                  })
+                ) : (
                 <Image
                   source={{ uri: dataUri || resolvedUrl }}
                   onLoad={(() => {
@@ -420,10 +453,11 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
                   }}
                   fadeDuration={0}
                   {...(Platform.OS === 'ios' ? { progressiveRenderingEnabled: false as any } : {})}
-                  resizeMode={'stretch'}
+                  resizeMode={'center'}
                   style={{ width: natDpW ?? viewportW, height: natDpH ?? (lockedViewportHRef.current ?? viewportH ?? ((natDpW && ratio) ? (natDpW * (natH ?? 0)) / (natW ?? 1) : fallbackSquareH)) }}
                   {...a11y}
                 />
+                )}
               </Pressable>
               )}
             </View>

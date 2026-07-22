@@ -16,6 +16,7 @@ export interface IFileCardProps {
     onRemove: () => void;
     onLink: () => void;
     showDownload: boolean;
+    showDelete: boolean;
     t: TFunction;
     parentJsonPath: string;
     index:number;
@@ -49,6 +50,7 @@ function FileCard({
     onRemove,
     onLink,
     showDownload,
+    showDelete,
     t,
     parentJsonPath,
     index,
@@ -176,13 +178,15 @@ function FileCard({
                             <AndpIcon name="download" style={styles.downloadIcon}></AndpIcon>
                         </Pressable>
                     }
-                    <Pressable style={styles.iconButton} onPress={() => onRemove()} onHoverIn={handleHoverIn}
-                        id={`${parentJsonPath}-binary-file-delete-btn-${index}`}
-                        //@ts-ignore
-                        dataSet={{ class: 'binary-file-delete-btn' }}
-                    >
-                        <AndpIcon name="trashCan" style={styles.deleteIcon}></AndpIcon>
-                    </Pressable>
+                    {showDelete &&
+                        <Pressable style={styles.iconButton} onPress={() => onRemove()} onHoverIn={handleHoverIn}
+                            id={`${parentJsonPath}-binary-file-delete-btn-${index}`}
+                            //@ts-ignore
+                            dataSet={{ class: 'binary-file-delete-btn' }}
+                        >
+                            <AndpIcon name="trashCan" style={styles.deleteIcon}></AndpIcon>
+                        </Pressable>
+                    }
                 </View>
             </Animated.View>
 

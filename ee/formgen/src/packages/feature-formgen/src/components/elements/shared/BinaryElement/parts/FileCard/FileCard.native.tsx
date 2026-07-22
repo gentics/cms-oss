@@ -35,12 +35,14 @@ function FileCard({
     onRemove,
     onLink,
     showDownload,
+    showDelete,
     t
 }: {
     file: IBinaryFile;
     onRemove: () => void;
     onLink: () => void;
     showDownload: boolean;
+    showDelete: boolean;
     t: TFunction;
 }) {
     const [hovered, setHovered] = useState(false);
@@ -134,11 +136,13 @@ function FileCard({
                 </>
             )}
 
-            <View style={styles.headerActions}>
-                <Pressable style={styles.iconButton} onPress={handleRemove}>
-                    <AndpIcon name="trashCan" style={styles.deleteIcon}></AndpIcon>
-                </Pressable>
-            </View>
+            {showDelete &&
+                <View style={styles.headerActions}>
+                    <Pressable style={styles.iconButton} onPress={handleRemove}>
+                        <AndpIcon name="trashCan" style={styles.deleteIcon}></AndpIcon>
+                    </Pressable>
+                </View>
+            }
 
             {/* Footer — filename (ellipsis) + filetype */}
             <View style={styles.footer}>

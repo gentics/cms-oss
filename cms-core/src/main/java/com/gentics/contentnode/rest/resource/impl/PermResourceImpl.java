@@ -69,8 +69,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@GET
-	@Path("/{type}")
-	public PermBitsResponse getPermissions(@PathParam("type") String objType, @QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws NodeException {
+	@Path("/{permType}")
+	public PermBitsResponse getPermissions(@PathParam("permType") String objType, @QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws NodeException {
 		TypePerms permType = getPermType(objType);
 		expectNoInstances(permType);
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -99,8 +99,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@GET
-	@Path("/{type}/{id}")
-	public PermBitsResponse getPermissions(@PathParam("type") String objType, @PathParam("id") int objId, @QueryParam("nodeId") @DefaultValue("0") int nodeId,
+	@Path("/{permType}/{id}")
+	public PermBitsResponse getPermissions(@PathParam("permType") String objType, @PathParam("id") int objId, @QueryParam("nodeId") @DefaultValue("0") int nodeId,
 			@QueryParam("type") @DefaultValue("-1") int checkType, @QueryParam("lang") @DefaultValue("0") int languageId,
 			@QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws NodeException {
 		TypePerms permType = getPermType(objType);
@@ -141,8 +141,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@GET
-	@Path("/{perm}/{type}/{id}")
-	public PermResponse getObjectPermission(@PathParam("perm") Permission perm, @PathParam("type") String objType, @PathParam("id") int objId,
+	@Path("/{perm}/{permType}/{id}")
+	public PermResponse getObjectPermission(@PathParam("perm") Permission perm, @PathParam("permType") String objType, @PathParam("id") int objId,
 			@QueryParam("nodeId") @DefaultValue("0") int nodeId) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -187,8 +187,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@POST
-	@Path("/{type}")
-	public GenericResponse setPermissions(@PathParam("type") String type, @QueryParam("wait") @DefaultValue("0") long waitMs, SetPermsRequest req)
+	@Path("/{permType}")
+	public GenericResponse setPermissions(@PathParam("permType") String type, @QueryParam("wait") @DefaultValue("0") long waitMs, SetPermsRequest req)
 			throws NodeException {
 		TypePerms permType = getPermType(type);
 		expectNoInstances(permType);
@@ -203,8 +203,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@POST
-	@Path("/{type}/{id}")
-	public GenericResponse setPermissions(@PathParam("type") String objType, @PathParam("id") int objId, @QueryParam("wait") @DefaultValue("0") long waitMs,
+	@Path("/{permType}/{id}")
+	public GenericResponse setPermissions(@PathParam("permType") String objType, @PathParam("id") int objId, @QueryParam("wait") @DefaultValue("0") long waitMs,
 			SetPermsRequest req) throws NodeException {
 		TypePerms permType = getPermType(objType);
 		expectInstances(permType);
@@ -219,8 +219,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@GET
-	@Path("/list/{type}")
-	public GroupsPermBitsResponse list(@PathParam("type") String objType) throws NodeException {
+	@Path("/list/{permType}")
+	public GroupsPermBitsResponse list(@PathParam("permType") String objType) throws NodeException {
 		TypePerms permType = getPermType(objType);
 		String logObjectTag = "{" + objType + "}";
 
@@ -271,8 +271,8 @@ public class PermResourceImpl implements PermResource {
 
 	@Override
 	@GET
-	@Path("/list/{type}/{id}")
-	public GroupsPermBitsResponse list(@PathParam("type") String objType, @PathParam("id") int objId) throws NodeException {
+	@Path("/list/{permType}/{id}")
+	public GroupsPermBitsResponse list(@PathParam("permType") String objType, @PathParam("id") int objId) throws NodeException {
 		TypePerms permType = getPermType(objType);
 		String logObjectTag = "{" + objType + "." + objId + "}";
 

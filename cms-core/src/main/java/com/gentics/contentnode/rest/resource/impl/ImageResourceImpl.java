@@ -33,18 +33,6 @@ import java.util.stream.Collectors;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.operator.TransposeDescriptor;
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -129,6 +117,16 @@ import com.gentics.lib.image.ImageUtils;
 import com.gentics.lib.image.ResizeFilter;
 import com.gentics.lib.image.SmarterResizeFilter;
 import com.gentics.lib.log.NodeLogger;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource for loading and manipulating Images in GCN
@@ -585,18 +583,6 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.ImageResource@loadContent(Integer id)
-	 */
-	@GET
-	@Path("/content/load/{id}")
-	@Produces("image/*")
-	public Response loadContent(@PathParam("id") Integer id) {
-		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
-		// return Response.ok(null, (MediaType)null).build();
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.api.ImageResource#create(com.gentics.contentnode.rest.model.request.ImageCreateRequest)
 	 */
 	@POST
@@ -748,13 +734,6 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while saving image " + id + ": " + e.getLocalizedMessage()));
 		}
-	}
-
-	@POST
-	@Path("/content/save/{id}")
-	@Consumes("image/*")
-	public GenericResponse saveContent(InputStream fileContent) {
-		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 	}
 
 	/* (non-Javadoc)

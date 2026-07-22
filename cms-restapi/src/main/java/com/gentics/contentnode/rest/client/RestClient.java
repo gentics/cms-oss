@@ -40,15 +40,10 @@ import com.gentics.contentnode.rest.model.response.VersionResponse;
 import com.gentics.contentnode.rest.version.Main;
 
 /**
- * <p>This client provides wrappers, helper-methods and exception-handling to facilitate requests to the REST API.
- * It is initialized with a URL pointing to the base-location providing the services. After a successful login,
- * a WebTarget-object can be retrieved that is then used to assemble and send requests; response-objects are
- * returned from the server, containing the requested data and further information in the case of an error.</p>
- *
  * <p>The Rest API client builds upon an underlying Jersey-client: detailed information about the use of the
  * WebTarget-object (base) to build requests can be found at http://jersey.java.net/ .</p>
  */
-public class RestClient {
+public class RestClient implements RestApi {
 	private WebTarget base;
 	// cookie handler (for storing cookies per client)
 	private CookieHandler cookieHandler = new CookieManager();
@@ -107,6 +102,7 @@ public class RestClient {
 	 * @param password password
 	 * @throws RestException If the login failed
 	 */
+	@Override
 	public void login(String username, String password) throws RestException {
 		LoginRequest request = new LoginRequest();
 
@@ -126,6 +122,7 @@ public class RestClient {
 	 *
 	 * @throws RestException If the login via SSO failed
 	 */
+	@Override
 	public void ssologin() throws RestException {
 		String response = base.path("auth").path("ssologin").request(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.TEXT_PLAIN).get(String.class);
 
@@ -143,6 +140,7 @@ public class RestClient {
 	 *
 	 * @throws RestException If the logout failed
 	 */
+	@Override
 	public void logout() throws RestException {
 		GenericResponse response = base.path("auth").path("logout").path(sid).request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
 
@@ -157,6 +155,7 @@ public class RestClient {
 	 * @return user
 	 * @throws RestException if authentication fails
 	 */
+	@Override
 	public User authenticate(String sid, String sessionSecret) throws RestException {
 		AuthenticationResponse response = base.path("auth").path("validate").path(sid + sessionSecret).request(MediaType.APPLICATION_JSON_TYPE)
 				.get(AuthenticationResponse.class);
@@ -214,6 +213,7 @@ public class RestClient {
 	 *
 	 * @throws RestException Mismatch between the versions detected
 	 */
+	@Override
 	public void assertMatchingVersion() throws RestException {
 		VersionResponse serverVersion = base.queryParam("sid", sid).path("admin").path("version").request(MediaType.APPLICATION_JSON_TYPE)
 				.get(VersionResponse.class);
@@ -232,6 +232,7 @@ public class RestClient {
 	 * @return The base resource, with the active SID already set
 	 * @throws RestException If no valid SID is registered with the client
 	 */
+	@Override
 	public WebTarget base() throws RestException {
 		if (sid != null) {
 			return base.queryParam("sid", sid);
@@ -244,6 +245,7 @@ public class RestClient {
 	 * Get the ID of the active session, as generated during login
 	 * @return session ID
 	 */
+	@Override
 	public String getSid() {
 		return sid;
 	}
@@ -251,6 +253,7 @@ public class RestClient {
 	/**
 	 * Set the ID of the session that should be used.
 	 */
+	@Override
 	public void setSid(String sid) {
 		this.sid = sid;
 	}
@@ -268,6 +271,7 @@ public class RestClient {
 	 * @return stored cookies
 	 * @throws RestException
 	 */
+	@Override
 	public List<Cookie> getCookies() throws RestException {
 		CookieStore cookieStore = ApacheConnectorProvider.getCookieStore(jerseyClient);
 		if (cookieStore != null) {
@@ -281,6 +285,7 @@ public class RestClient {
 	 * Get the cookie handler
 	 * @return cookie handler
 	 */
+	@Override
 	public CookieHandler getCookieHandler() {
 		return cookieHandler;
 	}

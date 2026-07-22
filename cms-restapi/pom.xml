@@ -37,6 +37,7 @@
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
 				<includes>
 					<include>**/*</include>
 				</includes>
@@ -68,7 +69,7 @@
 			<plugin>
 				<groupId>io.swagger.core.v3</groupId>
 				<artifactId>swagger-maven-plugin-jakarta</artifactId>
-				<version>2.2.28</version>
+				<version>${swagger.version}</version>
 				<configuration>
 					<resourcePackages>
 						<resourcePackage>com.gentics.contentnode.rest.resource</resourcePackage>
@@ -77,34 +78,7 @@
 					<outputFileName>openapi</outputFileName>
 					<outputFormat>JSONANDYAML</outputFormat>
 					<prettyPrint>TRUE</prettyPrint>
-					<!-- TODO: how is this done with this plugin -->
-					<openAPI>
-						<info>
-							<title>GcmsApi</title>
-							<description>${project.name}</description>
-							<contact><url>${project.url}</url></contact>
-							<version>${project.version}</version>
-						</info>
-						<components>
-							<securitySchemes>
-								<sid>
-									<type>apikey</type>
-									<description>CMS SID</description>
-									<name>sid</name>
-									<in>query</in>
-								</sid>
-							</securitySchemes>
-						</components>
-						<securityRequirements>
-							<one>
-								<entries>
-									<entry>
-										<name>sid</name>
-									</entry>
-								</entries>
-							</one>
-						</securityRequirements>
-					</openAPI>
+					<configurationFilePath>${project.build.outputDirectory}/openapiconfig.yaml</configurationFilePath>
 				</configuration>
 				<executions>
 					<execution>

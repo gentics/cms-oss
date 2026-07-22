@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue where the name of the template from a page would not be displayed in the page's properties, when the template is not linked to the folder anymore and the editor has permissions to edit the page.

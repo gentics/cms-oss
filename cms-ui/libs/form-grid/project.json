@@ -23,10 +23,12 @@
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": [
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
+            ],
             "options": {
-                "jestConfig": "libs/form-grid/jest.config.cts",
-                "tsConfig": "libs/form-grid/tsconfig.spec.json"
+                "jestConfig": "{projectRoot}/jest.config.ts"
             },
             "configurations": {
                 "watch": {
@@ -36,7 +38,7 @@
                     "color": false,
                     "colors": false,
                     "ci": true,
-                    "jestConfig": "libs/form-grid/jest.config.ci.cts"
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
                 }
             }
         },

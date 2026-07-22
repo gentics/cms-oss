@@ -4,5 +4,28 @@
     "sourceRoot": "libs/e2e-utils/src",
     "projectType": "library",
     "tags": ["lib"],
-    "targets": {}
+    "targets": {
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": [
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
+            ],
+            "options": {
+                "jestConfig": "{projectRoot}/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "color": false,
+                    "colors": false,
+                    "ci": true,
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
+                }
+            }
+        }
+    }
 }

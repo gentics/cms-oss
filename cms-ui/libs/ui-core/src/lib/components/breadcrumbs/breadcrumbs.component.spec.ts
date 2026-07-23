@@ -114,12 +114,8 @@ describe('Breadcrumbs', () => {
                 { text: 'B', href: './b' },
                 { text: 'C', href: '#c' },
             ];
-
-            debugger;
             
             fixture.detectChanges();
-
-            console.log(linkHrefs(fixture));
             
             tick(1000);
             expect(linkHrefs(fixture)).toEqual(['/a', './b', '#c']);
@@ -133,8 +129,6 @@ describe('Breadcrumbs', () => {
             expect(linkHrefs(fixture)).toEqual(['/aa', './bb', '#cc'],
                 'href of breadcrumb links did not change by value');
 
-            console.log(linkHrefs(fixture));
-
             // Change by reference
             component.links = [
                 { text: 'A', href: '/aaa' },
@@ -145,8 +139,6 @@ describe('Breadcrumbs', () => {
 
             expect(linkHrefs(fixture)).toEqual(['/aaa', './bbb', '#ccc'],
                 'href of breadcrumb links did not change by reference');
-
-            console.log(linkHrefs(fixture));
         }),
     );
 

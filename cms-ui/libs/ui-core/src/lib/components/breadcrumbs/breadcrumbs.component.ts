@@ -151,9 +151,6 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes['links']) {
-        console.log('links changed:', changes['links'].currentValue);
-    }
         coerceInstance(this, ['multiline', 'multilineExpanded', 'disabled'], changes);
         if (changes['links'] || changes['routerLinks']) {
             const allLinks = (this.links || []).concat(this.routerLinks || []);

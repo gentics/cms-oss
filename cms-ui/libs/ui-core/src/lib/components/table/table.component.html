@@ -14,7 +14,7 @@
             class="selection-checkbox"
             [value]="!(rows?.length < 1 && totalCount < 1) && allSelected"
             [disabled]="disabled || rows?.length < 1 && totalCount < 1"
-            (valueChange)="toggleAllSelections($event)"
+            (valueChange)="toggleAllSelections()"
           ></gtx-checkbox>
         }
       </div>
@@ -51,7 +51,7 @@
             [attr.data-id]="action.id"
             [icon]="true"
             [size]="'small'"
-            [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || selected.length < 1 || !selectable || !(action | gtxTableActionEnabled)"
+            [disabled]="disabled || (rows?.length < 1 && (totalCount ?? 0) < 1) || selectedCount < 1 || !selectable || !(action | gtxTableActionEnabled)"
             [title]="action.label"
             [type]="action.type"
             (click)="handleMultiActionClick(action)"
@@ -82,7 +82,7 @@
             <ng-container
               [ngTemplateOutlet]="filters[column.id]"
                 [ngTemplateOutletContext]="{
-                    row: row,
+                    row: rows,
                     column: column
                 }"
             ></ng-container>
@@ -123,7 +123,7 @@
             [value]="selected[row.id] === true"
             [indeterminate]="selected[row.id] === CHECKBOX_STATE_INDETERMINATE"
             [disabled]="disabled"
-            (valueChange)="updateRowSelection(row, $event)"
+            (valueChange)="updateRowSelection(row)"
           ></gtx-checkbox>
         </div>
       }

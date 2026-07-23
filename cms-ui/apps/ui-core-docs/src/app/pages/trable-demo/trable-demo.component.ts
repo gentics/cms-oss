@@ -5,6 +5,7 @@ import {
     TableActionClickEvent,
     TableColumn,
     TableRow,
+    TableSelection,
     TableSortOrder,
     TrableRow,
     TrableRowExpandEvent,
@@ -172,8 +173,12 @@ export class TrableDemoPage implements OnInit {
         this.rebuildRows();
     }
 
-    updateSelection(selection: string[]): void {
-        this.selection = selection;
+    updateSelection(selection: string[] | TableSelection): void {
+        this.selection = Array.isArray(selection)
+            ? selection
+            : Object.entries(selection)
+                .filter(([_, state]) => state === true)
+                .map(([id]) => id);
     }
 
     rebuildRows(): void {

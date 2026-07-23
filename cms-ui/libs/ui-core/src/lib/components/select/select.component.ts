@@ -5,8 +5,10 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
+    EventEmitter,
     Input,
     OnChanges,
+    Output,
     QueryList,
     SimpleChanges,
     ViewChild,
@@ -112,6 +114,9 @@ export class SelectComponent
      */
     @Input()
     public disableUnknownValues = false;
+
+    @Output()
+    public override valueChange = new EventEmitter<number>();
 
     @ViewChild(DropdownListComponent, { static: true })
     private dropdownList: DropdownListComponent;

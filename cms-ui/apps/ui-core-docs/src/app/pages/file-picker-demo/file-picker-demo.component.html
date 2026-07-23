@@ -92,7 +92,7 @@
       are passed to the drop area and drop events are passed to the file picker.
     </p>
     <div>
-      <gtx-file-picker gtxFileDropArea
+      <gtx-file-picker [gtxFileDropArea]
         gtxPreventFileDrop="page"
         (fileSelect)="selectedFilesC = $event"
         (fileSelectReject)="rejectedFilesC = $event"

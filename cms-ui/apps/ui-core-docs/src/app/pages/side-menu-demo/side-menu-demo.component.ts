@@ -15,6 +15,6 @@ export class SideMenuDemoPage {
 
     displayMenu1 = false;
     displayMenu2 = false;
-    menuPosition = 'left';
+    menuPosition:"left" | "right" = 'left';
     menuWidth = '400px';
 }

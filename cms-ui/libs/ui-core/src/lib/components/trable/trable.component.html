@@ -46,7 +46,7 @@
                         class="action-button"
                         [icon]="true"
                         [size]="'small'"
-                        [disabled]="(rows?.length < 1) || (action.disabled | gtxTableActionEnabled)"
+                        [disabled]="(rows?.length < 1) || !(action | gtxTableActionEnabled)"
                         [title]="action.label"
                         [type]="action.type"
                         [attr.data-id]="action.id"
@@ -70,14 +70,14 @@
                 <gtx-checkbox
                     class="selection-checkbox"
                     [value]="rowSelected"
-                    (valueChange)="updateRowSelection(row, $event)"
+                    (valueChange)="updateRowSelection(row)"
                 ></gtx-checkbox>
                 }
             </div>
         </ng-template>
 
         <ng-template #rowExpansionTemplate>
-            <button class="row-expansion" (click)="expandRow(row, $event)">
+            <button class="row-expansion" (click)="expandRow(row)">
                 @if (row.hasChildren || !row.loaded) {
                     <icon>chevron_right</icon>
                 }
@@ -110,7 +110,7 @@
             @if (!inlineExpansion) {
                 <div
                     class="grid-cell expand-column"
-                    (click)="cancelEvent($event)"
+                    (click)="cancel($event)"
                 >
                     <ng-container [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
                 </div>
@@ -198,7 +198,7 @@
                             [attr.data-id]="action.id"
                             [icon]="true"
                             [size]="'small'"
-                            [disabled]="action.disabled | gtxTableActionEnabled:row.item"
+                            [disabled]="!(action | gtxTableActionEnabled:row.item)"
                             [title]="action.label"
                             [type]="action.type"
                             [attr.data-id]="action.id"

@@ -1,18 +1,18 @@
 <div class="grouped-tabs">
   <ul class="collapsible expandable" [class.wrap-tab-title]="wrap">
     @for (tabItem of tabs$ | async; track (tabItem.id || tabItem.UNIQUE_ID)) {
-      @if (tabItem.expand != null) {
+      @if (tabItem.expanded != null) {
         <li
           class="tab-group"
           [attr.data-id]="tabItem.id || tabItem.UNIQUE_ID"
-          [class.expanded]="tabItem.expand"
-          [class.is-active]="tabItem.hasActiveChild"
+          [class.expanded]="tabItem.expanded"
+          [class.is-active]="isTabGroup(tabItem) && tabItem.hasActiveChild"
           >
           <div class="collapsible-header" (click)="toggleGroup(tabItem)">
             <ng-container *ngTemplateOutlet="labelTemplate;context:{tabItem: tabItem}"></ng-container>
           </div>
           <div class="collapsible-body">
-            @if (tabItem.tabs.length > 0) {
+            @if (isTabGroup(tabItem) && tabItem.tabs.length > 0) {
               <ul class="tab-links">
                 @for (tab of tabItem.tabs; track (tab.id || tab.UNIQUE_ID)) {
                   <ng-container *ngTemplateOutlet="tabItemTemplate;context:{tabItem: tab}"></ng-container>
@@ -30,7 +30,7 @@
 </div>
 
 <div class="grouped-tab-content">
-  <ng-container *ngTemplateOutlet="currentTab?.content"></ng-container>
+  <ng-container *ngTemplateOutlet="currentTemplate"></ng-container>
 </div>
 
 <ng-template #labelTemplate let-tabItem="tabItem">

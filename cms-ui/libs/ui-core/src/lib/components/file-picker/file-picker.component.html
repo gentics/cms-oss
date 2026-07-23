@@ -17,8 +17,8 @@
     [icon]="icon"
     [type]="dropArea?.pageDragHovered ? 'success' : type"
     [flat]="flat || dropArea?.dragHovered"
-    (focus)="handleFocus($event)"
-    (blur)="handleBlur($event)"
+    (focus)="handleFocus()"
+    (blur)="handleBlur()"
     (click)="openFilePicker()"
 >
     <ng-content></ng-content>

@@ -113,7 +113,7 @@
 
 <gtx-demo-block demoTitle="Grouped Tabs with Status icons">
   <div class="demo-result">
-    <gtx-grouped-tabs [wrap]="wrapWS" statusIcons="true" #groupedTabsWS="gtxGroupedTabs">
+    <gtx-grouped-tabs [wrap]="wrapWS" [statusIcons]="true" #groupedTabsWS="gtxGroupedTabs">
       <gtx-tab-pane #tabWS1>
         <ng-template gtx-tab-label>
           <icon left>add</icon> Standalone Tab 1
@@ -138,25 +138,25 @@
             <gtx-radio-button [(ngModel)]="wrapWS" [value]="false" label="No Wrap"></gtx-radio-button>
           </div>
         </gtx-tab-pane>
-        <gtx-tab-pane disabled="true">
+        <gtx-tab-pane [disabled]="true">
           <ng-template gtx-tab-label>
             Disabled tab
           </ng-template>
           Never seen content
         </gtx-tab-pane>
-        <gtx-tab-pane inactive="true">
+        <gtx-tab-pane [inactive]="true">
           <ng-template gtx-tab-label>
             Inactive tab
           </ng-template>
           This tab is inactive
         </gtx-tab-pane>
-        <gtx-tab-pane readonly="true">
+        <gtx-tab-pane [readonly]="true">
           <ng-template gtx-tab-label>
             Read-only tab
           </ng-template>
           This tab is read-only
         </gtx-tab-pane>
-        <gtx-tab-pane readonly="true" inactive="true">
+        <gtx-tab-pane [readonly]="true" [inactive]="true">
           <ng-template gtx-tab-label>
             Read-only & Inactive tab
           </ng-template>
@@ -251,7 +251,7 @@
 
 <gtx-demo-block demoTitle="Async Tab Rendering with Pure Tabs">
   <div class="demo-result">
-    <gtx-grouped-tabs pure [activeId]="activeTab">
+    <gtx-grouped-tabs [pure] [activeId]="activeTab">
       <gtx-tab-pane id="first-tab" (select)="activeTab = $event">
         <ng-template gtx-tab-label>
           <icon left>add</icon> Standalone Tab 1

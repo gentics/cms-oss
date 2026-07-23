@@ -11,6 +11,7 @@ import {
     Output,
     QueryList,
     SimpleChanges,
+    TemplateRef,
 } from '@angular/core';
 import { BehaviorSubject, combineLatest, ObjectUnsubscribedError } from 'rxjs';
 import { debounceTime, startWith, switchMap, tap } from 'rxjs/operators';
@@ -249,7 +250,11 @@ export class GroupedTabsComponent
     /**
      * Toggle TabGroup open/close state.
      */
-    toggleGroup(group: TabGroupComponent): void {
+    toggleGroup(group: TabPaneComponent | TabGroupComponent): void {
+        if (!(group instanceof TabGroupComponent)) {
+            return;
+        }
+
         group.toggle();
     }
 
@@ -281,5 +286,21 @@ export class GroupedTabsComponent
         this.changeDetector.markForCheck();
 
         this.collectTabs();
+    }
+
+    public isTabGroup(tab: TabPaneComponent | TabGroupComponent): tab is TabGroupComponent {
+        return tab instanceof TabGroupComponent;
+    }
+
+    public get currentTemplate(): TemplateRef<any> | null {
+        const content = this.currentTab?.content;
+
+        if (!content) {
+            return null;
+        }
+
+        return content instanceof TemplateRef
+            ? content
+            : content.template;
     }
 }

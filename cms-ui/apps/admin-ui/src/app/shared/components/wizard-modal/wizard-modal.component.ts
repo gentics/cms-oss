@@ -2,7 +2,6 @@ import { ObservableStopper } from '@admin-ui/common';
 import {
     ChangeDetectionStrategy,
     Component,
-    ComponentFactoryResolver,
     OnDestroy,
     OnInit,
     Type,
@@ -43,16 +42,30 @@ export class WizardModalComponent<T extends Wizard<R>, R> implements OnInit, OnD
 
     private stopper = new ObservableStopper();
 
-    constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
-    ) { }
+    constructor() { }
 
-    ngOnInit(): void {
+    /*ngOnInit(): void {
         const componentFactory = this.componentFactoryResolver.resolveComponentFactory(this.wizardType);
         const wizardHost = this.wizardContainer.createComponent(componentFactory);
         this.applyProperties(wizardHost.instance);
 
         // Force a change detection to trigger ngOnInit(), etc in the wizardHost.
+        wizardHost.changeDetectorRef.detectChanges();
+
+        wizardHost.instance.wizard.wizardFinish.pipe(
+            takeUntil(this.stopper.stopper$),
+        ).subscribe(output => this.closeFn(output));
+
+        wizardHost.instance.wizard.wizardCancel.pipe(
+            takeUntil(this.stopper.stopper$),
+        ).subscribe(() => this.cancelFn());
+    }*/
+
+    ngOnInit(): void {
+        const wizardHost = this.wizardContainer.createComponent(this.wizardType);
+
+        this.applyProperties(wizardHost.instance);
+
         wizardHost.changeDetectorRef.detectChanges();
 
         wizardHost.instance.wizard.wizardFinish.pipe(

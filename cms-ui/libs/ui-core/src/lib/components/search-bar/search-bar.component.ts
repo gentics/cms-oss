@@ -151,10 +151,8 @@ export class SearchBarComponent implements ControlValueAccessor {
         this.change.emit(newVal);
     }
 
-    onInputBlur(event: string): void {
-        if (typeof event === 'string') {
-            this.cvaTouch();
-        }
+    onInputBlur(): void {
+        this.cvaTouch();
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

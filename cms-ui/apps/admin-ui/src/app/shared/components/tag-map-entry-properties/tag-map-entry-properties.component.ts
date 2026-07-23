@@ -28,6 +28,7 @@ import {
     MESH_TAGMAP_ENTRY_ATTRIBUTES,
     SQL_TAGMAP_ENTRY_ATTRIBUTES,
     TAGMAP_ENTRY_ATTRIBUTES,
+    JSON_VALIDATOR,
 } from '../../../common';
 import { TagmapEntryDisplayFields } from '../create-update-tagmapentry-modal/create-update-tagmapentry-modal.component';
 
@@ -149,7 +150,7 @@ export class TagMapEntryPropertiesComponent extends BaseFormPropertiesComponent<
             noIndex: new FormControl(this.safeValue('noIndex') ?? false),
             elasticsearch: new FormControl(this.safeValue('elasticsearch') ?? null),
             micronodeFilter: new FormControl(this.safeValue('micronodeFilter')),
-            jsonSchemaFilter: new FormControl(this.safeValue('jsonSchemaFilter') ?? null, GtxJsonValidator),
+            jsonSchemaFilter: new FormControl(this.safeValue('jsonSchemaFilter') ?? null, JSON_VALIDATOR),
             // SQL CR
             filesystem: new FormControl(this.safeValue('filesystem') ?? false),
             optimized: new FormControl(this.safeValue('optimized') ?? false),

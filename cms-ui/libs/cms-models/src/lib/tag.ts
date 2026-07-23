@@ -1,10 +1,10 @@
 import { schema } from 'normalizr';
-import { CmsI18nValue } from './cms-i18n-value';
+import { I18nString } from './common';
+import { ConstructCategory } from './construct-category';
 import { InstancePermissionItem } from './permissions';
 import { TagPart, TagPartProperty } from './tag-part';
 import { DefaultModelType, IndexByKey, ModelType } from './type-util';
 import { User } from './user';
-import { ConstructCategory } from './construct-category';
 
 export type TagTypeType = 'CONTENTTAG' | 'TEMPLATETAG' | 'OBJECTTAG';
 
@@ -115,7 +115,7 @@ export interface RegexValidationInfo {
      * The description of the validation expression, which should also be used as the error messages
      * if validation fails.
      */
-    description: string;
+    description: string | null;
 
     /**
      * The regular expression as a string.
@@ -145,13 +145,13 @@ export interface TagTypeBase<T extends ModelType> {
     name?: string;
 
     /** The name of the tag in multiple languages */
-    nameI18n?: CmsI18nValue;
+    nameI18n?: I18nString;
 
     /** Description in the current language */
     description?: string;
 
     /** Description of th etag in multiple languages */
-    descriptionI18n?: CmsI18nValue;
+    descriptionI18n?: I18nString;
 
     /** The list of TagParts of this TagType. */
     parts: TagPart[];
@@ -222,8 +222,10 @@ export type ConstructBO = TagTypeBO;
 /**
  * @returns The TagPart that corresponds to the specified TagProperty
  * or null if no matching TagPart can be found in the TagType.
+ * @deprecated Will be removed as this library is for models only
  */
-export function findTagPart(property: TagPartProperty, tagType: TagType): TagPart {
+// TODO: Move this to either cms-components or some other place. This package is for models/types only.
+export function findTagPart(property: TagPartProperty, tagType: TagType): TagPart | null {
     if (tagType.parts) {
         const tagPart = tagType.parts.find((part) => property.partId === part.id
           || (part.defaultProperty != null && property.partId === part.defaultProperty.partId),

@@ -1150,6 +1150,7 @@ test.describe('Page Editing', () => {
         test.describe('Tables', () => {
             const SLOT_CELL_STYLE = 'tableCellStyle';
             const SLOT_CREATE_TABLE = 'createTable';
+            const SLOT_TABLE_CAPTION = 'tableCaption';
             const ROW_COUNT = 3;
             const COLUMN_COUNT = 3;
 
@@ -1251,6 +1252,17 @@ test.describe('Page Editing', () => {
                 for (const cell of cells) {
                     await expect(cell).toContainClass(STYLE_NAME);
                 }
+            });
+
+            test('should change scope to tables when adding a caption', async ({ page }) => {
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await editPageAndCreateTable(page);
+                
+                await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
+
+                const tableTab = page.locator(`gtx-page-editor-tabs button[data-id="table"]`);
+
+                await expect(tableTab).toContainClass("active");
             });
 
             async function editPageAndCreateTable(page) {

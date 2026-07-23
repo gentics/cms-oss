@@ -4,20 +4,12 @@ import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { I18nService } from '@gentics/cms-components';
 import { of } from 'rxjs';
 import { AppSettings } from '../../common/models/app-settings';
-import { GcmsAuthenticationService } from '../../core/services/authentication/gcms-authentication.service';
 import { FilterService } from '../filter/filter.service';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 import { AppService } from './app.service';
 
 class MockTranslateService {
     setFallbackLang = jasmine.createSpy('setFallbackLang');
-}
-
-class MockGcmsAuthenticationService {
-    getSid = jasmine.createSpy('getSid').and.returnValue(
-        of({})
-    );
-    init = jasmine.createSpy('init');
 }
 
 class MockUserSettings {
@@ -36,7 +28,6 @@ describe('AppService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                { provide: GcmsAuthenticationService, useClass: MockGcmsAuthenticationService },
                 { provide: ApiBase },
                 AppService,
                 FilterService,
@@ -56,7 +47,6 @@ describe('AppService', () => {
     it('should build correctly from default settings', fakeAsync(() => {
         const defaultLanguage: GcmsUiLanguage = 'en';
         const defaultAppSettings: AppSettings = {
-            sid: null,
             language: defaultLanguage as any,
             displayFields: []
         };

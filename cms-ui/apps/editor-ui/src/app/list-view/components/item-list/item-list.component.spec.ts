@@ -336,7 +336,6 @@ describe('ItemListComponent', () => {
                 user: {
                     id: 1,
                 } as any,
-                sid: 1,
             },
             editor: {
                 editorIsOpen: false,

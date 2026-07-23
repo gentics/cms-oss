@@ -42,14 +42,16 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.NodeFactory;
-import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.init.InitJob;
 import com.gentics.contentnode.init.MigrateTimeManagement;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.publish.PublishQueue;
@@ -103,6 +105,12 @@ public class DBTestContext extends TestWatcher {
 	 * Id of a user without permissions
 	 */
 	public final static Integer USER_WITHOUT_PERMS = 27;
+
+	public final static int EDITOR_USER_ID = 26;
+
+	public final static int READER_USER_ID = 27;
+
+	public final static int PUBLISHER_USER_ID = 29;
 
 	/**
 	 * Timeout in (ms) for waiting on the dirtqueue worker
@@ -564,19 +572,15 @@ public class DBTestContext extends TestWatcher {
 	public Transaction startSystemUserTransaction() throws NodeException {
 		String SESSION_SECRET = "sidforsystem012";
 
-		// create a dummy session for the systemuser
-		int sessionId;
-		try {
-			sessionId = getDBSQLUtils().executeQueryInsert("INSERT INTO systemsession (secret, user_id, ip, agent, cookie, since, language, val) VALUES ('" + SESSION_SECRET + "', "
-					+ 1 + ", 'localhost', 'JUnit Test', 0, unix_timestamp(), 1, '')");
-			String SESSION_TOKEN = new SessionToken(sessionId, SESSION_SECRET).toString();
-			// now we create a new transaction for the user
-			Transaction t = context.getContentNodeFactory().startTransaction(SESSION_TOKEN, true);
-			context.setTransaction(t);
-			return t;
-		} catch (SQLException e) {
-			throw new NodeException("Error while starting systemuser transaction", e);
-		}
+		DBSession session = Trx.supply(t -> {
+			SystemUser user = t.getObject(SystemUser.class, 1);
+			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+		});
+
+		// now we create a new transaction for the user
+		Transaction t = context.getContentNodeFactory().startTransaction(session, true);
+		context.setTransaction(t);
+		return t;
 	}
 
 	/**
@@ -611,9 +615,11 @@ public class DBTestContext extends TestWatcher {
 		String SESSION_SECRET = "sidwithperms012";
 
 		// create a dummy session for the user
-		int sessionId = getDBSQLUtils().executeQueryManipulation("INSERT INTO systemsession (secret, user_id, ip, agent, cookie, since, language, val) VALUES ('" + SESSION_SECRET
-				+ "', " + USER_WITH_PERMS + ", 'localhost', 'JUnit Test', 0, unix_timestamp(), 1, '')");
-		String SESSION_TOKEN = new SessionToken(sessionId, SESSION_SECRET).toString();
+		DBSession session = Trx.supply(t -> {
+			SystemUser user = t.getObject(SystemUser.class, USER_WITH_PERMS);
+			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+		});
+
 		if (closeCurrent) {
 			Transaction currentTransaction = TransactionManager.getCurrentTransactionOrNull();
 			if (currentTransaction != null) {
@@ -621,10 +627,10 @@ public class DBTestContext extends TestWatcher {
 			}
 		}
 		// now we create a new transaction for the user
-		Transaction t = context.getContentNodeFactory().startTransaction(SESSION_TOKEN, true);
+		Transaction t = context.getContentNodeFactory().startTransaction(session, true);
 		context.setTransaction(t);
 
-		RenderType renderType = RenderType.getDefaultRenderType(context.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, t.getSessionId(), 0);
+		RenderType renderType = RenderType.getDefaultRenderType(context.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, 0);
 
 		renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINK_AUTO, RenderUrl.LINK_AUTO, null));
 		t.setRenderType(renderType);
@@ -638,13 +644,14 @@ public class DBTestContext extends TestWatcher {
 	 * @throws Exception
 	 */
 	public Transaction startTransactionWithoutPermissions(boolean closeCurrent) throws Exception {
-		int SESSION_ID = 1234;
 		String SESSION_SECRET = "sidwithoutperms";
 
 		// create a dummy session for the user
-		getDBSQLUtils().executeQueryManipulation("DELETE FROM systemsession where id = " + SESSION_ID);
-		getDBSQLUtils().executeQueryManipulation("INSERT INTO systemsession (id, secret, user_id, ip, agent, cookie, since, language, val) VALUES (" + SESSION_ID + ", '"
-				+ SESSION_SECRET + "', " + USER_WITHOUT_PERMS + ", 'localhost', 'JUnit Test', 0, unix_timestamp(), 1, '')");
+		DBSession session = Trx.supply(t -> {
+			SystemUser user = t.getObject(SystemUser.class, USER_WITHOUT_PERMS);
+			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+		});
+
 		if (closeCurrent) {
 			Transaction currentTransaction = TransactionManager.getCurrentTransactionOrNull();
 			if (currentTransaction != null) {
@@ -652,7 +659,7 @@ public class DBTestContext extends TestWatcher {
 			}
 		}
 		// now we create a new transaction for the user
-		Transaction t = context.getContentNodeFactory().startTransaction(new SessionToken(SESSION_ID, SESSION_SECRET).toString(), true);
+		Transaction t = context.getContentNodeFactory().startTransaction(session, true);
 		context.setTransaction(t);
 
 		return t;

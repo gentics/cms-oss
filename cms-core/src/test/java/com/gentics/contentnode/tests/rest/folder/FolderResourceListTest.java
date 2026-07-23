@@ -35,11 +35,14 @@ import com.gentics.contentnode.tests.utils.Builder;
 public class FolderResourceListTest extends AbstractListSortAndFilterTest<Folder> {
 	private static Node node;
 
+	private static int nodeRootFolder;
+
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		AbstractListSortAndFilterTest.setupOnce();
 
 		node = supply(() -> createNode());
+		nodeRootFolder = supply(() -> node.getFolder().getId());
 	}
 
 	@Parameters(name = "{index}: sortBy {0}, ascending {2}, filter {3}")
@@ -61,7 +64,7 @@ public class FolderResourceListTest extends AbstractListSortAndFilterTest<Folder
 	@Override
 	protected Folder createItem() throws NodeException {
 		return supply(() -> ModelBuilder.getFolder(Builder.create(com.gentics.contentnode.object.Folder.class, f -> {
-			f.setMotherId(node.getFolder().getId());
+			f.setMotherId(nodeRootFolder);
 			f.setName(randomStringGenerator.generate(5, 10));
 			f.setDescription(randomStringGenerator.generate(10, 20));
 			f.setPublishDir(randomStringGenerator.generate(5, 10));
@@ -72,7 +75,7 @@ public class FolderResourceListTest extends AbstractListSortAndFilterTest<Folder
 	protected AbstractListResponse<Folder> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging)
 			throws NodeException {
 		return new FolderResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)),
 				new FolderListParameterBean(), filter, sort, paging, new EditableParameterBean(),
 				new WastebinParameterBean());
 	}

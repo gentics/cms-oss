@@ -32,17 +32,10 @@ describe('ServerStorage', () => {
                 { provide: AppStateService, useClass: TestAppState },
             ],
         });
-        appState = TestBed.inject(AppStateService) as any;
-        appState.mockState({
-            auth: {
-                sid: 4711,
-            },
-        });
         http = TestBed.inject(HttpClient);
         httpTestingController = TestBed.inject(HttpTestingController);
         errorHandler = new MockErrorHandler();
-        const sid$ = appState.select((state) => state.auth.sid);
-        const apiBase = new ApiBase(http, {} as any as FileUploaderFactory, API_BASE_URL, sid$, errorHandler as any);
+        const apiBase = new ApiBase(http, {} as any as FileUploaderFactory, API_BASE_URL, errorHandler as any);
         api = new GcmsApi(apiBase);
         serverStorage = new ServerStorageService(api);
     });

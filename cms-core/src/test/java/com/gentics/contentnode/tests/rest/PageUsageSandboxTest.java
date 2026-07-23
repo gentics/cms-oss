@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -11,7 +12,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.dirting.AbstractPageDirtingTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 
@@ -25,11 +25,10 @@ public class PageUsageSandboxTest extends AbstractPageDirtingTest {
 	@Test
 	public void testTotalCount() throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		PageResourceImpl resource = new PageResourceImpl();
-		resource.setTransaction(t);
+		t.commit(false);
 
 		Page page = t.getObject(Page.class, PAGE_ID, true);
-		TotalUsageResponse response = resource.getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode().getId());
+		TotalUsageResponse response = getPageResource().getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode().getId());
 		TotalUsageInfo firstInfo = response.getInfos().values().iterator().next();
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 		assertEquals("The page should not be used/referenced by any other elements.", 0, firstInfo.getTotal());
@@ -37,14 +36,15 @@ public class PageUsageSandboxTest extends AbstractPageDirtingTest {
 		Page pageVariant = page.createVariant();
 		pageVariant.setFilename("someExtra.html");
 		pageVariant.save();
+		t.commit(false);
 
-		response = resource.getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode
+		response = getPageResource().getTotalPageUsage(Arrays.asList(PAGE_ID), page.getNode
 				().getId());
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 		firstInfo = response.getInfos().values().iterator().next();
 		assertEquals("The page should not be used/referenced the created variant.", 1, firstInfo.getTotal());
 
-		response = resource.getTotalPageUsage(Arrays.asList(targetPageId), node.getId());
+		response = getPageResource().getTotalPageUsage(Arrays.asList(targetPageId), node.getId());
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 		firstInfo = response.getInfos().values().iterator().next();
 		assertEquals("The page should be used/referenced by three other elements.", 3, firstInfo.getTotal());

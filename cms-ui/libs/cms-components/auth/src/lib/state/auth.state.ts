@@ -44,7 +44,6 @@ export class AuthStateModule {
             isLoggedIn: true,
             loggingIn: false,
             user: action.user,
-            sid: action.sid,
             lastError: '',
         });
     }
@@ -70,7 +69,6 @@ export class AuthStateModule {
             loggingOut: false,
             isLoggedIn: false,
             user: null,
-            sid: null,
         });
     }
 
@@ -100,7 +98,6 @@ export class AuthStateModule {
             isLoggedIn: true,
             loggingIn: false,
             user: action.user,
-            sid: action.sid,
             lastError: '',
         });
     }

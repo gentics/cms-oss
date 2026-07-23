@@ -39,6 +39,7 @@ import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationJobEntry;
 import com.gentics.contentnode.rest.model.response.migration.MigrationJobLogEntryItem;
+import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
 
 /**
  * GCN specific assertions
@@ -171,6 +172,10 @@ public class GCNAssertions extends Assertions {
 
 	public static SchedulerScheduleAssert assertThat(SchedulerSchedule actual) {
 		return new SchedulerScheduleAssert(actual);
+	}
+
+	public static ApiTokenDataModelAssert assertThat(ApiTokenDataModel actual) {
+		return new ApiTokenDataModelAssert(actual);
 	}
 
 	/**

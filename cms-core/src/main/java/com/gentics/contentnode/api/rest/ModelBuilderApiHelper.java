@@ -34,7 +34,7 @@ public class ModelBuilderApiHelper {
 			com.gentics.contentnode.object.Page page = ModelBuilder.getPage(restPage, true);
 
 			NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
-			RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+			RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, RenderType.EM_ALOHA_READONLY, 0);
 			renderType.setLanguage(page.getLanguage());
 			t.setRenderType(renderType);
 			// push the page onto the rendertype stack

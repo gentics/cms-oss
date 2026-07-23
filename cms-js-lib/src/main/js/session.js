@@ -21,7 +21,7 @@
 	 */
 	function fetchUserDetails(success, error) {
 		GCN.ajax({
-			url: GCN.settings.BACKEND_PATH + '/rest/user/me?sid=' + GCN.sid,
+			url: GCN.settings.BACKEND_PATH + '/rest/user/me',
 			dataType: 'json',
 			contentType: 'application/json; charset=utf-8',
 
@@ -50,24 +50,6 @@
 		usingSSO: false,
 
 		isAuthenticating: false,
-
-		/**
-		 * @type {number} Stores the user's session id.  It is required for
-		 *                making REST-API requests.
-		 */
-		sid: null,
-
-		/**
-		 * Sets the `sid'.  If one has already been set, the it will be
-		 * overwritten.
-		 *
-		 * @param {id} sid The value to set the `sid' to.
-		 */
-		setSid: function (sid) {
-			GCN.sid = sid;
-			GCN.pub('session-set', [sid]);
-			GCN.pub('session.sid-set', [sid]);
-		},
 
 		/**
 		 * Log into Content.Node, with the given credentials.
@@ -119,10 +101,6 @@
 								), error);
 								return;
 							}
-							var secret = header.substr(19, 15);
-							GCN.setSid(response.sid + secret);
-						} else {
-							GCN.setSid(response.sid);
 						}
 
 						if (success) {
@@ -224,7 +202,6 @@
 		 * At the moment this only involves clearing the stored SID.
 		 */
 		clearSession: function () {
-			GCN.setSid(null);
 		},
 
 		/**
@@ -260,8 +237,6 @@
 						success(false);
 						break;
 					default:
-						GCN.setSid(response);
-
 						fetchUserDetails(function (user) {
 							if (success) {
 								success(true, {user: user});
@@ -291,17 +266,8 @@
 		 *                         logout request.
 		 */
 		logout: function (success, error) {
-			// If no `sid' exists, the logout fails.
-			if (!GCN.sid) {
-				success(false, GCN.createError('NO_SESSION',
-					'There is no session to log out of.'));
-
-				return;
-			}
-
 			GCN.ajax({
-				url: GCN.settings.BACKEND_PATH + '/rest/auth/logout/' +
-				     GCN.sid,
+				url: GCN.settings.BACKEND_PATH + '/rest/auth/logout',
 				type: 'POST',
 				dataType: 'json',
 				contentType: 'application/json; charset=utf-8',

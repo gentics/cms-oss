@@ -1,20 +1,13 @@
-/*
- * @author tobiassteiner
- * @date Jan 30, 2011
- * @version $Id: PolicyMapResource.java,v 1.1.2.1 2011-02-10 13:43:31 tobiassteiner Exp $
- */
 package com.gentics.contentnode.rest.resource.impl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.response.PolicyGroupResponse;
 import com.gentics.contentnode.rest.model.response.PolicyResponse;
 import com.gentics.contentnode.rest.resource.PolicyMapResource;
@@ -25,51 +18,63 @@ import com.gentics.contentnode.validation.map.PolicyGroup;
 import com.gentics.contentnode.validation.map.PolicyMap;
 import com.gentics.lib.etc.StringUtils;
 
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+
 /**
  * API for reading from the policy map.
  */
 @Path("/policyMap")
+@Produces({ MediaType.APPLICATION_JSON })
 @Consumes("*/*")
-public class PolicyMapResourceImpl extends AuthenticatedContentNodeResource implements PolicyMapResource {
+@Authenticated
+public class PolicyMapResourceImpl implements PolicyMapResource {
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PolicyMapResource#getPolicyGroup(int)
-	 */
+	@Override
 	@GET
 	@Path("/partType/{typeId}/policyGroup")
-	public PolicyGroupResponse getPolicyGroup(@PathParam("typeId") int typeId) throws EntityNotFoundException {
-		ValidatorFactory factory = ValidatorFactory.newInstance();
-		PolicyMap.PartType partType = factory.getPolicyMap().getPartTypeById(typeId);
-		PolicyGroup group;
+	public PolicyGroupResponse getPolicyGroup(@PathParam("typeId") int typeId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			ValidatorFactory factory = ValidatorFactory.newInstance();
+			PolicyMap.PartType partType = factory.getPolicyMap().getPartTypeById(typeId);
+			PolicyGroup group;
 
-		if (null == partType) {
-			group = factory.getPolicyMap().getDefaultPolicyGroup();
-		} else {
-			group = partType.getPolicyGroup();
+			if (null == partType) {
+				group = factory.getPolicyMap().getDefaultPolicyGroup();
+			} else {
+				group = partType.getPolicyGroup();
+			}
+			if (null == group) {
+				throw new EntityNotFoundException("No part type with id `" + typeId + "' and no default policy group");
+			}
+			trx.success();
+			return ModelBuilder.getPolicyGroupResponse(group);
 		}
-		if (null == group) {
-			throw new EntityNotFoundException("No part type with id `" + typeId + "' and no default policy group");
-		}
-		return ModelBuilder.getPolicyGroupResponse(group);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PolicyMapResource#getPolicy(java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/policy")
-	public PolicyResponse getPolicy(@QueryParam("uri") String uri) throws EntityNotFoundException, URISyntaxException {
-		if (StringUtils.isEmpty(uri)) {
-			throw new EntityNotFoundException("A valid `uri' parameter must be provided to retrieve a policy");
-		}
-		ValidatorFactory factory = ValidatorFactory.newInstance();
-		Policy policy = factory.getPolicyMap().getPolicyByURI(new URI(uri));
+	public PolicyResponse getPolicy(@QueryParam("uri") String uri) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			if (StringUtils.isEmpty(uri)) {
+				throw new EntityNotFoundException("A valid `uri' parameter must be provided to retrieve a policy");
+			}
+			ValidatorFactory factory = ValidatorFactory.newInstance();
+			Policy policy = factory.getPolicyMap().getPolicyByURI(new URI(uri));
 
-		if (null == policy) {
-			throw new EntityNotFoundException("Policy with given uri not found in policy map: `" + uri + "'");
+			if (null == policy) {
+				throw new EntityNotFoundException("Policy with given uri not found in policy map: `" + uri + "'");
+			}
+			trx.success();
+			return ModelBuilder.getPolicyResponse(policy);
+		} catch (URISyntaxException e) {
+			throw new NodeException(e);
 		}
-		return ModelBuilder.getPolicyResponse(policy);
 	}
 }

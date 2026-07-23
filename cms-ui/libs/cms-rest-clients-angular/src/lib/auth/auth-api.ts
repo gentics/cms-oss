@@ -25,15 +25,15 @@ export class AuthApi {
     /**
      * Log a user out.
      */
-    logout(sid: number): Observable<Response> {
-        return this.apiBase.post(`auth/logout/${sid}`, '');
+    logout(): Observable<Response> {
+        return this.apiBase.post(`auth/logout`, '');
     }
 
     /**
-     * Validates an sid by checking against the `user/me` endpoint.
+     * Validates the session by checking against the `user/me` endpoint.
      */
-    validate(sid: number): Observable<ValidateSidResponse> {
-        return this.apiBase.get(`user/me?sid=${sid}`);
+    validate(): Observable<ValidateSidResponse> {
+        return this.apiBase.get(`user/me`);
     }
 
     /**

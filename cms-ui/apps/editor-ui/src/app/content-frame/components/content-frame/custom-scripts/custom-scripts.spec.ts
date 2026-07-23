@@ -249,7 +249,7 @@ describe('custom scripts', () => {
 
 class CustomScriptsTestFixture {
 
-    public readonly ALOHAPAGE_URL_OF_OTHER_PAGE = '/alohapage?nodeid=1&language=2&sid=123&real=newview&realid=47';
+    public readonly ALOHAPAGE_URL_OF_OTHER_PAGE = '/alohapage?nodeid=1&language=2&real=newview&realid=47';
     public readonly ALOHAPAGE_URL_OF_EXTERNAL_PAGE = '/some/other/page';
     readonly linkToOtherPage = { nodeId: 1, pageId: 47 };
     readonly urlOfInternalLink = 'internal link (node 1 page 47)';

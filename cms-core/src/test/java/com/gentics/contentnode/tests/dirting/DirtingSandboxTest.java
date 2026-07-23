@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.dirting;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,10 +45,9 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.Overview.ListType;
 import com.gentics.contentnode.rest.model.Overview.SelectType;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.db.SQLExecutor;
@@ -696,9 +696,9 @@ public class DirtingSandboxTest {
 
 		pageY.save();
 
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		com.gentics.contentnode.rest.model.Page restpage = pri.load(pageY.getId().toString(), true, false, false, false, false, false, false, false, false, false, null, null).getPage();
+		t.commit(false);
+
+		com.gentics.contentnode.rest.model.Page restpage = getPageResource().load(pageY.getId().toString(), true, false, false, false, false, false, false, false, false, false, null, null).getPage();
 		com.gentics.contentnode.rest.model.Overview overview = OverviewHelper.extractOverviewFromRestPage(restpage);
 		overview.setListType(ListType.PAGE);
 		overview.setSelectType(SelectType.MANUAL);
@@ -706,7 +706,7 @@ public class DirtingSandboxTest {
 		overview.setSource("Page name goes here:<node page.name>\n");
 		PageSaveRequest psr = new PageSaveRequest();
 		psr.setPage(restpage);
-		pri.save(pageY.getId().toString(), psr);
+		getPageResource().save(pageY.getId().toString(), psr);
 
 		// Publish page with overview
 		pageY.publish();
@@ -776,10 +776,7 @@ public class DirtingSandboxTest {
 	 * @throws Exception
 	 */
 	protected void testDeleteConstruct(boolean enabled) throws Exception {
-		testContext.getContext().login("node", "node");
 		Transaction t = TransactionManager.getCurrentTransaction();
-		String sid = t.getSession().getSessionId() + t.getSession().getSessionSecret();
-		int userId = t.getUserId();
 
 		Node node = ContentNodeTestDataUtils.createNode("testnode", "Testnode", PublishTarget.FILESYSTEM);
 		int constructId = ContentNodeTestDataUtils.createConstruct(node, HTMLPartType.class, "testconstruct", "testpart");

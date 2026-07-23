@@ -7,7 +7,7 @@ global:
       newtab: false
     - id: 1
       key: formgenerator
-      toolUrl: http://www.orf.at/?sid=${SID}
+      toolUrl: http://www.orf.at/
       iconUrl: http://workstation/DEV/ws/burrito.png
       name:
         de: Formulargenerator

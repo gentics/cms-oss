@@ -13,7 +13,6 @@ import { SaveBarComponent } from './components/save-bar/save-bar.component';
 import { ScopeTabsComponent } from './components/scope-tabs/scope-tabs.component';
 import { TranslationsTableComponent } from './components/translations-table/translations-table.component';
 import { TranslationsToolbarComponent } from './components/translations-toolbar/translations-toolbar.component';
-import { AuthenticationService } from './services/authentication.service';
 
 @NgModule({
     declarations: [
@@ -36,7 +35,6 @@ import { AuthenticationService } from './services/authentication.service';
         provideAppInitializer(() => {
             const i18n = inject(I18nService);
             const translate = inject(TranslateService);
-            const auth = inject(AuthenticationService);
             const client = inject(GCMSRestClientService);
 
             translate.setTranslation('de', DE_TRANSLATIONS, true);
@@ -62,14 +60,9 @@ import { AuthenticationService } from './services/authentication.service';
                 }
             }
 
-            auth.init();
-
             client.init({
                 connection: { absolute: false, basePath: '/rest' },
             });
-            if (auth.sid) {
-                client.setSessionId(auth.sid);
-            }
         }),
     ],
     bootstrap: [AppComponent],

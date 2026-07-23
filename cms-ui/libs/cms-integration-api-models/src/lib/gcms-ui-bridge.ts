@@ -36,7 +36,6 @@ export interface ExposedPartialState {
     currentItem: Folder<Normalized> | Page<Normalized> | File<Normalized> | Form | Image<Normalized> | Node<Normalized>;
     editMode: EditMode;
     pageLanguage?: Language;
-    sid: number;
     uiLanguage: GcmsUiLanguage;
     uiVersion: string;
     userId: number;

@@ -23,6 +23,7 @@ import com.gentics.contentnode.rest.DuplicateEntityMapper;
 import com.gentics.contentnode.rest.EntityNotFoundMapper;
 import com.gentics.contentnode.rest.ExceptionRestModelMapper;
 import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
+import com.gentics.contentnode.rest.InvalidSessionIdMapper;
 import com.gentics.contentnode.rest.JsonMappingExceptionMapper;
 import com.gentics.contentnode.rest.JsonParseExceptionMapper;
 import com.gentics.contentnode.rest.ReadOnlyMapper;
@@ -47,6 +48,7 @@ public class RESTApplication extends Application {
 		resources.add(EntityNotFoundMapper.class);
 		resources.add(DuplicateEntityMapper.class);
 		resources.add(InsufficientPrivilegesMapper.class);
+		resources.add(InvalidSessionIdMapper.class);
 		resources.add(WebApplicationExceptionMapper.class);
 		resources.add(CannotModifySubpackageMapper.class);
 		resources.add(RestExceptionMapper.class);

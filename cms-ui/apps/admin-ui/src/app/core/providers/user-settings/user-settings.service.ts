@@ -73,9 +73,9 @@ export class UserSettingsService extends InitializableServiceBase {
     private loadUserSettingsOnLogin(): void {
         this.appState.select((state) => state.auth).pipe(
             // Only trigger when logged in state changed...
-            distinctUntilChanged((a: AuthStateModel, b: AuthStateModel) => a.isLoggedIn === b.isLoggedIn && a.sid === b.sid),
+            distinctUntilChanged((a: AuthStateModel, b: AuthStateModel) => a.isLoggedIn === b.isLoggedIn),
             // ... and only go further if user is logged in
-            filter((auth) => auth.isLoggedIn === true && !!auth.sid),
+            filter((auth) => auth.isLoggedIn === true),
             // Then get all keys
             switchMap(() => this.serverStorage.getAll()),
             takeUntil(this.stopper.stopper$),

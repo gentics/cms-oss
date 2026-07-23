@@ -14,21 +14,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +26,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.ApiTokenFactory;
+import com.gentics.contentnode.auth.ResolvableApiTokenDataModel;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.PrepareStatement;
 import com.gentics.contentnode.distributed.DistributionUtil;
@@ -52,6 +42,7 @@ import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.events.QueueEntryType;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -106,6 +97,10 @@ import com.gentics.contentnode.rest.model.response.log.ActionModel;
 import com.gentics.contentnode.rest.model.response.log.ActionModelList;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntry;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntryList;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
+import com.gentics.contentnode.rest.model.token.ApiTokenListResponse;
 import com.gentics.contentnode.rest.resource.AdminResource;
 import com.gentics.contentnode.rest.resource.parameter.ActionLogParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.DirtQueueParameterBean;
@@ -116,6 +111,8 @@ import com.gentics.contentnode.rest.util.CmpVersionUtils;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.contentnode.rest.version.Main;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.runtime.ReloadConfigurationTask;
@@ -128,6 +125,18 @@ import com.gentics.contentnode.version.ServerVariantService;
 import com.gentics.lib.log.NodeLogger;
 
 import io.reactivex.Flowable;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource for various tasks used by the administrator (like retrieving version numbers)
@@ -573,9 +582,11 @@ public class AdminResourceImpl implements AdminResource {
 				default:
 					break;
 				}
+				String sid = Optional.ofNullable(trx.getTransaction()).map(Transaction::getSession).map(Session::getId)
+						.map(id -> Integer.toString(id)).orElse("");
 				QueueEntry entry = new QueueEntry(timestamp, 0, type.getCode(), eventMask,
 						(String[]) properties.toArray(new String[properties.size()]), 0,
-						trx.getTransaction().getSessionId());
+						sid);
 				entry.store(ContentNodeFactory.getInstance());
 				ActionLogger.logCmd(ActionLogger.MAINTENANCE, type.getCode(), 0, 0, info);
 			}
@@ -775,8 +786,8 @@ public class AdminResourceImpl implements AdminResource {
 			// when maintenance mode was activated, all other user sessions will be invalidated
 			if (request.getMaintenance() == Boolean.TRUE) {
 				Session session = trx.getTransaction().getSession();
-				if (session != null) {
-					DBUtils.update("UPDATE systemsession SET secret = ? WHERE id != ?", "", session.getSessionId());
+				if (session instanceof DBSession dbSession) {
+					DBUtils.update("UPDATE systemsession SET secret = ? WHERE id != ?", "", dbSession.getId());
 				}
 			}
 
@@ -821,6 +832,77 @@ public class AdminResourceImpl implements AdminResource {
 			response.setResponseInfo(responseInfo);
 			trx.success();
 			return response;
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/token")
+	public ApiTokenCreationResponse createAPIToken(ApiTokenCreationRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			// request body must be present and contain a name
+			MiscUtils.checkBody(request, b -> Pair.of("name", b.getName()));
+			// if "expires" is given, it must not be in the past
+			if (request.getExpires() != 0 && request.getExpires() < trx.getTransaction().getUnixTimestamp()) {
+				throw new RestMappedException(I18NHelper.get("exception.expires.past", String.valueOf(request.getExpires()))).setMessageType(Message.Type.WARNING)
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			}
+
+			// we do not allow creation of API Tokens for support users
+			SystemUser user = MiscUtils.load(SystemUser.class, String.valueOf(trx.getTransaction().getUserId()));
+			if (user.isSupportUser()) {
+				throw new RestMappedException(I18NHelper.get("exception.apitoken.supportuser")).setMessageType(Message.Type.WARNING)
+					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			}
+
+			// create the token
+			String token = ApiTokenFactory.createToken();
+
+			ApiTokenDataModel data = ApiTokenFactory.create(request, trx.getTransaction().getUserId(), token);
+
+			ApiTokenCreationResponse response = new ApiTokenCreationResponse()
+					.setData(data)
+					.setToken(token);
+			response.setResponseInfo(ResponseInfo.ok("Successfully created API Token"));
+
+			trx.success();
+			return response;
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/token")
+	public ApiTokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<ResolvableApiTokenDataModel> list = ApiTokenFactory.list(trx.getTransaction().getUserId());
+
+			trx.success();
+			return ListBuilder.from(list, ApiTokenDataModel.class::cast)
+				.filter(ResolvableFilter.get(filter, "id", "name"))
+				.sort(ResolvableComparator.get(sorting, "id", "name", "cdate", "expires", "lastUsed", "valid"))
+				.page(paging)
+				.to(new ApiTokenListResponse());
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/token/{id}")
+	public GenericResponse deleteAPIToken(@PathParam("id") int tokenId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Optional<ResolvableApiTokenDataModel> optToken = ApiTokenFactory.load(trx.getTransaction().getUserId(), tokenId);
+
+			if (optToken.isEmpty()) {
+				throw new EntityNotFoundException(
+						I18NHelper.get("apitoken.notfound", String.valueOf(tokenId)));
+			}
+
+			ApiTokenFactory.delete(tokenId);
+
+			trx.success();
+			return new GenericResponse(null, ResponseInfo.ok("Successfully deleted token %d".formatted(tokenId)));
 		}
 	}
 

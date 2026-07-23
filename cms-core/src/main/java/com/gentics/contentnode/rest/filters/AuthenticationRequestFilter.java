@@ -1,12 +1,26 @@
 package com.gentics.contentnode.rest.filters;
 
+import static com.gentics.contentnode.factory.Trx.supply;
+
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.auth.ApiTokenFactory;
+import com.gentics.contentnode.auth.ResolvableApiTokenDataModel;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.ApiTokenSession;
+import com.gentics.contentnode.factory.DBSession;
+import com.gentics.contentnode.factory.InvalidSessionIdException;
+import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.SessionToken;
+import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.lib.log.NodeLogger;
+
+import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -14,27 +28,9 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.message.internal.MediaTypes;
-import org.glassfish.jersey.server.ContainerRequest;
-
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.etc.ContentNodeHelper;
-import com.gentics.contentnode.factory.InvalidSessionIdException;
-import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.factory.SessionToken;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.rest.util.MiscUtils;
-import com.gentics.lib.log.NodeLogger;
 
 /**
  * Filter implementation that checks authentication with sid/secret
@@ -43,6 +39,8 @@ import com.gentics.lib.log.NodeLogger;
 @Authenticated
 @Priority(Priorities.AUTHENTICATION)
 public class AuthenticationRequestFilter implements ContainerRequestFilter {
+	protected final static Pattern BEARER_TOKEN = Pattern.compile("Bearer\s(.*)");
+
 	@Context
 	UriInfo uriInfo;
 
@@ -51,31 +49,20 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		String sid = getSid(requestContext);
-		String sessionSecret = getSessionSecret();
-
-		if (ObjectTransformer.isEmpty(sid)) {
-			requestContext.abortWith(
-					Response.status(Response.Status.UNAUTHORIZED).entity("sid and session secret required").build());
-			return;
-		}
-
-		// check whether sid/sessionSecret are valid
 		try {
-			SessionToken token = new SessionToken(sid, sessionSecret);
-			Session session = null;
-			try (Trx trx = new Trx(sid, null)) {
-				session = trx.getTransaction().getSession();
-				if (!token.authenticates(session)) {
-					throw new InvalidSessionIdException(sid);
-				}
+			Optional<? extends Session> optSession = supply(() -> tryApiToken());
 
-				session.touch();
-				trx.success();
+			if (optSession.isEmpty()) {
+				optSession = supply(() -> trySessionSecretSession(requestContext));
 			}
-			ContentNodeHelper.setSession(session);
+
+			if (optSession.isPresent()) {
+				ContentNodeHelper.setSession(optSession.get());
+			} else {
+				requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("").build());
+			}
 		} catch (InvalidSessionIdException e) {
-			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("invalid sid").build());
+			requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity("").build());
 		} catch (NodeException e) {
 			NodeLogger.getNodeLogger(getClass()).error(e);
 			requestContext.abortWith(Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(MiscUtils.serverError()).build());
@@ -83,46 +70,48 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 	}
 
 	/**
-	 * Extract the session id from the URI
-	 * @param requestContext request context
-	 * @return sid or null
+	 * Try authenticating with an API Token. If a valid API Token is found as Authorization: Bearer header, a {@link Session} is created and returned.
+	 * Otherwise an empty optional is returned
+	 * @return optional session
+	 * @throws NodeException
 	 */
-	private String getSid(ContainerRequestContext requestContext) {
-		Optional<String> optionalQueryParamSid = Optional.ofNullable(uriInfo.getQueryParameters().get(SessionToken.SESSION_ID_QUERY_PARAM_NAME))
-				.flatMap(values -> values.stream().findFirst());
-		if (optionalQueryParamSid.isPresent()) {
-			return optionalQueryParamSid.get();
+	private Optional<? extends Session> tryApiToken() throws NodeException {
+		Optional<String> optBearerToken = Optional.ofNullable(headers.getHeaderString("Authorization")).map(auth -> BEARER_TOKEN.matcher(auth))
+				.filter(Matcher::matches).map(m -> m.group(1));
+
+		if (optBearerToken.isPresent()) {
+			String token = optBearerToken.get();
+			String tokenHash = ApiTokenFactory.hash(token);
+			Optional<ResolvableApiTokenDataModel> optToken = ApiTokenFactory.load(tokenHash);
+
+			if (optToken.isPresent()) {
+				return Optional.of(new ApiTokenSession(optToken.get()));
+			}
 		}
 
-		Optional<String> optionalRefererSid = Optional.ofNullable(headers.getHeaderString("Referer")).map(this::getSidFromReferer);
-		if (optionalQueryParamSid.isPresent()) {
-			return optionalRefererSid.get();
-		}
-
-		// check whether request is multipart/form-data
-		if (MediaTypes.typeEqual(requestContext.getMediaType(), MediaType.MULTIPART_FORM_DATA_TYPE) && requestContext.hasEntity() && requestContext instanceof ContainerRequest) {
-			ContainerRequest containerRequest = (ContainerRequest) requestContext;
-			containerRequest.bufferEntity();
-			FormDataMultiPart data = containerRequest.readEntity(FormDataMultiPart.class);
-			return Optional.ofNullable(data.getField("sid")).map(FormDataBodyPart::getValue).orElse(null);
-		}
-
-		return null;
+		return Optional.empty();
 	}
 
 	/**
-	 * Try to get the sid from the referer
-	 * @param referer referer
-	 * @return SID or null if not found
+	 * Try authentication with session secret sent as cookie. If a valid session secret is found, a {@link Session} is returned.
+	 * Otherwise an empty optional is returned
+	 * @param requestContext request context
+	 * @return optional session
+	 * @throws NodeException
 	 */
-	private String getSidFromReferer(String referer) {
-		try {
-			List<NameValuePair> queryParams = URLEncodedUtils.parse(new URI(referer), "UTF-8");
-			return queryParams.stream().filter(pair -> SessionToken.SESSION_ID_QUERY_PARAM_NAME.equals(pair.getName())).map(NameValuePair::getValue)
-					.findFirst().orElse(null);
-		} catch (URISyntaxException e) {
-			return null;
+	private Optional<? extends Session> trySessionSecretSession(ContainerRequestContext requestContext) throws NodeException {
+		String sessionSecret = getSessionSecret();
+
+		if (!StringUtils.isEmpty(sessionSecret)) {
+			SessionToken token = new SessionToken(sessionSecret);
+			Optional<DBSession> optSession = DBSession.load(token);
+			if (optSession.isPresent()) {
+				optSession.get().touch();
+			}
+			return optSession;
 		}
+
+		return Optional.empty();
 	}
 
 	/**

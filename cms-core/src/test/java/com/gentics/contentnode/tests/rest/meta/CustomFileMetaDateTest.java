@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
@@ -35,47 +35,49 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	@Override
 	public File updateMetaDated(int updateTime, Integer id, Optional<Integer> maybeDate, Optional<Integer> maybeEDate,
 			Optional<Integer> maybeCustomCDate, Optional<Integer> maybeCustomEDate) throws NodeException {
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(updateTime);
+		systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(updateTime));
 
-			File update = new File();
-			FileSaveRequest request = new FileSaveRequest();
-			request.setFile(update);
-			maybeDate.ifPresent(cdate -> request.getFile().setCdate(cdate));
-			maybeEDate.ifPresent(edate -> request.getFile().setEdate(edate));
-			maybeCustomCDate.ifPresent(cdate -> request.getFile().setCustomCdate(cdate));
-			maybeCustomEDate.ifPresent(edate -> request.getFile().setCustomEdate(edate));
-			GenericResponse response = new FileResourceImpl().save(id, request);
-			assertResponseCodeOk(response);
-
-			trx.success();
-		}
+				File update = new File();
+				FileSaveRequest request = new FileSaveRequest();
+				request.setFile(update);
+				maybeDate.ifPresent(cdate -> request.getFile().setCdate(cdate));
+				maybeEDate.ifPresent(edate -> request.getFile().setEdate(edate));
+				maybeCustomCDate.ifPresent(cdate -> request.getFile().setCustomCdate(cdate));
+				maybeCustomEDate.ifPresent(edate -> request.getFile().setCustomEdate(edate));
+				GenericResponse response = new FileResourceImpl().save(id, request);
+				assertResponseCodeOk(response);
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+			}
+		});
 
 		return loadFile(String.valueOf(id));
 	}
 
 	@Override
 	public File createMetaDated(int createTime, Optional<Consumer<FileCreateRequest>> maybeInflater) throws NodeException {
-		File file = null;
+		int folderId = supply(() -> node.getFolder().getId());
 
-		try (Trx trx = new Trx(systemUser)) {
-			trx.at(createTime);
+		return systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(createTime));
 
-			FileCreateRequest request = new FileCreateRequest();
-			request.setFolderId(node.getFolder().getId());
-			request.setSourceURL(appContext.getBaseUri() + "binary");
+				FileCreateRequest request = new FileCreateRequest();
+				request.setFolderId(folderId);
+				request.setSourceURL(appContext.getBaseUri() + "binary");
 
-			if (maybeInflater.isPresent()) {
-				maybeInflater.get().accept(request);
+				if (maybeInflater.isPresent()) {
+					maybeInflater.get().accept(request);
+				}
+				FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
+				assertResponseCodeOk(response);
+				return response.getFile();
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 			}
-			FileUploadResponse response = ContentNodeRESTUtils.getFileResource().create(request);
-			assertResponseCodeOk(response);
-			file = response.getFile();
-
-			trx.success();
-		}
-
-		return file;
+		});
 	}
 
 	/**
@@ -103,11 +105,9 @@ public class CustomFileMetaDateTest extends CustomMetaDateTest<com.gentics.conte
 	 * @throws NodeException
 	 */
 	protected File loadFile(String pageId) throws NodeException {
-		return supply(() -> {
-			FileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(pageId, false, false, 0, null);
-			assertResponseCodeOk(response);
-			return response.getFile();
-		});
+		FileLoadResponse response = ContentNodeRESTUtils.getFileResource().load(pageId, false, false, 0, null);
+		assertResponseCodeOk(response);
+		return response.getFile();
 	}
 
 	@Override

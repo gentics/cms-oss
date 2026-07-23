@@ -1,8 +1,6 @@
 package com.gentics.contentnode.factory.url;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
@@ -35,8 +33,6 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 	 * Configuration parameter name that is used to store the proxy prefix setting
 	 */
 	public final static String PROXY_PREFIX_PARAM = "proxy_prefix";
-    
-	private String cnSessionId;
 
 	/**
 	 * This is the factory implementation of the renderurl.
@@ -55,8 +51,8 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 			boolean dontAppendFilename = TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature(
 					"disablepreviewurlappendfilename");
 
-			return String.format("/rest/file/content/load/%d?sid=%s&nodeId=%d%s", file.getId(),
-					cnSessionId, file.getNode().getId(), dontAppendFilename ? "" : "&fingerprint=" + file.getMd5());
+			return String.format("/rest/file/content/load/%d?nodeId=%d%s", file.getId(),
+					file.getNode().getId(), dontAppendFilename ? "" : "&fingerprint=" + file.getMd5());
 		}
 
 		protected String renderPage(Page page) throws NodeException {
@@ -85,8 +81,6 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 					url.append(page.getFolder().getNode().getId());
 					url.append("&language=");
 					url.append(page.getLanguageId());
-					url.append("&sid=");
-					url.append(cnSessionId);
 					url.append("&real=").append(realViewMode);
 					url.append("&realid=");
 				} else {
@@ -97,8 +91,6 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 					url.append(page.getId());
 					url.append("?nodeId=");
 					url.append(page.getFolder().getNode().getId());
-					url.append("&sid=");
-					url.append(cnSessionId);
 					return url.toString();
 				}
 			} else {
@@ -109,8 +101,6 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 				url.append(page.getId());
 				url.append("?nodeId=");
 				url.append(page.getFolder().getNode().getId());
-				url.append("&sid=");
-				url.append(cnSessionId);
 				return url.toString();
 			}
 
@@ -152,21 +142,17 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 		protected StringBuffer prepareJavaUrl(StringBuffer url, String servletName, boolean setLanguage) throws NodeException {
 			url.append(getPortletappPrefix());
 			url.append(servletName);
-			url.append("?sid=");
-			url.append(cnSessionId);
+			url.append("?time=");
+			url.append(TransactionManager.getCurrentTransaction().getTimestamp());
 			if (setLanguage) {
 				url.append("&language=");
 				url.append(ContentNodeHelper.getLanguageId());
 			}
-			url.append("&time=");
-			url.append(TransactionManager.getCurrentTransaction().getTimestamp());
 			return url;
 		}
         
 		protected StringBuffer prepareUrl(StringBuffer url) throws NodeException {
 			url.append(getStagPrefix());
-			url.append("?sid=");
-			url.append(cnSessionId);
 			return url;
 		}
         
@@ -225,9 +211,7 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 				StringBuffer url = new StringBuffer();
 
 				url.append(getStagPrefix());
-				url.append("?sid=");
-				url.append(cnSessionId);
-				url.append("&time=");
+				url.append("?time=");
 				url.append(TransactionManager.getCurrentTransaction().getTimestamp());
 				return url.toString();
 			} catch (NodeException e) {
@@ -254,15 +238,6 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
     
 	private String getStagPrefix() throws NodeException {
 		return TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getProperty(STAG_PREFIX_PARAM);
-	}
-
-	/**
-	 * create a new urlfactory, which creates url valid for a given session-id.
-	 *
-	 * @param cnSessionId the session-id of the contentnode-frontend.
-	 */
-	public DynamicUrlFactory(String cnSessionId) {
-		this.cnSessionId = cnSessionId;
 	}
 
 	public RenderUrl createRenderUrl(Class targetObjClass, Integer targetObjId) {

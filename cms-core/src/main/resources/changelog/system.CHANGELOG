@@ -300,3 +300,4 @@ G# New changelog numbers must be generated via https://dev.gentics.com/numbercru
 2024-09-02  CH-1724 GO  SQL CREATE TABLE publish_protocol (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, obj_id INT NOT NULL, type VARCHAR(50) NOT NULL, state TINYINT NOT NULL, user INT NOT NULL, date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP());
 2024-09-02  CH-1725 GO  SQL CREATE INDEX publish_protocol_obj_id_index ON publish_protocol (obj_id, type);
 2025-04-03  CH-1732 PK  SQL ALTER TABLE systemuser ADD COLUMN support_user BOOLEAN NOT NULL DEFAULT false AFTER inboxtoemail;
+2026-07-08  CH-1748 NOP SQL CREATE TABLE api_token (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, user_id INT NOT NULL REFERENCES systemuser(id), name VARCHAR(255), token_hash VARCHAR(64) NOT NULL UNIQUE, cdate INT NOT NULL, expires INT NOT NULL DEFAULT 0, last_used INT NOT NULL DEFAULT 0);

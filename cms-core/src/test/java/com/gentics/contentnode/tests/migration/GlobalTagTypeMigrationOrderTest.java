@@ -22,6 +22,7 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
@@ -30,7 +31,6 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.TagTypeMigrationMapping;
 import com.gentics.contentnode.rest.model.request.migration.TagTypeMigrationRequest;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -71,6 +71,8 @@ public class GlobalTagTypeMigrationOrderTest {
 	 */
 	private static Integer toConstructId;
 
+	private static SystemUser user;
+
 	/**
 	 * Template to migrate
 	 */
@@ -80,6 +82,7 @@ public class GlobalTagTypeMigrationOrderTest {
 	 * Page to migrate
 	 */
 	private Page page;
+
 
 	/**
 	 * Setup static test data
@@ -93,7 +96,7 @@ public class GlobalTagTypeMigrationOrderTest {
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			UserGroup nodeGroup = t.getObject(UserGroup.class, 2);
-			Creator.createUser(LOGIN, PASSWORD, "name", "name", "", Arrays.asList(nodeGroup));
+			user = Creator.createUser(LOGIN, PASSWORD, "name", "name", "", Arrays.asList(nodeGroup));
 			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(nodeGroup), PermHandler.FULL_PERM);
 		});
 	}
@@ -165,12 +168,11 @@ public class GlobalTagTypeMigrationOrderTest {
 			return request;
 		});
 
-		String sid = Trx.supply(() -> ContentNodeRESTUtils.login(LOGIN, PASSWORD));
-		try (Trx trx = new Trx(sid, 2)) {
+		Trx.operate(user, () -> {
 			TagTypeMigrationJob job = new TagTypeMigrationJob();
 			setJobParameter(job, migrationRequest);
 			job.execute(1000, TimeUnit.SECONDS);
-		}
+		});
 
 		// assert that template was migrated
 		Trx.operate(() -> {

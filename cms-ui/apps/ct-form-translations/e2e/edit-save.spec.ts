@@ -12,7 +12,7 @@ import {
     findCellInput,
     findSaveButton,
     findTableRow,
-    navigateToToolWithSid,
+    navigateToTool,
     readDirtyCount,
     waitForToolReady,
 } from './helpers';
@@ -57,8 +57,7 @@ test.describe('form-translations · Edit, Save & Discard', () => {
         });
 
         await test.step('Open tool', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToTool(page);
             await waitForToolReady(page);
             await findTableRow(page, TARGET_KEY).waitFor({ state: 'visible' });
         });
@@ -90,8 +89,7 @@ test.describe('form-translations · Edit, Save & Discard', () => {
         await expectCellValue(page, TARGET_KEY, TARGET_LANG, newValue);
 
         await test.step('Reload and re-verify persistence', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToTool(page);
             await waitForToolReady(page);
             await findTableRow(page, TARGET_KEY).waitFor({ state: 'visible' });
             await expectCellValue(page, TARGET_KEY, TARGET_LANG, newValue);

@@ -1,10 +1,12 @@
 package com.gentics.contentnode.tests.versioning;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +16,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -28,8 +31,6 @@ import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -100,13 +101,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
-		});
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -153,13 +153,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
-		});
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -208,13 +207,12 @@ public class RestoreTest {
 		});
 
 		// restore version 1000 (with ts 3000)
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setTimestamp(3000);
-
-			PageResource res = new PageResourceImpl();
-			ContentNodeRESTUtils.assertResponseOK(res.restoreVersion(page.getId().toString(), 1));
-		});
+		try {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.of(3));
+			ContentNodeRESTUtils.assertResponseOK(getPageResource().restoreVersion(page.getId().toString(), 1));
+		} finally {
+			ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
+		}
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();

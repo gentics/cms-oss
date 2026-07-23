@@ -1,8 +1,3 @@
-/*
- * @author floriangutmann
- * @date Apr 6, 2010
- * @version $Id: PageResource.java,v 1.16.2.1.2.2.2.21 2011-03-29 15:33:37 norbert Exp $
- */
 package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.getItemList;
@@ -48,6 +43,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.etc.ContentMap;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.LangTrx;
@@ -55,16 +51,13 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.AutoCommit;
 import com.gentics.contentnode.factory.ChannelTrx;
-import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.PageLanguageFallbackList;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.TransactionManager.ReturnValueExecutable;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.PageFactory;
@@ -119,6 +112,7 @@ import com.gentics.contentnode.render.renderer.MetaEditableRenderer;
 import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
@@ -186,6 +180,7 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.MiscUtils.PageUsage;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.rest.util.NodeObjectFilter;
 import com.gentics.contentnode.rest.util.Operator;
@@ -204,9 +199,9 @@ import com.gentics.contentnode.validation.validator.ValidationResult;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 
-import de.jkeylockmanager.manager.ReturnValueLockCallback;
 import jakarta.ws.rs.BeanParam;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -226,28 +221,10 @@ import jakarta.ws.rs.core.Response.Status;
  * @author floriangutmann
  */
 @Path("/page")
-public class PageResourceImpl extends AuthenticatedContentNodeResource implements PageResource {
-
-	/**
-	 * Keyed lock to synchronize translation calls for the same contentset
-	 */
-	private static final TransactionLockManager<PageLoadResponse> translateLock = new TransactionLockManager<>();
-
-	/**
-	 * Create an instance
-	 */
-	public PageResourceImpl() {
-		super();
-	}
-
-	/**
-	 * Create an instance using the given transaction
-	 *
-	 * @param t transaction to use
-	 */
-	public PageResourceImpl(Transaction t) {
-		super(t);
-	}
+@Authenticated
+@Produces({ MediaType.APPLICATION_JSON })
+public class PageResourceImpl implements PageResource {
+	protected final static NodeLogger logger = NodeLogger.getNodeLogger(PageResourceImpl.class);
 
 	/**
 	 * Helper method to transform tag references (like <node bla>)
@@ -526,6 +503,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	}
 
 	@Override
+	@GET
 	public PageListResponse list(
 			@BeanParam InFolderParameterBean inFolder,
 			@BeanParam PageListParameterBean pageListParams,
@@ -533,273 +511,242 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
 			@BeanParam PublishableParameterBean publishParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		try {
-			Transaction t = getTransaction();
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(pageListParams.nodeId)) {
+			Transaction t = trx.getTransaction();
 			FolderResourceImpl folderResource = new FolderResourceImpl();
-			boolean channelIdSet = false;
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only)
 					.contains(wastebinParams.wastebinSearch);
 
-			folderResource.setTransaction(t);
+			try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin,
+					inFolder.folderId)) {
+				// load the folder
+				com.gentics.contentnode.object.Folder f = folderResource.getFolder(inFolder.folderId,
+						false);
 
-			try {
-				channelIdSet = setChannelToTransaction(pageListParams.nodeId);
+				// if a language was set, we need to do language fallback here
+				ContentLanguage lang = null;
+				Node node = f.getNode();
 
-				try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin,
-						inFolder.folderId)) {
-					// load the folder
-					com.gentics.contentnode.object.Folder f = folderResource.getFolder(inFolder.folderId,
-							false);
+				if (!ObjectTransformer.isEmpty(pageListParams.language)) {
+					List<ContentLanguage> languages = node.getLanguages();
 
-					// if a language was set, we need to do language fallback here
-					ContentLanguage lang = null;
-					Node node = f.getNode();
-
-					if (!ObjectTransformer.isEmpty(pageListParams.language)) {
-						List<ContentLanguage> languages = node.getLanguages();
-
-						for (ContentLanguage contentLanguage : languages) {
-							if (pageListParams.language.equals(contentLanguage.getCode())
-									|| pageListParams.language.equals(
-									ObjectTransformer.getString(contentLanguage.getId(), null))) {
-								lang = contentLanguage;
-								break;
-							}
-						}
-
-						// when the language was NOT found and language fallback is disabled, we will return an empty list
-						if (lang == null && !pageListParams.langFallback && !"0".equals(
-								pageListParams.language)) {
-							PageListResponse response = new PageListResponse();
-
-							response.setHasMoreItems(false);
-							response.setNumItems(0);
-							response.setResponseInfo(
-									new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
-
-							return response;
-						} else if (lang == null && pageListParams.langFallback) {
-							// language fallback is activated, but the requested
-							// language was not found, so get the first language for the
-							// node (if any)
-							if (languages.size() > 0) {
-								lang = languages.get(0);
-							}
+					for (ContentLanguage contentLanguage : languages) {
+						if (pageListParams.language.equals(contentLanguage.getCode())
+								|| pageListParams.language.equals(
+								ObjectTransformer.getString(contentLanguage.getId(), null))) {
+							lang = contentLanguage;
+							break;
 						}
 					}
 
-					// Check which references shall be added
-					Collection<Reference> fillRefs = new ArrayList<>();
+					// when the language was NOT found and language fallback is disabled, we will return an empty list
+					if (lang == null && !pageListParams.langFallback && !"0".equals(
+							pageListParams.language)) {
+						PageListResponse response = new PageListResponse();
 
-					if (pageListParams.template) {
-						fillRefs.add(Reference.TEMPLATE);
-					}
-					if (pageListParams.folder) {
-						fillRefs.add(Reference.FOLDER);
-					}
-					if (pageListParams.languageVariants) {
-						fillRefs.add(Reference.LANGUAGEVARIANTS);
-					}
-					if (pageListParams.workflowOwn || pageListParams.workflowWatch) {
-						fillRefs.add(Reference.WORKFLOW);
-					}
-					if (pageListParams.translationStatus || pageListParams.inSync != null) {
-						fillRefs.add(Reference.TRANSLATIONSTATUS);
-					}
-					if (pageListParams.contentTags) {
-						fillRefs.add(Reference.CONTENT_TAGS);
-					}
-					if (pageListParams.objectTags) {
-						fillRefs.add(Reference.OBJECT_TAGS_VISIBLE);
-					}
+						response.setHasMoreItems(false);
+						response.setNumItems(0);
+						response.setResponseInfo(
+								new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
 
-					// if restricting with templateIds, make sure we use the IDs of the master objects
-					if (!ObjectTransformer.isEmpty(pageListParams.templateIds) && t.getNodeConfig()
-							.getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
-						List<Template> templates = t.getObjects(Template.class, pageListParams.templateIds);
-						List<Integer> templateMasterIds = new ArrayList<>(templates.size());
-						for (Template tmpl : templates) {
-							templateMasterIds.add(tmpl.getMaster().getId());
-						}
-						pageListParams.templateIds = templateMasterIds;
-					}
-
-					// get the pages
-					List<Page> pages = folderResource.getPagesFromFolder(f,
-							Folder.PageSearch.create().setSearchString(filterParams.query)
-									.setSearchContent(pageListParams.searchContent)
-									.setFileNameSearch(pageListParams.filename)
-									.setNiceUrlSearch(pageListParams.niceUrl)
-									.setWorkflowOwn(pageListParams.workflowOwn)
-									.setWorkflowWatch(pageListParams.workflowWatch)
-									.setEditor(publishParams.isEditor).setCreator(publishParams.isCreator)
-									.setPublisher(publishParams.isPublisher)
-									.setOnline(publishParams.online).setModified(publishParams.modified)
-									.setPlanned(pageListParams.planned).setQueued(pageListParams.queued)
-									.setPriority(pageListParams.priority).setTemplateIds(pageListParams.templateIds)
-									.setPermissions(pageListParams.permission)
-									.setEditors(getMatchingSystemUsers(publishParams.editor, publishParams.editorIds))
-									.setCreators(
-											getMatchingSystemUsers(publishParams.creator, publishParams.creatorIds))
-									.setPublishers(
-											getMatchingSystemUsers(publishParams.publisher, publishParams.publisherIds))
-									.setEditedBefore(publishParams.editedBefore)
-									.setEditedSince(publishParams.editedSince)
-									.setCreatedBefore(publishParams.createdBefore)
-									.setCreatedSince(publishParams.createdSince)
-									.setPublishedBefore(publishParams.publishedBefore)
-									.setPublishedSince(publishParams.publishedSince)
-									.setRecursive(inFolder.recursive).setInherited(pageListParams.inherited)
-									.setWastebin(wastebinParams.wastebinSearch == WastebinSearch.only)
-									.setIncludeMlIds(pageListParams.includeMlIds)
-									.setExcludeMlIds(pageListParams.excludeMlIds),
-							pageListParams.timeDue,
-							pageListParams.inSync);
-
-					if (wastebinParams.wastebinSearch == WastebinSearch.only) {
-						Wastebin.ONLY.filter(pages);
-					}
-
-					// check view permission on the pages
-					for (Iterator<Page> iter = pages.iterator(); iter.hasNext(); ) {
-						Page page = iter.next();
-						if (!PermHandler.ObjectPermission.view.checkObject(page)) {
-							iter.remove();
+						return response;
+					} else if (lang == null && pageListParams.langFallback) {
+						// language fallback is activated, but the requested
+						// language was not found, so get the first language for the
+						// node (if any)
+						if (languages.size() > 0) {
+							lang = languages.get(0);
 						}
 					}
+				}
 
-					// if a language was set, we need to filter out pages of the wrong language
-					if (lang != null) {
-						if (pageListParams.langFallback) {
-							// if language fallback shall be used, we need to do it
-							// now
-							PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(lang, node);
+				// Check which references shall be added
+				Collection<Reference> fillRefs = new ArrayList<>();
 
-							for (Page page : pages) {
-								fallbackList.addPage(page);
-							}
-							pages = fallbackList.getPages();
-						} else {
-							// otherwise we simply ignore languages of the wrong
-							// language
-							for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext(); ) {
-								Page page = iPages.next();
+				if (pageListParams.template) {
+					fillRefs.add(Reference.TEMPLATE);
+				}
+				if (pageListParams.folder) {
+					fillRefs.add(Reference.FOLDER);
+				}
+				if (pageListParams.languageVariants) {
+					fillRefs.add(Reference.LANGUAGEVARIANTS);
+				}
+				if (pageListParams.workflowOwn || pageListParams.workflowWatch) {
+					fillRefs.add(Reference.WORKFLOW);
+				}
+				if (pageListParams.translationStatus || pageListParams.inSync != null) {
+					fillRefs.add(Reference.TRANSLATIONSTATUS);
+				}
+				if (pageListParams.contentTags) {
+					fillRefs.add(Reference.CONTENT_TAGS);
+				}
+				if (pageListParams.objectTags) {
+					fillRefs.add(Reference.OBJECT_TAGS_VISIBLE);
+				}
 
-								if (!lang.equals(page.getLanguage())) {
-									iPages.remove();
-								}
-							}
-						}
-					} else if ("0".equals(pageListParams.language)) {
-						// "0" was set as language, so we only return pages WITHOUT language
-						for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext(); ) {
-							Page page = iPages.next();
+				// if restricting with templateIds, make sure we use the IDs of the master objects
+				if (!ObjectTransformer.isEmpty(pageListParams.templateIds) && t.getNodeConfig()
+						.getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
+					List<Template> templates = t.getObjects(Template.class, pageListParams.templateIds);
+					List<Integer> templateMasterIds = new ArrayList<>(templates.size());
+					for (Template tmpl : templates) {
+						templateMasterIds.add(tmpl.getMaster().getId());
+					}
+					pageListParams.templateIds = templateMasterIds;
+				}
 
-							if (page.getLanguage() != null) {
-								iPages.remove();
-							}
-						}
-					} else {
-						// do the fallback with no specific language
-						PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(null, node);
+				// get the pages
+				List<Page> pages = folderResource.getPagesFromFolder(f,
+						Folder.PageSearch.create().setSearchString(filterParams.query)
+								.setSearchContent(pageListParams.searchContent)
+								.setFileNameSearch(pageListParams.filename)
+								.setNiceUrlSearch(pageListParams.niceUrl)
+								.setWorkflowOwn(pageListParams.workflowOwn)
+								.setWorkflowWatch(pageListParams.workflowWatch)
+								.setEditor(publishParams.isEditor).setCreator(publishParams.isCreator)
+								.setPublisher(publishParams.isPublisher)
+								.setOnline(publishParams.online).setModified(publishParams.modified)
+								.setPlanned(pageListParams.planned).setQueued(pageListParams.queued)
+								.setPriority(pageListParams.priority).setTemplateIds(pageListParams.templateIds)
+								.setPermissions(pageListParams.permission)
+								.setEditors(getMatchingSystemUsers(publishParams.editor, publishParams.editorIds))
+								.setCreators(
+										getMatchingSystemUsers(publishParams.creator, publishParams.creatorIds))
+								.setPublishers(
+										getMatchingSystemUsers(publishParams.publisher, publishParams.publisherIds))
+								.setEditedBefore(publishParams.editedBefore)
+								.setEditedSince(publishParams.editedSince)
+								.setCreatedBefore(publishParams.createdBefore)
+								.setCreatedSince(publishParams.createdSince)
+								.setPublishedBefore(publishParams.publishedBefore)
+								.setPublishedSince(publishParams.publishedSince)
+								.setRecursive(inFolder.recursive).setInherited(pageListParams.inherited)
+								.setWastebin(wastebinParams.wastebinSearch == WastebinSearch.only)
+								.setIncludeMlIds(pageListParams.includeMlIds)
+								.setExcludeMlIds(pageListParams.excludeMlIds),
+						pageListParams.timeDue,
+						pageListParams.inSync);
 
-						fallbackList.setCheckViewPermission(true);
+				if (wastebinParams.wastebinSearch == WastebinSearch.only) {
+					Wastebin.ONLY.filter(pages);
+				}
+
+				// check view permission on the pages
+				for (Iterator<Page> iter = pages.iterator(); iter.hasNext(); ) {
+					Page page = iter.next();
+					if (!PermHandler.ObjectPermission.view.checkObject(page)) {
+						iter.remove();
+					}
+				}
+
+				// if a language was set, we need to filter out pages of the wrong language
+				if (lang != null) {
+					if (pageListParams.langFallback) {
+						// if language fallback shall be used, we need to do it
+						// now
+						PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(lang, node);
 
 						for (Page page : pages) {
 							fallbackList.addPage(page);
 						}
 						pages = fallbackList.getPages();
+					} else {
+						// otherwise we simply ignore languages of the wrong
+						// language
+						for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext(); ) {
+							Page page = iPages.next();
+
+							if (!lang.equals(page.getLanguage())) {
+								iPages.remove();
+							}
+						}
 					}
+				} else if ("0".equals(pageListParams.language)) {
+					// "0" was set as language, so we only return pages WITHOUT language
+					for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext(); ) {
+						Page page = iPages.next();
 
-					Wastebin wastebin;
-
-					switch (wastebinParams.wastebinSearch) {
-						case include:
-							wastebin = Wastebin.INCLUDE;
-							break;
-						case only:
-							wastebin = Wastebin.ONLY;
-							break;
-						case exclude:
-						default:
-							wastebin = Wastebin.EXCLUDE;
-							break;
+						if (page.getLanguage() != null) {
+							iPages.remove();
+						}
 					}
+				} else {
+					// do the fallback with no specific language
+					PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(null, node);
 
-					Map<String, String> fieldMap = new HashMap<>();
-					fieldMap.put("niceUrl", "nice_url");
-					fieldMap.put("alternateUrls", "alternate_urls");
-					fieldMap.put("fileName", "filename");
+					fallbackList.setCheckViewPermission(true);
 
-					ResolvableComparator<Page> comparator = ResolvableComparator.get(
-							sortingParams,
-							fieldMap,
-							// From AbstractContentObject
-							"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
-							// From AbstractPage
-							"seite", "page", "url", "template", "template_id", "ml_id", "name", "nice_url",
-							"niceUrl",
-							"alternate_urls", "alternateUrls", "filename", "fileName", "description",
-							"beschreibung", "priority", "folder_id",
-							"node_id", "tags", "publishtimestamp", "veroeffentlichungsdatum", "creationtimestamp",
-							"erstellungstimestamp", "edittimestamp", "bearbeitungstimestamp", "editdate",
-							"bearbeitungsdatum",
-							"expiredate", "expiretimestamp", "ordner", "folder", "node", "languageset",
-							"ersteller",
-							"creator", "bearbeiter", "editor", "veroeffentlicher", "publisher", "sprach_id",
-							"language_id", "language", "sprache", "languagecode", "sprach_code",
-							"languagevariants",
-							"sprachvarianten", "object", "versions", "version", "pagevariants", "ismaster",
-							"inherited",
-							"edittime", "createtime", "createtimestamp", "timepub", "content_id", "code",
-							"online",
-							"sprachen", "contentset_id");
-
-					PageListResponse response = ListBuilder.from(pages,
-									p -> ModelBuilder.getPage(p, fillRefs, wastebin))
-							.sort(comparator)
-							.page(pagingParams)
-							.to(new PageListResponse());
-
-					response.setStagingStatus(
-							StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName,
-									o -> o.getGlobalId().toString(), pageListParams.languageVariants));
-					return response;
+					for (Page page : pages) {
+						fallbackList.addPage(page);
+					}
+					pages = fallbackList.getPages();
 				}
-			} finally {
-				if (channelIdSet) {
-					// render type channel wieder auf null setzen
-					t.resetChannel();
+
+				Wastebin wastebin;
+
+				switch (wastebinParams.wastebinSearch) {
+					case include:
+						wastebin = Wastebin.INCLUDE;
+						break;
+					case only:
+						wastebin = Wastebin.ONLY;
+						break;
+					case exclude:
+					default:
+						wastebin = Wastebin.EXCLUDE;
+						break;
 				}
+
+				Map<String, String> fieldMap = new HashMap<>();
+				fieldMap.put("niceUrl", "nice_url");
+				fieldMap.put("alternateUrls", "alternate_urls");
+				fieldMap.put("fileName", "filename");
+
+				ResolvableComparator<Page> comparator = ResolvableComparator.get(
+						sortingParams,
+						fieldMap,
+						// From AbstractContentObject
+						"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
+						// From AbstractPage
+						"seite", "page", "url", "template", "template_id", "ml_id", "name", "nice_url",
+						"niceUrl",
+						"alternate_urls", "alternateUrls", "filename", "fileName", "description",
+						"beschreibung", "priority", "folder_id",
+						"node_id", "tags", "publishtimestamp", "veroeffentlichungsdatum", "creationtimestamp",
+						"erstellungstimestamp", "edittimestamp", "bearbeitungstimestamp", "editdate",
+						"bearbeitungsdatum",
+						"expiredate", "expiretimestamp", "ordner", "folder", "node", "languageset",
+						"ersteller",
+						"creator", "bearbeiter", "editor", "veroeffentlicher", "publisher", "sprach_id",
+						"language_id", "language", "sprache", "languagecode", "sprach_code",
+						"languagevariants",
+						"sprachvarianten", "object", "versions", "version", "pagevariants", "ismaster",
+						"inherited",
+						"edittime", "createtime", "createtimestamp", "timepub", "content_id", "code",
+						"online",
+						"sprachen", "contentset_id");
+
+				PageListResponse response = ListBuilder.from(pages,
+								p -> ModelBuilder.getPage(p, fillRefs, wastebin))
+						.sort(comparator)
+						.page(pagingParams)
+						.to(new PageListResponse());
+
+				response.setStagingStatus(
+						StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName,
+								o -> o.getGlobalId().toString(), pageListParams.languageVariants));
+				trx.success();
+				return response;
 			}
-		} catch (EntityNotFoundException e) {
-			return new PageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new PageListResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, e.getMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#create(com.gentics.contentnode
-	 * .rest.model.request.PageCreateRequest)
-	 */
+	@Override
 	@POST
 	@Path("/create")
-	public PageLoadResponse create(PageCreateRequest request) {
-		Transaction t = getTransaction();
+	public PageLoadResponse create(PageCreateRequest request) throws NodeException {
 		// this will be the new page
 		Page page = null;
 
@@ -812,15 +759,17 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		// whether a page variant is created
 		boolean createVariant = ObjectTransformer.getInt(request.getVariantId(), 0) != 0;
 
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-
 		// If set nodeId, create the page as local in the channel, corresponding
 		// to the provided nodeId.
 		final Integer channelId = request.getNodeId();
 
 		Integer srcChannel = request.getVariantChannelId();
 
-		try (AutoCommit ac = new AutoCommit(); ChannelTrx ct = new ChannelTrx(srcChannel)) {
+		String id;
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx ct = new ChannelTrx(srcChannel)) {
+			Transaction t = trx.getTransaction();
+			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+
 			// first get the folder
 			Node targetChannel;
 			try (NoMcTrx nmt = new NoMcTrx()) {
@@ -1063,17 +1012,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				page.unlock();
 			}
 
-			ac.success();
-		} catch (NodeException e) {
-			logger.error("Error while creating new page", e);
-			I18nString m = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, m.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while creating new page :" + e.getLocalizedMessage()), null);
+			// after creating the page, load it and return it
+			id = Integer.toString(ObjectTransformer.getInteger(page.getId(), null));
+			trx.success();
 		}
 
-		// after creating the page, load it and return it
-		String id = Integer.toString(ObjectTransformer.getInteger(page.getId(), null));
 		PageLoadResponse response = load(id, !createVariant, false, false, false, false, false, false,
 				false, false, false, channelId, null);
 		if (response.getResponseInfo().getResponseCode() == ResponseCode.OK) {
@@ -1082,17 +1025,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return response;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#save(java.lang.String, com.gentics.contentnode.rest.model.request.PageSaveRequest)
-	 */
+	@Override
 	@POST
 	@Path("/save/{id}")
-	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) {
-		Transaction t = getTransaction();
+	public GenericResponse save(@PathParam("id") String id, PageSaveRequest request) throws NodeException {
 		Page page = null;
 
-		try (AutoCommit cmt = new AutoCommit()) {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			// first get the page and lock it (for checking the permission to
 			// save)
 			if (request.isClearOfflineAt() || request.isClearPublishAt()) {
@@ -1232,39 +1171,16 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				page.unlock();
 			}
 
-			cmt.success();
+			trx.success();
 
 			I18nString message = new CNI18nString("page.save.success");
 			return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "saved page with id: "
 							+ page.getId()));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			try {
-				t.rollback(false);
-			} catch (TransactionException ignored) {
-			}
-			logger.error("Error while saving page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while saving page " + id + ": " + e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#load(java.lang.String, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean, java.lang.Integer)
-	 */
+	@Override
 	@GET
 	@Path("/load/{id}")
 	public PageLoadResponse load(
@@ -1280,18 +1196,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("disinherited") @DefaultValue("false") boolean disinherited,
 			@QueryParam("construct") @DefaultValue("false") boolean construct,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("package") String stagingPackageName) {
+			@QueryParam("package") String stagingPackageName) throws NodeException {
 
-		Transaction t = getTransaction();
-		boolean channelIdset = false;
-		try {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Transaction t = trx.getTransaction();
 			String responseMessage = null;
 
 			// Load the Page from GCN
 			Page page;
-
-			// set the nodeId, if provided
-			channelIdset = setChannelToTransaction(nodeId);
 
 			boolean readOnly = !update;
 			PageLoadResponse response = new PageLoadResponse();
@@ -1354,25 +1266,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
 			response.setStagingStatus(StagingUtil.checkStagingStatus(page, stagingPackageName));
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while loading page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while loading page " + id
-							+ ": " + e.getLocalizedMessage()), null);
-		} finally {
-			if (channelIdset) {
-				// reset channel
-				t.resetChannel();
-			}
 		}
 	}
 
@@ -1380,8 +1275,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/load")
 	public MultiPageLoadResponse load(MultiPageLoadRequest request,
-			@QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
-		Transaction t = getTransaction();
+			@QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws NodeException {
 		boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 		Set<Reference> references = new HashSet<>();
 
@@ -1413,7 +1307,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			references.add(Reference.VERSIONS);
 		}
 
-		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+			Transaction t = trx.getTransaction();
 			List<Page> allPages = t.getObjects(Page.class, request.getIds());
 
 			List<com.gentics.contentnode.rest.model.Page> returnedPages = getItemList(request.getIds(),
@@ -1432,24 +1327,17 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 								&& (!forUpdate || ObjectPermission.edit.checkObject(page));
 					}, fillWithNulls);
 
+			trx.success();
 			return new MultiPageLoadResponse(returnedPages);
-		} catch (NodeException e) {
-			return new MultiPageLoadResponse(
-					new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.FAILURE, "Could not load pages"));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#preview(com.gentics.contentnode.rest.model.request.PagePreviewRequest)
-	 */
+	@Override
 	@POST
 	@Path("/preview")
-	public PagePreviewResponse preview(PagePreviewRequest request) {
-		Transaction t = getTransaction();
-		boolean channelIdset = false;
-		try {
+	public PagePreviewResponse preview(PagePreviewRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+			Transaction t = trx.getTransaction();
 			// TODO should we check permissions here?
 
 			PagePreviewResponse response = new PagePreviewResponse();
@@ -1459,14 +1347,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						"No page data was provided in the preview request."));
 				return response;
 			}
-			channelIdset = setChannelToTransaction(request.getNodeId());
 			Page page = ModelBuilder.getPage(request.getPage(), true);
-			ContentNodeFactory factory = ContentNodeFactory.getInstance();
 
 			NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig()
 					.getDefaultPreferences();
 			RenderType renderType = RenderType.getDefaultRenderType(preferences,
-					RenderType.EM_LIVEPREVIEW, t.getSessionId(), 0);
+					RenderType.EM_LIVEPREVIEW, 0);
 			renderType.setRenderUrlFactory(new StaticUrlFactory(
 					RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null));
 			renderType.setFrontEnd(true);
@@ -1484,17 +1370,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						"Rendering the page preview failed"));
 			}
 			// TODO add the renderresult messages
+			trx.success();
 			return response;
-		} catch (NodeException e) {
-			logger.error("Error while rendering preview", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PagePreviewResponse(new Message(Message.Type.CRITICAL, message
-					.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while rendering preview" + e.getLocalizedMessage()), null);
-		} finally {
-			if (channelIdset) {
-				t.resetChannel();
-			}
 		}
 	}
 
@@ -1536,16 +1413,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return wholeMessage.toString();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#assign(com.gentics.contentnode.rest.model.request.MultiPageAssignRequest)
-	 */
 	@POST
 	@Path("/assign")
 	@Override
-	public GenericResponse assign(MultiPageAssignRequest request) {
+	public GenericResponse assign(MultiPageAssignRequest request) throws NodeException {
 
 		String userMessage = request.getMessage();
 		List<Integer> userIds = request.getUserIds();
@@ -1558,8 +1429,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			return new GenericResponse(null,
 					new ResponseInfo(ResponseCode.INVALIDDATA, "User pageIds could not be found."));
 		}
-		Transaction t = getTransaction();
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			if (!StringUtils.isEmpty(userMessage) && t.getNodeConfig().getDefaultPreferences()
 					.getFeature("validation")) {
 				ValidationResult result = ValidationUtils.validate(new UserMessageInputChannel(),
@@ -1602,25 +1473,16 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			GenericResponse response = new GenericResponse();
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, message));
 			t.addTransactional(messageSender);
+			trx.success();
 			return response;
-		} catch (NodeException e) {
-			logger.error("Error assigning pages to users.", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while assigning pages to users: " + e.getLocalizedMessage()));
 		}
-
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#publish(java.lang.Integer, com.gentics.contentnode.rest.model.request.MultiPagePublishRequest)
-	 */
+	@Override
 	@POST
 	@Path("/publish")
 	public GenericResponse publish(@QueryParam("nodeId") Integer nodeId,
-			MultiPagePublishRequest request) {
+			MultiPagePublishRequest request) throws NodeException {
 		LinkedList<String> ids = new LinkedList<String>();
 		ids.addAll(request.getIds());
 		MultiPagePublishJob job = new MultiPagePublishJob()
@@ -1631,34 +1493,21 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				.setKeepPublishAt(request.isKeepPublishAt())
 				.setKeepVersion(request.isKeepVersion())
 				.setNodeId(nodeId);
-		try {
-			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
-		} catch (NodeException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.FAILURE, e.getMessage()));
+		try (Trx trx = ContentNodeHelper.trx()) {
+			GenericResponse response = job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#publish(java.lang.String, java.lang.Integer,
-	 * com.gentics.contentnode.rest.model.request.PagePublishRequest)
-	 */
+	@Override
 	@POST
 	@Path("/publish/{id}")
 	public GenericResponse publish(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
-			PagePublishRequest request) {
-		boolean channelIdSet = false;
-		Transaction t = null;
-		String restError = new CNI18nString("rest.general.error").toString();
-
+			PagePublishRequest request) throws NodeException {
 		GenericResponse response = new GenericResponse();
-		try {
-			t = TransactionManager.getCurrentTransaction();
-			channelIdSet = setChannelToTransaction(nodeId);
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Transaction t = TransactionManager.getCurrentTransaction();
 			List<String> feedback = new ArrayList<String>(1);
 
 			Page page = MiscUtils.load(Page.class, id);
@@ -1737,45 +1586,17 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			MiscUtils.addMessage(instantPublishingResult, response);
 
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while publishing page " + id, e);
-			return new GenericResponse(new Message(Message.Type.CRITICAL,
-					restError), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while publishing page " + id + ": "
-							+ e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				t.resetChannel();
-			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#delete(java.lang.String)
-	 */
+	@Override
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws NodeException {
 		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
-		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
-			// set the channel ID if given
-			boolean isChannelIdset = setChannelToTransaction(nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			// get the page (this will check for existence and delete permission)
 			Page page = getPage(id, false, PermHandler.ObjectPermission.delete);
 			throwIfLockedByAnotherUser(page);
@@ -1791,7 +1612,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				nodeId = 0;
 			}
 
-			if (isChannelIdset && page.isInherited()) {
+			if (nodeId > 0 && page.isInherited()) {
 				throw new NodeException(
 						"Can't delete an inherated page, the page has to be deleted in the master node.");
 			}
@@ -1810,7 +1631,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			final int pageId = page.getId();
 			TransactionManager.getCurrentTransaction().commit(false);
 
-			return Operator.executeLocked(new CNI18nString("page.delete.job").toString(), 0,
+			GenericResponse response = Operator.executeLocked(new CNI18nString("page.delete.job").toString(), 0,
 					Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
@@ -1842,23 +1663,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 							return new GenericResponse(new Message(Type.INFO, message.toString()),
 									new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
-					});
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while deleting page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message
-					.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while deleting page " + id + ": " + e.getLocalizedMessage()));
+					}, java.util.function.Function.identity());
+			trx.success();
+			return response;
 		}
 	}
 
@@ -1866,7 +1673,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/wastebin/delete/{id}")
 	public GenericResponse deleteFromWastebin(@PathParam("id") String id,
-			@QueryParam("wait") @DefaultValue("0") long waitMs) {
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return deleteFromWastebin(new PageIdSetRequest(id), waitMs);
 	}
 
@@ -1874,82 +1681,86 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/wastebin/delete")
 	public GenericResponse deleteFromWastebin(PageIdSetRequest request,
-			@QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-		}
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+			}
 
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("page.delete.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("pages.delete.wastebin");
-			description.setParameter("0", ids.size());
-		}
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
-					List<Page> pages = new ArrayList<Page>();
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("page.delete.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("pages.delete.wastebin");
+				description.setParameter("0", ids.size());
+			}
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
+						List<Page> pages = new ArrayList<Page>();
 
-					for (String id : ids) {
-						Page page = getPage(id, false);
+						for (String id : ids) {
+							Page page = getPage(id, false);
 
-						try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-							page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
-						}
-
-						if (!page.isDeleted()) {
-							I18nString message = new CNI18nString("page.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
-						}
-						pages.add(page);
-					}
-
-					String pagePaths = I18NHelper.getPaths(pages, 5);
-					for (Page page : pages) {
-						page.delete(true);
-
-						if (request.isAlllangs()) {
-							List<Page> variants = new ArrayList<Page>();
 							try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-								variants.addAll(page.getLanguageVariants(false));
-								for (Iterator<Page> i = variants.iterator(); i.hasNext(); ) {
-									Page variant = i.next();
-									if (variant.equals(page) || !variant.isDeleted() || variant.isInherited()) {
-										i.remove();
+								page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
+							}
+
+							if (!page.isDeleted()) {
+								I18nString message = new CNI18nString("page.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+							pages.add(page);
+						}
+
+						String pagePaths = I18NHelper.getPaths(pages, 5);
+						for (Page page : pages) {
+							page.delete(true);
+
+							if (request.isAlllangs()) {
+								List<Page> variants = new ArrayList<Page>();
+								try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
+									variants.addAll(page.getLanguageVariants(false));
+									for (Iterator<Page> i = variants.iterator(); i.hasNext(); ) {
+										Page variant = i.next();
+										if (variant.equals(page) || !variant.isDeleted() || variant.isInherited()) {
+											i.remove();
+										}
 									}
 								}
-							}
 
-							for (Page variant : variants) {
-								variant.delete(true);
+								for (Page variant : variants) {
+									variant.delete(true);
+								}
 							}
 						}
-					}
 
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(
-							ids.size() == 1 ? "page.delete.wastebin.success" : "pages.delete.wastebin.success");
-					message.setParameter("0", pagePaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()),
-							new ResponseInfo(ResponseCode.OK, message.toString()));
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(
+								ids.size() == 1 ? "page.delete.wastebin.success" : "pages.delete.wastebin.success");
+						message.setParameter("0", pagePaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()),
+								new ResponseInfo(ResponseCode.OK, message.toString()));
+					}
 				}
-			}
-		});
+			}, java.util.function.Function.identity());
+			trx.success();
+			return response;
+		}
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/restore/{id}")
 	public GenericResponse restoreFromWastebin(@PathParam("id") String id,
-			@QueryParam("wait") @DefaultValue("0") long waitMs) {
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return restoreFromWastebin(new PageIdSetRequest(id), waitMs);
 	}
 
@@ -1957,92 +1768,89 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/wastebin/restore")
 	public GenericResponse restoreFromWastebin(PageIdSetRequest request,
-			@QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-		}
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+			}
 
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("page.restore.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("pages.restore.wastebin");
-			description.setParameter("0", ids.size());
-		}
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
-					List<Page> pages = new ArrayList<Page>();
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("page.restore.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("pages.restore.wastebin");
+				description.setParameter("0", ids.size());
+			}
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit()) {
+						List<Page> pages = new ArrayList<Page>();
 
-					for (String id : ids) {
-						Page page = getPage(id, false);
+						for (String id : ids) {
+							Page page = getPage(id, false);
 
-						try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-							page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
-						}
-
-						if (!page.isDeleted()) {
-							I18nString message = new CNI18nString("page.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
-						}
-
-						checkImplicitRestorePermissions(page);
-						pages.add(page);
-					}
-
-					String pagePaths = I18NHelper.getPaths(pages, 5);
-					for (Page page : pages) {
-						page.restore();
-						if (request.isAlllangs()) {
-							List<Page> variants = new ArrayList<Page>();
 							try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-								variants.addAll(page.getLanguageVariants(false));
-								for (Iterator<Page> i = variants.iterator(); i.hasNext(); ) {
-									Page variant = i.next();
-									if (variant.equals(page) || !variant.isDeleted() || variant.isInherited()) {
-										i.remove();
+								page = getPage(id, true, ObjectPermission.view, ObjectPermission.wastebin);
+							}
+
+							if (!page.isDeleted()) {
+								I18nString message = new CNI18nString("page.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+
+							MiscUtils.checkImplicitRestorePermissions(page);
+							pages.add(page);
+						}
+
+						String pagePaths = I18NHelper.getPaths(pages, 5);
+						for (Page page : pages) {
+							page.restore();
+							if (request.isAlllangs()) {
+								List<Page> variants = new ArrayList<Page>();
+								try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
+									variants.addAll(page.getLanguageVariants(false));
+									for (Iterator<Page> i = variants.iterator(); i.hasNext(); ) {
+										Page variant = i.next();
+										if (variant.equals(page) || !variant.isDeleted() || variant.isInherited()) {
+											i.remove();
+										}
 									}
 								}
-							}
 
-							for (Page variant : variants) {
-								variant.restore();
+								for (Page variant : variants) {
+									variant.restore();
+								}
 							}
 						}
-					}
 
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(
-							ids.size() == 1 ? "page.restore.wastebin.success" : "pages.restore.wastebin.success");
-					message.setParameter("0", pagePaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()),
-							new ResponseInfo(ResponseCode.OK, message.toString()));
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(
+								ids.size() == 1 ? "page.restore.wastebin.success" : "pages.restore.wastebin.success");
+						message.setParameter("0", pagePaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()),
+								new ResponseInfo(ResponseCode.OK, message.toString()));
+					}
 				}
-			}
-		});
+			}, java.util.function.Function.identity());
+			trx.success();
+			return response;
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#cancel(java.lang.Integer, java.lang.Integer)
-	 */
+	@Override
 	@POST
 	@Path("/cancel/{id}")
-	public GenericResponse cancel(@PathParam("id") Integer id, @QueryParam("nodeId") Integer nodeId) {
-		Transaction t = getTransaction();
-		Page page = null;
-		boolean isChannelIdset = false;
+	public GenericResponse cancel(@PathParam("id") Integer id, @QueryParam("nodeId") Integer nodeId) throws NodeException {
 
-		try {
-			// set the channel ID if given
-			isChannelIdset = setChannelToTransaction(nodeId);
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Page page = null;
 
 			page = getPage(id, ObjectPermission.view);
 
@@ -2055,28 +1863,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			page.unlock();
-			t.commit(false);
 
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK,
 					"Cancelled editing of page : " + page.getId());
+			trx.success();
 			return new GenericResponse(null, responseInfo);
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while cancelling page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message
-					.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while canelling page " + id + ": " + e.getLocalizedMessage()));
-		} finally {
-			if (isChannelIdset) {
-				t.resetChannel();
-			}
 		}
 	}
 
@@ -2091,17 +1882,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
 			@QueryParam("publish") @DefaultValue("false") boolean publish,
-			com.gentics.contentnode.rest.model.Page page) {
+			com.gentics.contentnode.rest.model.Page page) throws NodeException {
 		return render(String.format("Preview of %d", page.getId()), nodeId, template, editMode,
 				proxyprefix, linksType, tagmap, inherited, publish, editable -> {
 					return ModelBuilder.getPage(page, !editable);
 				});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#render(java.lang.String, java.lang.Integer, java.lang.String, boolean, java.lang.String, com.gentics.contentnode.rest.model.request.LinksType, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/render/{id}")
 	public PageRenderResponse render(@PathParam("id") String id,
@@ -2113,40 +1901,66 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
 			@QueryParam("publish") @DefaultValue("false") boolean publish,
-			@QueryParam("version") Integer versionTimestamp) {
+			@QueryParam("version") Integer versionTimestamp) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PageRenderResponse response = internalRender(id, nodeId, template, editMode, proxyprefix, linksType, tagmap,
+					inherited, publish, versionTimestamp);
+			trx.success();
+			return response;
+		}
+	}
+
+	/**
+	 * Internal render method
+	 * @param id
+	 * @param nodeId
+	 * @param template
+	 * @param editMode
+	 * @param proxyprefix
+	 * @param linksType
+	 * @param tagmap
+	 * @param inherited
+	 * @param publish
+	 * @param versionTimestamp
+	 * @return
+	 * @throws NodeException
+	 */
+	protected PageRenderResponse internalRender(String id, Integer nodeId, String template, boolean editMode,
+			String proxyprefix, LinksType linksType, boolean tagmap, boolean inherited, boolean publish,
+			Integer versionTimestamp) throws NodeException {
 		int version = ObjectTransformer.getInt(versionTimestamp, 0);
-		return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited,
-				publish, editable -> {
-					Transaction t = TransactionManager.getCurrentTransaction();
-					if (editable) {
-						Page page = getLockedPage(id, true, ObjectPermission.edit);
-						return page;
-					} else if (version > 0) {
+		return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited, publish, editable -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			if (editable) {
+				Page page = getLockedPage(id, true, ObjectPermission.edit);
+				return page;
+			} else if (version > 0) {
 
-						Page page = getPage(id, true, ObjectPermission.view);
-						t.prepareVersionedObjects(Page.class, Page.class, Collections.singletonMap(page.getId(), version));
-						Page versionedPage = t.getObject(Page.class, page.getId(), version);
+				Page page = getPage(id, true, ObjectPermission.view);
+				t.prepareVersionedObjects(Page.class, Page.class, Collections.singletonMap(page.getId(), version));
+				Page versionedPage = t.getObject(Page.class, page.getId(), version);
 
-						if (versionedPage == null) {
-							I18nString message = new CNI18nString("page.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
-						} else {
-							return versionedPage;
-						}
-					} else {
-						Page page =  getPage(id, true, ObjectPermission.view);
-						return page;
-					}
-				});
+				if (versionedPage == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				} else {
+					return versionedPage;
+				}
+			} else {
+				Page page = getPage(id, true, ObjectPermission.view);
+				return page;
+			}
+		});
+
 	}
 
 	@Override
 	@GET
 	@Path("/render/content/{id}")
 	public Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
-			@QueryParam("version") Integer versionTimestamp) {
-		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			@QueryParam("version") Integer versionTimestamp) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Page page = getPage(id, true, ObjectPermission.view);
 
 			int version = ObjectTransformer.getInt(versionTimestamp, 0);
@@ -2165,17 +1979,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					false)) {
 				String content = page.render(RenderUtils.getPreviewTemplate(page, RenderType.EM_PREVIEW),
 						new RenderResult(), null, null, null, null);
+				trx.success();
 				return Response.status(Status.OK)
 						.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 						.entity(content).build();
 			}
-		} catch (EntityNotFoundException e) {
-			return Response.status(Status.NOT_FOUND).build();
-		} catch (InsufficientPrivilegesException e) {
-			return Response.status(Status.FORBIDDEN).build();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while rendering content of page %s", id), e);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 
@@ -2185,8 +1993,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	public Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
 			@QueryParam("source") @DefaultValue("false") boolean source,
-			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
-		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Page page = getPage(id, true, ObjectPermission.view);
 
@@ -2209,16 +2017,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 					return p;
 				}
 			});
+			trx.success();
 			return Response.status(Status.OK)
 					.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 					.entity(diff).build();
-		} catch (EntityNotFoundException e) {
-			return Response.status(Status.NOT_FOUND).build();
-		} catch (InsufficientPrivilegesException e) {
-			return Response.status(Status.FORBIDDEN).build();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while rendering version diff for page %s", id), e);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 
@@ -2229,8 +2031,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
 			@QueryParam("source") @DefaultValue("false") boolean source,
-			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) {
-		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			@QueryParam("daisyDiff") @DefaultValue("false") boolean daisyDiff) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Page page = getPage(id, true, ObjectPermission.view);
 			Page otherPage = getPage(ObjectTransformer.getString(otherPageId, null),
 					true, ObjectPermission.view);
@@ -2240,16 +2042,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}, () -> {
 				return otherPage;
 			});
+			trx.success();
 			return Response.status(Status.OK)
 					.type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8")
 					.entity(diff).build();
-		} catch (EntityNotFoundException e) {
-			return Response.status(Status.NOT_FOUND).build();
-		} catch (InsufficientPrivilegesException e) {
-			return Response.status(Status.FORBIDDEN).build();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while rendering version diff for page %s", id), e);
-			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
 		}
 	}
 
@@ -2303,8 +2099,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("proxyprefix") String proxyprefix,
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
-			com.gentics.contentnode.rest.model.Page page) {
-		return renderTag(tag, nodeId, proxyprefix, linksType, () -> ModelBuilder.getPage(page, false));
+			com.gentics.contentnode.rest.model.Page page) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PageRenderResponse response = renderTag(tag, nodeId, proxyprefix, linksType, () -> ModelBuilder.getPage(page, false));
+			trx.success();
+			return response;
+		}
 	}
 
 	@Override
@@ -2314,9 +2114,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@PathParam("tag") String tag,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("proxyprefix") String proxyprefix,
-			@QueryParam("links") @DefaultValue("backend") LinksType linksType) {
-		return renderTag(tag, nodeId, proxyprefix, linksType,
-				() -> getLockedPage(id, true, ObjectPermission.edit));
+			@QueryParam("links") @DefaultValue("backend") LinksType linksType) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PageRenderResponse response = renderTag(tag, nodeId, proxyprefix, linksType,
+					() -> getLockedPage(id, true, ObjectPermission.edit));
+			trx.success();
+			return response;
+		}
 	}
 
 	/**
@@ -2349,20 +2153,18 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 *
 	 * @param linksType       Type link
 	 * @param editMode        One of the RenderType constants
-	 * @param sessionId       Transaction session id
 	 * @param nodePreferences Preferences for the node
 	 * @param readOnly        should be read only
 	 * @return Render Type
 	 * @throws NodeException
 	 */
 	private RenderType createRenderType(LinksType linksType, int editMode,
-			String sessionId, NodePreferences nodePreferences, boolean readOnly) throws NodeException {
-		RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, editMode, sessionId,
-				0);
+			NodePreferences nodePreferences, boolean readOnly) throws NodeException {
+		RenderType renderType = RenderType.getDefaultRenderType(nodePreferences, editMode, 0);
 
 		switch (linksType) {
 			case backend:
-				renderType.setRenderUrlFactory(new DynamicUrlFactory(sessionId));
+				renderType.setRenderUrlFactory(new DynamicUrlFactory());
 				renderType.setParameter(AlohaRenderer.LINKS_TYPE, "backend");
 				break;
 			case frontend:
@@ -2442,10 +2244,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return content;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getTags(java.lang.Integer, java.lang.Integer, java.lang.Integer, com.gentics.contentnode.rest.model.request.TagSortAttribute, com.gentics.contentnode.rest.model.request.SortOrder, java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/getTags/{id}")
 	public TagListResponse getTags(@PathParam("id") Integer id,
@@ -2454,10 +2253,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			final @QueryParam("sortby") @DefaultValue("name") TagSortAttribute sortBy,
 			final @QueryParam("sortorder") @DefaultValue("asc") SortOrder sortOrder,
 			@QueryParam("search") String search
-	) {
+	) throws NodeException {
 		Page page = null;
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			page = getPage(id, ObjectPermission.view);
 			List<Tag> tags = new Vector<Tag>(page.getTags().values());
 
@@ -2509,27 +2308,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				restTags.add(ModelBuilder.getTag(tag, false));
 			}
 			response.setTags(restTags);
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new TagListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new TagListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (Exception e) {
-			logger.error("Error while cancelling page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new TagListResponse(new Message(Message.Type.CRITICAL, message
-					.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while cancelling page " + id + ": " + e.getLocalizedMessage()));
+		} catch (NoSuchMethodException e) {
+			throw new NodeException(e);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getPrivileges(java.lang.Integer)
-	 */
+	@Override
 	@GET
 	@Path("/privileges/{id}")
 	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) {
@@ -2547,7 +2333,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 */
 	protected TagCreateResponse createTagFromConstruct(String id, Integer constructId,
 			String magicValue) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// get the page
 		Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
@@ -2601,7 +2387,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Page page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 		// render the tag to collect all "embedded" tags
-		PageRenderResponse renderResponse = render(sourceId, null, "<node " + tagname + ">", true, null,
+		PageRenderResponse renderResponse = internalRender(sourceId, null, "<node " + tagname + ">", true, null,
 				LinksType.backend, false, false, false, 0);
 		if (ResponseCode.OK.equals(renderResponse.getResponseInfo()
 				.getResponseCode())) {
@@ -2686,56 +2472,33 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return constructId;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#createTag(java.lang.String,
-	 * java.lang.Integer, java.lang.String,
-	 * com.gentics.contentnode.rest.model.request.ContentTagCreateRequest)
-	 */
+	@Override
 	@POST
 	@Path("/newtag/{id}")
 	public TagCreateResponse createTag(@PathParam("id") String id,
 			@QueryParam("constructId") Integer constructId, @QueryParam("keyword") String keyword,
-			ContentTagCreateRequest request) {
-		try {
+			ContentTagCreateRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			TagCreateResponse response;
 			if (request.getCopyPageId() == null && request.getCopyTagname() == null) {
 				constructId = getConstructId(request, constructId, keyword);
 
-				return createTagFromConstruct(id, constructId, request.getMagicValue());
+				response = createTagFromConstruct(id, constructId, request.getMagicValue());
 			} else {
 				// copy the given tag
-				return copyTag(id, request.getCopyPageId(), request.getCopyTagname());
+				response = copyTag(id, request.getCopyPageId(), request.getCopyTagname());
 			}
-		} catch (EntityNotFoundException e) {
-			return new TagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new TagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (ReadOnlyException e) {
-			return new TagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while creating tag in page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new TagCreateResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while creating tag in page " + id + ": " + e.getLocalizedMessage()), null);
+			trx.success();
+			return response;
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.PageResource#createTags(java.lang.String, com.gentics.contentnode.rest.model.request.MultiTagCreateRequest)
-	 */
 	@Override
 	@POST
 	@Path("/newtags/{id}")
 	public MultiTagCreateResponse createTags(@PathParam("id") String id,
-			MultiTagCreateRequest request) {
-		try (AutoCommit ac = new AutoCommit()) {
+			MultiTagCreateRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Map<String, CreatedTag> created = new HashMap<String, CreatedTag>();
 
@@ -2787,7 +2550,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			// render all tags
 			RenderType renderType = createRenderType(LinksType.backend, RenderType.EM_ALOHA,
-					t.getSessionId(), t.getNodeConfig().getDefaultPreferences(), false);
+					t.getNodeConfig().getDefaultPreferences(), false);
 			t.setRenderType(renderType);
 			RenderResult renderResult = new RenderResult();
 			t.setRenderResult(renderResult);
@@ -2810,44 +2573,25 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				createdTag.getTag().setId(ObjectTransformer.getInt(tag.getId(), 0));
 			}
 
-			ac.success();
+			trx.success();
 
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK,
 					"created new tags in page with id: " + page.getId());
 
 			return new MultiTagCreateResponse(null, responseInfo, created, getTags(renderResult));
-		} catch (EntityNotFoundException e) {
-			return new MultiTagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new MultiTagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new MultiTagCreateResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while creating tags in page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new MultiTagCreateResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while creating tag in page " + id + ": " + e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#restoreVersion(java.lang.String, java.lang.Integer)
-	 */
+	@Override
 	@POST
 	@Path("/restore/{id}")
 	public PageLoadResponse restoreVersion(@PathParam("id") String id,
-			@QueryParam("version") Integer versionTimestamp) {
-		Transaction t = getTransaction();
+			@QueryParam("version") Integer versionTimestamp) throws NodeException {
 		Page page = null;
 
 		// get the page
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			page = getLockedPage(id, false, PermHandler.ObjectPermission.edit);
 
 			NodeObjectVersion[] versions = page.getVersions();
@@ -2881,45 +2625,23 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			I18nString message = new CNI18nString("page.restore.success");
 
+			trx.success();
 			return new PageLoadResponse(new Message(Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "Successfully restored version {"
 							+ versionTimestamp + "} of page with id { " + id + " }"), restPage);
-		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (ReadOnlyException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while restoring version of page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(
-					new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(
-					ResponseCode.FAILURE, "Error while restoring version of page " + id
-					+ ": " + e.getLocalizedMessage()), null);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#restore(java.lang.String,
-	 * java.lang.String, java.lang.Integer)
-	 */
+	@Override
 	@POST
 	@Path("/restore/{pageid}/{tag}")
 	public TagListResponse restoreTag(@PathParam("pageid") String pageId,
-			@PathParam("tag") String tag, @QueryParam("version") Integer versionTimestamp) {
-		Transaction t = getTransaction();
+			@PathParam("tag") String tag, @QueryParam("version") Integer versionTimestamp) throws NodeException {
 		Page page = null;
 
 		// get the page
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			page = getLockedPage(pageId, false, PermHandler.ObjectPermission.edit);
 
 			// get tag
@@ -2959,81 +2681,27 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 									+ "} in page { " + pageId + " }"));
 
 			response.setTags(Arrays.asList(ModelBuilder.getTag(tagToRestore, false)));
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new TagListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new TagListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new TagListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while restoring version of page " + pageId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new TagListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while restoring version of page " + pageId + ": " + e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#translate(java.lang.Integer, java.lang.String, boolean)
-	 */
+	@Override
 	@POST
 	@Path("/translate/{id}")
 	public PageLoadResponse translate(final @PathParam("id") Integer id,
 			final @QueryParam("language") String languageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
-			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) {
-		try {
-			// get the page in a new transaction
-			Page page = TransactionManager.execute(new ReturnValueExecutable<Page>() {
-				public Page execute() throws NodeException {
-					return getPage(Integer.toString(id), true);
-				}
-			});
+			final @QueryParam("channelId") @DefaultValue("0") Integer channelId) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Page page = getPage(Integer.toString(id), true);
 			Integer lockKey = ObjectTransformer.getInteger(page.getContentsetId(), 0);
 
-			// create the translation (synchronized for the contentset_id and in a new transaction)
-			return translateLock.execute(lockKey, new ReturnValueLockCallback<PageLoadResponse>() {
-				/* (non-Javadoc)
-				 * @see de.jkeylockmanager.manager.ReturnValueLockCallback#doInLock()
-				 */
-				public PageLoadResponse doInLock() {
-					Transaction oldTransaction = getTransaction();
-
-					try {
-						// The TransactionLockManager creates a copy of the current transaction.
-						// In order to use this new transaction, we have to set it here
-						transaction = TransactionManager.getCurrentTransaction();
-
-						return translate(id, languageCode, locked, channelId, true);
-					} catch (TransactionException e) {
-						throw new WebApplicationException(new Exception("Could not get transaction."));
-					} finally {
-						transaction = oldTransaction;
-					}
-				}
-			});
-		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (Exception e) {
-			logger.error("Error while translating page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while translating page " + id + ": " + e.getLocalizedMessage()), null);
+			PageLoadResponse response = Operator.executeLocked("", 0, Operator.lock(LockType.contentSet, lockKey), () -> {
+				return translate(id, languageCode, locked, channelId, true);
+			}, r -> new PageLoadResponse(r));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -3052,62 +2720,42 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @return page load response
 	 */
 	private PageLoadResponse translate(Integer id, String languageCode, boolean locked,
-			Integer channelId, boolean requirePermission) throws TransactionException {
-		Transaction t = TransactionManager.getCurrentTransaction();
+			Integer channelId, boolean requirePermission) throws NodeException {
 		boolean readOnly = !locked;
 
 		if (channelId == null) {
 			channelId = 0;
 		}
 
-		try {
-			var translationService = new LanguageVariantService();
-			var languageVariant = translationService.translate(id, languageCode, locked, channelId,
-					requirePermission);
+		var translationService = new LanguageVariantService();
+		var languageVariant = translationService.translate(id, languageCode, locked, channelId,
+				requirePermission);
 
-			// return the language variant
-			com.gentics.contentnode.rest.model.Page restPage = getPage(languageVariant,
-					Arrays.asList(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE), readOnly);
+		// return the language variant
+		com.gentics.contentnode.rest.model.Page restPage = getPage(languageVariant,
+				Arrays.asList(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE), readOnly);
 
-			PageLoadResponse response = new PageLoadResponse();
-			response.setPage(restPage);
+		PageLoadResponse response = new PageLoadResponse();
+		response.setPage(restPage);
 
-			var responseMessage = "Translated page with id { " + id + " } successfully";
-			if (languageVariant.getChannel() != null) {
-				responseMessage += " in channel {" + languageVariant.getChannel().getId() + "}";
-			}
-			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
-
-			return response;
-
-		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
-		} catch (Exception e) {
-			logger.error("Error while translating page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while translating page " + id + ": " + e.getLocalizedMessage()), null);
+		var responseMessage = "Translated page with id { " + id + " } successfully";
+		if (languageVariant.getChannel() != null) {
+			responseMessage += " in channel {" + languageVariant.getChannel().getId() + "}";
 		}
+		response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
+
+		return response;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#workflowRevoke(java.lang.Integer)
-	 */
+	@Override
 	@POST
 	@Path("/workflow/revoke/{id}")
-	public GenericResponse workflowRevoke(@PathParam("id") Integer id) {
-		Transaction t = getTransaction();
+	public GenericResponse workflowRevoke(@PathParam("id") Integer id) throws NodeException {
 		Page page = null;
 
-		try {
-			SystemUser user = (SystemUser) t.getObject(SystemUser.class, t.getUserId());
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			SystemUser user = t.getObject(SystemUser.class, t.getUserId());
 
 			// get the page and check whether it is currently locked
 			page = getPage(id, ObjectPermission.view);
@@ -3147,40 +2795,21 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			I18nString message = new CNI18nString("page.workflow.revoke.success");
+			trx.success();
 			return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "Successfully revoked last step of page "
 							+ id));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.FAILURE, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while revoking workflow of page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while revoking workflow of page " + id + ": "
-									+ e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#workflowDecline(java.lang.String, com.gentics.contentnode.rest.model.request.WorkflowRequest)
-	 */
+	@Override
 	@POST
 	@Path("/workflow/decline/{id}")
-	public GenericResponse workflowDecline(@PathParam("id") String id, WorkflowRequest request) {
-		Transaction t = getTransaction();
+	public GenericResponse workflowDecline(@PathParam("id") String id, WorkflowRequest request) throws NodeException {
 		Page page = null;
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			// get the page and lock it TODO what kind of permissions do we need?
 			page = getLockedPage(id, false, ObjectPermission.view);
 
@@ -3197,6 +2826,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				// TODO inform all users watching
 				workflow.delete();
 				I18nString message = new CNI18nString("page.workflow.delete.success");
+				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 						new ResponseInfo(ResponseCode.OK,
 								"Successfully removed the workflow of page " + id));
@@ -3221,27 +2851,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				workflow.save();
 
 				I18nString message = new CNI18nString("page.workflow.decline.success");
+				trx.success();
 				return new GenericResponse(new Message(Type.SUCCESS, message.toString()),
 						new ResponseInfo(ResponseCode.OK,
 								"Successfully updated the workflow of page " + id));
 			}
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.FAILURE, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while modifying workflow of page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while modifying workflow of page " + id + ": "
-									+ e.getLocalizedMessage()));
 		} finally {
 			if (page != null) {
 				try {
@@ -3253,23 +2867,16 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * com.gentics.contentnode.rest.api.PageResource#getTotalPageUsage(java.util
-	 * .List, java.lang.Integer)
-	 */
 	@GET
 	@Path("/usage/total")
 	@Override
 	public TotalUsageResponse getTotalPageUsage(@QueryParam("id") List<Integer> pageIds,
-			@QueryParam("nodeId") Integer nodeId) {
+			@QueryParam("nodeId") Integer nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageIds)) {
 			return new TotalUsageResponse(null, new ResponseInfo(ResponseCode.OK,
 					"Successfully fetched total usage information using 0 pages"));
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			TotalUsageResponse response = new TotalUsageResponse();
 			Map<Integer, Integer> masterMap = mapMasterPageIds(pageIds);
 			for (Entry<Integer, Integer> entry : masterMap.entrySet()) {
@@ -3292,14 +2899,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 			response.setResponseInfo(
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
+			trx.success();
 			return response;
-		} catch (Exception e) {
-			logger.error("Error while getting total usage info for " + pageIds.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting total usage info for " + pageIds.size() + " pages"
-									+ e.getLocalizedMessage()));
 		}
 	}
 
@@ -3312,7 +2913,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @throws NodeException
 	 */
 	protected Map<Integer, Integer> mapMasterPageIds(List<Integer> pageId) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 		if (!t.getNodeConfig().getDefaultPreferences().isFeature(
 				Feature.MULTICHANNELLING)) {
 			return pageId.stream().collect(Collectors.toMap(java.util.function.Function.identity(),
@@ -3329,10 +2930,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return masterMap;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getPagetagUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/tag")
 	public PageUsageListResponse getPagetagUsageInfo(
@@ -3343,30 +2941,22 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel) {
+			@BeanParam PageModelParameterBean pageModel) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new PageUsageListResponse(null,
 					new ResponseInfo(ResponseCode.OK,
 							"Successfully fetched pages using 0 pages"), null, 0, 0);
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.TAG, nodeId, returnPages, pageModel);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0, 0);
+			trx.success();
+			return response;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getVariantsUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/variant")
 	public PageUsageListResponse getVariantsUsageInfo(
@@ -3377,30 +2967,22 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel) {
+			@BeanParam PageModelParameterBean pageModel) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new PageUsageListResponse(null,
 					new ResponseInfo(ResponseCode.OK,
 							"Successfully fetched pages using 0 pages"), null, 0, 0);
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.VARIANT, nodeId, returnPages, pageModel);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0, 0);
+			trx.success();
+			return response;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getPageUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean, boolean, boolean, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/page")
 	public PageUsageListResponse getPageUsageInfo(
@@ -3411,31 +2993,23 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel) {
+			@BeanParam PageModelParameterBean pageModel) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new PageUsageListResponse(null,
 					new ResponseInfo(ResponseCode.OK,
 							"Successfully fetched pages using 0 pages"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
+			PageUsageListResponse response = MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE, pageId,
 					PageUsage.GENERAL, nodeId, returnPages, pageModel);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0, 0);
+			trx.success();
+			return response;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#getTemplateUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/usage/template")
 	public TemplateUsageListResponse getTemplateUsageInfo(
@@ -3445,27 +3019,23 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) {
+			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new TemplateUsageListResponse(null,
 					new ResponseInfo(ResponseCode.OK,
 							"Successfully fetched templates using 0 pages"), null, 0, 0);
 		}
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			pageId = getMasterPageIds(pageId);
-			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE,
+			TemplateUsageListResponse response = MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, Page.TYPE_PAGE,
 					pageId, nodeId, returnTemplates);
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new TemplateUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0, 0);
+			trx.success();
+			return response;
 		}
 	}
 
+	@Override
 	@GET
 	@Path("/usage/linkedPage")
 	public ReferencedPagesListResponse getLinkedPages(
@@ -3474,13 +3044,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId) {
+			@QueryParam("nodeId") Integer nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new ReferencedPagesListResponse(null,
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched objects linked by 0 pages"), null,
 					0, 0);
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Set<Page> pages = new HashSet<>();
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
@@ -3513,7 +3083,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 				if (!ObjectTransformer.isEmpty(sortBy) && !ObjectTransformer.isEmpty(sortOrder)
 						&& !ObjectTransformer.isEmpty(items)) {
-					Collections.sort(items, new ItemComparator(sortBy, sortOrder));
+					Collections.sort(items, new MiscUtils.ItemComparator(sortBy, sortOrder));
 				}
 
 				// create the response
@@ -3525,19 +3095,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				reduceList(items, skipCount, maxItems);
 				response.setPages(items);
 
+				trx.success();
 				return response;
 			}
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new ReferencedPagesListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0,
-					0);
 		}
 	}
 
+	@Override
 	@GET
 	@Path("/usage/linkedFile")
 	public ReferencedFilesListResponse getLinkedFiles(
@@ -3546,13 +3110,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId) {
+			@QueryParam("nodeId") Integer nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new ReferencedFilesListResponse(null,
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched objects linked by 0 pages"), null,
 					0, 0);
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Set<File> files = new HashSet<>();
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
@@ -3585,7 +3149,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 				if (!ObjectTransformer.isEmpty(sortBy) && !ObjectTransformer.isEmpty(sortOrder)
 						&& !ObjectTransformer.isEmpty(items)) {
-					Collections.sort(items, new ItemComparator(sortBy, sortOrder));
+					Collections.sort(items, new MiscUtils.ItemComparator(sortBy, sortOrder));
 				}
 
 				// create the response
@@ -3597,19 +3161,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				reduceList(items, skipCount, maxItems);
 				response.setFiles(items);
 
+				trx.success();
 				return response;
 			}
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new ReferencedFilesListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0,
-					0);
 		}
 	}
 
+	@Override
 	@GET
 	@Path("/usage/linkedImage")
 	public ReferencedFilesListResponse getLinkedImages(
@@ -3618,13 +3176,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> pageId,
-			@QueryParam("nodeId") Integer nodeId) {
+			@QueryParam("nodeId") Integer nodeId) throws NodeException {
 		if (ObjectTransformer.isEmpty(pageId)) {
 			return new ReferencedFilesListResponse(null,
 					new ResponseInfo(ResponseCode.OK, "Successfully fetched objects linked by 0 pages"), null,
 					0, 0);
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Set<ImageFile> images = new HashSet<>();
 			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 				Transaction t = TransactionManager.getCurrentTransaction();
@@ -3657,7 +3215,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 				if (!ObjectTransformer.isEmpty(sortBy) && !ObjectTransformer.isEmpty(sortOrder)
 						&& !ObjectTransformer.isEmpty(items)) {
-					Collections.sort(items, new ItemComparator(sortBy, sortOrder));
+					Collections.sort(items, new MiscUtils.ItemComparator(sortBy, sortOrder));
 				}
 
 				// create the response
@@ -3669,24 +3227,17 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				reduceList(items, skipCount, maxItems);
 				response.setFiles(items);
 
+				trx.success();
 				return response;
 			}
-		} catch (Exception e) {
-			logger.error("Error while getting usage info for " + pageId.size() + " pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new ReferencedFilesListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while getting usage info for " + pageId.size() + " pages"
-									+ e.getLocalizedMessage()), null, 0,
-					0);
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/takeOffline/{id}")
-	public GenericResponse takeOffline(@PathParam("id") String id, PageOfflineRequest request) {
-		try (AutoCommit ac = new AutoCommit()) {
+	public GenericResponse takeOffline(@PathParam("id") String id, PageOfflineRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Page page = getPage(id, false);
 
 			Node node = page.getChannel();
@@ -3754,32 +3305,13 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			MiscUtils.addMessage(instantPublishingResult, response);
 
-			ac.success();
+			trx.success();
 
 			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "The following page has been taken offline : " + page.getId());
 			response.addMessage(message);
 			response.setResponseInfo(responseInfo);
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ReadOnlyException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e
-					.getLocalizedMessage()), new ResponseInfo(
-					ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while taking offline page " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL,
-					message.toString()), new ResponseInfo(ResponseCode.FAILURE,
-					"Error while taking offline page " + id + ": "
-							+ e.getLocalizedMessage()));
 		}
 	}
 
@@ -3795,14 +3327,14 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("translationstatus") @DefaultValue("false") boolean translationStatus,
 			@QueryParam("versioninfo") @DefaultValue("false") boolean versionInfo,
 			@QueryParam("disinherited") @DefaultValue("false") boolean disinherited,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("liveUrl") String liveUrl) {
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("liveUrl") String liveUrl) throws NodeException {
 
 		StringBuilder queryBuilder = new StringBuilder();
 		queryBuilder.append("select page_id, node_id from publish where CONCAT(path, filename) = ?");
 		if (nodeId != null) {
 			queryBuilder.append(" and node_id = ?");
 		}
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Pair<Integer, Integer> hit = DBUtils.select(queryBuilder.toString(),
 					new DBUtils.PrepareStatement() {
 						@Override
@@ -3826,24 +3358,16 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 			if (pageId != null) {
 				Integer foundNodeId = hit.getRight();
-				return load(Integer.toString(pageId), update, template, folder, languageVariants,
+				PageLoadResponse response = load(Integer.toString(pageId), update, template, folder, languageVariants,
 						pageVariants, workflow, translationStatus, versionInfo, disinherited, false,
 						foundNodeId, null);
+				trx.success();
+				return response;
 			} else {
 				I18nString message = new CNI18nString("page.notfound");
 				message.setParameter("0", liveUrl);
 				throw new EntityNotFoundException(message.toString());
 			}
-
-		} catch (EntityNotFoundException e) {
-			return new PageLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while searching for page", e);
-			I18nString m = new CNI18nString("rest.general.error");
-			return new PageLoadResponse(new Message(Message.Type.CRITICAL, m.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while searching for page: " + e.getLocalizedMessage()), null);
 		}
 	}
 
@@ -3856,7 +3380,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @throws NodeException
 	 */
 	protected List<Integer> getMasterPageIds(List<Integer> pageId) throws NodeException {
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 		if (!t.getNodeConfig().getDefaultPreferences().isFeature(
 				Feature.MULTICHANNELLING)) {
 			return pageId;
@@ -4022,7 +3546,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		// And finally: Validate
 		PageValidator validator = new PageValidatorAndErrorCollector(page.getFolder().getNode());
-		validator.processRestPage(restPage, getTransaction());
+		validator.processRestPage(restPage, TransactionManager.getCurrentTransaction());
 		for (ValidationResult result : validator.getResults()) {
 			if (result.hasErrors()) {
 				throw new NodeException(ValidationUtils.formatValidationError(result));
@@ -4030,15 +3554,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.PageResource#autocomplete(String, int)
-	 */
+	@Override
 	@GET
 	@Path("/autocomplete")
 	@Produces(MediaType.TEXT_HTML)
 	public String autocomplete(@QueryParam("q") String q,
-			final @QueryParam("limit") @DefaultValue("15") int limit) {
+			final @QueryParam("limit") @DefaultValue("15") int limit) throws NodeException {
 		// no input data, no output
 		if (ObjectTransformer.isEmpty(q)) {
 			return "";
@@ -4053,7 +3574,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 		final Map<Integer, Map<Integer, Set<Integer>>> pageIdMap = new HashMap<Integer, Map<Integer, Set<Integer>>>();
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			final PermHandler permHandler = t.getPermHandler();
 			StringBuilder sql = new StringBuilder();
@@ -4226,6 +3747,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 			}
 
+			trx.success();
 			return out.toString();
 		} catch (Exception e) {
 			logger.error("Error while doing autocomplete for " + q, e);
@@ -4233,131 +3755,111 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.gentics.contentnode.rest.api.PageResource#copy(PageCopyRequest, long)
-	 */
+	@Override
 	@POST
 	@Path("/copy")
 	public PageCopyResponse copy(final PageCopyRequest request,
-			@QueryParam("wait") @DefaultValue("0") long waitMs) {
-		GenericResponse response = Operator.execute(new CNI18nString("nodecopy_pages").toString(),
-				waitMs, new Callable<GenericResponse>() {
-					@Override
-					public PageCopyResponse call() throws Exception {
-						Transaction t = TransactionManager.getCurrentTransaction();
+			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			PageCopyResponse response = Operator.execute(new CNI18nString("nodecopy_pages").toString(),
+					waitMs, new Callable<>() {
+				@Override
+				public PageCopyResponse call() throws Exception {
+					Transaction t = TransactionManager.getCurrentTransaction();
 
-						boolean channelSet = setChannelToTransaction(request.getNodeId());
-						try {
-							PageCopyResponse response = new PageCopyResponse(null,
-									new ResponseInfo(ResponseCode.OK, "Copied pages"));
+					try (ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+						PageCopyResponse response = new PageCopyResponse(null,
+								new ResponseInfo(ResponseCode.OK, "Copied pages"));
 
-							if (request.getTargetFolders().size() == 0) {
-								CNI18nString message = new CNI18nString("page_copy.no_target_folder");
-								return new PageCopyResponse(new Message(Message.Type.CRITICAL, message.toString()),
-										new ResponseInfo(ResponseCode.FAILURE,
-												"Error while copying pages: No target folder was specified."));
+						if (request.getTargetFolders().size() == 0) {
+							CNI18nString message = new CNI18nString("page_copy.no_target_folder");
+							return new PageCopyResponse(new Message(Message.Type.CRITICAL, message.toString()),
+									new ResponseInfo(ResponseCode.FAILURE,
+											"Error while copying pages: No target folder was specified."));
+						}
+						if (request.getSourcePageIds().size() == 0) {
+							CNI18nString message = new CNI18nString("page_copy.no_source_pages");
+							return new PageCopyResponse(new Message(Message.Type.CRITICAL, message.toString()),
+									new ResponseInfo(ResponseCode.FAILURE,
+											"Error while copying pages: No source pages were specified."));
+						}
+						// Copy each set of source pages to all target folders
+						for (Integer sourcePageId : request.getSourcePageIds()) {
+							Page nodeSourcePage = t.getObject(Page.class, sourcePageId);
+							if (nodeSourcePage == null) {
+								logger.error("Could not load page with id {" + sourcePageId + "}");
+								CNI18nString message = new CNI18nString("page_copy.sourcepage_not_found");
+								return new PageCopyResponse(
+										new Message(Message.Type.CRITICAL, message.toString()),
+										new ResponseInfo(ResponseCode.FAILURE, "Source page could not be loaded."));
 							}
-							if (request.getSourcePageIds().size() == 0) {
-								CNI18nString message = new CNI18nString("page_copy.no_source_pages");
-								return new PageCopyResponse(new Message(Message.Type.CRITICAL, message.toString()),
-										new ResponseInfo(ResponseCode.FAILURE,
-												"Error while copying pages: No source pages were specified."));
-							}
-							// Copy each set of source pages to all target folders
-							for (Integer sourcePageId : request.getSourcePageIds()) {
-								Page nodeSourcePage = t.getObject(Page.class, sourcePageId);
-								if (nodeSourcePage == null) {
-									logger.error("Could not load page with id {" + sourcePageId + "}");
-									CNI18nString message = new CNI18nString("page_copy.sourcepage_not_found");
-									return new PageCopyResponse(
-											new Message(Message.Type.CRITICAL, message.toString()),
-											new ResponseInfo(ResponseCode.FAILURE, "Source page could not be loaded."));
+
+							// Now iterate over each target folder and copy the source page into
+							// the folder
+							for (TargetFolder targetFolder : request.getTargetFolders()) {
+
+								CNI18nString genericMessage = new CNI18nString(
+										"page_copy.generic_copy_not_possible");
+								genericMessage.addParameter(I18NHelper.getLocation(nodeSourcePage));
+								genericMessage.addParameter(I18NHelper.getLocation(targetFolder));
+
+								// Load the target folder and invoke copy
+								Folder currentTargetFolder = t.getObject(Folder.class, targetFolder.getId(), -1,
+										false);
+								if (currentTargetFolder == null) {
+									CNI18nString message = new CNI18nString("page_copy.target_folder_not_found");
+									t.rollback();
+									return new PageCopyResponse(new Message(Message.Type.CRITICAL,
+											genericMessage.toString() + message.toString()),
+											new ResponseInfo(ResponseCode.FAILURE,
+													"Target folder could not be loaded."));
 								}
 
-								// Now iterate over each target folder and copy the source page into
-								// the folder
-								for (TargetFolder targetFolder : request.getTargetFolders()) {
-
-									CNI18nString genericMessage = new CNI18nString(
-											"page_copy.generic_copy_not_possible");
-									genericMessage.addParameter(I18NHelper.getLocation(nodeSourcePage));
-									genericMessage.addParameter(I18NHelper.getLocation(targetFolder));
-
-									// Load the target folder and invoke copy
-									Folder currentTargetFolder = t.getObject(Folder.class, targetFolder.getId(), -1,
-											false);
-									if (currentTargetFolder == null) {
-										CNI18nString message = new CNI18nString("page_copy.target_folder_not_found");
-										rollbackTransaction();
-										return new PageCopyResponse(new Message(Message.Type.CRITICAL,
-												genericMessage.toString() + message.toString()),
-												new ResponseInfo(ResponseCode.FAILURE,
-														"Target folder could not be loaded."));
-									}
-
-									Integer targetChannelId = targetFolder.getChannelId();
-									PageCopyOpResult result = nodeSourcePage.copyTo(request.getNodeId(),
-											currentTargetFolder, request.isCreateCopy(), null, targetChannelId);
-									if (!result.isOK()) {
-										PageCopyResponse copyResponse = new PageCopyResponse(null,
-												new ResponseInfo(ResponseCode.FAILURE,
-														"Error during copy process. Please check the messages."));
-										t.rollback(false);
-										ModelBuilder.addMessagesFromOpResult(result, copyResponse);
-										return copyResponse;
-									}
-
-									// Add info about copied pages to rest response
-									for (PageCopyOpResultInfo copyInfo : result.getCopyInfos()) {
-										try (ChannelTrx cTrx = new ChannelTrx(copyInfo.getTargetChannelId())) {
-											response.getPages().add(ModelBuilder.getPage(copyInfo.getCreatedPageCopy(),
-													(Collection<Reference>) null));
-										}
-										PageCopyResultInfo restCopyInfo = new PageCopyResultInfo();
-										restCopyInfo.setNewPageId(
-												ObjectTransformer.getInteger(copyInfo.getCreatedPageCopy().getId(), -1));
-										restCopyInfo.setTargetFolderChannelId(
-												ObjectTransformer.getInteger(copyInfo.getTargetChannelId(), -1));
-										restCopyInfo.setTargetFolderId(
-												ObjectTransformer.getInteger(copyInfo.getTargetFolder().getId(), -1));
-										restCopyInfo.setNewPageId(
-												ObjectTransformer.getInteger(copyInfo.getCreatedPageCopy().getId(), -1));
-										response.getPageCopyMappings().add(restCopyInfo);
-									}
+								Integer targetChannelId = targetFolder.getChannelId();
+								PageCopyOpResult result = nodeSourcePage.copyTo(request.getNodeId(),
+										currentTargetFolder, request.isCreateCopy(), null, targetChannelId);
+								if (!result.isOK()) {
+									PageCopyResponse copyResponse = new PageCopyResponse(null,
+											new ResponseInfo(ResponseCode.FAILURE,
+													"Error during copy process. Please check the messages."));
+									t.rollback(false);
+									ModelBuilder.addMessagesFromOpResult(result, copyResponse);
+									return copyResponse;
 								}
-							}
-							t.commit(false);
-							return response;
-						} finally {
-							if (channelSet) {
-								t.resetChannel();
+
+								// Add info about copied pages to rest response
+								for (PageCopyOpResultInfo copyInfo : result.getCopyInfos()) {
+									try (ChannelTrx cTrx2 = new ChannelTrx(copyInfo.getTargetChannelId())) {
+										response.getPages().add(ModelBuilder.getPage(copyInfo.getCreatedPageCopy(),
+												(Collection<Reference>) null));
+									}
+									PageCopyResultInfo restCopyInfo = new PageCopyResultInfo();
+									restCopyInfo.setNewPageId(
+											ObjectTransformer.getInteger(copyInfo.getCreatedPageCopy().getId(), -1));
+									restCopyInfo.setTargetFolderChannelId(
+											ObjectTransformer.getInteger(copyInfo.getTargetChannelId(), -1));
+									restCopyInfo.setTargetFolderId(
+											ObjectTransformer.getInteger(copyInfo.getTargetFolder().getId(), -1));
+									restCopyInfo.setNewPageId(
+											ObjectTransformer.getInteger(copyInfo.getCreatedPageCopy().getId(), -1));
+									response.getPageCopyMappings().add(restCopyInfo);
+								}
 							}
 						}
+						t.commit(false);
+						return response;
 					}
-				});
-
-		if (response instanceof PageCopyResponse) {
-			return (PageCopyResponse) response;
-		} else {
-			PageCopyResponse pageCopyResponse = new PageCopyResponse();
-			pageCopyResponse.setResponseInfo(response.getResponseInfo());
-			pageCopyResponse.setMessages(response.getMessages());
-			return pageCopyResponse;
+				}
+			}, r -> new PageCopyResponse(r));
+			trx.success();
+			return response;
 		}
 	}
 
-	/**
-	 * Move the given page to another folder
-	 *
-	 * @param id      page id
-	 * @param request request
-	 * @return generic response
-	 */
+	@Override
 	@POST
 	@Path("/move/{id}")
-	public GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) {
+	public GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) throws NodeException {
 		MultiObjectMoveRequest multiRequest = new MultiObjectMoveRequest();
 		multiRequest.setFolderId(request.getFolderId());
 		multiRequest.setNodeId(request.getNodeId());
@@ -4365,16 +3867,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		return move(multiRequest);
 	}
 
-	/**
-	 * Move multiple pages to another folder
-	 *
-	 * @param request request
-	 * @return generic response
-	 */
+	@Override
 	@POST
 	@Path("/move")
-	public GenericResponse move(MultiObjectMoveRequest request) {
-		try (AutoCommit trx = new AutoCommit()) {
+	public GenericResponse move(MultiObjectMoveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Folder target = t.getObject(Folder.class, request.getFolderId());
 
@@ -4397,21 +3894,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			trx.success();
 			return new GenericResponse(null,
 					new ResponseInfo(ResponseCode.OK, "Successfully moved pages"));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while moving pages: " + e.getLocalizedMessage()));
 		}
 	}
 
+	@Override
 	@GET
 	@Path("/pubqueue")
 	public LegacyPageListResponse pubqueue(
@@ -4419,8 +3905,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems,
 			@QueryParam("search") String search,
 			@QueryParam("sortby") @DefaultValue("name") String sortBy,
-			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder) {
-		try {
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			List<Page> pages = null;
 
@@ -4481,14 +3967,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			response.setPages(restPages);
 
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
+			trx.success();
 			return response;
-
-		} catch (NodeException e) {
-			logger.error("Error while loading publish queue", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new LegacyPageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while loading publish queue: " + e.getLocalizedMessage()));
 		}
 	}
 
@@ -4497,93 +3977,97 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/pubqueue/approve")
 	public GenericResponse pubqueueApprove(MultiPubqueueApproveRequest request,
 			@QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
-		return Operator.execute(new CNI18nString("approve_publication").toString(), waitMs, () -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = ContentNodeHelper.trx()) {
+			GenericResponse response = Operator.execute(new CNI18nString("approve_publication").toString(), waitMs, () -> {
+				Transaction t = TransactionManager.getCurrentTransaction();
 
-			MessageSender messageSender = new MessageSender();
-			t.addTransactional(messageSender);
+				MessageSender messageSender = new MessageSender();
+				t.addTransactional(messageSender);
 
-			List<Page> pages = new ArrayList<>();
+				List<Page> pages = new ArrayList<>();
 
-			try {
-				for (int id : request.getIds()) {
-					Page page = getPage(String.valueOf(id), false);
-					try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
-						page = getLockedPage(String.valueOf(id), false, ObjectPermission.publish);
-					}
-
-					pages.add(page);
-
-					if (!page.isQueued()) {
-						continue;
-					}
-
-					// check whether page was queued to be published
-					if (page.getPubQueueUser() != null) {
-						SystemUser pubQueueUser = page.getPubQueueUser();
-						int at = page.getTimePubQueue().getIntTimestamp();
-						NodeObjectVersion publishAtVersion = page.getTimePubVersionQueue();
-
-						CNI18nString messageTextI18n = null;
-						if (at > 0) {
-							messageTextI18n = new CNI18nString(
-									"publishing of page <pageid {0}> at {1} has been approved.");
-							messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
-							messageTextI18n.setParameter("1", new ContentNodeDate(at).getFullFormat());
-						} else {
-							messageTextI18n = new CNI18nString("the page <pageid {0}> has been published.");
-							messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
+				try {
+					for (int id : request.getIds()) {
+						Page page = getPage(String.valueOf(id), false);
+						try (ChannelTrx cTrx = new ChannelTrx(page.getChannel())) {
+							page = getLockedPage(String.valueOf(id), false, ObjectPermission.publish);
 						}
 
-						try (LangTrx lTrx = new LangTrx(pubQueueUser)) {
-							messageSender.sendMessage(
-									new com.gentics.contentnode.messaging.Message(t.getUserId(), pubQueueUser.getId(),
-											messageTextI18n.toString()));
+						pages.add(page);
+
+						if (!page.isQueued()) {
+							continue;
 						}
-						page.publish(at, publishAtVersion);
-					}
 
-					// check whether page was queued to be taken offline
-					if (page.getOffQueueUser() != null) {
-						SystemUser offQueueUser = page.getOffQueueUser();
-						int at = page.getTimeOffQueue().getIntTimestamp();
+						// check whether page was queued to be published
+						if (page.getPubQueueUser() != null) {
+							SystemUser pubQueueUser = page.getPubQueueUser();
+							int at = page.getTimePubQueue().getIntTimestamp();
+							NodeObjectVersion publishAtVersion = page.getTimePubVersionQueue();
 
-						if (at > 0) {
-							// send message
-							CNI18nString msg = new CNI18nString("message.offlineat.queue.approve");
-							msg.setParameters(Arrays.asList(String.valueOf(page.getId()),
-									page.getTimeOffQueue().getFullFormat()));
-							try (LangTrx lTrx = new LangTrx(offQueueUser)) {
-								messageSender.sendMessage(
-										new com.gentics.contentnode.messaging.Message(t.getUserId(),
-												offQueueUser.getId(), msg.toString()));
+							CNI18nString messageTextI18n = null;
+							if (at > 0) {
+								messageTextI18n = new CNI18nString(
+										"publishing of page <pageid {0}> at {1} has been approved.");
+								messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
+								messageTextI18n.setParameter("1", new ContentNodeDate(at).getFullFormat());
+							} else {
+								messageTextI18n = new CNI18nString("the page <pageid {0}> has been published.");
+								messageTextI18n.setParameter("0", ObjectTransformer.getString(page.getId(), null));
 							}
 
-							// plan taking offline
-							page.takeOffline(at);
-						} else {
-							// send message
-							CNI18nString msg = new CNI18nString("message.offline.queue.approve");
-							msg.setParameters(Arrays.asList(String.valueOf(page.getId())));
-							try (LangTrx lTrx = new LangTrx(offQueueUser)) {
+							try (LangTrx lTrx = new LangTrx(pubQueueUser)) {
 								messageSender.sendMessage(
-										new com.gentics.contentnode.messaging.Message(t.getUserId(),
-												offQueueUser.getId(), msg.toString()));
+										new com.gentics.contentnode.messaging.Message(t.getUserId(), pubQueueUser.getId(),
+												messageTextI18n.toString()));
 							}
+							page.publish(at, publishAtVersion);
+						}
 
-							// take offline
-							page.takeOffline();
+						// check whether page was queued to be taken offline
+						if (page.getOffQueueUser() != null) {
+							SystemUser offQueueUser = page.getOffQueueUser();
+							int at = page.getTimeOffQueue().getIntTimestamp();
+
+							if (at > 0) {
+								// send message
+								CNI18nString msg = new CNI18nString("message.offlineat.queue.approve");
+								msg.setParameters(Arrays.asList(String.valueOf(page.getId()),
+										page.getTimeOffQueue().getFullFormat()));
+								try (LangTrx lTrx = new LangTrx(offQueueUser)) {
+									messageSender.sendMessage(
+											new com.gentics.contentnode.messaging.Message(t.getUserId(),
+													offQueueUser.getId(), msg.toString()));
+								}
+
+								// plan taking offline
+								page.takeOffline(at);
+							} else {
+								// send message
+								CNI18nString msg = new CNI18nString("message.offline.queue.approve");
+								msg.setParameters(Arrays.asList(String.valueOf(page.getId())));
+								try (LangTrx lTrx = new LangTrx(offQueueUser)) {
+									messageSender.sendMessage(
+											new com.gentics.contentnode.messaging.Message(t.getUserId(),
+													offQueueUser.getId(), msg.toString()));
+								}
+
+								// take offline
+								page.takeOffline();
+							}
 						}
 					}
+				} finally {
+					for (Page page : pages) {
+						page.unlock();
+					}
 				}
-			} finally {
-				for (Page page : pages) {
-					page.unlock();
-				}
-			}
 
-			return new GenericResponse(null, ResponseInfo.ok(""));
-		});
+				return new GenericResponse(null, ResponseInfo.ok(""));
+			}, java.util.function.Function.identity());
+			trx.success();
+			return response;
+		}
 	}
 
 	@Override
@@ -4591,9 +4075,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/suggest/filename")
 	public PageFilenameSuggestResponse suggestFilename(PageFilenameSuggestRequest request)
 			throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		try (ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+			Transaction t = TransactionManager.getCurrentTransaction();
 			Folder folder = MiscUtils.load(Folder.class, Integer.toString(request.getFolderId()))
 					.getMaster();
 
@@ -4614,7 +4097,6 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						request.getFileName());
 				NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig()
 						.getDefaultPreferences();
-				@SuppressWarnings("unchecked")
 				Map<String, String> sanitizeCharacters = prefs.getPropertyMap("sanitize_character");
 				String replacementChararacter = prefs.getProperty("sanitize_replacement_character");
 				String[] preservedCharacters = prefs.getProperties("sanitize_allowed_characters");
@@ -4624,6 +4106,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				suggestedFilename = PageFactory.suggestFilename(page);
 			}
 
+			trx.success();
 			return new PageFilenameSuggestResponse().setFileName(suggestedFilename);
 		}
 	}
@@ -4639,8 +4122,8 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @return response
 	 */
 	protected PageRenderResponse renderTag(String tag, Integer nodeId, String proxyprefix,
-			LinksType linksType, Supplier<Page> pageSupplier) {
-		Transaction t = getTransaction();
+			LinksType linksType, Supplier<Page> pageSupplier) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
 		boolean prefixSet = false;
 
@@ -4666,8 +4149,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// set the RR for the current transaction, so that parameters are not reset
 			t.setRenderResult(renderResult);
 
-			RenderType renderType = createRenderType(linksType, RenderType.EM_ALOHA, t.getSessionId(),
-					nodePreferences, false);
+			RenderType renderType = createRenderType(linksType, RenderType.EM_ALOHA, nodePreferences, false);
 			t.setRenderType(renderType);
 
 			Page page = pageSupplier.supply();
@@ -4713,19 +4195,6 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
 
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new PageRenderResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageRenderResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while rendering tag {" + tag + "}", e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageRenderResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE,
-							"Error while rendering tag {" + tag + "}: " + e.getLocalizedMessage()));
 		} finally {
 			if (prefixSet) {
 				nodePreferences.unsetProperty(DynamicUrlFactory.STAG_PREFIX_PARAM);
@@ -4752,16 +4221,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	 */
 	protected PageRenderResponse render(String identifier, Integer nodeId, String template,
 			boolean editMode, String proxyprefix, LinksType linksType,
-			boolean tagmap, boolean inherited, boolean publish, Function<Boolean, Page> pageSupplier) {
-		Transaction t = getTransaction();
+			boolean tagmap, boolean inherited, boolean publish, Function<Boolean, Page> pageSupplier) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
 		boolean prefixSet = false;
-		boolean channelIdSet = false;
-		try {
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			String responseMessage = null;
-
-			// set the nodeId, if provided
-			channelIdSet = setChannelToTransaction(nodeId);
 
 			boolean readOnly = !editMode;
 			PageRenderResponse response = new PageRenderResponse();
@@ -4792,8 +4257,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				renderTypeValue = readOnly ? RenderType.EM_ALOHA_READONLY : RenderType.EM_ALOHA;
 			}
 
-			RenderType renderType = createRenderType(linksType, renderTypeValue, t.getSessionId(),
-					nodePreferences, readOnly);
+			RenderType renderType = createRenderType(linksType, renderTypeValue, nodePreferences, readOnly);
 			t.setRenderType(renderType);
 
 			Page page;
@@ -4818,8 +4282,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 
 					// we need to reset the rendertype, since editmode is different now
 					renderTypeValue = readOnly ? RenderType.EM_ALOHA_READONLY : RenderType.EM_ALOHA;
-					renderType = createRenderType(linksType, renderTypeValue, t.getSessionId(),
-							nodePreferences, readOnly);
+					renderType = createRenderType(linksType, renderTypeValue, nodePreferences, readOnly);
 					t.setRenderType(renderType);
 				}
 			}
@@ -4840,7 +4303,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			if (inherited && page.isLocalized()) {
 				RenderResult renderResultInherit = new RenderResult();
 				RenderType renderTypeInherit = createRenderType(linksType, renderTypeValue,
-						t.getSessionId(), nodePreferences, true);
+						nodePreferences, true);
 
 				t.setRenderResult(renderResultInherit);
 				t.setRenderType(renderTypeInherit);
@@ -4872,27 +4335,10 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, responseMessage));
 
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new PageRenderResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PageRenderResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while loading page " + identifier, e);
-			I18nString message = new CNI18nString("rest.general.error");
-			return new PageRenderResponse(new Message(Message.Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while rendering page " + identifier
-							+ ": " + e.getLocalizedMessage()));
 		} finally {
 			if (prefixSet) {
 				nodePreferences.unsetProperty(DynamicUrlFactory.STAG_PREFIX_PARAM);
 				nodePreferences.unsetProperty(DynamicUrlFactory.PORTLETAPP_PREFIX_PARAM);
-			}
-			if (channelIdSet) {
-				// reset channel
-				t.resetChannel();
 			}
 		}
 	}

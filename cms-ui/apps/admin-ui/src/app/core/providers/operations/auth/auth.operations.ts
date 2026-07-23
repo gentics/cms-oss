@@ -34,20 +34,16 @@ export class AuthOperations {
     ) {}
 
     /**
-     * Validates the specified sid with the API.
+     * Validates the session with the API.
      */
-    validateSessionId(sid: number): void {
+    validateSession(): void {
         this.appState.dispatch(new ValidateStart());
 
-        this.client.user.me({ sid: sid }).subscribe({
+        this.client.user.me().subscribe({
             next: (res) => {
-                this.appState.dispatch(new ValidateSuccess(sid, res.user));
-                if (this.readSidFromEditorUi() !== sid) {
-                    this.storeSidForEditorUi(sid);
-                }
+                this.appState.dispatch(new ValidateSuccess(res.user));
             },
             error: (error: GCMSRestClientRequestError) => {
-                this.storeSidForEditorUi(null);
                 this.appState.dispatch(new ValidateError(error.message));
 
                 if (error.responseCode !== 401) {
@@ -55,18 +51,6 @@ export class AuthOperations {
                 }
             },
         });
-    }
-
-    /**
-     * Check the local storage for an sid, and if found, attempt to validate the user's session
-     * with the API.
-     */
-    validateSessionFromLocalStorage(): void {
-        const sid = this.readSidFromEditorUi();
-        if (!sid) {
-            return;
-        }
-        this.validateSessionId(sid);
     }
 
     login(username: string, password: string, returnUrl: string): void {
@@ -77,8 +61,7 @@ export class AuthOperations {
             password: password,
         }).subscribe({
             next: (res) => {
-                this.storeSidForEditorUi(res.sid);
-                this.appState.dispatch(new LoginSuccess(res.sid, res.user));
+                this.appState.dispatch(new LoginSuccess(res.user));
                 if (returnUrl) {
                     this.router.navigateByUrl(returnUrl);
                 }
@@ -90,12 +73,11 @@ export class AuthOperations {
         });
     }
 
-    logout(sid: number): Promise<any> {
+    logout(): Promise<any> {
         this.appState.dispatch(new LogoutStart());
 
-        return this.client.auth.logout(sid).toPromise()
+        return this.client.auth.logout().toPromise()
             .then(() => {
-                this.storeSidForEditorUi(null);
                 this.appState.dispatch(new LogoutSuccess());
             })
             .catch((error: GCMSRestClientRequestError) => {
@@ -114,7 +96,6 @@ export class AuthOperations {
             password: newPassword,
         }).toPromise()
             .then(() => {
-                this.storeSidForEditorUi(null);
                 this.notification.show({
                     message: 'modal.updated_password',
                     type: 'success',
@@ -125,13 +106,5 @@ export class AuthOperations {
                 this.appState.dispatch(new ChangePasswordError(error.message || error));
                 this.errorHandler.catch(error);
             });
-    }
-
-    private readSidFromEditorUi(): number | null {
-        return this.editorLocalStorage.getSid();
-    }
-
-    private storeSidForEditorUi(sid: number | null): void {
-        this.editorLocalStorage.setSid(sid);
     }
 }

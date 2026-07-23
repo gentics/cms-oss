@@ -37,7 +37,6 @@ type FormgridPreviewData = {
     schema: FormSchema;
     uiSchema: FormUISchema;
     language: string;
-    cmsSid?: number;
     features?: IFeatures;
     prefillContent?: Record<string, FormPropertyData>;
     currentPage?: number;
@@ -300,7 +299,6 @@ export class FormPreviewComponent implements AfterViewInit {
                     flows: this.config().flows,
                     selectedElementId: this.selectedElementId(),
                     prefillContent: this.prefill(),
-                    cmsSid: this.client.getClient().sid as number,
                 };
             } catch (err) {
                 // Ignore err
@@ -334,7 +332,6 @@ export class FormPreviewComponent implements AfterViewInit {
                             flowId: this.flowId(),
                             flows: this.config().flows,
 
-                            cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),
                             availableLanguages: this.languages(),

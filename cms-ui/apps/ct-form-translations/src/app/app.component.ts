@@ -17,7 +17,6 @@ import {
     Scope,
     ScopeId,
 } from './models/translations.model';
-import { AuthenticationService } from './services/authentication.service';
 import { FormTranslationsApiService } from './services/form-translations-api.service';
 import { ToolApiService } from './services/tool-api.service';
 import { ScopeTabInfo } from './components/scope-tabs/scope-tabs.component';
@@ -35,7 +34,6 @@ type LoadStatus = 'idle' | 'loading' | 'loaded' | 'no-session' | 'error';
 })
 export class AppComponent implements OnInit {
 
-    private readonly auth = inject(AuthenticationService);
     private readonly toolApi = inject(ToolApiService);
     private readonly api = inject(FormTranslationsApiService);
     private readonly modals = inject(ModalService);
@@ -159,12 +157,6 @@ export class AppComponent implements OnInit {
 
     private async bootstrap(): Promise<void> {
         this.bootstrapStatus.set('loading');
-
-        if (this.auth.sid == null) {
-            this.bootstrapStatus.set('no-session');
-            this.changeDetector.markForCheck();
-            return;
-        }
 
         /* Pull-based protocol: expose hasUnsavedChanges() so the embedding
            UI can ask whenever it wants (e.g. on navigation). */

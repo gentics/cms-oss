@@ -82,7 +82,6 @@ export interface LoginRequest {
 }
 
 export interface LoginOptions {
-    sid?: string | number;
 }
 
 /**

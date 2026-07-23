@@ -16,6 +16,8 @@ import com.gentics.contentnode.rest.model.response.ResponseInfo;
 @XmlRootElement
 public class PageCopyResponse extends GenericResponse {
 
+	private static final long serialVersionUID = 5789221494733422413L;
+
 	/**
 	 * The copied pages
 	 */
@@ -31,6 +33,14 @@ public class PageCopyResponse extends GenericResponse {
 	 * Empty constructor needed by JAXB
 	 */
 	public PageCopyResponse() {
+	}
+
+	/**
+	 * Create instance as copy
+	 * @param other other instance
+	 */
+	public PageCopyResponse(GenericResponse other) {
+		super(other);
 	}
 
 	/**

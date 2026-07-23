@@ -2,6 +2,7 @@ package com.gentics.contentnode.servlets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Optional;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -10,10 +11,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -94,39 +97,27 @@ public abstract class ContentNodeUserServlet extends HttpServlet {
 			logger.error(error, e);
 			return null;
 		}
-		
+
 		Transaction t = null;
 
 		try {
-			// we pass the token string and not the session ID, since
-			// we must have the session secret available in the transaction,
-			// so that the transaction can be authenticated by
-			// {@link ContentNodeResource}. we also authenticate the session
-			// below, which gets executed first, and catches all invalid
-			// sessions.
-			t = factory.startTransaction(token.toString(), true);
+			Optional<DBSession> optSession = Trx.supply(() -> DBSession.load(token));
+			if (optSession.isEmpty()) {
+				halt("Invalid sid provided.", response);
+				logger.error("Invalid sessionId { " + token + " } provided");
+				return null;
+			}
+
+			t = factory.startTransaction(optSession.get(), true);
 		} catch (NodeException e) {
 			halt("Invalid sid provided.", response);
 			logger.error("Invalid sessionId { " + token + " } provided", e);
 			return null;
 		}
 
-		if (!token.authenticates(t.getSession())) {
-			if (t != null) {
-				try {
-					t.rollback();
-				} catch (TransactionException e) {
-					logger.warn("Error while rolling back transaction with token: \"" + token + "\"");
-				}
-			}
-			halt("The session can't be authenticated", response);
-			logger.error("The session can't be authenticated with token: \"" + token + "\"");
-			return null;
-		}
-        
 		return t;
 	}
-    
+
 	/**
 	 * Extended doGet method that provides some extra parameters the implementing class can use.
 	 * @param request The original HttpServeltRequest

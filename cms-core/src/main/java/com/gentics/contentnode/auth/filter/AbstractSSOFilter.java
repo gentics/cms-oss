@@ -34,8 +34,8 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -408,9 +408,10 @@ public abstract class AbstractSSOFilter implements Filter {
 						// now check whether the request is done with a session
 						try {
 							SessionToken sessionToken = new SessionToken(request);
-							Session session = new Session(sessionToken.getSessionId(), trx.getTransaction());
+							Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-							if (sessionToken.authenticates(session)) {
+							if (optSession.isPresent()) {
+								DBSession session = optSession.get();
 								// check whether the session belongs to the same user, if
 								// not -> do logout for the old session and create a new one
 								if (session.getUserId() != ObjectTransformer.getInt(systemUser.getId(), -1)) {
@@ -426,7 +427,7 @@ public abstract class AbstractSSOFilter implements Filter {
 						}
 
 						if (createNewSession) {
-							Session session = new Session(systemUser, request.getRemoteAddr(), request.getHeader("user-agent"),
+							DBSession session = new DBSession(systemUser, request.getRemoteAddr(), request.getHeader("user-agent"),
 									SessionToken.getSessionSecretFromRequestCookie(request), 0);
 
 							// replace the request with the wrapper and set the session
@@ -749,7 +750,7 @@ public abstract class AbstractSSOFilter implements Filter {
 		 * @param request wrapped request
 		 * @param session the current session
 		 */
-		public AuthenticatedHttpServletRequestWrapper(HttpServletRequest request, Session session) {
+		public AuthenticatedHttpServletRequestWrapper(HttpServletRequest request, DBSession session) {
 			super(request);
 
 			// get the cookies
@@ -765,7 +766,7 @@ public abstract class AbstractSSOFilter implements Filter {
 			}
 
 			// create and add the session secret cookie
-			Cookie sessionSecretCookie = new Cookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret());
+			Cookie sessionSecretCookie = new Cookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getCookieValue());
 
 			sessionSecretCookie.setPath("/");
 
@@ -778,9 +779,6 @@ public abstract class AbstractSSOFilter implements Filter {
 
 				parameterMap.put(name, request.getParameterValues(name));
 			}
-
-			// set the sid as parameter
-			parameterMap.put("sid", new String[] { ObjectTransformer.getString(session.getSessionId(), null)});
 		}
 
 		/* (non-Javadoc)

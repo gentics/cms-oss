@@ -1,27 +1,21 @@
 package com.gentics.contentnode.tests.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.rest.model.request.LoginRequest;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.AuthenticationResource;
-import com.gentics.contentnode.rest.resource.ConstructResource;
-import com.gentics.contentnode.rest.resource.FileResource;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.ImageResource;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.TemplateResource;
-import com.gentics.contentnode.rest.resource.UserResource;
+import com.gentics.contentnode.rest.resource.impl.AdminResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
@@ -29,6 +23,7 @@ import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 
@@ -42,7 +37,7 @@ public class ContentNodeRESTUtils {
 	 * @return construct resource
 	 * @throws NodeException
 	 */
-	public static ConstructResource getConstructResource() throws NodeException {
+	public static ConstructResourceImpl getConstructResource() throws NodeException {
 		return new ConstructResourceImpl();
 	}
 
@@ -51,10 +46,8 @@ public class ContentNodeRESTUtils {
 	 * @return page resource
 	 * @throws NodeException
 	 */
-	public static PageResource getPageResource() throws NodeException {
-		PageResourceImpl resource = new PageResourceImpl();
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-		return resource;
+	public static PageResourceImpl getPageResource() throws NodeException {
+		return new PageResourceImpl();
 	}
 
 	/**
@@ -62,12 +55,8 @@ public class ContentNodeRESTUtils {
 	 * @return file resource
 	 * @throws NodeException
 	 */
-	public static FileResource getFileResource() throws NodeException {
-		FileResourceImpl resource = new FileResourceImpl();
-
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		return resource;
+	public static FileResourceImpl getFileResource() throws NodeException {
+		return new FileResourceImpl();
 	}
 
 	/**
@@ -75,9 +64,8 @@ public class ContentNodeRESTUtils {
 	 * @return user resource
 	 * @throws NodeException
 	 */
-	public static UserResource getUserResource() throws NodeException {
-		UserResource resource = new UserResourceImpl();
-		return resource;
+	public static UserResourceImpl getUserResource() throws NodeException {
+		return new UserResourceImpl();
 	}
 
 	/**
@@ -85,12 +73,8 @@ public class ContentNodeRESTUtils {
 	 * @return image resource
 	 * @throws NodeException
 	 */
-	public static ImageResource getImageResource() throws NodeException {
-		ImageResourceImpl resource = new ImageResourceImpl();
-
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-
-		return resource;
+	public static ImageResourceImpl getImageResource() throws NodeException {
+		return new ImageResourceImpl();
 	}
 
 	/**
@@ -98,10 +82,8 @@ public class ContentNodeRESTUtils {
 	 * @return auth resource
 	 * @throws NodeException
 	 */
-	public static AuthenticationResource getAuthResource() throws NodeException {
-		AuthenticationResourceImpl resource = new AuthenticationResourceImpl();
-		resource.setTransaction(TransactionManager.getCurrentTransaction());
-		return resource;
+	public static AuthenticationResourceImpl getAuthResource() throws NodeException {
+		return new AuthenticationResourceImpl();
 	}
 
 	/**
@@ -109,11 +91,8 @@ public class ContentNodeRESTUtils {
 	 * @return folder resource
 	 * @throws Exception
 	 */
-	public static FolderResource getFolderResource() throws NodeException {
-		FolderResourceImpl res = new FolderResourceImpl();
-
-		res.setTransaction(TransactionManager.getCurrentTransaction());
-		return res;
+	public static FolderResourceImpl getFolderResource() throws NodeException {
+		return new FolderResourceImpl();
 	}
 
 	/**
@@ -130,25 +109,26 @@ public class ContentNodeRESTUtils {
 	 * @return template resource
 	 * @throws NodeException
 	 */
-	public static TemplateResource getTemplateResource() throws NodeException {
+	public static TemplateResourceImpl getTemplateResource() throws NodeException {
 		return new TemplateResourceImpl();
 	}
 
 	/**
-	 * Perform login for the given luser credentials
-	 * @param login login
-	 * @param password password
-	 * @return sid
+	 * Get a admin resource
+	 * @return admin resource
 	 * @throws NodeException
 	 */
-	public static String login(String login, String password) throws NodeException {
-		AuthenticationResource resource = getAuthResource();
-		LoginRequest request = new LoginRequest();
-		request.setLogin(login);
-		request.setPassword(password);
-		LoginResponse response = resource.login(request, "0");
-		assertResponseOK(response);
-		return response.getSid();
+	public static AdminResourceImpl getAdminResource() throws NodeException {
+		return new AdminResourceImpl();
+	}
+
+	/**
+	 * Get a perm resource
+	 * @return perm resource
+	 * @throws NodeException
+	 */
+	public static PermResourceImpl getPermResource() throws NodeException {
+		return new PermResourceImpl();
 	}
 
 	/**
@@ -197,6 +177,52 @@ public class ContentNodeRESTUtils {
 			for (int i = 0; i < expectedMessages.length; i++) {
 				assertEquals("Check message type #" + i, expectedMessages[i].getType(), response.getMessages().get(i).getType());
 				assertEquals("Check message #" + i, expectedMessages[i].getMessage(), response.getMessages().get(i).getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Assert that the method from the supplier returns a successful response
+	 * @param <T> result type
+	 * @param supplier supplier generating the result
+	 * @param expectedResponseMessage optional expected response message
+	 * @param expectedMessages optional user messages expected in the response
+	 * @return result
+	 * @throws NodeException
+	 */
+	public static <T extends GenericResponse> T assertSuccess(Supplier<T> supplier, String expectedResponseMessage, Message... expectedMessages) throws NodeException {
+		T response = supplier.supply();
+		assertResponse(response, ResponseCode.OK, expectedResponseMessage, expectedMessages);
+		return response;
+	}
+
+	/**
+	 * Assert that the method from the supplier fails either by returning a failed result or throwing an exception
+	 * @param <T> result type
+	 * @param supplier supplier generating the result
+	 * @param expectedErrorClazz expected class of the thrown exception
+	 * @param expectedCode expected error code
+	 * @param expectedResponseMessage optional expected response message
+	 * @param expectedMessages optional user messages expected in the response or the throws error
+	 */
+	public static <T extends GenericResponse> void assertError(Supplier<T> supplier,
+			Class<? extends NodeException> expectedErrorClazz, ResponseCode expectedCode,
+			String expectedResponseMessage, Message... expectedMessages) {
+		try {
+			T response = supplier.supply();
+			assertResponse(response, expectedCode, expectedResponseMessage, expectedMessages);
+		} catch (NodeException e) {
+			if (e.getClass().isAssignableFrom(expectedErrorClazz)) {
+				if (StringUtils.isNotBlank(expectedResponseMessage)) {
+					assertThat(e.getMessage()).as("Exception message").isEqualTo(expectedResponseMessage);
+				}
+
+				if (!ObjectTransformer.isEmpty(expectedMessages)) {
+					assertThat(List.of(new Message(Message.Type.CRITICAL, e.getLocalizedMessage())))
+							.as("Exception messages").usingRecursiveFieldByFieldElementComparatorOnFields("message", "type").containsOnly(expectedMessages);
+				}
+			} else {
+				fail("Unexpected exception thrown", e);
 			}
 		}
 	}

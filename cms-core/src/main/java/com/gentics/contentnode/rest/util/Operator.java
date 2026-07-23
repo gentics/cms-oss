@@ -61,7 +61,7 @@ public class Operator {
 	/**
 	 * Map of currently running jobs, keys are the internal jobIds
 	 */
-	protected static Map<Long, RestCallable> runningJobs = new HashMap<>();
+	protected static Map<Long, RestCallable<?>> runningJobs = new HashMap<>();
 
 	/**
 	 * Executor instance TODO make pool size configurable
@@ -105,10 +105,11 @@ public class Operator {
 	 * @param description Job description (must be i18n). This will be used in generic notification messages to the user.
 	 * @param timeout timeout in ms. If 0, the calling thread will wait, until the callable is executed.
 	 * @param callable callable to execute
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return either the response from the callable (if executed in foreground) or a response containing a message, that the job is done in background
 	 */
-	public static GenericResponse execute(String description, long timeout, Callable<GenericResponse> callable) {
-		return executeLocked(description, timeout, null, callable, null, null);
+	public static <T extends GenericResponse> T execute(String description, long timeout, Callable<T> callable, Function<GenericResponse, T> responseTransformer) {
+		return executeLocked(description, timeout, null, callable, null, null, responseTransformer);
 	}
 
 	/**
@@ -117,10 +118,11 @@ public class Operator {
 	 * @param timeout timeout in ms
 	 * @param lock optional lock
 	 * @param callable callable to execute
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable) {
-		return executeLocked(description, timeout, lock, callable, null, null);
+	public static <T extends GenericResponse> T executeLocked(String description, long timeout, Lock lock, Callable<T> callable, Function<GenericResponse, T> responseTransformer) {
+		return executeLocked(description, timeout, lock, callable, null, null, responseTransformer);
 	}
 
 	/**
@@ -130,10 +132,11 @@ public class Operator {
 	 * @param lock optional lock
 	 * @param callable callable to execute
 	 * @param errorHandler optional error handler
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock, Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler) {
-		return executeLocked(description, timeout, lock, callable, errorHandler, null);
+	public static <T extends GenericResponse> T executeLocked(String description, long timeout, Lock lock, Callable<T> callable, Function<Exception, WebApplicationException> errorHandler, Function<GenericResponse, T> responseTransformer) {
+		return executeLocked(description, timeout, lock, callable, errorHandler, null, responseTransformer);
 	}
 
 	/**
@@ -144,14 +147,15 @@ public class Operator {
 	 * @param callable callable to execute
 	 * @param errorHandler optional error handler
 	 * @param backgroundCallback optional callback that is called when the operation is sent to background
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return response
 	 */
-	public static GenericResponse executeLocked(String description, long timeout, Lock lock,
-			Callable<GenericResponse> callable, Function<Exception, WebApplicationException> errorHandler,
-			Runnable backgroundCallback) {
+	public static <T extends GenericResponse> T executeLocked(String description, long timeout, Lock lock,
+			Callable<T> callable, Function<Exception, WebApplicationException> errorHandler,
+			Runnable backgroundCallback, Function<GenericResponse, T> responseTransformer) {
 		try {
-			RestCallable wrapper = new RestCallable(description, lock, callable);
-			Future<GenericResponse> futureResult = executor.submit(wrapper);
+			RestCallable<T> wrapper = new RestCallable<>(description, lock, callable, responseTransformer);
+			Future<T> futureResult = executor.submit(wrapper);
 
 			try {
 				if (timeout <= 0) {
@@ -168,11 +172,11 @@ public class Operator {
 				}
 				String translatedMsg = msg.toString();
 
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				return responseTransformer.apply(new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true));
 			}
 		} catch (Exception exception) {
 			if (exception.getCause() instanceof ReadOnlyException) {
-				return new GenericResponse(new Message(Message.Type.CRITICAL, exception.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
+				return responseTransformer.apply(new GenericResponse(new Message(Message.Type.CRITICAL, exception.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, "")));
 			} else {
 				// for ExecutionExceptions, we are more interested in the causing exception
 				if (exception instanceof ExecutionException && exception.getCause() instanceof Exception) {
@@ -183,8 +187,8 @@ public class Operator {
 					throw errorHandler.apply(exception);
 				} else {
 					I18nString message = new CNI18nString("rest.general.error");
-					return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-							+ description + ": " + exception.getLocalizedMessage()));
+					return responseTransformer.apply(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+							+ description + ": " + exception.getLocalizedMessage())));
 				}
 			}
 		}
@@ -197,10 +201,11 @@ public class Operator {
 	 * @param timeout timeout in ms. If 0, the calling thread will wait, until the callable is executed.
 	 * @param callable callable to execute
 	 * @return either the response from the callable (if executed in foreground) or a response containing a message, that the job is done in background
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @throws NodeException
 	 */
-	public static GenericResponse executeRethrowing(String description, long timeout, Callable<GenericResponse> callable) throws NodeException {
-		return executeLockedRethrowing(description, timeout, null, callable);
+	public static <T extends GenericResponse> T executeRethrowing(String description, long timeout, Callable<T> callable, Function<GenericResponse, T> responseTransformer) throws NodeException {
+		return executeLockedRethrowing(description, timeout, null, callable, responseTransformer);
 	}
 
 	/**
@@ -209,13 +214,14 @@ public class Operator {
 	 * @param timeout timeout in ms
 	 * @param lock optional lock
 	 * @param callable callable to execute
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return response
 	 */
-	public static GenericResponse executeLockedRethrowing(String description, long timeout, Lock lock, Callable<GenericResponse> callable) throws NodeException {
+	public static <T extends GenericResponse> T executeLockedRethrowing(String description, long timeout, Lock lock, Callable<T> callable, Function<GenericResponse, T> responseTransformer) throws NodeException {
 		try {
-			RestCallable wrapper = new RestCallable(description, lock, callable);
+			RestCallable<T> wrapper = new RestCallable<>(description, lock, callable, responseTransformer);
 			wrapper.setThrowNodeException(true);
-			Future<GenericResponse> futureResult = executor.submit(wrapper);
+			Future<T> futureResult = executor.submit(wrapper);
 
 			try {
 				if (timeout <= 0) {
@@ -229,7 +235,7 @@ public class Operator {
 				msg.setParameter("0", description);
 				String translatedMsg = msg.toString();
 
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				return responseTransformer.apply(new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true));
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -239,8 +245,8 @@ public class Operator {
 			}
 			logger.error("Error while " + description, e);
 			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-					+ description + ": " + e.getLocalizedMessage()));
+			return responseTransformer.apply(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+					+ description + ": " + e.getLocalizedMessage())));
 		}
 	}
 
@@ -249,24 +255,25 @@ public class Operator {
 	 * @param description description
 	 * @param timeout timeout
 	 * @param wrappedCallables list of wrapped callables
+	 * @param responseTransformer function to transform a GenericResponse into the response object
 	 * @return merged response
 	 */
-	protected static GenericResponse execute(String description, long timeout, List<RestCallable> wrappedCallables) {
+	protected static <T extends GenericResponse> T execute(String description, long timeout, List<RestCallable<T>> wrappedCallables, Function<GenericResponse, T> responseTransformer) {
 		if (wrappedCallables.isEmpty()) {
-			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, ""));
+			return responseTransformer.apply(new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "")));
 		}
 		try {
 			QueueResult queueResult = new QueueResult(description, wrappedCallables.size());
-			List<Future<GenericResponse>> futureResults = new ArrayList<>();
-			for (RestCallable wrapper : wrappedCallables) {
+			List<Future<T>> futureResults = new ArrayList<>();
+			for (RestCallable<T> wrapper : wrappedCallables) {
 				wrapper.addToQueue(queueResult);
 				futureResults.add(executor.submit(wrapper));
 			}
 
 			try {
-				GenericResponse merged = new GenericResponse();
+				T merged = responseTransformer.apply(new GenericResponse());
 				long remainingTimeout = timeout;
-				for (Future<GenericResponse> futureResult : futureResults) {
+				for (Future<T> futureResult : futureResults) {
 					if (timeout <= 0) {
 						mergeInto(futureResult.get(), merged);
 					} else {
@@ -279,7 +286,7 @@ public class Operator {
 
 				return merged;
 			} catch (TimeoutException e) {
-				for (RestCallable wrapper : wrappedCallables) {
+				for (RestCallable<T> wrapper : wrappedCallables) {
 					wrapper.sendToBackground();
 				}
 				queueResult.sendToBackground();
@@ -287,13 +294,13 @@ public class Operator {
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
 				String translatedMsg = msg.toString();
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				return responseTransformer.apply(new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true));
 			}
 		} catch (Exception e) {
 			logger.error("Error while " + description, e);
 			I18nString message = new CNI18nString("rest.general.error");
-			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-					+ description + ": " + e.getLocalizedMessage()));
+			return responseTransformer.apply(new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
+					+ description + ": " + e.getLocalizedMessage())));
 		}
 	}
 
@@ -361,8 +368,8 @@ public class Operator {
 	 * Create a new queue builder
 	 * @return queue builder
 	 */
-	public static QueueBuilder queue() {
-		return new QueueBuilder();
+	public static <T extends GenericResponse> QueueBuilder<T> queue(Function<GenericResponse, T> responseTransformer) {
+		return new QueueBuilder<>(responseTransformer);
 	}
 
 	/**
@@ -383,7 +390,7 @@ public class Operator {
 	 * Called, when the given job is about to be called
 	 * @param job job
 	 */
-	protected static void jobIsStarting(RestCallable job) {
+	protected static void jobIsStarting(RestCallable<?> job) {
 		runningJobs.put(job.jobId, job);
 	}
 
@@ -391,7 +398,7 @@ public class Operator {
 	 * Called, when the give job finished execution
 	 * @param job job
 	 */
-	protected static void jobFinished(RestCallable job) {
+	protected static void jobFinished(RestCallable<?> job) {
 		runningJobs.remove(job.jobId);
 	}
 
@@ -399,23 +406,36 @@ public class Operator {
 	 * Get the currently running jobs
 	 * @return collection of {@link RestCallable} wrappers for the currently running jobs
 	 */
-	public static Collection<RestCallable> getCurrentlyRunningJobs() {
+	public static Collection<RestCallable<?>> getCurrentlyRunningJobs() {
 		return new ArrayList<>(runningJobs.values());
 	}
 
 	/**
 	 * Queue Builder for building queues of operators.
 	 */
-	public static class QueueBuilder {
+	public static class QueueBuilder<T extends GenericResponse> {
 		/**
 		 * List of callable wrappers
 		 */
-		protected List<RestCallable> wrappers = new ArrayList<>();
+		protected List<RestCallable<T>> wrappers = new ArrayList<>();
 
 		/**
 		 * Flag to mark whether the queue has been executed
 		 */
 		protected boolean executed = false;
+
+		/**
+		 * Response transformer
+		 */
+		protected Function<GenericResponse, T> responseTransformer;
+
+		/**
+		 * Create an instance
+		 * @param responseTransformer response transformer
+		 */
+		protected QueueBuilder(Function<GenericResponse, T> responseTransformer) {
+			this.responseTransformer = responseTransformer;
+		}
 
 		/**
 		 * Add the given callable to the queue
@@ -424,7 +444,7 @@ public class Operator {
 		 * @return builder instance
 		 * @throws NodeException
 		 */
-		public QueueBuilder add(String description, Callable<GenericResponse> callable) throws NodeException {
+		public QueueBuilder<T> add(String description, Callable<T> callable) throws NodeException {
 			return addLocked(description, null, callable);
 		}
 
@@ -436,11 +456,11 @@ public class Operator {
 		 * @return builder instance
 		 * @throws NodeException
 		 */
-		public QueueBuilder addLocked(String description, Lock lock, Callable<GenericResponse> callable) throws NodeException {
+		public QueueBuilder<T> addLocked(String description, Lock lock, Callable<T> callable) throws NodeException {
 			if (executed) {
 				throw new NodeException("Cannot add callable after queue has been executed");
 			}
-			wrappers.add(new RestCallable(description, lock, callable));
+			wrappers.add(new RestCallable<>(description, lock, callable, responseTransformer));
 			return this;
 		}
 
@@ -451,13 +471,13 @@ public class Operator {
 		 * @return merged response
 		 * @throws NodeException in case of an error
 		 */
-		public GenericResponse execute(String description, long timeout) throws NodeException {
+		public T execute(String description, long timeout) throws NodeException {
 			if (executed) {
 				throw new NodeException("The queue has already been executed");
 			}
 
 			executed = true;
-			return Operator.execute(description, timeout, wrappers);
+			return Operator.execute(description, timeout, wrappers, responseTransformer);
 		}
 	}
 
@@ -569,6 +589,6 @@ public class Operator {
 	 * Enum of possible lock types
 	 */
 	public static enum LockType {
-		channelSet, contentSet, contentPackage, devtoolPackage
+		channelSet, contentSet, contentPackage, devtoolPackage, fileName, motherId
 	}
 }

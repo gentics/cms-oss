@@ -162,7 +162,7 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 	public void testRender() throws Exception {
 		operate(creator, t -> {
 			// set the render type
-			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, -1);
 			t.setRenderType(renderType);
 			// set the url factory
 			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));

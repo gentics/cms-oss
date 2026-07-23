@@ -27,17 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -46,9 +35,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.AutoCommit;
@@ -57,14 +46,12 @@ import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.MultichannellingFactory;
 import com.gentics.contentnode.factory.PageLanguageFallbackList;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FolderFactory;
 import com.gentics.contentnode.factory.object.FolderFactory.ReductionType;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.object.TagFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -82,7 +69,6 @@ import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
@@ -101,9 +87,9 @@ import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.render.RenderUrlFactory;
-import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.ContentNodeItem;
 import com.gentics.contentnode.rest.model.ContentNodeItem.ItemType;
 import com.gentics.contentnode.rest.model.Folder;
@@ -167,33 +153,37 @@ import com.gentics.contentnode.staging.StagingUtil;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.lib.log.NodeLogger;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Resource for loading and manipulating folders in GCN
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/folder")
-public class FolderResourceImpl extends AuthenticatedContentNodeResource implements FolderResource {
-	/**
-	 * Keyed lock to synchronize folder creation in same mother
-	 */
-	private static final TransactionLockManager<FolderLoadResponse> createLock = new TransactionLockManager<>();
+@Authenticated
+public class FolderResourceImpl implements FolderResource {
+	protected final static NodeLogger logger = NodeLogger.getNodeLogger(FolderResourceImpl.class);
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#create(com.gentics.contentnode.rest.model.request.FolderCreateRequest)
-	 */
+	@Override
 	@POST
 	@Path("/create")
-	public FolderLoadResponse create(FolderCreateRequest request) {
-		try {
-			return createLock.execute(request.getMotherId(), () -> doCreate(request));
-		} catch (Exception e) {
-			logger.error("Error while creating new folder", e);
-			I18nString m = new CNI18nString("rest.general.error");
-
-			return new FolderLoadResponse(new Message(Message.Type.CRITICAL, m.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while creating new folder: " + e.getLocalizedMessage()), null);
+	public FolderLoadResponse create(FolderCreateRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			FolderLoadResponse response = Operator.executeLocked("", 0,
+					Operator.lock(LockType.motherId, request.getMotherId()), () -> doCreate(request), r -> new FolderLoadResponse(r));
+			trx.success();
+			return response;
 		}
 	}
 
@@ -456,40 +446,15 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 	}
 
-	/**
-	 * Creates critical error response
-	 * @param throwable Error exception
-	 * @param responseCode Error code response
-	 * @param message Message
-	 * @return A {@code FolderExternalLinksResponse} with the message type
-	 * 		{@code CRITICAL} and the given response code and message
-	 */
-	private FolderExternalLinksResponse createCriticalErrorResponse(Throwable throwable, ResponseCode responseCode, String message) {
-		return new FolderExternalLinksResponse(
-				new Message(Type.CRITICAL, message),
-				new ResponseInfo(responseCode, throwable.getMessage()));
-	}
-
-	/**
-	 * Creates critical error response
-	 * @param throwable Error exception
-	 * @param responseCode Error Code response
-	 * @return A {@code FolderExternalLinksResponse} with the message type
-	 * 		{@code CRITICAL} and the given response code and the localized
-	 * 		message from the throwable
-	 */
-	private FolderExternalLinksResponse createCriticalErrorResponse(Throwable throwable, ResponseCode responseCode) {
-		return createCriticalErrorResponse(throwable, responseCode, throwable.getLocalizedMessage());
-	}
-
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#getExternalLinks(java.lang.String, boolean)
-	 */
-	public FolderExternalLinksResponse getExternalLinks(Integer folderId,
-			boolean recursive) {
+	@Override
+	@GET
+	@Path("/getExternalLinks/{folderId}")
+	public FolderExternalLinksResponse getExternalLinks(
+			@PathParam("folderId") Integer folderId,
+			@QueryParam("recursive")@DefaultValue("false") boolean recursive) throws NodeException {
 		FolderExternalLinksResponse externalLinksResponse = new FolderExternalLinksResponse();
 
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			List<Integer> folderIds = new ArrayList<>();
 			folderIds.add(folderId);
 
@@ -498,20 +463,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 
 			externalLinksResponse.setPages(getExternalLinks(folderIds));
-		} catch (EntityNotFoundException e) {
-			return createCriticalErrorResponse(e, ResponseCode.NOTFOUND);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return createCriticalErrorResponse(e, ResponseCode.PERMISSION);
-		} catch (NodeException e) {
-			logger.error("Error while loading folder " + folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return createCriticalErrorResponse(e, ResponseCode.FAILURE, message.toString());
-		} catch (SQLException e) {
-			String message = "Error while finding pages, starting from folder {" + folderId + "}";
-
-			throw new WebApplicationException(e, Response.status(Status.INTERNAL_SERVER_ERROR).entity(message).build());
+			trx.success();
 		}
 
 		return externalLinksResponse;
@@ -598,10 +550,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		});
 		return externalLinks ;
 	}
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#load(java.lang.String, boolean, java.lang.Integer)
-	 */
+
+	@Override
 	@GET
 	@Path("/load/{id}")
 	public FolderLoadResponse load(@PathParam("id") String folderId,
@@ -609,7 +559,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@QueryParam("privileges") @DefaultValue("false") boolean addPrivileges,
 			@QueryParam("construct") @DefaultValue("false") boolean construct,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("package") String stagingPackageName) {
+			@QueryParam("package") String stagingPackageName) throws NodeException {
 		Folder restFolder = null;
 
 		// Check which references shall be added
@@ -626,13 +576,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		// load the folder
 		com.gentics.contentnode.object.Folder nodeFolder;
-		boolean channelIdSet = false;
 
-		Transaction t = null;
-		try {
-			t = TransactionManager.getCurrentTransaction();
-			channelIdSet = setChannelToTransaction(nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			nodeFolder = getFolder(folderId, update);
 
 			// transform the folder into a REST object
@@ -642,31 +587,15 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			FolderLoadResponse response = new FolderLoadResponse(null, responseInfo, restFolder);
 			response.setStagingStatus(StagingUtil.checkStagingStatus(nodeFolder, stagingPackageName));
+			trx.success();
 			return response;
-		} catch (EntityNotFoundException e) {
-			return new FolderLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getLocalizedMessage()),
-					null);
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new FolderLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getLocalizedMessage()), null);
-		} catch (NodeException e) {
-			logger.error("Error while loading folder " + folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FolderLoadResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()), null);
-		} finally {
-			if (t != null && channelIdSet) {
-				t.resetChannel();
-			}
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/load")
-	public MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) {
-		Transaction t = getTransaction();
+	public MultiFolderLoadResponse load(MultiFolderLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws NodeException {
 		Set<Reference> references = new HashSet<>();
 
 		if (ObjectTransformer.getBoolean(request.isAddPrivileges(), false)) {
@@ -676,7 +605,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		references.add(Reference.TAGS);
 		references.add(Reference.OBJECT_TAGS_VISIBLE);
 
-		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
+			Transaction t = TransactionManager.getCurrentTransaction();
 			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
 			List<com.gentics.contentnode.object.Folder> allFolders =
 				t.getObjects(com.gentics.contentnode.object.Folder.class, request.getIds());
@@ -700,27 +630,19 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			// TODO make for filtered folders
 			response.setStagingStatus(StagingUtil.checkStagingStatus(allFolders, request.getPackage(), o -> o.getGlobalId().toString()));
+			trx.success();
 			return response;
-		} catch (NodeException e) {
-			return new MultiFolderLoadResponse(
-				new Message(Type.CRITICAL, e.getLocalizedMessage()),
-				new ResponseInfo(ResponseCode.FAILURE, "Could not load folders"));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#getBreadcrumb(java.lang.String, java.lang.Integer)
-	 */
+	@Override
 	@GET
 	@Path("/breadcrumb/{id}")
 	public LegacyFolderListResponse getBreadcrumb(
 			@PathParam("id") String id,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("wastebin") @DefaultValue("false") boolean includeWastebin,
-			@QueryParam("tags") @DefaultValue("false") boolean includeTags) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
+			@QueryParam("tags") @DefaultValue("false") boolean includeTags) throws NodeException {
 		Collection<Reference> fillRefs = new Vector<>();
 
 		if (includeTags) {
@@ -728,9 +650,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			fillRefs.add(Reference.OBJECT_TAGS_VISIBLE);
 		}
 
-		try {
-			channelIdSet = setChannelToTransaction(nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
 				com.gentics.contentnode.object.Folder folder = getFolder(id, false);
 				List<Folder> restFolders = new Vector<>();
@@ -743,22 +663,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				LegacyFolderListResponse response = new LegacyFolderListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched breadcrumb for folder " + id));
 
 				response.setFolders(restFolders);
+				trx.success();
 				return response;
-			}
-		} catch (EntityNotFoundException e) {
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getLocalizedMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getLocalizedMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while loading breadcrumb for folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				t.resetChannel();
 			}
 		}
 	}
@@ -774,227 +680,206 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacySortParameterBean sortingParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam PublishableParameterBean publishParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		try {
-			Transaction t = getTransaction();
-			boolean channelIdSet = false;
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(pageListParams.nodeId)) {
+			Transaction t = trx.getTransaction();
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			inFolder.setFolderId(id);
 
-			try {
-				channelIdSet = setChannelToTransaction(pageListParams.nodeId);
+			try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
+				// load the folder
+				com.gentics.contentnode.object.Folder f = getFolder(id, false);
 
-				try (WastebinFilter filter = getWastebinFilter(includeWastebin, id)) {
-					// load the folder
-					com.gentics.contentnode.object.Folder f = getFolder(id, false);
+				// if a language was set, we need to do language fallback here
+				ContentLanguage lang = null;
+				Node node = f.getNode();
 
-					// if a language was set, we need to do language fallback here
-					ContentLanguage lang = null;
-					Node node = f.getNode();
+				if (!ObjectTransformer.isEmpty(pageListParams.language)) {
+					List<ContentLanguage> languages = node.getLanguages();
 
-					if (!ObjectTransformer.isEmpty(pageListParams.language)) {
-						List<ContentLanguage> languages = node.getLanguages();
-
-						for (ContentLanguage contentLanguage : languages) {
-							if (pageListParams.language.equals(contentLanguage.getCode()) || pageListParams.language.equals(ObjectTransformer.getString(contentLanguage.getId(), null))) {
-								lang = contentLanguage;
-								break;
-							}
-						}
-
-						// when the language was NOT found and language fallback is disabled, we will return an empty list
-						if (lang == null && !pageListParams.langFallback && !"0".equals(pageListParams.language)) {
-							LegacyPageListResponse response = new LegacyPageListResponse();
-
-							response.setHasMoreItems(false);
-							response.setNumItems(0);
-							response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
-							return response;
-						} else if (lang == null && pageListParams.langFallback) {
-							// language fallback is activated, but the requested
-							// language was not found, so get the first language for the
-							// node (if any)
-							if (languages.size() > 0) {
-								lang = languages.get(0);
-							}
+					for (ContentLanguage contentLanguage : languages) {
+						if (pageListParams.language.equals(contentLanguage.getCode()) || pageListParams.language.equals(ObjectTransformer.getString(contentLanguage.getId(), null))) {
+							lang = contentLanguage;
+							break;
 						}
 					}
 
-					// Check which references shall be added
-					Collection<Reference> fillRefs = new Vector<>();
+					// when the language was NOT found and language fallback is disabled, we will return an empty list
+					if (lang == null && !pageListParams.langFallback && !"0".equals(pageListParams.language)) {
+						LegacyPageListResponse response = new LegacyPageListResponse();
 
-					if (pageListParams.template) {
-						fillRefs.add(Reference.TEMPLATE);
-					}
-					if (pageListParams.folder) {
-						fillRefs.add(Reference.FOLDER);
-					}
-					if (pageListParams.languageVariants) {
-						fillRefs.add(Reference.LANGUAGEVARIANTS);
-					}
-					if (pageListParams.workflowOwn || pageListParams.workflowWatch) {
-						fillRefs.add(Reference.WORKFLOW);
-					}
-					if (pageListParams.translationStatus || pageListParams.inSync != null) {
-						fillRefs.add(Reference.TRANSLATIONSTATUS);
-					}
-					if (pageListParams.contentTags) {
-						fillRefs.add(Reference.CONTENT_TAGS);
-					}
-					if (pageListParams.objectTags) {
-						fillRefs.add(Reference.OBJECT_TAGS_VISIBLE);
-					}
-
-					// if restricting with templateIds, make sure we use the IDs of the master objects
-					if (!ObjectTransformer.isEmpty(pageListParams.templateIds) && t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
-						List<Template> templates = t.getObjects(Template.class, pageListParams.templateIds);
-						List<Integer> templateMasterIds = new ArrayList<>(templates.size());
-						for (Template tmpl : templates) {
-							templateMasterIds.add(tmpl.getMaster().getId());
-						}
-						pageListParams.templateIds = templateMasterIds;
-					}
-
-					// get the pages
-					List<Page> pages = getPagesFromFolder(f,
-						PageSearch.create().setSearchString(filterParams.search).setSearchContent(pageListParams.searchContent).setFileNameSearch(pageListParams.filename)
-							.setNiceUrlSearch(pageListParams.niceUrl)
-							.setWorkflowOwn(pageListParams.workflowOwn).setWorkflowWatch(pageListParams.workflowWatch)
-							.setEditor(publishParams.isEditor).setCreator(publishParams.isCreator).setPublisher(publishParams.isPublisher)
-							.setOnline(publishParams.online).setModified(publishParams.modified)
-							.setPlanned(pageListParams.planned).setQueued(pageListParams.queued)
-							.setPriority(pageListParams.priority).setTemplateIds(pageListParams.templateIds)
-							.setPermissions(pageListParams.permission)
-							.setEditors(getMatchingSystemUsers(publishParams.editor, publishParams.editorIds))
-							.setCreators(getMatchingSystemUsers(publishParams.creator, publishParams.creatorIds))
-							.setPublishers(getMatchingSystemUsers(publishParams.publisher, publishParams.publisherIds))
-							.setEditedBefore(publishParams.editedBefore).setEditedSince(publishParams.editedSince)
-							.setCreatedBefore(publishParams.createdBefore).setCreatedSince(publishParams.createdSince)
-							.setPublishedBefore(publishParams.publishedBefore).setPublishedSince(publishParams.publishedSince)
-							.setRecursive(inFolder.recursive).setInherited(pageListParams.inherited)
-							.setWastebin(wastebinParams.wastebinSearch == WastebinSearch.only)
-							.setIncludeMlIds(pageListParams.includeMlIds)
-							.setExcludeMlIds(pageListParams.excludeMlIds),
-							pageListParams.timeDue,
-							pageListParams.inSync);
-
-					if (wastebinParams.wastebinSearch == WastebinSearch.only) {
-						Wastebin.ONLY.filter(pages);
-					}
-
-					// check view permission on the pages
-					for (Iterator<Page> iter = pages.iterator(); iter.hasNext(); ) {
-						Page page = iter.next();
-						if (!PermHandler.ObjectPermission.view.checkObject(page)) {
-							iter.remove();
+						response.setHasMoreItems(false);
+						response.setNumItems(0);
+						response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
+						return response;
+					} else if (lang == null && pageListParams.langFallback) {
+						// language fallback is activated, but the requested
+						// language was not found, so get the first language for the
+						// node (if any)
+						if (languages.size() > 0) {
+							lang = languages.get(0);
 						}
 					}
+				}
 
-					// if a language was set, we need to filter out pages of the wrong language
-					if (lang != null) {
-						if (pageListParams.langFallback) {
-							// if language fallback shall be used, we need to do it
-							// now
-							PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(lang, node);
+				// Check which references shall be added
+				Collection<Reference> fillRefs = new Vector<>();
 
-							for (Page page : pages) {
-								fallbackList.addPage(page);
-							}
-							pages = fallbackList.getPages();
-						} else {
-							// otherwise we simply ignore languages of the wrong
-							// language
-							for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext();) {
-								Page page = iPages.next();
+				if (pageListParams.template) {
+					fillRefs.add(Reference.TEMPLATE);
+				}
+				if (pageListParams.folder) {
+					fillRefs.add(Reference.FOLDER);
+				}
+				if (pageListParams.languageVariants) {
+					fillRefs.add(Reference.LANGUAGEVARIANTS);
+				}
+				if (pageListParams.workflowOwn || pageListParams.workflowWatch) {
+					fillRefs.add(Reference.WORKFLOW);
+				}
+				if (pageListParams.translationStatus || pageListParams.inSync != null) {
+					fillRefs.add(Reference.TRANSLATIONSTATUS);
+				}
+				if (pageListParams.contentTags) {
+					fillRefs.add(Reference.CONTENT_TAGS);
+				}
+				if (pageListParams.objectTags) {
+					fillRefs.add(Reference.OBJECT_TAGS_VISIBLE);
+				}
 
-								if (!lang.equals(page.getLanguage())) {
-									iPages.remove();
-								}
-							}
-						}
-					} else if ("0".equals(pageListParams.language)) {
-						// "0" was set as language, so we only return pages WITHOUT language
-						for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext();) {
-							Page page = iPages.next();
+				// if restricting with templateIds, make sure we use the IDs of the master objects
+				if (!ObjectTransformer.isEmpty(pageListParams.templateIds) && t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
+					List<Template> templates = t.getObjects(Template.class, pageListParams.templateIds);
+					List<Integer> templateMasterIds = new ArrayList<>(templates.size());
+					for (Template tmpl : templates) {
+						templateMasterIds.add(tmpl.getMaster().getId());
+					}
+					pageListParams.templateIds = templateMasterIds;
+				}
 
-							if (page.getLanguage() != null) {
-								iPages.remove();
-							}
-						}
-					} else {
-						// do the fallback with no specific language
-						PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(null, node);
+				// get the pages
+				List<Page> pages = getPagesFromFolder(f,
+					PageSearch.create().setSearchString(filterParams.search).setSearchContent(pageListParams.searchContent).setFileNameSearch(pageListParams.filename)
+						.setNiceUrlSearch(pageListParams.niceUrl)
+						.setWorkflowOwn(pageListParams.workflowOwn).setWorkflowWatch(pageListParams.workflowWatch)
+						.setEditor(publishParams.isEditor).setCreator(publishParams.isCreator).setPublisher(publishParams.isPublisher)
+						.setOnline(publishParams.online).setModified(publishParams.modified)
+						.setPlanned(pageListParams.planned).setQueued(pageListParams.queued)
+						.setPriority(pageListParams.priority).setTemplateIds(pageListParams.templateIds)
+						.setPermissions(pageListParams.permission)
+						.setEditors(getMatchingSystemUsers(publishParams.editor, publishParams.editorIds))
+						.setCreators(getMatchingSystemUsers(publishParams.creator, publishParams.creatorIds))
+						.setPublishers(getMatchingSystemUsers(publishParams.publisher, publishParams.publisherIds))
+						.setEditedBefore(publishParams.editedBefore).setEditedSince(publishParams.editedSince)
+						.setCreatedBefore(publishParams.createdBefore).setCreatedSince(publishParams.createdSince)
+						.setPublishedBefore(publishParams.publishedBefore).setPublishedSince(publishParams.publishedSince)
+						.setRecursive(inFolder.recursive).setInherited(pageListParams.inherited)
+						.setWastebin(wastebinParams.wastebinSearch == WastebinSearch.only)
+						.setIncludeMlIds(pageListParams.includeMlIds)
+						.setExcludeMlIds(pageListParams.excludeMlIds),
+						pageListParams.timeDue,
+						pageListParams.inSync);
 
-						fallbackList.setCheckViewPermission(true);
+				if (wastebinParams.wastebinSearch == WastebinSearch.only) {
+					Wastebin.ONLY.filter(pages);
+				}
+
+				// check view permission on the pages
+				for (Iterator<Page> iter = pages.iterator(); iter.hasNext(); ) {
+					Page page = iter.next();
+					if (!PermHandler.ObjectPermission.view.checkObject(page)) {
+						iter.remove();
+					}
+				}
+
+				// if a language was set, we need to filter out pages of the wrong language
+				if (lang != null) {
+					if (pageListParams.langFallback) {
+						// if language fallback shall be used, we need to do it
+						// now
+						PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(lang, node);
 
 						for (Page page : pages) {
 							fallbackList.addPage(page);
 						}
 						pages = fallbackList.getPages();
-					}
+					} else {
+						// otherwise we simply ignore languages of the wrong
+						// language
+						for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext();) {
+							Page page = iPages.next();
 
-					// optionally sort the list
-					if (!ObjectTransformer.isEmpty(sortingParams.sortBy) && !ObjectTransformer.isEmpty(sortingParams.sortOrder)) {
-						Collections.sort(pages, new PageComparator(sortingParams.sortBy, sortingParams.sortOrder));
-					}
-
-					// create the response
-					LegacyPageListResponse response = new LegacyPageListResponse();
-
-					response.setHasMoreItems(pagingParams.maxItems >= 0 && (pages.size() > pagingParams.skipCount + pagingParams.maxItems));
-					response.setNumItems(pages.size());
-					reduceList(pages, pagingParams.skipCount, pagingParams.maxItems);
-
-					List<com.gentics.contentnode.rest.model.Page> restPages = new ArrayList<>(pages.size());
-
-					Wastebin wastebin = null;
-					switch (wastebinParams.wastebinSearch) {
-					case include:
-						wastebin = Wastebin.INCLUDE;
-						break;
-					case only:
-						wastebin = Wastebin.ONLY;
-						break;
-					case exclude:
-					default:
-						wastebin = Wastebin.EXCLUDE;
-						break;
-					}
-					for (Page page : pages) {
-						try {
-							restPages.add(ModelBuilder.getPage(page, fillRefs, wastebin));
-						} catch (InconsistentDataException e) {
-							logger.warn("Error while fetching page {" + page.getId() + "}", e);
+							if (!lang.equals(page.getLanguage())) {
+								iPages.remove();
+							}
 						}
 					}
+				} else if ("0".equals(pageListParams.language)) {
+					// "0" was set as language, so we only return pages WITHOUT language
+					for (Iterator<Page> iPages = pages.iterator(); iPages.hasNext();) {
+						Page page = iPages.next();
+
+						if (page.getLanguage() != null) {
+							iPages.remove();
+						}
+					}
+				} else {
+					// do the fallback with no specific language
+					PageLanguageFallbackList fallbackList = new PageLanguageFallbackList(null, node);
+
+					fallbackList.setCheckViewPermission(true);
+
+					for (Page page : pages) {
+						fallbackList.addPage(page);
+					}
+					pages = fallbackList.getPages();
+				}
+
+				// optionally sort the list
+				if (!ObjectTransformer.isEmpty(sortingParams.sortBy) && !ObjectTransformer.isEmpty(sortingParams.sortOrder)) {
+					Collections.sort(pages, new PageComparator(sortingParams.sortBy, sortingParams.sortOrder));
+				}
+
+				// create the response
+				LegacyPageListResponse response = new LegacyPageListResponse();
+
+				response.setHasMoreItems(pagingParams.maxItems >= 0 && (pages.size() > pagingParams.skipCount + pagingParams.maxItems));
+				response.setNumItems(pages.size());
+				reduceList(pages, pagingParams.skipCount, pagingParams.maxItems);
+
+				List<com.gentics.contentnode.rest.model.Page> restPages = new ArrayList<>(pages.size());
+
+				Wastebin wastebin = null;
+				switch (wastebinParams.wastebinSearch) {
+				case include:
+					wastebin = Wastebin.INCLUDE;
+					break;
+				case only:
+					wastebin = Wastebin.ONLY;
+					break;
+				case exclude:
+				default:
+					wastebin = Wastebin.EXCLUDE;
+					break;
+				}
+				for (Page page : pages) {
+					try {
+						restPages.add(ModelBuilder.getPage(page, fillRefs, wastebin));
+					} catch (InconsistentDataException e) {
+						logger.warn("Error while fetching page {" + page.getId() + "}", e);
+					}
+				}
 
 
-					response.setPages(restPages);
-					response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
-					response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
-					return response;
-				}
-			} finally {
-				if (channelIdSet) {
-					// render type channel wieder auf null setzen
-					t.resetChannel();
-				}
+				response.setPages(restPages);
+				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully loaded pages"));
+				response.setStagingStatus(StagingUtil.checkStagingStatus(pages, inFolder.stagingPackageName, o -> o.getGlobalId().toString(), pageListParams.languageVariants));
+				trx.success();
+				return response;
 			}
-		} catch (EntityNotFoundException e) {
-			return new LegacyPageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new LegacyPageListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting pages", e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new LegacyPageListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getMessage()));
 		}
 	}
-
-
 
 	/**
 	 * Get the pages from the given folder. Possibly do a search.
@@ -1023,7 +908,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		// when time management restriction or translation status restriction is set, we consider it now
 		if (timeDue > 0 || inSync != null) {
-			int now = getTransaction().getUnixTimestamp();
+			int now = TransactionManager.getCurrentTransaction().getUnixTimestamp();
 
 			for (Iterator<Page> pagesIt = pages.iterator(); pagesIt.hasNext();) {
 				Page page = pagesIt.next();
@@ -1075,7 +960,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacySortParameterBean sortingParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		return getFilesOrImages(ContentFile.TYPE_FILE, inFolder.setFolderId(folderId), fileListParams, filterParams, sortingParams, pagingParams, editableParams, wastebinParams);
 	}
 
@@ -1090,7 +975,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacySortParameterBean sortingParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		return getFilesOrImages(ContentFile.TYPE_IMAGE, inFolder.setFolderId(folderId), fileListParams, filterParams, sortingParams, pagingParams, editableParams, wastebinParams);
 	}
 
@@ -1146,14 +1031,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			LegacySortParameterBean sortingParams,
 			LegacyPagingParameterBean pagingParams,
 			EditableParameterBean editableParams,
-			WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
+			WastebinParameterBean wastebinParams) throws NodeException {
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
-		try {
-			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx ctrx = new ChannelTrx(fileListParams.nodeId)) {
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {
 			com.gentics.contentnode.object.Folder f = getFolder(inFolder.folderId, false);
 				List<File> imagesOrFiles = getFilesOrImagesFromFolder(f, type,
@@ -1195,30 +1076,16 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				}
 				response.setFiles(restFiles);
 				response.setStagingStatus(StagingUtil.checkStagingStatus(imagesOrFiles, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+				trx.success();
 				return response;
-			}
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new LegacyFileListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new LegacyFileListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting files or images for folder " + inFolder.folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new LegacyFileListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// reset transaction channel
-				t.resetChannel();
 			}
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#getFolders(com.gentics.contentnode.rest.model.request.FolderListRequest)
-	 */
-	public LegacyFolderListResponse getFolders(FolderListRequest folderListRequest) {
+	@Override
+	@POST
+	@Path("/getFolders/")
+	public LegacyFolderListResponse getFolders(FolderListRequest folderListRequest) throws NodeException {
 		return getFolders(
 			folderListRequest.getId(),
 			folderListRequest.getRecursiveIds(),
@@ -1232,9 +1099,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			new WastebinParameterBean().setWastebinSearch(folderListRequest.getWastebin()));
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#getFolders(java.lang.String, java.lang.Integer, int, int, boolean, java.lang.String, java.lang.String, java.lang.Boolean, java.lang.String, java.lang.String, java.lang.String, int, int, boolean, java.util.List, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/getFolders/{id}")
 	public LegacyFolderListResponse getFolders(
@@ -1247,9 +1112,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacySortParameterBean sortParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 		// Make sure the parameter beans and the explicit parameters are the same.
@@ -1257,9 +1120,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		folderListParams.setRecursiveIds(recursiveIds);
 		folderListParams.setAddPrivileges(addPrivileges);
 
-		try {
-			channelIdSet = setChannelToTransaction(folderListParams.nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(folderListParams.nodeId)) {
+			Transaction t = trx.getTransaction();
 			List<com.gentics.contentnode.object.Folder> folders = null;
 
 			if ("0".equalsIgnoreCase(id)) {
@@ -1384,26 +1246,12 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 			response.setStagingStatus(StagingUtil.checkStagingStatus(folders, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 			response.setFolders(restFolders);
-
+			trx.success();
 			return response;
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting folders for folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new LegacyFolderListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// reset render type channel to null
-				t.resetChannel();
-			}
 		}
 	}
 
+	@GET
 	@Override
 	public FolderListResponse list(
 			@BeanParam InFolderParameterBean inFolder,
@@ -1412,13 +1260,11 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
 		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
-		try {
-			channelIdSet = setChannelToTransaction(folderListParams.nodeId);
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(folderListParams.nodeId)) {
+			Transaction t = trx.getTransaction();
 
 			List<com.gentics.contentnode.object.Folder> folders = getFolders(t, inFolder.folderId, includeWastebin);
 
@@ -1503,22 +1349,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			response.setStagingStatus(StagingUtil.checkStagingStatus(folders, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
 
+			trx.success();
 			return response;
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new FolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new FolderListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting folders for folder " + inFolder.folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FolderListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// reset render type channel to null
-				t.resetChannel();
-			}
 		}
 	}
 
@@ -1667,7 +1499,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		for (Iterator<com.gentics.contentnode.object.Folder> i = folders.iterator(); i.hasNext();) {
 			com.gentics.contentnode.object.Folder folder = i.next();
 
-			if (!checkFolderPermissions(folder, perms)) {
+			if (!MiscUtils.checkFolderPermissions(folder, perms)) {
 				i.remove();
 			} else if (inherited != null && folder.isInherited() != inherited.booleanValue()) {
 				i.remove();
@@ -1744,7 +1576,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		// iterate over all children
 		for (com.gentics.contentnode.object.Folder child : children) {
 			// check the child permission
-			if (checkFolderPermissions(child, perms)) {
+			if (MiscUtils.checkFolderPermissions(child, perms)) {
 				// add the child
 				subFolders.add(child);
 				// and the grandchildren
@@ -1799,10 +1631,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		folder.setSubfolders(restChildren);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#getTemplates(java.lang.String, java.lang.Integer, java.lang.String, boolean, boolean, java.lang.String, java.lang.String, java.lang.String, java.lang.String, int, int, boolean, java.lang.Boolean)
-	 */
+	@Override
 	@GET
 	@Path("/getTemplates/{folderId}")
 	public TemplateListResponse getTemplates(
@@ -1813,13 +1642,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacySortParameterBean sortingParams,
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
-			@BeanParam WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
-
-		try {
-			// set the channel
-			channelIdSet = setChannelToTransaction(templateListParams.nodeId);
+			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(templateListParams.nodeId)) {
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {
@@ -1866,6 +1690,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 					response.setHasMoreItems(pagingParams.maxItems > -1 && restTemplates.size() > pagingParams.skipCount + pagingParams.maxItems);
 					reduceList(restTemplates, pagingParams.skipCount, pagingParams.maxItems);
 					response.setTemplates(restTemplates);
+					trx.success();
 					return response;
 				} else {
 					TemplateListResponse response = new TemplateListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded templates"));
@@ -1873,31 +1698,13 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 					response.setNumItems(0);
 					response.setHasMoreItems(false);
 					response.setTemplates(new Vector<com.gentics.contentnode.rest.model.Template>(0));
+					trx.success();
 					return response;
 				}
-			}
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new TemplateListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new TemplateListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting templates for folder " + folderId, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new TemplateListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// reset the channel
-				t.resetChannel();
 			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#getItems(java.lang.String, java.util.List, int, int, java.lang.Integer, boolean, java.lang.String, boolean, java.lang.String, boolean, java.lang.String, java.lang.String, java.lang.String, java.lang.String, int, int)
-	 */
 	@Override
 	@GET
 	@Path("/getItems/{folderId}")
@@ -1913,7 +1720,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@BeanParam LegacyFilterParameterBean filter,
 			@BeanParam LegacySortParameterBean sorting,
 			@BeanParam LegacyPagingParameterBean paging,
-			@BeanParam PublishableParameterBean publishParams) {
+			@BeanParam PublishableParameterBean publishParams) throws NodeException {
 
 		// accumulate the items here
 		List<ContentNodeItem> items = new ArrayList<>();
@@ -1976,7 +1783,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		// sort the list
 		if (!ObjectTransformer.isEmpty(sorting.sortBy) && !ObjectTransformer.isEmpty(sorting.sortOrder) && !ObjectTransformer.isEmpty(items)) {
-			Collections.sort(items, new ItemComparator(sorting.sortBy, sorting.sortOrder));
+			Collections.sort(items, new MiscUtils.ItemComparator(sorting.sortBy, sorting.sortOrder));
 		}
 
 		// create the response
@@ -1991,10 +1798,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		return response;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#findPages(java.lang.Integer, java.lang.String, java.lang.Integer, java.lang.Integer, com.gentics.contentnode.rest.model.request.LinksType, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/findPages")
 	public LegacyPageListResponse findPages(@QueryParam("folderId") @DefaultValue("0") Integer folderId,
@@ -2002,112 +1806,111 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("100") Integer maxItems,
 			@QueryParam("links") @DefaultValue("backend") LinksType links,
-			@QueryParam("recursive") @DefaultValue("true") boolean recursive) {
-		Transaction t = getTransaction();
-		List<Integer> folderIds = new Vector<>();
-		PreparedStatement pst = null;
-		ResultSet res = null;
-		List<com.gentics.contentnode.rest.model.Page> foundPages = new Vector<>(maxItems);
-		RenderUrlFactory urlFactory = null;
+			@QueryParam("recursive") @DefaultValue("true") boolean recursive) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			List<Integer> folderIds = new Vector<>();
+			PreparedStatement pst = null;
+			ResultSet res = null;
 
-		// set a rendertype to the transaction
-		NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-		RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+			try {
+				List<com.gentics.contentnode.rest.model.Page> foundPages = new Vector<>(maxItems);
+				RenderUrlFactory urlFactory = null;
 
-		t.setRenderType(renderType);
+				// set a rendertype to the transaction
+				NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
+				RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, 0);
 
-		if (skipCount < 0) {
-			skipCount = 0;
-		}
+				t.setRenderType(renderType);
 
-		// generate the url factory
-		if (links == LinksType.backend) {
-			urlFactory = new DynamicUrlFactory(t.getSessionId());
-		} else if (links == LinksType.frontend) {
-			// TODO linkways must be fetched from the configuration
-			urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);
-		}
-
-		try {
-			// first check the given folder itself
-			if (folderId.intValue() > 0) {
-				com.gentics.contentnode.object.Folder folder = getFolder(folderId);
-
-				if (PermHandler.ObjectPermission.view.checkClass(folder, Page.class, null)) {
-					folderIds.add(folderId);
-				}
-			}
-
-			// get the folder id's
-			if (recursive) {
-				recursiveGetFolderIds(folderId, folderIds);
-			}
-
-			// get all pages within those folder id's that match the given
-			// criteria
-			if (folderIds.size() > 0) {
-				StringBuffer sql = new StringBuffer(70 + 2 * folderIds.size());
-
-				sql.append("SELECT id FROM page WHERE deleted = 0 AND name LIKE ? AND folder_id IN (");
-				sql.append(StringUtils.repeat("?", folderIds.size(), ","));
-				sql.append(") limit " + skipCount + ", " + maxItems);
-				pst = t.prepareStatement(sql.toString());
-				int paramCounter = 0;
-
-				pst.setString(++paramCounter, "%" + ObjectTransformer.getString(query, "") + "%");
-				for (Iterator<Integer> i = folderIds.iterator(); i.hasNext();) {
-					pst.setInt(++paramCounter, i.next());
+				if (skipCount < 0) {
+					skipCount = 0;
 				}
 
-				res = pst.executeQuery();
-				Collection<Integer> pageIds = new Vector<>();
-
-				while (res.next()) {
-					pageIds.add(res.getInt("id"));
+				// generate the url factory
+				if (links == LinksType.backend) {
+					urlFactory = new DynamicUrlFactory();
+				} else if (links == LinksType.frontend) {
+					// TODO linkways must be fetched from the configuration
+					urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);
 				}
 
-				t.closeStatement(pst);
-				t.closeResultSet(res);
+				// first check the given folder itself
+				if (folderId.intValue() > 0) {
+					com.gentics.contentnode.object.Folder folder = getFolder(folderId);
 
-				// now get all the pages
-				List<Page> pages = t.getObjects(Page.class, pageIds);
-
-				for (Page page : pages) {
-					com.gentics.contentnode.rest.model.Page restPage = ModelBuilder.getPage(page, (Collection<Reference>) null);
-
-					// set url to page
-					if (urlFactory != null) {
-						renderType.push(page);
-						try {
-							restPage.setUrl(urlFactory.createRenderUrl(Page.class, page.getId()).toString());
-						} finally {
-							renderType.pop();
-						}
+					if (PermHandler.ObjectPermission.view.checkClass(folder, Page.class, null)) {
+						folderIds.add(folderId);
 					}
-					foundPages.add(restPage);
 				}
+
+				// get the folder id's
+				if (recursive) {
+					recursiveGetFolderIds(folderId, folderIds);
+				}
+
+				// get all pages within those folder id's that match the given
+				// criteria
+				if (folderIds.size() > 0) {
+					StringBuffer sql = new StringBuffer(70 + 2 * folderIds.size());
+
+					sql.append("SELECT id FROM page WHERE deleted = 0 AND name LIKE ? AND folder_id IN (");
+					sql.append(StringUtils.repeat("?", folderIds.size(), ","));
+					sql.append(") limit " + skipCount + ", " + maxItems);
+					pst = t.prepareStatement(sql.toString());
+					int paramCounter = 0;
+	
+					pst.setString(++paramCounter, "%" + ObjectTransformer.getString(query, "") + "%");
+					for (Iterator<Integer> i = folderIds.iterator(); i.hasNext();) {
+						pst.setInt(++paramCounter, i.next());
+					}
+
+					res = pst.executeQuery();
+					Collection<Integer> pageIds = new Vector<>();
+
+					while (res.next()) {
+						pageIds.add(res.getInt("id"));
+					}
+
+					t.closeStatement(pst);
+					t.closeResultSet(res);
+
+					// now get all the pages
+					List<Page> pages = t.getObjects(Page.class, pageIds);
+
+					for (Page page : pages) {
+						com.gentics.contentnode.rest.model.Page restPage = ModelBuilder.getPage(page, (Collection<Reference>) null);
+
+						// set url to page
+						if (urlFactory != null) {
+							renderType.push(page);
+							try {
+								restPage.setUrl(urlFactory.createRenderUrl(Page.class, page.getId()).toString());
+							} finally {
+								renderType.pop();
+							}
+						}
+						foundPages.add(restPage);
+					}
+				}
+
+				// return the found pages
+				LegacyPageListResponse response = new LegacyPageListResponse();
+
+				response.setPages(foundPages);
+
+				trx.success();
+				return response;
+			} catch (SQLException e) {
+				throw new NodeException(e);
+			} finally {
+				t.closeResultSet(res);
+				t.closeStatement(pst);
 			}
-
-			// return the found pages
-			LegacyPageListResponse response = new LegacyPageListResponse();
-
-			response.setPages(foundPages);
-
-			return response;
-		} catch (Exception e) {
-			String message = "Error while finding pages, starting from folder {" + folderId + "} with name like {" + query + "}";
-
-			throw new WebApplicationException(e, Response.status(Status.INTERNAL_SERVER_ERROR).entity(message).build());
-		} finally {
-			t.closeResultSet(res);
-			t.closeStatement(pst);
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#findFiles(java.lang.Integer, java.lang.String, java.lang.Integer, java.lang.Integer, com.gentics.contentnode.rest.model.request.LinksType, boolean)
-	 */
+	@Override
 	@GET
 	@Path("/findFiles")
 	public FoundFilesListResponse findFiles(@QueryParam("folderId") @DefaultValue("0") Integer folderId,
@@ -2115,105 +1918,106 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("100") Integer maxItems,
 			@QueryParam("links") @DefaultValue("backend") LinksType links,
-			@QueryParam("recursive") @DefaultValue("true") boolean recursive) {
-		Transaction t = getTransaction();
-		List<Integer> folderIds = new Vector<>();
-		PreparedStatement pst = null;
-		ResultSet res = null;
-		List<com.gentics.contentnode.rest.model.File> foundFiles = new Vector<>(maxItems);
-		RenderUrlFactory urlFactory = null;
+			@QueryParam("recursive") @DefaultValue("true") boolean recursive) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			List<Integer> folderIds = new Vector<>();
+			PreparedStatement pst = null;
+			ResultSet res = null;
+			List<com.gentics.contentnode.rest.model.File> foundFiles = new Vector<>(maxItems);
+			RenderUrlFactory urlFactory = null;
 
-		// set a rendertype to the transaction
-		NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-		RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+			// set a rendertype to the transaction
+			NodePreferences preferences = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
+			RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, 0);
 
-		t.setRenderType(renderType);
+			t.setRenderType(renderType);
 
-		if (skipCount < 0) {
-			skipCount = 0;
-		}
-
-		// generate the url factory
-		if (links == LinksType.backend) {
-			urlFactory = new DynamicUrlFactory(t.getSessionId());
-		} else if (links == LinksType.frontend) {
-			// TODO linkways must be fetched from the configuration
-			urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);
-		}
-
-		try {
-			// first check the given folder itself
-			if (folderId.intValue() > 0) {
-				com.gentics.contentnode.object.Folder folder = getFolder(folderId);
-
-				if (PermHandler.ObjectPermission.view.checkClass(folder, File.class, null)) {
-					folderIds.add(folderId);
-				}
+			if (skipCount < 0) {
+				skipCount = 0;
 			}
 
-			// get the folder id's
-			if (recursive) {
-				recursiveGetFolderIds(folderId, folderIds);
+			// generate the url factory
+			if (links == LinksType.backend) {
+				urlFactory = new DynamicUrlFactory();
+			} else if (links == LinksType.frontend) {
+				// TODO linkways must be fetched from the configuration
+				urlFactory = new StaticUrlFactory(RenderUrl.LINKWAY_PORTAL, RenderUrl.LINKWAY_PORTAL, null);
 			}
 
-			// get all pages within those folder id's that match the given
-			// criteria
-			if (folderIds.size() > 0) {
-				StringBuffer sql = new StringBuffer(70 + 2 * folderIds.size());
+			try {
+				// first check the given folder itself
+				if (folderId.intValue() > 0) {
+					com.gentics.contentnode.object.Folder folder = getFolder(folderId);
 
-				sql.append("SELECT id FROM contentfile WHERE deleted = 0 AND name LIKE ? AND folder_id IN (");
-				sql.append(StringUtils.repeat("?", folderIds.size(), ","));
-				sql.append(") AND filetype NOT LIKE 'image%' limit " + skipCount + ", " + maxItems);
-				pst = t.prepareStatement(sql.toString());
-				int paramCounter = 0;
-
-				pst.setString(++paramCounter, "%" + query + "%");
-				for (Iterator<Integer> i = folderIds.iterator(); i.hasNext();) {
-					pst.setInt(++paramCounter, i.next());
-				}
-
-				res = pst.executeQuery();
-				Collection<Integer> fileIds = new Vector<>();
-
-				while (res.next()) {
-					fileIds.add(res.getInt("id"));
-				}
-
-				t.closeStatement(pst);
-				t.closeResultSet(res);
-
-				// now get all the files
-				List<File> files = t.getObjects(File.class, fileIds);
-
-				for (File file : files) {
-					com.gentics.contentnode.rest.model.File restFile = ModelBuilder.getFile(file, Collections.emptyList());
-
-					// set url to page
-					if (urlFactory != null) {
-						renderType.push(file);
-						try {
-							restFile.setUrl(urlFactory.createRenderUrl(File.class, file.getId()).toString());
-						} finally {
-							renderType.pop();
-						}
+					if (PermHandler.ObjectPermission.view.checkClass(folder, File.class, null)) {
+						folderIds.add(folderId);
 					}
-					foundFiles.add(restFile);
 				}
+
+				// get the folder id's
+				if (recursive) {
+					recursiveGetFolderIds(folderId, folderIds);
+				}
+
+				// get all pages within those folder id's that match the given
+				// criteria
+				if (folderIds.size() > 0) {
+					StringBuffer sql = new StringBuffer(70 + 2 * folderIds.size());
+
+					sql.append("SELECT id FROM contentfile WHERE deleted = 0 AND name LIKE ? AND folder_id IN (");
+					sql.append(StringUtils.repeat("?", folderIds.size(), ","));
+					sql.append(") AND filetype NOT LIKE 'image%' limit " + skipCount + ", " + maxItems);
+					pst = t.prepareStatement(sql.toString());
+					int paramCounter = 0;
+
+					pst.setString(++paramCounter, "%" + query + "%");
+					for (Iterator<Integer> i = folderIds.iterator(); i.hasNext();) {
+						pst.setInt(++paramCounter, i.next());
+					}
+
+					res = pst.executeQuery();
+					Collection<Integer> fileIds = new Vector<>();
+
+					while (res.next()) {
+						fileIds.add(res.getInt("id"));
+					}
+
+					t.closeStatement(pst);
+					t.closeResultSet(res);
+
+					// now get all the files
+					List<File> files = t.getObjects(File.class, fileIds);
+
+					for (File file : files) {
+						com.gentics.contentnode.rest.model.File restFile = ModelBuilder.getFile(file, Collections.emptyList());
+
+						// set url to page
+						if (urlFactory != null) {
+							renderType.push(file);
+							try {
+								restFile.setUrl(urlFactory.createRenderUrl(File.class, file.getId()).toString());
+							} finally {
+								renderType.pop();
+							}
+						}
+						foundFiles.add(restFile);
+					}
+				}
+
+				// return the found pages
+				FoundFilesListResponse response = new FoundFilesListResponse();
+
+				response.setFiles(foundFiles);
+
+				trx.success();
+				return response;
+			} catch (SQLException e) {
+				throw new NodeException(e);
+			} finally {
+				t.closeResultSet(res);
+				t.closeStatement(pst);
 			}
-
-			// return the found pages
-			FoundFilesListResponse response = new FoundFilesListResponse();
-
-			response.setFiles(foundFiles);
-
-			return response;
-		} catch (Exception e) {
-			String message = "Error while finding files, starting from folder {" + folderId + "} with name like {" + query + "}";
-
-			throw new WebApplicationException(e, Response.status(Status.INTERNAL_SERVER_ERROR).entity(message).build());
-		} finally {
-			t.closeResultSet(res);
-			t.closeStatement(pst);
 		}
 	}
 
@@ -2222,11 +2026,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	 * the user to see pages in
 	 * @param folderId starting folder id (may be 0)
 	 * @param allIds list, which will be filled with all folder id's
-	 * @throws TransactionException
-	 * @throws SQLException
+	 * @throws NodeException
 	 */
-	protected void recursiveGetFolderIds(Integer folderId, List<Integer> allIds) throws TransactionException, SQLException {
-		Transaction t = getTransaction();
+	protected void recursiveGetFolderIds(Integer folderId, List<Integer> allIds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		List<Integer> folderIds = new Vector<>();
 		PreparedStatement pst = null;
 		ResultSet res = null;
@@ -2240,6 +2043,8 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			while (res.next()) {
 				folderIds.add(res.getInt("id"));
 			}
+		} catch (SQLException e) {
+			throw new NodeException(e);
 		} finally {
 			t.closeResultSet(res);
 			t.closeStatement(pst);
@@ -2252,10 +2057,10 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			// the folder-view permission has to be available for all ancestors of
 			// a folder to be included in the search results.
-			if (checkFolderPermission(subFolderId, PermHandler.PERM_VIEW)) {
+			if (MiscUtils.checkFolderPermission(subFolderId, PermHandler.PERM_VIEW)) {
 
 				// a folder is only added if the page view permission is available.
-				if (checkFolderPermission(subFolderId, PermHandler.PERM_PAGE_VIEW)) {
+				if (MiscUtils.checkFolderPermission(subFolderId, PermHandler.PERM_PAGE_VIEW)) {
 					// add the subfolder id to the list
 					allIds.add(subFolderId);
 				}
@@ -2266,15 +2071,12 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#save(java.lang.String, com.gentics.contentnode.rest.model.request.FolderSaveRequest)
-	 */
+	@Override
 	@POST
 	@Path("/save/{id}")
-	public GenericResponse save(@PathParam("id") String id, FolderSaveRequest request) {
-		try (AutoCommit cmt = new AutoCommit()) {
-			Transaction t = getTransaction();
+	public GenericResponse save(@PathParam("id") String id, FolderSaveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 
 			// check for sufficient provided data
 			if (!MiscUtils.isGlobalOrLocalId(id) || request == null || request.getFolder() == null) {
@@ -2430,7 +2232,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				// collect the subfolders
 				Set<com.gentics.contentnode.object.Folder> subFolders = new HashSet<>();
 				List<com.gentics.contentnode.object.Folder> rec = new ArrayList<>();
-				try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+				try (ChannelTrx cTrx = new ChannelTrx(request.getNodeId())) {
 					rec.addAll(folder.getChildFolders());
 					while (!rec.isEmpty()) {
 						com.gentics.contentnode.object.Folder current = rec.remove(0);
@@ -2520,11 +2322,11 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 							return new GenericResponse(new Message(Type.SUCCESS, message.toString()), new ResponseInfo(
 									ResponseCode.OK, "Folder " + id + " was successfully saved."));
 						}
-					});
+					}, Function.identity());
 				}
 			}
 
-			cmt.success();
+			trx.success();
 
 			if (jobResponse == null || ObjectTransformer.isEmpty(jobResponse.getMessages())) {
 				message = null;
@@ -2536,39 +2338,15 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			} else {
 				return jobResponse;
 			}
-		} catch (ReadOnlyException e) {
-			I18nString message = new CNI18nString("folder.nopermission");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.PERMISSION, "Insufficient permission to save the folder " + id));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (ObjectModificationException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
-		} catch (NodeException e) {
-			logger.error("Error while saving folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while saving folder. See server logs for details"));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#delete(java.lang.String)
-	 */
+	@Override
 	@POST
 	@Path("/delete/{id}")
-	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) {
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws NodeException {
 		boolean syncCr = Optional.ofNullable(noCrSync).map(BooleanUtils::negate).orElse(true);
-		try (InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
-			// set the channel ID if given
-			boolean isChannelIdset = setChannelToTransaction(nodeId);
-
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId); InstantPublishingTrx ip = new InstantPublishingTrx(syncCr)) {
 			// get the folder (this will check for existence and delete permission)
 			com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.delete);
 
@@ -2584,7 +2362,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 				nodeId = 0;
 			}
 
-			if (isChannelIdset && folder.isInherited()) {
+			if (nodeId > 0 && folder.isInherited()) {
 				throw new NodeException("Can't delete an inherated folder, the folder has to be deleted in the master node.");
 			}
 
@@ -2599,7 +2377,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 
 			final int folderId = folder.getId();
-			return Operator.executeLocked(new CNI18nString("folder.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+			GenericResponse response = Operator.executeLocked(new CNI18nString("folder.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
 					new Callable<GenericResponse>() {
 						@Override
 						public GenericResponse call() throws Exception {
@@ -2611,154 +2389,153 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 							I18nString message = new CNI18nString("folder.delete.success");
 							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 						}
-					});
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (EntityNotFoundException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while deleting folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
+					}, Function.identity());
 
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
+			trx.success();
+			return response;
 		}
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/delete/{id}")
-	public GenericResponse deleteFromWastebin(final @PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+	public GenericResponse deleteFromWastebin(final @PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return deleteFromWastebin(new IdSetRequest(id), waitMs);
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/delete")
-	public GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-		}
+	public GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
 
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("folder.delete.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("folders.delete.wastebin");
-			description.setParameter("0", ids.size());
-		}
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
-					Set<com.gentics.contentnode.object.Folder> folders = new HashSet<>();
-					for (String id : ids) {
-						com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.view, ObjectPermission.wastebin);
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+			}
 
-						if (!folder.isDeleted()) {
-							I18nString message = new CNI18nString("folder.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("folder.delete.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("folders.delete.wastebin");
+				description.setParameter("0", ids.size());
+			}
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+						Set<com.gentics.contentnode.object.Folder> folders = new HashSet<>();
+						for (String id : ids) {
+							com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.view, ObjectPermission.wastebin);
+
+							if (!folder.isDeleted()) {
+								I18nString message = new CNI18nString("folder.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+
+							folders.add(folder);
 						}
 
-						folders.add(folder);
+						// reduce folders (remove subfolders of parents)
+						folders = new HashSet<>(FolderFactory.reduce(folders, ReductionType.PARENT));
+
+						String folderPaths = I18NHelper.getPaths(folders, 5);
+						for (com.gentics.contentnode.object.Folder folder : folders) {
+							folder.delete(true);
+						}
+
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(folders.size() == 1
+								? "folder.delete.wastebin.success"
+										: "folders.delete.wastebin.success");
+						message.setParameter("0", folderPaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
-
-					// reduce folders (remove subfolders of parents)
-					folders = new HashSet<>(FolderFactory.reduce(folders, ReductionType.PARENT));
-
-					String folderPaths = I18NHelper.getPaths(folders, 5);
-					for (com.gentics.contentnode.object.Folder folder : folders) {
-						folder.delete(true);
-					}
-
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(folders.size() == 1
-						? "folder.delete.wastebin.success"
-						: "folders.delete.wastebin.success");
-					message.setParameter("0", folderPaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 				}
-			}
-		});
+			}, Function.identity());
+			trx.success();
+			return response;
+		}
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/restore/{id}")
-	public GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+	public GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
 		return restoreFromWastebin(new IdSetRequest(id), waitMs);
 	}
 
 	@Override
 	@POST
 	@Path("/wastebin/restore")
-	public GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
-		List<String> ids = request.getIds();
-		if (ObjectTransformer.isEmpty(ids)) {
-			I18nString message = new CNI18nString("rest.general.insufficientdata");
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
-		}
+	public GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<String> ids = request.getIds();
+			if (ObjectTransformer.isEmpty(ids)) {
+				I18nString message = new CNI18nString("rest.general.insufficientdata");
+				return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+			}
 
-		I18nString description = null;
-		if (ids.size() == 1) {
-			description = new CNI18nString("folder.restore.wastebin");
-			description.setParameter("0", ids.iterator().next());
-		} else {
-			description = new CNI18nString("folders.restore.wastebin");
-			description.setParameter("0", ids.size());
-		}
-		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
-			@Override
-			public GenericResponse call() throws Exception {
-				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
-					Set<com.gentics.contentnode.object.Folder> folders = new HashSet<>();
-					for (String id : ids) {
-						com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.view, ObjectPermission.wastebin);
+			I18nString description = null;
+			if (ids.size() == 1) {
+				description = new CNI18nString("folder.restore.wastebin");
+				description.setParameter("0", ids.iterator().next());
+			} else {
+				description = new CNI18nString("folders.restore.wastebin");
+				description.setParameter("0", ids.size());
+			}
+			GenericResponse response = Operator.executeRethrowing(description.toString(), waitMs, new Callable<GenericResponse>() {
+				@Override
+				public GenericResponse call() throws Exception {
+					try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+						Set<com.gentics.contentnode.object.Folder> folders = new HashSet<>();
+						for (String id : ids) {
+							com.gentics.contentnode.object.Folder folder = getFolder(id, ObjectPermission.view, ObjectPermission.wastebin);
 
-						if (!folder.isDeleted()) {
-							I18nString message = new CNI18nString("folder.notfound");
-							message.setParameter("0", id.toString());
-							throw new EntityNotFoundException(message.toString());
+							if (!folder.isDeleted()) {
+								I18nString message = new CNI18nString("folder.notfound");
+								message.setParameter("0", id.toString());
+								throw new EntityNotFoundException(message.toString());
+							}
+
+							MiscUtils.checkImplicitRestorePermissions(folder);
+							folders.add(folder);
 						}
 
-						checkImplicitRestorePermissions(folder);
-						folders.add(folder);
+						// reduce folders (remove parents of subfolders)
+						folders = new HashSet<>(FolderFactory.reduce(folders, ReductionType.CHILD));
+
+						String folderPaths = I18NHelper.getPaths(folders, 5);
+						for (com.gentics.contentnode.object.Folder folder : folders) {
+							folder.restore();
+						}
+
+						trx.success();
+						// generate the response
+						I18nString message = new CNI18nString(folders.size() == 1 ? "folder.restore.wastebin.success" : "folders.restore.wastebin.success");
+						message.setParameter("0", folderPaths);
+						return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 					}
-
-					// reduce folders (remove parents of subfolders)
-					folders = new HashSet<>(FolderFactory.reduce(folders, ReductionType.CHILD));
-
-					String folderPaths = I18NHelper.getPaths(folders, 5);
-					for (com.gentics.contentnode.object.Folder folder : folders) {
-						folder.restore();
-					}
-
-					trx.success();
-					// generate the response
-					I18nString message = new CNI18nString(folders.size() == 1 ? "folder.restore.wastebin.success" : "folders.restore.wastebin.success");
-					message.setParameter("0", folderPaths);
-					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 				}
-			}
-		});
+			}, Function.identity());
+			trx.success();
+			return response;
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#getPrivileges(java.lang.Integer)
-	 */
+	@Override
 	@GET
 	@Path("/privileges/{id}")
-	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) {
-		try {
-			Transaction t = getTransaction();
+	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 
 			// get the folder (this will check for existance and permission)
 			getFolder(id);
@@ -2766,37 +2543,21 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			PermHandler permHandler = t.getPermHandler();
 			List<Privilege> privileges = ModelBuilder.getFolderPrivileges(id, permHandler);
 
+			trx.success();
 			return new PrivilegesResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded privileges on folder " + id), privileges);
-		} catch (EntityNotFoundException e) {
-			return new PrivilegesResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new PrivilegesResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting privileges for folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new PrivilegesResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#getObjectCounts(java.lang.Integer, java.lang.Integer, java.lang.String)
-	 */
+	@Override
 	@GET
 	@Path("/count/{id}")
 	public FolderObjectCountResponse getObjectCounts(@PathParam("id") Integer id, @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("language") String language, @QueryParam("inherited") Boolean inherited,
-			@BeanParam InFolderParameterBean inFolder, @BeanParam WastebinParameterBean wastebinParams) {
-		Transaction t = getTransaction();
-		boolean channelIdSet = false;
-		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
-
-		try {
+			@BeanParam InFolderParameterBean inFolder, @BeanParam WastebinParameterBean wastebinParams) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 			String folderId = id.toString();
 
-			channelIdSet = setChannelToTransaction(nodeId);
 			inFolder.setFolderId(folderId);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, folderId)) {
@@ -2866,36 +2627,18 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 				response.setFolders(folderList.getNumItems());
 
+				trx.success();
 				return response;
-			}
-		} catch (EntityNotFoundException e) {
-			return new FolderObjectCountResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
-		} catch (InsufficientPrivilegesException e) {
-			InsufficientPrivilegesMapper.log(e);
-			return new FolderObjectCountResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
-		} catch (NodeException e) {
-			logger.error("Error while getting count for folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new FolderObjectCountResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} finally {
-			if (channelIdSet) {
-				// render type channel wieder auf null setzen
-				t.resetChannel();
 			}
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.FolderResource#setStartpage(java.lang.String, com.gentics.contentnode.rest.model.request.StartpageRequest)
-	 */
+	@Override
 	@POST
 	@Path("/startpage/{id}")
-	public GenericResponse setStartpage(@PathParam("id") String id, StartpageRequest request) {
-		Transaction t = getTransaction();
-
-		try {
+	public GenericResponse setStartpage(@PathParam("id") String id, StartpageRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
 			// check for sufficient provided data
 			if (!MiscUtils.isGlobalOrLocalId(id) || request == null || request.getPageId() <= 0) {
 				I18nString message = new CNI18nString("rest.general.insufficientdata");
@@ -2976,51 +2719,43 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 						new ResponseInfo(ResponseCode.FAILURE, "Error while setting startpage for folder. Object property for startpage not configured properly"));
 			} else {
 				folder.save();
+				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully set startpage"));
 			}
-		} catch (ReadOnlyException e) {
-			I18nString message = new CNI18nString("folder.nopermission");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.PERMISSION, "Insufficient permission to edit the folder " + id));
-		} catch (NodeException e) {
-			logger.error("Error while setting startpage of folder " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while setting startpage for folder. See server logs for details"));
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#move(java.lang.String, com.gentics.contentnode.rest.model.request.FolderMoveRequest)
-	 */
+	@Override
 	@POST
 	@Path("/move/{id}")
-	public GenericResponse move(@PathParam("id") String id, FolderMoveRequest request) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Folder folder = getFolder(id, false);
-		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
-				request.getFolderId(), request.getNodeId());
-		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+	public GenericResponse move(@PathParam("id") String id, FolderMoveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
+			MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, Integer.toString(folder.getId()),
+					request.getFolderId(), request.getNodeId());
+			GenericResponse response = moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
+		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.resource.FolderResource#move(com.gentics.contentnode.rest.model.request.MultiFolderMoveRequest)
-	 */
+	@Override
 	@POST
 	@Path("/move")
-	public GenericResponse move(MultiFolderMoveRequest request) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Set<String> ids = request.getIds();
-		Set<Integer> localIds = new HashSet<>();
-		for (String id : ids) {
-			com.gentics.contentnode.object.Folder folder = getFolder(id, false);
-			localIds.add(folder.getId());
+	public GenericResponse move(MultiFolderMoveRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Set<String> ids = request.getIds();
+			Set<Integer> localIds = new HashSet<>();
+			for (String id : ids) {
+				com.gentics.contentnode.object.Folder folder = getFolder(id, false);
+				localIds.add(folder.getId());
+			}
+			MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
+					request.getNodeId());
+			GenericResponse response = moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
+			trx.success();
+			return response;
 		}
-		MoveJob moveJob = new MoveJob(com.gentics.contentnode.object.Folder.class, localIds, request.getFolderId(),
-				request.getNodeId());
-		return moveJob.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 	}
 
 
@@ -3028,9 +2763,12 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	@POST
 	@Path("/sanitize/publishDir")
 	public FolderPublishDirSanitizeResponse sanitizePubdir(FolderPublishDirSanitizeRequest request) throws NodeException {
-		Node node = MiscUtils.load(Node.class, Integer.toString(request.getNodeId()));
-		String sanitized = FolderFactory.cleanPubDir(request.getPublishDir(), node.isPubDirSegment(), true);
-		return new FolderPublishDirSanitizeResponse(null, ResponseInfo.ok("")).setPublishDir(sanitized);
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Node node = MiscUtils.load(Node.class, Integer.toString(request.getNodeId()));
+			String sanitized = FolderFactory.cleanPubDir(request.getPublishDir(), node.isPubDirSegment(), true);
+			trx.success();
+			return new FolderPublishDirSanitizeResponse(null, ResponseInfo.ok("")).setPublishDir(sanitized);
+		}
 	}
 
 	/**

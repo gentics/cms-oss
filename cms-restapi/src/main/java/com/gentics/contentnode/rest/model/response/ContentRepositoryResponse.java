@@ -9,12 +9,22 @@ import com.gentics.contentnode.rest.model.ContentRepositoryModel;
  */
 @XmlRootElement
 public class ContentRepositoryResponse extends GenericResponse {
+	private static final long serialVersionUID = 2339631417561314970L;
+
 	private ContentRepositoryModel contentRepository;
 
 	/**
 	 * Create empty instance
 	 */
 	public ContentRepositoryResponse() {
+	}
+
+	/**
+	 * Create instance as copy
+	 * @param other other instance
+	 */
+	public ContentRepositoryResponse(GenericResponse other) {
+		super(other);
 	}
 
 	/**

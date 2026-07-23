@@ -1,5 +1,9 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getTemplateResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -24,8 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import jakarta.ws.rs.core.MediaType;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -43,9 +45,9 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.portalnode.connector.PortalConnectorFactory;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -115,10 +117,6 @@ import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.lib.content.GenticsContentAttribute;
@@ -127,6 +125,8 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.infrastructure.TestEnvironment;
+
+import jakarta.ws.rs.core.MediaType;
 
 
 /**
@@ -1482,7 +1482,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException {
 		final NodeObject nodeObject;
 
 		byte[] data= "File contents".getBytes();
@@ -1502,7 +1502,11 @@ public class ContentNodeTestDataUtils {
 			break;
 		case ImageFile.TYPE_IMAGE:
 			InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg");
-			nodeObject = ContentNodeTestDataUtils.createImage(folder, name, IOUtils.toByteArray(inputStream), channel);
+			try {
+				nodeObject = ContentNodeTestDataUtils.createImage(folder, name, IOUtils.toByteArray(inputStream), channel);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
 			break;
 		default:
 			Assert.fail("createNodeObject can't create an NodeObject for type " + objectType);
@@ -1531,7 +1535,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException {
 		return createNodeObject(objectType, folder, name, null, false);
 	}
 
@@ -1680,11 +1684,8 @@ public class ContentNodeTestDataUtils {
 	 */
 	public static ContentRepository createContentRepositoryWithDatsource(
 			String name, boolean mccr, Boolean instant, Node node) throws NodeException{
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		Map<String, String> handleProperties = createDatasource(node, mccr);
 		ContentRepository cr = createContentRepository(name, mccr, instant, handleProperties.get("url"));
-
 		return cr;
 	}
 
@@ -1812,18 +1813,14 @@ public class ContentNodeTestDataUtils {
 	 * @param nodeObjectId
 	 * @param responseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
 	public static Map<String, com.gentics.contentnode.rest.model.Tag> loadRestNodeObjectAndCheckIfTagExists(
-			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
+			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws NodeException {
 		Map<String, com.gentics.contentnode.rest.model.Tag> restTags = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
-			FolderResourceImpl folderResourceImpl = new FolderResourceImpl();
-			folderResourceImpl.setTransaction(t);
-			FolderLoadResponse folderLoadResponse = folderResourceImpl.load(nodeObjectId.toString(), false, false, false, 0, null);
+			FolderLoadResponse folderLoadResponse = getFolderResource().load(nodeObjectId.toString(), false, false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(folderLoadResponse, ResponseCode.OK);
 			restTags = folderLoadResponse.getFolder().getTags();
 			break;
@@ -1833,24 +1830,18 @@ public class ContentNodeTestDataUtils {
 			restTags = templateLoadResponse.getTemplate().getObjectTags();
 			break;
 		case Page.TYPE_PAGE:
-			PageResourceImpl pageResourceImpl = new PageResourceImpl();
-			pageResourceImpl.setTransaction(t);
-			PageLoadResponse pageLoadResponse = pageResourceImpl.load(nodeObjectId.toString(), false, false,
+			PageLoadResponse pageLoadResponse = getPageResource().load(nodeObjectId.toString(), false, false,
 					false, false, false, false, false, false, false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(pageLoadResponse, ResponseCode.OK);
 			restTags = pageLoadResponse.getPage().getTags();
 			break;
 		case File.TYPE_FILE:
-			FileResourceImpl fileResourceImpl = new FileResourceImpl();
-			fileResourceImpl.setTransaction(t);
-			FileLoadResponse fileLoadResponse = fileResourceImpl.load(nodeObjectId.toString(), false, false, 0, null);
+			FileLoadResponse fileLoadResponse = getFileResource().load(nodeObjectId.toString(), false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(fileLoadResponse, ResponseCode.OK);
 			restTags = fileLoadResponse.getFile().getTags();
 			break;
 		case ImageFile.TYPE_IMAGE:
-			ImageResourceImpl imageResourceImpl = new ImageResourceImpl();
-			imageResourceImpl.setTransaction(t);
-			ImageLoadResponse imageLoadResponse = imageResourceImpl.load(nodeObjectId.toString(), false, false, 0, null);
+			ImageLoadResponse imageLoadResponse = getImageResource().load(nodeObjectId.toString(), false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(imageLoadResponse, ResponseCode.OK);
 			restTags = imageLoadResponse.getImage().getTags();
 			break;
@@ -1868,25 +1859,19 @@ public class ContentNodeTestDataUtils {
 	 * @param objectType
 	 * @param nodeObjectId
 	 * @param restTags
-	 * @param shouldFail
-	 * @param reponseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	public static GenericResponse saveRestNodeObjectPropertyTagsAndAssert(int objectType, Integer nodeObjectId,
-			Map<String, com.gentics.contentnode.rest.model.Tag> restTags, ResponseCode reponseCode) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
+	public static GenericResponse saveRestNodeObjectPropertyTags(int objectType, Integer nodeObjectId,
+			Map<String, com.gentics.contentnode.rest.model.Tag> restTags) throws NodeException {
 		GenericResponse genericResponse = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
-			FolderResourceImpl folderResourceImpl = new FolderResourceImpl();
-			folderResourceImpl.setTransaction(t);
 			FolderSaveRequest folderSaveRequest = new FolderSaveRequest();
 			com.gentics.contentnode.rest.model.Folder restFolder = new com.gentics.contentnode.rest.model.Folder();
 			restFolder.setTags(restTags);
 			folderSaveRequest.setFolder(restFolder);
-			genericResponse = folderResourceImpl.save(nodeObjectId.toString(), folderSaveRequest);
+			genericResponse = getFolderResource().save(nodeObjectId.toString(), folderSaveRequest);
 			break;
 		case Template.TYPE_TEMPLATE:
 			TemplateSaveRequest templateSaveRequest = new TemplateSaveRequest();
@@ -1896,35 +1881,27 @@ public class ContentNodeTestDataUtils {
 			genericResponse = getTemplateResource().update(nodeObjectId.toString(), templateSaveRequest);
 			break;
 		case Page.TYPE_PAGE:
-			PageResourceImpl pageResourceImpl = new PageResourceImpl();
-			pageResourceImpl.setTransaction(t);
 			PageSaveRequest pageSaveRequest = new PageSaveRequest();
 			com.gentics.contentnode.rest.model.Page restPage = new com.gentics.contentnode.rest.model.Page();
 			restPage.setTags(restTags);
 			pageSaveRequest.setPage(restPage);
-			genericResponse = pageResourceImpl.save(nodeObjectId.toString(), pageSaveRequest);
+			genericResponse = getPageResource().save(nodeObjectId.toString(), pageSaveRequest);
 			break;
 		case File.TYPE_FILE:
-			FileResourceImpl fileResourceImpl = new FileResourceImpl();
-			fileResourceImpl.setTransaction(t);
 			FileSaveRequest fileSaveRequest = new FileSaveRequest();
 			com.gentics.contentnode.rest.model.File restFile = new com.gentics.contentnode.rest.model.File();
 			restFile.setTags(restTags);
 			fileSaveRequest.setFile(restFile);
-			genericResponse = fileResourceImpl.save(nodeObjectId, fileSaveRequest);
+			genericResponse = getFileResource().save(nodeObjectId, fileSaveRequest);
 			break;
 		case ImageFile.TYPE_IMAGE:
-			ImageResourceImpl imageResourceImpl = new ImageResourceImpl();
-			imageResourceImpl.setTransaction(t);
 			ImageSaveRequest imageSaveRequest = new ImageSaveRequest();
 			com.gentics.contentnode.rest.model.Image restImage = new com.gentics.contentnode.rest.model.Image();
 			restImage.setTags(restTags);
 			imageSaveRequest.setImage(restImage);
-			genericResponse = imageResourceImpl.save(nodeObjectId, imageSaveRequest);
+			genericResponse = getImageResource().save(nodeObjectId, imageSaveRequest);
 			break;
 		}
-
-		ContentNodeTestUtils.assertResponseCode(genericResponse, reponseCode);
 
 		return genericResponse;
 	}
@@ -2124,7 +2101,7 @@ public class ContentNodeTestDataUtils {
 			Transaction t = trx.getTransaction();
 			SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
 					.getSystemUser(username, null, false);
-			session = new Session(systemUser, "", "ContentNodeTestDataUtils", "secret", 0);
+			session = new DBSession(systemUser, "", "ContentNodeTestDataUtils", "secret", 0);
 			trx.success();
 		}
 
@@ -2363,16 +2340,10 @@ public class ContentNodeTestDataUtils {
 			String name, Integer folderId, Integer nodeId, String description, Boolean overwrite,
 			String data) throws ParseException, TransactionException {
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		@SuppressWarnings("resource")
 		MultiPart multiPart = new MultiPart()
 			.bodyPart(createformDataBodyPart("form-data; name=\"folderId\"", folderId.toString(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"nodeId\"", nodeId.toString(), null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-					t.getSessionId(), null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-					t.getSession().getSessionSecret(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", name, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"description\"", description, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + name + "\"",

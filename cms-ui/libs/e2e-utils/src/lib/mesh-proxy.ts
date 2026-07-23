@@ -14,7 +14,6 @@ export function createMeshProxy(client: GCMSRestClient, crId: string | number): 
             if (!data.params) {
                 data.params = {};
             }
-            data.params['sid'] = `${client.sid}`;
             return data;
         }],
     });

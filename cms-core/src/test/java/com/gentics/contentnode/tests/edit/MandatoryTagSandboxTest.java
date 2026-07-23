@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -21,7 +22,6 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -155,19 +155,15 @@ public class MandatoryTagSandboxTest {
 	 *            The REST-API response code
 	 * @throws TransactionException
 	 */
-	protected void publishPage(Page page, ResponseCode code) throws TransactionException {
+	protected void publishPage(Page page, ResponseCode code) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		try {
-			PageResourceImpl pageResource = new PageResourceImpl();
-
-			pageResource.setTransaction(t);
-
 			PagePublishRequest request = new PagePublishRequest();
 
 			request.setAlllang(true);
 
-			assertResponse(pageResource.publish(Integer.toString(page.getId()), null, request), code);
+			assertResponse(getPageResource().publish(Integer.toString(page.getId()), null, request), code);
 		} finally {
 			t.commit(false);
 		}

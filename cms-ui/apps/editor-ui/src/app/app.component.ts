@@ -92,7 +92,6 @@ export class AppComponent implements OnInit {
 
     unreadMessageCount = 0;
     alertCenterCounter = 0;
-    userSid: number;
     activeNode: Node;
     userMenuOpened = false;
     loadedNodes: Node[] = [];
@@ -234,11 +233,6 @@ export class AppComponent implements OnInit {
 
         this.supportedUiLanguages$ = this.appState.select(state => state.ui.availableUiLanguages);
         this.currentUiLanguage$ = this.appState.select(state => state.ui.language);
-
-        this.appState.select(state => state.auth.sid).subscribe(sid => {
-            this.userSid = sid;
-            this.changeDetector.markForCheck();
-        });
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
             distinctUntilChanged(isEqual, state => state.user?.id),
@@ -444,7 +438,7 @@ export class AppComponent implements OnInit {
 
     onLogoutClick(): void {
         this.keycloakSignOut$.pipe(first()).subscribe(singleSignOut => {
-            this.authActions.logout(this.userSid)
+            this.authActions.logout()
                 .then(() => {
                     if (singleSignOut) {
                         return this.keycloakService.logout();

@@ -116,8 +116,6 @@ public class CustomProxyTest {
 	@Test(expected = NotAuthorizedException.class)
 	public void testNoLogin() throws RestException {
 		RestClient client = new RestClient(restContext.getBaseUri());
-		// set invalid sid, so that the RestClient allows to make the request
-		client.setSid("bla");
 		client.base().path("proxy").path(RESOURCE_KEY).path("hello").request().get(String.class);
 	}
 

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.setRenderType;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,7 +50,6 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
 import com.gentics.contentnode.rest.model.response.TagListResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.db.SQLExecutor;
@@ -428,14 +428,10 @@ public class VersioningRestSandboxTest {
 		// in the same second only generates a single version.
 		Thread.sleep(1000);
 
-		// Restore version 1 with saved timestamp
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 		@SuppressWarnings("unused")
-		PageLoadResponse restoreResponse = pageResource.restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+		PageLoadResponse restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
 
 		// Verify it was correctly restored
 		Page page3 = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -502,12 +498,9 @@ public class VersioningRestSandboxTest {
 		Thread.sleep(1000);
 
 		// Restore version 1 with saved timestamp
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
-		PageLoadResponse restoreResponse = pageResource.restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+		PageLoadResponse restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
 		assertEquals("Restore has to be successful", ResponseCode.OK, restoreResponse.getResponseInfo().getResponseCode());
 
 		// Verify it was correctly restored
@@ -577,13 +570,10 @@ public class VersioningRestSandboxTest {
 		Thread.sleep(1000);
 
 		// Restore version 1 with saved timestamp
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 		@SuppressWarnings("unused")
-		TagListResponse restoreResponse = pageResource.restoreTag(String.valueOf(changedPageId), tag, v1Timestamp);
+		TagListResponse restoreResponse = getPageResource().restoreTag(String.valueOf(changedPageId), tag, v1Timestamp);
 
 		// Verify it was correctly restored
 		Page page3 = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -606,13 +596,10 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private Page loadPage(int pageId, int userId, boolean forUpdate, boolean versionInfo) throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction(userId);
 		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
-		PageLoadResponse response = pageResource.load(String.valueOf(pageId), forUpdate, false, false, false, false, false, false, versionInfo, false, false, 0, null);
+		PageLoadResponse response = getPageResource().load(String.valueOf(pageId), forUpdate, false, false, false, false, false, false, versionInfo, false, false, 0, null);
 
 		assertEquals("Check page load response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 		return response.getPage();
@@ -636,17 +623,14 @@ public class VersioningRestSandboxTest {
 		Property html = page.getTags().get(tag).getProperties().get(part);
 
 		html.setStringValue(newContent);
-		
-		// save the page
-		PageResourceImpl pageResource = new PageResourceImpl();
 
+		// save the page
 		testContext.getContext().startTransaction(userId);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 		PageSaveRequest saveRequest = new PageSaveRequest(page);
 
 		saveRequest.setUnlock(unlock);
 		saveRequest.setCreateVersion(createVersion);
-		GenericResponse saveResponse = pageResource.save(String.valueOf(pageId), saveRequest);
+		GenericResponse saveResponse = getPageResource().save(String.valueOf(pageId), saveRequest);
 
 		assertEquals(ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
@@ -662,10 +646,7 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private Tag createTag(int pageId, int userId, String keyword, int constructId) throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction(userId);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 		ContentTagCreateRequest request = new ContentTagCreateRequest();
 
@@ -677,7 +658,7 @@ public class VersioningRestSandboxTest {
 			request.setConstructId(constructId);
 		}
 
-		TagCreateResponse response = pageResource.createTag(Integer.toString(pageId), null, null, request);
+		TagCreateResponse response = getPageResource().createTag(Integer.toString(pageId), null, null, request);
 
 		assertEquals(ResponseCode.OK, response.getResponseInfo().getResponseCode());
 		return response.getTag();
@@ -692,10 +673,8 @@ public class VersioningRestSandboxTest {
 	 */
 	private void deleteTag(int pageId, int userId, String keyword) throws NodeException {
 		Page page = loadPage(pageId, userId, true, false);
-		PageResourceImpl pageResource = new PageResourceImpl();
 
 		testContext.getContext().startTransaction(userId);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 		PageSaveRequest pageSaveRequest = new PageSaveRequest();
 
@@ -704,7 +683,7 @@ public class VersioningRestSandboxTest {
 
 		pageSaveRequest.setPage(page);
 		pageSaveRequest.setDelete(tagsToDelete);
-		pageResource.save(Integer.toString(pageId), pageSaveRequest);
+		getPageResource().save(Integer.toString(pageId), pageSaveRequest);
 	}
 
 	/**
@@ -714,13 +693,10 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private void cancelPageEdit(int pageId, int userId) throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction(userId);
 		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
-		GenericResponse response = pageResource.cancel(pageId, null);
+		GenericResponse response = getPageResource().cancel(pageId, null);
 
 		assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 	}
@@ -732,13 +708,10 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private void publishPage(int pageId, int userId) throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
 		testContext.getContext().startTransaction(userId);
 		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
-		GenericResponse response = pageResource.publish(Integer.toString(pageId), null, new PagePublishRequest());
+		GenericResponse response = getPageResource().publish(Integer.toString(pageId), null, new PagePublishRequest());
 
 		assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 	}

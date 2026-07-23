@@ -95,8 +95,6 @@ public class ParallelAccessTest {
 
 	protected ExecutorService service;
 
-	private String sid;
-
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
@@ -229,9 +227,7 @@ public class ParallelAccessTest {
 		LoginRequest loginRequest = new LoginRequest();
 		loginRequest.setLogin("tester");
 		loginRequest.setPassword("tester");
-		LoginResponse loginResponse = post(loginRequest, LoginResponse.class, "/rest/auth/login");
-
-		sid = loginResponse.getSid();
+		post(loginRequest, LoginResponse.class, "/rest/auth/login");
 	}
 
 	/**
@@ -356,7 +352,6 @@ public class ParallelAccessTest {
 	 */
 	@SafeVarargs
 	protected final void addQueryParameters(Builder urlBuilder, Map.Entry<String, String>...params) {
-		urlBuilder.addQueryParameter("sid", sid);
 		for (Map.Entry<String, String> param : params) {
 			urlBuilder.addQueryParameter(param.getKey(), param.getValue());
 		}

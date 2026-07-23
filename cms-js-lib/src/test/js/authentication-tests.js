@@ -29,7 +29,6 @@
 				ok(!GCN.isAuthenticating,
 					'`GCN.isAuthenticating\' should be `false\'');
 				ok(!success, 'Check that login failed');
-				ok(!GCN.sid, 'Check that the `GCN.sid\' is empty');
 
 				start();
 				next();
@@ -48,7 +47,6 @@
 				ok(success, 'Check for login success');
 
 				if (success) {
-					ok(GCN.sid, 'Check whether the sid is set after login');
 					ok(data && data.user, 'Check whether user was returned');
 				}
 
@@ -76,7 +74,6 @@
 					'`GCN.isAuthenticating\' should be `false\'');
 
 				if (success) {
-					ok(GCN.sid, 'Check whether the sid is set now');
 					ok(data && data.user, 'Check whether user was returned');
 
 					if (data && data.user) {
@@ -100,18 +97,12 @@
 
 		asyncTest('Logout of existing session', function () {
 			// We should be signed in; now sign out.
-			if (GCN.sid) {
-				GCN.logout(function (success, error) {
-					ok(success, 'Check that logout succeeded');
-					ok(!GCN.sid, '`GCN.sid\' should be unset after logout');
+			GCN.logout(function (success, error) {
+				ok(success, 'Check that logout succeeded');
 
-					start();
-					next();
-				});
-			} else {
 				start();
 				next();
-			}
+			});
 		});
 	}
 

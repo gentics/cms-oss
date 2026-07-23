@@ -354,7 +354,6 @@ describe('MaintenanceModeService', () => {
             appState.mockState({
                 auth: {
                     isLoggedIn: true,
-                    sid: 1234,
                 },
                 maintenanceMode: {
                     active: true,
@@ -365,7 +364,7 @@ describe('MaintenanceModeService', () => {
                 },
             });
 
-            expect(apiBase.get).toHaveBeenCalledWith('user/me?sid=1234');
+            expect(apiBase.get).toHaveBeenCalledWith('user/me');
 
             subscription.unsubscribe();
         });

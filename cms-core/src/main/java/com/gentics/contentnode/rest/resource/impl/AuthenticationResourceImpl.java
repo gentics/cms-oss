@@ -1,34 +1,22 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import java.util.Map;
-
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Cookie;
-import jakarta.ws.rs.core.HttpHeaders;
+import java.util.Optional;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.LoginService;
 import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.NodeSetup;
 import com.gentics.contentnode.etc.NodeSetupValuePair;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.perm.PermHandler;
@@ -48,11 +36,22 @@ import com.gentics.lib.http.CookieHelper;
 import com.gentics.lib.http.CookieHelper.SameSite;
 import com.gentics.lib.log.NodeLogger;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+
 /**
  * Authentication Resource. This can be used to authenticate an existing SID.
  *
  * @author norbert
  */
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/auth")
 public class AuthenticationResourceImpl extends AbstractLoginResource implements AuthenticationResource {
 
@@ -66,46 +65,10 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	 */
 	protected AccessControlService accessControlService = new AccessControlService("restapi");
 
-
-	/**
-	 * Session id that is injected by JAX-RS.
-	 */
-	private String sessionId;
-
 	/**
 	 * Session Secret from the Session Secret Cookie
 	 */
 	private String sessionSecret;
-
-
-
-	/**
-	 * Initializes this ResourceImpl
-	 */
-	@Override
-	@PostConstruct
-	public void initialize() {
-
-		super.initialize();
-	}
-
-	/**
-	 * Set the sessionId for this request.
-	 * 
-	 * @param sessionId Id of the session to use for this ContentNodeResource
-	 */
-	@QueryParam("sid")
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-
-	/**
-	 * Get the session Id of the current request
-	 * @return The session Id of the current request
-	 */
-	public String getSessionId() {
-		return sessionId;
-	}
 
 	@Context
 	public void setSessionSecretFromCookie(HttpHeaders headers) {
@@ -131,50 +94,48 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return sessionSecret;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#validate(java.lang.String)
-	 */
 	@Override
 	@GET
-	@Path("/validate/{sid}")
-	public AuthenticationResponse validate(@PathParam("sid") String sid) {
+	@Path("/validate")
+	public AuthenticationResponse validate() throws NodeException {
 		AuthenticationResponse response = new AuthenticationResponse();
 
-		// check the SID
-		try {
-			int userId = validateSID(sid);
+		// check the session
+		try (Trx trx = ContentNodeHelper.trx()) {
+			SessionToken sessionToken = new SessionToken(getSessionSecret());
+			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully validated given SID"));
-			response.setUser(ModelBuilder.getUser(transaction.getObject(SystemUser.class, userId)));
-		} catch (Exception e) {
-			response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
+			if (optSession.isPresent()) {
+				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully validated session"));
+				response.setUser(ModelBuilder.getUser(trx.getTransaction().getObject(SystemUser.class, optSession.get().getUserId())));
+			} else {
+				throw new InvalidSessionIdException(sessionSecret);
+			}
+			trx.success();
 		}
 		return response;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#ssoLogin()
-	 */
 	@Override
 	@GET
 	@Path("/ssologin")
 	@Produces("text/plain; charset=UTF-8")
 	public String ssoLogin() {
-		try {
+		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			SessionToken sessionToken = null;
 			// the request may not always be set (e.g. when testing)
 			if (getRequest() != null) {
 				sessionToken = new SessionToken(getRequest());
 			} else {
-				sessionToken = new SessionToken(getSessionId(), getSessionSecret());
+				sessionToken = new SessionToken(getSessionSecret());
 			}
-			Session session = new Session(sessionToken.getSessionId(), t);
+			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-			if (sessionToken.authenticates(session)) {
+			if (optSession.isPresent()) {
 
 				// We need to create a new session otherwise the permhandler will not be set correctly.
-				Transaction userTransaction = getFactory().startTransaction(null, session.getUserId(), true);
+				Transaction userTransaction = getFactory().startTransaction(null, optSession.get().getUserId(), true);
 
 				try {
 					// Check whether the maintenance mode is enabled and the the user has the permissions to view the maintenance setting.
@@ -197,8 +158,9 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 				if (getResponse() != null) {
 					NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 					String sameSiteString = ObjectTransformer.getString(prefs.getProperty(LoginService.CONFIGURATION_COOKIE_SAMESITE), null);
-					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, session.getSessionSecret(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
+					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME, optSession.get().getCookieValue(), "/", null, LoginService.isCookieSecure(), true, SameSite.parse(sameSiteString), getResponse());
 				}
+				trx.success();
 				// return the sid as plaintext
 				return ObjectTransformer.getString(sessionToken.getSessionId(), "");
 			} else {
@@ -222,40 +184,39 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return ssoLogin();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#login(com.gentics.contentnode.rest.model.request.LoginRequest)
-	 */
 	@Override
 	@POST
 	@Path("/login")
-	public LoginResponse login(LoginRequest request, @QueryParam("sid") @DefaultValue("0") String sidString) {
-		String username = request.getLogin();
-		String password = request.getPassword();
+	public LoginResponse login(LoginRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			String username = request.getLogin();
+			String password = request.getPassword();
 
-		LoginResponse response = tryLoginWithService(username, password, sidString);
+			LoginResponse response = tryLoginWithService(username, password);
 
-		if (response != null) {
+			if (response != null) {
+				return response;
+			}
+
+			var message = "No login service returned a response";
+
+			logger.error("Error while logging in user {" + username + "}: " + message);
+
+			response = new LoginResponse();
+			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, message));
+
+			trx.success();
 			return response;
 		}
-
-		var message = "No login service returned a response";
-
-		logger.error("Error while logging in user {" + username + "}: " + message);
-
-		response = new LoginResponse();
-		response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, message));
-
-		return response;
 	}
 
 	/**
 	 * Search a login implementation that is able to perform a login
 	 * @param username user login
 	 * @param password user password
-	 * @param sid session id
 	 * @return Login response if login was successfully
 	 */
-	private LoginResponse tryLoginWithService(String username, String password, String sid) {
+	private LoginResponse tryLoginWithService(String username, String password) {
 		LoginResponse errorResponse = null;
 
 		for (LoginService service : LOGIN_SERVICE_LOADER) {
@@ -273,77 +234,41 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return errorResponse;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#logout(java.lang.String)
-	 */
 	@Override
 	@POST
-	@Path("/logout/{sid}")
-	public GenericResponse logout(@PathParam("sid") String sid,
-			@QueryParam("allSessions") @DefaultValue("false") boolean allSessions) {
-		try {
-			SessionToken sessionToken = new SessionToken(sid, getSessionSecret());
-			Session session = new Session(sessionToken.getSessionId(), transaction);
+	@Path("/logout")
+	public GenericResponse logout() throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			SessionToken sessionToken = new SessionToken(getSessionSecret());
+			Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-			if (sessionToken.authenticates(session)) {
-				if (allSessions) {
-					session.logoutAllSessions();
-					// Remove the session secret cookie
-					CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
-							"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
-				} else {
-					// Simply log out the current session
-					session.logout();
-				}
+			if (optSession.isPresent()) {
+				optSession.get().logout();
+				CookieHelper.setCookie(SessionToken.SESSION_SECRET_COOKIE_NAME,
+						"deleted", "/", 0, LoginService.isCookieSecure(), true, null, getResponse());
 
+				trx.success();
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully logged out"));
 			} else {
 				return new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid SID given"));
 			}
-		} catch (Exception e) {
-			return new GenericResponse(null, new ResponseInfo(ResponseCode.FAILURE, "Error while logout"));
 		}
 	}
 
-
-
-	/**
-	 * Validate the given SID
-	 * @param sid sid to validate
-	 * @return user id
-	 * @throws Exception if the SID cannot be validated
-	 */
-	protected int validateSID(String sid) throws Exception {
-		SessionToken sessionToken = new SessionToken(sid);
-		Session session = new Session(sessionToken.getSessionId(), transaction);
-
-		int userId = session.getUserId();
-		if (userId > 0 && sessionToken.authenticates(session)) {
-			return userId;
-		} else {
-			throw new NodeException("SessionToken does not authenticate the session");
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#hashPassword(
-	 *            com.gentics.contentnode.rest.model.request.HashPasswordRequest)
-	 */
 	@Override
 	@POST
 	@Path("/hashpassword")
 	public HashPasswordResponse hashPassword(
 			@Context HttpServletRequest httpServletRequest,
-			HashPasswordRequest hashPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId) {
+			HashPasswordRequest hashPasswordRequest) {
 		HashPasswordResponse response = new HashPasswordResponse();
 
 		String password = hashPasswordRequest.getPassword();
 		int userId      = hashPasswordRequest.getUserId();
 
 		try {
-			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest, sessionId)) {
-				throw new InvalidSessionIdException(Integer.toString(sessionId));
+			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest)) {
+				throw new InvalidSessionIdException("");
 			}
 
 			// Hash the plain text password
@@ -354,7 +279,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 			response.setHash(hashedPassword);
 		} catch (InvalidSessionIdException e) {
 			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} catch (TransactionException e) {
+		} catch (NodeException e) {
 			logger.error("Error while hashing password for user ID {" + userId + "}", e);
 			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Error while hashing password"));
 		}
@@ -362,22 +287,17 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 		return response;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gentics.contentnode.rest.api.AuthenticationResource#matchPassword(
-	 *            com.gentics.contentnode.rest.model.request.MatchPasswordRequest)
-	 */
 	@Override
 	@POST
 	@Path("/matchpassword")
 	public GenericResponse matchPassword(
 			@Context HttpServletRequest httpServletRequest,
-			MatchPasswordRequest matchPasswordRequest,
-			@QueryParam("sid") @DefaultValue("0") int sessionId) {
+			MatchPasswordRequest matchPasswordRequest) {
 		GenericResponse response = new GenericResponse();
 
 		try {
-			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest, sessionId)) {
-				throw new InvalidSessionIdException(Integer.toString(sessionId));
+			if (!isAuthenticatedOrIpWhiteListed(httpServletRequest)) {
+				throw new InvalidSessionIdException("");
 			}
 
 			if (SystemUserFactory.passwordMatches(
@@ -389,7 +309,7 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 
 		} catch (InvalidSessionIdException e) {
 			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
-		} catch (TransactionException e) {
+		} catch (NodeException e) {
 			logger.error("Error while hashing password", e);
 			response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Error while hashing password"));
 		}
@@ -424,12 +344,11 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 	 * Checks if the session is authenticated or the IP from the HttpServletRequest
 	 * is whitelisted.
 	 * @param httpServletRequest The HTTP servlet request from jersey
-	 * @param sessionId          Session ID
 	 * @return True if granted
-	 * @throws TransactionException -
+	 * @throws NodeException
 	 */
-	protected final boolean isAuthenticatedOrIpWhiteListed(HttpServletRequest httpServletRequest, int sessionId)
-			throws TransactionException {
+	protected final boolean isAuthenticatedOrIpWhiteListed(HttpServletRequest httpServletRequest)
+			throws NodeException {
 		// Access to this method will only be granted if the IP
 		// is whitelisted or a valid session exists.
 		boolean accessVerified = false;
@@ -446,11 +365,11 @@ public class AuthenticationResourceImpl extends AbstractLoginResource implements
 			}
 
 			// Allow if authentication is authenticated
-			if (!accessVerified && sessionId > 0) {
-				SessionToken sessionToken = new SessionToken(sessionId, getSessionSecret());
-				Session session = new Session(sessionToken.getSessionId(), transaction);
+			if (!accessVerified) {
+				SessionToken sessionToken = new SessionToken(getSessionSecret());
+				Optional<DBSession> optSession = DBSession.load(sessionToken);
 
-				if (sessionToken.authenticates(session)) {
+				if (optSession.isPresent()) {
 					accessVerified = true;
 				}
 			}

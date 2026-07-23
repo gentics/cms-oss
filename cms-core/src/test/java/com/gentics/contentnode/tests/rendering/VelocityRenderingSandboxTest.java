@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rendering;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
@@ -19,8 +20,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
@@ -118,7 +117,7 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 		this.renderWholeTag = TEMPLATES[templateIndex].contains(".") && (TEMPLATES[templateIndex].contains(".tags.") || TEMPLATES[templateIndex].endsWith(".tag")) && !TEMPLATES[templateIndex].contains(".parts.");
 		this.tagContent = TEMPLATES[templateIndex].contains("tags.url_construct") ? "/nowhere/82.html" : "This is the test content";
 		assertTrue("Given edit mode is unknown", editMode.equals(RenderType.renderEditMode(this.editMode)));
-		updateConstruct(TEMPLATES[templateIndex]);
+		operate(() -> updateConstruct(TEMPLATES[templateIndex]));
 	}
 
 	@BeforeClass
@@ -150,33 +149,33 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 	}
 
 	@Test
-	public void testRender() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+	public void testRender() throws NodeException {
+		operate(t -> {
+			// set the render type
+			RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, -1);
+			t.setRenderType(renderType);
+			// set the url factory
+			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
 
-		// set the render type
-		RenderType renderType = RenderType.getDefaultRenderType(testContext.getContext().getNodeConfig().getDefaultPreferences(), editMode, "sid", -1);
-		t.setRenderType(renderType);
-		// set the url factory
-		renderType.setRenderUrlFactory(new StaticUrlFactory(RenderUrl.LINKWAY_AUTO, RenderUrl.LINKWAY_AUTO, ""));
+			RenderResult renderResult = new RenderResult();
+			String content = page.render(renderResult);
 
-		RenderResult renderResult = new RenderResult();
-		String content = page.render(renderResult);
+			// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
+			// JSON and the order of the properties might vary on different systems)
+			Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
+			content = pattern.matcher(content).replaceAll("");
 
-		// strip away the head, which probably was rendered for aloha editor (we don't want to test it, because it contains
-		// JSON and the order of the properties might vary on different systems)
-		Pattern pattern = Pattern.compile("<head>.*</head>", Pattern.DOTALL | Pattern.MULTILINE);
-		content = pattern.matcher(content).replaceAll("");
-
-		assertEquals("Check rendered content", getExpectedContent(), content);
-		assertEquals("Check render result", "OK", renderResult.getReturnCode());
+			assertEquals("Check rendered content", getExpectedContent(), content);
+			assertEquals("Check render result", "OK", renderResult.getReturnCode());
+		});
 	}
 
 	/**
 	 * Get the expected content
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	protected String getExpectedContent() throws Exception {
+	protected String getExpectedContent() throws NodeException {
 		// prepare data which is rendered into the editable tags
 		String pageId = ObjectTransformer.getString(page.getId(), null);
 		String tagId = ObjectTransformer.getString(page.getContentTag(VTL_TAGNAME).getId(), null);

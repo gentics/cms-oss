@@ -163,18 +163,12 @@ export class GCMSRestClientService implements APIDefinition {
         };
     }
 
-    init(config: GCMSRestClientConfig, sid?: string): void {
+    init(config: GCMSRestClientConfig): void {
         this.client.config = config;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-        this.client.sid = sid as any;
     }
 
     configure(config: GCMSRestClientConfig): void {
         this.client.config = config;
-    }
-
-    setSessionId(sid: number | string): void {
-        this.client.sid = sid;
     }
 
     isInitialized(): boolean {

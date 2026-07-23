@@ -18,6 +18,7 @@ import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
@@ -27,6 +28,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 
@@ -39,6 +41,9 @@ public class PageSaveSandboxTest {
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	/**
 	 * The Node used for testing
@@ -177,13 +182,10 @@ public class PageSaveSandboxTest {
 	public void testNoPage() throws Exception {
 		testContext.getContext().startTransaction();
 
+		exceptionChecker.expect(EntityNotFoundException.class, "Die angegebene Seite wurde nicht gefunden.");
 		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageLoadResponse pageLoad = pageResource.load("-42", false, false,
+		pageResource.load("-42", false, false,
 				false, false, false, false, false, false, false, false, null, null);
-
-		assertEquals("Checking for correct response code",
-				ResponseCode.NOTFOUND, pageLoad.getResponseInfo()
-						.getResponseCode());
 	}
 
 	/**

@@ -1,0 +1,12 @@
+h2 Translate Pages
+
+This option allows pages to be automatically translated using a translation tool.
+
+h3. Feature activation
+
+If you want to use this feature, you first have to enable it
+
+<javascript filename="conf/features.yml">
+feature:
+    automatic_translation: true
+</javascript>

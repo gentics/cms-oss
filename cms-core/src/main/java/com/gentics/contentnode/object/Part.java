@@ -113,9 +113,7 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 
 		switch (to.getPartTypeId()) {
 		case Part.JSON:
-			if (StringUtils.isNotEmpty(from.getJSONSchema()) ) {
-				to.setInfoText(from.getJSONSchema());
-			}
+			to.setInfoText(from.getJSONSchema());
 			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
@@ -127,11 +125,6 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 				to.setInfoInt(from.getRegex().getId());
 			}
 			break;
-		default:
-			break;
-		}
-
-		switch (to.getPartTypeId()) {
 		case Part.LIST:
 		case Part.LISTORDERED:
 		case Part.LISTUNORDERED:
@@ -257,6 +250,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		switch (from.getPartTypeId()) {
+		case Part.JSON:
+			to.setHtmlClass(from.getInfoText());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -265,11 +261,6 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		case Part.HTMLLONG:
 			to.setRegexId(from.getInfoInt());
 			break;
-		default:
-			break;
-		}
-
-		switch (from.getPartTypeId()) {
 		case Part.LIST:
 		case Part.LISTORDERED:
 		case Part.LISTUNORDERED:

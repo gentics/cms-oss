@@ -922,7 +922,7 @@ export class RestService {
   }
 
   /** @ANOnly */
-  ANGetBinaryURL(formid: string, binaryValue: string, businessObjectID?: string, width?: number, height?: number) {
+  ANGetBinaryURL(formid: string, binaryValue: string, businessObjectID?: string) {
     let url = this.anBasePath + 'form/' + encodeURIComponent(formid);
     if (businessObjectID !== null && businessObjectID !== '') {
       if (typeof businessObjectID === 'undefined') {
@@ -931,9 +931,6 @@ export class RestService {
       url = url + `/businessObject/${encodeURIComponent(businessObjectID)}`;
     }
     url = url + '/binary/' + encodeURIComponent(binaryValue);
-    if(width != null && width > 0 && height != null && height > 0){
-      url = url + '?w=' + width + '&h=' +height;
-    }
     return url;
   }
 

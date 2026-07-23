@@ -54,6 +54,7 @@ const sharedElementTypes: IElementTypes = {
 const cmsElementTypes: IElementTypes = {
     text: Elements.FormGridTextElement as unknown as IElementType,
     spacer: Elements.FormGridTextElement as unknown as IElementType,
+    image: Elements.FormGridImageElement as unknown as IElementType,
     boolean: Elements.CMSBooleanElement,
     group: Elements.CmsContainerElement,
     conditionalcontainer: Elements.CmsContainerElement,

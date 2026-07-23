@@ -121,7 +121,7 @@ function BinaryElement(props: IFormComponentAttributes) {
 
   const classifySource = (b: IBinary): BinarySource => {
     if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
-    if (String(b.value).startsWith('FormInstanceContent|')) return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith('FormInstanceContent|') || String(b.value).startsWith('ActaNovaDocument|')) return BinarySource.ACTANOVA;
     if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
     return BinarySource.LOCAL;
   };
@@ -147,9 +147,7 @@ function BinaryElement(props: IFormComponentAttributes) {
           ? props.restService.ANGetBinaryURL(
             props.formState.formid,
             formFile.value,
-            props.formState.businessObjectID,
-            350,
-            200,
+            props.formState.businessObjectID
           )
           : formFile.uri,
       ext: fileExt,
@@ -260,6 +258,7 @@ function BinaryElement(props: IFormComponentAttributes) {
         t={props.t}
         file={item}
         showDownload={showDownload}
+        showDelete={props.editable}
         onLink={() => {
           if (binaryLink) {
             Linking.openURL(binaryLink);

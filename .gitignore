@@ -197,3 +197,4 @@ velocity.log
 logs/
 *.zip
 dist/
+cms.live

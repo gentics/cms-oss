@@ -4,6 +4,7 @@ export interface SymbolGridItem {
     symbol: string;
     label: string;
     keywords?: string[];
+    icon?: string;
 }
 
 export interface AlohaSymbolGridComponent extends AlohaComponent {

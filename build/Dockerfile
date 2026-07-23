@@ -146,6 +146,14 @@ RUN rvm-exec 2.3 gem install guides -- --with-cflags="-O2 -pipe -march=native -w
 # does the SCM checkout in the jnlp container for some reasons.
 RUN groupadd --system --gid 10000 ${USER_NAME} && useradd --create-home --no-log-init --uid 10000 --gid ${USER_NAME} ${USER_NAME}
 
+# OpenTelemetry Java agent
+ARG OTEL_JAVAAGENT_VERSION="v2.27.0"
+RUN mkdir -p /cms \
+ && curl -fsSL \
+  "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/${OTEL_JAVAAGENT_VERSION}/opentelemetry-javaagent.jar" \
+  -o /cms/opentelemetry-javaagent.jar \
+ && chown ${USER_NAME}:${USER_NAME} /cms/opentelemetry-javaagent.jar
+
 # Setup Git
 RUN git config --system user.name "${GIT_USER_NAME}" \
  && git config --system user.email "${GIT_USER_EMAIL}"

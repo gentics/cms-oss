@@ -558,7 +558,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 * Get the JSON schema filter for entries of type {@link AttributeType#json}
 	 * @return filter
 	 */
-	@FieldGetter("jsonschema_filter")
+	@FieldGetter("json_schema_filter")
 	public abstract String getJSONSchemaFilter();
 
 	/**
@@ -566,7 +566,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 * @param jsonSchemaFilter filter
 	 * @throws ReadOnlyException
 	 */
-	@FieldSetter("jsonschema_filter")
+	@FieldSetter("json_schema_filter")
 	public void setJSONSchemaFilter(String jsonSchemaFilter) throws ReadOnlyException {
 		failReadOnly();
 	}

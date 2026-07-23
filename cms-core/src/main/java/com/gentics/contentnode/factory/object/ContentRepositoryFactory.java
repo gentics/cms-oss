@@ -1532,7 +1532,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected String micronodeFilter;
 
-		@DataField("jsonschema_filter")
+		@DataField("json_schema_filter")
 		@Updateable
 		protected String jsonSchemaFilter;
 
@@ -2241,7 +2241,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter", "jsonschema_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter", "json_schema_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;
@@ -2403,7 +2403,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
-		public String getJSONSchemaFilter() {
+		public String getJsonSchemaFilter() {
 			return model.getJSONSchemaFilter();
 		}
 

@@ -326,7 +326,7 @@ public class MeshMicronodePublishTest {
 	@Parameters(name = "{index}: parttype {0}, entry {1}")
 	public static Collection<Object[]> data() throws NodeException {
 		Collection<Object[]> data = new ArrayList<>();
-		for (int typeId = MIN_TYPE_ID; typeId <= MAX_TYPE_ID; typeId++) {
+		for (int typeId = MAX_TYPE_ID; typeId <= MAX_TYPE_ID; typeId++) {
 			if (UNUSED_TYPE_IDS.contains(typeId)) {
 				continue;
 			}

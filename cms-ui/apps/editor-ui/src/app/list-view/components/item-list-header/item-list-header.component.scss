@@ -76,3 +76,9 @@ gtx-file-picker {
         margin-left: 0.5rem;
     }
 }
+
+/* Prevent firing the click/change event twice
+** because the checkbox underneath also gets clicked */
+gtx-dropdown-item gtx-checkbox {
+    pointer-events: none;
+}

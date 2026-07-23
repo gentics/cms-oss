@@ -8,7 +8,7 @@ import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
-    AbstractConstrctCategoryAPI,
+    AbstractConstructCategoryAPI,
     AbstractConstructAPI,
     AbstractContentRepositoryAPI,
     AbstractContentRepositoryFragmentAPI,
@@ -122,7 +122,7 @@ export class GCMSRestClientService implements APIDefinition {
             auth: asAngularAPI<AbstractAuthenticationAPI>(this.client.auth),
             cluster: asAngularAPI<AbstractClusterAPI>(this.client.cluster),
             construct: asAngularAPI<AbstractConstructAPI>(this.client.construct),
-            constructCategory: asAngularAPI<AbstractConstrctCategoryAPI>(this.client.constructCategory),
+            constructCategory: asAngularAPI<AbstractConstructCategoryAPI>(this.client.constructCategory),
             contentRepository: asAngularAPI<AbstractContentRepositoryAPI>(this.client.contentRepository),
             contentRepositoryFragment: asAngularAPI<AbstractContentRepositoryFragmentAPI>(this.client.contentRepositoryFragment),
             contentStaging: asAngularAPI<AbstractContentStagingAPI>(this.client.contentStaging),
@@ -205,7 +205,7 @@ export class GCMSRestClientService implements APIDefinition {
         return this.apis.construct;
     }
 
-    get constructCategory(): AngularAPI<AbstractConstrctCategoryAPI> {
+    get constructCategory(): AngularAPI<AbstractConstructCategoryAPI> {
         return this.apis.constructCategory;
     }
 

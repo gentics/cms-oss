@@ -8,10 +8,23 @@
     "targets": {
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": [
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
+            ],
             "options": {
-                "jestConfig": "libs/cms-rest-client-angular/jest.config.cts",
-                "tsConfig": "libs/cms-rest-client-angular/tsconfig.spec.json"
+                "jestConfig": "{projectRoot}/jest.config.ts"
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "color": false,
+                    "colors": false,
+                    "ci": true,
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
+                }
             }
         },
         "build": {

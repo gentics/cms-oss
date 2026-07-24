@@ -27,7 +27,7 @@ import com.gentics.contentnode.rest.model.response.GroupList;
 import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PermsFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -75,12 +75,12 @@ public class GroupResourceImplTest {
 	@Test
 	public void testFilterOutUnassignableGroups() throws NodeException {
 		SystemUser nodeSuperUser = Trx.supply(trx -> trx.getObject(SystemUser.class, 3));
-		GroupList allAvailable = Trx.supply(nodeSuperUser, () -> new GroupResourceImpl().list(null, null, null, new PermsParameterBean().setPerms(true)));
+		GroupList allAvailable = Trx.supply(nodeSuperUser, () -> new GroupResourceImpl().list(null, null, null, new PermsParameterBean().setPerms(true), null));
 		assertThat(allAvailable)
 			.as("Available groups")
 			.matches(assignable -> assignable.getPerms().values().stream().anyMatch(perms -> perms.stream().noneMatch(p -> Permission.userassignment.equals(p))), "User unassignable groups provided");
 
-		GroupList onlyAssignable = Trx.supply(nodeSuperUser, () -> new GroupResourceImpl().list(new FilterParameterBean().setPermitted(List.of(Permission.userassignment)), null, null, new PermsParameterBean().setPerms(true)));
+		GroupList onlyAssignable = Trx.supply(nodeSuperUser, () -> new GroupResourceImpl().list(null, null, null, new PermsParameterBean().setPerms(true), new PermsFilterParameterBean().setPermitted(List.of(Permission.userassignment))));
 		assertThat(onlyAssignable)
 			.as("Assignable groups")
 			.matches(assignable -> assignable.getItems().size() < allAvailable.getItems().size(), "User assignable groups are filtered out")

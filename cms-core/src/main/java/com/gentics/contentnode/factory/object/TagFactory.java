@@ -1967,9 +1967,9 @@ public class TagFactory extends AbstractFactory {
 					JsonSchema[] allowedSchemas = null;
 					if (jsonSchemaContent.isArray()) {
 						JsonArray jsonSchemas = jsonSchemaContent.getArray();
-						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::from).toArray(size -> new JsonSchema[size]);
 					} else {
-						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+						allowedSchemas = new JsonSchema[] { JsonSchema.from(jsonSchemaContent.getObject()) };
 					}
 					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(jsonContent.getContent()).getValid() == Boolean.TRUE)) {
 						throw new NodeException("JSON Validation error for {"

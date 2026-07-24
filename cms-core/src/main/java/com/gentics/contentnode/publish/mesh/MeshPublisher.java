@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,9 +45,6 @@ import org.apache.commons.text.translate.EntityArrays;
 import org.apache.commons.text.translate.LookupTranslator;
 import org.apache.logging.log4j.Level;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -57,7 +52,6 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
@@ -65,7 +59,6 @@ import com.gentics.contentnode.etc.SemaphoreMap;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
-import com.gentics.contentnode.factory.AnyChannelTrx;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.ContentLanguageTrx;
 import com.gentics.contentnode.factory.HandleDependenciesTrx;
@@ -93,7 +86,6 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
-import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -154,7 +146,6 @@ import com.gentics.mesh.core.rest.branch.info.BranchInfoSchemaList;
 import com.gentics.mesh.core.rest.branch.info.BranchSchemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
-import com.gentics.mesh.core.rest.common.RestModel;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.job.JobStatus;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
@@ -3222,9 +3213,9 @@ public class MeshPublisher implements AutoCloseable {
 					JsonContent jsonSchemaContent = JsonContent.fromString(entry.getJSONSchemaFilter());
 					if (jsonSchemaContent.isArray()) {
 						JsonArray jsonSchemas = jsonSchemaContent.getArray();
-						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::from).toArray(size -> new JsonSchema[size]);
 					} else {
-						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+						allowedSchemas = new JsonSchema[] { JsonSchema.from(jsonSchemaContent.getObject()) };
 					}
 				}
 				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(allowedSchemas);

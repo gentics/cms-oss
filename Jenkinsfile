@@ -380,7 +380,7 @@ spec:
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
-                       sh 'REPO_USERNAME=$repoUsername REPO_PASSWORD=$repoPassword .jenkins/build-helm-chart.sh ${helmVersion}'
+                       sh 'REPO_USERNAME=$repoUsername REPO_PASSWORD=$repoPassword .jenkins/build-helm-chart.sh ' + helmVersion
                     }
 
                     if (Boolean.valueOf(params.deploy) || Boolean.valueOf(params.deployTesting)) {

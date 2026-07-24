@@ -4,17 +4,21 @@ global:
   fullnameOverride: ""
 
 image:
-  repository: "docker.gentics.com/gentics/cms"
-  tag: 6.1.0
+  ## Registry and repository are combined to "registry/repository:tag".
+  ## global.imageRegistry (umbrella mirror override) takes precedence over registry.
+  ## Leave registry empty if your repository already contains the registry host.
+  registry: "docker.gentics.com"
+  repository: "gentics/cms"
+  #tag: 6.5.0
   pullPolicy: IfNotPresent
-  pullSecret: docker-gentics-com
+  pullSecret: ""
 
 database:
   name: "cms"
   username: "node"
   # password: "node"
   # passwordSecret: "cms.database.secret"
-  host: "mariadb"
+  host: ""
   port: "3306"
 
 # Add custom certificates to the jvm truststore
@@ -54,8 +58,10 @@ cms:
 
   resources:
     requests:
+      cpu: 500m
       memory: 1Gi
     limits:
+      cpu: 1000m
       memory: 2Gi
   
   ## Configure the service
@@ -77,6 +83,10 @@ cms:
 
   persistence:
     enabled: true
+    ## Whether CMS volumes (data, cache, backup) survive "helm uninstall".
+    ## Unset: follows global.persistence.keepOnUninstall, defaulting to true (keep).
+    ## Leave commented so the global umbrella switch stays effective.
+    # keepOnUninstall: true
     #if false, also implementation (packages, config, ...) is persisted
     onlyData: false
     # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
@@ -135,9 +145,52 @@ cms:
     #allow to override default backup.sh script
     #backupScript: |-
 
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    timeoutSeconds: 1
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 6
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: http
+    timeoutSeconds: 1
+    periodSeconds: 2
+    successThreshold: 1
+    failureThreshold: 90 #3min bootup time
+   
+  readinessProbe:
+    httpGet:
+      path: /rest/info/maintenance
+      port: http
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+
+
+  preUpgrade:
+    enabled: false
+    #nodeUser: "node"
+
+    #image:
+    #  repository: "docker.gentics.com/gentics/cms"
+    #  tag: "6.4.4"
+    #  pullPolicy: IfNotPresent
+    #  pullSecret: docker-gentics-com
+
+    #allow to override default preUpgrade.sh script
+    #script: |-
 
 spellchecker:
   enabled: false
+  ## Docker Hub image — registry intentionally empty; set global.imageRegistry
+  ## only if your mirror also proxies Docker Hub.
+  registry: ""
   repository: gentics/languagetool
   tag: latest
   resources:

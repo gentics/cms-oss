@@ -30,9 +30,9 @@ spec:
           containers:
           - name: backup
             {{- if .Values.cms.backup.image }}
-            image: "{{ .Values.cms.backup.image.repository }}:{{ .Values.cms.backup.image.tag }}"
+            image: "{{ include "gentics-common.image" (dict "root" . "image" .Values.cms.backup.image) }}"
             {{- else }}
-            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            image: "{{ include "cms.image" . }}"
             {{- end }}
             
             {{- if ((.Values.cms.backup.image).pullPolicy)}}
@@ -118,11 +118,8 @@ spec:
           imagePullSecrets:
             - name: {{ .Values.cms.backup.image.pullSecret }}
           {{- else }}
-          {{- if .Values.image.pullSecret }}
-          imagePullSecrets:
-            - name: {{ .Values.image.pullSecret }}
-          {{- end}}
-          {{- end}}
+          {{- include "cms.imagePullSecrets" . | nindent 10 }}
+          {{- end }}
           volumes:
             - name: config-cms
               configMap:

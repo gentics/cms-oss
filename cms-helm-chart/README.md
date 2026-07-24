@@ -1,4 +1,4 @@
-# Gentics CMS Helm
+# Gentics CMS Helm Chart
 
 ## Introduction
 
@@ -6,21 +6,17 @@ This chart bootstraps a Gentics CMS with a persistent volume & ingress.
 
 ## Links
 
+* [Installation Guide](https://www.gentics.com/cmp8/operations/kubernetes/installation)
 * [Documentation](https://www.gentics.com/Content.Node/cmp8/guides/)
 * [Changelog](https://www.gentics.com/cmp/changelog/)
-* [Environment variables](https://www.gentics.com/Content.Node/cmp8/guides/admin_configuration.html#environment-variables-system-properties)
+
+## Update dependency charts
+
+Set gentics-common `version` in `Chart.yml`
+```bash
+helm dependency update
+```
 
 ## Building / Release
 
-Increase `version` in `Chart.yaml` and create git Tag. Then this tag can be pushed to Artifactory
-
-### package current version 
-```bash
-helm package ./
-```
-
-### Upload the generated/packaged file (check filename)
-
-```bash
-curl -u USERNAME:PASSWORD -s -w "%{http_code}\n" https://repo.gentics.com/repository/helm/ --upload-file ./cms-xxx.tgz
-```
+Helm chart is automatically built with a mesh-enterprise release

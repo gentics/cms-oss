@@ -11,7 +11,7 @@ import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
-import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PermsFilterParameterBean;
 
 /**
  * Permission Filter.
@@ -43,7 +43,7 @@ public class PermFilter<T extends NodeObject> implements Filter<T> {
 	 * @param perms permissions
 	 * @return filter
 	 */
-	public static <U extends NodeObject> PermFilter<U> get(FilterParameterBean filter, PermHandler.ObjectPermission... perms) {
+	public static <U extends NodeObject> PermFilter<U> get(PermsFilterParameterBean filter, PermHandler.ObjectPermission... perms) {
 		Set<PermHandler.ObjectPermission> parsedPerms = new HashSet<>(Arrays.asList(perms));
 		if (filter != null && filter.permitted != null) {
 			parsedPerms.addAll(filter.permitted.stream().map(ObjectPermission::get).filter(Objects::nonNull).collect(Collectors.toSet()));

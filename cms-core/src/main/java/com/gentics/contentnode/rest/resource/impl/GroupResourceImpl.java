@@ -91,6 +91,7 @@ import com.gentics.contentnode.rest.model.response.UserLoadResponse;
 import com.gentics.contentnode.rest.resource.GroupResource;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PermsFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.util.AbstractNodeObjectFilter;
@@ -387,7 +388,7 @@ public class GroupResourceImpl implements GroupResource {
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
 	public GroupList list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
-			@BeanParam PermsParameterBean perms) throws NodeException {
+			@BeanParam PermsParameterBean perms, @BeanParam PermsFilterParameterBean permFilter) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 
@@ -399,7 +400,7 @@ public class GroupResourceImpl implements GroupResource {
 			recursiveAddGroups(groups, user.getUserGroups());
 
 			GroupList response = ListBuilder.from(groups, UserGroup.TRANSFORM2REST)
-				.filter(o -> PermFilter.get(filter).matches(o))
+				.filter(o -> PermFilter.get(permFilter).matches(o))
 				.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "description"))
 				.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.setperm, ObjectPermission.userassignment))
 				.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "description"))

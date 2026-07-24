@@ -152,7 +152,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		List<Group> groups = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
-			return new GroupResourceImpl().list(null, null, null, null).getItems();
+			return new GroupResourceImpl().list(null, null, null, null, null).getItems();
 		});
 		assertThat(groups).as("Groups after adding").usingFieldByFieldElementComparator().contains(created);
 
@@ -161,7 +161,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		groups = Trx.supply(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
-			return new GroupResourceImpl().list(null, null, null, null).getItems();
+			return new GroupResourceImpl().list(null, null, null, null, null).getItems();
 		});
 		assertThat(groups).as("Groups after deleting").usingFieldByFieldElementComparator().doesNotContain(created);
 	}
@@ -189,7 +189,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
-			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after adding").usingFieldByFieldElementComparator()
+			assertThat(new GroupResourceImpl().list(null, null, null, null, null).getItems()).as("Groups after adding").usingFieldByFieldElementComparator()
 					.contains(mother, child1, child2, subchild1, subchild2);
 		});
 
@@ -198,7 +198,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
-			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator().doesNotContain(mother, child1, child2, subchild1, subchild2);
+			assertThat(new GroupResourceImpl().list(null, null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator().doesNotContain(mother, child1, child2, subchild1, subchild2);
 		});
 	}
 
@@ -237,7 +237,7 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		});
 
 		Trx.operate(Trx.supply(trx -> trx.getObject(SystemUser.class, userId)), () -> {
-			assertThat(new GroupResourceImpl().list(null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator()
+			assertThat(new GroupResourceImpl().list(null, null, null, null, null).getItems()).as("Groups after deleting").usingFieldByFieldElementComparator()
 					.doesNotContain(toDelete);
 		});
 	}

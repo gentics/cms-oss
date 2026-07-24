@@ -16,6 +16,7 @@ import {
     GroupUserCreateRequest,
     GroupUserCreateResponse,
     GroupUsersListOptions,
+    LoadGroupOptions,
     Response,
     UserGroupsResponse,
     UserListResponse,
@@ -65,8 +66,8 @@ export class GroupApi {
     /**
      * Gets the group with the specified `id` (without its `children`).
      */
-    getGroup(id: number): Observable<GroupResponse> {
-        return this.apiBase.get(`group/${id}`);
+    getGroup(id: number, options?: LoadGroupOptions): Observable<GroupResponse> {
+        return this.apiBase.get(`group/${id}`, options);
     }
 
     /**

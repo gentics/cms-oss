@@ -31,6 +31,7 @@ import com.gentics.contentnode.rest.model.response.UserList;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PermsFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
@@ -110,16 +111,18 @@ public interface GroupResource {
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
 	 * @param perms permissions parameters
+	 * @param permFilter permissions filter parameter
 	 * @return list of groups
 	 * @throws Exception
 	 */
 	@GET
 	GroupList list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
-			@BeanParam PermsParameterBean perms) throws Exception;
+			@BeanParam PermsParameterBean perms, @BeanParam PermsFilterParameterBean permFilter) throws Exception;
 
 	/**
 	 * Load group with given ID
 	 * @param id local group ID
+	 * @param perms permission parameters
 	 * @return group response
 	 * @throws Exception
 	 */
@@ -129,7 +132,7 @@ public interface GroupResource {
 		@ResponseCode(code = 200, condition = "Group {id} exists."),
 		@ResponseCode(code = 404, condition = "Group {id} does not exist.")
 	})
-	GroupLoadResponse get(@PathParam("id") String id) throws Exception;
+	GroupLoadResponse get(@PathParam("id") String id, @BeanParam PermsParameterBean perms) throws Exception;
 
 	/**
 	 * List subgroups of the given group.<br>

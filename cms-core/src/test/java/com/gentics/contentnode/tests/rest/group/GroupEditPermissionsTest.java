@@ -185,7 +185,7 @@ public class GroupEditPermissionsTest extends AbstractGroupEditTest {
 			exceptionRule.expect(InsufficientPrivilegesException.class, String.format("Keine Berechtigung für die Gruppe %d.", testedGroup.getId()));
 		}
 		try (Trx trx = new Trx(testUser)) {
-			Group ownGroup = new GroupResourceImpl().get(String.valueOf(testedGroup.getId())).getGroup();
+			Group ownGroup = new GroupResourceImpl().get(String.valueOf(testedGroup.getId()), null).getGroup();
 			assertThat(ownGroup).as("Read group").has(attribute("id", testedGroup.getId()));
 			trx.success();
 		}

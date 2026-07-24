@@ -9,7 +9,9 @@
 
 <div *ngIf="!hideActions" class="entity-table-actions-bar">
     <gtx-button
+        *ngIf="(group ? assignable : true)"
         class="table-action-button"
+        data-id="createUser"
         flat
         size="small"
         type="primary"
@@ -21,8 +23,9 @@
     </gtx-button>
 
     <gtx-button
-        *ngIf="group"
+        *ngIf="assignable"
         class="table-action-button"
+        data-id="assignUsers"
         flat
         size="small"
         type="primary"
@@ -35,6 +38,7 @@
 
     <gtx-button
         class="table-action-button reload-button"
+        data-id="reload"
         flat
         size="small"
         type="primary"

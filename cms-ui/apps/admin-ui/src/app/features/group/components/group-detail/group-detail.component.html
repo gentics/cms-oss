@@ -148,6 +148,7 @@
                     <gtx-user-table
                         [group]="currentEntity"
                         [showSearch]="true"
+                        [assignable]="isGroupAssignable$ | async"
                     ></gtx-user-table>
                 </div>
             </div>

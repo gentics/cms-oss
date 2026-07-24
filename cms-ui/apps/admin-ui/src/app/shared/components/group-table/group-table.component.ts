@@ -21,7 +21,7 @@ const DELETE_ACTION = 'delete';
     templateUrl: './group-table.component.html',
     styleUrls: ['./group-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, GroupBO, GroupTableLoaderOptions> implements OnChanges {
 
@@ -30,6 +30,9 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
 
     @Input()
     public groupId: number;
+
+    @Input()
+    public assignableOnly = false;
 
     protected rawColumns: TableColumn<GroupBO>[] = [
         {
@@ -134,6 +137,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         return {
             userId: this.userId,
             groupId: this.groupId,
+            assignableOnly: this.assignableOnly,
         };
     }
 

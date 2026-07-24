@@ -11,6 +11,7 @@ import static com.gentics.contentnode.object.Part.HTML;
 import static com.gentics.contentnode.object.Part.HTMLCUSTOMFORM;
 import static com.gentics.contentnode.object.Part.HTMLLONG;
 import static com.gentics.contentnode.object.Part.JAVAEDITOR;
+import static com.gentics.contentnode.object.Part.JSON;
 import static com.gentics.contentnode.object.Part.LIST;
 import static com.gentics.contentnode.object.Part.LISTORDERED;
 import static com.gentics.contentnode.object.Part.LISTUNORDERED;
@@ -194,6 +195,7 @@ public class MigrationPartMapper {
 		case TEXTHTMLLONG:
 		case TEXTCUSTOMFORM:
 		case HTML:
+		case JSON:
 		case LIST:
 		case LISTORDERED:
 		case LISTUNORDERED:

@@ -245,6 +245,8 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     overviewSettings?: OverviewSetting;
     /** Selection settings (if type is SELECT or MULTISELECT) */
     selectSettings?: SelectSetting;
+    /** JSON schema filter (for type JSON) */
+    jsonSchema?: string;
 }
 
 export interface PartType {

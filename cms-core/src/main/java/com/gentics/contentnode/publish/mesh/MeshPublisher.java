@@ -2,7 +2,6 @@ package com.gentics.contentnode.publish.mesh;
 
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.isRecoverable;
-import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,6 +33,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -46,9 +45,6 @@ import org.apache.commons.text.translate.EntityArrays;
 import org.apache.commons.text.translate.LookupTranslator;
 import org.apache.logging.log4j.Level;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -56,7 +52,6 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Consumer;
-import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
@@ -64,7 +59,6 @@ import com.gentics.contentnode.etc.SemaphoreMap;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
-import com.gentics.contentnode.factory.AnyChannelTrx;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.ContentLanguageTrx;
 import com.gentics.contentnode.factory.HandleDependenciesTrx;
@@ -92,7 +86,6 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
-import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -139,6 +132,7 @@ import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.mesh.MeshStatus;
+import com.gentics.mesh.core.rest.JsonSchema;
 import com.gentics.mesh.core.rest.MeshServerInfoModel;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyCheckResponse;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyRating;
@@ -152,7 +146,6 @@ import com.gentics.mesh.core.rest.branch.info.BranchInfoSchemaList;
 import com.gentics.mesh.core.rest.branch.info.BranchSchemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
-import com.gentics.mesh.core.rest.common.RestModel;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.job.JobStatus;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
@@ -163,6 +156,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
 import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
 import com.gentics.mesh.core.rest.node.field.BinaryField;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
@@ -172,12 +166,14 @@ import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
+import com.gentics.mesh.core.rest.node.field.impl.JsonFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
 import com.gentics.mesh.core.rest.node.field.list.FieldList;
 import com.gentics.mesh.core.rest.node.field.list.impl.BooleanFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.DateFieldListImpl;
+import com.gentics.mesh.core.rest.node.field.list.impl.JsonFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.MicronodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListItemImpl;
@@ -197,6 +193,7 @@ import com.gentics.mesh.core.rest.schema.change.impl.SchemaChangeOperation;
 import com.gentics.mesh.core.rest.schema.impl.BinaryFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.BooleanFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.DateFieldSchemaImpl;
+import com.gentics.mesh.core.rest.schema.impl.JsonFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.ListFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.MicronodeFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.NodeFieldSchemaImpl;
@@ -239,6 +236,7 @@ import io.reactivex.SingleSource;
 import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
@@ -3204,6 +3202,25 @@ public class MeshPublisher implements AutoCloseable {
 				fieldSchema = new DateFieldSchemaImpl();
 			}
 			break;
+		case json:
+			if (entry.isMultivalue()) {
+				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.JSON.toString());
+			} else {
+				JsonSchema[] allowedSchemas;
+				if (StringUtils.isEmpty(entry.getJSONSchemaFilter())) {
+					allowedSchemas = new JsonSchema[0];
+				} else {
+					JsonContent jsonSchemaContent = JsonContent.fromString(entry.getJSONSchemaFilter());
+					if (jsonSchemaContent.isArray()) {
+						JsonArray jsonSchemas = jsonSchemaContent.getArray();
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::from).toArray(size -> new JsonSchema[size]);
+					} else {
+						allowedSchemas = new JsonSchema[] { JsonSchema.from(jsonSchemaContent.getObject()) };
+					}
+				}
+				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(allowedSchemas);
+			}
+			break;
 		case bool:
 			if (entry.isMultivalue()) {
 				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.BOOLEAN.toString());
@@ -3697,6 +3714,22 @@ public class MeshPublisher implements AutoCloseable {
 						}
 					} else {
 						fields.put(entry.getMapname(), new BooleanFieldImpl().setValue(ObjectTransformer.getBoolean(value, null)));
+					}
+					break;
+				}
+				case json:
+				{
+					if (entry.isMultivalue()) {
+						FieldList<JsonContent> field = new JsonFieldListImpl();
+						fields.put(entry.getMapname(), field);
+						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
+							String jsonString = ObjectTransformer.getString(o, null);
+							if (jsonString != null) {
+								field.add(JsonContent.fromString(jsonString));
+							}
+						}
+					} else {
+						fields.put(entry.getMapname(), new JsonFieldImpl().setJson(JsonContent.fromString(ObjectTransformer.getString(value, null))));
 					}
 					break;
 				}

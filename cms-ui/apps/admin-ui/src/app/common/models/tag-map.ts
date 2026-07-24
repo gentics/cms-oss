@@ -37,6 +37,10 @@ export const TAGMAP_ENTRY_ATTRIBUTES: { id: TagmapEntryAttributeTypes; label: st
         id: TagmapEntryAttributeTypes.MICRONODE,
         label: 'tagmap_entry.attributetype_micronode',
     },
+    {
+        id: TagmapEntryAttributeTypes.JSON,
+        label: 'tagmap_entry.attributetype_json',
+    },
 ];
 
 export const TAGMAP_ENTRY_ATTRIBUTES_MAP = TAGMAP_ENTRY_ATTRIBUTES.reduce((acc, entry) => {

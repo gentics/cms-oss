@@ -7,6 +7,7 @@ import java.util.Map;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.gentics.contentnode.rest.model.Property.Type;
 
 /**
@@ -83,6 +84,11 @@ public class Part implements Serializable {
 	 * Regular expression
 	 */
 	private RegexModel regex;
+
+	/**
+	 * JSON schema
+	 */
+	private String jsonSchema;
 
 	/**
 	 * Flag to hide part in tag editor
@@ -535,6 +541,26 @@ public class Part implements Serializable {
 			this.nameI18n = new HashMap<>();
 		}
 		this.nameI18n.put(language, name);
+		return this;
+	}
+
+	/**
+	 * Get the JSON schema
+	 * @return
+	 */
+	@JsonProperty("jsonSchema")
+	public String getJSONSchema() {
+		return jsonSchema;
+	}
+
+	/**
+	 * Set the JSON schema
+	 * @param jsonSchema
+	 * @return
+	 */
+	@JsonProperty("jsonSchema")
+	public Part setJSONSchema(String jsonSchema) {
+		this.jsonSchema = jsonSchema;
 		return this;
 	}
 }

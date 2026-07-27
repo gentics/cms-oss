@@ -788,6 +788,8 @@ public class AdminResourceImpl implements AdminResource {
 				Session session = trx.getTransaction().getSession();
 				if (session instanceof DBSession dbSession) {
 					DBUtils.update("UPDATE systemsession SET secret = ? WHERE id != ?", "", dbSession.getId());
+				} else {
+					DBUtils.update("UPDATE systemsession SET secret = ? WHERE user_id != ?", "", session.getUserId());
 				}
 			}
 

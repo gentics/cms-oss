@@ -427,8 +427,7 @@ public abstract class AbstractSSOFilter implements Filter {
 						}
 
 						if (createNewSession) {
-							DBSession session = new DBSession(systemUser, request.getRemoteAddr(), request.getHeader("user-agent"),
-									SessionToken.getSessionSecretFromRequestCookie(request), 0);
+							DBSession session = new DBSession(systemUser, request.getRemoteAddr(), request.getHeader("user-agent"));
 
 							// replace the request with the wrapper and set the session
 							// information

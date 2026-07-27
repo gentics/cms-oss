@@ -47,7 +47,7 @@ public class Auth {
 	public <T> T withAuth(AuthType type, Supplier<T> method) throws NodeException {
 		switch (type) {
 		case LOGIN:
-			try (DBSessionClosure ses = new DBSessionClosure(user.getId())) {
+			try (DBSessionClosure ses = new DBSessionClosure(user)) {
 				return method.supply();
 			}
 		case TOKEN:
@@ -69,7 +69,7 @@ public class Auth {
 	public void withAuth(AuthType type, Operator method) throws NodeException {
 		switch (type) {
 		case LOGIN:
-			try (DBSessionClosure ses = new DBSessionClosure(user.getId())) {
+			try (DBSessionClosure ses = new DBSessionClosure(user)) {
 				method.operate();
 			}
 			break;

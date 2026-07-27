@@ -264,7 +264,7 @@ public class Trx implements AutoCloseable {
 	 */
 	protected static DBSession createSession(SystemUser user) throws NodeException {
 		try (Trx trx = new Trx()) {
-			DBSession session = new DBSession(user, "", "", null, 0);
+			DBSession session = new DBSession(user, "", "");
 			trx.success();
 			return session;
 		}

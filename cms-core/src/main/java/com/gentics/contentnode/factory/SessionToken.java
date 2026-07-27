@@ -13,22 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 public class SessionToken {
 	/**
 	 * The name for the cookie that contains the session secret.
-	 * This value is defined in global.inc.php.
-	 * This value is hardcoded in the GCNAuthenticationManager because we don't have
-	 * access to the GCN configuration in portal node. This value is also hardcoded
-	 * in the GCNProxyServlet because we don't have access to the GCN config there.
-	 * We also hardcode it here, although we do have access to the GCN configuration
-	 * here, simply for convenience, because many tests would fail otherwise. 
 	 */
 	public static final String SESSION_SECRET_COOKIE_NAME = "GCN_SESSION_SECRET";
-
-	/**
-	 * The encoding to use for the query string of a request.
-	 * Can be used with {@link #injectIntoQueryString(String, String)}.
-	 * I suppose this encoding will just work. I'm not sure how to determine
-	 * the correct encoding to use.
-	 */
-	public static final String SANE_DEFAULT_QUERY_STRING_ENCODING = "UTF-8";
 
 	/**
 	 * The length of the secret part in a session token string.
@@ -86,7 +72,7 @@ public class SessionToken {
 	public SessionToken(HttpServletRequest request) throws InvalidSessionIdException {
 		// note: getParemeter() retrieves query parameters as well as
 		// from-posted values.
-		this(getSessionSecretFromRequestCookie(request));        
+		this(getSessionSecretFromRequestCookie(request));
 	}
 
 	/**

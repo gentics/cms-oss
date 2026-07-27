@@ -2101,7 +2101,7 @@ public class ContentNodeTestDataUtils {
 			Transaction t = trx.getTransaction();
 			SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
 					.getSystemUser(username, null, false);
-			session = new DBSession(systemUser, "", "ContentNodeTestDataUtils", "secret", 0);
+			session = new DBSession(systemUser, "", "ContentNodeTestDataUtils");
 			trx.success();
 		}
 

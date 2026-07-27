@@ -570,11 +570,9 @@ public class DBTestContext extends TestWatcher {
 	 * @throws Exception
 	 */
 	public Transaction startSystemUserTransaction() throws NodeException {
-		String SESSION_SECRET = "sidforsystem012";
-
 		DBSession session = Trx.supply(t -> {
 			SystemUser user = t.getObject(SystemUser.class, 1);
-			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+			return new DBSession(user, "localhost", "JUnit Test");
 		});
 
 		// now we create a new transaction for the user
@@ -612,12 +610,10 @@ public class DBTestContext extends TestWatcher {
 	 * @throws Exception
 	 */
 	public Transaction startTransactionWithPermissions(boolean closeCurrent) throws Exception {
-		String SESSION_SECRET = "sidwithperms012";
-
 		// create a dummy session for the user
 		DBSession session = Trx.supply(t -> {
 			SystemUser user = t.getObject(SystemUser.class, USER_WITH_PERMS);
-			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+			return new DBSession(user, "localhost", "JUnit Test");
 		});
 
 		if (closeCurrent) {
@@ -644,12 +640,10 @@ public class DBTestContext extends TestWatcher {
 	 * @throws Exception
 	 */
 	public Transaction startTransactionWithoutPermissions(boolean closeCurrent) throws Exception {
-		String SESSION_SECRET = "sidwithoutperms";
-
 		// create a dummy session for the user
 		DBSession session = Trx.supply(t -> {
 			SystemUser user = t.getObject(SystemUser.class, USER_WITHOUT_PERMS);
-			return new DBSession(user, "localhost", "JUnit Test", SESSION_SECRET, -1);
+			return new DBSession(user, "localhost", "JUnit Test");
 		});
 
 		if (closeCurrent) {

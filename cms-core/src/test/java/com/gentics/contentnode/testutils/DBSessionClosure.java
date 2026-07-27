@@ -32,7 +32,7 @@ public class DBSessionClosure implements AutoCloseable {
 	public static DBSession createSession(int userId) throws NodeException {
 		return supply(t -> {
 			SystemUser user = t.getObject(SystemUser.class, userId);
-			return new DBSession(user, "localhost", "JUnit Test", DBSession.createSessionSecret(), 0);
+			return new DBSession(user, "localhost", "JUnit Test");
 		});
 	}
 

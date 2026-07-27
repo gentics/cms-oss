@@ -80,23 +80,15 @@ public class DBSession implements Session {
 	}
 
 	/**
-	 * Create a new session for user -1. If a sessionSecret is given, it will
-	 * use it, otherwise a new session secret is generated
+	 * Create a new session for the given user.
 	 * @param user system user
 	 * @param ip IP address of the request
 	 * @param userAgent user agent of the request
-	 * @param sessionSecret
-	 *            session secret to use, may be null
 	 * @throws NodeException
 	 */
-	public DBSession(SystemUser user, String ip, String userAgent, String sessionSecret, int sid) throws NodeException {
+	public DBSession(SystemUser user, String ip, String userAgent) throws NodeException {
 		this.userId = ObjectTransformer.getInt(user.getId(), -1);
-		// if no session secret was given, we need to create one
-		if (ObjectTransformer.isEmpty(sessionSecret)) {
-			this.sessionSecret = createSessionSecret();
-		} else {
-			this.sessionSecret = sessionSecret;
-		}
+		this.sessionSecret = createSessionSecret();
 
 		Transaction t = TransactionManager.getCurrentTransaction();
 		PreparedStatement pst = null;
@@ -120,57 +112,23 @@ public class DBSession implements Session {
 			t.closeStatement(pst);
 			pst = null;
 
-			int newSid = sid;
-			if (sid > 0) {
-				// We have to make sure, that the sid that was passed
-				// actually belongs to this client (check the secret).
-				pst = t.prepareStatement("SELECT secret FROM systemsession WHERE id = ?");
-				pst.setInt(1, sid);
-				res = pst.executeQuery();
+			// Create a new session
+			pst = t.prepareInsertStatement("INSERT INTO systemsession (secret, user_id, ip, agent, since, language, val) VALUES (?, ?, ?, ?, ?, ?, ?)");
+			pst.setString(1, this.sessionSecret);
+			pst.setInt(2, this.userId);
+			pst.setString(3, ip);
+			pst.setString(4, userAgent);
+			pst.setInt(5, t.getUnixTimestamp());
+			pst.setInt(6, this.languageId);
+			pst.setString(7, val);
+			pst.execute();
 
-				// If the sid could not be found or the secret
-				// doesn't match, we ignore the passed sid
-				if (!res.first() || !res.getString("secret").equals(sessionSecret)) {
-					newSid = 0;
-				}
-				t.closeResultSet(res);
-				res = null;
-				t.closeStatement(pst);
-				pst = null;
-			}
-
-			if (newSid == 0) {
-				// Create a new session
-				pst = t.prepareInsertStatement("INSERT INTO systemsession (secret, user_id, ip, agent, since, language, val) VALUES (?, ?, ?, ?, ?, ?, ?)");
-				pst.setString(1, this.sessionSecret);
-				pst.setInt(2, this.userId);
-				pst.setString(3, ip);
-				pst.setString(4, userAgent);
-				pst.setInt(5, t.getUnixTimestamp());
-				pst.setInt(6, this.languageId);
-				pst.setString(7, val);
-				pst.execute();
-
-				// get the generated keys
-				res = pst.getGeneratedKeys();
-				if (res.first()) {
-					this.sessionId = res.getInt(1);
-				} else {
-					throw new NodeException("Error while generating new session: Could not get sid");
-				}
+			// get the generated keys
+			res = pst.getGeneratedKeys();
+			if (res.first()) {
+				this.sessionId = res.getInt(1);
 			} else {
-				// Use an existing session
-				pst = t.prepareUpdateStatement("UPDATE systemsession SET user_id=?, ip=?, agent=?, since=?, language=?, val=? WHERE id=?");
-				pst.setInt(1, this.userId);
-				pst.setString(2, ip);
-				pst.setString(3, userAgent);
-				pst.setInt(4, t.getUnixTimestamp());
-				pst.setInt(5, this.languageId);
-				pst.setString(6, val);
-				pst.setInt(7, newSid);
-				pst.executeUpdate();
-
-				this.sessionId = sid;
+				throw new NodeException("Error while generating new session: Could not get sid");
 			}
 
 			// log the login

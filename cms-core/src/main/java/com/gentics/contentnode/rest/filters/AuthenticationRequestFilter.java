@@ -53,7 +53,7 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 			Optional<? extends Session> optSession = supply(() -> tryApiToken());
 
 			if (optSession.isEmpty()) {
-				optSession = supply(() -> trySessionSecretSession(requestContext));
+				optSession = supply(() -> trySessionSecretSession());
 			}
 
 			if (optSession.isPresent()) {
@@ -95,11 +95,10 @@ public class AuthenticationRequestFilter implements ContainerRequestFilter {
 	/**
 	 * Try authentication with session secret sent as cookie. If a valid session secret is found, a {@link Session} is returned.
 	 * Otherwise an empty optional is returned
-	 * @param requestContext request context
 	 * @return optional session
 	 * @throws NodeException
 	 */
-	private Optional<? extends Session> trySessionSecretSession(ContainerRequestContext requestContext) throws NodeException {
+	private Optional<? extends Session> trySessionSecretSession() throws NodeException {
 		String sessionSecret = getSessionSecret();
 
 		if (!StringUtils.isEmpty(sessionSecret)) {

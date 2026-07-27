@@ -41,7 +41,7 @@ public class DummySSOFilter implements ContainerRequestFilter {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class)).getSystemUser(LOGIN, null, false);
 
-				DBSession session = new DBSession(systemUser, "localhost", "Dummy User Agent", null, 0);
+				DBSession session = new DBSession(systemUser, "localhost", "Dummy User Agent");
 				UriBuilder builder = requestContext.getUriInfo().getRequestUriBuilder();
 				requestContext.setRequestUri(builder.build());
 				requestContext.getHeaders().add(HttpHeaders.COOKIE,

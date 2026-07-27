@@ -105,9 +105,7 @@ public abstract class AbstractLoginService implements LoginService {
 		// Create a new session for the user
 		DBSession session = new DBSession(
 			systemUser, servletRequest != null ? servletRequest.getRemoteAddr() : "",
-			servletRequest != null ? servletRequest.getHeader("user-agent") : "",
-			null,
-			0);
+			servletRequest != null ? servletRequest.getHeader("user-agent") : "");
 
 		if (servletResponse != null) {
 			NodePreferences prefs = TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences();

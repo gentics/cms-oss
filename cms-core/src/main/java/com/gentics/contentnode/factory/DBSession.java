@@ -181,30 +181,6 @@ public class DBSession implements Session {
 	}
 
 	/**
-	 * Do a logout of all sessions that belong
-	 * to the users session secret
-	 * @throws NodeException
-	 */
-	public void logoutAllSessions() throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		PreparedStatement pst = null;
-
-		try {
-			pst = t.prepareUpdateStatement("UPDATE systemsession SET secret = ? WHERE secret = ?");
-			pst.setString(1, "");
-			pst.setString(2, this.getSessionSecret());
-			pst.executeUpdate();
-
-			// log the logout
-			ActionLogger.logCmd(ActionLogger.LOGOUT, SystemUser.TYPE_SYSTEMUSER, this.userId, t.getUnixTimestamp(), "sid(" + this.sessionId + ", all sessions)");
-		} catch (SQLException e) {
-			throw new NodeException("Error while performing logout", e);
-		} finally {
-			t.closeStatement(pst);
-		}
-	}
-
-	/**
 	 * Move the given character into the "human readable" area of characters
 	 * This method was migrated from the old (undocumented) PHP code
 	 * @param r character

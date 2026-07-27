@@ -1,12 +1,11 @@
 package com.gentics.contentnode.factory;
 
-import static com.gentics.contentnode.db.DBUtils.firstInt;
-import static com.gentics.contentnode.db.DBUtils.select;
 import static com.gentics.contentnode.db.DBUtils.update;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.Language;
 import com.gentics.contentnode.i18n.CNDictionary;
+import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
 
 /**
@@ -33,12 +32,8 @@ public class ApiTokenSession implements Session {
 		id = dataModel.getId();
 		userId = dataModel.getUserId();
 
-		// set the language Id of the last session of the user or 1
-		languageId = Math
-				.max(select("SELECT language FROM systemsession WHERE user_id = ? ORDER BY since DESC LIMIT 1", pst -> {
-					pst.setInt(1, userId);
-				}, firstInt("language")), 1);
-
+		// set the language Id of the user or 1
+		languageId = Session.getUserLanguage(userId).map(UserLanguage::getId).orElse(1);
 		language = new CNDictionary(languageId).asLanguage();
 
 		// touch the API Token

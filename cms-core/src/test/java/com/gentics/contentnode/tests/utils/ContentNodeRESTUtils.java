@@ -20,6 +20,7 @@ import com.gentics.contentnode.rest.resource.impl.AuthenticationResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ConstructResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
+import com.gentics.contentnode.rest.resource.impl.I18nResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
@@ -129,6 +130,15 @@ public class ContentNodeRESTUtils {
 	 */
 	public static PermResourceImpl getPermResource() throws NodeException {
 		return new PermResourceImpl();
+	}
+
+	/**
+	 * Get an i18n resource
+	 * @return i18n resource
+	 * @throws NodeException
+	 */
+	public static I18nResourceImpl getI18nResource() throws NodeException {
+		return new I18nResourceImpl();
 	}
 
 	/**

@@ -352,11 +352,6 @@ public class FileResourceImpl implements FileResource {
 			// Load the metadata by examining the multipart payload
 			FileUploadMetaData metaData = MiscUtils.getMetaData(multiPart, customBodyPartName);
 
-			// FIXME
-//			// Since we previously omitted the authentication for multipart requests we have to do it now
-//			// This also calls initialize()
-//			authenticate(metaData);
-
 			Folder folder = null;
 			Node owningNode = null;
 
@@ -708,11 +703,6 @@ public class FileResourceImpl implements FileResource {
 			// Load meta data without handling the custombodypartname
 			FileUploadMetaData metaData = MiscUtils.getMetaData(multiPart, null);
 			sentFilename = metaData.getFilename();
-
-			// FIXME
-//			// Since we previously omitted the authentication for multipart requests we have to do it now
-//			// This also calls initialize()
-//			authenticate(metaData);
 
 			// Load needed information from metaData
 			Integer nodeId = metaData.getNodeId();
@@ -1559,11 +1549,6 @@ public class FileResourceImpl implements FileResource {
 	public GenericResponse save(@PathParam("id") Integer id, MultiPart multiPart) throws NodeException {
 		// Load meta data without handling the custombodypartname
 		FileUploadMetaData metaData = MiscUtils.getMetaData(multiPart, null);
-
-		// FIXME
-//		// Since we previously omitted the authentication for multipart requests we have to do it now
-//		// This also calls initialize()
-//		authenticate(metaData);
 
 		String sentFilename = metaData.getFilename();
 

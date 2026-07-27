@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -17,10 +18,10 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.Language;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
-import com.gentics.contentnode.factory.object.UserLanguageFactory;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.scheduler.SimpleScheduler;
 import com.gentics.lib.db.SQLExecutor;
@@ -87,58 +88,24 @@ public class DBSession implements Session {
 	 * @throws NodeException
 	 */
 	public DBSession(SystemUser user, String ip, String userAgent) throws NodeException {
-		this.userId = ObjectTransformer.getInt(user.getId(), -1);
-		this.sessionSecret = createSessionSecret();
+		userId = ObjectTransformer.getInt(user.getId(), -1);
+		sessionSecret = createSessionSecret();
+
+		languageId = Session.getUserLanguage(userId).map(UserLanguage::getId).orElse(1);
+		language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;
 
 		Transaction t = TransactionManager.getCurrentTransaction();
-		PreparedStatement pst = null;
-		ResultSet res = null;
-		String val = "";
+		List<Integer> insertIds = DBUtils.executeInsert(
+				"INSERT INTO systemsession (secret, user_id, ip, agent, since, language, val) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				new Object[] { this.sessionSecret, this.userId, ip, userAgent, t.getUnixTimestamp(), this.languageId,
+						"" });
 
-		try {
-			// get the last session of the user
-			pst = t.prepareStatement("SELECT ip, agent, cookie, since, language, val FROM systemsession WHERE user_id = ? ORDER BY since DESC LIMIT 1");
-			pst.setInt(1, this.userId);
-			res = pst.executeQuery();
-			if (res.first()) {
-				this.languageId = UserLanguageFactory.getById(res.getInt("language"), true).getId();
-				val = res.getString("val");
-			} else {
-				this.languageId = 1;
-			}
-			this.language = new CNDictionary(languageId).asLanguage();
-			t.closeResultSet(res);
-			res = null;
-			t.closeStatement(pst);
-			pst = null;
-
-			// Create a new session
-			pst = t.prepareInsertStatement("INSERT INTO systemsession (secret, user_id, ip, agent, since, language, val) VALUES (?, ?, ?, ?, ?, ?, ?)");
-			pst.setString(1, this.sessionSecret);
-			pst.setInt(2, this.userId);
-			pst.setString(3, ip);
-			pst.setString(4, userAgent);
-			pst.setInt(5, t.getUnixTimestamp());
-			pst.setInt(6, this.languageId);
-			pst.setString(7, val);
-			pst.execute();
-
-			// get the generated keys
-			res = pst.getGeneratedKeys();
-			if (res.first()) {
-				this.sessionId = res.getInt(1);
-			} else {
-				throw new NodeException("Error while generating new session: Could not get sid");
-			}
-
-			// log the login
-			ActionLogger.logCmd(ActionLogger.LOGIN, SystemUser.TYPE_SYSTEMUSER, this.userId, t.getUnixTimestamp(), "sid(" + this.sessionId + ")");
-		} catch (SQLException e) {
-			throw new NodeException("Error while generating new session", e);
-		} finally {
-			t.closeResultSet(res);
-			t.closeStatement(pst);
+		if (insertIds.size() != 1) {
+			throw new NodeException("Error while generating new session: Could not get sid");
 		}
+		sessionId = insertIds.get(0);
+
+		ActionLogger.logCmd(ActionLogger.LOGIN, SystemUser.TYPE_SYSTEMUSER, userId, t.getUnixTimestamp(), "sid(" + sessionId + ")");
 	}
 
 	public final static Optional<DBSession> load(SessionToken sessionToken) throws NodeException {
@@ -163,7 +130,7 @@ public class DBSession implements Session {
 		this.sessionId = sessionId;
 		this.userId = userId;
 		this.languageId = languageId;
-		this.language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;;
+		this.language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;
 		this.sessionSecret = sessionSecret;
 	}
 

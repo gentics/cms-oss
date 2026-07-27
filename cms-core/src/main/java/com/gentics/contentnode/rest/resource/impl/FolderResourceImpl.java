@@ -27,17 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -82,7 +71,6 @@ import com.gentics.contentnode.object.I18nMap;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
@@ -167,6 +155,17 @@ import com.gentics.contentnode.staging.StagingUtil;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource for loading and manipulating folders in GCN
@@ -2411,7 +2410,17 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 
 			// save the folder
-			boolean folderChanged = folder.save();
+			boolean folderChanged;
+			try {
+				folderChanged = folder.save();
+			} catch (NodeException e) {
+				if (e.getMessage().contains(TagFactory.LOG_JSON_VALIDATION_ERROR)) {
+					GenericResponse response = new GenericResponse();
+					response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage()));
+					return response;
+				}
+				throw e;
+			}
 			t.commit(false);
 
 			boolean recursivePubDir = ObjectTransformer.getBoolean(request.getRecursive(), false) && !ObjectTransformer.isEmpty(request.getFolder().getPublishDir());

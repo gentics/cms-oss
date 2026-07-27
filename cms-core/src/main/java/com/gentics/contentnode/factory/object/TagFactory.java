@@ -163,6 +163,10 @@ public class TagFactory extends AbstractFactory {
 	public final static String SYNC_RUNNING_ATTRIBUTENAME = "objtag.sync_running";
 
 	/**
+	 * Error log
+	 */
+	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
+	/**
 	 * Implementation class for a ContentTag
 	 */
 	private static class FactoryContentTag extends ContentTag {
@@ -1957,7 +1961,7 @@ public class TagFactory extends AbstractFactory {
 				}
 				JsonContent jsonContent = JsonContent.fromString(stringValue);
 				if (jsonContent == null) {
-					throw new NodeException("JSON Validation error for {"
+					throw new NodeException(LOG_JSON_VALIDATION_ERROR + " for {"
 							+ "tag {" + tag.getId() + " " + tag.getName() + "}"
 							+ ", part {" + part.getKeyname() + "}}"
 							+ " Reason: not a JSON value");
@@ -1972,7 +1976,7 @@ public class TagFactory extends AbstractFactory {
 						allowedSchemas = new JsonSchema[] { JsonSchema.from(jsonSchemaContent.getObject()) };
 					}
 					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(jsonContent.getContent()).getValid() == Boolean.TRUE)) {
-						throw new NodeException("JSON Validation error for {"
+						throw new NodeException(LOG_JSON_VALIDATION_ERROR + " for {"
 								+ "tag {" + tag.getId() + " " + tag.getName() + "}"
 								+ ", part {" + part.getKeyname() + "}}"
 								+ " Reason: the JSON contents does not match any of allowed schemas");

@@ -2410,17 +2410,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			}
 
 			// save the folder
-			boolean folderChanged;
-			try {
-				folderChanged = folder.save();
-			} catch (NodeException e) {
-				if (e.getMessage().contains(TagFactory.LOG_JSON_VALIDATION_ERROR)) {
-					GenericResponse response = new GenericResponse();
-					response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage()));
-					return response;
-				}
-				throw e;
-			}
+			boolean folderChanged = folder.save();
 			t.commit(false);
 
 			boolean recursivePubDir = ObjectTransformer.getBoolean(request.getRecursive(), false) && !ObjectTransformer.isEmpty(request.getFolder().getPublishDir());

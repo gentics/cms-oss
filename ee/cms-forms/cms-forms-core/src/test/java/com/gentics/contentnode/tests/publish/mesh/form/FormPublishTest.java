@@ -20,6 +20,30 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.FormRESTUtils.getFormResource;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -59,22 +83,6 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarge
 import com.gentics.contentnode.tests.utils.Expected;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.GCNFeature;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test cases for publishing forms into Mesh.
@@ -82,9 +90,27 @@ import org.junit.experimental.categories.Category;
  */
 @GCNFeature(set = { Feature.FORMS, Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING, Feature.WASTEBIN, Feature.DISABLE_INSTANT_DELETE })
 @Category(MeshTest.class)
+@RunWith(Parameterized.class)
 public class FormPublishTest extends AbstractFormPublishTest {
 
 	protected final static String IMAGE_NAME = "image-dpi66x44-res311x211.jpg";
+
+	@Parameters(name = "{index}: noIndex: {0}")
+	public static Collection<Object[]> parameterize() {
+		return Arrays.asList(new Object[][]{ { false }, { true } });
+	}
+
+	@Parameter(0)
+	public boolean noIndex;
+
+	@Before
+	@Override
+	public void setup() throws NodeException {
+		super.setup();
+		operate(t -> update(t.getObject(ContentRepository.class, crId), cr -> {
+			cr.setNoFormsIndex(noIndex);
+		}));
+	}
 
 	@Test
 	public void testSinglePageTextLinkPublishing() throws Exception {

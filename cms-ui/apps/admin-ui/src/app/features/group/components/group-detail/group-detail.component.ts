@@ -21,7 +21,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { Observable, of } from 'rxjs';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { map, takeUntil, tap, publishReplay, refCount, switchMap } from 'rxjs/operators';
 
 // *************************************************************************************************
 /**
@@ -34,7 +34,7 @@ import { map, takeUntil, tap } from 'rxjs/operators';
     templateUrl: './group-detail.component.html',
     styleUrls: ['group-detail.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOperations> implements OnInit {
 
@@ -55,6 +55,8 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
 
     /** TRUE if logged-in user is allowed to read entity `content` */
     permissionContentRead$: Observable<boolean>;
+	/** TRUE if logged in user is allowed to assign the group */
+    isGroupAssignable$: Observable<boolean>;
 
     activeTabId$: Observable<string>;
 
@@ -108,6 +110,20 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
 
         this.permissionContentRead$ = this.permissionsService.getPermissions(AccessControlledType.CONTENT).pipe(
             map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
+        );
+        this.isGroupAssignable$ = this.currentEntity$.pipe(
+            switchMap((entity) => {
+                if (!entity) {
+                    return of(false);
+                }
+                return this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN, entity.id).pipe(
+                    map(typePermissions => {
+                        return typePermissions.hasPermission(GcmsPermission.USER_ASSIGNMENT);
+                    }),
+                );
+            }),
+            publishReplay(1),
+            refCount(),
         );
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
@@ -167,5 +183,4 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         });
         this.fgProperties.markAsPristine();
     }
-
 }

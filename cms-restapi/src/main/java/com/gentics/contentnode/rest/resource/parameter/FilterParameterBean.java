@@ -3,7 +3,7 @@ package com.gentics.contentnode.rest.resource.parameter;
 import jakarta.ws.rs.QueryParam;
 
 /**
- * Parameter bean for filter parameters
+ * Parameter bean for entity filter parameters
  */
 public class FilterParameterBean {
 	/**
@@ -16,4 +16,5 @@ public class FilterParameterBean {
 		this.query = query;
 		return this;
 	}
+
 }

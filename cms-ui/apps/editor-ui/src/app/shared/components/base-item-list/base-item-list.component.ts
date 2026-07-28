@@ -187,12 +187,6 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
     ): Observable<ItemLoadData<T>>;
 
     public ngOnInit(): void {
-        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).pipe(
-            distinctUntilChanged(isEqual),
-        ).subscribe((show) => {
-            this.showStatusIcons.set(show);
-        }));
-
         this.subscriptions.push(this.appState.select((state) => state.folder.displayDeleted).pipe(
             distinctUntilChanged(isEqual),
         ).subscribe((show) => {
@@ -243,7 +237,7 @@ export abstract class BaseItemListComponent<T extends Item> implements OnInit, O
             }),
         ).subscribe());
 
-        // Cuase the lists to actually load
+        // Cause the lists to actually load
         this.reload();
     }
 

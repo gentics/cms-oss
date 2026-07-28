@@ -7,6 +7,6 @@ import { EditableFileProps, EditableFolderProps, EditablePageProps, EditableForm
 export type EditableNodeProps = Partial<Pick<Node, 'publishContentMap' | 'publishContentMapFiles' | 'publishContentMapFolders'
   | 'publishContentMapPages' | 'defaultFileFolderId' | 'defaultImageFolderId' | 'defaultFormFolderId' | 'disablePublish' | 'publishFs'
   | 'binaryPublishDir' | 'publishFsFiles' | 'publishDir' | 'publishFsPages' | 'host' | 'hostProperty'
-  | 'name' | 'urlRenderWayFiles' | 'urlRenderWayPages' | 'utf8' | 'contentRepositoryId'>>;
+  | 'name' | 'urlRenderWayFiles' | 'urlRenderWayPages' | 'utf8'>>;
 
 export type EditableProperties = EditableFolderProps | EditablePageProps | EditableFileProps | EditableNodeProps | Partial<EditableFormProperties>;

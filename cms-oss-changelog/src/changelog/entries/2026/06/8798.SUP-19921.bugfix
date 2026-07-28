@@ -1,0 +1,1 @@
+Wastebin: Triggering wastebin purge scheduled job may cause a crash, when purging a referenced page. This has been fixed.

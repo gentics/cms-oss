@@ -24,9 +24,7 @@
             "currentVersionResolver": "registry",
             "fallbackCurrentVersionResolver": "disk",
             "versionPrefix": "^",
-            "manifestRootsToUpdate": [
-                "{projectRoot}"
-            ],
+            "manifestRootsToUpdate": ["{projectRoot}"],
             "preserveLocalDependencyProtocols": false,
             "preserveMatchingDependencyRanges": false
         },
@@ -80,10 +78,10 @@
     ],
     "generators": {
         "@nx/angular:application": {
-            "style": "scss",
+            "e2eTestRunner": "playwright",
             "linter": "eslint",
-            "unitTestRunner": "jest",
-            "e2eTestRunner": "playwright"
+            "style": "scss",
+            "unitTestRunner": "jest"
         },
         "@nx/angular:library": {
             "linter": "eslint",
@@ -211,7 +209,8 @@
             "{projectRoot}/cypress/**/*",
             "{projectRoot}/cypress.config.ci.ts",
             "{projectRoot}/cypress.config.ts",
-            "{workspaceRoot}/cypress.preset.js"
+            "{workspaceRoot}/cypress.preset.js",
+            "{projectRoot}/**/*.cy.ts"
         ],
         "playwrightTests": [
             "envFiles",
@@ -296,6 +295,21 @@
             }
         },
         "@nx/angular:package": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@angular-devkit/build-angular:browser": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@nx/angular:ng-packagr-lite": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@angular/build:application": {
             "cache": true,
             "dependsOn": ["^build"],
             "inputs": ["production", "^production"]

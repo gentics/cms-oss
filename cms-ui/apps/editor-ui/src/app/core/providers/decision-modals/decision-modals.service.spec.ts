@@ -39,6 +39,7 @@ import { LocalizationsService } from '../localizations/localizations.service';
 import { PermissionService } from '../permissions/permission.service';
 import { DecisionModalsService } from './decision-modals.service';
 import { I18nService, TranslateParameters } from '@gentics/cms-components';
+import { EditMode } from '@gentics/cms-integration-api-models';
 
 describe('DecisionModalsService', () => {
 
@@ -781,7 +782,7 @@ describe('DecisionModalsService', () => {
             tick();
 
             expect(folderActions.localizeItem).toHaveBeenCalledWith('page', PAGE, CURRENTNODE);
-            expect(eventualAction).toHaveBeenCalledWith({ item: localItem, nodeId: CURRENTNODE });
+            expect(eventualAction).toHaveBeenCalledWith({ item: localItem, nodeId: CURRENTNODE, editMode: EditMode.EDIT });
         }));
 
         it('localizes the item if the user does not have permission to edit original', fakeAsync(() => {
@@ -795,7 +796,7 @@ describe('DecisionModalsService', () => {
 
             expect(modalService.dialog).not.toHaveBeenCalled();
             expect(folderActions.localizeItem).toHaveBeenCalledWith('page', PAGE, CURRENTNODE);
-            expect(eventualAction).toHaveBeenCalledWith({ item: localItem, nodeId: CURRENTNODE });
+            expect(eventualAction).toHaveBeenCalledWith({ item: localItem, nodeId: CURRENTNODE, editMode: EditMode.EDIT });
         }));
 
         it('refreshes the item list if an item is localized into the current folder', fakeAsync(() => {

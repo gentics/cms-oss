@@ -1,20 +1,38 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
-        "moduleResolution": "node10",
+        "moduleResolution": "node16",
         "allowJs": true,
         "outDir": "../../dist/out-tsc",
         "module": "commonjs",
         "types": ["cypress", "node"],
         "sourceMap": false,
-        "ignoreDeprecations": "6.0"
+        "ignoreDeprecations": "6.0",
+        "strict": false,
+        "noImplicitOverride": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": true
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": false,
+        "strictInputAccessModifiers": false,
+        "strictTemplates": false,
+        "compilationMode": "partial"
     },
     "include": [
         "**/*.ts",
         "**/*.js",
         "../cypress.config.ts",
-        "../**/*.cy.ts",
-        "../**/*.cy.js",
-        "../**/*.d.ts"
+        "../src/**/*.cy.ts",
+        "../src/**/*.cy.js",
+        "../src/**/*.d.ts"
+    ],
+    "exclude": [
+        "**/*.spec.ts",
+        "../src/test.ts",
+        "../testing/**/*",
+        "../build/**/*"
     ]
 }

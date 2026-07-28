@@ -48,16 +48,22 @@
           <div class="item-avatar">
             @switch (item.type) {
               @case ('css') {
-                <i class="material-icons">style</i>
+                <icon>style</icon>
               }
               @case ('info') {
-                <i class="material-icons">info</i>
+                <icon>info</icon>
               }
               @case ('component') {
-                <i class="material-icons">code</i>
+                <icon>code</icon>
+              }
+              @case ('directive') {
+                <icon>extension</icon>
               }
               @case ('service') {
-                <i class="material-icons">share</i>
+                <icon>share</icon>
+              }
+              @case ('pipe') {
+                <icon>filter_arrow_right</icon>
               }
             }
           </div>

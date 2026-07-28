@@ -13,7 +13,7 @@
             "outputs": ["{projectRoot}/docs.output.json"],
             "options": {
                 "cwd": "apps/ui-core-docs",
-                "commands": ["tsx ./compile-docs.ts"]
+                "commands": ["tsx --tsconfig ./tsconfig.compile.json ./compile-docs.ts"]
             }
         },
         "build": {

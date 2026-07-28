@@ -61,7 +61,7 @@ public class PublishProtocolUtil {
 		var tableName = getType(object.getTType()).toLowerCase();
 
 		if (PublishState.ONLINE.getValue() == logEntry.getState()) {
-			var publisherId = object.getFutureUnpublisher() != null ? object.getFutureUnpublisher().getId() : userId;
+			var publisherId = object.getFuturePublisher() != null ? object.getFuturePublisher().getId() : userId;
 			logEntry.setUser(publisherId);
 
 			DBUtils.update("UPDATE " + tableName + " SET unpublished_date = ?, unpublisher = ? WHERE id = ?", 0, 0,

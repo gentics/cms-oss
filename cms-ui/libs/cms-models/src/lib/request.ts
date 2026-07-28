@@ -730,7 +730,9 @@ export interface FormExportOptions {
     lang?: string;
 }
 
-export interface FormTypeConfigirationListOptions extends BaseListOptionsWithPaging<{
+/** @deprecated Use {FormTypeConfigurationListOptions} instead. */
+export type FormTypeConfigirationListOptions = FormTypeConfigurationListOptions;
+export interface FormTypeConfigurationListOptions extends BaseListOptionsWithPaging<{
     type: string;
     name: string;
     description: string;
@@ -2362,9 +2364,13 @@ export type ScheduleTaskSaveRequest = Partial<WritableScheduleTask>;
 
 type WriteableSchedule = Omit<Schedule, 'id' | 'creatorId' | 'cdate' | 'editorId' | 'edate' | 'status' | 'runs' | 'averageTime' | 'lastExecution'>;
 
-export type ScheduleCreateReqeust = WriteableSchedule;
+/** @deprecated Use {ScheduleCreateRequest} instead */
+export type ScheduleCreateReqeust = ScheduleCreateRequest;
+export type ScheduleCreateRequest = WriteableSchedule;
 
-export type ScheduleSaveReqeust = Partial<WriteableSchedule>;
+/** @deprecated Use {ScheduleSaveRequest} */
+export type ScheduleSaveReqeust = ScheduleSaveRequest;
+export type ScheduleSaveRequest = Partial<WriteableSchedule>;
 
 // CONTENT STAGING /////////////////////////////////////////////////////////////////////////////////////////////////////
 

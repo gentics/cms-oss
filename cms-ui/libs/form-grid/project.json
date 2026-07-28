@@ -23,10 +23,12 @@
         },
         "test": {
             "executor": "@nx/jest:jest",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "outputs": [
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
+            ],
             "options": {
-                "jestConfig": "libs/form-grid/jest.config.cts",
-                "tsConfig": "libs/form-grid/tsconfig.spec.json"
+                "jestConfig": "{projectRoot}/jest.config.ts"
             },
             "configurations": {
                 "watch": {
@@ -36,7 +38,7 @@
                     "color": false,
                     "colors": false,
                     "ci": true,
-                    "jestConfig": "libs/form-grid/jest.config.ci.cts"
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
                 }
             }
         },
@@ -46,10 +48,17 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "libs/form-grid/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "editor-ui:build"
+                "devServerTarget": "component-tests-harness:build"
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true,
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
+                    "devServerTarget": "component-tests-harness:build:ci"
+                }
             }
         }
     }

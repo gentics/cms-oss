@@ -48,7 +48,7 @@ services:
       retries: 3
 
   cms:
-    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-hotfix-6.4.x}
+    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-hotfix-6.5.x}
     ports:
       - 8080:8080
 
@@ -82,6 +82,7 @@ services:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages:x
+      - ./cms/content-packages:/cms/content-packages
       - ./cms/logs:/cms/logs:x
 
     healthcheck:

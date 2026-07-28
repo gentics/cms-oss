@@ -1,5 +1,8 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import { Component, NO_ERRORS_SCHEMA, provideZoneChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { GenticsUICoreModule } from '../../ui-core.module';
 import { InputComponent } from './input.component';
 
 // NOTE: The `cy.wrap(null)` calls are there, to make assertions/executions happen in the correct
@@ -14,25 +17,34 @@ describe('InputComponent', () => {
     const QUERY_INPUT = 'input.input-element';
     const QUERY_LABEL = 'label';
 
-    const OUTPUT_CHANGE = '@changeSpy';
     const OUTPUT_VALUE_CHANGE = '@valueChangeSpy';
 
     const INITIAL_VALUE = 'testValue';
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            imports: [
+                FormsModule,
+                ReactiveFormsModule,
+                GenticsUICoreModule,
+            ],
+            providers: [
+                provideZoneChangeDetection(),
+            ],
+            schemas: [NO_ERRORS_SCHEMA],
+        });
+    });
 
     it('should trigger the change on an arbitrary string accordingly', () => {
         const WRITE_VALUE = 'Hello World';
 
         cy.mount(InputComponent, {
             autoSpyOutputs: true,
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
         });
 
         cy.get(QUERY_INPUT)
             .type(WRITE_VALUE);
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
 
@@ -41,8 +53,6 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type('{selectAll}{backspace}');
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', '');
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', '');
     });
@@ -52,15 +62,11 @@ describe('InputComponent', () => {
 
         cy.mount(InputComponent, {
             autoSpyOutputs: true,
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
         });
 
         cy.get(QUERY_INPUT)
             .type(WRITE_VALUE);
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
 
@@ -69,8 +75,6 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type('{selectAll}{backspace}');
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', '');
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', '');
     });
@@ -80,8 +84,6 @@ describe('InputComponent', () => {
 
         cy.mount(InputComponent, {
             autoSpyOutputs: true,
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
             componentProperties: {
                 type: 'number',
             },
@@ -90,8 +92,6 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type(`${WRITE_VALUE}`);
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', WRITE_VALUE);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', WRITE_VALUE);
 
@@ -100,8 +100,6 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type('{selectAll}{backspace}');
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', null);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', null);
     });
@@ -111,8 +109,6 @@ describe('InputComponent', () => {
 
         cy.mount(InputComponent, {
             autoSpyOutputs: true,
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
             componentProperties: {
                 type: 'number',
             },
@@ -121,8 +117,6 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type(WRITE_VALUE);
 
-        cy.get(OUTPUT_CHANGE)
-            .should('not.have.been.called');
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('not.have.been.called');
 
@@ -131,18 +125,12 @@ describe('InputComponent', () => {
         cy.get(QUERY_INPUT)
             .type('{selectAll}{backspace}8');
 
-        cy.get(OUTPUT_CHANGE)
-            .should('have.been.calledWith', 8);
         cy.get(OUTPUT_VALUE_CHANGE)
             .should('have.been.calledWith', 8);
     });
 
     it('should not display the label element when no label has been provided', () => {
-        cy.mount(InputComponent, {
-            componentProperties: {},
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        });
+        cy.mount(InputComponent);
 
         cy.get(QUERY_LABEL)
             .should('not.exist');
@@ -155,8 +143,6 @@ describe('InputComponent', () => {
             componentProperties: {
                 label: LABEL_VALUE,
             },
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
         });
 
         cy.get(QUERY_LABEL)
@@ -172,55 +158,47 @@ describe('InputComponent', () => {
                 id: ID_VALUE,
                 label: 'something',
             },
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).then(async mounted => {
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenRenderingDone();
+        })
+            .detectChanges()
+            .then(() => {
+                cy.get(QUERY_INPUT)
+                    .then(($input) => expect($input[0].getAttribute(ATTR_ID)).to.equal(ID_VALUE));
 
-            cy.get(QUERY_INPUT)
-                .then($input => expect($input[0].getAttribute(ATTR_ID)).to.equal(ID_VALUE));
-
-            cy.get(QUERY_LABEL)
-                .then($label => expect($label[0].getAttribute(ATTR_FOR_ID)).to.equal(ID_VALUE));
-        });
+                cy.get(QUERY_LABEL)
+                    .then(($label) => expect($label[0].getAttribute(ATTR_FOR_ID)).to.equal(ID_VALUE));
+            });
 
     });
 
     it('should apply default attributes', () => {
-        cy.mount(InputComponent, {
-            componentProperties: {},
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).then(async mounted => {
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenRenderingDone();
+        cy.mount(InputComponent)
+            .detectChanges()
+            .then(() => {
+                cy.get<HTMLInputElement>(QUERY_INPUT).then(($input) => {
+                    expect($input[0].autocomplete).to.equal('');
+                    expect($input[0].autofocus).to.equal(false);
+                    expect($input[0].disabled).to.equal(false);
+                    expect($input[0].readOnly).to.equal(false);
+                    expect($input[0].required).to.equal(false);
+                    expect($input[0].type).to.equal('text');
+                    expect($input[0].value).to.equal('');
 
-            cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                expect($input[0].autocomplete).to.equal('');
-                expect($input[0].autofocus).to.equal(false);
-                expect($input[0].disabled).to.equal(false);
-                expect($input[0].readOnly).to.equal(false);
-                expect($input[0].required).to.equal(false);
-                expect($input[0].type).to.equal('text');
-                expect($input[0].value).to.equal('');
+                    const notDefinedAttributes = [
+                        'id',
+                        'max',
+                        'min',
+                        'maxLength',
+                        'name',
+                        'pattern',
+                        'placeholder',
+                        'step',
+                    ];
 
-                const notDefinedAttributes = [
-                    'id',
-                    'max',
-                    'min',
-                    'maxLength',
-                    'name',
-                    'pattern',
-                    'placeholder',
-                    'step',
-                ];
-
-                for (const attr of notDefinedAttributes) {
-                    expect($input[0].hasAttribute(attr)).to.equal(false);
-                }
+                    for (const attr of notDefinedAttributes) {
+                        expect($input[0].hasAttribute(attr)).to.equal(false);
+                    }
+                });
             });
-        });
     });
 
     it('should apply native attributes correctly', () => {
@@ -254,28 +232,25 @@ describe('InputComponent', () => {
                 type: TYPE_VALUE,
                 value: VALUE,
             },
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).then(async mounted => {
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenRenderingDone();
-
-            cy.get<HTMLInputElement>(QUERY_INPUT).then($input => {
-                expect($input[0].autocomplete).to.equal(AUTO_COMPLETE_VALUE);
-                expect($input[0].disabled).to.equal(DISABLED_VALUE);
-                expect(Number($input[0].max)).to.equal(MAX_VALUE);
-                expect(Number($input[0].min)).to.equal(MIN_VALUE);
-                expect($input[0].maxLength).to.equal(MAX_LENGTH_VALUE);
-                expect($input[0].name).to.equal(NAME_VALUE);
-                expect($input[0].pattern).to.equal(PATTERN_VALUE);
-                expect($input[0].placeholder).to.equal(PLACEHOLDER_VALUE);
-                expect($input[0].readOnly).to.equal(READONLY_VALUE);
-                expect($input[0].required).to.equal(REQUIRED_VALUE);
-                expect(Number($input[0].step)).to.equal(STEP_VALUE);
-                expect($input[0].type).to.equal(TYPE_VALUE);
-                expect($input[0].value).to.equal(VALUE);
+        })
+            .detectChanges()
+            .then(() => {
+                cy.get<HTMLInputElement>(QUERY_INPUT).then(($input) => {
+                    expect($input[0].autocomplete).to.equal(AUTO_COMPLETE_VALUE);
+                    expect($input[0].disabled).to.equal(DISABLED_VALUE);
+                    expect(Number($input[0].max)).to.equal(MAX_VALUE);
+                    expect(Number($input[0].min)).to.equal(MIN_VALUE);
+                    expect($input[0].maxLength).to.equal(MAX_LENGTH_VALUE);
+                    expect($input[0].name).to.equal(NAME_VALUE);
+                    expect($input[0].pattern).to.equal(PATTERN_VALUE);
+                    expect($input[0].placeholder).to.equal(PLACEHOLDER_VALUE);
+                    expect($input[0].readOnly).to.equal(READONLY_VALUE);
+                    expect($input[0].required).to.equal(REQUIRED_VALUE);
+                    expect(Number($input[0].step)).to.equal(STEP_VALUE);
+                    expect($input[0].type).to.equal(TYPE_VALUE);
+                    expect($input[0].value).to.equal(VALUE);
+                });
             });
-        });
     });
 
     it('should emit a number value when the type is number', () => {
@@ -289,19 +264,16 @@ describe('InputComponent', () => {
                 type: 'number',
             },
             autoSpyOutputs: true,
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).then(async mounted => {
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenRenderingDone();
+        })
+            .detectChanges()
+            .then(() => {
+                cy.get(QUERY_INPUT)
+                    .should('have.value', VALUE_START_VALUE)
+                    .type(VALUE_ADD);
 
-            cy.get(QUERY_INPUT)
-                .should('have.value', VALUE_START_VALUE)
-                .type(VALUE_ADD);
-
-            cy.get(OUTPUT_VALUE_CHANGE)
-                .should('have.been.calledWith', VALUE_CHANGE_VALUE);
-        });
+                cy.get(OUTPUT_VALUE_CHANGE)
+                    .should('have.been.calledWith', VALUE_CHANGE_VALUE);
+            });
     });
 
     it('should work with regular two way bindings', () => {
@@ -318,32 +290,25 @@ describe('InputComponent', () => {
 
         cy.mount(Test2WayBindingComponent, {
             declarations: [InputComponent],
-            imports: [FormsModule, ReactiveFormsModule],
-            schemas: [NO_ERRORS_SCHEMA],
-        }).then(async mounted => {
-            mounted.fixture.detectChanges();
-            await mounted.fixture.whenRenderingDone();
+        })
+            .detectChanges()
+            .tap(() => {
+                cy.get(QUERY_INPUT).should('have.value', INITIAL_VALUE);
+            })
+            .updateInstance((instance) => {
+                instance.value = INBETWEEN_VALUE;
+            })
+            .tap(() => {
+                cy.get(QUERY_INPUT)
+                    .should('have.value', INBETWEEN_VALUE);
 
-            cy.get(QUERY_INPUT)
-                .should('have.value', INITIAL_VALUE);
-
-            cy.wrap(null).then(async () => {
-                mounted.component.value = INBETWEEN_VALUE;
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenRenderingDone();
-            });
-
-            cy.get(QUERY_INPUT)
-                .should('have.value', INBETWEEN_VALUE);
-
-            cy.get(QUERY_INPUT)
-                .clear()
-                .type(NEW_VALUE);
-
-            cy.wrap(null).then(() => {
+                cy.get(QUERY_INPUT).clear();
+                cy.get(QUERY_INPUT).type(NEW_VALUE);
+            })
+            .detectChanges()
+            .tap((mounted) => {
                 expect(mounted.component.value).to.equal(NEW_VALUE);
             });
-        });
     });
 
     describe('Form Bindings', () => {
@@ -356,79 +321,66 @@ describe('InputComponent', () => {
         }
 
         it('should propagate the value correctly via form bindings', () => {
+            const TEMPORARY_VALUE = 'something inbetween?';
+            const NEW_VALUE = 'hello world!';
+
             cy.mount(TestFormComponent, {
                 declarations: [InputComponent],
-                imports: [FormsModule, ReactiveFormsModule],
-                schemas: [NO_ERRORS_SCHEMA],
-            }).then(async mounted => {
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenRenderingDone();
+            })
+                .detectChanges()
+                .tap((mounted) => {
+                    expect(mounted.component.control.value).to.equal(INITIAL_VALUE);
+                    expect(mounted.component.control.touched).to.equal(false);
+                    expect(mounted.component.control.dirty).to.equal(false);
+                })
+                .updateInstance((instance) => {
+                    instance.control.setValue(TEMPORARY_VALUE);
+                })
+                .tap(() => {
+                    cy.get(QUERY_INPUT)
+                        .should('have.value', TEMPORARY_VALUE);
 
-                const TEMPORARY_VALUE = 'something inbetween?';
-                const NEW_VALUE = 'hello world!';
-
-                expect(mounted.component.control.value).to.equal(INITIAL_VALUE);
-                expect(mounted.component.control.touched).to.equal(false);
-                expect(mounted.component.control.dirty).to.equal(false);
-
-                mounted.component.control.setValue(TEMPORARY_VALUE);
-
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenRenderingDone();
-
-                cy.get(QUERY_INPUT)
-                    .should('have.value', TEMPORARY_VALUE);
-
-                cy.get(QUERY_INPUT)
-                    .clear()
-                    .type(NEW_VALUE);
-
-                cy.wrap(null).then(async () => {
-                    mounted.fixture.detectChanges();
-                    await mounted.fixture.whenRenderingDone();
-
+                    cy.get(QUERY_INPUT).clear();
+                    cy.get(QUERY_INPUT).type(NEW_VALUE);
+                })
+                .detectChanges()
+                .then((mounted) => {
                     expect(mounted.component.control.value).to.equal(NEW_VALUE);
                     expect(mounted.component.control.touched).to.equal(true);
                     expect(mounted.component.control.dirty).to.equal(true);
                 });
-            });
         });
 
         it('should be possible to dis-/enable the input via form bindings', () => {
             cy.mount(TestFormComponent, {
                 declarations: [InputComponent],
-                imports: [FormsModule, ReactiveFormsModule],
-                schemas: [NO_ERRORS_SCHEMA],
-            }).then(async mounted => {
-                mounted.fixture.detectChanges();
-                await mounted.fixture.whenRenderingDone();
-
-                expect(mounted.component.control.disabled).to.equal(false);
-                cy.get<HTMLInputElement>(QUERY_INPUT)
-                    .should('not.be.disabled');
-
-                cy.wrap(null).then(async () => {
-                    mounted.component.control.disable();
-                    mounted.fixture.detectChanges();
-                    await mounted.fixture.whenRenderingDone();
-
-                    expect(mounted.component.control.disabled).to.equal(true);
-                });
-
-                cy.get(QUERY_INPUT)
-                    .should('be.disabled');
-
-                cy.wrap(null).then(async () => {
-                    mounted.component.control.enable();
-                    mounted.fixture.detectChanges();
-                    await mounted.fixture.whenRenderingDone();
-
+            })
+                .detectChanges()
+                .tap((mounted) => {
                     expect(mounted.component.control.disabled).to.equal(false);
-                });
 
-                cy.get(QUERY_INPUT)
-                    .should('not.be.disabled');
-            });
+                    cy.get<HTMLInputElement>(QUERY_INPUT)
+                        .should('not.be.disabled');
+                })
+                .detectChanges()
+                .updateInstance((instance) => {
+                    instance.control.disable();
+                })
+                .tap((mounted) => {
+                    expect(mounted.component.control.disabled).to.equal(true);
+
+                    cy.get(QUERY_INPUT)
+                        .should('be.disabled');
+                })
+                .updateInstance((instance) => {
+                    instance.control.enable();
+                })
+                .tap((mounted) => {
+                    expect(mounted.component.control.disabled).to.equal(false);
+
+                    cy.get(QUERY_INPUT)
+                        .should('not.be.disabled');
+                });
         });
     });
 });

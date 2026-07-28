@@ -1,33 +1,49 @@
 <div class="modal-title">
-  <h4>{{ 'modal.display_field_selector_title' | gtxI18n }}</h4>
+    <h4>{{ 'modal.display_field_selector_title' | gtxI18n }}</h4>
 </div>
+
 <div class="modal-content">
-  @if (type !== 'folder' && type !== 'form') {
-    <gtx-contents-list-item>
-      <div class="item-primary">
-        <gtx-checkbox [(ngModel)]="showPath"
-          name="showPath"
-          [label]="'common.path_label' | gtxI18n">
-        </gtx-checkbox>
-      </div>
-    </gtx-contents-list-item>
-  }
-  <gtx-sortable-list (dragEnd)="sortList($event)">
-    @for (field of availableFields; track field.name) {
-      <gtx-sortable-item>
-        <gtx-contents-list-item>
-          <div class="item-primary">
-            <gtx-checkbox [(ngModel)]="selected[field.name]"
-              [name]="field.name"
-            [label]="field.label | gtxI18n"></gtx-checkbox>
-          </div>
-          <gtx-drag-handle></gtx-drag-handle>
+    @if (type !== 'folder' && type !== 'form') {
+        <gtx-contents-list-item data-id="showPath">
+            <div class="item-primary">
+                <gtx-checkbox
+                    [(ngModel)]="showPath"
+                    name="showPath"
+                    [label]="'common.path_label' | gtxI18n"
+                />
+            </div>
         </gtx-contents-list-item>
-      </gtx-sortable-item>
     }
-  </gtx-sortable-list>
+
+    <gtx-sortable-list (dragEnd)="sortList($event)">
+        @for (field of availableFields; track field.name) {
+            <gtx-sortable-item>
+                <gtx-contents-list-item [attr.data-id]="field.name" [attr.data-active]="selected[field.name]">
+                    <div class="item-primary">
+                        <gtx-checkbox
+                            [(ngModel)]="selected[field.name]"
+                            [name]="field.name"
+                            [label]="field.label | gtxI18n"
+                        />
+                    </div>
+                    <gtx-drag-handle></gtx-drag-handle>
+                </gtx-contents-list-item>
+            </gtx-sortable-item>
+        }
+    </gtx-sortable-list>
 </div>
+
 <div class="modal-footer">
-  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
-  <gtx-button class="okay" (click)="updateAndClose()">{{ 'common.okay_button' | gtxI18n }}</gtx-button>
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+
+    <gtx-button
+        class="okay"
+        data-action="confirm"
+        (click)="updateAndClose()"
+    >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

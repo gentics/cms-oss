@@ -73,14 +73,12 @@ test.describe('Node Settings', () => {
             await test.step('Navigate to Nodes module', async () => {
                 const master = await navigateToModule(page, 'nodes');
                 const masterTable = master.locator(SELECTORS.MASTER).or(master);
-                await masterTable.waitFor({ state: 'visible' });
 
-                const row = findTableRowById(masterTable, node.id);
-                await row.waitFor({ state: 'visible' });
+                const row = await findTableRowById(masterTable, node.id);
                 await clickTableRow(row);
 
                 const editor = page.locator(SELECTORS.EDITOR);
-                await editor.waitFor({ state: 'visible' });
+                await expect(editor).toBeVisible();
             });
 
             await test.step('meshProjectName field should not be empty', async () => {

@@ -203,7 +203,6 @@ export class UserSettingsService {
             activeFormLanguage: state.folder.activeFormLanguage,
             contentFrameBreadcrumbsExpanded: state.ui.contentFrameBreadcrumbsExpanded,
             displayAllLanguages: state.folder.displayAllLanguages,
-            displayStatusIcons: state.folder.displayStatusIcons,
             displayImagesGridView: state.folder.displayImagesGridView,
             displayDeleted: state.folder.displayDeleted,
             favourites: state.favourites.list,
@@ -302,10 +301,6 @@ export class UserSettingsService {
         this.dispatchAndSaveChange('displayAllLanguages', all);
     }
 
-    setDisplayStatusIcons(all: boolean): void {
-        this.dispatchAndSaveChange('displayStatusIcons', all);
-    }
-
     setDisplayDeleted(all: boolean): void {
         this.dispatchAndSaveChange('displayDeleted', all);
     }
@@ -370,10 +365,6 @@ export class UserSettingsService {
 
             case 'displayAllLanguages':
                 this.folderActions.setDisplayAllPageLanguages(value);
-                break;
-
-            case 'displayStatusIcons':
-                this.folderActions.setDisplayStatusIcons(value);
                 break;
 
             case 'displayDeleted':

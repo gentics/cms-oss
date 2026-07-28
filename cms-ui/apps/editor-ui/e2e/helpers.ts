@@ -637,3 +637,114 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
         return pickedHexColor;
     });
 }
+
+export async function fgFindPaletteItem(grid: Locator, paletteId: string, isControl: boolean): Promise<Locator> {
+    const leftSidePanel = grid.locator('.editor-panel.editor-panel--left');
+
+    // If it isn't expanded, we have to open it, otherwise we can't see the controls
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    if (!leftSidePanel.evaluate((el) => el.classList.contains('expanded'))) {
+        await leftSidePanel.locator('.panel-header .panel-toggle-btn').click();
+    }
+
+    return leftSidePanel.locator(`.palette .palette-item[data-element-type="${paletteId}"][data-is-control="${isControl ? 'true' : 'false'}"]`);
+}
+
+interface FGDropTarget {
+    position?: number;
+    containerId?: string;
+}
+
+interface FGElement {
+    id: string;
+    rect: DOMRect;
+}
+
+const DRAG_THRESHOLD = 2;
+
+export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, target?: FGDropTarget): Promise<Locator> {
+    let containerEl: Locator;
+    if (!target?.containerId) {
+        containerEl = grid.locator('.editor-main .editor-drop-container.editor-drop-container--root');
+    } else {
+        containerEl = grid.locator(`.editor-main .editor-drop-container[data-drop-container-id="${target.containerId}"]`);
+    }
+
+    const containerRect = await containerEl.evaluate((el) => el.getBoundingClientRect());
+    const entries: FGElement[] = await containerEl.evaluate((el) => {
+        return Array.from(el.children).map((child) => {
+            return {
+                id: child.getAttribute('data-element-id'),
+                rect: child.getBoundingClientRect(),
+            };
+        });
+    });
+
+    let targetPosition: { x: number; y: number };
+    // If no position was provided, or it out of bounds, we default to adding it to the end
+    // of the container.
+    if (
+        target?.position == null
+        || (target.position >= entries.length)
+        || entries.length === 0
+    ) {
+        if (entries.length > 0) {
+            const ent = entries[entries.length - 1];
+            targetPosition = {
+                x: (ent.rect.x - containerRect.x) + ent.rect.width + DRAG_THRESHOLD,
+                y: (ent.rect.y - containerRect.x) + ent.rect.height + DRAG_THRESHOLD,
+            };
+        } else {
+            targetPosition = {
+                x: DRAG_THRESHOLD,
+                y: DRAG_THRESHOLD,
+            };
+        }
+    } else {
+        const ent = entries[target.position];
+        targetPosition = {
+            x: (ent.rect.x - containerRect.x) + DRAG_THRESHOLD,
+            y: (ent.rect.y - containerRect.x) + DRAG_THRESHOLD,
+        };
+    }
+
+    await item.dragTo(containerEl, {
+        targetPosition,
+    });
+
+    if (entries.length === 0) {
+        return containerEl.locator('> .form-item');
+    }
+
+    return containerEl.locator('> .form-item')
+        .filter({
+            hasNot: containerEl.locator(entries.map((ent) => `> .form-item[data-element-id="${ent.id}"]`).join(',')),
+        });
+}
+
+export async function fgAddControl(grid: Locator, controlId: string, target?: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, controlId, true);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, blockId, false);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export function fgFindEditSidebar(grid: Locator): Locator {
+    return grid.locator('.editor-panel.editor-panel--right');
+}
+
+export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
+    await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
+    return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}

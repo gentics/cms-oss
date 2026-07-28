@@ -2,7 +2,7 @@ import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
-    AbstractConstrctCategoryAPI,
+    AbstractConstructCategoryAPI,
     AbstractConstructAPI,
     AbstractContentRepositoryAPI,
     AbstractContentRepositoryFragmentAPI,
@@ -173,7 +173,9 @@ export type GCMSAdminAPI = MappedAPI<AbstractAdminAPI>;
 export type GCMSAuthenticationAPI = MappedAPI<AbstractAuthenticationAPI>;
 export type GCMSClusterAPI = MappedAPI<AbstractClusterAPI>;
 export type GCMSConstructAPI = MappedAPI<AbstractConstructAPI>;
-export type GCMSConstrctCategoryAPI = MappedAPI<AbstractConstrctCategoryAPI>;
+/** @deprecated Use {GCMSConstructCategoryAPI}; Only here to not break it instantly. */
+export type GCMSConstrctCategoryAPI = GCMSConstructCategoryAPI;
+export type GCMSConstructCategoryAPI = MappedAPI<AbstractConstructCategoryAPI>;
 export type GCMSContentRepositoryFragmentAPI = MappedAPI<AbstractContentRepositoryFragmentAPI>;
 export type GCMSContentRepositoryAPI = MappedAPI<AbstractContentRepositoryAPI>;
 export type GCMSContentStagingAPI = MappedAPI<AbstractContentStagingAPI>;

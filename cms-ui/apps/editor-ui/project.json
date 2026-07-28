@@ -154,16 +154,15 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "apps/editor-ui/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "editor-ui:build",
-                "watch": false
+                "devServerTarget": "editor-ui:build"
             },
             "configurations": {
                 "ci": {
                     "quiet": true,
-                    "cypressConfig": "apps/editor-ui/cypress.config.ci.ts",
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
                     "devServerTarget": "editor-ui:build:ci"
                 }
             }

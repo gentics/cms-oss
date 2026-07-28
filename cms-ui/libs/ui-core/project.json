@@ -48,10 +48,17 @@
         "component-test": {
             "executor": "@nx/cypress:cypress",
             "options": {
-                "cypressConfig": "libs/ui-core/cypress.config.ts",
+                "cypressConfig": "{projectRoot}/cypress.config.ts",
                 "testingType": "component",
                 "skipServe": true,
-                "devServerTarget": "image-editor-demo:build"
+                "devServerTarget": "component-tests-harness:build"
+            },
+            "configurations": {
+                "ci": {
+                    "quiet": true,
+                    "cypressConfig": "{projectRoot}/cypress.config.ci.ts",
+                    "devServerTarget": "component-tests-harness:build:ci"
+                }
             }
         }
     }

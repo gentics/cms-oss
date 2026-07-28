@@ -41,7 +41,6 @@ import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
-import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
@@ -1548,7 +1547,6 @@ public class TagFactory extends AbstractFactory {
 				// object is modified, so update it
 				try {
 					isModified = true;
-					validateObjectTagObject(this);
 					saveObjectTagObject(this);
 					modified = false;
 				} catch (SQLException e) {
@@ -1565,6 +1563,7 @@ public class TagFactory extends AbstractFactory {
 			if (valueIds != null) {
 				valueIdsToRemove.addAll(valueIds);
 			}
+			validateObjectTagObject(this);
 			for (Value value : values) {
 				value.setContainer(this);
 				isModified |= value.save();
@@ -1962,10 +1961,10 @@ public class TagFactory extends AbstractFactory {
 				}
 				JsonContent jsonContent = JsonContent.fromString(stringValue);
 				if (jsonContent == null) {
-					throw new InvalidRequestException(LOG_JSON_VALIDATION_ERROR + " for {"
+					throw new ObjectModificationException(tag.getName(), LOG_JSON_VALIDATION_ERROR + " for "
 							+ "tag {" + tag.getId() + " " + tag.getName() + "}"
-							+ ", part {" + part.getKeyname() + "}}"
-							+ " Reason: not a JSON value");
+							+ ", part {" + part.getKeyname() + "}."
+							+ " Reason: not a JSON value", "json_validation_failed");
 				}
 				if (!StringUtils.isEmpty(part.getInfoText())) {
 					JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
@@ -1977,10 +1976,10 @@ public class TagFactory extends AbstractFactory {
 						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
 					}
 					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(jsonContent.getContent()).getValid() == Boolean.TRUE)) {
-						throw new InvalidRequestException(LOG_JSON_VALIDATION_ERROR + " for {"
+						throw new ObjectModificationException(tag.getName(), LOG_JSON_VALIDATION_ERROR + " for {"
 								+ "tag {" + tag.getId() + " " + tag.getName() + "}"
 								+ ", part {" + part.getKeyname() + "}}"
-								+ " Reason: the JSON contents does not match any of allowed schemas");
+								+ " Reason: the JSON contents does not match any of allowed schemas", "json_validation_failed");
 					}
 				}
 			}

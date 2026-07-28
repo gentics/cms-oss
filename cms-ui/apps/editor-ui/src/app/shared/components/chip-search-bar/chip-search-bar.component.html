@@ -24,7 +24,7 @@
                                         formControlName="chipProperty"
                                         [options]="searchableProperties"
                                         [noInput]="true"
-                                        [style.width]="getChipValue(chip)?.length < 4 ? '4ch' : getChipValue(chip).length + 1 + 'ch'"
+                                        [style.width]="getChipWidth(chip) + 'ch'"
                                     ></gtx-input-select>
                                 </span>
                                 <!-- Chip OPERATOR -->
@@ -74,7 +74,7 @@
                                                     type="text"
                                                     class="gtx-chip-input-value-inner gtx-chip-input-value-inner-string"
                                                     formControlName="chipValue"
-                                                    [style.width]="getChipValue(chip)?.length < 4 ? '4ch' : getChipValue(chip).length + 1 + 'ch'"
+                                                    [style.width]="getChipWidth(chip) + 'ch'"
                                                 />
                                             }
                                             <!-- TYPE `date` -->

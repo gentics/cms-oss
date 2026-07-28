@@ -458,6 +458,11 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         return this.getFormControlValue(c);
     }
 
+    getChipWidth(control: AbstractControl): number {
+        const chipValue = String(this.getChipValue(control));
+        return Math.max(4, (chipValue?.length ?? 0) + 1);
+    }
+
     setChipValue<K extends GtxChipSearchPropertyKeys>(control: AbstractControl, newValue: GtxChipValue<K>): void {
         const c = this.getChipValueControl(control);
         this.setFormControlValue(c, newValue);

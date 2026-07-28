@@ -75,7 +75,7 @@ test.describe('Node Settings', () => {
                 const masterTable = master.locator(SELECTORS.MASTER).or(master);
                 await masterTable.waitFor({ state: 'visible' });
 
-                const row = findTableRowById(masterTable, node.id);
+                const row = await findTableRowById(masterTable, node.id);
                 await row.waitFor({ state: 'visible' });
                 await clickTableRow(row);
 

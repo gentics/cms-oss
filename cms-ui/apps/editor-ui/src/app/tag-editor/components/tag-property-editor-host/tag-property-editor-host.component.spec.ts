@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -42,14 +42,14 @@ describe('TagPropertyEditorHostComponent', () => {
             const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
             const resolverSpy = spyOn(resolverService, 'createPropertyEditor').and.callThrough();
             expect(tagPart).toBeTruthy();
-            expect(instance.tagPart).toBeFalsy();
+            expect(instance.tagPart()).toBeFalsy();
 
             fixture.detectChanges();
             tick();
             const tagPropertyEditorHost = fixture.debugElement.query(By.directive(TagPropertyEditorHostComponent));
             expect((<HTMLElement> tagPropertyEditorHost.nativeElement).children.length).toBe(0);
 
-            instance.tagPart = tagPart;
+            instance.tagPart.set(tagPart);
             fixture.detectChanges();
             tick();
 
@@ -63,14 +63,14 @@ describe('TagPropertyEditorHostComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
             expect(tagPart).toBeTruthy();
-            expect(instance.tagPart).toBeFalsy();
+            expect(instance.tagPart()).toBeFalsy();
 
             fixture.detectChanges();
             tick();
             const tagPropertyEditorHost = fixture.debugElement.query(By.directive(TagPropertyEditorHostComponent));
             expect((<HTMLElement> tagPropertyEditorHost.nativeElement).children.length).toBe(0);
 
-            instance.tagPart = tagPart;
+            instance.tagPart.set(tagPart);
             fixture.detectChanges();
             tick();
             expect(fixture.debugElement.query(By.directive(TextTagPropertyEditor))).toBeTruthy();
@@ -85,10 +85,10 @@ describe('TagPropertyEditorHostComponent', () => {
 
 @Component({
     template: `
-        <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
+        <tag-property-editor-host [tagPart]="tagPart()"></tag-property-editor-host>
     `,
     standalone: false,
 })
 class TestComponent {
-    tagPart: TagPart;
+    readonly tagPart = model<TagPart>();
 }

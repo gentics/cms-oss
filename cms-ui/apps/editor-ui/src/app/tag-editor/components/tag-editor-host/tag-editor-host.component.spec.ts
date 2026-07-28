@@ -120,7 +120,7 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (tag: TagEditorResult) => void = null;
-                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                spyWithOriginalFn(resolver, 'createCustomTagEditor', (original, container) => {
                     const ref = original(container);
 
                     editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
@@ -132,6 +132,10 @@ describe('TagEditorHostComponent', () => {
 
                 fixture.detectChanges();
                 const result = fixture.componentInstance.tagEditorHost.editTag(tag, context);
+
+                tick();
+                fixture.detectChanges();
+                await fixture.whenRenderingDone();
 
                 // Make sure that the TagEditor's editTag() method has been called appropriately.
                 expect(editTagSpy.calls.argsFor(0)[0]).toEqual(tag);
@@ -347,7 +351,7 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagLiveSpy: jasmine.Spy = null;
                 let onChangeFn: TagChangedFn;
-                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                spyWithOriginalFn(resolver, 'createCustomTagEditor', (original, container) => {
                     const ref = original(container);
 
                     editTagLiveSpy = spyOn(ref.instance, 'editTagLive').and

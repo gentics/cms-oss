@@ -4,7 +4,6 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    ElementRef,
     EventEmitter,
     Input,
     OnChanges,
@@ -13,8 +12,8 @@ import {
     SimpleChanges,
     TemplateRef,
 } from '@angular/core';
-import { BehaviorSubject, combineLatest, ObjectUnsubscribedError } from 'rxjs';
-import { debounceTime, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { debounceTime, startWith } from 'rxjs/operators';
 import { BaseComponent } from '../base-component/base.component';
 import { TabGroupComponent } from '../tab-group/tab-group.component';
 import { TabPaneComponent } from '../tab-pane/tab-pane.component';

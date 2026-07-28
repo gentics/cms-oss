@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { Component, model, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -44,12 +44,12 @@ describe('I18nSelectComponent', () => {
         fixture.detectChanges();
         await fixture.whenRenderingDone();
         await fixture.whenRenderingDone();
-        selectComponent = fixture.debugElement.children[0].children[0].componentInstance
+        selectComponent = fixture.debugElement.children[0].children[0].componentInstance;
     });
 
     it('should trigger a change when the value has been changed', fakeAsync(() => {
         const options = ['Hello World', 'Example 123', 'Foo Bar'];
-        component.options = options;
+        component.options.set(options);
         fixture.detectChanges();
         tick();
 
@@ -62,12 +62,12 @@ describe('I18nSelectComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(1);
+        expect(changeSpy).toHaveBeenCalledTimes(1); // FIXME:
         expect(component.currentValue).toEqual({ [DEFAULT_LANGUAGE]: options[0] });
 
         // --------------------
 
-        component.activeLanguage = SECOND_LANGUAGE;
+        component.activeLanguage.set(SECOND_LANGUAGE);
         tick();
         fixture.detectChanges();
         changeSpy.calls.reset();
@@ -93,7 +93,7 @@ describe('I18nSelectComponent', () => {
             [SECOND_LANGUAGE]: options[1],
         };
 
-        component.options = options;
+        component.options.set(options);
         component.control.setValue(initialValue);
         // Needs two ticks, one for the observable, and one for the setTimeout in the subscription handler
         tick();
@@ -127,10 +127,12 @@ describe('I18nSelectComponent', () => {
     template: `
         <gtx-i18n-select
             [formControl]="control"
-            [language]="activeLanguage"
-            [availableLanguages]="availableLanguages"
+            [language]="activeLanguage()"
+            [availableLanguages]="availableLanguages()"
         >
-            <gtx-option *ngFor="let opt of options" [value]="opt">{{ opt }}</gtx-option>
+            @for (opt of options(); track opt) {
+                <gtx-option [value]="opt">{{ opt }}</gtx-option>
+            }
         </gtx-i18n-select>
         <gtx-overlay-host></gtx-overlay-host>
     `,
@@ -139,17 +141,17 @@ describe('I18nSelectComponent', () => {
 class TestComponent implements OnInit, OnDestroy {
 
     public control: FormControl;
-    public activeLanguage = DEFAULT_LANGUAGE;
-    public availableLanguages = AVAILABLE_LANGUAGES;
+    public readonly activeLanguage = model(DEFAULT_LANGUAGE);
+    public readonly availableLanguages = model(AVAILABLE_LANGUAGES);
 
     public currentValue: Record<string, string>;
-    public options: string[] = [];
+    public readonly options = model<string[]>([]);
 
     private subscription: Subscription;
 
     ngOnInit(): void {
         this.control = new FormControl();
-        this.subscription = this.control.valueChanges.subscribe(value => {
+        this.subscription = this.control.valueChanges.subscribe((value) => {
             this.valueChangeHandler(value);
         });
     }

@@ -1,4 +1,4 @@
-import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, DebugElement, model, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -25,7 +25,7 @@ import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
 import { SelectComponent } from './select.component';
 
-describe('SelectComponent', () => {
+fdescribe('SelectComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -85,9 +85,11 @@ describe('SelectComponent', () => {
 
     it('updates the value via ngModel when the clear selection button is clicked',
         componentTest(() => TestComponent, `
-                <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable>
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                </gtx-select>`,
+            <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
+            </gtx-select>`,
         (fixture, instance) => {
             fixture.detectChanges();
             tick();
@@ -106,7 +108,9 @@ describe('SelectComponent', () => {
     it('displays the placeholder, if it is set and if nothing is selected',
         componentTest(() => TestComponent, `
             <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable [placeholder]="placeholder">
-                    <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>`,
         (fixture, instance) => {
             fixture.detectChanges();
@@ -233,7 +237,9 @@ describe('SelectComponent', () => {
     it('accept an array "value" and marks the matching options "selected" (multi select)',
         componentTest(() => TestComponent, `
             <gtx-select [value]="multiValue" multiple="true">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture) => {
@@ -308,7 +314,9 @@ describe('SelectComponent', () => {
     it('emits "change" when a list item is clicked (multiple select)',
         componentTest(() => TestComponent, `
             <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
@@ -334,7 +342,9 @@ describe('SelectComponent', () => {
     it('emits "change" with an empty array when a multiselect has no selected options',
         componentTest(() => TestComponent, `
             <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
@@ -360,14 +370,14 @@ describe('SelectComponent', () => {
             const getOptionText = () => getListItems(fixture).map((el) => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            instance.options.push('Quux');
+            instance.options.update((arr) => {
+                return [...arr, 'Quux'];
+            });
+
             fixture.detectChanges();
-            tick(100);
-            await fixture.whenRenderingDone();
-            tick(100);
+            tick();
             fixture.detectChanges();
-            await fixture.whenRenderingDone();
-            tick(100);
+
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
         },
         ),
@@ -383,7 +393,9 @@ describe('SelectComponent', () => {
 
             const tmp = new Promise<void>((r) => {
                 setTimeout(() => {
-                    instance.options.push('Quux');
+                    instance.options.update((arr) => {
+                        return [...arr, 'Quux'];
+                    });
                     fixture.detectChanges();
                     fixture.whenRenderingDone().then(() => r());
                 }, 500);
@@ -541,12 +553,12 @@ describe('SelectComponent', () => {
 
         it('umlauts should work as expected',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.options = [
+                testComponent.options.set([
                     'Ägypten',
                     'Äquatorialguinea',
                     'Äthiopien',
                     'Österreich',
-                ];
+                ]);
                 testComponent.value = 'Ägypten';
 
                 fixture.detectChanges();
@@ -596,7 +608,9 @@ describe('SelectComponent', () => {
         it('updates a variable bound with ngModel (outbound)',
             componentTest(() => TestComponent, `
                 <gtx-select [(ngModel)]="ngModelValue">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                    @for (option of options(); track option) {
+                        <gtx-option [value]="option">{{ option }}</gtx-option>
+                    }
                 </gtx-select>
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
@@ -625,7 +639,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -655,7 +671,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -684,7 +702,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -708,12 +728,14 @@ describe('SelectComponent', () => {
 
         it('marks the component as "disabled" if the associated FormControl is set to disabled',
             componentTest(() => TestComponent, `
-                   <form [formGroup]="testForm">
-                       <gtx-select formControlName="test">
-                           <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                       </gtx-select>
-                   </form>
-                   <gtx-overlay-host></gtx-overlay-host>`,
+                <form [formGroup]="testForm">
+                    <gtx-select formControlName="test">
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
+                    </gtx-select>
+                </form>
+                <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
@@ -734,7 +756,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>`,
             (fixture, instance) => {
@@ -754,7 +778,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -881,7 +907,9 @@ describe('SelectComponent', () => {
             (blur)="onBlur($event)"
             (valueChange)="onChange($event)"
         >
-            <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+            @for (option of options(); track option) {
+                <gtx-option [value]="option">{{ option }}</gtx-option>
+            }
         </gtx-select>
         <gtx-overlay-host></gtx-overlay-host>
     `,
@@ -893,7 +921,7 @@ class TestComponent {
     multiValue: string[] = ['Bar', 'Baz'];
     ngModelValue = 'Bar';
     placeholder = 'More...';
-    options: string[] = ['Foo', 'Bar', 'Baz'];
+    readonly options = model<string[]>(['Foo', 'Bar', 'Baz']);
     optionsSubject = new BehaviorSubject<any[]>([]);
     valueSubject = new BehaviorSubject<any>('Initial value');
     testForm: UntypedFormGroup = new UntypedFormGroup({

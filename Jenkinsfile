@@ -140,9 +140,10 @@ spec:
                 updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
                 script {
+                    sh "nvm use $NODE_VERSION"
                     def mvnGoal       = "package"
                     def mvnProjects   = ""
-                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
+                    def mvnArguments  = "-Dnodejs.npm.bin=$NVM_HOME/npm "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()
@@ -329,7 +330,7 @@ spec:
                                 junit testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/VITEST-report.xml", allowEmptyResults: allowEmptyResults
                             junit testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
                             junit testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }

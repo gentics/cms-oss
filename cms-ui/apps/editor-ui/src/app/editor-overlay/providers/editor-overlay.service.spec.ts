@@ -71,8 +71,8 @@ describe('EditorOverlayService', () => {
 
         TestBed.compileComponents();
 
-        appState = TestBed.get(ApplicationStateService);
-        editorOverlayService = TestBed.get(EditorOverlayService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        editorOverlayService = TestBed.inject(EditorOverlayService);
     }));
 
     describe('modal actions', () => {
@@ -98,14 +98,14 @@ describe('EditorOverlayService', () => {
                 });
             }) as any);
 
-            const folderActions = <MockFolderActions> TestBed.get(FolderActionsService);
+            const folderActions: MockFolderActions = TestBed.inject(FolderActionsService) as any;
             spyOn(folderActions, 'cropAndResizeImage');
 
             editorOverlayService.editImage({nodeId: ITEM_NODE, itemId: ITEM_ID});
             editImageState();
             tick();
 
-            const entityResolver = TestBed.get(EntityResolver) as MockEntityResolver;
+            const entityResolver: MockEntityResolver = TestBed.inject(EntityResolver) as any;
             const image = entityResolver.getEntity();
             const resultParams: CropResizeParameters = {
                 image: {
@@ -133,9 +133,9 @@ describe('EditorOverlayService', () => {
                 return new Promise(() => {});
             }) as any);
 
-            const entityResolver = <MockEntityResolver> TestBed.get(EntityResolver);
+            const entityResolver: MockEntityResolver = TestBed.inject(EntityResolver) as any;
             spyOn(entityResolver, 'getEntity').and.returnValue(null);
-            const folderActions = <MockFolderActions> TestBed.get(FolderActionsService);
+            const folderActions: MockFolderActions = TestBed.inject(FolderActionsService) as any;
             spyOn(folderActions, 'getItem').and.callThrough();
 
             editorOverlayService.editImage({nodeId: ITEM_NODE, itemId: ITEM_ID});

@@ -3,11 +3,11 @@
         <gtx-tab
             [id]="Tabs.PROPERTIES"
             gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
+            [title]="'shared.title_properties' | gtxI18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
+                    [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: entity?.name }"
                     saveActionAllowedId="dataSource.updateDataSourceInstance"
                     [saveActionAllowedInstanceId]="entity?.id"
                     [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
@@ -30,12 +30,12 @@
         <gtx-tab
             [id]="Tabs.ENTRIES"
             gtxDetailTabLink
-            [title]="'shared.title_entries' | i18n"
+            [title]="'shared.title_entries' | gtxI18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
                     [hidden]="isLoading"
-                    [title]="'shared.title_entries_of_entity' | i18n: { entityName: entity?.name }"
+                    [title]="'shared.title_entries_of_entity' | gtxI18n: { entityName: entity?.name }"
                     saveActionAllowedId="dataSource.updateDataSourceInstance"
                     [saveActionAllowedInstanceId]="entity?.id"
                     [saveDisabled]="!entriesChanged"
@@ -55,7 +55,7 @@
 
                     <ng-template #unauthorized>
                         <div class="message-unauthorized">
-                            <h5>{{ 'common.general_permission_required' | i18n }}</h5>
+                            <h5>{{ 'common.general_permission_required' | gtxI18n }}</h5>
                             <icon>warning</icon>
                         </div>
                     </ng-template>
@@ -66,11 +66,11 @@
         <gtx-tab
             [id]="Tabs.USAGE_OVERVIEW"
             gtxDetailTabLink
-            [title]="'shared.title_usage_overview' | i18n"
+            [title]="'shared.title_usage_overview' | gtxI18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_usage_overview_of_entity' | i18n: { entityName: entity?.name }"
+                    [title]="'shared.title_usage_overview_of_entity' | gtxI18n: { entityName: entity?.name }"
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
@@ -85,7 +85,7 @@
 
                     <ng-template #unauthorized>
                         <div class="message-unauthorized">
-                            <h5>{{ 'common.general_permission_required' | i18n }}</h5>
+                            <h5>{{ 'common.general_permission_required' | gtxI18n }}</h5>
                             <icon>warning</icon>
                         </div>
                     </ng-template>

@@ -1,8 +1,8 @@
 import { ContentItem, ContentItemBO, ContentItemTypes } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { ContentItemTrableLoaderOptions, ContentItemTrableLoaderService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({
@@ -10,7 +10,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './content-item-trable.component.html',
     styleUrls: ['./content-item-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentItemTrableComponent extends BaseEntityTrableComponent<ContentItem, ContentItemBO, ContentItemTrableLoaderOptions> {
 
@@ -43,6 +43,7 @@ export class ContentItemTrableComponent extends BaseEntityTrableComponent<Conten
         },
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         i18n: I18nService,

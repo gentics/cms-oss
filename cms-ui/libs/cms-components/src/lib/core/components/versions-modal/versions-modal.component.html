@@ -4,12 +4,12 @@
             state: compatibilityState
         }"></ng-container>
     </span>
-    <h5>{{ 'modal.version_info_modal' | i18n }}</h5>
+    <h5>{{ 'modal.version_info_modal' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
     <div class="version-group system-information">
-        <div class="version-group-label">{{ 'modal.version_info_label_system' | i18n }}</div>
+        <div class="version-group-label">{{ 'modal.version_info_label_system' | gtxI18n }}</div>
         <div class="version-table-wrapper">
             <table class="version-table">
                 <tr>
@@ -25,7 +25,7 @@
     </div>
 
     <div class="version-group nodes-information">
-        <div class="version-group-label">{{ 'modal.version_info_label_nodes' | i18n }}</div>
+        <div class="version-group-label">{{ 'modal.version_info_label_nodes' | gtxI18n }}</div>
         <div class="version-table-wrapper">
             <table class="version-table">
                 <ng-container *ngFor="let node of nodeVersions">
@@ -41,15 +41,15 @@
 
                     <ng-container *ngIf="node.nodeInfo">
                         <tr *ngIf="node.nodeInfo.meshVersion" class="component-version">
-                            <td>{{ 'modal.version_info_label_mesh' | i18n }}</td>
+                            <td>{{ 'modal.version_info_label_mesh' | gtxI18n }}</td>
                             <td><code>{{ node.nodeInfo.meshVersion }}</code></td>
                         </tr>
                         <tr *ngIf="node.nodeInfo.portalType" class="component-version">
-                            <td>{{ 'modal.version_info_label_portal_type' | i18n }}</td>
+                            <td>{{ 'modal.version_info_label_portal_type' | gtxI18n }}</td>
                             <td><code>{{ node.nodeInfo.portalType }}</code></td>
                         </tr>
                         <tr *ngIf="node.nodeInfo.portalVersion" class="component-version">
-                            <td>{{ 'modal.version_info_label_portal_version' | i18n }}</td>
+                            <td>{{ 'modal.version_info_label_portal_version' | gtxI18n }}</td>
                             <td><code>{{ node.nodeInfo.portalVersion }}</code></td>
                         </tr>
                     </ng-container>
@@ -65,9 +65,9 @@
             *ngSwitchCase="VersionCompatibility.NOT_SUPPORTED"
             class="not-supported"
             [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
                 nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_not_supported' | i18n)
+                compatibility: ('modal.version_info_modal_compatibility_not_supported' | gtxI18n)
             })"
         >report_problem</icon>
 
@@ -75,9 +75,9 @@
             *ngSwitchCase="VersionCompatibility.SUPPORTED"
             class="supported"
             [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
                 nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_supported' | i18n)
+                compatibility: ('modal.version_info_modal_compatibility_supported' | gtxI18n)
             })"
         >check_circle</icon>
 
@@ -85,9 +85,9 @@
             *ngSwitchCase="VersionCompatibility.UNKNOWN"
             class="unknown"
             [attr.left]="!nodeName"
-            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | i18n: {
+            [title]="!nodeName ? '' : ('modal.version_info_modal_node_tooltip' | gtxI18n: {
                 nodeName: nodeName,
-                compatibility: ('modal.version_info_modal_compatibility_unknown' | i18n)
+                compatibility: ('modal.version_info_modal_compatibility_unknown' | gtxI18n)
             })"
         >error</icon>
     </ng-container>

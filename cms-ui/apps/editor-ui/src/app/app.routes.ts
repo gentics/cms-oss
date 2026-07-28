@@ -18,7 +18,7 @@ export const APP_ROUTES: Route[] = [
         path: 'login',
         canActivate: [AuthGuard],
         pathMatch: 'full',
-        loadChildren: () => import('./login/login.module').then(m => m.LoginModule),
+        loadChildren: () => import('./login/login.module').then((m) => m.LoginModule),
     },
     {
         path: 'no-nodes',
@@ -37,7 +37,7 @@ export const APP_ROUTES: Route[] = [
                 children: [
                     {
                         path: '',
-                        loadChildren: () => import('./list-view/list-view.module').then(m => m.ListViewModule),
+                        loadChildren: () => import('./list-view/list-view.module').then((m) => m.ListViewModule),
                     },
                 ],
                 outlet: EditorOutlet.LIST,
@@ -51,7 +51,7 @@ export const APP_ROUTES: Route[] = [
                 children: [
                     {
                         path: '',
-                        loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then(m => m.EditorOverlayRoutingModule),
+                        loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then((m) => m.EditorOverlayRoutingModule),
                     },
                 ],
                 outlet: EditorOutlet.MODAL,
@@ -65,7 +65,7 @@ export const APP_ROUTES: Route[] = [
                 children: [
                     {
                         path: '',
-                        loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then(m => m.EditorOverlayRoutingModule),
+                        loadChildren: () => import('./editor-overlay/editor-overlay-routing.module').then((m) => m.EditorOverlayRoutingModule),
                     },
                 ],
                 outlet: EditorOutlet.MODAL,
@@ -79,7 +79,7 @@ export const APP_ROUTES: Route[] = [
                 children: [
                     {
                         path: '',
-                        loadChildren: () => import('./content-frame/content-frame.module').then(m => m.ContentFrameModule),
+                        loadChildren: () => import('./content-frame/content-frame.module').then((m) => m.ContentFrameModule),
                     },
                 ],
                 outlet: EditorOutlet.DETAIL,

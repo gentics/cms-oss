@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
@@ -14,8 +15,6 @@ import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { RepositoryBrowserClient } from '../../../shared/providers';
@@ -46,24 +45,24 @@ describe('CustomScriptHostService', () => {
                 CustomScriptHostService,
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: I18nNotification, useClass: MockI18nNotification },
-                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: NavigationService, useClass: MockNavigationService },
-                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService},
+                { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
+                { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
         mockContentFrame = new MockContentFrame();
-        customScriptHostService = TestBed.get(CustomScriptHostService);
-        appState = TestBed.get(ApplicationStateService);
-        resourceUrlBuilder = TestBed.get(ResourceUrlBuilder);
-        folderActions = TestBed.get(FolderActionsService);
-        navigationService = TestBed.get(NavigationService);
-        router = TestBed.get(Router);
-        repositoryBrowserClient = TestBed.get(RepositoryBrowserClient);
+        customScriptHostService = TestBed.inject(CustomScriptHostService);
+        appState = TestBed.inject(ApplicationStateService) as any;
+        resourceUrlBuilder = TestBed.inject(ResourceUrlBuilder);
+        folderActions = TestBed.inject(FolderActionsService) as any;
+        navigationService = TestBed.inject(NavigationService) as any;
+        router = TestBed.inject(Router);
+        repositoryBrowserClient = TestBed.inject(RepositoryBrowserClient);
 
         customScriptHostService.initialize(mockContentFrame as any);
         filePickerButton = {
@@ -105,14 +104,14 @@ describe('CustomScriptHostService', () => {
             expect(filePickerButton.click).toHaveBeenCalled();
         });
 
-        it('returns an observable of the FilePicker fileSelect stream', done => {
+        it('returns an observable of the FilePicker fileSelect stream', (done) => {
             const result = customScriptHostService.openFilePicker('image');
 
             result.subscribe(
-                value => {
+                (value) => {
                     expect(value).toBe('MOCK_FILE' as any);
                 },
-                err => { },
+                (err) => { },
                 () => {
                     // ensure the stream completes
                     done();
@@ -186,7 +185,7 @@ describe('CustomScriptHostService', () => {
             const files: any[] = [{}];
 
             customScriptHostService.uploadForCurrentItem('file', files)
-                .subscribe(result => {
+                .subscribe((result) => {
                     expect(result).toEqual([uploadResponses[0].response.file, uploadResponses[1].response.file]);
                 });
         });
@@ -209,7 +208,7 @@ describe('CustomScriptHostService', () => {
             expect(repositoryBrowserClient.openRepositoryBrowser).toHaveBeenCalledWith(options);
         });
 
-        it('invokes the callback with the selected items once the modal resolves', done => {
+        it('invokes the callback with the selected items once the modal resolves', (done) => {
             const options: RepositoryBrowserOptions = { selectMultiple: true, allowedSelection: 'page' };
             const callback = jasmine.createSpy('callback').and.callFake(() => {
                 expect(callback).toHaveBeenCalledWith(SELECTED_ITEMS);
@@ -264,6 +263,7 @@ class MockContentFrame {
         accept: '',
         fileSelect: of('MOCK_FILE'),
     };
+
     filePickerWrapper = {
         nativeElement: {
             querySelector: (): any => filePickerButton,

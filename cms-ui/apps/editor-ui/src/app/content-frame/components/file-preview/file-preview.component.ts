@@ -6,21 +6,20 @@ import {
     Input,
     OnChanges,
     OnDestroy,
-    Output
+    Output,
 } from '@angular/core';
-import { getImageType } from '@gentics/cms-components';
+import { getImageType, I18nNotificationService } from '@gentics/cms-components';
 import {
     File as FileModel,
     Image as ImageModel,
     PermissionsMapCollection,
-    RotateParameters
+    RotateParameters,
 } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { publishReplay, refCount, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
@@ -36,7 +35,7 @@ interface ImageVariant {
     templateUrl: './file-preview.component.html',
     styleUrls: ['./file-preview.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FilePreviewComponent implements OnChanges, OnDestroy {
 
@@ -71,7 +70,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         private folderActions: FolderActionsService,
         private overlay: EditorOverlayService,
         private errorHandler: ErrorHandler,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
@@ -127,7 +126,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.permSubscription = this.permissions.getFolderPermissionMap(this.file.folderId).subscribe(perms => {
+        this.permSubscription = this.permissions.getFolderPermissionMap(this.file.folderId).subscribe((perms) => {
             this.canEdit = this.hasEditPermission(perms, this.file.type === 'file');
             this.loading = false;
             this.changeDetector.markForCheck();
@@ -216,7 +215,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             refCount(),
         );
 
-        if (this.keepFileName && (this.file.fileType !== files[0].type) ) {
+        if (this.keepFileName && (this.file.fileType !== files[0].type)) {
             this.notification.show({
                 message: 'message.file_type_changed_warning',
                 translationParams: {
@@ -264,7 +263,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                     });
                 }
             },
-            error: err => {
+            error: (err) => {
                 this.loading = false;
                 this.changeDetector.markForCheck();
 

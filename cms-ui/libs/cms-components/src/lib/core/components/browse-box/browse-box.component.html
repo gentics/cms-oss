@@ -1,44 +1,46 @@
 <gtx-input
-    class="value-display"
-    [readonly]="true"
-    [value]="displayValue"
-    [label]="label"
+  class="value-display"
+  [readonly]="true"
+  [value]="displayValue"
+  [label]="label"
 ></gtx-input>
 
-<gtx-button
-    *ngIf="clearable"
+@if (clearable) {
+  <gtx-button
     icon
     class="browse-box__button browse-box__button--clear"
     type="secondary"
     data-action="clear"
-    [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | i18n"
+    [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
     [disabled]="disabled"
     (click)="clear.emit()"
->
+    >
     <icon>clear</icon>
-</gtx-button>
+  </gtx-button>
+}
 
 <gtx-button
-    icon
-    class="browse-box__button browse-box__button--browse"
-    type="secondary"
-    data-action="browse"
-    [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | i18n"
-    [disabled]="disabled"
-    (click)="browse.emit()"
->
-    <icon>folder_open</icon>
+  icon
+  class="browse-box__button browse-box__button--browse"
+  type="secondary"
+  data-action="browse"
+  [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
+  [disabled]="disabled"
+  (click)="browse.emit()"
+  >
+  <icon>folder_open</icon>
 </gtx-button>
 
-<gtx-button
-    *ngIf="canUpload"
+@if (canUpload) {
+  <gtx-button
     icon
     class="browse-box__button browse-box__button--upload"
     type="secondary"
     data-action="upload"
-    [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | i18n"
+    [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
     [disabled]="disabled"
     (click)="upload.emit()"
->
+    >
     <icon>cloud_upload</icon>
-</gtx-button>
+  </gtx-button>
+}

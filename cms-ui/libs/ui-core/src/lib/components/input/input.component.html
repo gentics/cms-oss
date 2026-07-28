@@ -1,46 +1,48 @@
 <div class="wrapper">
-    <input
-        #inputElement
+  <input
+    #inputElement
 
-        class="input-element"
-        [ngModel]="value || ''"
-        [attr.autocomplete]="autocomplete || null"
-        [attr.id]="id"
-        [attr.max]="max"
-        [attr.maxlength]="maxlength"
-        [attr.min]="min"
-        [attr.name]="name"
-        [attr.pattern]="pattern"
-        [attr.placeholder]="placeholder"
-        [attr.step]="step"
-        [class.clearable]="clearable"
-        [class.has-addon]="clearable"
+    class="input-element"
+    [ngModel]="value || ''"
+    [attr.autocomplete]="autocomplete || null"
+    [attr.id]="id"
+    [attr.max]="max"
+    [attr.maxlength]="maxlength"
+    [attr.min]="min"
+    [attr.name]="name"
+    [attr.pattern]="pattern"
+    [attr.placeholder]="placeholder"
+    [attr.step]="step"
+    [class.clearable]="clearable"
+    [class.has-addon]="clearable"
 
-        [disabled]="disabled"
-        [readonly]="readonly"
-        [required]="required"
-        [type]="type"
+    [disabled]="disabled"
+    [readonly]="readonly"
+    [required]="required"
+    [type]="type"
 
-        (keydown)="handleKeyDown($event)"
-        (blur)="onBlur($event)"
-        (focus)="onFocus($event)"
-        (input)="handleInputChange($event)"
+    (keydown)="handleKeyDown($event)"
+    (blur)="onBlur($event)"
+    (focus)="onFocus($event)"
+    (input)="handleInputChange($event)"
     />
 
+  @if (clearable) {
     <gtx-button
-        *ngIf="clearable"
-        icon
-        class="addon-button clear-button"
-        type="secondary"
-        [disabled]="disabled"
-        (click)="clear()"
-    >
-        <icon class="clear-icon">clear</icon>
+      icon
+      class="addon-button clear-button"
+      type="secondary"
+      [disabled]="disabled"
+      (click)="clear()"
+      >
+      <icon class="clear-icon">clear</icon>
     </gtx-button>
+  }
 </div>
 
-<label
-    *ngIf="label"
+@if (label) {
+  <label
     [attr.for]="id"
     (click)="inputElement.focus()"
->{{ label }}</label>
+  >{{ label }}</label>
+}

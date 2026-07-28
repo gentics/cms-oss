@@ -1,29 +1,29 @@
 <div class="modal-title">
-    <h5>{{ 'modal.execution_detail_title' | i18n }}</h5>
+    <h5>{{ 'modal.execution_detail_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
     <table>
         <tr>
-            <td>{{ 'scheduler.execution_result' | i18n }}</td>
-            <td>{{ (execution.running ? 'scheduler.execution_result_running' : (execution.result ? 'scheduler.execution_result_true' : 'scheduler.execution_result_false')) | i18n }}</td>
+            <td>{{ 'scheduler.execution_result' | gtxI18n }}</td>
+            <td>{{ (execution.running ? 'scheduler.execution_result_running' : (execution.result ? 'scheduler.execution_result_true' : 'scheduler.execution_result_false')) | gtxI18n }}</td>
         </tr>
         <tr>
-            <td>{{ 'scheduler.execution_startTime' | i18n }}</td>
-            <td>{{ execution.startTime | i18nDate:'dateTimeDetailed' }}</td>
+            <td>{{ 'scheduler.execution_startTime' | gtxI18n }}</td>
+            <td>{{ execution.startTime | gtxI18nDate:'dateTimeDetailed' }}</td>
         </tr>
         <tr>
-            <td>{{ 'scheduler.execution_endTime' | i18n }}</td>
-            <td>{{ execution.endTime | i18nDate:'dateTimeDetailed' }}</td>
+            <td>{{ 'scheduler.execution_endTime' | gtxI18n }}</td>
+            <td>{{ execution.endTime | gtxI18nDate:'dateTimeDetailed' }}</td>
         </tr>
         <tr>
-            <td>{{ 'scheduler.execution_duration' | i18n }}</td>
+            <td>{{ 'scheduler.execution_duration' | gtxI18n }}</td>
             <td>{{ execution.duration | gtxI18nDuration:true }}</td>
         </tr>
     </table>
 
     <div class="log-wrapper">
-        <label class="log-label">{{ 'scheduler.execution_log' | i18n }}</label>
+        <label class="log-label">{{ 'scheduler.execution_log' | gtxI18n }}</label>
         <pre class="log-output">{{ execution.log }}</pre>
     </div>
 </div>
@@ -34,6 +34,6 @@
         flat
         (click)="closeFn()"
     >
-        {{ 'common.close_button' | i18n }}
+        {{ 'common.close_button' | gtxI18n }}
     </gtx-button>
 </div>

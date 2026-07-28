@@ -1,24 +1,22 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { EditorPermissions, ItemsInfo, getNoPermissions } from '@editor-ui/app/common/models';
-import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
-import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { UploadConflictService } from '@editor-ui/app/core/providers/upload-conflict/upload-conflict.service';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
-import { AllItemsSelectedPipe } from '@editor-ui/app/shared/pipes/all-items-selected/all-items-selected.pipe';
-import { I18nDatePipe } from '@editor-ui/app/shared/pipes/i18n-date/i18n-date.pipe';
-import { ApplicationStateService, FolderActionsService, UsageActionsService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Folder, Image, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { BehaviorSubject } from 'rxjs';
+import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
+import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
+import { AllItemsSelectedPipe } from '../../../shared/pipes/all-items-selected/all-items-selected.pipe';
+import { ApplicationStateService, FolderActionsService, UsageActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
 import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
 import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
@@ -58,10 +56,12 @@ class TestComponent {
         { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
         { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
     ];
+
     selectedItems = [];
     activeNode: any = {
         name: '',
     };
+
     itemsInfo: ItemsInfo = {
         list: [1, 2, 3],
         selected: [],
@@ -76,6 +76,7 @@ class TestComponent {
         showPath: true,
         itemsPerPage: 10,
     };
+
     filterTerm = 'xxx';
     startPageId: number = Number.NaN;
     itemInEditor: any = undefined;
@@ -147,11 +148,9 @@ describe('ItemListHeader', () => {
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
                 { provide: ContextMenuOperationsService, useClass: MockContextMenuOperationsService },
-                { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
             ],
             declarations: [
-                I18nDatePipe,
                 ItemListHeaderComponent,
                 TestComponent,
                 AllItemsSelectedPipe,
@@ -163,7 +162,7 @@ describe('ItemListHeader', () => {
             ],
             schemas: [NO_ERRORS_SCHEMA],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('it works', componentTest(() => TestComponent, (fixture, instance) => {

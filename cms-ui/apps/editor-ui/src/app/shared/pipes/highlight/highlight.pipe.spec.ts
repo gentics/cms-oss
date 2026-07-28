@@ -21,7 +21,7 @@ describe('HighlightPipe:', () => {
         TestBed.configureTestingModule({
            providers: [HighlightPipe]
         });
-        highlightPipe = TestBed.get(HighlightPipe);
+        highlightPipe = TestBed.inject(HighlightPipe);
     });
 
     it('should return original string when no matches', () => {

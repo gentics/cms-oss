@@ -1,5 +1,15 @@
-import { InterfaceOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '@admin-ui/common';
+import { MockErrorHandler, createDelayedObservable } from '@admin-ui/testing';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { I18nService } from '@gentics/cms-components';
+import { GcmsPermission, Group, IndexById, ModelType, Normalized } from '@gentics/cms-models';
+import { InterfaceOf, ObservableStopper, USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../../common';
 import {
+    EntityManagerService,
+    ErrorHandler,
     FileOperations,
     FolderOperations,
     FormOperations,
@@ -9,34 +19,17 @@ import {
     PageOperations,
     PermissionsService,
     UserOperations,
-} from '@admin-ui/core';
-import { EntityManagerService } from '@admin-ui/core/providers/entity-manager';
-import { ErrorHandler } from '@admin-ui/core/providers/error-handler';
-import { MockErrorHandler } from '@admin-ui/core/providers/error-handler/error-handler.mock';
-import { I18nService } from '@admin-ui/core/providers/i18n';
-import { I18nNotificationService } from '@admin-ui/core/providers/i18n-notification';
-import { MockI18nNotificationService } from '@admin-ui/core/providers/i18n-notification/i18n-notification.service.mock';
-import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
+} from '../../../../core/providers';
+import { GroupTrableComponent, LoadingTriggerComponent } from '../../../../shared/components';
+import { ActionAllowedDirective } from '../../../../shared/directives';
 import {
     GroupDataService,
     GroupUserDataService,
     NodeDataService,
-    NotificationService,
     SubgroupDataService,
-} from '@admin-ui/shared';
-import { GroupTrableComponent } from '@admin-ui/shared/components/group-trable/group-trable.component';
-import { LoadingTriggerComponent } from '@admin-ui/shared/components/loading-trigger/loading-trigger.component';
-import { ActionAllowedDirective } from '@admin-ui/shared/directives/action-allowed/action-allowed.directive';
-import { AppStateService } from '@admin-ui/state';
-import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
-import { createDelayedObservable } from '@admin-ui/testing';
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, NO_ERRORS_SCHEMA, Pipe, PipeTransform, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { GcmsPermission, Group, IndexById, ModelType, Normalized } from '@gentics/cms-models';
-import { TranslateService } from '@ngx-translate/core';
+} from '../../../../shared/providers';
+import { AppStateService } from '../../../../state';
+import { TEST_APP_STATE, TestAppState, assembleTestAppStateImports } from '../../../../state/utils/test-app-state';
 import { GroupMasterComponent } from './group-master.component';
 
 const ROOT_GROUP_ID = 2;
@@ -47,13 +40,13 @@ const MOCK_GROUPS: IndexById<Group<Normalized>> = {
         id: ROOT_GROUP_ID,
         name: 'Node Super Admin',
         description: '',
-        children: [ 3 ],
+        children: [3],
     },
     [NON_ROOT_GROUP_ID]: {
         id: NON_ROOT_GROUP_ID,
         name: 'Admins',
         description: '',
-        children: [ 4, 5 ],
+        children: [4, 5],
     },
     4: {
         id: 4,
@@ -64,13 +57,13 @@ const MOCK_GROUPS: IndexById<Group<Normalized>> = {
         id: 5,
         name: 'Customer',
         description: '',
-        children: [ 6, 8 ],
+        children: [6, 8],
     },
     6: {
         id: 6,
         name: 'Editors',
         description: '',
-        children: [ 7 ],
+        children: [7],
     },
     7: {
         id: 7,
@@ -163,7 +156,7 @@ const MOCK_WATCH_GROUPS: Group<ModelType>[] = [
     },
 ];
 
-const MOCK_GROUP_PERMISSIONS: {[key: number]: string[]} = {
+const MOCK_GROUP_PERMISSIONS: { [key: number]: string[] } = {
     2: [GcmsPermission.VIEW, GcmsPermission.EDIT],
     3: [GcmsPermission.VIEW, GcmsPermission.EDIT],
     4: [GcmsPermission.VIEW, GcmsPermission.EDIT],
@@ -171,7 +164,7 @@ const MOCK_GROUP_PERMISSIONS: {[key: number]: string[]} = {
     6: [GcmsPermission.VIEW, GcmsPermission.EDIT],
     7: [GcmsPermission.VIEW, GcmsPermission.EDIT],
     8: [GcmsPermission.VIEW, GcmsPermission.EDIT],
-}
+};
 
 const PARENT_NODE_ID = 2;
 const FIRST_PARENT_NODE_ID = 4;
@@ -247,7 +240,8 @@ class MockTranslateService {
     instant = jasmine.createSpy('instant').and.callFake((key: string, params: any) => {
         return `${key}_translated`;
     });
-    onDefaultLangChange = new EventEmitter<any>();
+
+    onFallbackLangChange = new EventEmitter<any>();
     onLangChange = new EventEmitter<any>();
     onTranslationChange = new EventEmitter<any>();
     get = jasmine.createSpy('get').and.callFake(() => createDelayedObservable(null));
@@ -392,11 +386,9 @@ xdescribe('GroupMasterComponent', () => {
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GroupOperations, useClass: MockGroupOperations },
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: Router, useClass: MockRouter },
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: USER_ACTION_PERMISSIONS_DEF },
                 { provide: UserOperations, useClass: MockUserOperations },
                 { provide: NodeOperations, useClass: MockNodeOperations },
@@ -407,7 +399,6 @@ xdescribe('GroupMasterComponent', () => {
                 { provide: PageOperations, useClass: MockPageOperations },
                 GroupDataService,
                 GroupUserDataService,
-                NotificationService,
                 SubgroupDataService,
                 NodeDataService,
                 TEST_APP_STATE,
@@ -415,7 +406,7 @@ xdescribe('GroupMasterComponent', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
         fixture = TestBed.createComponent(TestComponent);
         component = fixture.componentInstance;
     });

@@ -23,6 +23,7 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     GcmsPermission,
@@ -35,7 +36,6 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { forkJoin, map, Observable, tap } from 'rxjs';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ScheduleHandlerService
@@ -73,7 +73,7 @@ export class ScheduleHandlerService
         params?: EntityCreateRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EntityCreateResponseModel<EditableEntity.SCHEDULE>> {
         return this.client.scheduler.create(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.item);
                 this.nameMap[res.item.id] = name;
 
@@ -94,7 +94,7 @@ export class ScheduleHandlerService
         params?: EntityCreateRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.SCHEDULE]> {
         return this.create(data, params).pipe(
-            map(res => this.mapToBusinessObject(res.item)),
+            map((res) => this.mapToBusinessObject(res.item)),
         );
     }
 
@@ -103,7 +103,7 @@ export class ScheduleHandlerService
         params?: EntityLoadRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EntityLoadResponseModel<EditableEntity.SCHEDULE>> {
         return this.client.scheduler.get(id).pipe(
-            tap(res => {
+            tap((res) => {
                 this.nameMap[res.item.id] = this.displayName(res.item);
             }),
             this.catchAndRethrowError(),
@@ -136,7 +136,7 @@ export class ScheduleHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.SCHEDULE>> {
         return this.client.scheduler.update(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.item);
                 this.nameMap[res.item.id] = name;
 
@@ -158,7 +158,7 @@ export class ScheduleHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.SCHEDULE]> {
         return this.update(id, data, params).pipe(
-            map(res => {
+            map((res) => {
                 const bo = this.mapToBusinessObject(res.item);
 
                 // Since we already updated it, we have permissions to do so
@@ -200,13 +200,13 @@ export class ScheduleHandlerService
         params?: EntityListRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EntityListResponseModel<EditableEntity.SCHEDULE>> {
         return this.client.scheduler.list(params).pipe(
-            tap(res => {
-                res.items.forEach(item => {
+            tap((res) => {
+                res.items.forEach((item) => {
                     this.nameMap[item.id] = this.displayName(item);
                 });
             }),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     listMapped(
@@ -214,7 +214,7 @@ export class ScheduleHandlerService
         params?: EntityListRequestParams<EditableEntity.SCHEDULE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.SCHEDULE]>> {
         return this.list(body, params).pipe(
-            map(res => ({
+            map((res) => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),

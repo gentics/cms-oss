@@ -48,9 +48,9 @@ describe('AuthGuard', () => {
             ],
         });
 
-        authGuard = TestBed.get(AuthGuard);
-        appState = TestBed.get(AppStateService);
-        router = TestBed.get(Router);
+        authGuard = TestBed.inject(AuthGuard);
+        appState = TestBed.inject(AppStateService) as any;
+        router = TestBed.inject(Router) as any;
     });
 
     function assertNoRedirectAction(): void {

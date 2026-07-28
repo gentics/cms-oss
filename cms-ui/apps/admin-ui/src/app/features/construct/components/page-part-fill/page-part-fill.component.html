@@ -1,44 +1,46 @@
-<label *ngIf="label">{{ label }}</label>
+@if (label) {
+  <label>{{ label }}</label>
+}
 
 <div class="link-group" [class.active]="linkType === PageLinkType.INTERNAL">
-    <gtx-radio-button
-        class="radio-select"
-        [label]="'construct.page_link_internal' | i18n"
-        [value]="PageLinkType.INTERNAL"
-        [required]="true"
-        [disabled]="disabled"
-        [(ngModel)]="linkType"
-        (change)="onLinkTypeChange($event)"
-    ></gtx-radio-button>
+  <gtx-radio-button
+    class="radio-select"
+    [label]="'construct.page_link_internal' | gtxI18n"
+    [value]="PageLinkType.INTERNAL"
+    [required]="true"
+    [disabled]="disabled"
+    [(ngModel)]="linkType"
+    (change)="onLinkTypeChange($event)"
+  ></gtx-radio-button>
 
-    <gtx-generic-url-part-fill
-        class="fill"
-        [type]="TagPropertyType.PAGE"
-        [selectType]="SelectableTypes.PAGE"
-        [disabled]="disabled || (linkType !== PageLinkType.INTERNAL)"
-        [required]="required"
-        [value]="value"
-        (valueChange)="triggerChange($event)"
-    ></gtx-generic-url-part-fill>
+  <gtx-generic-url-part-fill
+    class="fill"
+    [type]="TagPropertyType.PAGE"
+    [selectType]="SelectableTypes.PAGE"
+    [disabled]="disabled || (linkType !== PageLinkType.INTERNAL)"
+    [required]="required"
+    [value]="value"
+    (valueChange)="triggerChange($event)"
+  ></gtx-generic-url-part-fill>
 </div>
 
 <div class="link-group" [class.active]="linkType === PageLinkType.EXTERNAL">
-    <gtx-radio-button
-        class="radio-select"
-        [label]="'construct.page_link_external' | i18n"
-        [value]="PageLinkType.EXTERNAL"
-        [required]="true"
-        [disabled]="disabled"
-        [(ngModel)]="linkType"
-        (change)="onLinkTypeChange($event)"
-    ></gtx-radio-button>
+  <gtx-radio-button
+    class="radio-select"
+    [label]="'construct.page_link_external' | gtxI18n"
+    [value]="PageLinkType.EXTERNAL"
+    [required]="true"
+    [disabled]="disabled"
+    [(ngModel)]="linkType"
+    (change)="onLinkTypeChange($event)"
+  ></gtx-radio-button>
 
-    <gtx-input
-        class="fill"
-        [value]="value?.stringValue"
-        [type]="'text'"
-        [required]="required"
-        [disabled]="disabled || (linkType !== PageLinkType.EXTERNAL)"
-        (valueChange)="onExternalUrlChange($event)"
-    ></gtx-input>
+  <gtx-input
+    class="fill"
+    [value]="value?.stringValue"
+    [type]="'text'"
+    [required]="required"
+    [disabled]="disabled || (linkType !== PageLinkType.EXTERNAL)"
+    (valueChange)="onExternalUrlChange($event)"
+  ></gtx-input>
 </div>

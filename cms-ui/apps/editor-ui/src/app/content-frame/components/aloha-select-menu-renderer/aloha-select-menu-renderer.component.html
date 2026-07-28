@@ -1,63 +1,61 @@
 <div
-    class="gtx-select-menu"
-    [class.icons-only]="settings.iconsOnly"
-    [class.next-step-open]="activeMultiStep"
-    [class.next-step-ready]="nextStepReady"
-    [class.has-left-icons]="hasLeftIcon"
-    [class.has-right-icons]="hasRightIcon"
->
-    <div class="select-menu-entries-container">
-        <button
-            *ngFor="let entry of (settings?.options || [])"
-            class="select-menu-entry"
-            tabindex="0"
-            [class.multi-step-entry]="entry.isMultiStep"
-            [class.active]="entry.id === value"
-            [attr.data-id]="entry.id"
-            (click)="handleOptionClick(entry)"
+  class="gtx-select-menu"
+  [class.icons-only]="settings.iconsOnly"
+  [class.next-step-open]="activeMultiStep"
+  [class.next-step-ready]="nextStepReady"
+  [class.has-left-icons]="hasLeftIcon"
+  [class.has-right-icons]="hasRightIcon"
+  >
+  <div class="select-menu-entries-container">
+    @for (entry of (settings?.options || []); track entry.id) {
+      <button
+        class="select-menu-entry"
+        tabindex="0"
+        [class.multi-step-entry]="entry.isMultiStep"
+        [class.active]="entry.id === value"
+        [attr.data-id]="entry.id"
+        (click)="handleOptionClick(entry)"
         >
-            <div class="entry-icon icon-left">
-                <icon [class.hollow]="entry.iconHollow">{{ entry.icon }}</icon>
+        <div class="entry-icon icon-left">
+          <icon [class.hollow]="entry.iconHollow">{{ entry.icon }}</icon>
+        </div>
+        @if (!settings.iconsOnly) {
+          <div class="entry-label">{{ entry.label }}</div>
+          @if (entry.isMultiStep) {
+            <div class="entry-icon icon-right">
+              <icon>chevron_right</icon>
             </div>
+          }
+        }
+      </button>
+    }
+  </div>
 
-            <ng-container *ngIf="!settings.iconsOnly">
-                <div class="entry-label">{{ entry.label }}</div>
-
-                <div *ngIf="entry.isMultiStep" class="entry-icon icon-right">
-                    <icon>chevron_right</icon>
-                </div>
-            </ng-container>
+  <div #nextStep class="next-step" [class.with-confirm]="activeMultiStep?.multiStepContext?.requiresConfirm || componentRequiresConfirm">
+    @if (activeMultiStep) {
+      <div class="next-step-header">
+        <button class="header-icon header-back-button" data-action="back" (click)="stepBack()">
+          <i class="material-icons">chevron_left</i>
         </button>
-    </div>
-
-    <div #nextStep class="next-step" [class.with-confirm]="activeMultiStep?.multiStepContext?.requiresConfirm || componentRequiresConfirm">
-        <ng-container *ngIf="activeMultiStep">
-            <div class="next-step-header">
-                <button class="header-icon header-back-button" data-action="back" (click)="stepBack()">
-                    <i class="material-icons">chevron_left</i>
-                </button>
-
-                <div class="header-label">{{ activeMultiStep.multiStepContext?.label || activeMultiStep.label }}</div>
-
-                <button
-                    class="header-confirm-button"
-                    data-action="confirm"
-                    [disabled]="!control.valid"
-                    (click)="multiStepConfirm()"
-                >
-                    <div class="header-confirm-label">{{ activeMultiStep.confirmLabel || ('editor.dropdown_confirm' | i18n) }}</div>
-                </button>
-            </div>
-
-            <div class="next-step-content">
-                <gtx-aloha-component-renderer
-                    [type]="activeMultiStep.multiStepContext.type"
-                    [settings]="activeMultiStep.multiStepContext.options"
-                    [formControl]="control"
-                    (requiresConfirm)="handleComponentRequire($event)"
-                    (manualConfirm)="handleComponentManualConfirm()"
-                ></gtx-aloha-component-renderer>
-            </div>
-        </ng-container>
-    </div>
+        <div class="header-label">{{ activeMultiStep.multiStepContext?.label || activeMultiStep.label }}</div>
+        <button
+          class="header-confirm-button"
+          data-action="confirm"
+          [disabled]="!control.valid"
+          (click)="multiStepConfirm()"
+          >
+          <div class="header-confirm-label">{{ activeMultiStep.confirmLabel || ('editor.dropdown_confirm' | gtxI18n) }}</div>
+        </button>
+      </div>
+      <div class="next-step-content">
+        <gtx-aloha-component-renderer
+          [type]="activeMultiStep.multiStepContext.type"
+          [settings]="activeMultiStep.multiStepContext.options"
+          [formControl]="control"
+          (requiresConfirm)="handleComponentRequire($event)"
+          (manualConfirm)="handleComponentManualConfirm()"
+        ></gtx-aloha-component-renderer>
+      </div>
+    }
+  </div>
 </div>

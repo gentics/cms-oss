@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
     GcmsUiServices,
     ModalClosingReason,
@@ -26,8 +25,9 @@ import {
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { IModalInstance, ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
+import { stripLeadingSlash } from '../../../common/utils/strip';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
@@ -78,7 +78,7 @@ export class TagEditorService {
         private editorOverlayService: EditorOverlayService,
         private entityResolver: EntityResolver,
         private repositoryBrowserClient: RepositoryBrowserClient,
-        private translateService: TranslateService,
+        private translateService: I18nService,
         private modals: ModalService,
         private apiBase: ApiBase,
         private client: GCMSRestClientService,
@@ -106,7 +106,7 @@ export class TagEditorService {
             tagType: tagType,
             tagOwner: page,
             node: node,
-            readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
+            readOnly: tag.rootTag && tag.inherited,
             withDelete: options?.withDelete ?? tagType.editorControlStyle === EditorControlStyle.CLICK,
             tagOwnerFromIFrame: true,
         });

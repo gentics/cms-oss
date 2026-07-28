@@ -1,11 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { PRIMARY_OUTLET, Router } from '@angular/router';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers/repository-browser-client/repository-browser-client.service';
-import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     CropResizeParameters,
@@ -18,8 +13,13 @@ import {
     Node,
     Page,
 } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map, publishReplay, refCount, take } from 'rxjs/operators';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
+import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '../../../state';
 import { ContentFrameComponent } from '../../components/content-frame/content-frame.component';
 
 /**
@@ -55,7 +55,7 @@ export class CustomScriptHostService {
 
     constructor(
         private appState: ApplicationStateService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private i18n: I18nService,
         private errorHandler: ErrorHandler,
         private folderActions: FolderActionsService,
@@ -191,7 +191,7 @@ export class CustomScriptHostService {
      * Needed e.g. for the tagfill dialog where we insert custom buttons.
      */
     getTranslation(translationKey: string, translationParams?: any): string {
-        return this.i18n.translate(translationKey, translationParams);
+        return this.i18n.instant(translationKey, translationParams);
     }
 
     /**

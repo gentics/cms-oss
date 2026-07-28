@@ -106,10 +106,8 @@
                     "buildTarget": "admin-ui:build:development"
                 }
             },
-            "defaultConfiguration": "development"
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            "defaultConfiguration": "development",
+            "continuous": true
         },
         "test": {
             "executor": "nx:run-commands",

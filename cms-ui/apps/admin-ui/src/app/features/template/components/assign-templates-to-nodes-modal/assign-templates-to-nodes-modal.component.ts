@@ -1,7 +1,8 @@
 import { TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, NodeOperations, TemplateOperations } from '@admin-ui/core';
+import { NodeOperations, TemplateOperations } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { IndexById, Node, Raw } from '@gentics/cms-models';
 import { BaseModal, CHECKBOX_STATE_INDETERMINATE, TableSelection, toSelectionArray } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Subscription } from 'rxjs';
@@ -12,7 +13,7 @@ import { map } from 'rxjs/operators';
     templateUrl: './assign-templates-to-nodes-modal.component.html',
     styleUrls: ['./assign-templates-to-nodes-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> implements OnInit, OnDestroy {
 
@@ -45,10 +46,10 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
 
         this.subscriptions.push(combineLatest([
             this.nodeData.watchAllEntities(),
-            forkJoin(this.templates.map(template => {
+            forkJoin(this.templates.map((template) => {
                 // for every template, get the list of nodes to which the template is assigned
                 return this.templateOperations.getLinkedNodes(template.id).pipe(
-                    map(linkedNodes => [template, linkedNodes]),
+                    map((linkedNodes) => [template, linkedNodes]),
                 );
             })),
         ]).subscribe(([allNodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
@@ -95,7 +96,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<boolean> imp
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     async okButtonClicked(): Promise<void> {

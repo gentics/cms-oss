@@ -14,6 +14,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
@@ -86,7 +87,8 @@ public class PageSaveSandboxTest {
 
 		// create a page containing the tag
 		com.gentics.contentnode.object.Page page = Creator.createPage("emptyOverviewTest", node.getFolder(), template, null);
-		page.getContent().addContentTag((Integer) construct.getId());
+		ContentTag tag = page.getContent().addContentTag((Integer) construct.getId());
+		tag.setName("emptyOverviewTest1");
 		page.save();
 		t.commit(false);
 		return page;

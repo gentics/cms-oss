@@ -1,22 +1,26 @@
-<div *ngIf="tagProperty" class="tag-part-editor">
-    <div *ngIf="tagProperty.type === tagPropertyTypeEnum.LIST">
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    @if (tagProperty.type === tagPropertyTypeEnum.LIST) {
+      <div>
         <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
         <gtx-checkbox
-            [label]="'tag_editor.list_type_numbered' | i18n"
-            [disabled]="readOnly"
-            [(ngModel)]="isNumberedListUserSelection"
-            (change)="onUserChange()"
+          [label]="'tag_editor.list_type_numbered' | gtxI18n"
+          [disabled]="readOnly"
+          [(ngModel)]="isNumberedListUserSelection"
+          (change)="onUserChange()"
         ></gtx-checkbox>
-    </div>
+      </div>
+    }
     <div class="row column">
-        <gtx-textarea
-            [class.no-label]="tagProperty.type === tagPropertyTypeEnum.LIST"
-            [label]="tagProperty.type !== tagPropertyTypeEnum.LIST ? (tagPart | tagPropLabel) : ''"
-            [required]="tagPart.mandatory"
-            [readonly]="readOnly"
-            [(ngModel)]="stringifiedList"
-            (valueChange)="listChange.next()"
-            (touch)="listBlur.next()">
-        </gtx-textarea>
+      <gtx-textarea
+        [class.no-label]="tagProperty.type === tagPropertyTypeEnum.LIST"
+        [label]="tagProperty.type !== tagPropertyTypeEnum.LIST ? (tagPart | tagPropLabel) : ''"
+        [required]="tagPart.mandatory"
+        [readonly]="readOnly"
+        [(ngModel)]="stringifiedList"
+        (valueChange)="listChange.next()"
+        (touch)="listBlur.next()">
+      </gtx-textarea>
     </div>
-</div>
+  </div>
+}

@@ -1,16 +1,21 @@
-import { InterfaceOf, MultiModuleUserActionPermissions, USER_ACTION_PERMISSIONS, UserActionPermissions } from '@admin-ui/common';
-import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
 import { componentTest } from '@admin-ui/testing';
 import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
+import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ButtonComponent, GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
-import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
-import { MockI18nServiceWithSpies } from '../../../core/providers/i18n/i18n.service.mock';
+import { BehaviorSubject } from 'rxjs';
+import { delay } from 'rxjs/operators';
+import {
+    InterfaceOf,
+    MultiModuleUserActionPermissions,
+    USER_ACTION_PERMISSIONS,
+    UserActionPermissions,
+} from '../../../common';
+import { PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '../../../core';
 import { ACTION_HIDDEN_CSS_CLASS, ActionAllowedDirective, DEFAULT_DISABLED_TOOLTIP } from './action-allowed.directive';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 
 function assembleTestTemplate(additionalAttributes: string): string {
     return `<gtx-button #actionButton [gtxActionAllowed]="userAction" ${additionalAttributes}>Action Button</gtx-button>`;
@@ -75,8 +80,8 @@ class MockPermissionsService implements Partial<InterfaceOf<PermissionsService>>
 
         const parts = actionId.split('.');
         if (parts.length !== 2) {
-            throw new Error(`Malformed user action ID provided to gtxActionAllowed directive: '${actionId}'.` +
-                'Make sure that you use the format \'<module>.actionId');
+            throw new Error(`Malformed user action ID provided to gtxActionAllowed directive: '${actionId}'.`
+              + 'Make sure that you use the format \'<module>.actionId');
         }
 
         const module = MOCK_USER_ACTIONS[parts[0]];
@@ -88,23 +93,6 @@ class MockPermissionsService implements Partial<InterfaceOf<PermissionsService>>
             throw new Error(`User Action '${parts[1]}' does not exist within module '${parts[0]}'.`);
         }
         return reqPerms;
-    }
-}
-
-class MockI18nWithLangChange implements Partial<InterfaceOf<I18nService>> {
-    private currLang$ = new BehaviorSubject<GcmsUiLanguage>('en');
-
-    get(key: string): Observable<string> {
-        return combineLatest([
-            observableOf(key),
-            this.currLang$,
-        ]).pipe(
-            map(([translation, lang]) => `${lang}-${translation}`),
-        );
-    }
-
-    setLanguage(lang: GcmsUiLanguage): void {
-        this.currLang$.next(lang);
     }
 }
 
@@ -141,7 +129,7 @@ const MOCK_USER_ACTIONS = {
         instancePermsOnly: {
             instancePermissions: {
                 type: AccessControlledType.FOLDER,
-                permissions: [ GcmsPermission.READ ],
+                permissions: [GcmsPermission.READ],
             },
             disabledTooltip: TEST_TOOLTIP,
         },
@@ -180,7 +168,7 @@ const MOCK_USER_ACTIONS = {
             typePermissions: [
                 {
                     type: AccessControlledType.ADMIN,
-                    permissions: [ GcmsPermission.READ ],
+                    permissions: [GcmsPermission.READ],
                 },
             ],
             disabledTooltip: {
@@ -200,7 +188,6 @@ const NODE_ID_B = 2;
 
 describe('ActionAllowedDirective', () => {
 
-    let i18n: MockI18nServiceWithSpies;
     let permissions: MockPermissionsService;
 
     beforeEach(() => {
@@ -214,9 +201,9 @@ describe('ActionAllowedDirective', () => {
                 InputTestComponent,
             ],
             providers: [
-                { provide: I18nService, useClass: MockI18nServiceWithSpies },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: USER_ACTION_PERMISSIONS, useValue: cloneDeep(MOCK_USER_ACTIONS as MultiModuleUserActionPermissions) },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
@@ -224,12 +211,10 @@ describe('ActionAllowedDirective', () => {
 
     /** Some tests need to override the TestComponent's template, which must happen before injecting anything. */
     function initServices(): void {
-        i18n = TestBed.get(I18nService);
-        i18n.setLanguage('en');
-        permissions = TestBed.get(PermissionsService);
+        permissions = TestBed.inject(PermissionsService) as any;
     }
 
-    function assertActionState(instance: TestComponent, expected: { disabled: boolean, tooltip?: string, hidden: boolean }): void {
+    function assertActionState(instance: TestComponent, expected: { disabled: boolean; tooltip?: string; hidden: boolean }): void {
         expect(instance.actionButton.disabled).toBe(expected.disabled, 'control.disabled state did not match expected value');
         if (typeof expected.tooltip === 'string') {
             expect(instance.actionButtonElement.nativeElement.title).toBeTruthy('No tooltip was set.');
@@ -242,7 +227,7 @@ describe('ActionAllowedDirective', () => {
 
     function assertInputFieldState(
         instance: InputTestComponent,
-        expected: { disabled: boolean, tooltip?: string, hidden: boolean },
+        expected: { disabled: boolean; tooltip?: string; hidden: boolean },
     ): void {
         expect(instance.setDisabledStateSpy.calls.all().length).toBe(1, 'setDisabledState() was not called');
         expect(instance.setDisabledStateSpy).toHaveBeenCalledWith(expected.disabled);
@@ -275,7 +260,6 @@ describe('ActionAllowedDirective', () => {
 
                 expect(permissions.checkPermissions).toHaveBeenCalledTimes(1);
                 expect(permissions.checkPermissions).toHaveBeenCalledWith(MOCK_USER_ACTIONS.typeTests.testAction.typePermissions);
-                expect(i18n.get).not.toHaveBeenCalled();
 
                 assertActionState(instance, { disabled: false, hidden: false });
             }),
@@ -288,10 +272,8 @@ describe('ActionAllowedDirective', () => {
 
                 expect(permissions.checkPermissions).toHaveBeenCalledTimes(1);
                 expect(permissions.checkPermissions).toHaveBeenCalledWith(MOCK_USER_ACTIONS.typeTests.testAction.typePermissions);
-                expect(i18n.get).toHaveBeenCalledTimes(1);
-                expect(i18n.get).toHaveBeenCalledWith(TEST_TOOLTIP, undefined);
 
-                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP,  hidden: false });
+                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });
             }),
         );
 
@@ -300,7 +282,7 @@ describe('ActionAllowedDirective', () => {
                 permissions.mockPermissionsGranted(false);
                 runDoubleChangeDetection(fixture);
 
-                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP,  hidden: false });
+                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });
 
                 permissions.mockPermissionsGranted(true);
                 tick();
@@ -361,7 +343,7 @@ describe('ActionAllowedDirective', () => {
 
                 // Since we haven't provided an instanceId yet, the component should be disabled.
                 expect(permissions.checkPermissions).not.toHaveBeenCalled();
-                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP,  hidden: false });
+                assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });
 
                 instance.instanceId = INSTANCE_ID_A;
                 runDoubleChangeDetection(fixture);
@@ -612,7 +594,6 @@ describe('ActionAllowedDirective', () => {
                 instance.userAction = 'tooltipTests.noTooltip';
                 runDoubleChangeDetection(fixture);
 
-                expect(i18n.get).toHaveBeenCalledWith(DEFAULT_DISABLED_TOOLTIP, undefined);
                 assertActionState(instance, { disabled: true, tooltip: DEFAULT_DISABLED_TOOLTIP, hidden: false });
             }),
         );
@@ -622,7 +603,6 @@ describe('ActionAllowedDirective', () => {
                 instance.userAction = 'tooltipTests.tooltipParams';
                 runDoubleChangeDetection(fixture);
 
-                expect(i18n.get).toHaveBeenCalledWith(TEST_TOOLTIP, MOCK_USER_ACTIONS.tooltipTests.tooltipParams.disabledTooltip.params);
                 assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });
             }),
         );
@@ -645,23 +625,6 @@ describe('ActionAllowedDirective', () => {
 
     });
 
-    it('tooltips react to language changes', fakeAsync(() => {
-        const i18nWithLangChange = new MockI18nWithLangChange();
-        TestBed.overrideProvider(I18nService, { useValue: i18nWithLangChange });
-        initServices();
-        permissions.mockPermissionsGranted(false);
-
-        const fixture = TestBed.createComponent(TestComponent);
-        runDoubleChangeDetection(fixture);
-        assertActionState(fixture.componentInstance, { disabled: true, tooltip: `en-${TEST_TOOLTIP}`, hidden: false });
-
-        i18nWithLangChange.setLanguage('de');
-        tick();
-        fixture.detectChanges();
-        assertActionState(fixture.componentInstance, { disabled: true, tooltip: `de-${TEST_TOOLTIP}`, hidden: false });
-    }),
-    );
-
     describe('ControlValueAccessor components', () => {
 
         // Unfortunately I was not able to find a way to spy on the input field's disabled property setter.
@@ -675,7 +638,7 @@ describe('ActionAllowedDirective', () => {
                 permissions.mockPermissionsGranted(false);
                 runDoubleChangeDetection(fixture);
 
-                assertInputFieldState(instance, { disabled: true, tooltip: TEST_TOOLTIP,  hidden: false });
+                assertInputFieldState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });
 
                 permissions.mockPermissionsGranted(true);
                 tick();

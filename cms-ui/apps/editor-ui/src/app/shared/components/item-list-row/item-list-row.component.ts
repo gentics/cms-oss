@@ -5,17 +5,8 @@ import {
     EventEmitter,
     Input,
     OnChanges,
-    OnInit,
-    Output
+    Output,
 } from '@angular/core';
-import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '@editor-ui/app/common/models';
-import {
-    ApplicationStateService,
-    ChangeListSelectionAction,
-    FocusEditorAction,
-    FolderActionsService,
-    WastebinActionsService,
-} from '@editor-ui/app/state';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File,
@@ -29,23 +20,31 @@ import {
     Normalized,
     Page,
     Raw,
-    StagedItemsMap
+    StagedItemsMap,
 } from '@gentics/cms-models';
 import { BaseComponent, ChangesOf, ModalService } from '@gentics/ui-core';
+import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, LanguageState, UIMode } from '../../../common/models';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { EntityStateUtil, PublishableStateUtil } from '../../../shared/util/entity-states';
+import {
+    ApplicationStateService,
+    ChangeListSelectionAction,
+    FocusEditorAction,
+    FolderActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { TranslatePageModal, TranslatePageModalActions, TranslateResult } from '../translate-page-modal/translate-page-modal.component';
 import { UsageModalComponent } from '../usage-modal/usage-modal.component';
 
-type AllowedItemType =
-    | Folder<Raw | Normalized>
-    | Form<Raw | Normalized>
-    | Page<Raw | Normalized>
-    | File<Raw | Normalized>
-    | Image<Raw | Normalized>
+type AllowedItemType
+    = | Folder<Raw | Normalized>
+      | Form<Raw | Normalized>
+      | Page<Raw | Normalized>
+      | File<Raw | Normalized>
+      | Image<Raw | Normalized>
     ;
 
 @Component({
@@ -53,9 +52,9 @@ type AllowedItemType =
     templateUrl: './item-list-row.component.html',
     styleUrls: ['./item-list-row.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class ItemListRowComponent extends BaseComponent implements OnInit, OnChanges {
+export class ItemListRowComponent extends BaseComponent implements OnChanges {
 
     public readonly UIMode = UIMode;
     public readonly ItemListRowMode = ItemListRowMode;
@@ -109,7 +108,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
     public showDeleted: boolean;
 
     @Input()
-    public showStatusIcons: boolean;
+    public showStatusIcons = true;
 
     @Input()
     public canBeSelected = true;
@@ -143,11 +142,11 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
 
     /** Emits if a page language icon is clicked */
     @Output()
-    public pageLanguageIconClick = new EventEmitter<{ page: Page<Raw>; language: Language; }>();
+    public pageLanguageIconClick = new EventEmitter<{ page: Page<Raw>; language: Language }>();
 
     /** Emits if a form language icon is clicked */
     @Output()
-    public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language; }>();
+    public formLanguageIconClick = new EventEmitter<{ form: Form<Raw>; language: Language }>();
 
     public languageState: LanguageState;
     public itemIdDeleted = false;
@@ -166,10 +165,6 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
         super(changeDetector);
     }
 
-    ngOnInit(): void {
-
-    }
-
     ngOnChanges(changes: ChangesOf<this>): void {
         if (changes.item || changes.nodeLanguages || changes.activeLanguage) {
             this.updateLanguageState();
@@ -181,12 +176,15 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
         let available: boolean;
 
         if (this.item.type === 'page') {
-            itemLang = this.nodeLanguages.find(lang => lang.code === (this.item as Page).language);
+            itemLang = this.nodeLanguages.find((lang) => lang.code === (this.item as Page).language);
             available = !!itemLang;
         } else if (this.item.type === 'form') {
-            itemLang = this.nodeLanguages.find(lang => (lang.id === this.appState.now.folder.activeFormLanguage && ((this.item as Form).languages.includes(lang.code))));
+            itemLang = this.nodeLanguages.find((lang) => (
+                lang.id === this.appState.now.folder.activeFormLanguage
+                && ((this.item as Form).languages.includes(lang.code))
+            ));
             if (!itemLang) {
-                itemLang = this.nodeLanguages.find(lang => (this.item as Form).languages.includes(lang.code));
+                itemLang = this.nodeLanguages.find((lang) => (this.item as Form).languages.includes(lang.code));
             }
             available = !!itemLang;
         } else {
@@ -194,34 +192,34 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
             return;
         }
 
-        this.itemIdDeleted = this.item != null &&
-                PublishableStateUtil.stateDeleted(this.item);
+        this.itemIdDeleted = this.item != null
+          && PublishableStateUtil.stateDeleted(this.item);
 
         this.languageState = {
             ...itemLang,
             available,
-            deleted: this.itemIdDeleted,
             inherited:
-                this.item != null &&
-                PublishableStateUtil.stateInherited(this.item),
+                this.item != null
+                && PublishableStateUtil.stateInherited(this.item),
             localized:
-                this.item != null &&
-                PublishableStateUtil.stateLocalized(this.item),
+                this.item != null
+                && PublishableStateUtil.stateLocalized(this.item),
             modified:
-                this.item != null &&
-                PublishableStateUtil.stateModified(this.item),
+                this.item != null
+                && PublishableStateUtil.stateModified(this.item),
             planned:
-                this.item != null &&
-                PublishableStateUtil.statePlanned(this.item),
+                this.item != null
+                && PublishableStateUtil.statePlanned(this.item),
             published:
-                this.item != null &&
-                PublishableStateUtil.statePublished(this.item),
+                this.item != null
+                && PublishableStateUtil.statePublished(this.item),
             queued:
-                this.item != null &&
-                PublishableStateUtil.stateInQueue(this.item),
-            staged: this.item != null &&
-                this.stagingMap?.[this.item.globalId]?.included,
-        }
+                this.item != null
+                && PublishableStateUtil.stateInQueue(this.item),
+            staged: this.item != null
+              && this.stagingMap?.[this.item.globalId]?.included,
+            deleted: this.itemIdDeleted,
+        };
     }
 
     toggleSelect(): void {
@@ -259,9 +257,8 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.activeLanguage.id;
-        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
-            .then(modal => modal.open())
+        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId })
+            .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }
 
@@ -271,7 +268,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
      */
     pageLanguageClicked(event: ItemLanguageClickEvent<Page<Normalized>>): void {
         const { item, language, compare, source, restore } = event;
-        const pageLanguageIds = item.languageVariants ? Object.keys(item.languageVariants).map(id => +id) : [];
+        const pageLanguageIds = item.languageVariants ? Object.keys(item.languageVariants).map((id) => +id) : [];
         const languageVariantId = item.languageVariants && item.languageVariants[language.id];
         const pageTranslation = languageVariantId && this.entityResolver.getPage(languageVariantId);
         const pageLanguageIsSet = item.language ?? false;
@@ -304,7 +301,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
 
         // Page does not exist in the selected language, so prompt to create a translation.
         this.decisionModals.showTranslatePageDialog(item, this.activeNode.id)
-            .then(nodeId => this.modalService.fromComponent(TranslatePageModal, null, {
+            .then((nodeId) => this.modalService.fromComponent(TranslatePageModal, null, {
                 defaultProps: {
                     name: item.name,
                     description: item.description || '',
@@ -317,7 +314,7 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
                 nodeId,
                 folderId: item.folderId,
             }))
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             // If user created translation and wants to edit, opensplitscreen; if not, do nothing.
             .then((data: TranslateResult) => {
                 if (!data.newPage) {
@@ -373,12 +370,12 @@ export class ItemListRowComponent extends BaseComponent implements OnInit, OnCha
         return this.itemsInfo && this.itemsInfo.showPath;
     }
 
-    onPageLanguageIconClicked(data: { item: Page<Raw> | Page<Normalized>; language: Language; }): void {
+    onPageLanguageIconClicked(data: { item: Page<Raw> | Page<Normalized>; language: Language }): void {
         const pageRaw = this.entityResolver.denormalizeEntity('page', data.item);
         this.pageLanguageIconClick.emit({ page: pageRaw, language: data.language });
     }
 
-    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language; }): void {
+    onFormLanguageIconClicked(data: { item: Form<Raw> | Form<Normalized>; language: Language }): void {
         const formRaw = this.entityResolver.denormalizeEntity('form', data.item);
         this.formLanguageIconClick.emit({ form: formRaw, language: data.language });
     }

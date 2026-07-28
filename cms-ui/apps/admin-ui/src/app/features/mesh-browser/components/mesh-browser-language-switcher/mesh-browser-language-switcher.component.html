@@ -1,21 +1,23 @@
 <gtx-dropdown-list class="dropdown-language" data-context-id="select-language">
-    <gtx-dropdown-trigger>
-        <button class="selector" data-context-trigger>
-            <icon
-                *ngIf="availableLanguages?.length > 1"
-                class="collapse-icon"
-            >keyboard_arrow_down</icon>
-            <span class="item-name">{{ language }}</span>
-        </button>
-    </gtx-dropdown-trigger>
+  <gtx-dropdown-trigger>
+    <button class="selector" data-context-trigger>
+      @if (availableLanguages?.length > 1) {
+        <icon
+          class="collapse-icon"
+        >keyboard_arrow_down</icon>
+      }
+      <span class="item-name">{{ language }}</span>
+    </button>
+  </gtx-dropdown-trigger>
 
-    <gtx-dropdown-content data-context-id="select-language">
-        <gtx-dropdown-item
-            *ngFor="let language of availableLanguages"
-            [attr.data-id]="language"
-            (click)="languageChangeHandler(language)"
+  <gtx-dropdown-content data-context-id="select-language">
+    @for (language of availableLanguages; track language) {
+      <gtx-dropdown-item
+        [attr.data-id]="language"
+        (click)="languageChangeHandler(language)"
         >
-            {{ language }}
-        </gtx-dropdown-item>
-    </gtx-dropdown-content>
+        {{ language }}
+      </gtx-dropdown-item>
+    }
+  </gtx-dropdown-content>
 </gtx-dropdown-list>

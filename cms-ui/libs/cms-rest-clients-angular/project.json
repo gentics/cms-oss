@@ -9,17 +9,17 @@
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
             "options": {
-                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json",
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.prod.json",
                 "project": "libs/cms-rest-clients-angular/ng-package.json"
             },
             "configurations": {
                 "production": {},
-                "development": {},
+                "development": {
+                    "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json"
+                },
                 "ci": {}
-            }
-        },
-        "lint": {
-            "executor": "@nx/eslint:lint"
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
             "executor": "nx:run-commands",
@@ -35,12 +35,6 @@
                     "command": "node ../node_modules/@angular/cli/bin/ng.js test cms-rest-clients-angular --watch=false --configuration=ci",
                     "color": false
                 }
-            }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/cms-rest-clients-angular"
             }
         }
     }

@@ -1,7 +1,8 @@
-<gtx-template-folder-link-trable
-    *ngIf="loaded$ | async"
+@if (loaded$ | async) {
+  <gtx-template-folder-link-trable
     [selected]="selectedIds | gtxValues"
     [disabled]="disabled"
     (link)="onLinkEvent($event)"
     (unlink)="onUnlinkEvent($event)"
-></gtx-template-folder-link-trable>
+  ></gtx-template-folder-link-trable>
+}

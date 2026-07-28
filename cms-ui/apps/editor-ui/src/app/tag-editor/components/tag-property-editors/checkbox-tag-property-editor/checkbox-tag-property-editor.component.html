@@ -1,11 +1,11 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <gtx-checkbox
-            [label]="tagPart | tagPropLabel"
-            [required]="tagPart?.mandatory"
-            [disabled]="readOnly"
-            [(ngModel)]="isChecked"
-            (change)="onCheckboxChange()">
-        </gtx-checkbox>
-    </div>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <gtx-checkbox
+      [label]="tagPart | tagPropLabel"
+      [required]="tagPart?.mandatory"
+      [disabled]="readOnly"
+      [(ngModel)]="isChecked"
+      (change)="onCheckboxChange()">
+    </gtx-checkbox>
+  </div>
+}

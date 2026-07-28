@@ -1,10 +1,10 @@
 <div class="modal-title">
-    <h5>{{ 'mesh.api_token_from' | i18n:{ user: displayName } }}</h5>
+    <h5>{{ 'mesh.api_token_from' | gtxI18n:{ user: displayName } }}</h5>
 </div>
 
 <div class="modal-content">
     <gtx-mesh-copy-value
-        [label]="'mesh.api_token' | i18n"
+        [label]="'mesh.api_token' | gtxI18n"
         [value]="token"
         (valueCopy)="handleCopy($event)"
     ></gtx-mesh-copy-value>
@@ -16,6 +16,6 @@
         flat
         (click)="closeFn()"
     >
-        {{ 'common.close_button' | i18n }}
+        {{ 'common.close_button' | gtxI18n }}
     </gtx-button>
 </div>

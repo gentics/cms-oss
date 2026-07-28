@@ -89,6 +89,19 @@ export class EditorActionsService {
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
     }
 
+    editPageInheritance(id: number, nodeId: number): void {
+        this.appState.dispatch(new EditItemAction({
+            compareWithId: null,
+            editMode: EditMode.EDIT_INHERITANCE,
+            itemId: id,
+            nodeId: nodeId,
+            itemType: 'page',
+            focusMode: true,
+        }));
+        this.appState.dispatch(new LockItemAction('page', id, EditMode.EDIT_INHERITANCE));
+        this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
+    }
+
     /**
      * Edit a form
      */

@@ -1,101 +1,98 @@
 <div class="list-controls">
+  @if (allowCreation) {
     <gtx-button
-        *ngIf="allowCreation"
-        size="small"
-        flat="true"
-        (click)="createNewPart()"
-    >
-        <icon left>add</icon>
-        {{ 'shared.create_new_construct_part' | i18n }}
+      size="small"
+      flat="true"
+      (click)="createNewPart()"
+      >
+      <icon left>add</icon>
+      {{ 'shared.create_new_construct_part' | gtxI18n }}
     </gtx-button>
+  }
 </div>
 
 <div class="gtx-construct-part-list">
+  @if (form?.controls) {
     <table
-        *ngIf="form?.controls"
-        class="gtx-table-tagparts"
-    >
-        <tr class="gtx-row-head">
-            <th>{{ 'construct.type' | i18n }}</th>
-            <th>{{ 'construct.name' | i18n }}</th>
-            <th>{{ 'construct.keyword' | i18n }}</th>
-            <th>{{ 'construct.editable' | i18n }}</th>
-            <th>{{ 'construct.mandatory' | i18n }}</th>
-            <th>{{ 'construct.hidden' | i18n }}</th>
-            <th>{{ 'construct.liveEditable' | i18n }}</th>
-            <th>{{ 'construct.hideInEditor' | i18n }}</th>
-
-            <th
-                class="gtx-cell-last"
-                (click)="toggleRowAll()"
+      class="gtx-table-tagparts"
+      >
+      <tr class="gtx-row-head">
+        <th>{{ 'construct.type' | gtxI18n }}</th>
+        <th>{{ 'construct.name' | gtxI18n }}</th>
+        <th>{{ 'construct.keyword' | gtxI18n }}</th>
+        <th>{{ 'construct.editable' | gtxI18n }}</th>
+        <th>{{ 'construct.mandatory' | gtxI18n }}</th>
+        <th>{{ 'construct.hidden' | gtxI18n }}</th>
+        <th>{{ 'construct.liveEditable' | gtxI18n }}</th>
+        <th>{{ 'construct.hideInEditor' | gtxI18n }}</th>
+        <th
+          class="gtx-cell-last"
+          (click)="toggleRowAll()"
+          >
+          <div class="gtx-cell-last-inner">
+            <icon
+              class="gtx-icon-expand"
+              [class.active]="allCollapsed === true"
+            >chevron_left</icon>
+          </div>
+        </th>
+        <th><!-- Empty for deletion column --></th>
+      </tr>
+      @for (item of displayItems; track identify(i, item); let i = $index) {
+        @if (form.at(i); as control) {
+          <tr
+            class="gtx-row-data"
+            [class.invalid]="control?.invalid"
+            [class.open]="item.state?.collapsed"
+            [hidden]="item.state?.hidden"
+            (click)="toggleRow(i)"
             >
-                <div class="gtx-cell-last-inner">
-                    <icon
-                        class="gtx-icon-expand"
-                        [class.active]="allCollapsed === true"
-                    >chevron_left</icon>
-                </div>
-            </th>
-            <th><!-- Empty for deletion column --></th>
-        </tr>
-
-        <ng-container *ngFor="let item of displayItems; index as i; trackBy: identify">
-            <ng-container *ngIf="form.at(i) as control">
-                <tr
-                    class="gtx-row-data"
-                    [class.invalid]="control?.invalid"
-                    [class.open]="item.state?.collapsed"
-                    [hidden]="item.state?.hidden"
-                    (click)="toggleRow(i)"
-                >
-                    <!-- [@slideAnim] -->
-                    <td class="gtx-row-data-name">{{ item.item?.typeId ? ('construct.tagPartType_' + item.item.typeId | i18n) : '' }}</td>
-                    <td>{{ item.item?.nameI18n?.[supportedLanguages?.[0]?.code] }}</td>
-                    <td>{{ item.item?.keyword }}</td>
-                    <td>{{ (item.item?.editable ? 'shared.yes' : 'shared.no') | i18n }}</td>
-                    <td>{{ (item.item?.mandatory ? 'shared.yes' : 'shared.no') | i18n }}</td>
-                    <td>{{ (item.item?.hidden ? 'shared.yes' : 'shared.no') | i18n }}</td>
-                    <td>{{ (item.item?.liveEditable ? 'shared.yes' : 'shared.no') | i18n }}</td>
-                    <td>{{ (item.item?.hideInEditor ? 'shared.yes' : 'shared.no') | i18n }}</td>
-
-                    <td class="gtx-cell-last">
-                        <div class="gtx-cell-last-inner">
-                            <icon
-                                class="gtx-icon-expand"
-                                [class.active]="item.state?.collapsed"
-                            >chevron_left</icon>
-                        </div>
-                    </td>
-
-                    <td>
-                        <gtx-button icon type="alert" (click)="deletePart(i, $event)">
-                            <icon>close</icon>
-                        </gtx-button>
-                    </td>
-                </tr>
-
-                <tr
-                    class="gtx-row-nested"
-                    [class.gtx-row-hidden]="!item.state?.collapsed"
-                    [class.invalid]="control.invalid"
-                    [hidden]="item.state?.hidden"
-                >
-                    <td colspan="10">
-                        <div class="gtx-nested-container">
-                            <gtx-construct-part-properties
-                                [formControl]="control"
-                                [supportedLanguages]="supportedLanguages"
-                                [mode]="ConstructPartPropertiesMode.UPDATE"
-                                [initialValue]="initialValue"
-                                [markupLanguages]="markupLanguages"
-                                [dataSources]="dataSources"
-                                [pureInitialValue]="true"
-                                (initialValueChange)="updateInitialValueFlag($event)"
-                            ></gtx-construct-part-properties>
-                        </div>
-                    </td>
-                </tr>
-            </ng-container>
-        </ng-container>
+            <!-- [@slideAnim] -->
+            <td class="gtx-row-data-name">{{ item.item?.typeId ? ('construct.tagPartType_' + item.item.typeId | gtxI18n) : '' }}</td>
+            <td>{{ item.item?.nameI18n?.[supportedLanguages?.[0]?.code] }}</td>
+            <td>{{ item.item?.keyword }}</td>
+            <td>{{ (item.item?.editable ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
+            <td>{{ (item.item?.mandatory ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
+            <td>{{ (item.item?.hidden ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
+            <td>{{ (item.item?.liveEditable ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
+            <td>{{ (item.item?.hideInEditor ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
+            <td class="gtx-cell-last">
+              <div class="gtx-cell-last-inner">
+                <icon
+                  class="gtx-icon-expand"
+                  [class.active]="item.state?.collapsed"
+                >chevron_left</icon>
+              </div>
+            </td>
+            <td>
+              <gtx-button icon type="alert" (click)="deletePart(i, $event)">
+                <icon>close</icon>
+              </gtx-button>
+            </td>
+          </tr>
+          <tr
+            class="gtx-row-nested"
+            [class.gtx-row-hidden]="!item.state?.collapsed"
+            [class.invalid]="control.invalid"
+            [hidden]="item.state?.hidden"
+            >
+            <td colspan="10">
+              <div class="gtx-nested-container">
+                <gtx-construct-part-properties
+                  [formControl]="control"
+                  [supportedLanguages]="supportedLanguages"
+                  [mode]="ConstructPartPropertiesMode.UPDATE"
+                  [initialValue]="initialValue"
+                  [markupLanguages]="markupLanguages"
+                  [dataSources]="dataSources"
+                  [pureInitialValue]="true"
+                  (initialValueChange)="updateInitialValueFlag($event)"
+                ></gtx-construct-part-properties>
+              </div>
+            </td>
+          </tr>
+        }
+      }
     </table>
+  }
 </div>

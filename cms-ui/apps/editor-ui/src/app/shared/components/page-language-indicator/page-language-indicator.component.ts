@@ -13,7 +13,6 @@ import {
     EventEmitter,
     Input,
     OnChanges,
-    OnInit,
     Output,
 } from '@angular/core';
 import { Language, Page, StagedItemsMap } from '@gentics/cms-models';
@@ -52,8 +51,8 @@ interface VariantState extends Language, LanguageState {
         trigger('animNgForChild', [
             transition('void => *', [
                 style({
-                    opacity: 0,
-                    width: '0',
+                    "opacity": 0,
+                    "width": '0',
                     'padding-left': '*',
                     'padding-right': '*',
                     'margin-left': '*',
@@ -62,8 +61,8 @@ interface VariantState extends Language, LanguageState {
                 animate(
                     '0.2s ease-in-out',
                     style({
-                        opacity: 1,
-                        width: '*',
+                        "opacity": 1,
+                        "width": '*',
                         'padding-left': '*',
                         'padding-right': '*',
                         'margin-left': '*',
@@ -73,8 +72,8 @@ interface VariantState extends Language, LanguageState {
             ]),
             transition('* => void', [
                 style({
-                    opacity: 1,
-                    width: '*',
+                    "opacity": 1,
+                    "width": '*',
                     'padding-left': '*',
                     'padding-right': '*',
                     'margin-left': '*',
@@ -83,8 +82,8 @@ interface VariantState extends Language, LanguageState {
                 animate(
                     '0.2s ease-in-out',
                     style({
-                        opacity: 0,
-                        width: '0',
+                        "opacity": 0,
+                        "width": '0',
                         'padding-left': '*',
                         'padding-right': '*',
                         'margin-left': '*',
@@ -98,8 +97,7 @@ interface VariantState extends Language, LanguageState {
 })
 export class PageLanguageIndicatorComponent
     extends BaseComponent
-    implements OnChanges
-{
+    implements OnChanges {
     public readonly ItemListRowMode = ItemListRowMode;
     public readonly UIMode = UIMode;
 
@@ -165,8 +163,8 @@ export class PageLanguageIndicatorComponent
 
         if (changes.activeLanguage || changes.page) {
             this.inCurrentLanguage = this.page != null
-                && this.activeLanguage != null
-                && this.activeLanguage.code === this.page.language;
+              && this.activeLanguage != null
+              && this.activeLanguage.code === this.page.language;
         }
 
         if (changes.expandByDefault || changes.page || changes.languages || changes.stagingMap) {
@@ -239,8 +237,8 @@ export class PageLanguageIndicatorComponent
             if (this.page.languageVariants) {
                 if (Array.isArray(this.page.languageVariants)) {
                     variantPage = (this.page.languageVariants as number[])
-                        .map(variantId => this.appState.now.entities.page[variantId])
-                        .find(variant => variant != null && variant.language === lang.code);
+                        .map((variantId) => this.appState.now.entities.page[variantId])
+                        .find((variant) => variant != null && variant.language === lang.code);
                 } else {
                     const tmpVal = this.page.languageVariants[lang.id];
                     if (typeof tmpVal === 'number') {
@@ -268,28 +266,28 @@ export class PageLanguageIndicatorComponent
 
                 available: variantPage != null,
                 deleted:
-                    variantPage != null &&
-                    PublishableStateUtil.stateDeleted(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.stateDeleted(variantPage),
                 inherited:
-                    variantPage != null &&
-                    PublishableStateUtil.stateInherited(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.stateInherited(variantPage),
                 localized:
-                    variantPage != null &&
-                    PublishableStateUtil.stateLocalized(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.stateLocalized(variantPage),
                 modified:
-                    variantPage != null &&
-                    PublishableStateUtil.stateModified(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.stateModified(variantPage),
                 planned:
-                    variantPage != null &&
-                    PublishableStateUtil.statePlanned(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.statePlanned(variantPage),
                 published:
-                    variantPage != null &&
-                    PublishableStateUtil.statePublished(variantPage),
+                    variantPage != null
+                    && PublishableStateUtil.statePublished(variantPage),
                 queued:
-                    variantPage != null &&
-                    PublishableStateUtil.stateInQueue(variantPage),
-                staged: variantPage != null &&
-                    this.stagingMap?.[variantPage.globalId]?.included,
+                    variantPage != null
+                    && PublishableStateUtil.stateInQueue(variantPage),
+                staged: variantPage != null
+                  && this.stagingMap?.[variantPage.globalId]?.included,
             }];
         });
     }

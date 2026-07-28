@@ -1,6 +1,6 @@
 <div class="gtx-modal-datagrid">
     <div class="modal-title">
-        <h5>{{ 'modal.manage_templates_assignments_to_nodes_title' | i18n }}</h5>
+        <h5>{{ 'modal.manage_templates_assignments_to_nodes_title' | gtxI18n }}</h5>
     </div>
 
     <div class="modal-content">
@@ -21,7 +21,7 @@
             data-action="confirm"
             [disabled]="loading"
             (click)="okButtonClicked()"
-        >{{ 'common.ok_button' | i18n }}</gtx-button>
+        >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 
         <gtx-button
             type="primary"
@@ -29,7 +29,7 @@
             flat
             (click)="closeFn(false)"
         >
-            {{ 'common.close_button' | i18n }}
+            {{ 'common.close_button' | gtxI18n }}
         </gtx-button>
     </div>
 </div>

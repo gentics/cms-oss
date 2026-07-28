@@ -1,13 +1,17 @@
 @import "variables";
 
 .editor-toolbar {
-    padding: 10px 10px 0;
+    padding: 0.5rem 0.5rem 0;
     width: 100%;
     border-bottom: 2px solid #ffb84f;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
+
+    &.mode-editInheritance {
+        padding: 10px;
+    }
 
     .gentics-logo {
         margin-right: 1rem;
@@ -87,6 +91,7 @@
 
                     .inner-wrapper {
                         line-height: inherit;
+                        align-items: center;
 
                         .other-content {
                             margin-right: 0.5rem;

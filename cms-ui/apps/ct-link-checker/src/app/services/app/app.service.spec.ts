@@ -1,7 +1,7 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { ApiBase } from '@gentics/cms-rest-clients-angular';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { of } from 'rxjs';
 import { AppSettings } from '../../common/models/app-settings';
 import { GcmsAuthenticationService } from '../../core/services/authentication/gcms-authentication.service';
@@ -10,7 +10,7 @@ import { UserSettingsService } from '../user-settings/user-settings.service';
 import { AppService } from './app.service';
 
 class MockTranslateService {
-    setDefaultLang = jasmine.createSpy('setDefaultLang');
+    setFallbackLang = jasmine.createSpy('setFallbackLang');
 }
 
 class MockGcmsAuthenticationService {
@@ -40,7 +40,7 @@ describe('AppService', () => {
                 { provide: ApiBase },
                 AppService,
                 FilterService,
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockTranslateService },
                 { provide: UserSettingsService, useClass: MockUserSettings }
             ]
         });

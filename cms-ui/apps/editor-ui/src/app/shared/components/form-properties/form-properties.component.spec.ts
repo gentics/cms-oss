@@ -2,10 +2,6 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { Api } from '@editor-ui/app/core/providers/api';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { BrowseBoxComponent, I18nInputComponent } from '@gentics/cms-components';
 import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { ItemInNode, Language, Page, PageResponse, Raw, ResponseCode } from '@gentics/cms-models';
@@ -21,6 +17,9 @@ import { GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { Api } from '../../../core/providers/api';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
 import { FormPropertiesComponent } from './form-properties.component';
@@ -42,7 +41,6 @@ describe('FormProperties', () => {
                 { provide: FormEditorConfigurationService, useClass: MockFormEditorConfigurationService },
                 { provide: FormEditorService, useClass: MockFormEditorService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
-                { provide: I18nService, useClass: TestI18nService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
             declarations: [
@@ -135,13 +133,12 @@ describe('FormProperties', () => {
                 declarations: [
                     TestComponent,
                     FormPropertiesComponent,
-                    mockPipes('i18n'),
                 ],
                 schemas: [NO_ERRORS_SCHEMA],
-            })
+            });
             repositoryBrowserClient = new MockRepositoryBrowserClient();
 
-        })
+        });
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
             componentTest(() => FormPropertiesComponent, (fixture, instance) => {
@@ -169,7 +166,7 @@ describe('FormProperties', () => {
         );
 
         it('openRepositoryBrowser returns the correct Promise and setEmailTemplatePage sets the correct ID',
-            componentTest(() => FormPropertiesComponent, fixture => {
+            componentTest(() => FormPropertiesComponent, (fixture) => {
                 const options: RepositoryBrowserOptions = { selectMultiple: false, allowedSelection: 'page' };
                 const instance: FormPropertiesComponent = fixture.componentInstance;
                 instance.ngOnInit();
@@ -183,7 +180,7 @@ describe('FormProperties', () => {
                 expect(instance.dataGroup.controls.mailsource_pageid.value).toBe(111);
             }),
         );
-    })
+    });
 });
 
 @Component({
@@ -200,6 +197,7 @@ describe('FormProperties', () => {
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
     propertiesForm: FormPropertiesComponent;
+
     isMultiLang = true;
     languages: Language[] = [];
     value = {};
@@ -236,7 +234,7 @@ class MockSelectedItemHelper {
     }
 }
 
-function getExamplePageWithNodeId({ pageId, nodeId }: { pageId: number, nodeId: number }): PageWithNodeId {
+function getExamplePageWithNodeId({ pageId, nodeId }: { pageId: number; nodeId: number }): PageWithNodeId {
     const page: PageWithNodeId = getExamplePageData({ id: pageId }) as any;
     page.nodeId = nodeId;
     return page;

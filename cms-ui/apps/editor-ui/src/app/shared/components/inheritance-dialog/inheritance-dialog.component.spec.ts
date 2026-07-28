@@ -1,9 +1,9 @@
 import { ComponentFixture } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { CapitalizePipe } from '../../pipes/capitalize/capitalize.pipe';
 import { InheritanceDialog } from './inheritance-dialog.component';
 

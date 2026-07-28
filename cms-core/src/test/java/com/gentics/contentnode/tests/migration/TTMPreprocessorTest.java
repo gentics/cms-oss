@@ -207,7 +207,7 @@ public class TTMPreprocessorTest {
 
 		Page page = testSkippingPreprocessor(AbstractMigrationJob.STATUS_COMPLETED, AbstractMigrationJob.STATUS_COMPLETED);
 		Trx.operate(() -> {
-			for (ContentTag tag : page.getContent().getContentTags().values()) {
+			for (ContentTag tag : page.getContentTags().values()) {
 				if ("tag2".equals(tag.getName())) {
 					assertThat(tag).as("Tag " + tag.getName()).hasConstruct(fromConstruct.getGlobalId());
 				} else {
@@ -227,7 +227,7 @@ public class TTMPreprocessorTest {
 
 		Page page = testSkippingPreprocessor(AbstractMigrationJob.STATUS_COMPLETED_WITH_WARNINGS, AbstractMigrationJob.STATUS_SKIPPED);
 		Trx.operate(() -> {
-			for (ContentTag tag : page.getContent().getContentTags().values()) {
+			for (ContentTag tag : page.getContentTags().values()) {
 				assertThat(tag).as("Tag " + tag.getName()).hasConstruct(fromConstruct.getGlobalId());
 			}
 		});
@@ -246,17 +246,17 @@ public class TTMPreprocessorTest {
 		Page page = Trx.supply(() -> createPage(node.getFolder(), template, "Page"));
 		Trx.operate(() -> {
 			update(page, p -> {
-				p.getContent().getContentTags().put("tag1", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag1", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag1");
 				}, false));
-				p.getContent().getContentTags().put("tag2", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag2", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag2");
 				}, false));
-				p.getContent().getContentTags().put("tag3", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag3", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag3");
@@ -267,7 +267,7 @@ public class TTMPreprocessorTest {
 		migrate(request(Page.class, Arrays.asList(page), Arrays.asList(ModifyingPreprocessor.class)));
 
 		Trx.operate(() -> {
-			for (ContentTag tag : page.getContent().getContentTags().values()) {
+			for (ContentTag tag : page.getContentTags().values()) {
 				assertThat(tag).as("Tag " + tag.getName()).hasConstruct(toConstruct.getGlobalId());
 				if ("tag2".equals(tag.getName())) {
 					assertThat(tag.getValues().getByKeyname("text")).as("Value [text]").hasText("Modified by the Preprocessor");
@@ -300,7 +300,7 @@ public class TTMPreprocessorTest {
 		for (Page page : Arrays.asList(page1, page2, page3, page4)) {
 			Trx.operate(() -> {
 				update(page, p -> {
-					p.getContent().getContentTags().put("tag", create(ContentTag.class, t -> {
+					p.getContentTags().put("tag", create(ContentTag.class, t -> {
 						t.setConstructId(fromConstruct.getId());
 						t.setEnabled(true);
 						t.setName("tag");
@@ -314,7 +314,7 @@ public class TTMPreprocessorTest {
 
 		Trx.operate(() -> {
 			for (Page page : Arrays.asList(page1, page2)) {
-				assertThat(page.getContent().getContentTag("tag").getValues().getByKeyname("text")).as("Migrated value").hasText("content-one-two");
+				assertThat(page.getContentTag("tag").getValues().getByKeyname("text")).as("Migrated value").hasText("content-one-two");
 			}
 		});
 
@@ -322,7 +322,7 @@ public class TTMPreprocessorTest {
 
 		Trx.operate(() -> {
 			for (Page page : Arrays.asList(page3, page4)) {
-				assertThat(page.getContent().getContentTag("tag").getValues().getByKeyname("text")).as("Migrated value").hasText("content-two-one");
+				assertThat(page.getContentTag("tag").getValues().getByKeyname("text")).as("Migrated value").hasText("content-two-one");
 			}
 		});
 	}
@@ -363,7 +363,7 @@ public class TTMPreprocessorTest {
 
 		for (Page page : Arrays.asList(page1, page2)) {
 			Trx.operate(() -> {
-				assertThat(page.getContent().getContentTag("tag1").getValues().getByKeyname("text")).as("Migrated value").hasText("Modified by the Preprocessor");
+				assertThat(page.getContentTag("tag1").getValues().getByKeyname("text")).as("Migrated value").hasText("Modified by the Preprocessor");
 			});
 		}
 
@@ -448,7 +448,7 @@ public class TTMPreprocessorTest {
 			for (Page page : Arrays.asList(page1, page2)) {
 				Trx.operate(() -> {
 					assertThat(page.getTemplate()).as("Template of " + page).isEqualTo(toTemplate);
-					for (String tag : page.getContent().getContentTags().keySet()) {
+					for (String tag : page.getContentTags().keySet()) {
 						if (tag.equals(tagName)) {
 							assertThat(page.getContentTag(tag)).as("Skipped Tag").hasConstruct(fromConstruct.getGlobalId());
 						} else {
@@ -471,17 +471,17 @@ public class TTMPreprocessorTest {
 		Page page = Trx.supply(() -> createPage(node.getFolder(), template, "Page"));
 		Trx.operate(() -> {
 			update(page, p -> {
-				p.getContent().getContentTags().put("tag1", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag1", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag1");
 				}, false));
-				p.getContent().getContentTags().put("tag2", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag2", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag2");
 				}, false));
-				p.getContent().getContentTags().put("tag3", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag3", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag3");
@@ -510,7 +510,7 @@ public class TTMPreprocessorTest {
 		Page page = Trx.supply(() -> createPage(node.getFolder(), template, "Page"));
 		Trx.operate(() -> {
 			update(page, p -> {
-				p.getContent().getContentTags().put("tag1", create(ContentTag.class, t -> {
+				p.getContentTags().put("tag1", create(ContentTag.class, t -> {
 					t.setConstructId(fromConstruct.getId());
 					t.setEnabled(true);
 					t.setName("tag1");

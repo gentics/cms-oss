@@ -1,5 +1,5 @@
 import { FolderItemType, SortField } from '@gentics/cms-models';
-import { GtxChipSearchSearchFilterMap } from '@editor-ui/app/common/models';
+import { GtxChipSearchSearchFilterMap } from '../../common/models';
 
 export interface DisplayFields {
     selection: string[];
@@ -41,7 +41,6 @@ export interface FolderState {
     activeLanguage: number;
     activeFormLanguage: number;
     displayAllLanguages: boolean;
-    displayStatusIcons: boolean;
     displayDeleted: boolean;
     displayImagesGridView: boolean;
     filterTerm: string;

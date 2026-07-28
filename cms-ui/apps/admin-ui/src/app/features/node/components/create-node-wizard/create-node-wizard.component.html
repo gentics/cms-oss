@@ -1,75 +1,77 @@
 <gtx-wizard
-    [title]="'node.create_node_wizard_title' | i18n"
-    [finishButtonTitle]="'node.create_node_wizard_create_button' | i18n"
-    class="gtx-modal-datagrid-in-tab"
->
+  [title]="'node.create_node_wizard_title' | gtxI18n"
+  [finishButtonTitle]="'node.create_node_wizard_create_button' | gtxI18n"
+  class="gtx-modal-datagrid-in-tab"
+  >
 
-    <gtx-wizard-step
-        [title]="'node.create_node_wizard_step_properties' | i18n"
-        [nextEnabled]="fgPropertiesValid$ | async"
-        [nextClick]="setChildNodeAction"
+  <gtx-wizard-step
+    [title]="'node.create_node_wizard_step_properties' | gtxI18n"
+    [nextEnabled]="fgPropertiesValid$ | async"
+    [nextClick]="setChildNodeAction"
     >
-        <ng-template>
-            <div>
-                <form class="gtx-entity-details-form">
-                    <gtx-node-properties
-                        [formControl]="fgProperties"
-                        [mode]="NodePropertiesMode.CREATE"
-                    ></gtx-node-properties>
-                </form>
-            </div>
-        </ng-template>
-    </gtx-wizard-step>
+    <ng-template>
+      <div>
+        <form class="gtx-entity-details-form">
+          <gtx-node-properties
+            [formControl]="fgProperties"
+            [mode]="NodePropertiesMode.CREATE"
+          ></gtx-node-properties>
+        </form>
+      </div>
+    </ng-template>
+  </gtx-wizard-step>
 
-    <gtx-wizard-step
-        [title]="'node.create_node_wizard_step_publishing' | i18n"
-        [nextEnabled]="fgPublishingValid$ | async"
+  <gtx-wizard-step
+    [title]="'node.create_node_wizard_step_publishing' | gtxI18n"
+    [nextEnabled]="fgPublishingValid$ | async"
     >
-        <ng-template>
-            <div>
-                <form class="gtx-entity-details-form">
-                    <gtx-node-publishing-properties
-                        [formControl]="fgPublishing"
-                    ></gtx-node-publishing-properties>
-                </form>
-            </div>
-        </ng-template>
-    </gtx-wizard-step>
+    <ng-template>
+      <div>
+        <form class="gtx-entity-details-form">
+          <gtx-node-publishing-properties
+            [formControl]="fgPublishing"
+          ></gtx-node-publishing-properties>
+        </form>
+      </div>
+    </ng-template>
+  </gtx-wizard-step>
 
-    <gtx-wizard-step
-        [title]="'node.create_node_wizard_step_node_features' | i18n"
-        [nextEnabled]="fgNodeFeaturesValid$ | async"
-        [nextClick]="isChildNode && finishClickAction"
+  <gtx-wizard-step
+    [title]="'node.create_node_wizard_step_node_features' | gtxI18n"
+    [nextEnabled]="fgNodeFeaturesValid$ | async"
+    [nextClick]="isChildNode && finishClickAction"
     >
-        <ng-template>
-            <div>
-                <form class="gtx-entity-details-form">
-                    <gtx-node-features
-                        *ngIf="nodeFeatures$ | async as features"
-                        [formControl]="fgNodeFeatures"
-                        [availableFeatures]="features"
-                    ></gtx-node-features>
-                </form>
-            </div>
-        </ng-template>
-    </gtx-wizard-step>
+    <ng-template>
+      <div>
+        <form class="gtx-entity-details-form">
+          @if (nodeFeatures$ | async; as features) {
+            <gtx-node-features
+              [formControl]="fgNodeFeatures"
+              [availableFeatures]="features"
+            ></gtx-node-features>
+          }
+        </form>
+      </div>
+    </ng-template>
+  </gtx-wizard-step>
 
+  @if (!isChildNode) {
     <gtx-wizard-step
-        *ngIf="!isChildNode"
-        [title]="'node.create_node_wizard_step_languages' | i18n"
-        [nextEnabled]="isChildNode || selectedLanguages?.length > 0"
-        [nextClick]="finishClickAction"
-    >
-        <ng-template>
-            <div>
-                <gtx-language-table
-                    [disabled]="isChildNode"
-                    [showSearch]="true"
-                    [hideActions]="true"
-                    [(selected)]="selectedLanguages"
-                ></gtx-language-table>
-            </div>
-        </ng-template>
+      [title]="'node.create_node_wizard_step_languages' | gtxI18n"
+      [nextEnabled]="isChildNode || selectedLanguages?.length > 0"
+      [nextClick]="finishClickAction"
+      >
+      <ng-template>
+        <div>
+          <gtx-language-table
+            [disabled]="isChildNode"
+            [showSearch]="true"
+            [hideActions]="true"
+            [(selected)]="selectedLanguages"
+          ></gtx-language-table>
+        </div>
+      </ng-template>
     </gtx-wizard-step>
+  }
 
 </gtx-wizard>

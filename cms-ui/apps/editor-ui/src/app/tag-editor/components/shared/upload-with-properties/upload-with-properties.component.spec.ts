@@ -1,7 +1,6 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { File as FileModel, Folder } from '@gentics/cms-models';
 import { getExampleFileObjectData, getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
@@ -9,13 +8,13 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
 import { DynamicDisableDirective } from '../../../../shared/directives/dynamic-disable/dynamic-disable.directive';
 import { FileSizePipe } from '../../../../shared/pipes/file-size/file-size.pipe';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';
+import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { ImagePreviewComponent } from '../image-preview/image-preview.component';
 import { UploadWithPropertiesComponent } from './upload-with-properties.component';
 
@@ -24,8 +23,6 @@ import { UploadWithPropertiesComponent } from './upload-with-properties.componen
  */
 describe('UploadWithPropertiesComponent', () => {
     let folderActions: FolderActionsService;
-    let i18nService: I18nService;
-    let repositoryBrowserClient: RepositoryBrowserClient;
     let uploadConflictService: UploadConflictService;
     let uploadWithProperties: UploadWithPropertiesComponent;
     let mockFile: File;
@@ -49,7 +46,6 @@ describe('UploadWithPropertiesComponent', () => {
                 { provide: GCMSRestClientService, useClass: MockClient },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: ChangeDetectorRef, useClass: MockChangeDetectorRef },
                 { provide: ModalService, useClass: MockModalService },
             ],
@@ -64,12 +60,10 @@ describe('UploadWithPropertiesComponent', () => {
             ],
         });
 
-        folderActions = TestBed.get(FolderActionsService);
-        i18nService = TestBed.get(I18nService);
-        modalService = TestBed.get(ModalService);
-        repositoryBrowserClient = TestBed.get(RepositoryBrowserClient);
-        uploadConflictService = TestBed.get(UploadConflictService);
-        uploadWithProperties = TestBed.get(UploadWithPropertiesComponent);
+        folderActions = TestBed.inject(FolderActionsService);
+        modalService = TestBed.inject(ModalService) as any;
+        uploadConflictService = TestBed.inject(UploadConflictService);
+        uploadWithProperties = TestBed.inject(UploadWithPropertiesComponent);
     });
 
     describe('upload', () => {

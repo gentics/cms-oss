@@ -1,16 +1,17 @@
-<form
-    *ngIf="form"
+@if (form) {
+  <form
     [formGroup]="form"
     class="row small-12 medium-12"
->
+    >
     <div class="columns small-6">
-        <gtx-input
-            type="text"
-            [required]="true"
-            maxlength="50"
-            [label]="('shared.dataSource_name' | i18n) + ' *'"
-            [placeholder]="'shared.dataSource_name' | i18n"
-            formControlName="name"
-        ></gtx-input>
+      <gtx-input
+        type="text"
+        [required]="true"
+        maxlength="50"
+        [label]="('shared.dataSource_name' | gtxI18n) + ' *'"
+        [placeholder]="'shared.dataSource_name' | gtxI18n"
+        formControlName="name"
+      ></gtx-input>
     </div>
-</form>
+  </form>
+}

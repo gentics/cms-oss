@@ -1,5 +1,7 @@
+import { MockErrorHandler } from '@admin-ui/testing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { I18nNotificationService, I18nService } from '@gentics/cms-components';
 import {
     ChangePasswordError,
     ChangePasswordStart,
@@ -14,6 +16,7 @@ import {
     ValidateStart,
     ValidateSuccess,
 } from '@gentics/cms-components/auth';
+import { MockI18nNotificationService, MockI18nService } from '@gentics/cms-components/testing';
 import { LoginResponse, Raw, Response, ResponseCode, User, UserUpdateResponse, ValidateSidResponse } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
@@ -27,10 +30,9 @@ import { ObservableStopper } from '../../../../common/utils/observable-stopper/o
 import { AppStateService } from '../../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../../state/utils/test-app-state';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
-import { MockErrorHandler } from '../../error-handler/error-handler.mock';
+import { EntityManagerService } from '../../entity-manager';
+import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
 import { AuthOperations } from './auth.operations';
 
 class MockRouter {
@@ -63,23 +65,22 @@ describe('AuthOperations', () => {
             ],
             providers: [
                 AuthOperations,
-                TestAppState,
-                { provide: AppStateService, useExisting: TestAppState },
-                MockEditorUiLocalStorage,
-                { provide: EditorUiLocalStorageService, useExisting: MockEditorUiLocalStorage },
-                MockErrorHandler,
-                { provide: ErrorHandler, useExisting: MockErrorHandler },
-                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
-                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: AppStateService, useClass: TestAppState },
+                { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorage },
+                { provide: EntityManagerService, useClass: MockEntityManagerService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: Router, useClass: MockRouter },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotificationService, useClass: MockI18nNotificationService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
         }).compileComponents();
 
         client = TestBed.inject(GCMSRestClientService) as any;
         authOps = TestBed.inject(AuthOperations);
-        editorUiLocalStorage = TestBed.inject(MockEditorUiLocalStorage);
-        errorHandler = TestBed.inject(MockErrorHandler);
-        state = TestBed.inject(TestAppState);
+        editorUiLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
+        errorHandler = TestBed.inject(ErrorHandler) as any;
+        state = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
     });
 
@@ -123,7 +124,7 @@ describe('AuthOperations', () => {
 
         it('works for a success response', fakeAsync(() => {
             editorUiLocalStorage.getSid.and.returnValue(null);
-           spyOn(client.user, 'me').and.returnValue(
+            spyOn(client.user, 'me').and.returnValue(
                 observableOf<ValidateSidResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
                     user: MOCK_USER,

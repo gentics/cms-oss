@@ -1,20 +1,21 @@
 <form [formGroup]="form" class="flex-row row">
-    <gtx-input
-        class="small-8 columns"
-        [label]="('scheduler.interval_value' | i18n) + ' *'"
-        [required]="true"
-        formControlName="value"
-    ></gtx-input>
+  <gtx-input
+    class="small-8 columns"
+    [label]="('scheduler.interval_value' | gtxI18n) + ' *'"
+    [required]="true"
+    formControlName="value"
+  ></gtx-input>
 
-    <gtx-select
-        class="small-4 columns"
-        [label]="('scheduler.interval_unit' | i18n) + ' *'"
-        [required]="true"
-        formControlName="unit"
+  <gtx-select
+    class="small-4 columns"
+    [label]="('scheduler.interval_unit' | gtxI18n) + ' *'"
+    [required]="true"
+    formControlName="unit"
     >
-        <gtx-option
-            *ngFor="let unit of IntervalUnit | gtxEntries"
-            [value]="unit.value"
-        >{{ ('scheduler.interval_unitType_' + unit.value) | i18n }}</gtx-option>
-    </gtx-select>
+    @for (unit of IntervalUnit | gtxEntries; track unit.value) {
+      <gtx-option
+        [value]="unit.value"
+      >{{ ('scheduler.interval_unitType_' + unit.value) | gtxI18n }}</gtx-option>
+    }
+  </gtx-select>
 </form>

@@ -1,6 +1,7 @@
 import { removeEntries, removeEntryIfPresent } from '@admin-ui/common/utils/list-utils/list-utils';
 import { AppStateService, UpdateEntities } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     EntityIdType,
@@ -25,7 +26,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { combineLatest, Observable, of as observableOf } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 import { PermissionsService } from '../../permissions';
 
@@ -54,8 +54,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getAll(): Observable<Group<Raw>[]> {
         return this.api.group.getGroupsTree().pipe(
-            map(response => response.groups),
-            tap(groups => this.entities.addEntities(this.entityIdentifier, groups)),
+            map((response) => response.groups),
+            tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
         );
     }
@@ -65,8 +65,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getFlattned(): Observable<Group<Raw>[]> {
         return this.api.group.listGroups().pipe(
-            map(response => response.items),
-            tap(groups => this.entities.addEntities(this.entityIdentifier, groups)),
+            map((response) => response.items),
+            tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
         );
     }
@@ -74,9 +74,9 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
     /**
      * Gets the list of all permissions of groups.
      */
-    getGroupPermissions(): Observable<{[key: number]: string[]}> {
+    getGroupPermissions(): Observable<{ [key: number]: string[] }> {
         return this.api.group.listGroups().pipe(
-            map(response => response.perms),
+            map((response) => response.perms),
             this.catchAndRethrowError(),
         );
     }
@@ -86,8 +86,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getSubgroups(parentId: number): Observable<Group<Raw>[]> {
         return this.api.group.getSubgroups(parentId).pipe(
-            map(response => response.items),
-            tap(groups => this.entities.addEntities(this.entityIdentifier, groups)),
+            map((response) => response.items),
+            tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
         );
     }
@@ -112,14 +112,14 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     createSubgroup(parentId: number, subgroup: GroupCreateRequest): Observable<Group<Raw>> {
         return this.api.group.createSubgroup(parentId, subgroup).pipe(
-            map(response => response.group),
-            switchMap(group => {
+            map((response) => response.group),
+            switchMap((group) => {
                 this.entities.addEntity(this.entityIdentifier, group);
                 return this.addSubgroupToParent(parentId, group).pipe(
                     map(() => group),
                 );
             }),
-            tap(group => {
+            tap((group) => {
                 this.notification.show({
                     type: 'success',
                     message: 'shared.item_created',
@@ -140,8 +140,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     moveSubgroup(id: string | number, parentTargetId: number): Observable<Group<Raw>> {
         return this.api.group.moveSubgroup(id, parentTargetId).pipe(
-            map(response => response.group),
-            switchMap(movedGroup =>
+            map((response) => response.group),
+            switchMap((movedGroup) =>
                 this.getAll().pipe(
                     map(() => movedGroup),
                 ),
@@ -177,8 +177,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     update(id: number, update: GroupUpdateRequest): Observable<Group<Raw>> {
         return this.api.group.updateGroup(id, update).pipe(
-            map(response => response.group),
-            tap(group => {
+            map((response) => response.group),
+            tap((group) => {
                 this.entities.addEntity(this.entityIdentifier, group);
                 this.notification.show({
                     type: 'success',
@@ -195,8 +195,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getGroupUsers(id: number, options?: GroupUsersListOptions): Observable<User<Raw>[]> {
         return this.api.group.getGroupUsers(id, options).pipe(
-            map(response => response.items),
-            switchMap(users => combineLatest([
+            map((response) => response.items),
+            switchMap((users) => combineLatest([
                 observableOf(users),
                 this.entities.addEntities('user', users),
             ])),
@@ -215,7 +215,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
             // get group of created user to assemble raw user (presume that group user has been created in is already in app state)
             map((user: User<Raw>) => {
                 const userGroupIdInitial = this.entities.denormalizeEntity('group', this.appState.now.entity.group[groupId]);
-                return { ...user, groups: [ userGroupIdInitial ] };
+                return { ...user, groups: [userGroupIdInitial] };
             }),
             tap((userWithGroups: User<Raw>) => this.entities.addEntity('user', userWithGroups)),
             // display toast notification
@@ -235,8 +235,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         const group = this.appState.now.entity.group[groupId];
 
         return this.api.group.addUserToGroup(groupId, userId).pipe(
-            map(response => response.user),
-            tap(user => {
+            map((response) => response.user),
+            tap((user) => {
                 this.entities.addEntity('user', user);
                 this.notification.show({
                     type: 'success',
@@ -284,7 +284,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getPermissionsSets(groupId: number, options: GroupPermissionsListOptions = {}): Observable<PermissionsSet[]> {
         return this.api.group.getGroupPermissions(groupId, options).pipe(
-            map(response => response.items),
+            map((response) => response.items),
             this.catchAndRethrowError(),
         );
     }
@@ -294,7 +294,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getGroupTypePermissions(groupId: number, type: AccessControlledType): Observable<PermissionInfo[]> {
         return this.api.group.getGroupTypePermissions(groupId, type).pipe(
-            map(response => response.perms),
+            map((response) => response.perms),
             this.catchAndRethrowError(),
         );
     }
@@ -304,7 +304,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     getGroupInstancePermissions(groupId: number, type: AccessControlledType, instanceId: number): Observable<PermissionInfo[]> {
         return this.api.group.getGroupInstancePermissions(groupId, type, instanceId).pipe(
-            map(response => response.perms),
+            map((response) => response.perms),
             this.catchAndRethrowError(),
         );
     }
@@ -350,7 +350,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
 
     private addSubgroupToParent(parentId: number, subGroup: Group<Raw>): Observable<void> {
         const parentGroup = this.appState.now.entity.group[parentId];
-        const children = parentGroup.children ? [ ...parentGroup.children ] : [];
+        const children = parentGroup.children ? [...parentGroup.children] : [];
         children.push(subGroup.id);
         const update: Record<EntityIdType, RecursivePartial<Group<Normalized>>> = {
             [parentId]: { children },
@@ -365,7 +365,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         const allGroupIds = Object.keys(allGroups) as any as number[];
         const updatedParentGroups: Record<EntityIdType, RecursivePartial<Group<Normalized>>> = {};
 
-        allGroupIds.forEach(currGroupId => {
+        allGroupIds.forEach((currGroupId) => {
             const currGroup = allGroups[currGroupId];
             const newChildren = removeEntryIfPresent(currGroup.children, deletedGroupId) as number[];
             if (newChildren !== currGroup.children) {

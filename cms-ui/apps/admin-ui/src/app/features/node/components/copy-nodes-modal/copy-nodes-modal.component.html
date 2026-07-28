@@ -1,80 +1,76 @@
 <div class="modal-title">
-    <h5>{{ 'modal.copy_nodes_title' | i18n }}</h5>
+  <h5>{{ 'modal.copy_nodes_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
+  @if (formGroup) {
     <form
-        *ngIf="formGroup"
-        [formGroup]="formGroup"
-        class="gtx-copy-nodes-modal-form"
-    >
+      [formGroup]="formGroup"
+      class="gtx-copy-nodes-modal-form"
+      >
+      @for (subForm of getSubForms(); track subForm; let i = $index) {
         <form
-            *ngFor="let subForm of getSubForms(); let i = index"
-            [formGroup]="subForm"
-            class="gtx-copy-nodes-modal-subform row"
-        >
-            <div class="gtx-copy-nodes-modal-subform-header small-12">
-                <h6>{{ getNodeName(subForm) }}</h6>
-
-                <gtx-button
-                    icon
-                    class="gtx-copy-nodes-modal-subform-header-action"
-                    [title]="'modal.remove_from_list_action' | i18n"
-                    (click)="removeNodeFromList(i)"
-                >
-                    <icon>close</icon>
-                </gtx-button>
-            </div>
-
-            <div class="small-12 medium-6">
-                <gtx-checkbox
-                    formControlName="pages"
-                    [label]="'common.page_plural' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="templates"
-                    [label]="'common.template_plural' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="files"
-                    [label]="'common.file_plural' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="workflows"
-                    [label]="'common.workflow_plural' | i18n"
-                ></gtx-checkbox>
-            </div>
-
-            <div class="small-12 medium-6">
-                <gtx-input
-                    formControlName="copies"
-                    type="number"
-                    [label]="('common.copy_plural' | i18n) + '*'"
-                    min="1"
-                    max="100"
-                >
-                </gtx-input>
-            </div>
+          [formGroup]="subForm"
+          class="gtx-copy-nodes-modal-subform row"
+          >
+          <div class="gtx-copy-nodes-modal-subform-header small-12">
+            <h6>{{ getNodeName(subForm) }}</h6>
+            <gtx-button
+              icon
+              class="gtx-copy-nodes-modal-subform-header-action"
+              [title]="'modal.remove_from_list_action' | gtxI18n"
+              (click)="removeNodeFromList(i)"
+              >
+              <icon>close</icon>
+            </gtx-button>
+          </div>
+          <div class="small-12 medium-6">
+            <gtx-checkbox
+              formControlName="pages"
+              [label]="'common.page_plural' | gtxI18n"
+            ></gtx-checkbox>
+            <gtx-checkbox
+              formControlName="templates"
+              [label]="'common.template_plural' | gtxI18n"
+            ></gtx-checkbox>
+            <gtx-checkbox
+              formControlName="files"
+              [label]="'common.file_plural' | gtxI18n"
+            ></gtx-checkbox>
+            <gtx-checkbox
+              formControlName="workflows"
+              [label]="'common.workflow_plural' | gtxI18n"
+            ></gtx-checkbox>
+          </div>
+          <div class="small-12 medium-6">
+            <gtx-input
+              formControlName="copies"
+              type="number"
+              [label]="('common.copy_plural' | gtxI18n) + '*'"
+              min="1"
+              max="100"
+              >
+            </gtx-input>
+          </div>
         </form>
+      }
     </form>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="primary"
-        (click)="onBtnOkayClicked()"
+  <gtx-button
+    type="primary"
+    (click)="onBtnOkayClicked()"
     >
-        {{ 'common.ok_button' | i18n }}
-    </gtx-button>
+    {{ 'common.okay_button' | gtxI18n }}
+  </gtx-button>
 </div>

@@ -58,7 +58,7 @@ export function getExampleLanguageData(): IndexById<Language> {
 
 /** Returns actual page data from the ContentNode API for "GCN5 Demo" */
 export function getExamplePageData(
-    { id, userId, idVariant1 }: { id: number, userId?: number, idVariant1?: number } = { id: 95, userId: 3, idVariant1: 48 },
+    { id, userId, idVariant1 }: { id: number; userId?: number; idVariant1?: number } = { id: 95, userId: 3, idVariant1: 48 },
 ): Page<Raw> {
     userId = userId || 3;
     idVariant1 = idVariant1 || 48;
@@ -76,20 +76,22 @@ export function getExamplePageData(
         queued: false,
         master: true,
         tags: {
-            content : {
-                id : 137,
-                name : 'content',
-                constructId : 65,
-                active : true,
-                properties : {
-                    text : {
-                        type : TagPropertyType.RICHTEXT,
-                        id : 685,
-                        partId : 349,
-                        stringValue : '<br><node blogposts1><br><br><br>',
+            content: {
+                id: 137,
+                name: 'content',
+                constructId: 65,
+                active: true,
+                rootTag: true,
+                inherited: false,
+                properties: {
+                    text: {
+                        type: TagPropertyType.RICHTEXT,
+                        id: 685,
+                        partId: 349,
+                        stringValue: '<br><node blogposts1><br><br><br>',
                     },
                 },
-                type : 'CONTENTTAG',
+                type: 'CONTENTTAG',
             },
         },
         languageVariants: {
@@ -329,17 +331,16 @@ export function getExamplePageData(
 }
 
 export function getExamplePageDataNormalized(
-    { id, userId, idVariant1 }: { id: number, userId?: number, idVariant1?: number } = { id: 95, userId: 3, idVariant1: 48 },
+    { id, userId, idVariant1 }: { id: number; userId?: number; idVariant1?: number } = { id: 95, userId: 3, idVariant1: 48 },
 ): Page<Normalized> {
     const rawPage = getExamplePageData({ id, userId, idVariant1 });
     const normalized = normalize(rawPage, schemas.page);
     return normalized.entities.page[normalized.result] as Page<Normalized>;
 }
 
-
 /** Returns actual form data from the ContentNode API for "GCN5 Demo" */
 export function getExampleFormData(
-    { id, userId }: { id: number, userId?: number} = { id: 95, userId: 3 },
+    { id, userId }: { id: number; userId?: number } = { id: 95, userId: 3 },
 ): Form<Raw> {
     userId = userId || 3;
     return {
@@ -483,21 +484,20 @@ export function getExampleFormData(
         masterNodeId: undefined,
         disinheritDefault: undefined,
         disinherited: undefined,
-    }
+    };
 }
 
 export function getExampleFormDataNormalized(
-    { id, userId }: { id: number, userId?: number } = { id: 95, userId: 3 },
+    { id, userId }: { id: number; userId?: number } = { id: 95, userId: 3 },
 ): Form<Normalized> {
     const rawForm = getExampleFormData({ id, userId });
     const normalized = normalize(rawForm, schemas.form);
     return normalized.entities.form[normalized.result] as Form<Normalized>;
 }
 
-
 /** Returns actual folder data from the ContentNode API for "GCN5 Demo" */
-export function getExampleFolderData({ id, userId, publishDir }: { id: number, userId?: number, publishDir?: string }
-= { id: 115, userId: 3, publishDir: '/' }): Folder<Raw> {
+export function getExampleFolderData({ id, userId, publishDir }: { id: number; userId?: number; publishDir?: string }
+    = { id: 115, userId: 3, publishDir: '/' }): Folder<Raw> {
     userId = userId || 3;
     publishDir = publishDir || '/';
     return {
@@ -636,80 +636,80 @@ export function getExampleFolderData({ id, userId, publishDir }: { id: number, u
     };
 }
 
-export function getExampleFolderDataNormalized({ id, userId, publishDir }: { id: number, userId?: number, publishDir?: string }
-= { id: 115, userId: 3, publishDir: '/' }): Folder<Normalized> {
+export function getExampleFolderDataNormalized({ id, userId, publishDir }: { id: number; userId?: number; publishDir?: string }
+    = { id: 115, userId: 3, publishDir: '/' }): Folder<Normalized> {
     const rawFolder = getExampleFolderData({ id, userId, publishDir });
     const normalized = normalize(rawFolder, schemas.folder);
     return normalized.entities.folder[normalized.result] as Folder<Normalized>;
 }
 
 /** Returns actual user data from the ContentNode API for "GCN5 Demo" */
-export function getExampleImageData({ id, userId }: { id: number, userId?: number } = { id: 1, userId: 3 }): Image<Raw> {
+export function getExampleImageData({ id, userId }: { id: number; userId?: number } = { id: 1, userId: 3 }): Image<Raw> {
     userId = userId || 3;
     return {
         '@class': 'com.gentics.contentnode.rest.model.Image',
-        typeId: 10011,
-        iconCls: 'gtx_image',
-        gisResizable: true,
-        sizeX: 600,
-        sizeY: 331,
-        dpiX: 0,
-        dpiY: 0,
-        text: 'aloha_editor.png',
-        fileType: 'image/png',
-        folderName: '[Images]',
-        cls: 'file',
-        leaf: true,
-        description: '',
-        disinherited: false,
-        excluded: false,
-        disinheritDefault: false,
-        online: true,
-        channelId: 0,
-        folderId: 21,
-        fpX: 0.5,
-        fpY: 0.5,
-        fileSize: 150318,
-        forceOnline: false,
-        broken: false,
-        masterNodeId: 1,
-        inheritedFrom: 'GCN5 Demo',
-        inheritedFromId: 1,
-        masterNode: 'GCN5 Demo',
-        liveUrl: '',
-        inherited: false,
-        path: '/GCN5 Demo/[Media]/[Images]/',
-        publishPath: '/Content.Node/images/aloha_editor.png',
-        globalId: 'A547.72642',
-        editor: {
+        "typeId": 10011,
+        "iconCls": 'gtx_image',
+        "gisResizable": true,
+        "sizeX": 600,
+        "sizeY": 331,
+        "dpiX": 0,
+        "dpiY": 0,
+        "text": 'aloha_editor.png',
+        "fileType": 'image/png',
+        "folderName": '[Images]',
+        "cls": 'file',
+        "leaf": true,
+        "description": '',
+        "disinherited": false,
+        "excluded": false,
+        "disinheritDefault": false,
+        "online": true,
+        "channelId": 0,
+        "folderId": 21,
+        "fpX": 0.5,
+        "fpY": 0.5,
+        "fileSize": 150318,
+        "forceOnline": false,
+        "broken": false,
+        "masterNodeId": 1,
+        "inheritedFrom": 'GCN5 Demo',
+        "inheritedFromId": 1,
+        "masterNode": 'GCN5 Demo',
+        "liveUrl": '',
+        "inherited": false,
+        "path": '/GCN5 Demo/[Media]/[Images]/',
+        "publishPath": '/Content.Node/images/aloha_editor.png',
+        "globalId": 'A547.72642',
+        "editor": {
             email: 'nowhere@gentics.com',
             firstName: 'Node',
             lastName: 'Admin',
             id: userId,
         },
-        creator: {
+        "creator": {
             email: 'nowhere@gentics.com',
             firstName: 'Node',
             lastName: 'Admin',
             id: userId,
         },
-        cdate: 1288632521,
-        edate: 1288632521,
-        name: 'aloha_editor.png',
-        id: id,
-        type: 'image',
-        customCdate: 0,
-        customEdate: 0,
+        "cdate": 1288632521,
+        "edate": 1288632521,
+        "name": 'aloha_editor.png',
+        "id": id,
+        "type": 'image',
+        "customCdate": 0,
+        "customEdate": 0,
     };
 }
 
-export function getExampleImageDataNormalized({ id, userId }: { id: number, userId?: number } = { id: 1, userId: 3 }): Image<Normalized> {
+export function getExampleImageDataNormalized({ id, userId }: { id: number; userId?: number } = { id: 1, userId: 3 }): Image<Normalized> {
     const rawImage = getExampleImageData({ id, userId });
     const normalized = normalize(rawImage, schemas.image);
     return normalized.entities.image[normalized.result] as Image<Normalized>;
 }
 
-export function getExampleFileData({ id, userId }: { id: number, userId?: number } = { id: 41, userId: 3 }): FileModel<Raw> {
+export function getExampleFileData({ id, userId }: { id: number; userId?: number } = { id: 41, userId: 3 }): FileModel<Raw> {
     return {
         id: id,
         globalId: 'A547.74274',
@@ -760,14 +760,14 @@ export function getExampleFileData({ id, userId }: { id: number, userId?: number
     };
 }
 
-export function getExampleFileDataNormalized({ id, userId }: { id: number, userId?: number } = { id: 1, userId: 3 }): FileModel<Normalized> {
+export function getExampleFileDataNormalized({ id, userId }: { id: number; userId?: number } = { id: 1, userId: 3 }): FileModel<Normalized> {
     const rawFile = getExampleFileData({ id, userId });
     const normalized = normalize(rawFile, schemas.file);
     return normalized.entities.file[normalized.result] as FileModel<Normalized>;
 }
 
 /** Returns actual user data from the ContentNode API when editing an image in "GCN5 Demo" */
-export function getExampleNewImageData({ id, userId }: { id: number, userId?: number } = { id: 1, userId: 3 }): FileModel<Raw> {
+export function getExampleNewImageData({ id, userId }: { id: number; userId?: number } = { id: 1, userId: 3 }): FileModel<Raw> {
     userId = userId || 3;
     return {
         typeId: 10008,
@@ -783,6 +783,8 @@ export function getExampleNewImageData({ id, userId }: { id: number, userId?: nu
                 constructId: 1,
                 active: false,
                 name: 'object.copyright',
+                rootTag: false,
+                inherited: false,
                 properties: {
                     text: {
                         partId: 1,
@@ -858,6 +860,8 @@ export function getExampleObjectTag(data: Partial<ObjectTag> = {}): ObjectTag {
         inheritable: false,
         required: false,
         sortOrder: 10,
+        rootTag: false,
+        inherited: false,
         properties: {
             text: {
                 partId: 1,
@@ -878,7 +882,7 @@ export function getExampleConstruct(data: Partial<TagType> = {}): TagType {
         keyword: 'example',
         parts: [],
         ...data,
-    }
+    };
 }
 
 export function getExampleEditableObjectTag(data: Partial<EditableObjectTag> = {}): EditableObjectTag {
@@ -886,9 +890,8 @@ export function getExampleEditableObjectTag(data: Partial<EditableObjectTag> = {
         ...getExampleObjectTag(),
         tagType: getExampleConstruct(),
         ...data,
-    }
+    };
 }
-
 
 export function getExampleUserDataNormalized({ id }: { id: number } = { id: 3 }): User<Normalized> {
     const rawUser = getExampleUserData({ id });
@@ -971,9 +974,9 @@ export function getExampleTemplateData(
         masterId,
         userId,
     }: {
-        id: number,
-        masterId: number,
-        userId?: number,
+        id: number;
+        masterId: number;
+        userId?: number;
     } = {
         id: 115,
         masterId: 1,
@@ -985,59 +988,61 @@ export function getExampleTemplateData(
 
     return {
         id,
-        globalId : 'A547.69449',
+        globalId: 'A547.69449',
         masterId,
         type: 'template',
-        name : 'Contentpage',
-        description : '',
-        creator : {
-            id : userId,
-            firstName : '.Node',
-            lastName : 'Gentics',
-            email : 'nowhere@gentics.com',
+        name: 'Contentpage',
+        description: '',
+        creator: {
+            id: userId,
+            firstName: '.Node',
+            lastName: 'Gentics',
+            email: 'nowhere@gentics.com',
         },
-        cdate : 1280413392,
-        editor : {
-            id : userId,
-            firstName : '.Node',
-            lastName : 'Gentics',
-            email : 'nowhere@gentics.com',
+        cdate: 1280413392,
+        editor: {
+            id: userId,
+            firstName: '.Node',
+            lastName: 'Gentics',
+            email: 'nowhere@gentics.com',
         },
-        edate : 1316086962,
-        locked : false,
-        inherited : false,
-        master : true,
-        markupLanguage : {
-            id : 1,
-            name : 'HTML',
-            extension : 'html',
-            contentType : 'text/html',
+        edate: 1316086962,
+        locked: false,
+        inherited: false,
+        master: true,
+        markupLanguage: {
+            id: 1,
+            name: 'HTML',
+            extension: 'html',
+            contentType: 'text/html',
         },
-        inheritedFrom : 'GCN5 Demo',
-        masterNode : 'GCN5 Demo',
-        channelSetId : 66,
+        inheritedFrom: 'GCN5 Demo',
+        masterNode: 'GCN5 Demo',
+        channelSetId: 66,
         folderId: 0,
         path: '',
         objectTags: null,
         source: null,
         channelId: null,
         templateTags: {
-            content : {
-                id : 137,
-                name : 'content',
-                constructId : 65,
-                active : true,
+            content: {
+                id: 137,
+                name: 'content',
+                constructId: 65,
+                active: true,
                 editableInPage: true,
                 mandatory: false,
-                properties : {
-                    text : {
-                        type : TagPropertyType.RICHTEXT,
-                        id : 685,
-                        partId : 349,
-                        stringValue : '<br><node blogposts1><br><br><br>',
+                rootTag: true,
+                inherited: false,
+                properties: {
+                    text: {
+                        type: TagPropertyType.RICHTEXT,
+                        id: 685,
+                        partId: 349,
+                        stringValue: '<br><node blogposts1><br><br><br>',
                     },
                 },
-                type : 'CONTENTTAG',
+                type: 'CONTENTTAG',
             },
         },
     };
@@ -1049,9 +1054,9 @@ export function getExampleTemplateDataNormalized(
         masterId,
         userId,
     }: {
-        id: number,
-        masterId: number,
-        userId?: number,
+        id: number;
+        masterId: number;
+        userId?: number;
     } = {
         id: 115,
         masterId: 1,
@@ -1078,67 +1083,67 @@ export function getExampleFileObjectData(): Partial<File> {
 
 export function getExampleReports(): any {
     return {
-        totalCount : 2,
-        currentPage : 1,
-        pageCount : 1,
-        perPage : 12,
-        entries : [ {
-            uuid : '291b80fc0f344b4abc15ff7fb0487da1',
-            version : '1.0',
-            fields : {
-                input_fbeb53d4_79c5_4745_b60e_adb17fbf250 : '12345',
-                file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce : {
-                    fileName : 'öpäßü!_-$%&()[]{}+#éáúíóâêîôû.pdf',
+        totalCount: 2,
+        currentPage: 1,
+        pageCount: 1,
+        perPage: 12,
+        entries: [{
+            uuid: '291b80fc0f344b4abc15ff7fb0487da1',
+            version: '1.0',
+            fields: {
+                input_fbeb53d4_79c5_4745_b60e_adb17fbf250: '12345',
+                file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce: {
+                    fileName: 'öpäßü!_-$%&()[]{}+#éáúíóâêîôû.pdf',
                 },
-                errors : '',
+                errors: '',
             },
         }, {
-            uuid : '72a7334c56c641fe93a44b10bdffc98f',
-            version : '1.0',
-            fields : {
-                input_fbeb53d4_79c5_4745_b60e_adb17fbf2508 : '234234',
-                file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce : {
-                    fileName : '1.jpg',
+            uuid: '72a7334c56c641fe93a44b10bdffc98f',
+            version: '1.0',
+            fields: {
+                input_fbeb53d4_79c5_4745_b60e_adb17fbf2508: '234234',
+                file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce: {
+                    fileName: '1.jpg',
                 },
-                errors : '',
+                errors: '',
             },
-        } ],
-        elements : {
-            buttons_7f4a6124_865b_4c04_937b_d43ea4c8495f : {
-                type : 'buttons',
-                active : true,
-                mandatory : false,
-                elements : [],
-                multivalue : false,
-                globalId : '7f4a6124-865b-4c04-937b-d43ea4c8495f',
-                submitlabel : 'Submit',
-                resetlabel : null,
-                showreset : null,
+        }],
+        elements: {
+            buttons_7f4a6124_865b_4c04_937b_d43ea4c8495f: {
+                type: 'buttons',
+                active: true,
+                mandatory: false,
+                elements: [],
+                multivalue: false,
+                globalId: '7f4a6124-865b-4c04-937b-d43ea4c8495f',
+                submitlabel: 'Submit',
+                resetlabel: null,
+                showreset: null,
             },
-            file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce : {
-                label : 'Fileupload',
-                type : 'file',
-                active : true,
-                mandatory : false,
-                elements : [],
-                multivalue : false,
-                max_filesize : 0,
-                globalId : '127d4c49-9415-4ef8-aa1a-0aa96d1b94ce',
+            file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce: {
+                label: 'Fileupload',
+                type: 'file',
+                active: true,
+                mandatory: false,
+                elements: [],
+                multivalue: false,
+                max_filesize: 0,
+                globalId: '127d4c49-9415-4ef8-aa1a-0aa96d1b94ce',
             },
-            input_fbeb53d4_79c5_4745_b60e_adb17fbf2508 : {
-                label : 'Input 1 Mandatory telephone',
-                type : 'input',
-                active : true,
-                mandatory : true,
-                validation : 'telephone',
-                elements : [],
-                multivalue : false,
-                globalId : 'fbeb53d4-79c5-4745-b60e-adb17fbf2508',
-                maxVal : null,
-                placeholder : null,
-                minVal : null,
-                maxCharCount : null,
-                value : null,
+            input_fbeb53d4_79c5_4745_b60e_adb17fbf2508: {
+                label: 'Input 1 Mandatory telephone',
+                type: 'input',
+                active: true,
+                mandatory: true,
+                validation: 'telephone',
+                elements: [],
+                multivalue: false,
+                globalId: 'fbeb53d4-79c5-4745-b60e-adb17fbf2508',
+                maxVal: null,
+                placeholder: null,
+                minVal: null,
+                maxCharCount: null,
+                value: null,
             },
         },
     };

@@ -138,6 +138,10 @@ public class VelocityRenderingSandboxTest extends AbstractVelocityRenderingTest 
 
 		page = update(page, p -> {
 			ContentTag urlsTag = p.getContent().addContentTag(urlConstruct.getId());
+
+			// Since adding partial localization, addContentTag() will generate a UUID suffix for generated tag. For testing
+			// purposes we need to set the tagname explicitly.
+			urlsTag.setName("url_construct1");
 			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(page);
 			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
 		}).unlock().build();

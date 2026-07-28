@@ -1,37 +1,38 @@
-<div class="language-select" *ngIf="1 < variants.length; else one_language_text">
+@if (1 < variants.length) {
+  <div class="language-select">
     <gtx-select
-        [placeholder]="'common.select_placeholder' | i18n"
-        [multiple]="true"
-        [value]="selection"
-        (valueChange)="onSelectChange($event)"
-    >
+      [placeholder]="'common.select_placeholder' | gtxI18n"
+      [multiple]="true"
+      [value]="selection"
+      (valueChange)="onSelectChange($event)"
+      >
+      @for (languageCode of variants; track languageCode) {
         <gtx-option
-            *ngFor="let languageCode of variants"
-            [value]="languageCode"
-        >{{ 'lang.' + languageCode | i18n }}</gtx-option>
+          [value]="languageCode"
+        >{{ 'lang.' + languageCode | gtxI18n }}</gtx-option>
+      }
     </gtx-select>
-
     <gtx-button
-        flat
-        size="small"
-        class="show-on-hover"
-        type="secondary"
-        [title]="toggleTitle | i18n: { current: ('lang.' + activeFolderLanguage?.code | i18n) }"
-        (click)="toggleLanguageVariantSelection()"
-    >
-        <icon left>{{ allVariantsSelected && canSelectNone ? 'not_interested' : 'check' }}</icon>
-        <span>{{ allVariantsSelected
-            ? (canSelectNone
-                ? ('modal.page_select_none_button' | i18n)
-                : activeFolderLanguage?.code
-            )
-            : 'modal.page_select_all_button' | i18n
-        }}</span>
+      flat
+      size="small"
+      class="show-on-hover"
+      type="secondary"
+      [title]="toggleTitle | gtxI18n: { current: ('lang.' + activeFolderLanguage?.code | gtxI18n) }"
+      (click)="toggleLanguageVariantSelection()"
+      >
+      <icon left>{{ allVariantsSelected && canSelectNone ? 'not_interested' : 'check' }}</icon>
+      <span>{{ allVariantsSelected
+        ? (canSelectNone
+        ? ('modal.page_select_none_button' | gtxI18n)
+        : activeFolderLanguage?.code
+        )
+        : 'modal.page_select_all_button' |gtxI18n
+      }}</span>
     </gtx-button>
-</div>
+  </div>
+} @else {
+  <div class="one_language_text">
+    <span>{{ variants.length > 0 ? ('lang.' + variants[0] | gtxI18n) : activeFolderLanguage?.name }}</span>
+  </div>
+}
 
-<ng-template #one_language_text>
-    <div class="one_language_text">
-        <span>{{ variants.length > 0 ? ('lang.' + variants[0] | i18n) : activeFolderLanguage?.name }}</span>
-    </div>
-</ng-template>

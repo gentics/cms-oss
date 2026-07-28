@@ -1,32 +1,35 @@
 <div class="modal-title">
-    <h5>{{ 'modal.sorting_title' | i18n }}</h5>
+  <h5>{{ 'modal.sorting_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
+  @for (field of availableFields; track field) {
     <gtx-contents-list-item
-        *ngFor="let field of availableFields"
-        class="no-select"
-        [class.selected]="field === sortBy"
-        (click)="toggleSort(field)"
-    >
-        <div class="item-primary">
-            <div class="field">
-                {{ 'common.sort_' + field | i18n }}
-            </div>
+      class="no-select"
+      [class.selected]="field === sortBy"
+      (click)="toggleSort(field)"
+      >
+      <div class="item-primary">
+        <div class="field">
+          {{ 'common.sort_' + field | gtxI18n }}
         </div>
-        <div class="sort-order" *ngIf="field === sortBy">
-            {{ 'common.sort_' + sortOrder | i18n }}
-            <icon>{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
+      </div>
+      @if (field === sortBy) {
+        <div class="sort-order">
+          {{ 'common.sort_' + sortOrder | gtxI18n }}
+          <icon>{{ sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
         </div>
+      }
     </gtx-contents-list-item>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
-    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
+  >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
 
-    <gtx-button (click)="setSort()">{{ 'common.okay_button' | i18n }}</gtx-button>
+  <gtx-button (click)="setSort()">{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

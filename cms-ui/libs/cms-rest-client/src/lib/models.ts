@@ -111,7 +111,6 @@ export interface GCMSRestClientRequest<T> {
      * Repeated calls of this function may not trigger additional requests,
      * but may return the same promise/response.
      * For multiple requests, call the client functions accordingly.
-     *
      * @returns A promise with the requested/parsed data from the response.
      */
     send: () => Promise<T>;
@@ -133,7 +132,6 @@ export interface GCMSClientDriver {
     /**
      * Performs a request to the API and returns a prepared request.
      * The prepared request must return the body of the response, parsed, as JSON when sent.
-     *
      * @param request The request that should be sent to the API.
      * @param body The body that should be sent to the API
      */
@@ -145,7 +143,6 @@ export interface GCMSClientDriver {
     /**
      * Performs a request to the API and returns a prepared request.
      * The prepared request must return the body of the response, raw, without any parsing.
-     *
      * @param request The request that should be sent to the API.
      * @param body The body that should be sent to the API
      */
@@ -157,7 +154,6 @@ export interface GCMSClientDriver {
     /**
      * Performs a request to the API and returns a prepared request.
      * The prepared request must return the body of the response, as a Blob, to further process or download.
-     *
      * @param request The request that should be sent to the API.
      * @param body The body that should be sent to the API
      */
@@ -218,4 +214,4 @@ export type GCMSKeycloakAPI = MappedAPI<AbstractKeycloakAPI>;
 
 export type GCMSRootAPI = {
     [K in keyof AbstractRootAPI]: MappedAPI<AbstractRootAPI[K]>;
-}
+};

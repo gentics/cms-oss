@@ -1,12 +1,12 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
-import { WindowRef } from '@gentics/cms-components';
+import { I18nService, WindowRef } from '@gentics/cms-components';
 import { AuthenticationModule } from '@gentics/cms-components/auth';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { EmbeddedTool } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { Subject } from 'rxjs';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
@@ -31,7 +31,7 @@ describe('EmbeddedToolsService', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ModalService, useClass: MockModalService },
                 { provide: Router, useClass: MockRouter },
-                { provide: TranslateService, useClass: MockTranslateService },
+                { provide: I18nService, useClass: MockI18nService },
                 { provide: ToolApiChannelService, useClass: MockApiChannelService },
                 { provide: WindowRef, useClass: MockWindowRef },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -39,7 +39,7 @@ describe('EmbeddedToolsService', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         client = TestBed.inject(GCMSRestClientService) as any;
         spyOn(client.admin, 'getTools').and.callThrough();
 
@@ -52,8 +52,8 @@ describe('EmbeddedToolsService', () => {
             toolUrl: 'tool-url',
         };
 
-        router = TestBed.get(Router);
-        service = TestBed.get(EmbeddedToolsService);
+        router = TestBed.inject(Router) as any;
+        service = TestBed.inject(EmbeddedToolsService);
     });
 
     function pretendUserWasLoggedIn(): void {
@@ -84,7 +84,7 @@ describe('EmbeddedToolsService', () => {
 
         it('updates the state on success', fakeAsync(() => {
             const responseSubject = new Subject<{ tools: EmbeddedTool[] }>();
-            client.admin.getTools = (() => responseSubject as any);
+            client.admin.getTools = () => responseSubject as any;
 
             service.loadAvailableToolsWhenLoggedIn();
 
@@ -101,7 +101,7 @@ describe('EmbeddedToolsService', () => {
 
         it('updates the state on error', () => {
             const responseSubject = new Subject<{ tools: any }>();
-            client.admin.getTools = (() => responseSubject as any);
+            client.admin.getTools = () => responseSubject as any;
 
             service.loadAvailableToolsWhenLoggedIn();
             pretendUserWasLoggedIn();
@@ -198,16 +198,10 @@ class MockModalService {
 
     dialog(config: any): Promise<any> {
         return Promise.resolve({
-            open: () => new Promise<any>(resolve => {
+            open: () => new Promise<any>((resolve) => {
                 this.closeLastDialog = resolve;
             }),
         });
-    }
-}
-
-class MockTranslateService {
-    instant(key: string): string {
-        return key;
     }
 }
 
@@ -228,5 +222,5 @@ class MockWindowRef {
 class MockTabWindow {
     close = jasmine.createSpy('close');
     focus = jasmine.createSpy('focus');
-    location: { href: string; };
+    location: { href: string };
 }

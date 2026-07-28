@@ -56,7 +56,7 @@ describe('SingleSignOnComponent', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof TestApplicationState).toBe(true);
     });
 

@@ -3,7 +3,7 @@ import { tick } from '@angular/core/testing';
 import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
 import { MultiValueValidityState } from '../../../common';
-import { componentTest, configureComponentTest } from '../../../testing';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { StringListComponent } from './string-list.component';
 
 describe('StringListComponent', () => {
@@ -135,7 +135,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query((element) => element.nativeElement === changeInputRef).componentInstance;
             changeInput.handleInputChange({
                 preventDefault: () => {},
                 stopPropagation: () => {},
@@ -203,7 +203,7 @@ describe('StringListComponent', () => {
             const inputs = fixture.nativeElement.querySelectorAll('.list .input input');
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
-            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query((element) => element.nativeElement === inputRef).componentInstance;
             changeInput.handleInputChange({
                 preventDefault: () => {},
                 stopPropagation: () => {},
@@ -265,7 +265,7 @@ describe('StringListComponent', () => {
                 this.formChangeSpy = spyOn(this, 'onFormControlChange' as any) as any;
                 this.valueChangeSpy = spyOn(this, 'onValueChange' as any) as any;
                 this.onTouchSpy = spyOn(this, 'onTouch' as any) as any;
-                this.formControl.valueChanges.subscribe(change => this.onFormControlChange(change));
+                this.formControl.valueChanges.subscribe((change) => this.onFormControlChange(change));
             }
 
             onFormControlChange(change: any): void { }
@@ -380,7 +380,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query((element) => element.nativeElement === changeInputRef).componentInstance;
             changeInput.handleInputChange({
                 preventDefault: () => {},
                 stopPropagation: () => {},
@@ -420,7 +420,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query((element) => element.nativeElement === changeInputRef).componentInstance;
             changeInput.handleInputChange({
                 preventDefault: () => {},
                 stopPropagation: () => {},
@@ -499,7 +499,7 @@ describe('StringListComponent', () => {
             const inputs = fixture.nativeElement.querySelectorAll('.list .input input');
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
-            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query((element) => element.nativeElement === inputRef).componentInstance;
             changeInput.handleInputChange({
                 preventDefault: () => {},
                 stopPropagation: () => {},

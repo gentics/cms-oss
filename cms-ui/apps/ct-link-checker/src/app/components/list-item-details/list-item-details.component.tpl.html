@@ -1,45 +1,77 @@
 <div class="fields-wrapper" #fieldsWrapper>
-    <div *ngFor="let field of fields">
-        <div [ngSwitch]="field">
-            <detail-chip *ngSwitchCase="'creator'">
-                {{ 'common.creator_label' | translate }}: {{ item[field] | userFullName }}
+  @for (field of fields; track field) {
+    <div>
+      <div>
+        @switch (field) {
+          @case ('creator') {
+            <detail-chip>
+              {{ 'common.creator_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'editor'">
-                {{ 'common.editor_label' | translate }}: {{ item[field] | userFullName }}
+          }
+          @case ('editor') {
+            <detail-chip>
+              {{ 'common.editor_label' | gtxI18n }}: {{ item[field] | userFullName }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'cdate'">
-                {{ 'common.date_created_label' | translate }}: {{ item[field] | i18nDate }}
+          }
+          @case ('cdate') {
+            <detail-chip>
+              {{ 'common.date_created_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'customCdate'">
-                {{ 'common.date_custom_created_label' | translate }}: {{ item[field] ? (item[field] | i18nDate) : '-' }}
+          }
+          @case ('customCdate') {
+            <detail-chip>
+              {{ 'common.date_custom_created_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : '-' }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'edate'">
-                {{ 'common.date_edited_label' | translate }}: {{ item[field] | i18nDate }}
+          }
+          @case ('edate') {
+            <detail-chip>
+              {{ 'common.date_edited_label' | gtxI18n }}: {{ item[field] | gtxI18nDate }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'customEdate'">
-                {{ 'common.date_custom_edited_label' | translate }}: {{ item[field] ? (item[field] | i18nDate) : '-' }}
+          }
+          @case ('customEdate') {
+            <detail-chip>
+              {{ 'common.date_custom_edited_label' | gtxI18n }}: {{ item[field] ? (item[field] | gtxI18nDate) : '-' }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'pageStatus'">
-                {{ item[field] }}
+          }
+          @case ('pageStatus') {
+            <detail-chip>
+              {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'priority'">
-                Priority: {{ item[field] }}
+          }
+          @case ('priority') {
+            <detail-chip>
+              Priority: {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'fileType'">
-                <i class="material-icons">insert_drive_file</i> {{ item[field] }}
+          }
+          @case ('fileType') {
+            <detail-chip>
+              <i class="material-icons">insert_drive_file</i> {{ item[field] }}
             </detail-chip>
-            <detail-chip *ngSwitchCase="'usage'" (click)="usageClicked($event, item)" class="usage">
-                <span>{{ 'common.usage_label' | translate }}:</span>
-                <span *ngIf="item?.usage?.total !== undefined" class="usage-count">{{ totalUsage(item) }}</span>
-                <i *ngIf="item?.usage?.total === undefined"
-                   class="usage-spinner material-icons usage-count">hourglass_empty</i>
+          }
+          @case ('usage') {
+            <detail-chip (click)="usageClicked($event, item)" class="usage">
+              <span>{{ 'common.usage_label' | gtxI18n }}:</span>
+              @if (item?.usage?.total !== undefined) {
+                <span class="usage-count">{{ totalUsage(item) }}</span>
+              }
+              @if (item?.usage?.total === undefined) {
+                <i
+                class="usage-spinner material-icons usage-count">hourglass_empty</i>
+              }
             </detail-chip>
-            <detail-chip *ngSwitchDefault>
-                {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
+          }
+          @default {
+            <detail-chip>
+              {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
             </detail-chip>
-            <detail-chip *ngSwitchCase="'globalId'">
-                {{ 'editor.item_global_id_label' | translate }}:<br>{{ item[field] }}
+          }
+          @case ('globalId') {
+            <detail-chip>
+              {{ 'editor.item_global_id_label' | gtxI18n }}:<br>{{ item[field] }}
             </detail-chip>
-        </div>
+          }
+        }
+      </div>
     </div>
+  }
 </div>

@@ -1,170 +1,156 @@
-<form *ngIf="form" [formGroup]="form" class="gtx-form">
+@if (form) {
+  <form [formGroup]="form" class="gtx-form">
     <div class="row">
-
-        <div class="input-container small-12 medium-6 columns">
-            <div class="gtx-form-section-title">{{ 'shared.title_general' | i18n }}</div>
-
-            <gtx-input
-                type="text"
-                [required]="true"
-                [label]="('node.node_name' | i18n) + ' *'"
-                [placeholder]="'node.node_name' | i18n"
-                formControlName="name"
-            ></gtx-input>
-
-            <ng-container *ngIf="multiChannelingEnabled">
-                <ng-container *ngIf="mode === NodePropertiesMode.CREATE; else inheritedFromNotChangeable">
-                    <gtx-select
-                        [label]="'node.derives_from' | i18n:{ master: '' }"
-                        [clearable]="true"
-                        [placeholder]=""
-                        formControlName="inheritedFromId"
-                    >
-                        <gtx-option
-                            *ngFor="let node of nodes"
-                            [value]="node.id"
-                        >{{ node.name }}</gtx-option>
-                    </gtx-select>
-                </ng-container>
-
-                <ng-template #inheritedFromNotChangeable>
-                    <div *ngIf="isChannel" class="gtx-inheritance-info">
-                        <icon>input</icon>
-                        {{ 'node.derives_from' | i18n:{ master: inheritedFromName || '' } }}
-                    </div>
-                </ng-template>
-            </ng-container>
-
-            <gtx-textarea
-                [required]="false"
-                [label]="'shared.description' | i18n"
-                [placeholder]="'shared.description' | i18n"
-                formControlName="description"
-            ></gtx-textarea>
-
-            <ng-container *ngIf="meshCrEnabled">
-                <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | i18n }}</div>
-
-                <gtx-input
-                    type="text"
-                    [required]="false"
-                    [label]="('node.mesh_project_name' | i18n)"
-                    [placeholder]="'node.mesh_project_name' | i18n"
-                    formControlName="meshProjectName"
-                ></gtx-input>
-
-                <gtx-select
-                    [label]="('node.mesh_preview_url_type' | i18n) + ' *'"
-                    [value]="previewType"
-                    [clearable]="false"
-                    formControlName="previewType"
-                >
-                    <gtx-option
-                        *ngFor="let type of MESH_PREVIEWURL_TYPES"
-                        [value]="type.id"
-                    >{{ type.label | i18n }}</gtx-option>
-                </gtx-select>
-
-                <gtx-input
-                    type="text"
-                    [label]="('node.mesh_preview_url' | i18n)"
-                    [placeholder]="'node.mesh_preview_url' | i18n"
-                    formControlName="meshPreviewUrl"
-                ></gtx-input>
-
-                <ng-container *ngIf="form?.controls?.meshPreviewUrlProperty?.enabled">
-                    <gtx-input
-                        type="text"
-                        [required]="true"
-                        [label]="('node.mesh_preview_url_property' | i18n)"
-                        [placeholder]="'node.mesh_preview_url_property' | i18n"
-                        formControlName="meshPreviewUrlProperty"
-                    ></gtx-input>
-
-                    <span
-                        *ngIf="form?.controls?.meshPreviewUrlProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]"
-                        class="container-validator-errors"
-                    >
-                        {{ 'node.mesh_preview_url_property_pattern' | i18n }}
-                    </span>
-                </ng-container>
-
-                <gtx-checkbox
-                    [label]="'node.allow_insecure_mesh_preview_url' | i18n"
-                    formControlName="insecurePreviewUrl"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    [label]="'node.pub_img_variants' | i18n"
-                    formControlName="publishImageVariants"
-                ></gtx-checkbox>
-            </ng-container>
-        </div>
-
-        <div class="input-container small-12 medium-6 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_networking' | i18n }}</div>
-
+      <div class="input-container small-12 medium-6 columns">
+        <div class="gtx-form-section-title">{{ 'shared.title_general' | gtxI18n }}</div>
+        <gtx-input
+          type="text"
+          [required]="true"
+          [label]="('node.node_name' | gtxI18n) + ' *'"
+          [placeholder]="'node.node_name' | gtxI18n"
+          formControlName="name"
+        ></gtx-input>
+        @if (multiChannelingEnabled) {
+          @if (mode === NodePropertiesMode.CREATE) {
             <gtx-select
-                [label]="('node.hostnameType' | i18n) + ' *'"
-                [value]="hostType"
-                [clearable]="false"
-                formControlName="hostType"
-            >
+              [label]="'node.derives_from' | gtxI18n:{ master: '' }"
+              [clearable]="true"
+              [placeholder]=""
+              formControlName="inheritedFromId"
+              >
+              @for (node of nodes; track node.id) {
                 <gtx-option
-                    *ngFor="let type of HOSTNAME_TYPES"
-                    [value]="type.id"
-                >{{ type.label | i18n }}</gtx-option>
+                  [value]="node.id"
+                >{{ node.name }}</gtx-option>
+              }
             </gtx-select>
-
+          } @else {
+            @if (isChannel) {
+              <div class="gtx-inheritance-info">
+                <icon>input</icon>
+                {{ 'node.derives_from' | gtxI18n:{ master: inheritedFromName || '' } }}
+              </div>
+            }
+          }
+        }
+        <gtx-textarea
+          [required]="false"
+          [label]="'shared.description' | gtxI18n"
+          [placeholder]="'shared.description' | gtxI18n"
+          formControlName="description"
+        ></gtx-textarea>
+        @if (meshCrEnabled) {
+          <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | gtxI18n }}</div>
+          <gtx-input
+            type="text"
+            [required]="false"
+            [label]="('node.mesh_project_name' | gtxI18n)"
+            [placeholder]="'node.mesh_project_name' | gtxI18n"
+            formControlName="meshProjectName"
+          ></gtx-input>
+          <gtx-select
+            [label]="('node.mesh_preview_url_type' | gtxI18n) + ' *'"
+            [value]="previewType"
+            [clearable]="false"
+            formControlName="previewType"
+            >
+            @for (type of MESH_PREVIEWURL_TYPES; track type.id) {
+              <gtx-option
+                [value]="type.id"
+              >{{ type.label | gtxI18n }}</gtx-option>
+            }
+          </gtx-select>
+          <gtx-input
+            type="text"
+            [label]="('node.mesh_preview_url' | gtxI18n)"
+            [placeholder]="'node.mesh_preview_url' | gtxI18n"
+            formControlName="meshPreviewUrl"
+          ></gtx-input>
+          @if (form?.controls?.meshPreviewUrlProperty?.enabled) {
             <gtx-input
-                type="text"
-                [required]="true"
-                [label]="('node.hostname' | i18n) + ' *'"
-                [placeholder]="'node.hostname' | i18n"
-                formControlName="host"
+              type="text"
+              [required]="true"
+              [label]="('node.mesh_preview_url_property' | gtxI18n)"
+              [placeholder]="'node.mesh_preview_url_property' | gtxI18n"
+              formControlName="meshPreviewUrlProperty"
             ></gtx-input>
-
-            <ng-container *ngIf="form?.controls?.hostProperty?.enabled">
-                <gtx-input
-                    type="text"
-                    [required]="true"
-                    [label]="('node.hostnameProperty' | i18n) + ' *'"
-                    [placeholder]="'node.hostnameProperty' | i18n"
-                    formControlName="hostProperty"
-                ></gtx-input>
-
-                <span
-                   *ngIf="form?.controls?.hostProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]"
-                    class="container-validator-errors"
+            @if (form?.controls?.meshPreviewUrlProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]) {
+              <span
+                class="container-validator-errors"
                 >
-                    {{ 'node.hostnameProperty_pattern' | i18n }}
-                </span>
-            </ng-container>
-
-            <div class="property-section">
-                <div class="gtx-form-section-title">{{ 'node.title_content' | i18n }}</div>
-
-                <div class="gtx-two-col-options">
-                    <gtx-checkbox
-                        *ngIf="pubDirSegmentActivated"
-                        [label]="'node.pub_dir_segments' | i18n"
-                        formControlName="pubDirSegment"
-                    ></gtx-checkbox>
-                </div>
-
-                <ng-container *ngIf="mode !== NodePropertiesMode.CREATE">
-                    <gtx-folder-picker
-                        [label]="'node.default_file_folder' | i18n"
-                        formControlName="defaultFileFolderId"
-                    ></gtx-folder-picker>
-
-                    <gtx-folder-picker
-                        [label]="'node.default_image_folder' | i18n"
-                        formControlName="defaultImageFolderId"
-                    ></gtx-folder-picker>
-                </ng-container>
-            </div>
+                {{ 'node.mesh_preview_url_property_pattern' | gtxI18n }}
+              </span>
+            }
+          }
+          <gtx-checkbox
+            [label]="'node.allow_insecure_mesh_preview_url' | gtxI18n"
+            formControlName="insecurePreviewUrl"
+          ></gtx-checkbox>
+          <gtx-checkbox
+            [label]="'node.pub_img_variants' | gtxI18n"
+            formControlName="publishImageVariants"
+          ></gtx-checkbox>
+        }
+      </div>
+      <div class="input-container small-12 medium-6 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_networking' | gtxI18n }}</div>
+        <gtx-select
+          [label]="('node.hostnameType' | gtxI18n) + ' *'"
+          [value]="hostType"
+          [clearable]="false"
+          formControlName="hostType"
+          >
+          @for (type of HOSTNAME_TYPES; track type.id) {
+            <gtx-option
+              [value]="type.id"
+            >{{ type.label | gtxI18n }}</gtx-option>
+          }
+        </gtx-select>
+        <gtx-input
+          type="text"
+          [required]="true"
+          [label]="('node.hostname' | gtxI18n) + ' *'"
+          [placeholder]="'node.hostname' | gtxI18n"
+          formControlName="host"
+        ></gtx-input>
+        @if (form?.controls?.hostProperty?.enabled) {
+          <gtx-input
+            type="text"
+            [required]="true"
+            [label]="('node.hostnameProperty' | gtxI18n) + ' *'"
+            [placeholder]="'node.hostnameProperty' | gtxI18n"
+            formControlName="hostProperty"
+          ></gtx-input>
+          @if (form?.controls?.hostProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]) {
+            <span
+              class="container-validator-errors"
+              >
+              {{ 'node.hostnameProperty_pattern' | gtxI18n }}
+            </span>
+          }
+        }
+        <div class="property-section">
+          <div class="gtx-form-section-title">{{ 'node.title_content' | gtxI18n }}</div>
+          <div class="gtx-two-col-options">
+            @if (pubDirSegmentActivated) {
+              <gtx-checkbox
+                [label]="'node.pub_dir_segments' | gtxI18n"
+                formControlName="pubDirSegment"
+              ></gtx-checkbox>
+            }
+          </div>
+          @if (mode !== NodePropertiesMode.CREATE) {
+            <gtx-folder-picker
+              [label]="'node.default_file_folder' | gtxI18n"
+              formControlName="defaultFileFolderId"
+            ></gtx-folder-picker>
+            <gtx-folder-picker
+              [label]="'node.default_image_folder' | gtxI18n"
+              formControlName="defaultImageFolderId"
+            ></gtx-folder-picker>
+          }
         </div>
-
+      </div>
     </div>
-</form>
+  </form>
+}

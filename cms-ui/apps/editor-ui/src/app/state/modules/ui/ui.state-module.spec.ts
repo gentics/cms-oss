@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { Variant, Version, VersionCompatibility, UsersnapSettings } from '@gentics/cms-models';
+import { FALLBACK_LANGUAGE } from '@gentics/cms-components';
+import { UsersnapSettings, Variant, Version, VersionCompatibility } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { UIMode } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
@@ -43,7 +43,7 @@ describe('UIStateModule', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
     });
 
     it('sets the correct initial state', () => {

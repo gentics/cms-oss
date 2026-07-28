@@ -1,82 +1,78 @@
 <div (gtxClickOutside)="dropDownMenuClose()" [id]="'gtx-input-select-' + compId">
-    <div
-        *ngIf="iconOnly; else contentDefault"
-        class="trigger-content"
-    >
-        <gtx-button
-            icon
-            type="primary"
-            size="regular"
-            data-action="open-context"
-            [class.disabled]="disabled"
-            [disabled]="disabled"
-            (click)="dropDownMenuTrigger($event)"
-            (keydown.space)="dropDownMenuTrigger($event)"
-            (keydown.escape)="dropDownMenuClose()"
-        >
-            <icon>filter_list</icon>
-        </gtx-button>
-
-    </div>
-
-    <ng-template #contentDefault>
+    @if (iconOnly) {
+        <div class="trigger-content">
+            <gtx-button
+                icon
+                type="primary"
+                size="regular"
+                data-action="open-context"
+                [class.disabled]="disabled"
+                [disabled]="disabled"
+                (click)="dropDownMenuTrigger($event)"
+                (keydown.space)="dropDownMenuTrigger($event)"
+                (keydown.escape)="dropDownMenuClose()"
+            >
+                <icon>filter_list</icon>
+            </gtx-button>
+        </div>
+    } @else if (!noInput) {
         <button
-            *ngIf="!noInput; else triggerNoInput"
             #buttonDefault
             class="default-trigger"
             data-action="open-context"
             [class.disabled]="disabled"
             [disabled]="disabled"
-            [title]="labelGetByValue(value) | i18n"
+            [title]="labelGetByValue(value) | gtxI18n"
             (click)="dropDownMenuTrigger($event)"
             (keydown.space)="dropDownMenuTrigger($event)"
             (keydown.escape)="dropDownMenuClose()"
         >
-            <span class="default-trigger-label">{{ labelGetByValue(value) | i18n }}</span> <icon right>arrow_drop_down</icon>
+            <span class="default-trigger-label">{{ labelGetByValue(value) | gtxI18n }}</span> <icon right>arrow_drop_down</icon>
         </button>
+    } @else {
+        <div class="default-trigger no-input">
+            <span class="default-trigger-label">{{ labelGetByValue(value) | gtxI18n }}</span>
+        </div>
+    }
 
-        <ng-template #triggerNoInput>
-            <div class="default-trigger no-input">
-                <span class="default-trigger-label">{{ labelGetByValue(value) | i18n }}</span>
-            </div>
-        </ng-template>
-    </ng-template>
     <div [hidden]="!dropDownMenuIsOpen" class="custom-content-menu">
         <input
             #dropDownMenuItemsFilterElement
             type="text"
             class="custom-content-menu-filter"
             [hidden]="!dropDownMenuItemsFilterIsDisplayed()"
-            [placeholder]="'common.search_placeholder' | i18n"
+            [placeholder]="'common.search_placeholder' | gtxI18n"
             [(ngModel)]="dropDownMenuItemsFilterTerm"
             (keydown.escape)="dropDownMenuClose()"
         >
         <div class="custom-content-menu-inner">
-            <button
-                *ngIf="!dropDownMenuItems || dropDownMenuItems.length === 0"
-                disabled="true"
-                class="custom-content-menu-button custom-content-menu-no-match"
-                [attr.data-value]="null"
-            >
-                {{ 'common.no_matching_options' | i18n }}
-            </button>
-            <ng-container *ngFor="let option of options; let i = index">
+            @if (!dropDownMenuItems || dropDownMenuItems.length === 0) {
                 <button
-                    *ngIf="dropDownMenuOptionIsVisible(option.label | i18n)"
-                    #dropDownMenuItems
-                    class="custom-content-menu-button"
-                    [attr.data-value]="option.value"
-                    [attr.data-id]="option.id"
-                    (click)="onDropDownMenuItemTriggered(option.value, $event)"
-                    (keydown.enter)="onDropDownMenuItemTriggered(option.value, $event)"
-                    (keydown.space)="onDropDownMenuItemTriggered(option.value, $event)"
-                    (keydown.arrowup)="dropDownMenuItemFocus(i - 1)"
-                    (keydown.arrowdown)="dropDownMenuItemFocus(i + 1)"
-                    (keydown.escape)="dropDownMenuClose()"
+                    disabled="true"
+                    class="custom-content-menu-button custom-content-menu-no-match"
+                    [attr.data-value]="null"
                 >
-                    <span>{{ option.label | i18n }}</span>
+                    {{ 'common.no_matching_options' | gtxI18n }}
                 </button>
-            </ng-container>
+            }
+            @for (option of options; track option.id; let i = $index) {
+                @if (dropDownMenuOptionIsVisible(option.label | gtxI18n)) {
+                    <button
+                        #dropDownMenuItems
+                        class="custom-content-menu-button"
+                        [attr.data-value]="option.value"
+                        [attr.data-id]="option.id"
+                        (click)="onDropDownMenuItemTriggered(option.value, $event)"
+                        (keydown.enter)="onDropDownMenuItemTriggered(option.value, $event)"
+                        (keydown.space)="onDropDownMenuItemTriggered(option.value, $event)"
+                        (keydown.arrowup)="dropDownMenuItemFocus(i - 1)"
+                        (keydown.arrowdown)="dropDownMenuItemFocus(i + 1)"
+                        (keydown.escape)="dropDownMenuClose()"
+                    >
+                        <span>{{ option.label | gtxI18n }}</span>
+                    </button>
+                }
+            }
         </div>
     </div>
 </div>

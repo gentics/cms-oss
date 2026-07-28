@@ -311,7 +311,7 @@ export class FolderApi {
         nodeId: number,
         type: ItemType,
         options?: any,
-    ): Observable<(Item<Raw> & {
+    ): Observable<(InheritableItem<Raw> & {
         /**
          * Hacky fix to add the node ID when reloading items.
          * @deprecated Do not use, unless you know what you are doing.

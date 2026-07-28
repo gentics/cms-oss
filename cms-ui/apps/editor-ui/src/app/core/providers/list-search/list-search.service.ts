@@ -1,14 +1,14 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
-import { ApplicationStateService } from '@editor-ui/app/state/providers/application-state/application-state.service';
-import { FolderActionsService } from '@editor-ui/app/state/providers/folder-actions/folder-actions.service';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Node, Page, Raw } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, defer, iif, of } from 'rxjs';
 import { catchError, mergeMap, take, tap } from 'rxjs/operators';
+import { isLiveUrl } from '../../../common/utils/is-live-url';
+import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
+import { FolderActionsService } from '../../../state/providers/folder-actions/folder-actions.service';
 import { ErrorHandler } from '../error-handler/error-handler.service';
-import { I18nNotification } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { NavigationService } from '../navigation/navigation.service';
 import { QuickJumpService } from '../quick-jump/quick-jump.service';
 
@@ -18,7 +18,7 @@ const patternShortCutSyntaxId = /^(?:jump):(\d+)$/;
 export class ListSearchService {
 
     /** Notifying subscribers that search has been executed */
-    searchEvent$ = new EventEmitter<{ term: string, nodeId?: number }>(null);
+    searchEvent$ = new EventEmitter<{ term: string; nodeId?: number }>(null);
 
     constructor(
         private errorHandler: ErrorHandler,
@@ -27,7 +27,7 @@ export class ListSearchService {
         private quickJumpService: QuickJumpService,
         private state: ApplicationStateService,
         private i18n: I18nService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) { }
 
     /** Search for a string in the folder & node currently active in the item list. */
@@ -85,7 +85,7 @@ export class ListSearchService {
                     translationParams: { url: liveUrl.replace(/^https?:\/\//, '') },
                 });
             }),
-            catchError(error => {
+            catchError((error) => {
                 this.errorHandler.catch(error);
                 return of(null);
             }),
@@ -94,10 +94,10 @@ export class ListSearchService {
 
     searchPageId(id: number, nodeId: number): Promise<void> {
         return this.quickJumpService.searchPageById(id, nodeId)
-            .then(result => {
+            .then((result) => {
                 if (!result) {
                     this.errorHandler.catch(
-                        new Error(this.i18n.translate('editor.no_page_with_id', { id })),
+                        new Error(this.i18n.instant('editor.no_page_with_id', { id })),
                         { notification: true },
                     );
                     return;
@@ -106,12 +106,12 @@ export class ListSearchService {
                 // If the page entity is not already in the state, fetch it to get the folder id
                 const loadedPage = this.state.now.entities.page[result.id];
                 const pageReq: Promise<Page> = loadedPage ? Promise.resolve(loadedPage) : this.folderActions.getPage(result.id, { nodeId: result.nodeId });
-                return pageReq.then(page => ({
+                return pageReq.then((page) => ({
                     page,
                     nodeId: result.nodeId,
                 }));
             })
-            .then(page => {
+            .then((page) => {
                 if (!page) {
                     return;
                 }

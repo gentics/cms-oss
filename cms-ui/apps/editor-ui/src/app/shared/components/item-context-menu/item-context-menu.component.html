@@ -1,265 +1,284 @@
-<gtx-dropdown-list
-    *ngIf="buttons"
+@if (buttons) {
+  <gtx-dropdown-list
     align="right"
     data-action="item-context"
     data-context-id="item-context"
->
+    >
     <gtx-dropdown-trigger>
-        <gtx-button
-            data-context-trigger
-            icon
-            type="secondary"
+      <gtx-button
+        data-context-trigger
+        icon
+        type="secondary"
         >
-            <icon>more_vert</icon>
-        </gtx-button>
+        <icon>more_vert</icon>
+      </gtx-button>
     </gtx-dropdown-trigger>
-
     <gtx-dropdown-content data-context-id="item-context" class="item-context-menu-content">
-        <ng-container *ngIf="uiMode === UIMode.EDIT">
-            <gtx-dropdown-item
-                *ngIf="buttons.edit"
-                data-action="edit"
-                [class.disabled]="isLocked"
-                (click)="editClicked(item)"
+      @if (uiMode === UIMode.EDIT) {
+        @if (buttons.edit) {
+          <gtx-dropdown-item
+            data-action="edit"
+            [class.disabled]="isLocked"
+            (click)="editClicked(item)"
             >
-                <icon left>{{ isLocked ? 'lock' : 'edit' }}</icon>
-                {{ 'editor.edit_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.properties && !isLocked"
-                data-action="properties"
-                [class.disabled]="isLocked"
-                (click)="propertiesClicked(item)"
+            <icon left>{{ isLocked ? 'lock' : 'edit' }}</icon>
+            {{ 'editor.edit_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.properties && !isLocked) {
+          <gtx-dropdown-item
+            data-action="properties"
+            [class.disabled]="isLocked"
+            (click)="propertiesClicked(item)"
             >
-                <icon left>{{ isLocked ? 'lock' : 'settings' }}</icon>
-                {{ 'editor.properties_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.pageVersions"
-                data-action="page-versions"
-                (click)="versionsClicked(item)"
+            <icon left>{{ isLocked ? 'lock' : 'settings' }}</icon>
+            {{ 'editor.properties_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.pageVersions) {
+          <gtx-dropdown-item
+            data-action="page-versions"
+            (click)="versionsClicked(item)"
             >
-                <icon left>history</icon>
-                {{ 'editor.version_history_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item *ngIf="buttons.publishProtocol" (click)="publishProtocolClicked(item)">
-                <icon left>news</icon>
-                {{ 'editor.published_protocol_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.setAsStartpage"
-                data-action="startpage"
-                (click)="setAsStartpageClicked(item)"
+            <icon left>history</icon>
+            {{ 'editor.version_history_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.publishProtocol) {
+          <gtx-dropdown-item (click)="publishProtocolClicked(item)">
+            <icon left>news</icon>
+            {{ 'editor.published_protocol_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.setAsStartpage) {
+          <gtx-dropdown-item
+            data-action="startpage"
+            (click)="setAsStartpageClicked(item)"
             >
-                <icon left>home</icon>
-                {{ 'editor.set_as_start_page_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.localize"
-                data-action="localize"
-                (click)="localizeClicked(item)"
+            <icon left>home</icon>
+            {{ 'editor.set_as_start_page_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.localize) {
+          <gtx-dropdown-item
+            data-action="localize"
+            (click)="localizeClicked(item)"
             >
-                <icon left>insert_drive_file</icon>
-                {{ 'editor.localize_label' | i18n }}
-            </gtx-dropdown-item>
+            <icon left>insert_drive_file</icon>
+            {{ 'editor.localize_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
 
+        @if(buttons.editInheritance) {
             <gtx-dropdown-item
-                *ngIf="buttons.editInParent"
-                class="edit-parent"
-                data-action="edit-parent"
-                [title]="'editor.edit_in_parent_label' | i18n:{ master: item?.inheritedFrom }"
-                (click)="editInParentNode(item)"
+                data-action="edit-inheritance"
+                (click)="editInheritance(item)"
             >
-                <icon left>edit</icon>
-                {{ 'editor.edit_in_parent_label' | i18n:{ master: item?.inheritedFrom } }}
+                <icon left>rule_settings</icon>
+                {{ 'tag_inheritance.edit_settings' | gtxI18n }}
             </gtx-dropdown-item>
+        }
 
-            <gtx-dropdown-item
-                *ngIf="buttons.inheritanceSettings"
-                data-action="inheritance"
-                (click)="inheritanceClicked(item)"
+        @if (buttons.editInParent) {
+          <gtx-dropdown-item
+            class="edit-parent"
+            data-action="edit-parent"
+            [title]="'editor.edit_in_parent_label' | gtxI18n:{ master: item?.inheritedFrom }"
+            (click)="editInParentNode(item)"
             >
-                <icon left>input</icon>
-                {{ 'editor.inheritance_settings_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.synchronizeChannel"
-                data-action="synchronize"
-                (click)="synchronizeClicked(item)"
+            <icon left>edit</icon>
+            {{ 'editor.edit_in_parent_label' | gtxI18n:{ master: item?.inheritedFrom } }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.inheritanceSettings) {
+          <gtx-dropdown-item
+            data-action="inheritance"
+            (click)="inheritanceClicked(item)"
             >
-                <icon left>file_upload</icon>
-                {{ 'editor.synchronize_channel_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="isInQueue(item)"
-                data-action="approve"
-                (click)="approveClicked(item)"
-                class="success"
+            <icon left>input</icon>
+            {{ 'editor.inheritance_settings_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.synchronizeChannel) {
+          <gtx-dropdown-item
+            data-action="synchronize"
+            (click)="synchronizeClicked(item)"
             >
-                <icon left>playlist_add_check</icon>
-                {{ 'editor.publish_queue_btn_approve' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.publish"
-                data-action="publish"
-                [ngClass]="isLocked ? 'disabled' : 'success'"
-                (click)="publishClicked(item)"
+            <icon left>file_upload</icon>
+            {{ 'editor.synchronize_channel_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (isInQueue(item)) {
+          <gtx-dropdown-item
+            data-action="approve"
+            (click)="approveClicked(item)"
+            class="success"
             >
-                <icon left>{{ isLocked ? 'lock' : 'cloud_upload' }}</icon>
-                {{ 'editor.publish_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.publishLanguageVariants && !isLocked"
-                data-action="publish-variants"
-                (click)="publishLanguageVariantsClicked(item)"
+            <icon left>playlist_add_check</icon>
+            {{ 'editor.publish_queue_btn_approve' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.publish) {
+          <gtx-dropdown-item
+            data-action="publish"
+            [ngClass]="isLocked ? 'disabled' : 'success'"
+            (click)="publishClicked(item)"
             >
-                <icon left>cloud_upload</icon>
-                {{ 'editor.publish_language_variants_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.timeManagement"
-                data-action="time-management"
-                (click)="timeManagementClicked(item)"
+            <icon left>{{ isLocked ? 'lock' : 'cloud_upload' }}</icon>
+            {{ 'editor.publish_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.publishLanguageVariants && !isLocked) {
+          <gtx-dropdown-item
+            data-action="publish-variants"
+            (click)="publishLanguageVariantsClicked(item)"
             >
-                <icon left>date_range</icon>
-                {{ 'editor.time_management_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.copy"
-                data-action="copy"
-                (click)="copyClicked(item)"
+            <icon left>cloud_upload</icon>
+            {{ 'editor.publish_language_variants_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.timeManagement) {
+          <gtx-dropdown-item
+            data-action="time-management"
+            (click)="timeManagementClicked(item)"
             >
-                <icon left>file_copy</icon>
-                {{ 'editor.copy_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.move"
-                data-action="move"
-                (click)="moveClicked(item)"
+            <icon left>date_range</icon>
+            {{ 'editor.time_management_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.copy) {
+          <gtx-dropdown-item
+            data-action="copy"
+            (click)="copyClicked(item)"
             >
-                <icon left>subdirectory_arrow_right</icon>
-                {{ 'editor.move_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.createVariation"
-                data-action="create-variation"
-                (click)="createVariationClicked(item)"
+            <icon left>file_copy</icon>
+            {{ 'editor.copy_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.move) {
+          <gtx-dropdown-item
+            data-action="move"
+            (click)="moveClicked(item)"
             >
-                <icon left>layers</icon>
-                {{ 'editor.create_page_variation_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.requestTranslation"
-                data-action="translate"
-                (click)="requestTranslation(item)"
+            <icon left>subdirectory_arrow_right</icon>
+            {{ 'editor.move_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.createVariation) {
+          <gtx-dropdown-item
+            data-action="create-variation"
+            (click)="createVariationClicked(item)"
             >
-                <icon left>translate</icon>
-                    {{ 'editor.request_translation' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.linkTemplates"
-                data-action="link-templates"
-                (click)="linkToTemplatesClicked()"
+            <icon left>layers</icon>
+            {{ 'editor.create_page_variation_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.requestTranslation) {
+          <gtx-dropdown-item
+            data-action="translate"
+            (click)="requestTranslation(item)"
             >
-                <icon left>link</icon>
-                {{ 'editor.link_templates_to_folder_button' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.takeOffline"
-                class="alert"
-                data-action="take-offline"
-                (click)="takeOfflineClicked(item)"
+            <icon left>translate</icon>
+            {{ 'editor.request_translation' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.linkTemplates) {
+          <gtx-dropdown-item
+            data-action="link-templates"
+            (click)="linkToTemplatesClicked()"
             >
-                <icon left>cloud_off</icon>
-                {{ (item.type === 'form' || (item.type === 'page' && permissions.page.publish)) ? ('editor.take_offline_label' | i18n) : ('editor.request_take_offline_label' | i18n) }}
-                <span *ngIf="pageHasLanguageVariants(item)">...</span>
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.delete"
-                data-action="delete"
-                [ngClass]="isLocked ? 'disabled' : 'alert'"
-                (click)="deleteClicked(item)"
+            <icon left>link</icon>
+            {{ 'editor.link_templates_to_folder_button' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.takeOffline) {
+          <gtx-dropdown-item
+            class="alert"
+            data-action="take-offline"
+            (click)="takeOfflineClicked(item)"
             >
-                <icon left>{{ isLocked ? 'lock' : 'delete' }}</icon>
-                {{ 'editor.delete_label' | i18n }}
-                <span *ngIf="pageHasLanguageVariants(item)">...</span>
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.unlocalize"
-                data-action="delete-localized"
-                [ngClass]="isLocked ? 'disabled' : 'alert'"
-                (click)="deleteClicked(item)"
+            <icon left>cloud_off</icon>
+            {{ (item.type === 'form' || (item.type === 'page' && permissions.page.publish)) ? ('editor.take_offline_label' | gtxI18n) : ('editor.request_take_offline_label' | gtxI18n) }}
+            @if (pageHasLanguageVariants(item)) {
+              <span>...</span>
+            }
+          </gtx-dropdown-item>
+        }
+        @if (buttons.delete) {
+          <gtx-dropdown-item
+            data-action="delete"
+            [ngClass]="isLocked ? 'disabled' : 'alert'"
+            (click)="deleteClicked(item)"
             >
-                <icon left>{{ isLocked ? 'disabled' : 'restore_page' }}</icon>
-                {{ 'editor.delete_localized_label' | i18n }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.restore"
-                data-action="restore"
-                (click)="restoreClicked(item)"
+            <icon left>{{ isLocked ? 'lock' : 'delete' }}</icon>
+            {{ 'editor.delete_label' | gtxI18n }}
+            @if (pageHasLanguageVariants(item)) {
+              <span>...</span>
+            }
+          </gtx-dropdown-item>
+        }
+        @if (buttons.unlocalize) {
+          <gtx-dropdown-item
+            data-action="delete-localized"
+            [ngClass]="isLocked ? 'disabled' : 'alert'"
+            (click)="deleteClicked(item)"
             >
-                <icon left>restore_from_trash</icon>
-                {{ 'editor.restore_from_wastebin_label' | i18n }}
-                <span *ngIf="pageHasLanguageVariants(item)">...</span>
-            </gtx-dropdown-item>
-        </ng-container>
-
-        <ng-container *ngIf="uiMode === UIMode.STAGING">
-            <gtx-dropdown-item
-                *ngIf="buttons.stage"
-                data-action="stage"
-                [attr.data-active]="stagingMap?.[item.globalId]?.included"
-                (click)="stageClicked(item, StagingMode.REGULAR)"
+            <icon left>{{ isLocked ? 'disabled' : 'restore_page' }}</icon>
+            {{ 'editor.delete_localized_label' | gtxI18n }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.restore) {
+          <gtx-dropdown-item
+            data-action="restore"
+            (click)="restoreClicked(item)"
             >
-                <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'remove' : 'inventory') }}</icon>
-                {{ 'editor.' + (stagingMap?.[item.globalId]?.included ? 'un' : '') + 'stage_item_label' | i18n:{
-                    itemType: ('common.type_' + item.type | i18n),
-                    itemTypePlural: ('common.type_' + plural[item.type] | i18n)
-                } }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.stageRecursive && !stagingMap?.[item.globalId]?.included"
-                data-action="stage-recursive"
-                (click)="stageClicked(item, StagingMode.RECURSIVE)"
+            <icon left>restore_from_trash</icon>
+            {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
+            @if (pageHasLanguageVariants(item)) {
+              <span>...</span>
+            }
+          </gtx-dropdown-item>
+        }
+      }
+      @if (uiMode === UIMode.STAGING) {
+        @if (buttons.stage) {
+          <gtx-dropdown-item
+            data-action="stage"
+            [attr.data-active]="stagingMap?.[item.globalId]?.included"
+            (click)="stageClicked(item, StagingMode.REGULAR)"
             >
-                <icon left>input</icon>
-                {{ 'editor.stage_item_recursive_label' | i18n:{
-                    itemType: ('common.type_' + item.type | i18n),
-                    itemTypePlural: ('common.type_' + plural[item.type] | i18n)
-                } }}
-            </gtx-dropdown-item>
-
-            <gtx-dropdown-item
-                *ngIf="buttons.stageAllLanguages"
-                data-action="stage-languages"
-                (click)="stageClicked(item, StagingMode.ALL_LANGUAGES)"
+            <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'remove' : 'inventory') }}</icon>
+            {{ 'editor.' + (stagingMap?.[item.globalId]?.included ? 'un' : '') + 'stage_item_label' | gtxI18n:{
+            itemType: ('common.type_' + item.type | gtxI18n),
+            itemTypePlural: ('common.type_' + plural[item.type] | gtxI18n)
+            } }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.stageRecursive && !stagingMap?.[item.globalId]?.included) {
+          <gtx-dropdown-item
+            data-action="stage-recursive"
+            (click)="stageClicked(item, StagingMode.RECURSIVE)"
             >
-                <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'block' : 'language') }}</icon>
-                {{ 'editor.' + (stagingMap?.[item.globalId]?.included ? 'un' : '') + 'stage_item_all_languages_label' | i18n:{
-                    itemType: ('common.type_' + item.type | i18n),
-                    itemTypePlural: ('common.type_' + plural[item.type] | i18n)
-                } }}
-            </gtx-dropdown-item>
-        </ng-container>
+            <icon left>input</icon>
+            {{ 'editor.stage_item_recursive_label' | gtxI18n:{
+            itemType: ('common.type_' + item.type | gtxI18n),
+            itemTypePlural: ('common.type_' + plural[item.type] | gtxI18n)
+            } }}
+          </gtx-dropdown-item>
+        }
+        @if (buttons.stageAllLanguages) {
+          <gtx-dropdown-item
+            data-action="stage-languages"
+            (click)="stageClicked(item, StagingMode.ALL_LANGUAGES)"
+            >
+            <icon left>{{ (stagingMap?.[item.globalId]?.included ? 'block' : 'language') }}</icon>
+            {{ 'editor.' + (stagingMap?.[item.globalId]?.included ? 'un' : '') + 'stage_item_all_languages_label' | gtxI18n:{
+            itemType: ('common.type_' + item.type | gtxI18n),
+            itemTypePlural: ('common.type_' + plural[item.type] | gtxI18n)
+            } }}
+          </gtx-dropdown-item>
+        }
+      }
     </gtx-dropdown-content>
-</gtx-dropdown-list>
+  </gtx-dropdown-list>
+}

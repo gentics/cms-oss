@@ -10,16 +10,16 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { UploadResponse } from '@editor-ui/app/common/models';
 import { ExternalAssetReference } from '@gentics/cms-integration-api-models';
 import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { FolderActionsService } from '../../../../state';
+import { UploadResponse } from '../../../../common/models';
 
 /**
  * Allows the user to upload a file or image and modify its editable properties right after the upload.
@@ -29,7 +29,7 @@ import { FolderActionsService } from '../../../../state';
     templateUrl: './upload-with-properties.component.html',
     styleUrls: ['./upload-with-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -109,7 +109,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         this.repositoryBrowserClient.openRepositoryBrowser({
             allowedSelection: 'folder',
             selectMultiple: false,
-        }).then(selectedItem => {
+        }).then((selectedItem) => {
             this.destinationFolder = selectedItem;
             this.changeDetector.detectChanges();
         });
@@ -129,12 +129,12 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
             this.changeDetector.markForCheck();
         } else {
             this.modalService.dialog({
-                title: this.i18nService.translate('tag_editor.not_allowed'),
-                body: this.i18nService.translate('tag_editor.images_not_allowed'),
+                title: this.i18nService.instant('tag_editor.not_allowed'),
+                body: this.i18nService.instant('tag_editor.images_not_allowed'),
                 buttons: [
-                    { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
+                    { label: this.i18nService.instant('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            }).then(dialog => dialog.open());
+            }).then((dialog) => dialog.open());
         }
     }
 
@@ -149,22 +149,22 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         // check if correct entity type
         if (this.itemType === 'image' && this.selectionToUpload.fileCategory !== 'image') {
             this.modalService.dialog({
-                title: this.i18nService.translate('tag_editor.not_allowed'),
-                body: this.i18nService.translate('tag_editor.files_not_allowed'),
+                title: this.i18nService.instant('tag_editor.not_allowed'),
+                body: this.i18nService.instant('tag_editor.files_not_allowed'),
                 buttons: [
-                    { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
+                    { label: this.i18nService.instant('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            }).then(dialog => dialog.open());
+            }).then((dialog) => dialog.open());
         }
 
         if (this.itemType !== 'image' && this.selectionToUpload.fileCategory === 'image') {
             this.modalService.dialog({
-                title: this.i18nService.translate('tag_editor.not_allowed'),
-                body: this.i18nService.translate('tag_editor.images_not_allowed'),
+                title: this.i18nService.instant('tag_editor.not_allowed'),
+                body: this.i18nService.instant('tag_editor.images_not_allowed'),
                 buttons: [
-                    { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
+                    { label: this.i18nService.instant('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            }).then(dialog => dialog.open());
+            }).then((dialog) => dialog.open());
         }
 
         this.uploadPossible.emit(true);
@@ -190,7 +190,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
     private handleUploadClick(): void {
         const upload$ = this.uploadFileOrImage(this.fileToUpload, this.destinationFolder, this.removeUnsetProperties(this.fileProperties));
         if (upload$) {
-            const sub = upload$.subscribe(uploadedItem => {
+            const sub = upload$.subscribe((uploadedItem) => {
                 if (!uploadedItem) {
                     this.uploadInProgress = false;
                     this.changeDetector.markForCheck();
@@ -216,7 +216,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
             properties: this.selectionToUpload.properties,
         };
 
-        this.uploadInProgress = true
+        this.uploadInProgress = true;
         this.folderActions.uploadFromSourceUrl(fileCategory, payload).pipe(
             tap((data) => this.upload.emit({ destinationFolder: this.destinationFolder, file: data.file })),
             finalize(() => {

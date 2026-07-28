@@ -1,20 +1,21 @@
-<div
-    *ngIf="showButton && !showLogin"
-    class="line"
-></div>
+@if (showButton && !showLogin) {
+    <div class="line"></div>
+}
 
 <div class="sso-container">
-    <iframe
-        #iframe
-        *ngIf="showLogin"
-        [src]="url"
-        (load)="frameLoaded(iframe)"
-    ></iframe>
+    @if (showLogin) {
+        <iframe
+            #iframe
+            [src]="url"
+            (load)="frameLoaded(iframe)"
+        ></iframe>
+    }
 
-    <gtx-button
-        *ngIf="showButton && !showLogin"
-        size="large"
-        data-action="sso-login"
-        (click)="login()"
-    >{{ 'common.login_sso_button_label' | i18n }}</gtx-button>
+    @if (showButton && !showLogin) {
+        <gtx-button
+            size="large"
+            data-action="sso-login"
+            (click)="login()"
+        >{{ 'common.login_sso_button_label' | gtxI18n }}</gtx-button>
+    }
 </div>

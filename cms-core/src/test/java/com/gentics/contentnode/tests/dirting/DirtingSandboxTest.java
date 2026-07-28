@@ -154,6 +154,8 @@ public class DirtingSandboxTest {
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 
 		tag.setEnabled(true);
+		tag.setName("link1");
+
 		PartType partType = tag.getValues().getByKeyname("url").getPartType();
 
 		if (partType instanceof FileURLPartType) {
@@ -413,6 +415,7 @@ public class DirtingSandboxTest {
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 
 		tag.setEnabled(true);
+		tag.setName("link1");
 
 		page.save();
 		page.publish();
@@ -500,6 +503,7 @@ public class DirtingSandboxTest {
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 
 		tag.setEnabled(true);
+		tag.setName("link1");
 
 		page.save();
 		page.publish();
@@ -593,6 +597,7 @@ public class DirtingSandboxTest {
 		page.setTemplateId(template.getId());
 		ContentTag tag = page.getContent().addContentTag(ObjectTransformer.getInt(construct.getId(), 0));
 		tag.setEnabled(true);
+		tag.setName("link1");
 		page.save();
 
 		// 1. Publish the page at a specified time in the future

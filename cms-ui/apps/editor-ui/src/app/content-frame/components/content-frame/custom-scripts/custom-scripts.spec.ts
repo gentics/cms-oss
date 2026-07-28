@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-underscore-dangle */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { EditMode, GcmsUiBridge } from '@gentics/cms-integration-api-models';
@@ -303,7 +301,7 @@ class CustomScriptsTestFixture {
         script.run();
     }
 
-    addLink(attributes: { href?: string, target?: string, role?: string }): LinkTestFixture {
+    addLink(attributes: { href?: string; target?: string; role?: string }): LinkTestFixture {
         const linkFixture = LinkTestFixture.withAttributes(attributes);
         this.document.body.appendChild(linkFixture.nativeElement);
         this.subscription.add(() => this.document.body.removeChild(linkFixture.nativeElement));
@@ -341,7 +339,7 @@ class CustomScriptsTestFixture {
     }
 
     updateTagViaGCNJSLib(): void {
-        this.window.Aloha.GCN.page.tag('tag1', tag => {
+        this.window.Aloha.GCN.page.tag('tag1', (tag) => {
             tag.part('text', 'changed text');
         });
     }
@@ -349,13 +347,13 @@ class CustomScriptsTestFixture {
     updateTagToCurrentValuesViaGCNJSLib(): void {
         // eslint-disable-next-line no-underscore-dangle
         const currentText = (this.window.Aloha.GCN.page._data.tags.tag1.properties.text as StringTagPartProperty).stringValue;
-        this.window.Aloha.GCN.page.tag('tag1', tag => {
+        this.window.Aloha.GCN.page.tag('tag1', (tag) => {
             tag.part('text', currentText);
         });
     }
 
     updateObjectPropertyViaGCNJSLib(): void {
-        this.window.Aloha.GCN.page.tag('object.prop1', tag => {
+        this.window.Aloha.GCN.page.tag('object.prop1', (tag) => {
             tag.part('value', 'changed value');
         });
     }
@@ -406,7 +404,7 @@ class CustomScriptsTestFixture {
     }
 
     private preventLinkClicksFromNavigating(): void {
-        this.document.body.addEventListener('click', event => {
+        this.document.body.addEventListener('click', (event) => {
             const link = event.target as HTMLLinkElement;
             const href = link.getAttribute('href');
 
@@ -429,11 +427,13 @@ class FakeWindow extends SpyEventTarget {
     location = {
         href: '',
     };
+
     name: string;
     frameElement = {
         id: '',
         dataset: {} as DOMStringMap,
     };
+
     JSI3_objprop_new_0 = ['JSI3_objprop_new_0'];
     JSI3_objprop_new_1 = ['JSI3_objprop_new_1'];
     GCMSUI = new FakeGCMSUI();
@@ -505,11 +505,11 @@ class FakeDocument {
     }
 
     querySelector(selector: string): HTMLElement {
-        return this.documentElement.querySelector(selector) ;
+        return this.documentElement.querySelector(selector);
     }
 
     querySelectorAll(selector: string): NodeListOf<HTMLElement> {
-        return this.documentElement.querySelectorAll(selector) ;
+        return this.documentElement.querySelectorAll(selector);
     }
 }
 
@@ -521,6 +521,7 @@ class FakeAlohaGlobal implements AlohaGlobal {
     getEditableHost($element: JQuery): AlohaEditable | null {
         return null;
     }
+
     jQuery: JQueryStatic;
     scrollToSelection(): void {}
 
@@ -584,6 +585,8 @@ class FakeGCNJSLib implements GCNJSLib {
             constructId: 1,
             id: 1,
             name: 'tag1',
+            rootTag: false,
+            inherited: false,
             properties: {
                 text: {
                     id: 2,
@@ -600,6 +603,8 @@ class FakeGCNJSLib implements GCNJSLib {
             constructId: 3,
             id: 3,
             name: 'object.prop1',
+            rootTag: false,
+            inherited: false,
             properties: {
                 value: {
                     id: 4,
@@ -644,10 +649,12 @@ class FakeGCNJSLibTag {
     parent(): GCNJSLib['page'] {
         return this._parent.page;
     }
+
     part(name: string, value: any): void {
         // TODO: find correct value for path
         return this._parent.page._update(this._tagName + '/' + name, value);
     }
+
     parts(name: string): void { }
     prop(name: string, value: any): void { }
     remove(): void { }
@@ -747,7 +754,7 @@ class ClickableElementFixture<T extends Element> {
         const style = element && element.style;
         if (!element) {
             return false;
-        } else if (style && (style.display === 'none') || (style.visibility === 'hidden')) {
+        } else if (style && ((style.display === 'none') || (style.visibility === 'hidden'))) {
             return false;
         } else if (getComputedStyle(element).display === 'none') {
             return false;
@@ -829,14 +836,13 @@ class LinkTestFixture extends ClickableElementFixture<HTMLAnchorElement> {
 
     private originalHref: string;
 
-    static withAttributes(attributes: { href?: string, target?: string, role?: string }): LinkTestFixture {
+    static withAttributes(attributes: { href?: string; target?: string; role?: string }): LinkTestFixture {
         const element = document.createElement('a');
         for (const name of Object.keys(attributes)) {
             element.setAttribute(name, attributes[name as 'href' | 'target' | 'role']);
         }
         return new LinkTestFixture(element);
     }
-
 
     constructor(nativeElement: HTMLAnchorElement) {
         super(nativeElement);
@@ -858,4 +864,3 @@ class LinkTestFixture extends ClickableElementFixture<HTMLAnchorElement> {
     }
 
 }
-

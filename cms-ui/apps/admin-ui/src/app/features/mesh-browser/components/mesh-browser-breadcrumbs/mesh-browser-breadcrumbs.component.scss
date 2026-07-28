@@ -15,4 +15,12 @@
         font-size: inherit;
         color: inherit;
     }
+
+    .breadcrumb-item {
+        color: $gtx-color-primary;
+    }
+
+    .breadcrumb-item.last {
+        color: $gtx-breadcrumbs-inactive-color;
+    }
 }

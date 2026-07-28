@@ -1,7 +1,7 @@
-import {Folder, Page, File, Image, Item} from '../models';
+import {Folder, Page, File, Image, MasonryItem} from '../models';
 import {AppState} from '../models/app-state';
 
-export function nodeIdOfItem(item: Folder | Page | File | Image | Item, appState: AppState): number;
+export function nodeIdOfItem(item: Folder | Page | File | Image | MasonryItem, appState: AppState): number;
 export function nodeIdOfItem(item: Folder | Page | File | Image, appState: AppState): number {
     if (!item.inherited && item.inheritedFromId) {
         return item.inheritedFromId;

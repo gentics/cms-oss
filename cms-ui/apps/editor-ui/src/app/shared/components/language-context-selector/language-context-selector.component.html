@@ -2,9 +2,9 @@
     <gtx-dropdown-trigger>
         <gtx-button
             flat
-            data-context-trigger
             size="small"
             type="secondary"
+            data-context-trigger
             [attr.data-id]="activeLanguage?.code"
         >
             <icon left>language</icon>{{ activeLanguage?.name }}
@@ -12,10 +12,12 @@
     </gtx-dropdown-trigger>
 
     <gtx-dropdown-content class="language-context" data-context-id="language-select">
-        <gtx-dropdown-item
-            *ngFor="let language of availableLanguages"
-            [attr.data-id]="language.code"
-            (click)="languageChangeHandler(language)"
-        >{{ language?.name }}</gtx-dropdown-item>
+        @for (language of availableLanguages; track language.code) {
+            <gtx-dropdown-item
+                data-action="select-language-context"
+                [attr.data-id]="language.code"
+                (click)="languageChangeHandler(language)"
+            >{{ language?.name }}</gtx-dropdown-item>
+        }
     </gtx-dropdown-content>
 </gtx-dropdown-list>

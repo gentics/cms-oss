@@ -22,7 +22,7 @@ describe('FeaturesStateModule', () => {
             providers: [TEST_APP_STATE],
         }).compileComponents();
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
         expectedState = _cloneDeep(INITIAL_FEATURES_STATE);
     }));
 

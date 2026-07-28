@@ -1,31 +1,32 @@
 <gtx-progress-bar [active]="loading"></gtx-progress-bar>
 
 <div class="modal-title">
-    <h5>{{ 'modal.create_contentRepository_title' | i18n }}</h5>
+  <h5>{{ 'modal.create_contentRepository_title' | gtxI18n }}</h5>
 </div>
 
 <div class="modal-content">
+  @if (form) {
     <gtx-content-repository-properties
-        *ngIf="form"
-        [formControl]="form"
-        [mode]="ContentRepositoryPropertiesMode.CREATE"
+      [formControl]="form"
+      [mode]="ContentRepositoryPropertiesMode.CREATE"
     ></gtx-content-repository-properties>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        [disabled]="!form.valid || loading"
-        (click)="buttonCreateEntityClicked()"
+  <gtx-button
+    type="primary"
+    [disabled]="!form.valid || loading"
+    (click)="buttonCreateEntityClicked()"
     >
-        {{ 'modal.create_button' | i18n }}
-    </gtx-button>
+    {{ 'modal.create_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

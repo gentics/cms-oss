@@ -1,10 +1,11 @@
 import { DirtQueueItemBO } from '@admin-ui/common';
-import { AdminOperations, I18nService } from '@admin-ui/core';
+import { AdminOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, DirtQueueEntry, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { DirtQueueItemTableLoaderService } from '../../providers';
 
 const REDO_TASK_ACTION = 'redoAction';
@@ -14,42 +15,43 @@ const REDO_TASK_ACTION = 'redoAction';
     templateUrl: './dirt-queue-item-table.component.html',
     styleUrls: ['./dirt-queue-item-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQueueEntry, DirtQueueItemBO> {
 
     protected rawColumns: TableColumn<DirtQueueItemBO>[] = [
         {
             id: 'label',
-            label: 'contentmaintenance.label',
+            label: 'content_maintenance.label',
             fieldPath: 'label',
         },
         {
             id: 'objectType',
-            label: 'contentmaintenance.object_type',
+            label: 'content_maintenance.object_type',
             fieldPath: 'objType',
         },
         {
             id: 'objectId',
-            label: 'contentmaintenance.object_id',
+            label: 'content_maintenance.object_id',
             fieldPath: 'objId',
         },
         {
             id: 'timestamp',
-            label: 'contentmaintenance.timestamp',
+            label: 'content_maintenance.timestamp',
             fieldPath: 'timestamp',
         },
         {
             id: 'failed',
-            label: 'contentmaintenance.failed',
+            label: 'content_maintenance.failed',
             fieldPath: 'failed',
         },
         {
             id: 'failReason',
-            label: 'contentmaintenance.failReason',
+            label: 'content_maintenance.failReason',
             fieldPath: 'failReason',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = null;
 
     constructor(
@@ -101,7 +103,7 @@ export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQu
     }
 
     repeatFailedDirtQueueOfNode(actionIds: (number | string)[]): void {
-        Promise.all(actionIds.map(actionId => {
+        Promise.all(actionIds.map((actionId) => {
             return this.operations.repeatFailedDirtQueueOfNode(actionId).toPromise();
         }));
     }

@@ -1,76 +1,75 @@
 <form [formGroup]="form">
 
-    <div class="validation-element-container">
-        <gtx-input
-            class="gtx-input-with-validation"
-            [label]="('editor.item_name_label' | i18n) + '*'"
-            formControlName="name"
-            [autofocus]="mode === FolderPropertiesMode.CREATE"
-        ></gtx-input>
-
-        <div class="gtx-input-validation-msgs">
-            <p
-                [hidden]="!form.controls.name.errors?.[ERROR_NAME_DUPLICATE]"
-                class="invalid"
-            >
-                {{ 'editor.input_invalid_name_already_exists' | i18n }}
-            </p>
-        </div>
-    </div>
-
-    <div class="validation-element-container">
-        <gtx-input
-            class="gtx-input-with-validation"
-            [label]="('editor.item_directory_label' | i18n) + '*'"
-            formControlName="publishDir"
-        ></gtx-input>
-
-        <div class="gtx-input-validation-msgs">
-            <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_PATTERN]">
-                {{ 'editor.input_invalid_pattern' | i18n:{ charsAllowed: allowedCharacters } }}
-            </p>
-            <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_DUPLICATE]">
-                {{ 'editor.input_invalid_directory_already_exists' | i18n }}
-            </p>
-        </div>
-    </div>
-
+  <div class="validation-element-container">
     <gtx-input
-        [label]="'editor.item_description_label' | i18n"
-        formControlName="description"
+      class="gtx-input-with-validation"
+      [label]="('editor.item_name_label' | gtxI18n) + '*'"
+      formControlName="name"
+      [autofocus]="mode === FolderPropertiesMode.CREATE"
     ></gtx-input>
 
-    <div *ngIf="languages?.length > 1 && mode !== FolderPropertiesMode.CREATE">
-        <hr>
+    <div class="gtx-input-validation-msgs">
+      <p
+        [hidden]="!form.controls.name.errors?.[ERROR_NAME_DUPLICATE]"
+        class="invalid"
+        >
+        {{ 'editor.input_invalid_name_already_exists' | gtxI18n }}
+      </p>
+    </div>
+  </div>
 
-        <gtx-i18n-panel-group
-            *ngIf="languages"
-            [label]="'editor.i18n_properties_label' | i18n"
+  <div class="validation-element-container">
+    <gtx-input
+      class="gtx-input-with-validation"
+      [label]="('editor.item_directory_label' | gtxI18n) + '*'"
+      formControlName="publishDir"
+    ></gtx-input>
+
+    <div class="gtx-input-validation-msgs">
+      <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_PATTERN]">
+        {{ 'editor.input_invalid_pattern' | gtxI18n:{ charsAllowed: allowedCharacters } }}
+      </p>
+      <p [hidden]="!form.controls.publishDir.errors?.[ERROR_DIRECTORY_DUPLICATE]">
+        {{ 'editor.input_invalid_directory_already_exists' | gtxI18n }}
+      </p>
+    </div>
+  </div>
+
+  <gtx-input
+    [label]="'editor.item_description_label' | gtxI18n"
+    formControlName="description"
+  ></gtx-input>
+
+  @if (languages?.length > 1 && mode !== FolderPropertiesMode.CREATE) {
+    <div>
+      <hr>
+        @if (languages) {
+          <gtx-i18n-panel-group
+            [label]="'editor.i18n_properties_label' | gtxI18n"
             [languages]="languages"
             [invalidLanguages]="invalidLanguages"
             [(activeLanguage)]="activeTabI18nLanguage"
-        >
+            >
             <gtx-i18n-input
-                [label]="('editor.item_name_label' | i18n)"
-                formControlName="nameI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="languages"
+              [label]="('editor.item_name_label' | gtxI18n)"
+              formControlName="nameI18n"
+              [language]="activeTabI18nLanguage?.code"
+              [availableLanguages]="languages"
             ></gtx-i18n-input>
-
             <gtx-i18n-input
-                [label]="('editor.item_directory_label' | i18n)"
-                formControlName="publishDirI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="languages"
+              [label]="('editor.item_directory_label' | gtxI18n)"
+              formControlName="publishDirI18n"
+              [language]="activeTabI18nLanguage?.code"
+              [availableLanguages]="languages"
             ></gtx-i18n-input>
-
             <gtx-i18n-input
-                [label]="'editor.item_description_label' | i18n"
-                formControlName="descriptionI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="languages"
+              [label]="'editor.item_description_label' | gtxI18n"
+              formControlName="descriptionI18n"
+              [language]="activeTabI18nLanguage?.code"
+              [availableLanguages]="languages"
             ></gtx-i18n-input>
-
-        </gtx-i18n-panel-group>
-    </div>
-</form>
+          </gtx-i18n-panel-group>
+        }
+      </div>
+    }
+  </form>

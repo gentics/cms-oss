@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Node } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
@@ -32,7 +32,7 @@ export class ToolBreadcrumbComponent implements OnInit {
         private folderActions: FolderActionsService,
         private navigationService: NavigationService,
         private router: Router,
-        private translate: TranslateService) { }
+        private translate: I18nService) { }
 
     ngOnInit(): void {
         this.nodes$ = this.state.select(state => state.folder.nodes.list).pipe(

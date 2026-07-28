@@ -24,7 +24,7 @@ describe('FavouriteToggle', () => {
             ],
             declarations: [TestComponent, FavouriteToggleComponent, IsFavouritePipe],
         });
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
     });
 
     function getButton(fixture: ComponentFixture<any>): HTMLElement {

@@ -1,5 +1,5 @@
-import { ResponseCode, ResponseMessage } from "@gentics/cms-models";
-import { ColorThemes, INotificationOptions } from "@gentics/ui-core";
+import { ResponseCode, ResponseMessage } from '@gentics/cms-models';
+import { ColorThemes, INotificationOptions } from '@gentics/ui-core';
 
 /**
  * Transform the msg into notification options
@@ -11,7 +11,7 @@ export function responseMessageToNotification(msg: ResponseMessage, options?: IN
     return {
         ...options,
         message: msg.message,
-        type: msgTypeToNotifiactionOptionsType(msg.type)
+        type: msgTypeToNotifiactionOptionsType(msg.type),
     };
 }
 
@@ -22,14 +22,14 @@ export function responseMessageToNotification(msg: ResponseMessage, options?: IN
  */
 function msgTypeToNotifiactionOptionsType(msgType: ResponseMessage['type']): ColorThemes | 'default' {
     switch (msgType) {
-        case "CRITICAL":
-            return "alert";
-        case "INFO":
-            return "primary";
-        case "SUCCESS":
-            return "success";
-        case "WARNING":
-            return "warning";
+        case 'CRITICAL':
+            return 'alert';
+        case 'INFO':
+            return 'primary';
+        case 'SUCCESS':
+            return 'success';
+        case 'WARNING':
+            return 'warning';
         default:
             return 'default';
     }

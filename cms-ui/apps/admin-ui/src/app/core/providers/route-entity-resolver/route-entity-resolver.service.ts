@@ -72,7 +72,7 @@ export class RouteEntityResolverService {
     async resolve<K extends EditableEntity>(
         route: ActivatedRouteSnapshot,
     ): Promise<EditableEntityBusinessObjects[K]> {
-        const nav = this.router.getCurrentNavigation();
+        const nav = this.router.currentNavigation();
         const state: any = nav.extras?.state || {};
 
         // If the entity is already provided to the route, then we don't need to fetch it again.
@@ -99,7 +99,7 @@ export class RouteEntityResolverService {
     async resolveMeshRoute(
         route: ActivatedRouteSnapshot,
     ): Promise<ContentRepository> {
-        const nav = this.router.getCurrentNavigation();
+        const nav = this.router.currentNavigation();
         const state: any = nav.extras?.state || {};
 
         // If the entity is already provided to the route, then we don't need to fetch it again.
@@ -114,7 +114,7 @@ export class RouteEntityResolverService {
     }
 
     public extractRepositoryId(route: ActivatedRouteSnapshot): number {
-        const nav = this.router.getCurrentNavigation();
+        const nav = this.router.currentNavigation();
 
         let repositoryId = nav?.extras?.state?.[ROUTE_DATA_MESH_REPO_ID] ??
             route.params?.[ROUTE_MESH_REPOSITORY_ID];

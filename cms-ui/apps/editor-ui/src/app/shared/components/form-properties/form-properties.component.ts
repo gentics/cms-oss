@@ -8,7 +8,6 @@ import {
     OnInit,
 } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsFormData,
@@ -33,6 +32,7 @@ import { ChangesOf, FormProperties, generateFormProvider, generateValidatorProvi
 import { isEqual } from 'lodash-es';
 import { merge, of } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 
 export enum FormPropertiesMode {

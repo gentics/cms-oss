@@ -15,6 +15,7 @@ import {
 } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     EntityIdType,
     Folder,
@@ -42,15 +43,13 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable } from 'rxjs';
 import { map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
 export class TemplateOperations
     extends ExtendedEntityOperationsBase<'template'>
     implements PackageEntityOperations<TemplateBO<Raw>>,
-        DevToolEntityHandler<EditableEntity.TEMPLATE>
-{
+        DevToolEntityHandler<EditableEntity.TEMPLATE> {
 
     constructor(
         injector: Injector,
@@ -65,8 +64,8 @@ export class TemplateOperations
 
     create(request: TemplateCreateRequest, notify: boolean = true): Observable<TemplateBO<Raw>> {
         return this.api.template.createTemplate(request).pipe(
-            map(res => this.mapToBusinessObject(res.template)),
-            tap(template => {
+            map((res) => this.mapToBusinessObject(res.template)),
+            tap((template) => {
                 this.entityManager.addEntity(this.entityIdentifier, template);
 
                 if (notify) {
@@ -88,10 +87,10 @@ export class TemplateOperations
      */
     getAll(options?: TemplateFolderListRequest): Observable<TemplateBO<Raw>[]> {
         return this.api.template.getTemplates(options).pipe(
-            map(res => applyInstancePermissions(res)),
-            map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            map((res) => applyInstancePermissions(res)),
+            map((res) => res.items.map((item) => this.mapToBusinessObject(item))),
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
+            tap((templates) => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );
     }
@@ -101,22 +100,22 @@ export class TemplateOperations
      */
     get(templateId: EntityIdType, options?: TemplateRequestOptions): Observable<TemplateBO<Raw>> {
         return this.api.template.getTemplate(templateId, options).pipe(
-            map(res => this.mapToBusinessObject(res.template)),
-            tap(template => this.entityManager.addEntity(this.entityIdentifier, template)),
+            map((res) => this.mapToBusinessObject(res.template)),
+            tap((template) => this.entityManager.addEntity(this.entityIdentifier, template)),
             this.catchAndRethrowError(),
         );
     }
 
     getAllFromPackage(packageId: string, options?: any): Observable<TemplateBO<ModelType.Raw>[]> {
         return this.api.devTools.getTemplates(packageId, options).pipe(
-            map(res => res.items.map(item  => this.mapToBusinessObject(item))),
+            map((res) => res.items.map((item) => this.mapToBusinessObject(item))),
             this.catchAndRethrowError(),
         );
     }
 
     getFromPackage(packageId: string, entityId: string): Observable<TemplateBO<ModelType.Raw>> {
         return this.api.devTools.getTemplate(packageId, entityId).pipe(
-            map(res => this.mapToBusinessObject(res.template)),
+            map((res) => this.mapToBusinessObject(res.template)),
             this.catchAndRethrowError(),
         );
     }
@@ -126,16 +125,16 @@ export class TemplateOperations
      */
     getAllOfAllNodes(options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
         return this.api.node.getNodes().pipe(
-            map(res => res.items.map(node => node.id)),
-            mergeMap(nodeIds => {
-                const requests = nodeIds.map(nodeId => {
+            map((res) => res.items.map((node) => node.id)),
+            mergeMap((nodeIds) => {
+                const requests = nodeIds.map((nodeId) => {
                     const copy = { ...options };
                     copy.nodeId = nodeId;
                     return this.getAllOfNode(copy);
                 });
                 return forkJoin(requests).pipe(
                     // eslint-disable-next-line prefer-spread
-                    map(items => [].concat.apply([], items)),
+                    map((items) => [].concat.apply([], items)),
                 );
             }),
         );
@@ -143,10 +142,10 @@ export class TemplateOperations
 
     getAllOfNode(options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
         return this.api.template.getTemplates(options).pipe(
-            map(res => applyInstancePermissions(res)),
-            map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            map((res) => applyInstancePermissions(res)),
+            map((res) => res.items.map((item) => this.mapToBusinessObject(item))),
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
+            tap((templates) => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );
     }
@@ -154,7 +153,7 @@ export class TemplateOperations
     unlock(templateId: EntityIdType): Observable<void> {
         return this.api.template.unlock(templateId).pipe(
             switchMap(() => this.entityManager.getEntity(this.entityIdentifier, templateId)),
-            discard(normalizedTemplate => {
+            discard((normalizedTemplate) => {
                 // Denormalize the template
                 const template = this.entityManager.denormalizeEntity(this.entityIdentifier, normalizedTemplate);
                 // Unlock the template in the state
@@ -168,7 +167,7 @@ export class TemplateOperations
         return this.api.template.updateTemplate(templateId, body).pipe(
             // Load the template again, as currently the API does not respond with the updated model.
             switchMap(() => this.get(templateId, options)),
-            tap(template => {
+            tap((template) => {
                 this.notification.show({
                     type: 'success',
                     message: 'shared.item_updated',
@@ -202,7 +201,7 @@ export class TemplateOperations
 
     getLinkedFolders(templateId: EntityIdType, options?: TemplateLinkListOptions): Observable<Folder<Raw>[]> {
         return this.api.template.getLinkedFolders(templateId, options).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
@@ -217,26 +216,26 @@ export class TemplateOperations
 
     getLinkedNodes(templateId: EntityIdType, options?: NodeListRequestOptions): Observable<Node<Raw>[]> {
         return this.api.template.getLinkedNodes(templateId, options).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
 
     hasViewPermission(templateId: EntityIdType): Observable<boolean> {
         return this.api.permissions.getTemplateViewPermissions(templateId).pipe(
-            map(res => res.granted),
+            map((res) => res.granted),
         );
     }
 
     hasEditPermission(templateId: EntityIdType): Observable<boolean> {
         return this.api.permissions.getTemplateEditPermissions(templateId).pipe(
-            map(res => res.granted),
+            map((res) => res.granted),
         );
     }
 
     hasDeletePermission(templateId: EntityIdType): Observable<boolean> {
         return this.api.permissions.getTemplateDeletePermissions(templateId).pipe(
-            map(res => res.granted),
+            map((res) => res.granted),
         );
     }
 
@@ -286,7 +285,6 @@ export class TemplateOperations
         );
     }
 
-
     unlocalizeTemplate(templateId: number, body: UnlocalizeRequest): Observable<Response> {
         return this.client.template.unlocalize(templateId, body).pipe(
             this.catchAndRethrowError(),
@@ -309,8 +307,8 @@ export class TemplateOperations
         params?: DevToolEntityListRequestParams<EditableEntity.TEMPLATE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.TEMPLATE]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => {
-                const items = res.items.map(item => ({
+            map((res) => {
+                const items = res.items.map((item) => ({
                     ...item,
                     [BO_ID]: String(item.id),
                     [BO_PERMISSIONS]: [],

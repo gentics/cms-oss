@@ -1,36 +1,46 @@
-<div class="list-header" *ngIf="!readOnly">
+@if (!readOnly) {
+  <div class="list-header">
     <gtx-checkbox [checked]="areAllSelected()"
-                  (change)="toggleSelectall()"
-                  [label]="'common.select_all_label' | i18n"></gtx-checkbox>
-</div>
+      (change)="toggleSelectall()"
+    [label]="'common.select_all_label' | gtxI18n"></gtx-checkbox>
+  </div>
+}
 
-<gtx-contents-list-item *ngFor="let page of pages">
-    <gtx-checkbox class="row-checkbox"
-                  *ngIf="!readOnly"
-                  [checked]="selected[page.id]"
-                  (change)="toggleSelect(page.id, $event)"></gtx-checkbox>
-
-    <i class="material-icons page-icon" [attr.translate]="'no'"
-       *ngIf="readOnly">subject</i>
-
+@for (page of pages; track page.id) {
+  <gtx-contents-list-item>
+    @if (!readOnly) {
+      <gtx-checkbox class="row-checkbox"
+        [checked]="selected[page.id]"
+      (change)="toggleSelect(page.id, $event)"></gtx-checkbox>
+    }
+    @if (readOnly) {
+      <i class="material-icons page-icon" [attr.translate]="'no'"
+      >subject</i>
+    }
     <div class="item-primary">
-        <div class="page-title">
-            <inherited-localized-icon [item]="page">
-            </inherited-localized-icon>
-
-            <div *ngIf="readOnly">{{ page.name }}</div>
-            <a *ngIf="!readOnly"
-               (click)="pageClicked($event, page)" href="">
-                {{ page.name }}
-            </a>
-            <span class="language">{{ page.languageName }}</span>
+      <div class="page-title">
+        <inherited-localized-icon [item]="page">
+        </inherited-localized-icon>
+        @if (readOnly) {
+          <div>{{ page.name }}</div>
+        }
+        @if (!readOnly) {
+          <a
+            (click)="pageClicked($event, page)" href="">
+            {{ page.name }}
+          </a>
+        }
+        <span class="language">{{ page.languageName }}</span>
+      </div>
+      @if (!readOnly) {
+        <div class="path">
+          {{ page.path }}
         </div>
-        <div class="path" *ngIf="!readOnly">
-            {{ page.path }}
-        </div>
+      }
     </div>
     <div class="display-fields">
-        <list-item-details [fields]="displayFields$ | async"
-                           [item]="page"></list-item-details>
+      <list-item-details [fields]="displayFields$ | async"
+      [item]="page"></list-item-details>
     </div>
-</gtx-contents-list-item>
+  </gtx-contents-list-item>
+}

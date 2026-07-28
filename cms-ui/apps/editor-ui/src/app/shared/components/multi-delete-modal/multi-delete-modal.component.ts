@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { Feature, Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
+import { ApplicationStateService } from '../../../state';
 
 export interface MultiDeleteResult {
     delete: InheritableItem[];

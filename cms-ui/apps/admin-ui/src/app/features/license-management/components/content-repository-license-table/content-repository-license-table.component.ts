@@ -1,11 +1,13 @@
 import { ContentRepositoryLicenseBO } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { License, PushLicenseRequest } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { map, Observable } from 'rxjs';
 import { ContentRepositoryLicenseTableLoaderService } from '../../providers';
 import { ContentRepositoryLicenseInfoModal } from '../content-repository-license-info-modal/content-repository-license-info-modal.component';
@@ -17,7 +19,7 @@ const ACTION_PUSH = 'push';
     templateUrl: './content-repository-license-table.component.html',
     styleUrls: ['./content-repository-license-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentRepositoryLicenseTableComponent
     extends BaseEntityTableComponent<ContentRepositoryLicenseBO>
@@ -39,7 +41,7 @@ export class ContentRepositoryLicenseTableComponent
         },
         {
             id: 'url',
-            label: 'contentRepository.url',
+            label: 'content_repository.url',
             fieldPath: 'url',
             sortable: true,
             clickable: true,
@@ -58,6 +60,7 @@ export class ContentRepositoryLicenseTableComponent
             clickable: true,
         },
     ];
+
     protected entityIdentifier = null;
 
     constructor(
@@ -76,7 +79,7 @@ export class ContentRepositoryLicenseTableComponent
             i18n,
             loader,
             modalService,
-        )
+        );
     }
 
     public override ngOnChanges(changes: ChangesOf<this>): void {
@@ -98,7 +101,7 @@ export class ContentRepositoryLicenseTableComponent
 
         this.modalService.fromComponent(ContentRepositoryLicenseInfoModal, {}, {
             info: row.item,
-        }).then(modal => modal.open());
+        }).then((modal) => modal.open());
     }
 
     public override handleAction(event: TableActionClickEvent<ContentRepositoryLicenseBO>): void {
@@ -107,7 +110,7 @@ export class ContentRepositoryLicenseTableComponent
                 this.pushLicense({
                     crIds: this.getAffectedEntityIds(event)
                         .map(Number)
-                        .filter(id => Number.isInteger(id)),
+                        .filter((id) => Number.isInteger(id)),
                 }, true);
                 break;
 
@@ -138,7 +141,7 @@ export class ContentRepositoryLicenseTableComponent
 
     protected pushLicense(req: PushLicenseRequest, clearSelection: boolean = false): void {
         this.subscriptions.push(this.client.license.push(req).subscribe({
-            next: res => {
+            next: (res) => {
                 if (clearSelection) {
                     this.updateSelection([]);
                 }
@@ -149,7 +152,7 @@ export class ContentRepositoryLicenseTableComponent
                     type: 'success',
                 });
             },
-            error: err => {
+            error: (err) => {
                 this.errorHandler.catch(err);
             },
         }));

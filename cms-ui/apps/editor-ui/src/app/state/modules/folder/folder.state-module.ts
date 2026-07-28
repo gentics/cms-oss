@@ -1,12 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    folderSchema,
-    imageSchema,
-    languageSchema,
-    nodeSchema,
-} from '@editor-ui/app/common/models';
-import { defaultUserSettings } from '@editor-ui/app/core/models';
-import {
     File,
     Folder,
     FolderItemOrTemplateType,
@@ -33,9 +26,14 @@ import {
     RecentItem,
     RecentItemMode,
     emptyItemInfo,
+    folderSchema,
+    imageSchema,
+    languageSchema,
+    nodeSchema,
     plural,
 } from '../../../common/models';
 import { deepEqual } from '../../../common/utils/deep-equal';
+import { defaultUserSettings } from '../../../core/models';
 import { ApplicationStateService } from '../../providers/application-state/application-state.service';
 import { ActionDefinition, AppStateBranch, concatUnique, getNormalizrSchema } from '../../state-utils';
 import { FocusListAction } from '../editor/editor.actions';
@@ -68,7 +66,6 @@ import {
     SetDisplayAllLanguagesAction,
     SetDisplayDeletedAction,
     SetDisplayImagesGridViewAction,
-    SetDisplayStatusIconsAction,
     SetFilterTermAction,
     SetFolderLanguageAction,
     SetFormLanguageAction,
@@ -124,7 +121,6 @@ const INITIAL_FOLDER_STATE: FolderState = {
         fetching: false,
     },
     displayAllLanguages: false,
-    displayStatusIcons: false,
     displayDeleted: false,
     displayImagesGridView: true,
     files: { ...emptyItemInfo },
@@ -737,13 +733,6 @@ export class FolderStateModule {
     handleSetDisplayAllLanguagesAction(ctx: StateContext<FolderState>, action: SetDisplayAllLanguagesAction): void {
         ctx.patchState({
             displayAllLanguages: action.displayAll,
-        });
-    }
-
-    @ActionDefinition(SetDisplayStatusIconsAction)
-    handleSetDisplayStatusIconsAction(ctx: StateContext<FolderState>, action: SetDisplayStatusIconsAction): void {
-        ctx.patchState({
-            displayStatusIcons: action.displayIcons,
         });
     }
 

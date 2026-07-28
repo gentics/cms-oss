@@ -1,8 +1,9 @@
-import { FolderBO } from '@admin-ui/common';
-import { FolderTrableLoaderOptions, FolderTrableLoaderService, I18nService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { Folder } from '@gentics/cms-models';
 import { TableAction, TableColumn } from '@gentics/ui-core';
+import { FolderBO } from '../../../common';
+import { FolderTrableLoaderOptions, FolderTrableLoaderService } from '../../../core';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({
@@ -10,7 +11,7 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     templateUrl: './folder-trable.component.html',
     styleUrls: ['./folder-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FolderTrableComponent extends BaseEntityTrableComponent<Folder, FolderBO, FolderTrableLoaderOptions> {
 

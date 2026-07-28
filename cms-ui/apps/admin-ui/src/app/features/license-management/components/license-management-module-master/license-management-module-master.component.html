@@ -1,7 +1,7 @@
 <gtx-tabs pure [activeId]="activeTab">
     <gtx-tab
         [id]="LicenseModuleTabs.OVERVIEW"
-        [title]="'license.overview_title' | i18n"
+        [title]="'license.overview_title' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-license-management
@@ -12,7 +12,7 @@
 
     <gtx-tab
         [id]="LicenseModuleTabs.CONTENT_REPOSITORIES"
-        [title]="'common.contentRepository_plural' | i18n"
+        [title]="'common.plural' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <div class="gtx-entity-master">

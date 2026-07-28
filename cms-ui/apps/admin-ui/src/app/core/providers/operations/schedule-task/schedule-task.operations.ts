@@ -1,6 +1,7 @@
 import { applyInstancePermissions, discard } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     InstancePermissionMap,
     ModelType,
@@ -16,7 +17,6 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { combineLatest, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -34,20 +34,20 @@ export class ScheduleTaskOperations extends ExtendedEntityOperationsBase<'schedu
 
     getAll(options?: ScheduleTaskListOptions, parentId?: string | number): Observable<ScheduleTaskBO<Raw>[]> {
         return this.api.scheduler.listTasks(options).pipe(
-            map(res => applyInstancePermissions(res).items),
-            map(items => items.map(task => this.mapToBusinessObject(task))),
-            tap(tasks => this.entities.addEntities(this.entityIdentifier, tasks)),
+            map((res) => applyInstancePermissions(res).items),
+            map((items) => items.map((task) => this.mapToBusinessObject(task))),
+            tap((tasks) => this.entities.addEntities(this.entityIdentifier, tasks)),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     get(entityId: number, options?: any, parentId?: string | number): Observable<ScheduleTaskBO<Raw>> {
         return combineLatest([
             this.api.scheduler.getTask(entityId).pipe(
-                map(res => res.item),
+                map((res) => res.item),
             ),
             this.api.scheduler.getTaskPermission(entityId, SingleInstancePermissionType.EDIT).pipe(
-                map(res => res.granted),
+                map((res) => res.granted),
             ),
         ]).pipe(
             map(([task, canEdit]) => this.mapToBusinessObject(task, {
@@ -55,19 +55,19 @@ export class ScheduleTaskOperations extends ExtendedEntityOperationsBase<'schedu
                 [SingleInstancePermissionType.EDIT]: canEdit,
                 [SingleInstancePermissionType.DELETE]: canEdit,
             })),
-            tap(task => this.entities.addEntity(this.entityIdentifier, task)),
+            tap((task) => this.entities.addEntity(this.entityIdentifier, task)),
             this.catchAndRethrowError(),
         );
     }
 
     create(body: ScheduleTaskCreateRequest, notification: boolean = true): Observable<ScheduleTaskBO<Raw>> {
         return this.api.scheduler.createTask(body).pipe(
-            map(res => this.mapToBusinessObject(res.item, {
+            map((res) => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,
                 [SingleInstancePermissionType.EDIT]: true,
                 [SingleInstancePermissionType.DELETE]: true,
             })),
-            tap(task => {
+            tap((task) => {
                 this.entities.addEntity(this.entityIdentifier, task);
                 if (notification) {
                     this.notification.show({
@@ -78,17 +78,17 @@ export class ScheduleTaskOperations extends ExtendedEntityOperationsBase<'schedu
                 }
             }),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     update(entityId: number, body: ScheduleTaskSaveRequest, notification: boolean = true): Observable<ScheduleTaskBO<Raw>> {
         return this.api.scheduler.updateTask(entityId, body).pipe(
-            map(res => this.mapToBusinessObject(res.item, {
+            map((res) => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,
                 [SingleInstancePermissionType.EDIT]: true,
                 [SingleInstancePermissionType.DELETE]: true,
             })),
-            tap(task => {
+            tap((task) => {
                 this.entities.addEntity(this.entityIdentifier, task);
                 if (notification) {
                     this.notification.show({

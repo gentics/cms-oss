@@ -1,8 +1,9 @@
 import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, PermissionsService, ScheduleOperations } from '@admin-ui/core';
+import { PermissionsService, ScheduleOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     AnyModelType,
@@ -12,7 +13,8 @@ import {
     SchedulerStatus,
     ScheduleSaveReqeust,
 } from '@gentics/cms-models';
-import { ModalService, TableAction, TableColumn, TableRow, TableSortOrder, TableActionClickEvent } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { combineLatest, forkJoin, interval, Observable } from 'rxjs';
 import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -29,7 +31,7 @@ const DEACTIVATE_SCHEDULE_ACTION = 'deactivateSchedule';
     templateUrl: './schedule-table.component.html',
     styleUrls: ['./schedule-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, ScheduleBO> implements OnInit {
 
@@ -91,6 +93,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
             fieldPath: 'lastExecution.duration',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'schedule';
 
     constructor(
@@ -128,16 +131,16 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
                 this.changeDetector.markForCheck();
             }),
             switchMap(() => this.operations.status()),
-        ).subscribe(res => {
+        ).subscribe((res) => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
             this.loadingSchedulerStatus = false;
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(this.permissions.getTypePermissions(AccessControlledType.SCHEDULER).pipe(
-            map(typePerm => typePerm.hasPermission(GcmsPermission.SUSPEND_SCHEDULER)),
+            map((typePerm) => typePerm.hasPermission(GcmsPermission.SUSPEND_SCHEDULER)),
             distinctUntilChanged(isEqual),
-        ).subscribe(canManage => {
+        ).subscribe((canManage) => {
             this.canManageScheduler = canManage;
             this.changeDetector.markForCheck();
         }));
@@ -192,20 +195,18 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         );
     }
 
-    public override async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(CreateScheduleModalComponent, {
+    public override handleCreateButton(): void {
+        this.modalService.fromComponent(CreateScheduleModalComponent, {
             closeOnEscape: false,
             closeOnOverlayClick: false,
             width: '80%',
-        }, {});
-        const created = await dialog.open();
-
-        if (!created) {
-            return;
-        }
-
-        // Reload list once a new schedule was created
-        this.loader.reload();
+        }, {}).then((dialog) => dialog.open())
+            .then((created) => {
+                if (created) {
+                // Reload list once a new schedule was created
+                    this.loader.reload();
+                }
+            });
     }
 
     public override handleAction(event: TableActionClickEvent<ScheduleBO>): void {
@@ -232,7 +233,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         this.loadingSchedulerStatus = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.operations.resumeExecutions().subscribe(res => {
+        this.subscriptions.push(this.operations.resumeExecutions().subscribe((res) => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
             this.loadingSchedulerStatus = false;
             this.changeDetector.markForCheck();
@@ -247,7 +248,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         this.loadingSchedulerStatus = true;
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.operations.suspendExecutions().subscribe(res => {
+        this.subscriptions.push(this.operations.suspendExecutions().subscribe((res) => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
             this.loadingSchedulerStatus = false;
             this.changeDetector.markForCheck();
@@ -268,7 +269,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
             width: '80%',
         }, {
             execution: row.item.lastExecution,
-        }).then(dialog => dialog.open());
+        }).then((dialog) => dialog.open());
     }
 
     protected runSchedules(schedules: ScheduleBO[]): void {
@@ -277,8 +278,8 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         }
 
         let doAbort = false;
-        schedules = schedules.filter(schedule => schedule);
-        schedules.forEach(schedule => {
+        schedules = schedules.filter((schedule) => schedule);
+        schedules.forEach((schedule) => {
             if (!schedule[BO_PERMISSIONS].includes(GcmsPermission.EDIT)) {
                 doAbort = true;
                 this.notification.show({
@@ -289,14 +290,14 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
                     },
                 });
             }
-        })
+        });
 
         if (doAbort || schedules.length === 0) {
             return;
         }
 
         this.subscriptions.push(forkJoin(schedules
-            .map(schedule => this.operations.execute(schedule.id),
+            .map((schedule) => this.operations.execute(schedule.id),
             )).subscribe());
     }
 
@@ -306,8 +307,8 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         }
 
         let doAbort = false;
-        schedules = schedules.filter(schedule => schedule);
-        schedules.forEach(schedule => {
+        schedules = schedules.filter((schedule) => schedule);
+        schedules.forEach((schedule) => {
             if (!schedule[BO_PERMISSIONS].includes(GcmsPermission.EDIT)) {
                 doAbort = true;
                 this.notification.show({
@@ -318,7 +319,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
                     },
                 });
             }
-        })
+        });
 
         if (doAbort || schedules.length === 0) {
             return;
@@ -350,8 +351,8 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         }
 
         let doAbort = false;
-        schedules = schedules.filter(schedule => schedule);
-        schedules.forEach(schedule => {
+        schedules = schedules.filter((schedule) => schedule);
+        schedules.forEach((schedule) => {
             if (!schedule[BO_PERMISSIONS].includes(GcmsPermission.EDIT)) {
                 doAbort = true;
                 this.notification.show({
@@ -362,7 +363,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
                     },
                 });
             }
-        })
+        });
 
         if (doAbort || schedules.length === 0) {
             return;
@@ -390,7 +391,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
 
     protected updateSchedules(schedules: ScheduleBO[], body: ScheduleSaveReqeust): Observable<void> {
         return forkJoin(schedules
-            .map(schedule => this.operations.update(schedule.id, body, false)),
+            .map((schedule) => this.operations.update(schedule.id, body, false)),
         ).pipe(
             discard(() => {
                 // Reload the items, as they are out of date now and wouldn't update in the list otherwise

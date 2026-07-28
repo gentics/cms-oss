@@ -1,23 +1,21 @@
-<ng-container *ngIf="settings$ | async as settings">
+@if (settings$ | async; as settings) {
+  @if (settings.active || settings.showBanner) {
     <div
-        *ngIf="settings.active || settings.showBanner"
-        class="banner"
-        [class.maintenance-is-active]="settings.active"
-    >
+      class="banner"
+      [class.maintenance-is-active]="settings.active"
+      >
+      @if (settings.active) {
         <span
-            *ngIf="settings.active"
-            class="maintenance-is-active-note"
-        >{{ 'shared.maintenance_mode_is_active' | i18n }} &nbsp;&#124;&nbsp;</span>
-
-        <ng-container *ngIf="settings.showBanner; else templateNoBanner">
-            <span
-                class="banner-message-title"
-            >{{ 'shared.banner_message' | i18n }}:</span>&nbsp;{{ settings.message }}
-        </ng-container>
-
-        <ng-template #templateNoBanner>
-            <span class="banner-is-active-note">{{ 'shared.maintenance_banner_is_not_active' | i18n }}</span>
-        </ng-template>
-
+          class="maintenance-is-active-note"
+        >{{ 'shared.maintenance_mode_is_active' | gtxI18n }} &nbsp;&#124;&nbsp;</span>
+      }
+      @if (settings.showBanner) {
+        <span
+          class="banner-message-title"
+        >{{ 'shared.banner_message' | gtxI18n }}:</span>&nbsp;{{ settings.message }}
+      } @else {
+        <span class="banner-is-active-note">{{ 'shared.maintenance_banner_is_not_active' | gtxI18n }}</span>
+      }
     </div>
-</ng-container>
+  }
+}

@@ -1,44 +1,40 @@
 <div class="gtx-entity-master">
-    <ng-container *ngIf="!activeNode; else templateOverview">
-        <div class="node-select-header">
-            <h5>{{ 'template.select_node_overview_title' | i18n }}</h5>
-            <div class="description">{{ 'template.select_node_overview_description' | i18n }}</div>
-        </div>
+  @if (!activeNode) {
+    <div class="node-select-header">
+      <h5>{{ 'template.select_node_overview_title' | gtxI18n }}</h5>
+      <div class="description">{{ 'template.select_node_overview_description' | gtxI18n }}</div>
+    </div>
+    <gtx-node-table
+      class="entity-table"
+      [showSearch]="true"
+      [selectable]="false"
+      [hideActions]="true"
+      [(selected)]="selected"
+      (rowClick)="handleNodeSelect($event)"
+    ></gtx-node-table>
+  } @else {
+    <div class="overview-header">
+      <gtx-button
+        class="back-button"
+        flat
+        size="small"
+        (click)="navigateBack()"
+        >
+        <icon left>arrow_back</icon> Back
+      </gtx-button>
+      <div class="overview-title">Templates of Node "{{ activeNode.name }}"</div>
+    </div>
+    <gtx-template-table
+      class="entity-table"
+      [showSearch]="true"
+      [nodeId]="activeNode.id"
+      [activeEntity]="activeEntity"
+      [extraActions]="actions"
+      [(selected)]="selected"
+      (rowClick)="handleRowClick($event)"
+      (createClick)="handleCreate()"
+      (actionClick)="handleAction($event)"
+    ></gtx-template-table>
+  }
 
-        <gtx-node-table
-            class="entity-table"
-            [showSearch]="true"
-            [selectable]="false"
-            [hideActions]="true"
-            [(selected)]="selected"
-            (rowClick)="handleNodeSelect($event)"
-        ></gtx-node-table>
-    </ng-container>
-
-    <ng-template #templateOverview>
-        <div class="overview-header">
-            <gtx-button
-                class="back-button"
-                flat
-                size="small"
-                (click)="navigateBack()"
-            >
-                <icon left>arrow_back</icon> Back
-            </gtx-button>
-
-            <div class="overview-title">Templates of Node "{{ activeNode.name }}"</div>
-        </div>
-
-        <gtx-template-table
-            class="entity-table"
-            [showSearch]="true"
-            [nodeId]="activeNode.id"
-            [activeEntity]="activeEntity"
-            [extraActions]="actions"
-            [(selected)]="selected"
-            (rowClick)="handleRowClick($event)"
-            (createClick)="handleCreate()"
-            (actionClick)="handleAction($event)"
-        ></gtx-template-table>
-    </ng-template>
 </div>

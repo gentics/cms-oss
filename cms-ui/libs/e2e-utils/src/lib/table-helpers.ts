@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { ClickOptions } from './playwright-types';
+import { getSourceLocator } from './playwright-helpers';
 
 export function findTableAction(source: Page | Locator, id: string): Locator {
     return source.locator(`.action-column .action-button[data-id="${id}"]`)
@@ -19,8 +20,9 @@ export function findTableRowByText(source: Page | Locator, text: string, exact: 
 /**
  * Finds a table row by its data-id attribute
  */
-export function findTableRowById(source: Page | Locator, id: number | string): Locator {
-    return source.locator(`gtx-table .data-row[data-id="${id}"]`);
+export async function findTableRowById(source: Page | Locator, id: number | string): Promise<Locator> {
+    source = await getSourceLocator(source, 'gtx-table');
+    return source.locator(`.data-row[data-id="${id}"]`);
 }
 
 export function clickTableRow(row: Locator, options?: ClickOptions): Promise<void> {

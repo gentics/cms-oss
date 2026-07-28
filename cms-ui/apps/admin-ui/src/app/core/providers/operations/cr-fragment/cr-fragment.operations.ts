@@ -15,6 +15,7 @@ import {
 } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ContentRepositoryFragment,
     ContentRepositoryFragmentBO,
@@ -28,15 +29,13 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
 export class ContentRepositoryFragmentOperations
     extends ExtendedEntityOperationsBase<'contentRepositoryFragment'>
     implements PackageEntityOperations<ContentRepositoryFragmentBO<Raw>>,
-        DevToolEntityHandler<EditableEntity.CR_FRAGMENT>
-{
+        DevToolEntityHandler<EditableEntity.CR_FRAGMENT> {
 
     constructor(
         injector: Injector,
@@ -50,8 +49,8 @@ export class ContentRepositoryFragmentOperations
 
     create(payload: ContentRepositoryFragmentCreateRequest, notification: boolean = true): Observable<ContentRepositoryFragmentBO<Raw>> {
         return this.api.contentRepositoryFragments.createContentRepositoryFragment(payload).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepositoryFragment)),
-            tap(fragment => {
+            map((res) => this.mapToBusinessObject(res.contentRepositoryFragment)),
+            tap((fragment) => {
                 this.entityManager.addEntity(this.entityIdentifier, fragment);
 
                 if (notification) {
@@ -73,8 +72,8 @@ export class ContentRepositoryFragmentOperations
      */
     getAll(options?: ContentRepositoryFragmentListOptions): Observable<ContentRepositoryFragmentBO<Raw>[]> {
         return this.api.contentRepositoryFragments.getContentRepositoryFragments(options).pipe(
-            map(res => res.items.map(item => this.mapToBusinessObject(item, !!(options?.[LOAD_FOR_PACKAGE_LIST])))),
-            tap(fragments => this.entityManager.addEntities(this.entityIdentifier, fragments)),
+            map((res) => res.items.map((item) => this.mapToBusinessObject(item, !!(options?.[LOAD_FOR_PACKAGE_LIST])))),
+            tap((fragments) => this.entityManager.addEntities(this.entityIdentifier, fragments)),
             this.catchAndRethrowError(),
         );
     }
@@ -84,22 +83,22 @@ export class ContentRepositoryFragmentOperations
      */
     get(fragmentId: EntityIdType): Observable<ContentRepositoryFragmentBO<Raw>> {
         return this.api.contentRepositoryFragments.getContentRepositoryFragment(fragmentId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepositoryFragment)),
-            tap(fragment => this.entityManager.addEntity(this.entityIdentifier, fragment)),
+            map((res) => this.mapToBusinessObject(res.contentRepositoryFragment)),
+            tap((fragment) => this.entityManager.addEntity(this.entityIdentifier, fragment)),
             this.catchAndRethrowError(),
         );
     }
 
     getAllFromPackage(packageId: string, options?: any): Observable<ContentRepositoryFragmentBO<Raw>[]> {
         return this.api.devTools.getContentRepositoryFragments(packageId, options).pipe(
-            map(res => res.items.map(item => this.mapToBusinessObject(item, true))),
+            map((res) => res.items.map((item) => this.mapToBusinessObject(item, true))),
             this.catchAndRethrowError(),
         );
     }
 
     getFromPackage(packageId: string, entityId: string): Observable<ContentRepositoryFragmentBO<Raw>> {
         return this.api.devTools.getContentRepositoryFragment(packageId, entityId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepositoryFragment, true)),
+            map((res) => this.mapToBusinessObject(res.contentRepositoryFragment, true)),
             this.catchAndRethrowError(),
         );
     }
@@ -110,8 +109,8 @@ export class ContentRepositoryFragmentOperations
         notification: boolean = true,
     ): Observable<ContentRepositoryFragmentBO<Raw>> {
         return this.api.contentRepositoryFragments.updateContentRepositoryFragment(fragmentId, payload).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepositoryFragment)),
-            tap(fragment => {
+            map((res) => this.mapToBusinessObject(res.contentRepositoryFragment)),
+            tap((fragment) => {
                 this.entityManager.addEntity(this.entityIdentifier, fragment);
 
                 // display toast notification
@@ -149,7 +148,7 @@ export class ContentRepositoryFragmentOperations
                 this.entityManager.deleteEntities(this.entityIdentifier, [fragmentId]);
             }),
             this.catchAndRethrowError(),
-        )
+        );
     }
 
     addToDevTool(
@@ -161,7 +160,7 @@ export class ContentRepositoryFragmentOperations
         return this.api.devTools.addContentRepositoryFragmentToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_added_to_package',
+                    message: 'content_repository_fragment.contentRepositoryFragment_successfully_added_to_package',
                     type: 'success',
                     translationParams: {
                         name: entity.name,
@@ -181,7 +180,7 @@ export class ContentRepositoryFragmentOperations
         return this.api.devTools.removeContentRepositoryFragmentFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_removed_from_package',
+                    message: 'content_repository_fragment.contentRepositoryFragment_successfully_removed_from_package',
                     type: 'success',
                     translationParams: {
                         name: entity.name,
@@ -208,8 +207,8 @@ export class ContentRepositoryFragmentOperations
         params?: DevToolEntityListRequestParams<EditableEntity.CR_FRAGMENT>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CR_FRAGMENT]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => {
-                const items = res.items.map(item => ({
+            map((res) => {
+                const items = res.items.map((item) => ({
                     ...item,
                     [BO_ID]: String(item.id),
                     [BO_PERMISSIONS]: [],

@@ -1,67 +1,70 @@
-<div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
-
-    <gtx-button
-        *ngIf="!hideActions"
+@if (!hideActions || packageName) {
+  <div class="entity-table-actions-bar">
+    @if (!hideActions) {
+      <gtx-button
         class="table-action-button check-package-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
         (click)="handleLoadButtonClick()"
-    >
-        <icon left>offline_pin</icon> {{ 'package.consistency_check_button' | i18n }}
-    </gtx-button>
-</div> 
+        >
+        <icon left>offline_pin</icon> {{ 'package.consistency_check_button' | gtxI18n }}
+      </gtx-button>
+    }
+  </div>
+}
 
 
-<div class="check-ok" *ngIf="rows?.length === 0">
-    <span id="package-is-consistent-result">{{ 'package.consistency_check_ok' | i18n }}</span>
+@if (rows?.length === 0) {
+  <div class="check-ok">
+    <span id="package-is-consistent-result">{{ 'package.consistency_check_ok' | gtxI18n }}</span>
     <icon>check_circle</icon>
-</div>
+  </div>
+}
 
 
-<gtx-trable
-    *ngIf="rows?.length > 0"
+@if (rows?.length > 0) {
+  <gtx-trable
     class="entity-table"
     [selectable]="selectable"
     [hideActions]="hideActions"
     [multiple]="multiple"
     [inlineExpansion]="inlineExpansion"
     [inlineSelection]="inlineSelection"
-
     [columns]="columns"
     [rows]="rows"
     [active]="activeEntity"
     [selected]="selected"
     [actions]="actions"
-
     [renderers]="{
         label: nameRenderer,
         isInPackage: boolIconRenderer
     }"
-
     (loadRow)="loadRow($event)"
     (rowClick)="handleRowClick($event)"
     (rowExpand)="updateRowExpansion($event)"
     (actionClick)="handleActionClick($event)"
     (selectedChange)="updateSelection($event)"
-    (select)="forwardSelect($event)"
-    (deselect)="forwardDeselect($event)"
-></gtx-trable>
+    (rowSelect)="forwardSelect($event)"
+    (rowDeselect)="forwardDeselect($event)"
+  ></gtx-trable>
+}
 
 
 <ng-template #nameRenderer let-value="value" let-row="row">
-    <div class="name-wrapper">
-        <gtx-icon class="gtx-type-icon type-icon" [name]="row.item.type"></gtx-icon>
-        <span class="name">{{ value }}</span>
-    </div>
+  <div class="name-wrapper">
+    <gtx-icon class="gtx-type-icon type-icon" [name]="row.item.type"></gtx-icon>
+    <span class="name">{{ value }}</span>
+  </div>
 </ng-template>
 
 
 <ng-template #boolIconRenderer let-value="value">
+  @if (value !== undefined) {
     <icon
-        *ngIf="value !== undefined" 
-        class="gtx-table-cell-boolean"
-        [ngClass]="'gtx-table-cell-boolean-' + value"
+      class="gtx-table-cell-boolean"
+      [ngClass]="'gtx-table-cell-boolean-' + value"
     >{{ value ? 'check' : 'close' }}</icon>
+  }
 </ng-template>

@@ -4,7 +4,7 @@
 >
     <gtx-tab
         [id]="SchedulerModuleTabs.SCHEDULES"
-        [title]="'scheduler.schedules_tab' | i18n"
+        [title]="'scheduler.schedules_tab' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-schedule-master (taskClick)="setTabAsActive(SchedulerModuleTabs.TASKS)"></gtx-schedule-master>
@@ -12,7 +12,7 @@
 
     <gtx-tab
         [id]="SchedulerModuleTabs.TASKS"
-        [title]="'scheduler.tasks_tab' | i18n"
+        [title]="'scheduler.tasks_tab' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-schedule-task-master></gtx-schedule-task-master>

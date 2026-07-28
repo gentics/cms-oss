@@ -10,9 +10,9 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { ContentPackageBO, IndexById } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
+import { ApplicationStateService } from '../../../state';
 
 interface DisplayItem<T> {
     id: string;

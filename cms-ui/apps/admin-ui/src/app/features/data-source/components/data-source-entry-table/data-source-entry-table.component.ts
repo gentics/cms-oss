@@ -1,10 +1,11 @@
 import { BO_NEW_SORT_ORDER, createMoveActions, DataSourceEntryBO } from '@admin-ui/common';
-import { I18nService, PermissionsService } from '@admin-ui/core';
+import { PermissionsService } from '@admin-ui/core';
 import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit } from '@angular/core';
 import { AnyModelType, DataSourceEntry, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DataSourceEntryTableLoaderOptions, DataSourceEntryTableLoaderService } from '../../providers';
@@ -15,7 +16,7 @@ import { CreateDataSourceEntryModalComponent } from '../create-data-source-entry
     templateUrl: './data-source-entry-table.component.html',
     styleUrls: ['./data-source-entry-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DataSourceEntryTableComponent
     extends BaseSortableEntityTableComponent<DataSourceEntry<Raw>, DataSourceEntryBO, DataSourceEntryTableLoaderOptions>
@@ -27,23 +28,24 @@ export class DataSourceEntryTableComponent
     protected rawColumns: TableColumn<DataSourceEntryBO>[] = [
         {
             id: 'key',
-            label: 'dataSourceEntry.key',
+            label: 'data_source_entry.key',
             fieldPath: 'key',
         },
         {
             id: 'value',
-            label: 'dataSourceEntry.value',
+            label: 'data_source_entry.value',
             fieldPath: 'value',
         },
         {
             id: 'order',
             label: 'shared.order',
             fieldPath: BO_NEW_SORT_ORDER,
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
             mapper: (index: number) => index + 1,
             align: 'right',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'dataSourceEntry';
 
     constructor(

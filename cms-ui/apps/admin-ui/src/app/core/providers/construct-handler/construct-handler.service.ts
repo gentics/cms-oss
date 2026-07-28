@@ -29,13 +29,13 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { DataSourceConstructListOptions, DataSourceConstructListResponse, EntityIdType, Node } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ConstructHandlerService
@@ -73,7 +73,7 @@ export class ConstructHandlerService
         params?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityCreateResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.createTagType(data, params).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.construct);
                 this.nameMap[res.construct.id] = name;
 
@@ -94,7 +94,7 @@ export class ConstructHandlerService
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.construct)),
+            map((res) => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -103,7 +103,7 @@ export class ConstructHandlerService
         params?: EntityLoadRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityLoadResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.getTagType(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.construct);
                 this.nameMap[res.construct.id] = name;
             }),
@@ -116,7 +116,7 @@ export class ConstructHandlerService
         params?: EntityLoadRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.get(id, params).pipe(
-            map(res => this.mapToBusinessObject(res.construct)),
+            map((res) => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -126,7 +126,7 @@ export class ConstructHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.updateTagType(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.construct);
                 this.nameMap[res.construct.id] = name;
 
@@ -148,7 +148,7 @@ export class ConstructHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.construct)),
+            map((res) => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -179,8 +179,8 @@ export class ConstructHandlerService
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityListResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.getTagTypes(params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -194,7 +194,7 @@ export class ConstructHandlerService
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
         return this.list(body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
 
@@ -212,8 +212,8 @@ export class ConstructHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<DevToolEntityListResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.devTools.getConstructs(devtoolPackage, params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
+            tap((res) => {
+                res.items.forEach((objCat) => {
                     const name = this.displayName(objCat);
                     this.nameMap[objCat.id] = name;
                 });
@@ -228,7 +228,7 @@ export class ConstructHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
 
@@ -242,8 +242,8 @@ export class ConstructHandlerService
 
     getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.api.devTools.getConstruct(packageId, entityId).pipe(
-            map(res => this.mapToBusinessObject(res.construct)),
-            tap(con => {
+            map((res) => this.mapToBusinessObject(res.construct)),
+            tap((con) => {
                 this.nameMap[con.id] = con[BO_DISPLAY_NAME];
             }),
             this.catchAndRethrowError(),
@@ -252,7 +252,7 @@ export class ConstructHandlerService
 
     getLinkedNodes(constructId: EntityIdType): Observable<Node[]> {
         return this.api.tagType.getLinkedNodes(constructId).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
@@ -319,8 +319,8 @@ export class ConstructHandlerService
         params?: DataSourceConstructListOptions,
     ): Observable<DataSourceConstructListResponse> {
         return this.api.dataSource.getConstructs(dataSourceId, params).pipe(
-            tap(res => {
-                res.items.forEach(con => {
+            tap((res) => {
+                res.items.forEach((con) => {
                     const name = this.displayName(con);
                     this.nameMap[con.id] = name;
                 });
@@ -335,7 +335,7 @@ export class ConstructHandlerService
         params?: DataSourceConstructListOptions,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
         return this.listFromDataSource(dataSourceId, body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
 

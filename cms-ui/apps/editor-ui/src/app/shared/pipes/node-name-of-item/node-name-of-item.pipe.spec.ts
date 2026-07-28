@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { Folder, Page } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { NodeNameOfItemPipe } from './node-name-of-item.pipe';
 
@@ -18,7 +18,7 @@ describe('NodeNameOfItemPipe', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
 
         appState.mockState({
             entities: {

@@ -1413,9 +1413,23 @@
 			        (channelParam ? '&' : '?') +
 			        'links=' + encodeURIComponent(GCN.settings.linksRenderMode);
 			var jsonData = jQuery.extend({}, this._data);
+			
+			// Create a copy of the object, since we delete from it, and don't want it to affect other stuff.
+			// The extend also only copies a object one layer deep, that's why theres a second one.
+			// Remove inherited tags from the payload. 
+			var tags = jQuery.extend({}, jsonData.tags) || {};
+			Object.keys(tags || {}).forEach(function(key) {
+				if (tags[key].inherited) {
+					delete tags[key];
+				}
+			});
+			jsonData.tags = tags;
+
 			// remove some data, we don't want to serialize and POST to the server
 			jsonData.pageVariants = null;
 			jsonData.languageVariants = null;
+
+			// send the request
 			this._authAjax({
 				type: 'POST',
 				json: jsonData,

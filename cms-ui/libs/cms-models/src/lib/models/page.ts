@@ -1,3 +1,4 @@
+import { LocalizationType } from './common';
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
 import { Group } from './group';
@@ -28,10 +29,10 @@ export interface TimeManagement {
     version?: PageVersion;
 
     /* The user that planned to publish */
-    futurePublisher?: User,
+    futurePublisher?: User;
 
     /* The user that planned to upublish */
-    futureUnpublisher?: User,
+    futureUnpublisher?: User;
 }
 
 /** Superinterface for queued TimeManagement actions/ */
@@ -55,7 +56,6 @@ export interface QueuedActionPublish extends QueuedActionTakeOffline {
 
 /** Queued time management for taking a page offline */
 export interface QueuedActionTakeOffline extends QueuedAction { }
-
 
 export interface QueuedActionRequestPublishAt {
     at: number;
@@ -139,7 +139,7 @@ export interface PageWorkflow {
  * The user-editable properties of a Page object.
  */
 export type EditablePageProps = Partial<Pick<Page, 'name' | 'fileName' | 'description' | 'niceUrl'
-| 'alternateUrls' |'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate' | 'tags'>>;
+  | 'alternateUrls' | 'language' | 'templateId' | 'priority' | 'customCdate' | 'customEdate' | 'tags'>>;
 
 /**
  * External Link Checker page list item, contains the page and the external links
@@ -159,43 +159,35 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
 
     type: 'page';
 
+    /* BASICS
+     * ---------------------------------------------------------------------- */
+
     /** Filename */
     fileName: string;
 
     /** Description */
     description: string;
 
-    /** Folder path to the page */
-    path: string;
-
     /** Template ID */
     templateId: number;
 
-    /** ID of the folder this page is located in */
-    folderId: number;
-
-    /** Used to group language variants */
-    contentSetId: number;
-
-    /** Corresponds to the language id */
-    contentGroupId: number;
-
     /**
-     * Whether the page is modified (the last version of the page is not the currently published one)
+     * Language Code (if page has a language).
+     * Should always be present, but optional for legacy reasons.
      */
-    modified: boolean;
+    language?: string;
 
     /** Priority */
     priority: number;
 
-    /** True if the page was fetched readonly, false if fetched in edit mode */
-    readOnly: boolean;
+    /** Nice URL */
+    niceUrl?: string;
 
-    /** ID of the publisher */
-    publisher?: Normalizable<T, User<Raw>, number>;
+    /** Additional/Alternative Nice URLs */
+    alternateUrls?: string[];
 
-    /** Publish Date as a Unix timestamp */
-    pdate?: number;
+    /** Tags of the page */
+    tags?: Tags;
 
     /**
      * Custom creation date of the page as a Unix timestamp.
@@ -211,88 +203,148 @@ export interface Page<T extends ModelType = DefaultModelType> extends Inheritabl
      */
     customEdate?: number;
 
-    /** Language Code (if page has a language) */
-    language?: string;
+    /* COMMON META-DATA
+     * ---------------------------------------------------------------------- */
+
+    /** Folder path to the page */
+    readonly path: string;
+
+    /** ID of the folder this page is located in. */
+    readonly folderId: number;
 
     /** Language Name (if page has a language) */
-    languageName?: string;
-
-    /** Nice URL */
-    niceUrl?: string;
-
-    /** Additional/Alternative Nice URLs */
-    alternateUrls?: string[];
-
-    /** Tags of the page */
-    tags?: Tags;
-
-    /** Time management */
-    timeManagement: TimeManagement;
-
-    /** Whether the page has time management set or not. */
-    planned: boolean;
-
-    /** Workflow attached to the page */
-    workflow?: PageWorkflow;
-
-    /** Whether the page is in queue for being published or taken offline */
-    queued: boolean;
-
-    /** Page variants of the page */
-    pageVariants?: Normalizable<T, Page<Raw>, number>[];
-
-    /** Publish path */
-    publishPath: string;
-
-    /** Language variants */
-    languageVariants?: IndexById<Normalizable<T, Page<Raw>, number>>;
-
-    /** URL to the page */
-    url?: string;
-
-    /** Live URL to the page */
-    liveUrl?: string;
-
-    /** Whether the page is currently online. */
-    online: boolean;
-
-    /** Template */
-    template?: Normalizable<T, Template<Raw>, number>;
-
-    /** The folder that this page is located in */
-    folder?: Normalizable<T, Folder<Raw>, number>;
-
-    /** Whether this page is a master page */
-    master: boolean;
+    readonly languageName?: string;
 
     /** True if the page is locked */
-    locked: boolean;
+    readonly locked: boolean;
 
     /** Unix timestamp, since when the page is locked, or -1 if it is not locked */
-    lockedSince: number;
+    readonly lockedSince: number;
 
     /** User, who locked the page */
-    lockedBy?: Normalizable<T, User<Raw>, number>;
+    readonly lockedBy?: Normalizable<T, User<Raw>, number>;
 
-    /** Translation status information */
-    translationStatus?: PageTranslationStatus;
+    /**
+     * Whether the page is modified (the last version of the page is not the currently published one)
+     */
+    readonly modified: boolean;
 
-    /** Page versions */
-    versions?: PageVersion[];
+    /** True if the page was fetched readonly, false if fetched in edit mode */
+    readonly readOnly: boolean;
 
-    /** Current version of the page */
-    currentVersion?: PageVersion;
-
-    /** Published version of the page */
-    publishedVersion?: PageVersion;
-
-    /** Content id */
-    contentId: number;
-
-    /** Channel id */
-    channelId?: number;
+    /**
+     * ID of this pages content.
+     * Can be used to determine if this is a variant or not.
+     * If it's the same as `id`, then it is not a variant.'
+     */
+    readonly contentId: number;
 
     /** Channelset id */
-    channelSetId: number;
+    readonly channelSetId: number;
+
+    /* MULTICHANNELLING
+     * ---------------------------------------------------------------------- */
+
+    /** Whether this page is a master page */
+    readonly master: boolean;
+
+    /** Channel id */
+    readonly channelId?: number;
+
+    /** If the page is partially localized (only certain tags). */
+    readonly localizationType?: LocalizationType;
+
+    /* PUBLISH META-DATA
+     * ---------------------------------------------------------------------- */
+
+    /** Whether the page is currently online. */
+    readonly online: boolean;
+
+    /** Whether the page is in queue for being published or taken offline */
+    readonly queued: boolean;
+
+    /** Whether the page has time management set or not. */
+    readonly planned: boolean;
+
+    /** ID of the publisher */
+    readonly publisher?: Normalizable<T, User<Raw>, number>;
+
+    /** Publish Date as a Unix timestamp */
+    readonly pdate?: number;
+
+    /** Publish path */
+    readonly publishPath: string;
+
+    /** URL to the page */
+    readonly url?: string;
+
+    /** Live URL to the page */
+    readonly liveUrl?: string;
+
+    /** Time management */
+    readonly timeManagement: TimeManagement;
+
+    /* VARIANTS
+     * ---------------------------------------------------------------------- */
+
+    /** This page's ID in the {@link pageVariants} */
+    readonly contentSetId: number;
+
+    /**
+     * Page variants of the page.
+     * Only included if the page is loaded with `pagevars`.
+     */
+    readonly pageVariants?: Normalizable<T, Page<Raw>, number>[];
+
+    /** Corresponds to the language id. May be used with the {@link languageVariants} */
+    readonly contentGroupId: number;
+
+    /** Language variants */
+    readonly languageVariants?: IndexById<Normalizable<T, Page<Raw>, number>>;
+
+    /* INLINE REFERENCES
+     * ---------------------------------------------------------------------- */
+
+    /**
+     * Template of the Page.
+     * Only included if the page is loaded with `template`.
+     */
+    readonly template?: Normalizable<T, Template<Raw>, number>;
+
+    /**
+     * The folder that this page is located in.
+     * Only included if the page is loaded with `folder`.
+     */
+    readonly folder?: Normalizable<T, Folder<Raw>, number>;
+
+    /**
+     * Translation status information.
+     * Only included if the page is loaded with `translationstatus`.
+     */
+    readonly translationStatus?: PageTranslationStatus;
+
+    /**
+     * Page versions.
+     * Only included if the page is loaded with `versioninfo`.
+     */
+    readonly versions?: PageVersion[];
+
+    /**
+     * Current version of the page.
+     * Only included if the page is loaded with `versioninfo`.
+     */
+    readonly currentVersion?: PageVersion;
+
+    /**
+     * Published version of the page.
+     * Only included if the page is loaded with `versioninfo`.
+     */
+    readonly publishedVersion?: PageVersion;
+
+    /**
+     * Workflow attached to the page.
+     * Only included if the page is loaded with `workflow`.
+     */
+    readonly workflow?: PageWorkflow;
 
 }

@@ -1,5 +1,5 @@
 import { Translator } from '@gentics/cms-integration-api-models';
-import { TranslateService } from '@ngx-translate/core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 
 /**
@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
  */
 export class TranslatorImpl implements Translator {
 
-    constructor(private translateService: TranslateService) { }
+    constructor(private translateService: I18nService) { }
 
     get(key: string | string[], interpolateParams?: Object): Observable<string | Object> {
         return this.translateService.get(key, interpolateParams);

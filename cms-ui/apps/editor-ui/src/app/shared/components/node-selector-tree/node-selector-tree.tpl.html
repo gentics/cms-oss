@@ -1,48 +1,52 @@
-<ng-container *ngFor="let branch of branches">
+@for (branch of branches; track branch.node.id) {
+  @if (useLinks) {
     <gtx-dropdown-item
-        *ngIf="useLinks"
-        [ngClass]="'depth-' + depth"
-        [attr.data-id]="branch.node.id"
-        [attr.data-folder-id]="branch.node.folderId || branch.node.id"
-        [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
+      [ngClass]="'depth-' + depth"
+      [attr.data-id]="branch.node.id"
+      [attr.data-folder-id]="branch.node.folderId || branch.node.id"
+      [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
+      [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
+      (click)="nodeSelected.emit(branch.node)"
+      >
+      <a
+        [title]="branch?.folder?.description"
         [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
         (click)="nodeSelected.emit(branch.node)"
-    >
-        <a
-            [title]="branch?.folder?.description"
-            [routerLink]="['/editor', { outlets: { list: ['node', branch.node.id, 'folder', branch.node.folderId || branch.node.id] } }]"
-            (click)="nodeSelected.emit(branch.node)"
         >
-            <div *ngIf="0 < depth" class="inherited-icon">
-                <icon>input</icon>
-            </div>
-            {{ branch.node.name }}
-        </a>
+        @if (0 < depth) {
+          <div class="inherited-icon">
+            <icon>input</icon>
+          </div>
+        }
+        {{ branch.node.name }}
+      </a>
     </gtx-dropdown-item>
-
+  }
+  @if (!useLinks) {
     <gtx-dropdown-item
-        *ngIf="!useLinks"
-        [ngClass]="'depth-' + depth"
-        [attr.data-id]="branch.node.id"
-        [attr.data-folder-id]="branch.node.folderId || branch.node.id"
-        [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
+      [ngClass]="'depth-' + depth"
+      [attr.data-id]="branch.node.id"
+      [attr.data-folder-id]="branch.node.folderId || branch.node.id"
+      [attr.data-is-channel]="depth > 0 ? 'true' : 'false'"
+      (click)="nodeSelected.emit(branch.node)"
+      >
+      <a
+        [title]="branch.folder?.description"
         (click)="nodeSelected.emit(branch.node)"
-    >
-        <a
-            [title]="branch.folder?.description"
-            (click)="nodeSelected.emit(branch.node)"
         >
-            <div *ngIf="0 < depth" class="inherited-icon">
-                <icon>input</icon>
-            </div>
-            {{ branch.node.name }}
-        </a>
+        @if (0 < depth) {
+          <div class="inherited-icon">
+            <icon>input</icon>
+          </div>
+        }
+        {{ branch.node.name }}
+      </a>
     </gtx-dropdown-item>
-
-    <node-selector-tree
-        [branches]="branch.children"
-        [depth]="depth + 1"
-        [useLinks]="useLinks"
-        (nodeSelected)="nodeSelected.emit($event)"
-    ></node-selector-tree>
-</ng-container>
+  }
+  <node-selector-tree
+    [branches]="branch.children"
+    [depth]="depth + 1"
+    [useLinks]="useLinks"
+    (nodeSelected)="nodeSelected.emit($event)"
+  ></node-selector-tree>
+}

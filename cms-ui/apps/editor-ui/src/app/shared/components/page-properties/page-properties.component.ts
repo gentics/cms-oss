@@ -50,7 +50,7 @@ export enum PagePropertiesMode {
         generateFormProvider(PagePropertiesComponent),
         generateValidatorProvider(PagePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class PagePropertiesComponent
     extends BasePropertiesComponent<EditablePageProps>
@@ -90,7 +90,7 @@ export class PagePropertiesComponent
     public templatesLinked = new EventEmitter<void>();
 
     public viewTemplatesAllowed: boolean;
-    public linkToTemplatesAllowed: boolean
+    public linkToTemplatesAllowed: boolean;
 
     public niceUrlEnabled = false;
     // Note from Norbert -> This is configurable in the backend and might need to be updated
@@ -122,7 +122,7 @@ export class PagePropertiesComponent
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.appState.select(state => state.features[Feature.NICE_URLS]).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features[Feature.NICE_URLS]).subscribe((enabled) => {
             this.niceUrlEnabled = enabled;
 
             if (this.form) {
@@ -134,11 +134,11 @@ export class PagePropertiesComponent
         }));
 
         this.subscriptions.push(this.form.valueChanges.pipe(
-            filter(value =>
+            filter((value) =>
                 // Make sure we have the required properties at least set before we attempt to request
                 value?.language && value?.templateId != null,
             ),
-            map(value => ({
+            map((value) => ({
                 pageName: value.name,
                 language: value.language,
                 templateId: value.templateId,
@@ -160,15 +160,15 @@ export class PagePropertiesComponent
         }));
 
         /* Check if the currently linked template is still available. If not, remove it from the selection */
-        this.subscriptions.push(this.appState.select(state => state.folder.templates.list).pipe(
-            map((templateIds) => templateIds.map(templateId => this.entityResolver.getTemplate(templateId))),
-        ).subscribe(templates => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.templates.list).pipe(
+            map((templateIds) => templateIds.map((templateId) => this.entityResolver.getTemplate(templateId))),
+        ).subscribe((templates) => {
             this.templates = templates || [];
 
             const ctrl = this.form.controls.templateId;
 
             if (ctrl.value != null) {
-                const found = this.templates.find(t => t?.id === ctrl.value);
+                const found = this.templates.find((t) => t?.id === ctrl.value);
 
                 if (!found) {
                     ctrl.setValue(null);
@@ -196,7 +196,7 @@ export class PagePropertiesComponent
 
                         fileName: '',
                     }).pipe(
-                        map(res => res.fileName),
+                        map((res) => res.fileName),
                     );
                 }
 
@@ -259,7 +259,7 @@ export class PagePropertiesComponent
         });
     }
 
-    protected configureForm(value: EditablePageProps, loud?: boolean): void {
+    protected configureForm(_value: EditablePageProps, loud?: boolean): void {
         const options = { onlySelf: false, emitEvent: loud };
         setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], !this.disabled && this.niceUrlEnabled, options);
         setControlsEnabled(this.form, ['language'], !this.disabled && !this.disableLanguageSelect, options);

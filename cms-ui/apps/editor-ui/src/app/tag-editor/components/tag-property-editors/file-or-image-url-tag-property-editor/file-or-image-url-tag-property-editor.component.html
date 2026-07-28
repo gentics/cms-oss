@@ -1,23 +1,24 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <browse-box
-            [label]="tagPart | tagPropLabel"
-            [canUpload]="imageUploadInTagfillEnabled$ | async"
-            [displayValue]="displayValue$ | async"
-            [disabled]="context.readOnly"
-            [uploadTooltip]="(itemType === 'file' ? 'tag_editor.upload_new_file_button' : 'tag_editor.upload_new_image_button') | i18n"
-            (clear)="changeSelectedItem(null)"
-            (browse)="browseForItem()"
-            (upload)="uploadItem()"
-        ></browse-box>
-
-        <div *ngIf="selectedItemPath" class="path">{{ 'tag_editor.selected_folder' | i18n }}: {{ selectedItemPath }}</div>
-
-        <gtx-button
-            *ngIf="itemType === 'image' && (imageManipulationEnabled$ | async) && selectedItemPath && !context.readOnly"
-            class="edit_image"
-            type="secondary"
-            (click)="editImage(tagProperty.nodeId, tagProperty.imageId)"
-        >{{ 'tag_editor.image_manipulation' | i18n }}</gtx-button>
-    </div>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <browse-box
+      [label]="tagPart | tagPropLabel"
+      [canUpload]="imageUploadInTagfillEnabled$ | async"
+      [displayValue]="displayValue$ | async"
+      [disabled]="context.readOnly"
+      [uploadTooltip]="(itemType === 'file' ? 'tag_editor.upload_new_file_button' : 'tag_editor.upload_new_image_button') | gtxI18n"
+      (clear)="changeSelectedItem(null)"
+      (browse)="browseForItem()"
+      (upload)="uploadItem()"
+    ></browse-box>
+    @if (selectedItemPath) {
+      <div class="path">{{ 'tag_editor.selected_folder' | gtxI18n }}: {{ selectedItemPath }}</div>
+    }
+    @if (itemType === 'image' && (imageManipulationEnabled$ | async) && selectedItemPath && !context.readOnly) {
+      <gtx-button
+        class="edit_image"
+        type="secondary"
+        (click)="editImage(tagProperty.nodeId, tagProperty.imageId)"
+      >{{ 'tag_editor.image_manipulation' | gtxI18n }}</gtx-button>
+    }
+  </div>
+}

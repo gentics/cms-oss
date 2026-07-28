@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { EditorPermissions, UIMode } from '@editor-ui/app/common/models';
-import { ApplicationStateService } from '@editor-ui/app/state';
 import { Feature, Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
+import { EditorPermissions, UIMode } from '../../../common/models';
+import { ApplicationStateService } from '../../../state';
 import { ContextMenuOperationsService } from '../../providers/context-menu-operations/context-menu-operations.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
 

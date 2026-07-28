@@ -1,9 +1,10 @@
 <div class="wrapper">
-    <gtx-progress-bar [active]="safeSrcUrl && !iFrameLoaded" speed="200ms"></gtx-progress-bar>
+  <gtx-progress-bar [active]="safeSrcUrl && !iFrameLoaded" speed="200ms"></gtx-progress-bar>
+  @if (safeSrcUrl) {
     <iframe #iFrame
-        *ngIf="safeSrcUrl"
-        [attr.data-gcms-ui-styles]="iFrameStylesUrl"
-        [attr.data-disable-validation]="disableValidation"
-        [src]="safeSrcUrl">
+      [attr.data-gcms-ui-styles]="iFrameStylesUrl"
+      [attr.data-disable-validation]="disableValidation"
+      [src]="safeSrcUrl">
     </iframe>
+  }
 </div>

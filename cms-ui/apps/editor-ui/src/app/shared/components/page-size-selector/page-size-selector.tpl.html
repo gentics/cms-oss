@@ -1,5 +1,7 @@
 
-<span>{{ 'editor.items_per_page_title' | i18n }}</span>
+<span>{{ 'editor.items_per_page_title' | gtxI18n }}</span>
 <gtx-select [value]="size" (valueChange)="sizeChange.emit($event)">
-    <gtx-option *ngFor="let item of options" [value]="item"></gtx-option>
+  @for (item of options; track item) {
+    <gtx-option [value]="item"></gtx-option>
+  }
 </gtx-select>

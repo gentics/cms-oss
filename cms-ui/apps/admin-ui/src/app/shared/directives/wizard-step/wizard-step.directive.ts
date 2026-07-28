@@ -23,7 +23,7 @@ import { coerceToBoolean } from '@gentics/ui-core';
  * @example
  * ```
  * <gtx-wizard-step
- *      [title]="'example.step_one' | i18n"
+ *      [title]="'example.step_one' | gtxI18n"
  *      [nextEnabled]="myFrom.valid"
  *      (activate)="onStepOneActivate($event)"
  *      [nextClick]="onStepOneNextClick"

@@ -1,17 +1,5 @@
 import { Injectable } from '@angular/core';
 import {
-    GtxChipSearchProperty,
-    GtxChipSearchPropertyBoolean,
-    GtxChipSearchPropertyDate,
-    GtxChipSearchPropertyKeys,
-    GtxChipSearchPropertyNumber,
-    GtxChipSearchPropertyObjectId,
-    GtxChipSearchPropertyString,
-    GtxChipSearchSearchFilterMap,
-} from '@editor-ui/app/common/models';
-import { ChipPropertyOptionValueGcmssearch } from '@editor-ui/app/shared/providers/chip-search-bar-config/chip-search-bar-config.models';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import {
     FolderItemType,
     GtxCmsQueryOptions,
     IndexById,
@@ -26,6 +14,18 @@ import {
     filter,
     map,
 } from 'rxjs/operators';
+import {
+    GtxChipSearchProperty,
+    GtxChipSearchPropertyBoolean,
+    GtxChipSearchPropertyDate,
+    GtxChipSearchPropertyKeys,
+    GtxChipSearchPropertyNumber,
+    GtxChipSearchPropertyObjectId,
+    GtxChipSearchPropertyString,
+    GtxChipSearchSearchFilterMap,
+} from '../../../../common/models';
+import { ChipPropertyOptionValueGcmssearch } from '../../../../shared/providers/chip-search-bar-config/chip-search-bar-config.models';
+import { ApplicationStateService } from '../../../../state';
 import {
     GCMSSEARCH_AVAILABLE_FILTERS_FILE,
     GCMSSEARCH_AVAILABLE_FILTERS_FOLDER,

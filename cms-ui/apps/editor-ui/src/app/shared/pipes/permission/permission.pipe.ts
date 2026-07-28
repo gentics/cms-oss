@@ -1,8 +1,8 @@
 import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
-import { EditorPermissions, getNoPermissions } from '@editor-ui/app/common/models';
 import { Folder, Form, Item, Page } from '@gentics/cms-models';
 import { Observable, Subscription } from 'rxjs';
 import { skip } from 'rxjs/operators';
+import { EditorPermissions, getNoPermissions } from '../../../common/models';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService } from '../../../state';
 

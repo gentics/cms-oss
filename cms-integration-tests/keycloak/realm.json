@@ -428,7 +428,7 @@
     }, {
       "id" : "fd4c3d0f-10fb-4a75-9ef0-5abdedc1a45f",
       "createdTimestamp" : 1666623468982,
-      "username" : "node",
+      "username" : "integrationTest_admin",
       "enabled" : true,
       "totp" : false,
       "emailVerified" : true,
@@ -440,8 +440,8 @@
         "type" : "password",
         "userLabel" : "My password",
         "createdDate" : 1666623483831,
-        "secretData" : "{\"value\":\"2HfR4JyG32pHwm5wF0G7utLFHYNeCSKend0N0dcJ+hOlmrixeyiGp86XFrvZFCEMyidCGRsedyxIq9n2TidylQ==\",\"salt\":\"ikDHeUxzywaW/H9RNju1IQ==\",\"additionalParameters\":{}}",
-        "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        "secretData" : "{\"value\":\"0TLRtQ==\",\"salt\":\"kc+fweGVNcnkPo2Ifim7MA==\",\"additionalParameters\":{}}",
+        "credentialData" : "{\"hashIterations\":100000,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
       } ],
       "disableableCredentialTypes" : [ ],
       "requiredActions" : [ ],

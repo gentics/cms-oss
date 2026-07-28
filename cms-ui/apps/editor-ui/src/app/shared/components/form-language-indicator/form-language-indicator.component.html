@@ -5,7 +5,7 @@
     [class.show-indicators]="displayStatusInfo"
     [class.show-deleted]="displayDeleted"
 >
-    <ng-container *ngFor="let variant of variants; trackBy: identifyVariant">
+    @for (variant of variants; track variant.id) {
         <gtx-dropdown-list
             width="contents"
             data-action="page-language"
@@ -28,52 +28,48 @@
             </gtx-dropdown-trigger>
 
             <gtx-dropdown-content>
-                <ng-container *ngIf="uiMode === UIMode.EDIT">
-                    <gtx-dropdown-item
-                        *ngIf="variant.available && !variant.deleted"
-                        (click)="languageClicked(variant)"
-                    >
-                        {{ 'editor.preview_in_language_label' | i18n:{ _language: variant?.code } }}
-                    </gtx-dropdown-item>
+                @if (uiMode === UIMode.EDIT) {
+                    @if (variant.available && !variant.deleted) {
+                        <gtx-dropdown-item (click)="languageClicked(variant)">
+                            {{ 'editor.preview_in_language_label' | gtxI18n:{ _language: variant?.code } }}
+                        </gtx-dropdown-item>
+                    }
 
-                    <gtx-dropdown-item
-                        *ngIf="!variant.available || variant.deleted"
-                        (click)="languageClicked(variant, false, false)"
-                    >
-                        {{ 'editor.translate_into_label' | i18n:{ _language: variant?.code } }}
-                    </gtx-dropdown-item>
+                    @if (!variant.available || variant.deleted) {
+                        <gtx-dropdown-item (click)="languageClicked(variant, false, false)">
+                            {{ 'editor.translate_into_label' | gtxI18n:{ _language: variant?.code } }}
+                        </gtx-dropdown-item>
+                    }
 
-                    <gtx-dropdown-item
-                        *ngIf="variant.deleted && (permissions | gtxMapPermissions)?.item?.delete"
-                        (click)="languageClicked(variant, false, false, true)"
-                    >
-                        <icon left>restore_from_trash</icon>
-                        {{ 'editor.restore_from_wastebin_label' | i18n }}
-                    </gtx-dropdown-item>
-                </ng-container>
+                    @if (variant.deleted && (permissions | gtxMapPermissions)?.item?.delete) {
+                        <gtx-dropdown-item (click)="languageClicked(variant, false, false, true)">
+                            <icon left>restore_from_trash</icon>
+                            {{ 'editor.restore_from_wastebin_label' | gtxI18n }}
+                        </gtx-dropdown-item>
+                    }
+                }
 
-                <ng-container *ngIf="uiMode === UIMode.STAGING">
-                    <gtx-dropdown-item
-                        *ngIf="variant.available && !variant.deleted"
-                        (click)="onStageLanguageClick(variant)"
-                    >
+                @if (uiMode === UIMode.STAGING && variant.available && !variant.deleted) {
+                    <gtx-dropdown-item (click)="onStageLanguageClick(variant)">
                         <icon left>{{ stagingMap?.[item?.globalId]?.included ? 'remove' : 'inventory' }}</icon>
-                        {{ 'editor.' + (stagingMap?.[item?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | i18n:{ _language: variant?.code } }}
+                        {{ 'editor.' + (stagingMap?.[item?.globalId]?.included ? 'un' : '') + 'stage_item_language_label' | gtxI18n:{ _language: variant?.code } }}
                     </gtx-dropdown-item>
-                </ng-container>
+                }
             </gtx-dropdown-content>
         </gtx-dropdown-list>
-    </ng-container>
+    }
 
     <div class="expand-toggle">
-        <gtx-button
-            *ngIf="hasUntranslated"
-            icon
-            type="secondary"
-            size="small"
-            (click)="toggleExpand()"
-        >
-            <icon>{{ expanded ? 'arrow_back' : 'more_horiz' }}</icon>
-        </gtx-button>
+        @if (hasUntranslated) {
+            <gtx-button
+                icon
+                type="secondary"
+                size="small"
+                (click)="toggleExpand()"
+            >
+                <icon>{{ expanded ? 'arrow_back' : 'more_horiz' }}</icon>
+            </gtx-button>
+        }
     </div>
 </div>
+

@@ -6,7 +6,8 @@ export default defineConfig({
     component: {
         ...nxComponentTestingPreset(__filename),
         indexHtmlFile: './cypress/support/component-index.html',
+        video: false,
+        screenshotOnRunFailure: false,
     },
     ...createComponentReporterOptions('apps', 'editor-ui', false),
-    video: false,
 });

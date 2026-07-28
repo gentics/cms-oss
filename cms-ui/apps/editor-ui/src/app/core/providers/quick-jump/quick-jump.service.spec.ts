@@ -19,8 +19,8 @@ describe('QuickJumpService', () => {
             ],
             imports: [ HttpClientTestingModule ],
         });
-        httpTestingController = TestBed.get(HttpTestingController);
-        quickJumpService = TestBed.get(QuickJumpService);
+        httpTestingController = TestBed.inject(HttpTestingController);
+        quickJumpService = TestBed.inject(QuickJumpService);
     });
 
     afterEach(() => {

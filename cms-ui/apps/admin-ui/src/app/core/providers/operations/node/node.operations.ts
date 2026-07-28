@@ -1,5 +1,6 @@
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     EntityIdType,
@@ -28,7 +29,6 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { ActivityManagerService, GtxActivityManagerActivityConfig } from '../../activity-manager';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
 import { PermissionsService } from '../../permissions';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 

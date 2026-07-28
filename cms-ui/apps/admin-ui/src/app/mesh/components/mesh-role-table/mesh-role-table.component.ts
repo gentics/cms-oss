@@ -1,5 +1,4 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshGroupBO, MeshRoleBO } from '@admin-ui/mesh/common';
 import { MeshGroupHandlerService, MeshGroupTableLoaderService, MeshRoleTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
@@ -8,12 +7,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Permission, Role } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshRoleModal } from '../mesh-role-modal/mesh-role-modal.component';
+import { MeshRolePermissionsModal } from '../mesh-role-permissions-modal/mesh-role-permissions-modal.component';
 import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
-import { MeshRolePermissionsModal } from '../mesh-role-permissions-modal/mesh-role-permissions-modal.component';
 
 const EDIT_ACTION = 'edit';
 const MANAGE_PERMISSIONS_ACTION = 'managePermissions';
@@ -26,7 +26,7 @@ const MANAGE_GROUPS_ACTION = 'manageGroups';
     templateUrl: './mesh-role-table.component.html',
     styleUrls: ['./mesh-role-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshRoleBO> {
 
@@ -40,10 +40,11 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
         {
             id: 'groups',
             label: 'common.group_plural',
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (role: MeshRoleBO) => (role.groups || []).map(group => group.name).filter(name => !!name).join(', '),
+
+            mapper: (role: MeshRoleBO) => (role.groups || []).map((group) => group.name).filter((name) => !!name).join(', '),
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'role';
 
     constructor(
@@ -165,19 +166,19 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
     }
 
     async manageGroupAssignment(role: MeshRoleBO): Promise<void> {
-        const assignedGroupIds = role.groups.map(group => group.uuid);
+        const assignedGroupIds = role.groups.map((group) => group.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.manage_group_assignment',
             multiple: true,
-            selected: (role.groups || []).map(group => group.uuid),
+            selected: (role.groups || []).map((group) => group.uuid),
         });
 
         const groups: MeshGroupBO[] = await dialog.open();
-        const newGroupIds = groups.map(group => group.uuid);
+        const newGroupIds = groups.map((group) => group.uuid);
 
-        const toAssign = groups.filter(group => !assignedGroupIds.includes(group.uuid));
-        const toRemove = role.groups.filter(group => !newGroupIds.includes(group.uuid));
+        const toAssign = groups.filter((group) => !assignedGroupIds.includes(group.uuid));
+        const toRemove = role.groups.filter((group) => !newGroupIds.includes(group.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {

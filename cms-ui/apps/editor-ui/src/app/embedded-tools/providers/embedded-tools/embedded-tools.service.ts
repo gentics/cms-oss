@@ -1,5 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
+import { I18nService, WindowRef } from '@gentics/cms-components';
+import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
+import { EmbeddedTool } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { ModalService } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
+import { filter, map, pairwise, startWith, switchMap, take, tap } from 'rxjs/operators';
+import { ADMIN_UI_LINK } from '../../../common/config/config';
 import {
     ApplicationStateService,
     CloseToolAction,
@@ -9,16 +17,7 @@ import {
     ToolNavigationAction,
     ToolsFetchingErrorAction,
     ToolsFetchingSuccessAction,
-} from '@editor-ui/app/state';
-import { WindowRef } from '@gentics/cms-components';
-import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
-import { EmbeddedTool } from '@gentics/cms-models';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { filter, map, pairwise, startWith, switchMap, take, tap } from 'rxjs/operators';
-import { ADMIN_UI_LINK } from '../../../common/config/config';
+} from '../../../state';
 import { ToolApiChannelService } from '../tool-api-channel/tool-api-channel.service';
 import { TabbedTool } from './tabbed-tool';
 
@@ -39,7 +38,7 @@ export class EmbeddedToolsService implements OnDestroy {
         private state: ApplicationStateService,
         private modalService: ModalService,
         private router: Router,
-        private translate: TranslateService,
+        private translate: I18nService,
         private windowRef: WindowRef,
     ) {
         // Required to prevent cyclic dependencies.
@@ -47,15 +46,15 @@ export class EmbeddedToolsService implements OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     loadAvailableToolsWhenLoggedIn(): void {
-        const sub = this.state.select(state => state.auth.user?.id).pipe(
-            filter(id => id != null),
+        const sub = this.state.select((state) => state.auth.user?.id).pipe(
+            filter((id) => id != null),
             tap(() => this.state.dispatch(new StartToolsFetchingAction())),
             switchMap(() => this.client.admin.getTools()),
-        ).subscribe(response => {
+        ).subscribe((response) => {
             this.state.dispatch(new ToolsFetchingSuccessAction(response.tools));
         }, () => {
             this.state.dispatch(new ToolsFetchingErrorAction());
@@ -66,10 +65,10 @@ export class EmbeddedToolsService implements OnDestroy {
 
     updateStateWhenRouteChanges(): void {
         const sub = this.router.events.pipe(
-            filter(event => event instanceof NavigationEnd),
+            filter((event) => event instanceof NavigationEnd),
             map((event: NavigationEnd) => event.url),
             startWith(this.router.url),
-        ).subscribe(url => {
+        ).subscribe((url) => {
             const urlParts = toolsPathRegex.exec(url);
 
             if (!urlParts) {
@@ -93,11 +92,11 @@ export class EmbeddedToolsService implements OnDestroy {
             }
 
             // if a tool does not exist, redirect to overview
-            this.state.select(state => state.tools).pipe(
-                filter(tools => tools.received),
+            this.state.select((state) => state.tools).pipe(
+                filter((tools) => tools.received),
                 take(1),
-            ).subscribe(tools => {
-                if (tools.available.find(tool => tool.key === toolToOpen && !tool.newtab)) {
+            ).subscribe((tools) => {
+                if (tools.available.find((tool) => tool.key === toolToOpen && !tool.newtab)) {
                     const isActive = this.state.now.tools.active.indexOf(toolToOpen) >= 0;
                     if (isActive) {
                         this.navigateToolFromRoute(toolToOpen, subpath);
@@ -113,17 +112,17 @@ export class EmbeddedToolsService implements OnDestroy {
     }
 
     manageTabbedToolsWhenStateChanges(): void {
-        const openOrCloseSubscription = this.state.select(state => state.tools.active).pipe(
+        const openOrCloseSubscription = this.state.select((state) => state.tools.active).pipe(
             pairwise(),
         ).subscribe(([lastActiveTools, activeTools]) => {
             const availableTools = this.state.now.tools.available;
 
-            const opened = activeTools.filter(key => lastActiveTools.indexOf(key) < 0)
-                .map(key => availableTools.find(tool => tool.key === key))
-                .filter(tool => tool.newtab);
-            const closed = lastActiveTools.filter(key => activeTools.indexOf(key) < 0)
-                .map(key => availableTools.find(tool => tool.key === key))
-                .filter(tool => tool.newtab);
+            const opened = activeTools.filter((key) => lastActiveTools.indexOf(key) < 0)
+                .map((key) => availableTools.find((tool) => tool.key === key))
+                .filter((tool) => tool.newtab);
+            const closed = lastActiveTools.filter((key) => activeTools.indexOf(key) < 0)
+                .map((key) => availableTools.find((tool) => tool.key === key))
+                .filter((tool) => tool.newtab);
 
             for (const tool of opened) {
                 this.openToolInNewTab(tool);
@@ -186,12 +185,12 @@ export class EmbeddedToolsService implements OnDestroy {
             return closeTool();
         }
 
-        return Promise.resolve(api.hasUnsavedChanges()).then(unsavedChanges => {
+        return Promise.resolve(api.hasUnsavedChanges()).then((unsavedChanges) => {
             if (!unsavedChanges) {
                 return closeTool();
             }
 
-            this.askUserToDiscardChanges(toolKey).then(userChoice => {
+            this.askUserToDiscardChanges(toolKey).then((userChoice) => {
                 if (userChoice === 'discard') {
                     return closeTool();
                 } else if (userChoice === 'open') {
@@ -264,7 +263,7 @@ export class EmbeddedToolsService implements OnDestroy {
     }
 
     private askUserToDiscardChanges(toolKey: string): Promise<'open' | 'discard'> {
-        let toolName = this.state.now.tools.available.find(tool => tool.key === toolKey).name;
+        let toolName = this.state.now.tools.available.find((tool) => tool.key === toolKey).name;
         if (typeof toolName !== 'string') {
             toolName = toolName[this.state.now.ui.language];
         }
@@ -287,6 +286,6 @@ export class EmbeddedToolsService implements OnDestroy {
                     },
                 ],
             })
-            .then(modal => modal.open());
+            .then((modal) => modal.open());
     }
 }

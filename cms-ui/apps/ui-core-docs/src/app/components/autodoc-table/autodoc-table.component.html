@@ -1,55 +1,60 @@
 <table class="bordered autodoc-table highlight">
-    <thead>
-        <tr>
-            <th>{{ headers[0] }}</th>
-            <th>{{ headers[1] }}</th>
-            <th>{{ headers[2] }}</th>
-            <th>{{ headers[3] }}</th>
+  <thead>
+    <tr>
+      <th>{{ headers[0] }}</th>
+      <th>{{ headers[1] }}</th>
+      <th>{{ headers[2] }}</th>
+      <th>{{ headers[3] }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (block of docBlocks; track block) {
+      <tr class="regular-row" [class.has-inheritance]="block.inheritance">
+        <td>
+          <strong class="identifier">{{ block[props[0]] }}</strong>
+        </td>
+        <td>
+          @if (props[1] !== 'methodArgs') {
+            <div>
+              @if (block[props[1]]) {
+                <code
+                  class="type"
+                  [title]="block[props[1]]"
+                >{{  block[props[1]] }}</code>
+              }
+            </div>
+          } @else {
+            @for (arg of block[props[1]]; track arg) {
+              <code
+                class="type"
+                [title]="arg"
+              >{{ arg }}</code>
+            }
+          }
+        </td>
+        <td>
+          @if (block[props[2]]) {
+            <code
+              class="default-value"
+              [title]="block[props[2]]"
+            >{{  block[props[2]] }}</code>
+          }
+        </td>
+        <td>
+          <div class="block-body" [innerHTML]="block[props[3]] | trustedHTML"></div>
+        </td>
+      </tr>
+      @if (block.inheritance) {
+        <tr class="inheritance-row">
+          <td colspan="4">
+            <gtx-inheritance-details
+              class="block-inheritance"
+              [prefix]="'Inherited by:'"
+              [info]="block.inheritance"
+            ></gtx-inheritance-details>
+          </td>
         </tr>
-    </thead>
-    <tbody>
-        <ng-container *ngFor="let block of docBlocks">
-            <tr class="regular-row" [class.has-inheritance]="block.inheritance">
-                <td>
-                    <strong class="identifier">{{ block[props[0]] }}</strong>
-                </td>
-                <td>
-                    <div *ngIf="props[1] !== 'methodArgs'; else methodArgsTpl">
-                        <code
-                            *ngIf="block[props[1]]"
-                            class="type"
-                            [title]="block[props[1]]"
-                        >{{  block[props[1]] }}</code>
-                    </div>
-                    <ng-template #methodArgsTpl>
-                        <code
-                            *ngFor="let arg of block[props[1]]"
-                            class="type"
-                            [title]="arg"
-                        >{{ arg }}</code>
-                    </ng-template>
-                </td>
-                <td>
-                    <code
-                        *ngIf="block[props[2]]"
-                        class="default-value"
-                        [title]="block[props[2]]"
-                    >{{  block[props[2]] }}</code>
-                </td>
-                <td>
-                    <div class="block-body" [innerHTML]="block[props[3]] | trustedHTML"></div>
-                </td>
-            </tr>
-
-            <tr *ngIf="block.inheritance" class="inheritance-row">
-                <td colspan="4">
-                    <gtx-inheritance-details
-                        class="block-inheritance"
-                        [prefix]="'Inherited by:'"
-                        [info]="block.inheritance"
-                    ></gtx-inheritance-details>
-                </td>
-            </tr>
-        </ng-container>
-    </tbody>
+      }
+    }
+  </tbody>
 </table>

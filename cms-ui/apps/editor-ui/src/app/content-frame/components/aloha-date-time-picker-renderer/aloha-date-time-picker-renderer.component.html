@@ -1,9 +1,7 @@
-<gtx-date-time-picker
-    *ngIf="!settings?.inline; else inline"
-
+@if (!settings?.inline) {
+  <gtx-date-time-picker
     [format]="settings?.format"
     [label]="settings?.label"
-
     [disabled]="disabled"
     [selectYear]="true"
     [displayTime]="settings?.allowTime"
@@ -12,17 +10,17 @@
     [max]="settings?.max"
     [value]="timestamp"
     (valueChange)="handleValueChange($event)"
-></gtx-date-time-picker>
+  ></gtx-date-time-picker>
+} @else {
+  <gtx-date-time-picker-controls
+    [disabled]="disabled"
+    [selectYear]="true"
+    [displayTime]="settings?.allowTime"
+    [displaySeconds]="false"
+    [min]="settings?.min"
+    [max]="settings?.max"
+    [value]="timestamp"
+    (valueChange)="handleValueChange($event)"
+  ></gtx-date-time-picker-controls>
+}
 
-<ng-template #inline>
-    <gtx-date-time-picker-controls
-        [disabled]="disabled"
-        [selectYear]="true"
-        [displayTime]="settings?.allowTime"
-        [displaySeconds]="false"
-        [min]="settings?.min"
-        [max]="settings?.max"
-        [value]="timestamp"
-        (valueChange)="handleValueChange($event)"
-    ></gtx-date-time-picker-controls>
-</ng-template>

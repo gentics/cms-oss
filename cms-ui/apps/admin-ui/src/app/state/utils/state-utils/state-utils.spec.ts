@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Action, NgxsModule, StateContext, Store } from '@ngxs/store';
-import { ActionDef } from '@ngxs/store/src/actions/symbols';
+import { Action, ActionDef, NgxsModule, StateContext, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import {
     ActionDeclaration,
@@ -43,8 +42,8 @@ class NoAction {
 
 function isObservable<T>(value: any): value is Observable<T> {
     return value != null
-        && typeof value === 'object'
-        && typeof value.subscribe === 'function';
+      && typeof value === 'object'
+      && typeof value.subscribe === 'function';
 }
 
 let testModule: TestStateModule;
@@ -112,10 +111,10 @@ describe('StateUtils', () => {
 
         beforeEach(() => {
             TestBed.configureTestingModule({
-                imports: [ NgxsModule.forRoot([ TestStateModule ]) ],
+                imports: [NgxsModule.forRoot([TestStateModule])],
                 providers: [TestService],
             }).compileComponents();
-            store = TestBed.get(Store);
+            store = TestBed.inject(Store);
         });
 
         afterEach(() => {
@@ -145,12 +144,12 @@ describe('StateUtils', () => {
         });
 
         it('@SelectState works', () => {
-            const testService = TestBed.get(TestService) as TestService;
+            const testService = TestBed.inject(TestService);
             expect(isObservable(testService.state$)).toBeTruthy();
 
             let emissionCount = 0;
             let latestValue: TestStateModel;
-            const sub = testService.state$.subscribe(data => {
+            const sub = testService.state$.subscribe((data) => {
                 ++emissionCount;
                 latestValue = data;
             });

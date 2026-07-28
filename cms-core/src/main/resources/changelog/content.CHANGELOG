@@ -814,3 +814,4 @@
 2024-11-20  CH-1729 NOP SQL ALTER TABLE objprop ADD COLUMN restricted TINYINT(1) NOT NULL DEFAULT 0 AFTER sync_variants; ## Add flag to restrict object property definitions
 2024-11-20  CH-1730 NOP SQL UPDATE objprop SET restricted = 1 WHERE id IN (SELECT objprop_id FROM objprop_node); ## Make object property definitions restricted, which are assigned to nodes
 2025-02-18  CH-1731 NOP SQL ALTER TABLE dependencymap2 MODIFY COLUMN dep_prop TEXT;
+2025-10-03  CH-1733 PK  SQL ALTER TABLE content ADD COLUMN partially_localized BOOLEAN NOT NULL DEFAULT 0 AFTER udate;

@@ -628,7 +628,7 @@ public abstract class MeshPortalPreviewTestBase {
 			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
 		}).build();
 
-		Set<String> tagNames = Trx.supply(() -> page.getContent().getContentTags().keySet());
+		Set<String> tagNames = Trx.supply(() -> page.getContentTags().keySet());
 		for (String tag : tagNames) {
 			PageRenderResponse response = Trx.supply(user,
 					() -> new PageResourceImpl().renderTag(Integer.toString(page.getId()), tag, null, null, LinksType.backend));

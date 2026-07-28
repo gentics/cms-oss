@@ -1,14 +1,18 @@
 <div class="gtx-editor-input">
-    <input
-        #input
-        type="text"
-        tabindex="0"
-        [value]="value || ''"
-        [disabled]="disabled"
-        [attr.id]="uid"
-        (change)="handleInputChange()"
-        (keydown)="handleKeyDown($event)"
+  <input
+    #input
+    type="text"
+    tabindex="0"
+    [value]="value || ''"
+    [disabled]="disabled"
+    [attr.id]="uid"
+    (change)="handleInputChange()"
+    (keydown)="handleKeyDown($event)"
     />
-    <label *ngIf="settings?.label" [attr.for]="uid">{{ settings?.label }}</label>
-    <div class="input-hint" *ngIf="settings?.hint">{{ settings?.hint }}</div>
+  @if (settings?.label) {
+    <label [attr.for]="uid">{{ settings?.label }}</label>
+  }
+  @if (settings?.hint) {
+    <div class="input-hint">{{ settings?.hint }}</div>
+  }
 </div>

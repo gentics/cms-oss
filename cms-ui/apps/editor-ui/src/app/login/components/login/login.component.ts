@@ -38,7 +38,7 @@ export class LoginComponent extends BaseComponent implements OnInit {
             password: new FormControl('', Validators.required),
         });
 
-        this.subscriptions.push(this.appState.select(state => state.auth.keycloakError).pipe(
+        this.subscriptions.push(this.appState.select((state) => state.auth.keycloakError).pipe(
             distinctUntilChanged(isEqual),
         ).subscribe((errMsg) => {
             this.keycloakError = errMsg;

@@ -1,162 +1,145 @@
-<form *ngIf="form" [formGroup]="form" class="gtx-form">
+@if (form) {
+  <form [formGroup]="form" class="gtx-form">
     <div class="row">
-
-        <div class="input-container small-12 medium-12 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_content_updating' | i18n }}</div>
-
-            <gtx-checkbox
-                [label]="'node.pub_disable_updates' | i18n"
-                formControlName="disablePublish"
-            ></gtx-checkbox>
+      <div class="input-container small-12 medium-12 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_content_updating' | gtxI18n }}</div>
+        <gtx-checkbox
+          [label]="'node.pub_disable_updates' | gtxI18n"
+          formControlName="disablePublish"
+        ></gtx-checkbox>
+      </div>
+      <div class="input-container small-12 medium-6 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_filesystem' | gtxI18n }}</div>
+        <gtx-checkbox
+          [label]="'node.pub_to_filesystem' | gtxI18n"
+          formControlName="publishFs"
+        ></gtx-checkbox>
+        <gtx-checkbox
+          [label]="'node.pub_pages' | gtxI18n"
+          formControlName="publishFsPages"
+        ></gtx-checkbox>
+        <gtx-checkbox
+          formControlName="publishFsFiles"
+          [label]="'node.pub_files' | gtxI18n"
+        ></gtx-checkbox>
+      </div>
+      <div class="input-container small-12 medium-6 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_content_repository' | gtxI18n }}</div>
+        <div class="gtx-two-col-options">
+          <gtx-checkbox
+            formControlName="publishContentMap"
+            [label]="'node.pub_content_repository' | gtxI18n"
+          ></gtx-checkbox>
+          <gtx-checkbox
+            formControlName="publishContentMapPages"
+            [label]="'node.pub_cr_pages' | gtxI18n"
+          ></gtx-checkbox>
+          <gtx-checkbox
+            formControlName="publishContentMapFiles"
+            [label]="'node.pub_cr_files' | gtxI18n"
+          ></gtx-checkbox>
+          <gtx-checkbox
+            formControlName="publishContentMapFolders"
+            [label]="'node.pub_cr_folders' | gtxI18n"
+          ></gtx-checkbox>
         </div>
-
-        <div class="input-container small-12 medium-6 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_filesystem' | i18n }}</div>
-
-            <gtx-checkbox
-                [label]="'node.pub_to_filesystem' | i18n"
-                formControlName="publishFs"
-            ></gtx-checkbox>
-
-            <gtx-checkbox
-                [label]="'node.pub_pages' | i18n"
-                formControlName="publishFsPages"
-            ></gtx-checkbox>
-
-            <gtx-checkbox
-                formControlName="publishFsFiles"
-                [label]="'node.pub_files' | i18n"
-            ></gtx-checkbox>
-        </div>
-
-        <div class="input-container small-12 medium-6 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_content_repository' | i18n }}</div>
-
-            <div class="gtx-two-col-options">
-                <gtx-checkbox
-                    formControlName="publishContentMap"
-                    [label]="'node.pub_content_repository' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="publishContentMapPages"
-                    [label]="'node.pub_cr_pages' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="publishContentMapFiles"
-                    [label]="'node.pub_cr_files' | i18n"
-                ></gtx-checkbox>
-
-                <gtx-checkbox
-                    formControlName="publishContentMapFolders"
-                    [label]="'node.pub_cr_folders' | i18n"
-                ></gtx-checkbox>
-            </div>
-
-            <gtx-select
-                formControlName="contentRepositoryId"
-                [label]="'node.content_repository' | i18n"
-                [clearable]="true"
+        <gtx-select
+          formControlName="contentRepositoryId"
+          [label]="'node.content_repository' | gtxI18n"
+          [clearable]="true"
+          >
+          @for (cr of contentRepositories; track cr.id) {
+            <gtx-option
+              [value]="cr.id"
+            >{{ cr.name }}</gtx-option>
+          }
+        </gtx-select>
+      </div>
+      <div class="input-container small-12 medium-12 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_directories' | gtxI18n }}</div>
+        <div class="linkable-fields-wrapper">
+          <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="publishDir"
+            [label]="('node.pub_pages_dir' | gtxI18n)"
+            [placeholder]="'node.pub_pages_dir' | gtxI18n"
+          ></gtx-input>
+          <div
+            class="link-inputs no-select"
+            [title]="'editor.node_properties_share_directories' | gtxI18n"
+            [class.active]="publishDirsLinked"
             >
+            <div class="top-link-display"></div>
+            <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
+              <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
+            </button>
+            <div class="bottom-link-display"></div>
+          </div>
+          <gtx-input
+            class="linkable-field"
+            type="text"
+            maxlength="255"
+            formControlName="binaryPublishDir"
+            [readonly]="publishDirsLinked"
+            [label]="('node.pub_files_dir' | gtxI18n)"
+            [placeholder]="'node.pub_files_dir' | gtxI18n"
+          ></gtx-input>
+        </div>
+      </div>
+      <div class="input-container small-12 medium-12 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_url_rendering' | gtxI18n }}</div>
+        <div class="row">
+          <div class="input-container small-12 medium-6 columns">
+            <gtx-select
+              formControlName="urlRenderWayPages"
+              [label]="'node.pub_url_pages' | gtxI18n"
+              >
+              @for (item of URL_MODES | gtxEntries; track item.key) {
                 <gtx-option
-                    *ngFor="let cr of contentRepositories"
-                    [value]="cr.id"
-                >{{ cr.name }}</gtx-option>
+                  [value]="+item.key"
+                >{{ item.value | gtxI18n }}</gtx-option>
+              }
             </gtx-select>
+          </div>
+          <div class="input-container small-12 medium-6 columns">
+            <gtx-select
+              [label]="'node.pub_url_files_images' | gtxI18n"
+              formControlName="urlRenderWayFiles"
+              >
+              @for (item of URL_MODES | gtxEntries; track item.key) {
+                <gtx-option
+                  [value]="+item.key"
+                >{{ item.value | gtxI18n }}</gtx-option>
+              }
+            </gtx-select>
+          </div>
         </div>
-
-        <div class="input-container small-12 medium-12 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_directories' | i18n }}</div>
-
-            <div class="linkable-fields-wrapper">
-                <gtx-input
-                    class="linkable-field"
-                    type="text"
-                    maxlength="255"
-                    formControlName="publishDir"
-                    [label]="('node.pub_pages_dir' | i18n)"
-                    [placeholder]="'node.pub_pages_dir' | i18n"
-                ></gtx-input>
-
-                <div
-                    class="link-inputs no-select"
-                    [title]="'editor.node_properties_share_directories' | i18n"
-                    [class.active]="publishDirsLinked"
-                >
-                    <div class="top-link-display"></div>
-                    <button class="link-button" [disabled]="linkButtonDisabled || disabled" (click)="togglePublishDirLink()">
-                        <icon>{{ publishDirsLinked ? 'link' : 'link_off' }}</icon>
-                    </button>
-                    <div class="bottom-link-display"></div>
-                </div>
-
-                <gtx-input
-                    class="linkable-field"
-                    type="text"
-                    maxlength="255"
-                    formControlName="binaryPublishDir"
-                    [readonly]="publishDirsLinked"
-                    [label]="('node.pub_files_dir' | i18n)"
-                    [placeholder]="'node.pub_files_dir' | i18n"
-                ></gtx-input>
-            </div>
+      </div>
+      <div class="input-container small-12 medium-12 columns">
+        <div class="gtx-form-section-title">{{ 'node.title_seo_i18n' | gtxI18n }}</div>
+        <div class="row">
+          <div class="input-container small-12 medium-6 columns">
+            <gtx-checkbox
+              formControlName="omitPageExtension"
+              [label]="'node.omit_page_extension' | gtxI18n"
+            ></gtx-checkbox>
+          </div>
+          <div class="input-container small-12 medium-6 columns">
+            <gtx-select
+              formControlName="pageLanguageCode"
+              [label]="'node.page_language_code' | gtxI18n"
+              >
+              @for (item of NodePageLanguageCode | gtxEntries; track item.key) {
+                <gtx-option
+                  [value]="item.key"
+                >{{ item.value }}</gtx-option>
+              }
+            </gtx-select>
+          </div>
         </div>
-
-        <div class="input-container small-12 medium-12 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_url_rendering' | i18n }}</div>
-
-            <div class="row">
-                <div class="input-container small-12 medium-6 columns">
-                    <gtx-select
-                        formControlName="urlRenderWayPages"
-                        [label]="'node.pub_url_pages' | i18n"
-                    >
-                        <gtx-option
-                            *ngFor="let item of URL_MODES | gtxEntries"
-                            [value]="+item.key"
-                        >{{ item.value | i18n }}</gtx-option>
-                    </gtx-select>
-                </div>
-
-                <div class="input-container small-12 medium-6 columns">
-                    <gtx-select
-                        [label]="'node.pub_url_files_images' | i18n"
-                        formControlName="urlRenderWayFiles"
-                    >
-                        <gtx-option
-                            *ngFor="let item of URL_MODES | gtxEntries"
-                            [value]="+item.key"
-                        >{{ item.value | i18n }}</gtx-option>
-                    </gtx-select>
-                </div>
-            </div>
-        </div>
-
-        <div class="input-container small-12 medium-12 columns">
-            <div class="gtx-form-section-title">{{ 'node.title_seo_i18n' | i18n }}</div>
-
-            <div class="row">
-                <div class="input-container small-12 medium-6 columns">
-                    <gtx-checkbox
-                        formControlName="omitPageExtension"
-                        [label]="'node.omit_page_extension' | i18n"
-                    ></gtx-checkbox>
-                </div>
-
-                <div class="input-container small-12 medium-6 columns">
-                    <gtx-select
-                        formControlName="pageLanguageCode"
-                        [label]="'node.page_language_code' | i18n"
-                    >
-                        <gtx-option
-                            *ngFor="let item of NodePageLanguageCode | gtxEntries"
-                            [value]="item.key"
-                        >{{ item.value }}</gtx-option>
-                    </gtx-select>
-                </div>
-            </div>
-        </div>
-
+      </div>
     </div>
-</form>
+  </form>
+}

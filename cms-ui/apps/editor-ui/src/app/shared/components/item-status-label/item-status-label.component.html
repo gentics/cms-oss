@@ -1,74 +1,92 @@
-<gtx-dropdown-list *ngIf="uiMode === UIMode.EDIT && item && (item.type === 'page' || item.type === 'form')" width="contents">
+@if (uiMode === UIMode.EDIT && item && (item.type === 'page' || item.type === 'form')) {
+  <gtx-dropdown-list width="contents">
     <gtx-dropdown-trigger>
-        <div
-            class="status-label"
-            [class.published]="state.published"
-            [class.offline]="state.offline"
-            [class.icon-only]="iconOnly"
-            [class.modified]="state.modified"
+      <div
+        class="status-label"
+        [class.published]="state.published"
+        [class.offline]="state.offline"
+        [class.icon-only]="iconOnly"
+        [class.modified]="state.modified"
         >
-            <icon *ngIf="!state.deleted && state.published" class="main-icon success">cloud_upload</icon>
-            <icon *ngIf="!state.deleted && state.offline" class="main-icon alert">cloud_off</icon>
-            <icon *ngIf="state.deleted" class="main-icon alert">delete</icon>
-
-            <div *ngIf="state.locked" class="corner-icon icon-bottom-left">
-                <icon class="secondary-icon">lock</icon>
+        @if (!state.deleted && state.published) {
+          <icon class="main-icon success">cloud_upload</icon>
+        }
+        @if (!state.deleted && state.offline) {
+          <icon class="main-icon alert">cloud_off</icon>
+        }
+        @if (state.deleted) {
+          <icon class="main-icon alert">delete</icon>
+        }
+        @if (state.locked) {
+          <div class="corner-icon icon-bottom-left">
+            <icon class="secondary-icon">lock</icon>
+          </div>
+        }
+        @if (state.modified) {
+          <div class="corner-icon icon-bottom-right">
+            <span class="icon-modified secondary-icon">*</span>
+          </div>
+        }
+        @if (state.inherited || state.localized) {
+          <div class="corner-icon icon-top-left">
+            <icon class="secondary-icon">{{ state.inherited ? 'input' : 'file_copy' }}</icon>
+          </div>
+        }
+        @if (state.planned && (state.plannedOnline || state.plannedOffline)) {
+          <div class="corner-icon icon-top-right">
+            <icon class="secondary-icon">schedule</icon>
+          </div>
+        }
+        @switch (labelToDisplay) {
+          @case (DisplayLabel.IN_QUEUE) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_queue' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
             </div>
-
-            <div *ngIf="state.modified" class="corner-icon icon-bottom-right">
-                <icon class="icon-modified secondary-icon">asterisk</icon>
+          }
+          @case (DisplayLabel.PLANNED_ONLINE) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_publish_at' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
             </div>
-
-            <div *ngIf="state.inherited || state.localized" class="corner-icon icon-top-left">
-                <icon class="secondary-icon">{{ state.inherited ? 'input' : 'file_copy' }}</icon>
+          }
+          @case (DisplayLabel.PLANNED_OFFLINE) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_offline_at' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
             </div>
-
-            <div *ngIf="state.planned && (state.plannedOnline || state.plannedOffline)" class="corner-icon icon-top-right">
-                <icon class="secondary-icon">schedule</icon>
+          }
+          @case (DisplayLabel.MODIFIED) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_edited' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
             </div>
-
-            <ng-container [ngSwitch]="labelToDisplay">
-                <ng-container *ngSwitchCase="DisplayLabel.IN_QUEUE">
-                    <span class="label-element">{{ 'common.status_queue' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.PLANNED_ONLINE">
-                    <span class="label-element">{{ 'common.status_publish_at' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.PLANNED_OFFLINE">
-                    <span class="label-element">{{ 'common.status_offline_at' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.MODIFIED">
-                    <span class="label-element">{{ 'common.status_edited' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.PUBLISHED">
-                    <span class="label-element">{{ 'common.status_published' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.OFFLINE">
-                    <span class="label-element">{{ 'common.status_offline' | i18n }}</span>
-                    <icon class="icon-modified">asterisk</icon>
-                </ng-container>
-
-                <ng-container *ngSwitchCase="DisplayLabel.DELETED">
-                    <span class="label-element">{{ 'common.status_deleted' | i18n }}</span>
-                </ng-container>
-            </ng-container>
-
-            <div class="label-wrapper" *ngIf="state.locked">
-                <icon class="info">lock</icon>
+          }
+          @case (DisplayLabel.PUBLISHED) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_published' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
             </div>
-        </div>
+          }
+          @case (DisplayLabel.OFFLINE) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_offline' | gtxI18n }}</span>
+              <span class="icon-modified">*</span>
+            </div>
+          }
+          @case (DisplayLabel.DELETED) {
+            <div class="label-wrapper">
+              <span class="label-element">{{ 'common.status_deleted' | gtxI18n }}</span>
+            </div>
+          }
+        }
+        @if (state.locked) {
+          <div class="label-wrapper">
+            <icon class="info">lock</icon>
+          </div>
+        }
+      </div>
     </gtx-dropdown-trigger>
-
     <gtx-dropdown-content>
         <item-state-contextmenu
             [nodeLanguages]="nodeLanguages"
@@ -77,18 +95,21 @@
             [state]="state"
         ></item-state-contextmenu>
     </gtx-dropdown-content>
-</gtx-dropdown-list>
+  </gtx-dropdown-list>
+}
 
 <ng-template #stagingLabel let-included="included">
-    <div class="status-label" [class.included]="included">
+    <div class="status-label staging" [class.included]="included">
         <icon>{{ included ? 'check' : 'close' }}</icon>
-        {{ (included ? 'common.staging_status_included' : 'common.staging_status_excluded') | i18n }}
+        {{ (included ? 'common.staging_status_included' : 'common.staging_status_excluded') | gtxI18n }}
     </div>
 </ng-template>
 
-<div *ngIf="uiMode === UIMode.STAGING && item">
+@if (uiMode === UIMode.STAGING && item) {
+  <div>
     <ng-container
-        [ngTemplateOutlet]="stagingLabel"
-        [ngTemplateOutletContext]="{ included: stagingMap?.[item.globalId]?.included }"
+      [ngTemplateOutlet]="stagingLabel"
+      [ngTemplateOutletContext]="{ included: stagingMap?.[item.globalId]?.included }"
     ></ng-container>
-</div>
+  </div>
+}

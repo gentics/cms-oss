@@ -1,22 +1,23 @@
 <gtx-dropdown-list [disabled]="!!selection" [sticky]="sticky" belowTrigger="true" (close)="close.emit()">
-    <gtx-dropdown-trigger>
-        <div class="label">
-            <icon left>{{ icon }}</icon>
-            <span *ngIf="selection; else defaultLabel" class="selected-label">
-                <span class="selected-label">{{ label }}: {{ selection }}</span>
-                <icon (click)="cancelClicked($event)">close</icon>
-            </span>
-            <ng-template #defaultLabel >
-                <span class="default-label">{{ label }} <icon>arrow_drop_down</icon>
-                </span>
-            </ng-template>
-        </div>
-    </gtx-dropdown-trigger>
-    <gtx-dropdown-content>
-        <list-filter selector="gtx-dropdown-item"
-                     filterThreshhold="10"
-                     [label]="filterLabel">
-            <ng-content></ng-content>
-        </list-filter>
-    </gtx-dropdown-content>
+  <gtx-dropdown-trigger>
+    <div class="label">
+      <icon left>{{ icon }}</icon>
+      @if (selection) {
+        <span class="selected-label">
+          <span class="selected-label">{{ label }}: {{ selection }}</span>
+          <icon (click)="cancelClicked($event)">close</icon>
+        </span>
+      } @else {
+        <span class="default-label">{{ label }} <icon>arrow_drop_down</icon>
+      </span>
+    }
+  </div>
+</gtx-dropdown-trigger>
+<gtx-dropdown-content>
+  <list-filter selector="gtx-dropdown-item"
+    filterThreshhold="10"
+    [label]="filterLabel">
+    <ng-content></ng-content>
+  </list-filter>
+</gtx-dropdown-content>
 </gtx-dropdown-list>

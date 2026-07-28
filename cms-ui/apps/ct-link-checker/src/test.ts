@@ -4,17 +4,16 @@
 // otherwise it can cause strange behaviours
 import 'zone.js/testing';
 
-// tslint:disable-next-line: ordered-imports
 import { getTestBed } from '@angular/core/testing';
 import {
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing'; /* eslint-disable-line @typescript-eslint/naming-convention */
+    BrowserTestingModule,
+    platformBrowserTesting,
+} from '@angular/platform-browser/testing';
 
 // First, initialize the Angular testing environment.
 getTestBed().initTestEnvironment(
-    BrowserDynamicTestingModule,
-    platformBrowserDynamicTesting(), {
+    BrowserTestingModule,
+    platformBrowserTesting(), {
         teardown: { destroyAfterEach: false },
     },
 );

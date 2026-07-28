@@ -1,72 +1,83 @@
 <div class="modal-title">
-    <h5>{{ 'modal.edit_perms_title' | i18n:{ entity: permSet.label } }}</h5>
+  <h5>{{ 'modal.edit_perms_title' | gtxI18n:{ entity: permSet.label } }}</h5>
 </div>
 
 <div class="modal-content">
-    <div class="flex-container">
-        <gtx-checkbox
-            [(ngModel)]="allPermsGranted"
-            (change)="onAllPermsToggle($event)"
-            [label]="'group.all_perms'| i18n"
-            [disabled]="!hasEditPermissionRight()"
-        ></gtx-checkbox>
-        <gtx-checkbox
-            [(ngModel)]="applyToSubObjects"
-            [label]="(permSet.type === AccessControlledType.FOLDER ? 'group.apply_to_subfolders' : 'group.apply_to_subobjects') | i18n"
-            [disabled]="!hasEditPermissionRight()"
-        ></gtx-checkbox>
-        <gtx-checkbox
-            [(ngModel)]="applyToSubGroups"
-            [label]="'group.apply_to_subgroups'| i18n"
-            [disabled]="!hasEditPermissionRight()"
-        ></gtx-checkbox>
-    </div>
+  <div class="flex-container">
+    <gtx-checkbox
+      [(ngModel)]="allPermsGranted"
+      (change)="onAllPermsToggle($event)"
+      [label]="'group.all_perms'| gtxI18n"
+      [disabled]="!hasEditPermissionRight()"
+    ></gtx-checkbox>
+    <gtx-checkbox
+      [(ngModel)]="applyToSubObjects"
+      [label]="(permSet.type === AccessControlledType.FOLDER ? 'group.apply_to_subfolders' : 'group.apply_to_subobjects') | gtxI18n"
+      [disabled]="!hasEditPermissionRight()"
+    ></gtx-checkbox>
+    <gtx-checkbox
+      [(ngModel)]="applyToSubGroups"
+      [label]="'group.apply_to_subgroups'| gtxI18n"
+      [disabled]="!hasEditPermissionRight()"
+    ></gtx-checkbox>
+  </div>
 
-    <div class="row small-up-1 medium-up-2 large-up-4">
-        <div class="column gtx-perm-category-block" *ngFor="let category of permissionCategories">
-            <h6>{{ category.label | i18n }}</h6>
-            <div *ngIf="categorizedPerms[category.id] as permissions">
-                <gtx-checkbox *ngFor="let perm of permissions"
-                    [(ngModel)]="perm.value"
-                    (change)="onPermToggle()"
-                    [label]="perm.label | i18n"
-                    [disabled]="!perm.editable"
-                ></gtx-checkbox>
-            </div>
-        </div>
+  <div class="row small-up-1 medium-up-2 large-up-4">
+    @for (category of permissionCategories; track category.id) {
+      <div class="column gtx-perm-category-block">
+        <h6>{{ category.label | gtxI18n }}</h6>
+        @if (categorizedPerms[category.id]; as permissions) {
+          <div>
+            @for (perm of permissions; track perm.label) {
+              <gtx-checkbox
+                [(ngModel)]="perm.value"
+                (change)="onPermToggle()"
+                [label]="perm.label | gtxI18n"
+                [disabled]="!perm.editable"
+              ></gtx-checkbox>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+  @if (permSet.roles) {
+    <div class="row small-up-1">
+      <div class="column gtx-perm-category-block">
+        <h6>{{ 'common.role_plural' | gtxI18n }}</h6>
+        @if (permSet.roles.length > 0) {
+          <div>
+            @for (role of permSet.roles; track role.label) {
+              <gtx-checkbox
+                [(ngModel)]="role.value"
+                [label]="role.label"
+                [disabled]="!role.editable"
+              ></gtx-checkbox>
+            }
+          </div>
+        } @else {
+          -
+        }
+      </div>
     </div>
-    <div *ngIf="permSet.roles" class="row small-up-1">
-        <div class="column gtx-perm-category-block">
-            <h6>{{ 'common.role_plural' | i18n }}</h6>
-            <div *ngIf="permSet.roles.length > 0; else noRoles">
-                <gtx-checkbox *ngFor="let role of permSet.roles"
-                    [(ngModel)]="role.value"
-                    [label]="role.label"
-                    [disabled]="!role.editable"
-                ></gtx-checkbox>
-            </div>
-            <ng-template #noRoles>
-                -
-            </ng-template>
-        </div>
-    </div>
+  }
 </div>
 
 <div class="modal-footer">
-    <gtx-button
-        type="primary"
-        gtxActionAllowed="group.editPermissions"
-        [disabled]="!hasEditPermissionRight()"
-        (click)="onSaveClick()"
+  <gtx-button
+    type="primary"
+    gtxActionAllowed="group.editPermissions"
+    [disabled]="!hasEditPermissionRight()"
+    (click)="onSaveClick()"
     >
-        {{ 'common.save_button' | i18n }}
-    </gtx-button>
+    {{ 'common.save_button' | gtxI18n }}
+  </gtx-button>
 
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelFn()"
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelFn()"
     >
-        {{ 'common.cancel_button' | i18n }}
-    </gtx-button>
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
 </div>

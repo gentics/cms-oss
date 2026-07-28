@@ -1,11 +1,12 @@
-import { HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { inject, NgModule, provideAppInitializer } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NgxPaginationModule } from 'ngx-pagination';
+import * as DE_TRANSLATIONS from '../assets/i18n/de.json';
+import * as EN_TRANSLATIONS from '../assets/i18n/en.json';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './components/app/app.component';
 import { DetailChipComponent } from './components/detail-chip/detail-chip.component';
@@ -29,7 +30,6 @@ import { StatusIndicatorComponent } from './components/status-indicator/status-i
 import { UpdateLinkModalComponent } from './components/update-link-modal/update-link-modal.component';
 import { CoreModule } from './core/core.module';
 import { HighlightPipe } from './pipes/highlight/highlight.pipe';
-import { I18nDatePipe } from './pipes/i18n-date/i18n-date.pipe';
 import { UserFullNamePipe } from './pipes/user-full-name/user-full-name.pipe';
 import { AppService } from './services/app/app.service';
 import { FilterService } from './services/filter/filter.service';
@@ -37,8 +37,7 @@ import { LinkCheckerService } from './services/link-checker/link-checker.service
 import { NodeHierarchyBuilderService } from './services/node-hierarchy-builder/node-hierarchy-builder.service';
 import { ToolApiService } from './services/tool-api/tool-api.service';
 import { UserSettingsService } from './services/user-settings/user-settings.service';
-
-export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => new TranslateHttpLoader(http, './assets/i18n/', '.json');
+import { CmsComponentsModule } from '@gentics/cms-components';
 
 @NgModule({
     declarations: [
@@ -62,7 +61,6 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         StatusIndicatorComponent,
         SortingModalComponent,
         HighlightPipe,
-        I18nDatePipe,
         UserFullNamePipe,
         UpdateLinkModalComponent,
     ],
@@ -73,12 +71,9 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         CoreModule,
         NgxPaginationModule,
         FormsModule,
+        CmsComponentsModule.forRoot(),
         TranslateModule.forRoot({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: (createTranslateLoader),
-                deps: [HttpClient],
-            },
+            fallbackLang: 'en',
         }),
         AppRoutingModule,
     ],
@@ -90,6 +85,11 @@ export const createTranslateLoader = (http: HttpClient): TranslateHttpLoader => 
         ToolApiService,
         UserSettingsService,
         provideHttpClient(withInterceptorsFromDi()),
+        provideAppInitializer(() => {
+            const translations = inject(TranslateService);
+            translations.setTranslation('de', DE_TRANSLATIONS, true);
+            translations.setTranslation('en', EN_TRANSLATIONS, true);
+        })
     ],
 })
 export class AppModule { }

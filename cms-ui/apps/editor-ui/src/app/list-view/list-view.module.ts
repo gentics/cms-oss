@@ -11,15 +11,15 @@ import {
     FolderStartPageComponent,
     GridItemComponent,
     ItemListComponent,
-    ItemListHeaderComponent
+    ItemListHeaderComponent,
 } from './components';
-import { listViewRoutes } from './list-view.routes';
+import { LIST_VIEW_ROUTES } from './list-view.routes';
 import {
     AnyItemDeletedPipe,
     AnyItemInheritedPipe,
     AnyItemPublishedPipe,
     AnyPageUnpublishedPipe,
-    FilterItemsPipe
+    FilterItemsPipe,
 } from './pipes';
 import { ListService } from './providers/list/list.service';
 
@@ -55,10 +55,10 @@ const PROVIDERS = [
 @NgModule({
     imports: [
         SharedModule,
-        RouterModule.forChild(listViewRoutes),
+        RouterModule.forChild(LIST_VIEW_ROUTES),
     ],
     exports: [],
     declarations: [...COMPONENTS, ...ENTRY_COMPONENTS, ...PIPES],
-    providers: PROVIDERS
+    providers: PROVIDERS,
 })
 export class ListViewModule {}

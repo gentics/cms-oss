@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, skip, take } from 'rxjs/operators';
+import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FavouritesService } from '../../providers/favourites/favourites.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';

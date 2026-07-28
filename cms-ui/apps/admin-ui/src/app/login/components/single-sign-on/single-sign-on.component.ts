@@ -1,5 +1,3 @@
-import { AuthOperations, ErrorHandler } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,13 +6,15 @@ import { AuthStateModel, KeycloakService } from '@gentics/cms-components/auth';
 import { BaseComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { distinctUntilChanged, filter, first, take } from 'rxjs/operators';
+import { AuthOperations, ErrorHandler } from '../../../core';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 
 @Component({
     selector: 'gtx-single-sign-on',
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class SingleSignOnComponent extends BaseComponent implements OnInit {
 
@@ -37,7 +37,7 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.appState.select(state => state.auth).pipe(
+        this.subscriptions.push(this.appState.select((state) => state.auth).pipe(
             distinctUntilChanged<AuthStateModel>(isEqual),
             filter(auth => auth.keycloakAvailable != null),
             first(),
@@ -69,8 +69,8 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
         this.subscriptions.push(this.keycloakService.attemptCmsLogin().subscribe((result: string) => {
             this.handleSsoResponse(result);
             const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/';
-            const onLogin$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
-                filter(isLoggedIn => !!isLoggedIn),
+            const onLogin$ = this.appState.select((state) => state.auth.isLoggedIn).pipe(
+                filter((isLoggedIn) => !!isLoggedIn),
             );
             onLogin$.subscribe(() => {
                 this.router.navigateByUrl(returnUrl);
@@ -79,10 +79,10 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     }
 
     attemptSsoWithIframe(): void {
-        this.subscriptions.push(this.appState.select(state => state.auth).pipe(
-            filter(auth => !!auth),
+        this.subscriptions.push(this.appState.select((state) => state.auth).pipe(
+            filter((auth) => !!auth),
             take(1),
-            filter(auth => !auth.isLoggedIn),
+            filter((auth) => !auth.isLoggedIn),
         ).subscribe(() => {
             this.url = this.domSanitizer.bypassSecurityTrustResourceUrl(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`);
             this.showLogin = true;

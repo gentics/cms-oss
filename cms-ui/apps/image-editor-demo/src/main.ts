@@ -1,4 +1,4 @@
-import { platformBrowserDynamic } from "@angular/platform-browser-dynamic";
+import { platformBrowser } from '@angular/platform-browser';
 import { PlaygroundModule } from './app/playground.module';
 
-platformBrowserDynamic().bootstrapModule(PlaygroundModule);
+platformBrowser().bootstrapModule(PlaygroundModule);

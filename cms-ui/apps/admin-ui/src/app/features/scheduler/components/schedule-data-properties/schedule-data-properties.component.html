@@ -1,53 +1,59 @@
 <form [formGroup]="form">
 
-    <gtx-select
-        [label]="('scheduler.scheduleType' | i18n) + ' *'"
-        [required]="true"
-        formControlName="type"
+  <gtx-select
+    [label]="('scheduler.scheduleType' | gtxI18n) + ' *'"
+    [required]="true"
+    formControlName="type"
     >
-        <gtx-option *ngFor="let type of ScheduleType | gtxEntries" [value]="type.value">{{ ('scheduler.scheduleType_' + type.value) | i18n }}</gtx-option>
-    </gtx-select>
+    @for (type of ScheduleType | gtxEntries; track type.value) {
+      <gtx-option [value]="type.value">{{ ('scheduler.scheduleType_' + type.value) | gtxI18n }}</gtx-option>
+    }
+  </gtx-select>
 
-    <div class="flex-row row">
-        <div
-            class="date-time-wrapper columns"
-            [class.small-6]="form.get('endTimestamp').enabled"
-            [class.small-12]="!form.get('endTimestamp').enabled"
-        >
-            <gtx-date-time-picker
-                *ngIf="form.get('startTimestamp').enabled"
-                [label]="('scheduler.startTimestamp' | i18n) + (form?.value?.type === ScheduleType.ONCE ? '*' : '')"
-                [clearable]="form?.value?.type !== ScheduleType.ONCE"
-                [required]="form?.value?.type === ScheduleType.ONCE"
-                [min]="dateMin"
-                [max]="dateMax"
-                [displaySeconds]="false"
-                formControlName="startTimestamp"
-            ></gtx-date-time-picker>
-        </div>
-
-        <div class="date-time-wrapper columns small-6">
-            <gtx-date-time-picker
-                *ngIf="form.get('endTimestamp').enabled"
-                [label]="'scheduler.endTimestamp' | i18n"
-                [clearable]="true"
-                [displaySeconds]="false"
-                [min]="dateMin"
-                [max]="dateMax"
-                formControlName="endTimestamp"
-            ></gtx-date-time-picker>
-        </div>
+  <div class="flex-row row">
+    <div
+      class="date-time-wrapper columns"
+      [class.small-6]="form.get('endTimestamp').enabled"
+      [class.small-12]="!form.get('endTimestamp').enabled"
+      >
+      @if (form.get('startTimestamp').enabled) {
+        <gtx-date-time-picker
+          [label]="('scheduler.startTimestamp' | gtxI18n) + (form?.value?.type === ScheduleType.ONCE ? '*' : '')"
+          [clearable]="form?.value?.type !== ScheduleType.ONCE"
+          [required]="form?.value?.type === ScheduleType.ONCE"
+          [min]="dateMin"
+          [max]="dateMax"
+          [displaySeconds]="false"
+          formControlName="startTimestamp"
+        ></gtx-date-time-picker>
+      }
     </div>
 
-    <gtx-interval-schedule-data-properties
-        *ngIf="form.get('interval').enabled"
-        formControlName="interval"
-    ></gtx-interval-schedule-data-properties>
+    <div class="date-time-wrapper columns small-6">
+      @if (form.get('endTimestamp').enabled) {
+        <gtx-date-time-picker
+          [label]="'scheduler.endTimestamp' | gtxI18n"
+          [clearable]="true"
+          [displaySeconds]="false"
+          [min]="dateMin"
+          [max]="dateMax"
+          formControlName="endTimestamp"
+        ></gtx-date-time-picker>
+      }
+    </div>
+  </div>
 
+  @if (form.get('interval').enabled) {
+    <gtx-interval-schedule-data-properties
+      formControlName="interval"
+    ></gtx-interval-schedule-data-properties>
+  }
+
+  @if (form.get('follow').enabled) {
     <gtx-follow-up-schedule-data-properties
-        *ngIf="form.get('follow').enabled"
-        [scheduleBlacklist]="scheduleBlacklist"
-        formControlName="follow"
+      [scheduleBlacklist]="scheduleBlacklist"
+      formControlName="follow"
     ></gtx-follow-up-schedule-data-properties>
+  }
 
 </form>

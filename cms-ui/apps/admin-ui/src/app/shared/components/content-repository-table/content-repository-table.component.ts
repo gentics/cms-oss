@@ -1,19 +1,19 @@
-import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { I18nService } from '@gentics/cms-components';
+import { AnyModelType, ContentRepository, ContentRepositoryType, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '../../../common';
 import {
     ContentRepositoryHandlerService,
     ContentRepositoryTableLoaderOptions,
     ContentRepositoryTableLoaderService,
     DevToolPackageTableLoaderService,
-    I18nService,
     PermissionsService,
-} from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, ContentRepository, ContentRepositoryType, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+} from '../../../core';
+import { AppStateService } from '../../../state';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import {
     AssignContentrepositoriesToNodesModalComponent,
@@ -33,7 +33,7 @@ const STRUCTURE_REPAIR_ACTION = 'structureRepair';
 const SYNCHRONIZE_ROLES_ACTION = 'synchronizeRoles';
 
 export interface OpenCRDetailEvent {
-    item: ContentRepositoryBO,
+    item: ContentRepositoryBO;
     tab: ContentRepositoryDetailTabs;
 }
 
@@ -42,7 +42,7 @@ export interface OpenCRDetailEvent {
     templateUrl: './content-repository-table.component.html',
     styleUrls: ['./content-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ContentRepositoryTableComponent
     extends BasePackageEntityTableComponent<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>
@@ -60,48 +60,53 @@ export class ContentRepositoryTableComponent
     protected rawColumns: TableColumn<ContentRepositoryBO>[] = [
         {
             id: 'name',
-            label: 'contentRepository.name',
+            label: 'content_repository.name',
             fieldPath: 'name',
             sortable: true,
         },
         {
             id: 'crType',
-            label: 'contentRepository.crType',
+            label: 'content_repository.crType',
             fieldPath: 'crType',
             sortable: true,
         },
         {
             id: 'dbType',
-            label: 'contentRepository.dbType',
+            label: 'content_repository.dbType',
             fieldPath: 'dbType',
             sortable: true,
         },
         {
             id: 'url',
-            label: 'contentRepository.url',
+            label: 'content_repository.url',
             fieldPath: 'url',
             sortable: true,
         },
         {
             id: 'instantPublishing',
-            label: 'contentRepository.instantPublishing',
+            label: 'content_repository.instantPublishing',
             fieldPath: 'instantPublishing',
             align: 'center',
             sortable: true,
         },
         {
             id: 'dataStatus',
-            label: 'contentRepository.dataStatus',
+            label: 'content_repository.dataStatus',
             fieldPath: 'dataStatus',
             sortable: true,
         },
         {
             id: 'checkStatus',
-            label: 'contentRepository.checkStatus',
+            label: 'content_repository.checkStatus',
             fieldPath: 'checkStatus',
             sortable: true,
         },
     ];
+
+    public canCreate = false;
+    public canDelete = false;
+    public canManagePackage = false;
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentRepository';
 
     constructor(
@@ -131,11 +136,16 @@ export class ContentRepositoryTableComponent
     protected override createTableActionLoading(): Observable<TableAction<ContentRepositoryBO>[]> {
         return combineLatest([
             this.actionRebuildTrigger$,
+            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentRepository.createContentRepository').typePermissions),
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentRepository.deleteContentRepository').typePermissions),
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions),
         ]).pipe(
             map(([_, ...perms]) => perms),
-            map(([canDelete, canManagePackage]) => {
+            map(([canCreate, canDelete, canManagePackage]) => {
+                this.canCreate = canCreate;
+                this.canDelete = canDelete;
+                this.canManagePackage = canManagePackage;
+
                 const actions: TableAction<ContentRepositoryBO>[] = [];
 
                 if (!this.packageName) {
@@ -161,7 +171,7 @@ export class ContentRepositoryTableComponent
                         icon: 'sync',
                         enabled: (cr) => cr != null && cr.crType === ContentRepositoryType.MESH && !!cr.permissionProperty,
                         single: true,
-                        label: this.i18n.instant('contentRepository.synchronizeRoles'),
+                        label: this.i18n.instant('content_repository.synchronizeRoles'),
                     },
                     {
                         id: DATA_CHECK_ACTION,
@@ -169,7 +179,7 @@ export class ContentRepositoryTableComponent
                         icon: 'find_in_page',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('contentRepository.btn_data_check'),
+                        label: this.i18n.instant('content_repository.btn_data_check'),
                     },
                     {
                         id: DATA_REPAIR_ACTION,
@@ -177,7 +187,7 @@ export class ContentRepositoryTableComponent
                         icon: 'build',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('contentRepository.btn_data_repair'),
+                        label: this.i18n.instant('content_repository.btn_data_repair'),
                     },
                     {
                         id: STRUCTURE_CHECK_ACTION,
@@ -185,7 +195,7 @@ export class ContentRepositoryTableComponent
                         icon: 'image_search',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('contentRepository.btn_structure_check'),
+                        label: this.i18n.instant('content_repository.btn_structure_check'),
                     },
                     {
                         id: STRUCTURE_REPAIR_ACTION,
@@ -193,7 +203,7 @@ export class ContentRepositoryTableComponent
                         icon: 'offline_pin',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('contentRepository.btn_structure_repair'),
+                        label: this.i18n.instant('content_repository.btn_structure_repair'),
                     },
                     {
                         id: DELETE_ACTION,

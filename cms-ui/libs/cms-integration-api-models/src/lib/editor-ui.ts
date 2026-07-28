@@ -10,6 +10,7 @@ export type GcmsUiLanguage = string;
 export enum EditMode {
     PREVIEW = 'preview',
     EDIT = 'edit',
+    EDIT_INHERITANCE = 'editInheritance',
     EDIT_PROPERTIES = 'editProperties',
     PREVIEW_VERSION = 'previewVersion',
     COMPARE_VERSION_CONTENTS = 'compareVersionContents',

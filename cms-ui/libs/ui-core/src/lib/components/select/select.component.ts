@@ -40,7 +40,7 @@ type SingleOrArray<T> = T | T[];
  * ```html
  * <gtx-select label="Choose an option" [(ngModel)]="selectVal">
  *     <gtx-option
- *         *ngFor="let item of options"
+ *         ngFor="let item of options"
  *         [value]="item"
  *         [disabled]="item.disabled"
  *     >{{ item.label }}</gtx-option>
@@ -54,7 +54,7 @@ type SingleOrArray<T> = T | T[];
     styleUrls: ['./select.component.scss'],
     providers: [generateFormProvider(SelectComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
@@ -111,7 +111,7 @@ export class SelectComponent
      * it isn't allowed anymore and should be switched over to a known option.
      */
     @Input()
-    public disableUnknownValues = false
+    public disableUnknownValues = false;
 
     /**
      * Blur event.
@@ -131,6 +131,8 @@ export class SelectComponent
     @ViewChild(DropdownContentComponent, { static: true })
     private dropdownContent: DropdownContentComponent;
 
+    // TODO: Rework the options (and groups), to be simply inputs. Provding the options as
+    // children is messy and just causes unnecessary back and forth mapping, for no benefit.
     @ContentChildren(SelectOptionDirective, { descendants: false })
     private selectOptions: QueryList<SelectOptionDirective>;
 
@@ -199,7 +201,7 @@ export class SelectComponent
         const option = this.optionGroups[groupIndex] && this.optionGroups[groupIndex].options[optionIndex];
         if ((this.optionGroups[groupIndex] && !this.optionGroups[groupIndex].disabled) && option && !option.disabled) {
             this.toggleSelectedOption(option);
-            const selectedValues = this.selectedOptions.map(o => o.value);
+            const selectedValues = this.selectedOptions.map((o) => o.value);
             this.triggerChange(this.multiple ? selectedValues : selectedValues[0]);
             this.scrollToSelectedOption();
         }
@@ -217,7 +219,7 @@ export class SelectComponent
             selectOptions.push(...this.selectOptions.toArray());
         }
         if (this.selectOptionGroups) {
-            this.selectOptionGroups.toArray().forEach(group => {
+            this.selectOptionGroups.toArray().forEach((group) => {
                 selectOptions.push(...group.options);
             });
         }
@@ -249,7 +251,7 @@ export class SelectComponent
                 this.triggerChange(this.multiple ? this.valueArray : this.valueArray[0]);
             }
 
-            let tmp = selectOptions.filter(option => {
+            let tmp = selectOptions.filter((option) => {
                 for (const selectedValue of this.valueArray) {
                     if (this.isSame(selectedValue, option.value)) {
                         return true;
@@ -265,7 +267,6 @@ export class SelectComponent
 
         this.updateViewValue();
     }
-
 
     private isSame(value1: any, value2: any): boolean {
         if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {
@@ -362,7 +363,7 @@ export class SelectComponent
     }
 
     isSelected(option: SelectOptionDirective): boolean {
-        return this.selectedOptions.findIndex(selected => {
+        return this.selectedOptions.findIndex((selected) => {
             return this.isSame(option.value, selected.value);
         }) > -1;
     }
@@ -383,7 +384,7 @@ export class SelectComponent
     }
 
     selectAllOptions(): void {
-        this.triggerChange(this.selectOptions.map(option => option.value));
+        this.triggerChange(this.selectOptions.map((option) => option.value));
     }
 
     /**
@@ -416,7 +417,7 @@ export class SelectComponent
      * other groups as specified by optgroups.
      */
     private buildOptionGroups(): NormalizedOptionGroup[] {
-        const groups = this.selectOptionGroups.map(g => {
+        const groups = this.selectOptionGroups.map((g) => {
             return {
                 get options(): SelectOptionDirective[] { return g.options; },
                 get label(): string { return g.label; },
@@ -444,7 +445,7 @@ export class SelectComponent
         if (!this.multiple) {
             this.selectedOptions = [];
         }
-        const index = this.selectedOptions.findIndex(selected => {
+        const index = this.selectedOptions.findIndex((selected) => {
             return this.isSame(selected.value, option.value);
         });
         if (-1 < index) {
@@ -456,7 +457,7 @@ export class SelectComponent
     }
 
     private updateViewValue(): void {
-        const displayValues: (string | number)[] = this.selectedOptions.map(o => o.viewValue);
+        const displayValues: (string | number)[] = this.selectedOptions.map((o) => o.viewValue);
         if (this.disableUnknownValues) {
             displayValues.push(...this.unknownValues);
         }

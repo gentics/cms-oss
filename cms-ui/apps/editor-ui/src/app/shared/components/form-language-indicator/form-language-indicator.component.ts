@@ -1,11 +1,10 @@
 import { animate, animateChild, query, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
-import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, LanguageState, StageableItem, UIMode } from '../../../common/models';
-import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { Form, Language, StagedItemsMap } from '@gentics/cms-models';
-import { BaseComponent, ChangesOf } from '@gentics/ui-core';
-import { ApplicationStateService } from '../../../state';
+import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { PublishableStateUtil } from '../../util/entity-states';
+import { FolderPermissionData, ItemLanguageClickEvent, ItemListRowMode, LanguageState, UIMode } from '../../../common/models';
+import { BaseComponent, ChangesOf } from '@gentics/ui-core';
 
 interface VariantState extends Language, LanguageState {}
 
@@ -63,12 +62,11 @@ interface VariantState extends Language, LanguageState {}
             ]),
         ]),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FormLanguageIndicatorComponent
     extends BaseComponent
-    implements OnChanges
-{
+    implements OnChanges {
 
     public readonly ItemListRowMode = ItemListRowMode;
     public readonly UIMode = UIMode;
@@ -134,8 +132,8 @@ export class FormLanguageIndicatorComponent
 
         if (changes.activeLanguage || changes.form) {
             this.inCurrentLanguage = this.form != null
-                && this.activeLanguage != null
-                && this.form.languages.includes(this.activeLanguage.code);
+              && this.activeLanguage != null
+              && this.form.languages.includes(this.activeLanguage.code);
         }
 
         if (changes.expandByDefault || changes.form || changes.languages || changes.stagingMap) {
@@ -212,28 +210,28 @@ export class FormLanguageIndicatorComponent
 
                 available: available,
                 deleted:
-                    this.form != null &&
-                    PublishableStateUtil.stateDeleted(this.form),
+                    this.form != null
+                    && PublishableStateUtil.stateDeleted(this.form),
                 inherited:
-                    this.form != null &&
-                    PublishableStateUtil.stateInherited(this.form),
+                    this.form != null
+                    && PublishableStateUtil.stateInherited(this.form),
                 localized:
-                    this.form != null &&
-                    PublishableStateUtil.stateLocalized(this.form),
+                    this.form != null
+                    && PublishableStateUtil.stateLocalized(this.form),
                 modified:
-                    this.form != null &&
-                    PublishableStateUtil.stateModified(this.form),
+                    this.form != null
+                    && PublishableStateUtil.stateModified(this.form),
                 planned:
-                    this.form != null &&
-                    PublishableStateUtil.statePlanned(this.form),
+                    this.form != null
+                    && PublishableStateUtil.statePlanned(this.form),
                 published:
-                    this.form != null &&
-                    PublishableStateUtil.statePublished(this.form),
+                    this.form != null
+                    && PublishableStateUtil.statePublished(this.form),
                 queued:
-                    this.form != null &&
-                    PublishableStateUtil.stateInQueue(this.form),
-                staged: this.form != null &&
-                    this.stagingMap?.[this.form.globalId]?.included,
+                    this.form != null
+                    && PublishableStateUtil.stateInQueue(this.form),
+                staged: this.form != null
+                  && this.stagingMap?.[this.form.globalId]?.included,
             }];
         });
     }

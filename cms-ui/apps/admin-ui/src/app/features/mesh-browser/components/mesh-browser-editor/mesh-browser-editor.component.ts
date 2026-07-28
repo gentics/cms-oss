@@ -1,11 +1,12 @@
-import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '@admin-ui/common';
-import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType, NodeResponse, SchemaResponse } from '@gentics/mesh-models';
 import { MeshRestClientResponse } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { ChangesOf } from '@gentics/ui-core';
+import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '../../../../common';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
+import { SetUIFocusEntity } from '../../../../state/ui/ui.actions';
 import { BreadcrumbNode } from '../../models/mesh-browser-models';
 import { MeshBrowserImageService, MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
@@ -21,22 +22,22 @@ export interface DisplayField {
     templateUrl: './mesh-browser-editor.component.html',
     styleUrls: ['./mesh-browser-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class MeshBrowserEditorComponent  implements OnChanges {
+export class MeshBrowserEditorComponent implements OnChanges {
 
     public readonly FieldType = FieldType;
 
-    @Input({ alias: ROUTE_MESH_PROJECT_ID})
+    @Input({ alias: ROUTE_MESH_PROJECT_ID })
     public project: string;
 
-    @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID})
+    @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID })
     public node: string;
 
-    @Input({ alias: ROUTE_MESH_BRANCH_ID})
+    @Input({ alias: ROUTE_MESH_BRANCH_ID })
     public branch: string;
 
-    @Input({ alias: ROUTE_MESH_LANGUAGE})
+    @Input({ alias: ROUTE_MESH_LANGUAGE })
     public language: string;
 
     public loading = false;
@@ -45,6 +46,7 @@ export class MeshBrowserEditorComponent  implements OnChanges {
     public title: string;
     public version: string;
     public breadcrumb: BreadcrumbNode[] = [];
+    public isContainer = false;
 
     private availableLanguages: string[] = [];
     private resolvedProject: string;
@@ -94,8 +96,8 @@ export class MeshBrowserEditorComponent  implements OnChanges {
 
         if (this.project !== this.resolvedProject) {
             this.availableLanguages = ((await this.mesh.language.list(this.project).send()).data ?? [])
-                .map(lang => lang.languageTag)
-                .sort(lang => lang === this.language ? -1 : 1);
+                .map((lang) => lang.languageTag)
+                .sort((lang) => lang === this.language ? -1 : 1);
             this.resolvedProject = this.project;
         }
 
@@ -111,10 +113,11 @@ export class MeshBrowserEditorComponent  implements OnChanges {
 
             const schema = await this.mesh.schemas.get(response.schema.uuid).send();
 
-            this.title = response?.displayName || response.uuid;
+            this.title = response?.displayName ?? response.uuid;
             this.version = response.version;
             this.breadcrumb = response.breadcrumb;
             this.fields = this.createDisplayFields(response, schema);
+            this.isContainer = schema.container ?? false;
             this.loading = false;
 
             this.changeDetector.markForCheck();
@@ -126,7 +129,7 @@ export class MeshBrowserEditorComponent  implements OnChanges {
     }
 
     private createDisplayFields(node: NodeResponse, schema: SchemaResponse): DisplayField[] {
-        return schema.fields.map(field => {
+        return schema.fields.map((field) => {
             let value: any = node.fields[field.name];
 
             switch (field.type) {
@@ -157,7 +160,7 @@ export class MeshBrowserEditorComponent  implements OnChanges {
 
     async detailsClose(): Promise<void> {
         const relativeToRoute = this.route.parent.parent || this.route.parent;
-        const navigationSucceeded = await this.router.navigate([ { outlets: { detail: null } } ], { relativeTo: relativeToRoute });
+        const navigationSucceeded = await this.router.navigate([{ outlets: { detail: null } }], { relativeTo: relativeToRoute });
         if (navigationSucceeded) {
             this.appState.dispatch(new SetUIFocusEntity(null, null, null));
         }

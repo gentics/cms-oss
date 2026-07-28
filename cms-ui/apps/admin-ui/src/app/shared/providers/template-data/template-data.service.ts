@@ -1,15 +1,15 @@
 import { detailLoading, LOAD_FROM_PACKAGE, masterLoading } from '@admin-ui/common';
 import {
     EntityManagerService,
-    I18nNotificationService,
-    I18nService,
     NodeOperations,
     PermissionsService,
     TemplateOperations,
 } from '@admin-ui/core';
 import { AppStateService, SelectState, UIStateModel } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Raw, TemplateBO, TemplateCreateRequest, TemplateListRequest } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, OperatorFunction } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
@@ -17,7 +17,7 @@ import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-b
 @Injectable()
 export class TemplateDataService extends ExtendedEntityDataServiceBase<'template', TemplateOperations> {
 
-    @SelectState(state => state.ui)
+    @SelectState((state) => state.ui)
     stateUi$: Observable<UIStateModel>;
 
     constructor(
@@ -60,7 +60,7 @@ export class TemplateDataService extends ExtendedEntityDataServiceBase<'template
 
         return loader.pipe(
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
+            tap((templates) => this.entityManager.addEntities(this.entityIdentifier, templates)),
         );
     }
 

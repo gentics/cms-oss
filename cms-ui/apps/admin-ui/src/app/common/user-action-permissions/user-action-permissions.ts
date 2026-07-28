@@ -1,21 +1,22 @@
-import { I18nKey, RequiredInstancePermissions, RequiredTypePermissions } from '@admin-ui/core';
+import { RequiredInstancePermissions, RequiredTypePermissions } from '@admin-ui/core';
 import { InjectionToken } from '@angular/core';
+import { I18nKey } from '@gentics/cms-components';
 import { IndexByKey } from '@gentics/cms-models';
 import { WithOptional } from '../utils';
 import { ADMIN_MODULE_ACTION_PERMISSIONS } from './action-permissions/admin-module.action-permissions';
-import { CONSTRUCT_MODULE_ACTION_PERMISSIONS } from './action-permissions/construct-module.action-permissions';
 import { CONSTRUCTCATEGORY_MODULE_ACTION_PERMISSIONS } from './action-permissions/construct-category-module.action-permissions';
+import { CONSTRUCT_MODULE_ACTION_PERMISSIONS } from './action-permissions/construct-module.action-permissions';
 import { CONTENT_MODULE_ACTION_PERMISSIONS } from './action-permissions/content-module.action-permissions';
-import { CONTENT_STAGING_MODULE_ACTION_PERMISSIONS } from './action-permissions/content-staging-module.action-permissions';
 import { CONTENTREPOSITORY_MODULE_ACTION_PERMISSIONS } from './action-permissions/content-repository-module.action-permissions';
+import { CONTENT_STAGING_MODULE_ACTION_PERMISSIONS } from './action-permissions/content-staging-module.action-permissions';
 import { CR_FRAGMENTS_MODULE_ACTION_PERMISSIONS } from './action-permissions/cr-fragment-module.action-permissions';
 import { DATASOURCE_MODULE_ACTION_PERMISSIONS } from './action-permissions/datasource-module.action-permissions';
 import { GLOBAL_MODULE_ACTION_PERMISSIONS } from './action-permissions/global.action-permissions';
 import { GROUP_MODULE_ACTION_PERMISSIONS } from './action-permissions/group-module.action-permissions';
 import { LANGUAGE_MODULE_ACTION_PERMISSIONS } from './action-permissions/language-module.action-permissions';
 import { NODE_MODULE_ACTION_PERMISSIONS } from './action-permissions/node-module.action-permissions';
-import { OBJECTPROPERTY_MODULE_ACTION_PERMISSIONS } from './action-permissions/object-property-module.action-permissions';
 import { OBJECTPROPERTYCATEGORY_MODULE_ACTION_PERMISSIONS } from './action-permissions/object-property-category-module.action-permissions';
+import { OBJECTPROPERTY_MODULE_ACTION_PERMISSIONS } from './action-permissions/object-property-module.action-permissions';
 import { ROLE_MODULE_ACTION_PERMISSIONS } from './action-permissions/role-module.action-permissions';
 import { SCHEDULER_MODULE_ACTION_PERMISSIONS } from './action-permissions/scheduler-module.action-permissions';
 import { TEMPLATE_MODULE_ACTION_PERMISSIONS } from './action-permissions/template-module.action-permission';
@@ -74,8 +75,8 @@ export interface CompleteUserActionPermissions {
  *
  * Each `UserActionPermissions` object must have either the `typePermissions` or the `instancePermissions` or both set.
  */
-export type UserActionPermissions =
-    WithOptional<CompleteUserActionPermissions, 'typePermissions'> | WithOptional<CompleteUserActionPermissions, 'instancePermissions'>;
+export type UserActionPermissions
+    = WithOptional<CompleteUserActionPermissions, 'typePermissions'> | WithOptional<CompleteUserActionPermissions, 'instancePermissions'>;
 
 /** Describes the `UserActionPermissions` required by a single feature module. */
 export type SingleModuleUserActionPermissions = IndexByKey<UserActionPermissions>;

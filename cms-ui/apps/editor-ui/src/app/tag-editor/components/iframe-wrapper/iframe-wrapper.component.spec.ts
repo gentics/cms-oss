@@ -1,12 +1,12 @@
 import { Component, ElementRef, QueryList, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { getTestPagePath, getTestPageUrl } from '../../../../testing/iframe-helpers';
+import { ApplicationStateService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { IFrameWrapperComponent } from './iframe-wrapper.component';
 
@@ -139,7 +139,7 @@ describe('IFrameWrapperComponent', () => {
 
     it('sets the data-gcms-ui-styles attribute correctly on the IFrame',
         componentTest(() => TestComponent, (fixture, instance) => {
-            const stylesService = TestBed.get(IFrameStylesService) as IFrameStylesService;
+            const stylesService = TestBed.inject(IFrameStylesService) as IFrameStylesService;
             instance.srcUrl = SRC_URL1;
             fixture.detectChanges();
 

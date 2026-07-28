@@ -1,21 +1,22 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-        <gtx-select
-            [label]="tagPart | tagPropLabel"
-            clearable
-            [required]="tagPart?.mandatory"
-            [disabled]="readOnly"
-            [(ngModel)]="tagProperty.stringValue"
-            (valueCahnge)="onChange($event)"
-        >
-            <gtx-option
-                *ngFor="let item of (forms$ | async)"
-                [value]="item.uuid"
-            >
-                {{ item.name }}
-            </gtx-option>
-        </gtx-select>
-    </div>
-    <validation-error-info [validationResult]="displayedValidationResult">
-    </validation-error-info>
-</ng-container>
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <gtx-select
+      [label]="tagPart | tagPropLabel"
+      clearable
+      [required]="tagPart?.mandatory"
+      [disabled]="readOnly"
+      [(ngModel)]="tagProperty.stringValue"
+      (valueCahnge)="onChange($event)"
+      >
+      @for (item of (forms$ | async); track item.uuid) {
+        <gtx-option
+          [value]="item.uuid"
+          >
+          {{ item.name }}
+        </gtx-option>
+      }
+    </gtx-select>
+  </div>
+  <validation-error-info [validationResult]="displayedValidationResult">
+  </validation-error-info>
+}

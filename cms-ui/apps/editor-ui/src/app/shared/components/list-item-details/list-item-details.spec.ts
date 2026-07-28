@@ -8,12 +8,10 @@ import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { SpyEventTarget } from '../../../../testing/spy-event-target';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { FileSizePipe } from '../../pipes/file-size/file-size.pipe';
 import { GetInheritancePipe } from '../../pipes/get-inheritance/get-inheritance.pipe';
-import { I18nDatePipe } from '../../pipes/i18n-date/i18n-date.pipe';
 import { UserFullNamePipe } from '../../pipes/user-full-name/user-full-name.pipe';
 import { DetailChip } from '../detail-chip/detail-chip.component';
 import { ListItemDetails } from './list-item-details.component';
@@ -52,6 +50,7 @@ class MockEntityResolver {
             lastName: 'User',
         };
     }
+
     getTemplate(): any {
         return { name: 'Test Template' };
     }
@@ -68,11 +67,9 @@ class MockWindow extends SpyEventTarget {
 
 class MockI18nService { }
 
-
 class MockFolderActions {
 
 }
-
 
 describe('ListItemDetails', () => {
 
@@ -84,7 +81,6 @@ describe('ListItemDetails', () => {
                 ListItemDetails,
                 DetailChip,
                 GetInheritancePipe,
-                I18nDatePipe,
                 FileSizePipe,
                 UserFullNamePipe,
             ],
@@ -92,7 +88,6 @@ describe('ListItemDetails', () => {
                 { provide: SplitViewContainerComponent, useClass: MockSplitViewContainer },
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: WindowRef, useValue: { nativeWindow: new MockWindow() } },
-                { provide: I18nService, useClass: MockI18nService },
 
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: ApplicationStateService, useClass: TestApplicationState },

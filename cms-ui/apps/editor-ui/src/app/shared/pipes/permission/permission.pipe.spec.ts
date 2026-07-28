@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { ChangeDetectorRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { EditorPermissions } from '@editor-ui/app/common/models';
-import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { Page } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, Observable, Subject, of } from 'rxjs';
+import { EditorPermissions } from '../../../common/models';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PermissionsPipe } from './permission.pipe';
 
@@ -29,7 +29,7 @@ describe('PermissionPipe:', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
         changeDetector = new MockChangeDetector();
         permissionService = new MockPermissionService();
 

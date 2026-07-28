@@ -10,7 +10,6 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { FolderPermissionData, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
 import {
     FolderItemType,
     FolderItemTypePlural,
@@ -24,6 +23,7 @@ import { isEqual } from 'lodash-es';
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith, switchMap } from 'rxjs/operators';
+import { FolderPermissionData, ItemsInfo, UIMode } from '../../../common/models';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UploadProgressReporter } from '../../../core/providers/api';
@@ -40,7 +40,7 @@ interface ItemsHashMap {
     styleUrls: ['./item-list.component.scss'],
     providers: [PaginationService],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -103,7 +103,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     icon = '';
     showGrid = true;
 
-    public displayStatusInfo: boolean;
+    public displayStatusInfo = true;
     public displayDeleted: boolean;
     public displayAllLanguages: boolean;
     public searchTerm: string;
@@ -132,41 +132,36 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.showImagesGridView$ = this.appState.select(state => state.folder.displayImagesGridView);
+        this.showImagesGridView$ = this.appState.select((state) => state.folder.displayImagesGridView);
 
         if (this.itemType === 'page') {
             this.subscriptions.push(this.appState.select((state) => state.folder.activeLanguage).pipe(
-                switchMap(langId => this.appState.select((state) => state.entities.language[langId])),
-            ).subscribe(lang => {
+                switchMap((langId) => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe((lang) => {
                 this.activeLanguage = lang;
                 this.changeDetector.markForCheck();
             }));
         } else if (this.itemType === 'form') {
             this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
-                switchMap(langId => this.appState.select((state) => state.entities.language[langId])),
-            ).subscribe(lang => {
+                switchMap((langId) => this.appState.select((state) => state.entities.language[langId])),
+            ).subscribe((lang) => {
                 this.activeLanguage = lang;
                 this.changeDetector.markForCheck();
             }));
         }
-
-        this.subscriptions.push(this.appState.select((state) => state.folder.displayStatusIcons).subscribe((show) => {
-            this.displayStatusInfo = show;
-            this.changeDetector.markForCheck();
-        }));
 
         this.subscriptions.push(this.appState.select((state) => state.folder.displayDeleted).subscribe((show) => {
             this.displayDeleted = show;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.displayAllLanguages).subscribe((show) => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.displayAllLanguages).subscribe((show) => {
             this.displayAllLanguages = show;
             this.changeDetector.markForCheck();
         }));
 
         // When the current folder changes, reset the pagination to page 1
-        const resetPaginationSub = this.appState.select(state => state.folder.activeFolder)
+        const resetPaginationSub = this.appState.select((state) => state.folder.activeFolder)
             .subscribe(() => this.paginationConfig.currentPage = 1);
         this.subscriptions.push(resetPaginationSub);
 
@@ -175,23 +170,23 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         );
 
         const itemsInfo$ = combineLatest([
-            this.appState.select(state => state.folder),
+            this.appState.select((state) => state.folder),
             itemType$,
         ]).pipe(
             map(([folderState, itemType]) => folderState[`${itemType}s` as FolderItemTypePlural]),
         );
 
         const selected$: Observable<number[]> = itemsInfo$.pipe(
-            filter(itemsInfo => !!itemsInfo),
-            map(itemsInfo => itemsInfo.selected),
+            filter((itemsInfo) => !!itemsInfo),
+            map((itemsInfo) => itemsInfo.selected),
             distinctUntilChanged(isEqual),
         );
 
         this.selectedItems$ = combineLatest([selected$, this.itemHash$]).pipe(
             map(([selectedIds, itemHash]) => {
                 return (selectedIds || [])
-                    .map(id => itemHash[id])
-                    .filter(item => !!item);
+                    .map((id) => itemHash[id])
+                    .filter((item) => !!item);
             }),
         );
 
@@ -199,22 +194,22 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
         // so that the user is not required to refresh the list manually.
 
         const itemsInfoPipe$ = itemsInfo$.pipe(
-            map(itemsInfo => itemsInfo && itemsInfo.displayFields),
-            filter(val => !!val),
+            map((itemsInfo) => itemsInfo && itemsInfo.displayFields),
+            filter((val) => !!val),
             map((fields: string[]) => fields.indexOf('usage') >= 0),
             debounceTime(200),
             distinctUntilChanged(isEqual),
         );
         this.subscriptions.push(combineLatest([
             itemsInfoPipe$,
-            this.appState.select(state => state.editor.saving).pipe(startWith(false)),
+            this.appState.select((state) => state.editor.saving).pipe(startWith(false)),
         ]).subscribe(([displayUsage, saving]) => {
             if (displayUsage && !saving) {
                 this.getTotalUsage();
             }
         }));
 
-        this.subscriptions.push(itemType$.subscribe(itemType => {
+        this.subscriptions.push(itemType$.subscribe((itemType) => {
             this.icon = iconForItemType(itemType);
             this.changeDetector.markForCheck();
         }));
@@ -235,16 +230,16 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             this.userSettings.setItemsPerPage(itemType, pageSize);
         }));
 
-        this.areItemsLoading$ = this.appState.select(state => state.folder).pipe(
+        this.areItemsLoading$ = this.appState.select((state) => state.folder).pipe(
             map(areItemsLoading),
             distinctUntilChanged(isEqual),
         );
 
-        this.subscriptions.push(this.appState.select(state => state.folder.searchTerm).subscribe((term) => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.searchTerm).subscribe((term) => {
             this.searchTerm = term;
             this.changeDetector.markForCheck();
         }));
-        this.subscriptions.push(this.appState.select(state => state.folder.searchFiltersVisible).subscribe((active) => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.searchFiltersVisible).subscribe((active) => {
             this.elasticSearchQueryActive = active;
             this.changeDetector.markForCheck();
         }));
@@ -253,9 +248,8 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     ngOnChanges(changes: { [K in keyof ItemListComponent]?: SimpleChange }): void {
         const itemsInfoChanges = changes.itemsInfo;
         let listChanged = itemsInfoChanges
-            && itemsInfoChanges.previousValue
-            && !this.listsAreEqual(itemsInfoChanges.previousValue.list, itemsInfoChanges.currentValue.list);
-
+          && itemsInfoChanges.previousValue
+          && !this.listsAreEqual(itemsInfoChanges.previousValue.list, itemsInfoChanges.currentValue.list);
 
         if (changes.itemType) {
             this.itemType$.next(this.itemType);
@@ -267,7 +261,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             if (!Array.isArray(this.items)) {
                 this.items = [];
             } else {
-                this.items = this.items.filter(item => item != null);
+                this.items = this.items.filter((item) => item != null);
             }
         }
 
@@ -277,11 +271,11 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
             && this.items?.length > 0
             && (this.items[0]?.type === 'image' || this.items[0]?.type === 'page')
         ) {
-            (this.items || []).forEach(item => {
+            (this.items || []).forEach((item) => {
                 if (!item.usage) {
                     listChanged = true;
                 }
-            })
+            });
         }
 
         if (itemsInfoChanges) {
@@ -330,7 +324,7 @@ export class ItemListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     }
 
     getTotalUsage(): void {

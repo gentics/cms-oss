@@ -1,20 +1,20 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MeshGroupBO, MeshUserBO } from '@admin-ui/mesh/common';
 import { MeshGroupHandlerService, MeshUserHandlerService, MeshUserTableLoaderService } from '@admin-ui/mesh/providers';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Permission, User } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getUserDisplayName } from '@admin-ui/mesh/utils';
+import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 import { MeshUserModal } from '../mesh-user-modal/mesh-user-modal.component';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
-import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 
 const EDIT_ACTION = 'edit';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
@@ -27,7 +27,7 @@ const CREATE_API_TOKEN_ACTION = 'createApiToken';
     templateUrl: './mesh-user-table.component.html',
     styleUrls: ['./mesh-user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshUserBO> {
 
@@ -53,10 +53,11 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
         {
             id: 'groups',
             label: 'common.group_plural',
-            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (user: MeshUserBO) => (user.groups || []).map(group => group.name).filter(name => !!name).join(', '),
+
+            mapper: (user: MeshUserBO) => (user.groups || []).map((group) => group.name).filter((name) => !!name).join(', '),
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'user';
 
     constructor(
@@ -178,14 +179,14 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
             }),
             buttons: [
                 {
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'warning',
-                    returnValue: true,
-                },
-                {
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'warning',
+                    returnValue: true,
                 },
             ],
         });
@@ -206,19 +207,19 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
     }
 
     async manageGroupAssignment(user: MeshUserBO): Promise<void> {
-        const assignedGroupIds = user.groups.map(group => group.uuid);
+        const assignedGroupIds = user.groups.map((group) => group.uuid);
 
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.manage_group_assignment',
             multiple: true,
-            selected: (user.groups || []).map(group => group.uuid),
+            selected: (user.groups || []).map((group) => group.uuid),
         });
 
         const groups: MeshGroupBO[] = await dialog.open();
-        const newGroupIds = groups.map(group => group.uuid);
+        const newGroupIds = groups.map((group) => group.uuid);
 
-        const toAssign = groups.filter(group => !assignedGroupIds.includes(group.uuid));
-        const toRemove = user.groups.filter(group => !newGroupIds.includes(group.uuid));
+        const toAssign = groups.filter((group) => !assignedGroupIds.includes(group.uuid));
+        const toRemove = user.groups.filter((group) => !newGroupIds.includes(group.uuid));
 
         // Nothing to do
         if (toAssign.length === 0 && toRemove.length === 0) {

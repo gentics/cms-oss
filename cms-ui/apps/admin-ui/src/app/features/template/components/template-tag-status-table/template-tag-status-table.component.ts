@@ -1,10 +1,12 @@
 import { AdminUIEntityDetailRoutes, TagStatusBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, TemplateTagStatusOperations } from '@admin-ui/core';
+import { TemplateTagStatusOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, TagStatus } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TemplateTagStatusTableLoaderOptions, TemplateTagStatusTableLoaderService } from '../../providers';
@@ -16,7 +18,7 @@ const SYNC_ACTION = 'syncTag';
     templateUrl: './template-tag-status-table.component.html',
     styleUrls: ['./template-tag-status-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TemplateTagStatusTableComponent
     extends BaseEntityTableComponent<TagStatus, TagStatusBO, TemplateTagStatusTableLoaderOptions>
@@ -30,47 +32,48 @@ export class TemplateTagStatusTableComponent
     protected rawColumns: TableColumn<TagStatusBO>[] = [
         {
             id: 'name',
-            label: 'templateTag.name',
+            label: 'template_tag.name',
             fieldPath: 'name',
         },
         {
             id: 'construct',
-            label: 'templateTag.constructName',
+            label: 'template_tag.constructName',
             fieldPath: 'constructName',
         },
         {
             id: 'inSync',
-            label: 'templateTag.inSync',
+            label: 'template_tag.inSync',
             fieldPath: 'inSync',
             align: 'right',
         },
         {
             id: 'outOfSync',
-            label: 'templateTag.outOfSync',
+            label: 'template_tag.outOfSync',
             fieldPath: 'outOfSync',
             align: 'right',
         },
         {
             id: 'missing',
-            label: 'templateTag.missing',
-            fieldPath: 'templateTag.missing',
+            label: 'template_tag.missing',
+            fieldPath: 'template_tag.missing',
             align: 'right',
         },
         {
             id: 'incompatible',
-            label: 'templateTag.incompatible',
+            label: 'template_tag.incompatible',
             fieldPath: 'incompatible',
             align: 'right',
         },
     ];
+
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        protected loader: TemplateTagStatusTableLoaderService,
         modalService: ModalService,
+        loader: TemplateTagStatusTableLoaderService,
         protected entityOperations: TemplateTagStatusOperations,
         protected notification: I18nNotificationService,
     ) {
@@ -137,7 +140,7 @@ export class TemplateTagStatusTableComponent
         const dialog = await this.modalService.dialog({
             title: this.i18n.instant('modal.confirm_template_tag_sync_title'),
             body: this.i18n.instant('modal.confirm_template_tag_sync_body', {
-                names: this.i18n.join(tags.map(t => t.name), {
+                names: this.i18n.join(tags.map((t) => t.name), {
                     quoted: true,
                     withLast: true,
                 }),
@@ -180,10 +183,10 @@ export class TemplateTagStatusTableComponent
         }
 
         try {
-            await this.entityOperations.synchronizeTags(this.templateId, tags.map(tag => tag.name), forceSync).toPromise();
+            await this.entityOperations.synchronizeTags(this.templateId, tags.map((tag) => tag.name), forceSync).toPromise();
         } catch (error) {
             this.notification.show({
-                message: 'templateTag.sync_error',
+                message: 'template_tag.sync_error',
                 type: 'alert',
             });
             return;
@@ -191,7 +194,7 @@ export class TemplateTagStatusTableComponent
 
         if (tags.length === 1) {
             this.notification.show({
-                message: 'templateTag.sync_success_singular',
+                message: 'template_tag.sync_success_singular',
                 translationParams: {
                     name: tags[0].name,
                 },
@@ -199,9 +202,9 @@ export class TemplateTagStatusTableComponent
             });
         } else if (tags.length <= 3) {
             this.notification.show({
-                message: 'templateTag.sync_success_plural',
+                message: 'template_tag.sync_success_plural',
                 translationParams: {
-                    names: this.i18n.join(tags.map(tag => tag.name), {
+                    names: this.i18n.join(tags.map((tag) => tag.name), {
                         quoted: true,
                         withLast: true,
                     }),
@@ -210,7 +213,7 @@ export class TemplateTagStatusTableComponent
             });
         } else {
             this.notification.show({
-                message: 'templateTag.sync_success_many',
+                message: 'template_tag.sync_success_many',
                 translationParams: {
                     amount: tags.length,
                 },

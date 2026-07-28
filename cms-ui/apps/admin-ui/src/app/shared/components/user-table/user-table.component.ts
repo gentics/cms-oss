@@ -2,7 +2,6 @@ import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-u
 import {
     ErrorHandler,
     GroupOperations,
-    I18nService,
     PermissionsService,
     UserOperations,
     UserTableLoaderOptions,
@@ -12,6 +11,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { Group, NormalizableEntityType, Raw, User } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
@@ -27,7 +27,7 @@ const REMOVE_FROM_GROUP_ACTION = 'removeFromGroup';
     templateUrl: './user-table.component.html',
     styleUrls: ['./user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, UserBO, UserTableLoaderOptions> implements OnChanges {
 
@@ -154,7 +154,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
 
                 return actions;
             }),
-        )
+        );
     }
 
     protected override createAdditionalLoadOptions(): UserTableLoaderOptions {
@@ -168,8 +168,8 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
 
         switch (event.actionId) {
             case ASSIGN_TO_GROUP_ACTION:
-                this.changeUserGroups(this.getAffectedEntityIds(event).map(id => Number(id)))
-                    .then(didChange => {
+                this.changeUserGroups(this.getAffectedEntityIds(event).map((id) => Number(id)))
+                    .then((didChange) => {
                         if (!didChange) {
                             return;
                         }
@@ -187,7 +187,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                 }
 
                 this.removeUsersFromGroup(this.group.id, items)
-                    .then(didChange => {
+                    .then((didChange) => {
                         if (!didChange) {
                             return;
                         }
@@ -244,7 +244,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
 
     protected async removeUsersFromGroup(groupId: number, users: UserBO[]): Promise<boolean> {
         const groupName = this.appState.now.entity.group[groupId].name;
-        const userNames = users.map(user => user.login);
+        const userNames = users.map((user) => user.login);
 
         const dialog = await this.modalService.dialog({
             title: this.i18n.instant('modal.confirm_remove_user_from_group_title'),
@@ -256,15 +256,15 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
             `,
             buttons: [
                 {
-                    label: this.i18n.instant('modal.confirm_remove_users_button', { userAmount: userNames?.length }),
-                    returnValue: true,
-                    type: 'alert',
-                },
-                {
                     label: this.i18n.instant('common.cancel_button'),
                     returnValue: false,
                     flat: true,
                     type: 'secondary',
+                },
+                {
+                    label: this.i18n.instant('modal.confirm_remove_users_button', { userAmount: userNames?.length }),
+                    returnValue: true,
+                    type: 'alert',
                 },
             ],
         }, {

@@ -1,6 +1,6 @@
-import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ChangePasswordError,
     ChangePasswordStart,
@@ -13,13 +13,13 @@ import {
     LogoutSuccess,
     ValidateError,
     ValidateStart,
-    ValidateSuccess
+    ValidateSuccess,
 } from '@gentics/cms-components/auth';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { ErrorHandler } from '../../error-handler';
-import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
 
 @Injectable()
 export class AuthOperations {
@@ -40,7 +40,7 @@ export class AuthOperations {
         this.appState.dispatch(new ValidateStart());
 
         this.client.user.me({ sid: sid }).subscribe({
-            next: res => {
+            next: (res) => {
                 this.appState.dispatch(new ValidateSuccess(sid, res.user));
                 if (this.readSidFromEditorUi() !== sid) {
                     this.storeSidForEditorUi(sid);
@@ -76,7 +76,7 @@ export class AuthOperations {
             login: username,
             password: password,
         }).subscribe({
-            next: res => {
+            next: (res) => {
                 this.storeSidForEditorUi(res.sid);
                 this.appState.dispatch(new LoginSuccess(res.sid, res.user));
                 if (returnUrl) {
@@ -121,7 +121,7 @@ export class AuthOperations {
                 });
                 this.appState.dispatch(new ChangePasswordSuccess());
             })
-            .catch(error => {
+            .catch((error) => {
                 this.appState.dispatch(new ChangePasswordError(error.message || error));
                 this.errorHandler.catch(error);
             });

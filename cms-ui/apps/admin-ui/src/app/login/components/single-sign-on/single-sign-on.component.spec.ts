@@ -1,27 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthenticationModule, KeycloakService } from '@gentics/cms-components/auth';
-import { Store } from '@ngxs/store';
-import { componentTest, configureComponentTest } from '../../../../testing';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { componentTest, configureComponentTest, MockErrorHandler } from '../../../../testing';
 import { ErrorHandler } from '../../../core/providers/error-handler';
-import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { AuthOperations } from '../../../core/providers/operations/auth/auth.operations';
 import { AppStateService } from '../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
-import { MockStore } from '../../../state/utils/test-app-state/test-store.mock';
 import { SingleSignOnComponent } from './single-sign-on.component';
 
 class MockActivatedRoute {}
 
 class MockAuthOperations {}
-
-class MockKeycloakService {
-    keycloakEnabled = true;
-    showSSOButton = false;
-
-    login(): void {}
-}
 
 class MockRouter {}
 
@@ -42,7 +33,6 @@ class TestComponent implements OnInit {
 
 describe('SingleSignOn', () => {
     let appState: TestAppState;
-    let keycloakService: MockKeycloakService;
 
     beforeEach(() => {
         configureComponentTest({
@@ -54,8 +44,8 @@ describe('SingleSignOn', () => {
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: AuthOperations, useClass: MockAuthOperations },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: KeycloakService, useClass: MockKeycloakService },
                 { provide: Router, useClass: MockRouter },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
             declarations: [
                 SingleSignOnComponent,
@@ -63,14 +53,17 @@ describe('SingleSignOn', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
-        keycloakService = TestBed.get(KeycloakService);
+        appState = TestBed.inject(AppStateService) as any;
     });
 
     it('call nothing if showSSOButton is true and keycloakEnabled is true',
         componentTest(() => TestComponent, (fixture, instance) => {
-            keycloakService.keycloakEnabled = true;
-            keycloakService.showSSOButton = true;
+            appState.mockState({
+                auth: {
+                    keycloakAvailable: true,
+                    showSingleSignOnButton: true,
+                },
+            });
 
             fixture.detectChanges();
             tick();
@@ -82,8 +75,12 @@ describe('SingleSignOn', () => {
 
     it('call nothing if showSSOButton is true and keycloakEnabled is false',
         componentTest(() => TestComponent, (fixture, instance) => {
-            keycloakService.keycloakEnabled = false;
-            keycloakService.showSSOButton = true;
+            appState.mockState({
+                auth: {
+                    keycloakAvailable: false,
+                    showSingleSignOnButton: true,
+                },
+            });
 
             fixture.detectChanges();
             tick();

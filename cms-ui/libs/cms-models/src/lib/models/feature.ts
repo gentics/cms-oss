@@ -108,6 +108,11 @@ export enum NodeFeature {
      * If this feature is activated, automatic page translation is available
      */
     AUTOMATIC_TRANSLATION = 'automatic_translation',
+
+    /**
+     * If the partial multi-channeling feature is available for this node.
+     */
+    PARTIAL_MULTICHANNELLING = 'partial_multichannelling',
 }
 
 /**

@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { EditorPermissions } from '@editor-ui/app/common/models';
 import { CoreModule } from '@gentics/cms-components';
 import { Page, Raw, Template } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { EditorPermissions } from '../../../common/models';
 import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -47,14 +47,13 @@ xdescribe('CreatePageModal', () => {
                 DynamicDisableDirective,
                 PagePropertiesComponent,
                 TestComponent,
-                mockPipes('i18nDate'),
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof TestApplicationState).toBe(true);
 
-        folderActions = TestBed.get(FolderActionsService);
+        folderActions = TestBed.inject(FolderActionsService) as any;
         expect(folderActions instanceof MockFolderActions).toBe(true);
     });
 

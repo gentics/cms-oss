@@ -38,7 +38,7 @@ describe('OperationsBase', () => {
             ],
         });
 
-        ops = TestBed.get(TestOperations);
+        ops = TestBed.inject(TestOperations);
     });
 
     it('gets all required dependencies from the injector', () => {
@@ -46,7 +46,7 @@ describe('OperationsBase', () => {
     });
 
     it('catchAndRethrowError() works', fakeAsync(() => {
-        const errorHandler = TestBed.get(ErrorHandler) as MockErrorHandler;
+        const errorHandler: MockErrorHandler = TestBed.inject(ErrorHandler) as any;
         const error = new Error('Test');
         const action$ = ops.executeOperationToTestErrorHandling(error);
         errorHandler.assertNotifyAndRethrowIsCalled(action$, error);

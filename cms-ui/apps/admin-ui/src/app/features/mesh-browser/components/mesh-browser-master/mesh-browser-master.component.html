@@ -1,84 +1,75 @@
 <div [class.logged-out]="loggedIn !== true" class="mesh-browser-container">
 
-    <div class="overview-header">
-        <gtx-button
-            class="back-button"
-            flat
-            size="small"
-            (click)="navigateBack()"
-        >
-            <icon left>arrow_back</icon> {{ 'common.back_button' | i18n }}
-        </gtx-button>
+  <div class="overview-header">
+    <gtx-button
+      class="back-button"
+      flat
+      size="small"
+      (click)="navigateBack()"
+      >
+      <icon left>arrow_back</icon> {{ 'common.back_button' | gtxI18n }}
+    </gtx-button>
 
-        <div class="overview-title">{{ 'mesh.content_repository_title' | i18n }}</div>
-    </div>
+    <div class="overview-title">{{ 'mesh.content_repository_title' | gtxI18n }}</div>
+  </div>
 
-    <gtx-mesh-login-gate
-        class="login-gate-wrapper"
-        [repository]="selectedRepository"
-        [loggedIn]="loggedIn"
-        (loggedInChange)="meshLoginHandler($event)"
+  <gtx-mesh-login-gate
+    class="login-gate-wrapper"
+    [repository]="selectedRepository"
+    [loggedIn]="loggedIn"
+    (loggedInChange)="meshLoginHandler($event)"
     >
 
-        <ng-container *ngIf="loggedIn && loadedProjects != null">
-            <h1 class="cr-title">{{ 'mesh.browser_title' | i18n: {name: selectedRepository?.name} }}</h1>
+    @if (loggedIn && loadedProjects != null) {
+      <h1 class="cr-title">{{ 'mesh.browser_title' | gtxI18n: {name: selectedRepository?.name} }}</h1>
+      @if (availableProjects?.length > 0) {
+        @if (!noRootNode) {
+          <div class="switcher-row">
+            <gtx-mesh-browser-project-switcher
+              [project]="resolvedProject?.name"
+              [branch]="loadedBranch"
+              [availableProjects]="availableProjects"
+              [availableBranches]="projectBranches"
+              (projectChange)="navigateToProject($event)"
+              (branchChange)="navigateToBranch($event)"
+              />
+            <gtx-mesh-browser-language-switcher
+              [language]="language"
+              [availableLanguages]="projectLanguages"
+              (languageChange)="navigateToLanguage($event)"
+              />
+          </div>
+          @if (loadedNode) {
+            <gtx-mesh-browser-breadcrumbs
+              class="breadcrumbs"
+              [language]="language"
+              [entries]="loadedNode?.breadcrumb"
+              />
+            <gtx-mesh-browser-schema-list
+              class="schema-list"
+              [contentRepository]="selectedRepository"
+              [project]="resolvedProject?.name"
+              [branch]="branch"
+              [projectSchemas]="projectSchemas"
+              [availableLanguages]="projectLanguages"
+              [node]="node"
+              [language]="language"
+              (nodeChange)="navigateToNode($event)"
+              />
+          }
+        } @else {
+          <div  class="error-message no-root-node">
+            <h4>{{ 'mesh.browser_no_root_node' | gtxI18n:{ project: resolvedProject?.name } }}</h4>
+          </div>
+        }
+      } @else {
+        <div class="error-message no-project">
+          <h4>{{ 'mesh.browser_no_projects' | gtxI18n }}</h4>
+        </div>
+      }
+    }
 
-            <ng-container *ngIf="availableProjects?.length > 0 else noProjectRenderer">
-                <ng-container *ngIf="!noRootNode; else noRootNodeRenderer">
-
-                    <div class="switcher-row">
-                        <gtx-mesh-browser-project-switcher
-                            [project]="resolvedProject?.name"
-                            [branch]="loadedBranch"
-                            [availableProjects]="availableProjects"
-                            [availableBranches]="projectBranches"
-                            (projectChange)="navigateToProject($event)"
-                            (branchChange)="navigateToBranch($event)"
-                        />
-
-                        <gtx-mesh-browser-language-switcher
-                            [language]="language"
-                            [availableLanguages]="projectLanguages"
-                            (languageChange)="navigateToLanguage($event)"
-                        />
-                    </div>
-
-                    <ng-container *ngIf="loadedNode">
-                        <gtx-mesh-browser-breadcrumbs
-                            class="breadcrumbs"
-                            [language]="language"
-                            [entries]="loadedNode?.breadcrumb"
-                        />
-
-                        <gtx-mesh-browser-schema-list
-                            class="schema-list"
-                            [contentRepository]="selectedRepository"
-                            [project]="resolvedProject?.name"
-                            [branch]="branch"
-                            [projectSchemas]="projectSchemas"
-                            [availableLanguages]="projectLanguages"
-                            [node]="node"
-                            [language]="language"
-                            (nodeChange)="navigateToNode($event)"
-                        />
-                    </ng-container>
-
-                </ng-container>
-            </ng-container>
-
-        </ng-container>
-
-    </gtx-mesh-login-gate>
+  </gtx-mesh-login-gate>
 </div>
 
-<ng-template #noProjectRenderer>
-    <div class="error-message no-project">
-        <h4>{{ 'mesh.browser_no_projects' | i18n }}</h4>
-    </div>
-</ng-template>
 
-<ng-template #noRootNodeRenderer>
-    <div  class="error-message no-root-node">
-        <h4>{{ 'mesh.browser_no_root_node' | i18n:{ project: resolvedProject?.name } }}</h4>
-    </div>
-</ng-template>

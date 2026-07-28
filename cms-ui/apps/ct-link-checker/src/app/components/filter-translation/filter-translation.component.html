@@ -1,6 +1,8 @@
 <div class="filter">
-    <span>{{ 'common.filter_page_translation' | translate }}:</span>
-    <div class="languages">
-        <a [class.active]="isActive(item.id)" (click)="select(item)" *ngFor="let item of languages">{{ item.code }}</a>
-    </div>
+  <span>{{ 'common.filter_page_translation' | gtxI18n }}:</span>
+  <div class="languages">
+    @for (item of languages; track item) {
+      <a [class.active]="isActive(item.id)" (click)="select(item)">{{ item.code }}</a>
+    }
+  </div>
 </div>

@@ -1,5 +1,6 @@
 import { fakeAsync, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     BaseListResponse,
     Folder,
@@ -18,7 +19,6 @@ import { map } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { RepositoryBrowserDataService } from './repository-browser-data.service';
@@ -184,12 +184,12 @@ describe('RepositoryBrowserDataService', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 EntityResolver,
-                { provide: I18nNotification, useClass: MockNotificationService },
+                { provide: I18nNotificationService, useClass: MockNotificationService },
             ],
         });
 
-        service = TestBed.get(RepositoryBrowserDataService);
-        entityResolver = TestBed.get(EntityResolver);
+        service = TestBed.inject(RepositoryBrowserDataService);
+        entityResolver = TestBed.inject(EntityResolver);
         prefillAppStateWithDefaultTestData();
     });
 
@@ -482,14 +482,14 @@ class MockNotificationService {
 }
 
 function prefillAppStateWithDefaultTestData(): void {
-    const state: TestApplicationState = TestBed.get(ApplicationStateService);
+    const state: TestApplicationState = TestBed.inject(ApplicationStateService) as any;
     state.mockState(testStateData);
 }
 
 // function apiReturnsDataFromAppState(): void {
-//     const api: MockApi = TestBed.get(Api);
+//     const api: MockApi = TestBed.inject(Api);
 //     api.folders.getNodes = () => {
-//         const appState: TestApplicationState = TestBed.get(ApplicationStateService);
+//         const appState: TestApplicationState = TestBed.inject(ApplicationStateService) as any;
 //         const entities = appState.now.entities;
 
 //         const nodes = Object.keys(entities.node)
@@ -504,7 +504,7 @@ function prefillAppStateWithDefaultTestData(): void {
 // }
 
 // function prefillAppStateWithSingleNode(): void {
-//     const state: TestApplicationState = TestBed.get(ApplicationStateService);
+//     const state: TestApplicationState = TestBed.inject(ApplicationStateService) as any;
 //     state.mockState({
 //         folder: {
 //             nodes: {
@@ -522,7 +522,7 @@ function prefillAppStateWithDefaultTestData(): void {
 //         }
 //     });
 
-//     const api: MockApi = TestBed.get(Api);
+//     const api: MockApi = TestBed.inject(Api);
 //     api.folders.getNodes = () => of({
 //         folders: [
 //             {
@@ -541,7 +541,7 @@ function prefillAppStateWithDefaultTestData(): void {
 // }
 
 function prefillAppStateWithActiveNode(nodeId: number): void {
-    const state: TestApplicationState = TestBed.get(ApplicationStateService);
+    const state: TestApplicationState = TestBed.inject(ApplicationStateService) as any;
     state.mockState({
         folder: {
             ...state.now.folder,
@@ -551,7 +551,7 @@ function prefillAppStateWithActiveNode(nodeId: number): void {
 }
 
 function prefillAppStateWithActiveLanguage(contentLanguage: Language): void {
-    const state: TestApplicationState = TestBed.get(ApplicationStateService);
+    const state: TestApplicationState = TestBed.inject(ApplicationStateService) as any;
     state.mockState({
         folder: {
             ...state.now.folder,

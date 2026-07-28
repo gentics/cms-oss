@@ -32,7 +32,7 @@ import { GCMS_UI_SERVICES_PROVIDER, GcmsUiServices, I18nService } from '../../pr
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    standalone: false,
 })
 export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, OnInit, OnChanges, OnDestroy {
 
@@ -131,7 +131,7 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
         this._onTouched = (event: FocusEvent) => {
             this.blur.emit(event);
             fn();
-        }
+        };
     }
 
     setDisabledState?(isDisabled: boolean): void {
@@ -252,7 +252,7 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
                 }),
             ),
             this.selectedItemHelper.loadingError$.pipe(
-                map((error: { error: any, item: { item: number, nodeId?: number } }) => {
+                map((error: { error: any; item: { item: number; nodeId?: number } }) => {
                     /**
                      * When a page that is referenced gets deleted, the pageId is kept in tagProperty.
                      * When we try to fetch the page information we get an error message.
@@ -260,7 +260,8 @@ export class FormBrowseBoxComponent implements ControlValueAccessor, Validator, 
                      * (and thus avoid suggesting that a valid page is still selected).
                      */
                     if (control) {
-                        /** additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
+                        /**
+                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
                          * This could trigger an emission before this.tagProperty is set in updateTagProperty
                          */
                         return this.i18n.instant('editor.page_not_found', { id: control.value });

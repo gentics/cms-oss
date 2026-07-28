@@ -1,6 +1,6 @@
 <div class="gtx-modal-datagrid">
     <div class="modal-title">
-        <h5>{{ 'shared.assign_packages_to_node' | i18n }}</h5>
+        <h5>{{ 'shared.assign_packages_to_node' | gtxI18n }}</h5>
     </div>
 
     <div class="modal-content">
@@ -18,7 +18,7 @@
             (click)="buttonAssignPackagesToNodeClicked()"
             gtxActionAllowed=""
         >
-            {{ 'shared.assign_packages_to_node' | i18n }}
+            {{ 'shared.assign_packages_to_node' | gtxI18n }}
         </gtx-button>
 
         <gtx-button
@@ -26,7 +26,7 @@
             flat
             (click)="cancelFn()"
         >
-            {{ 'common.cancel_button' | i18n }}
+            {{ 'common.cancel_button' | gtxI18n }}
         </gtx-button>
     </div>
 </div>

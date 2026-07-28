@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: docker.gentics.com/cms-oss/build-container:latest
+      image: docker.gentics.com/cms-oss/build-container:6.4
       resources:
         requests:
           cpu: '0'
@@ -57,6 +57,7 @@ spec:
           cpu: '0'
           memory: '0'
     - name: docker
+      image: docker:29.0.4-dind-rootless
       resources:
         limits:
           cpu: '0'
@@ -271,7 +272,6 @@ spec:
                     }
 
                     // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm-products/> ~/.npmrc"
                     withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
                         sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
@@ -488,7 +488,7 @@ spec:
                 script {
                     dir(path: 'cms-ui') {
                         // Publish the pacakges to npm repository
-                        sh "npm run nx -- release publish --projects=tag:publish --output-style=static"
+                        sh "npm run nx -- release publish --output-style=static"
                     }
                 }
             }

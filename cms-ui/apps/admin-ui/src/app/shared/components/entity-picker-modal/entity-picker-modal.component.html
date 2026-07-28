@@ -1,6 +1,6 @@
 <div class="gtx-modal-datagrid">
     <div class="modal-title">
-        <h5>{{ multiple ? 'modal.select_generic_entities' : 'modal.select_generic_entity' | i18n }}</h5>
+        <h5>{{ multiple ? 'modal.select_generic_entities' : 'modal.select_generic_entity' | gtxI18n }}</h5>
     </div>
 
     <div class="modal-content">
@@ -13,7 +13,7 @@
             [inlineSelection]="true"
             [selectable]="true"
             [selected]="selectedIds | gtxValues"
-            (select)="handleRowSelect($event)"
+            (rowSelect)="handleRowSelect($event)"
             (selectedChange)="selectionChanges($event)"
         ></gtx-content-item-trable>
     </div>
@@ -24,7 +24,7 @@
             [disabled]="loading"
             (click)="confirmSelection()"
         >
-            {{ 'shared.confirm_selection' | i18n }}
+            {{ 'shared.confirm_selection' | gtxI18n }}
         </gtx-button>
 
         <gtx-button
@@ -32,7 +32,7 @@
             flat
             (click)="cancelFn(false)"
         >
-            {{ 'common.cancel_button' | i18n }}
+            {{ 'common.cancel_button' | gtxI18n }}
         </gtx-button>
     </div>
 </div>

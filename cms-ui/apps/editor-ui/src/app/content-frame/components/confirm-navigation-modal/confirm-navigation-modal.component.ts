@@ -9,7 +9,7 @@ import { ContentFrameComponent } from '../content-frame/content-frame.component'
     selector: 'confirm-navigation-modal',
     templateUrl: './confirm-navigation-modal.component.html',
     styleUrls: ['./confirm-navigation-modal.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class ConfirmNavigationModal extends BaseModal<boolean> {
 
@@ -17,14 +17,14 @@ export class ConfirmNavigationModal extends BaseModal<boolean> {
     contentFrame: ContentFrameComponent;
 
     saveAndClose(): void {
-        const promiseOrUndefined = this.contentFrame.saveChanges();
+        const promiseOrUndefined = this.contentFrame.saveChanges(true);
         if (!(promiseOrUndefined instanceof Promise)) {
             this.closeFn(true);
             return;
         }
 
         promiseOrUndefined
-            .then(() => this.closeFn(true))
+            .then((allow) => this.closeFn(allow))
             .catch(() => this.closeFn(false));
     }
 

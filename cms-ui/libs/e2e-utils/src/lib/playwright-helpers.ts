@@ -6,16 +6,18 @@ import {
     ATTR_MULTIPLE,
     ButtonClickOptions,
     DEFAULT_E2E_KEYCLOAK_URL,
-    ENV_E2E_APP_PATH,
-    ENV_E2E_KEYCLOAK_URL,
     LoginInformation,
     UserImportData,
 } from './common';
+import {
+    ENV_E2E_APP_PATH,
+    ENV_E2E_KEYCLOAK_URL,
+} from './config';
 import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
-const SIMPLE_TOAST = `${VISIBLE_TOAST} ${TOAST_CLOSE_BUTTON}`
+const SIMPLE_TOAST = `${VISIBLE_TOAST} ${TOAST_CLOSE_BUTTON}`;
 const ACTION_TOAST = `${VISIBLE_TOAST} .gtx-toast-btn_close[hidden] + .action > button`;
 
 function isResponse(input: any): input is Response {
@@ -52,7 +54,7 @@ export function mockResponse<T>(
         responseCode = 200;
     }
 
-    return route => {
+    return (route) => {
         if (typeof method === 'string' && route.request().method() !== method) {
             return route.continue();
         }
@@ -65,7 +67,7 @@ export function mockResponse<T>(
 }
 
 export function reroute(method: string, path: string): (route: Route) => Promise<void> {
-    return async route => {
+    return async (route) => {
         const res = await route.fetch({
             method: method,
             url: path,
@@ -90,9 +92,9 @@ export function matchRequest(method: string, path: string | RegExp, options?: Re
         }
 
         return (options?.skipStatus || isOk)
-            && request.method() === method
-            && matchesPath(request.url(), path)
-            && (!options?.params || hasMatchingParams(request.url(), options.params));
+          && request.method() === method
+          && matchesPath(request.url(), path)
+          && (!options?.params || hasMatchingParams(request.url(), options.params));
     };
 }
 
@@ -101,7 +103,7 @@ export function onRequest(
     matcher: (req: Request) => boolean,
     handler: (req: Request) => any,
 ): void {
-    page.on('request', req => {
+    page.on('request', (req) => {
         if (matcher(req)) {
             handler(req);
         }
@@ -113,7 +115,7 @@ export function onResponse(
     matcher: (req: Request, res: Response) => boolean,
     handler: (req: Request, res: Response) => any,
 ): void {
-    page.on('response', res => {
+    page.on('response', (res) => {
         const req = res.request();
         if (matcher(req, res)) {
             handler(req, res);
@@ -124,7 +126,6 @@ export function onResponse(
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
- *
  * @param page The playwright page object
  * @param method The method of the request
  * @param path The path of the request
@@ -140,7 +141,7 @@ export function waitForResponseFrom(
     const timeout = options?.timeout ?? 5_000;
 
     return page.waitForResponse(matchRequest(method, path, options), { timeout })
-        .catch(err => {
+        .catch((err) => {
             // The actual class isn't publicly available, which is why we have to do this hacky workaround.
             if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
                 const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
@@ -162,7 +163,7 @@ export function waitForKeycloakAuthPage(page: Page): Promise<void> {
     const kcUrl = process.env[ENV_E2E_KEYCLOAK_URL] || DEFAULT_E2E_KEYCLOAK_URL;
     const parsedUrl = new URL(kcUrl);
 
-    return page.waitForURL(url =>
+    return page.waitForURL((url) =>
         url.host === parsedUrl.host
         && matchesPath(url, '/realms/*/protocol/openid-connect/auth'),
     );
@@ -246,13 +247,12 @@ export async function pickSelectValue(select: Locator, values: string | number |
 /**
  * Overrides the call for the user-data, to always have a clean setup,
  * without accidently loading some user-data which would alter the test setup.
- *
  * @param page Page reference to where the route will be redirected
  * @param dataProvider Optional provider which will get the data for the user.
  * @returns Promise from `page.route`.
  */
 export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<void> {
-    return page.route(url => matchesPath(url, '/rest/user/me/data'), (route, req) => {
+    return page.route((url) => matchesPath(url, '/rest/user/me/data'), (route, req) => {
         // Only re-route requests to load user-data
         if (req.method() !== 'GET') {
             return route.continue();
@@ -281,8 +281,8 @@ export async function getSourceLocator(source: Page | Locator, nodeName: string)
         typeof (source as Page).reload === 'function'
         || await (source as Locator).evaluate(
             (el, args) => el == null
-                || typeof el !== 'object'
-                || el.nodeName.toLowerCase() !== args.nodeName,
+              || typeof el !== 'object'
+              || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase(),
             { nodeName },
         )
     ) {
@@ -307,7 +307,7 @@ export async function selectTab(source: Page | Locator, id: number | string): Pr
 
 export function findNotification(page: Page, id?: string): Locator {
     if (id) {
-        return page.locator(`gtx-toast .gtx-toast[data-id="${id}"]`)
+        return page.locator(`gtx-toast .gtx-toast[data-id="${id}"]`);
     } else {
         return page.locator('gtx-toast .gtx-toast');
     }
@@ -369,7 +369,7 @@ export async function waitForPublishDone(page: Page, client: GCMSRestClient): Pr
 }
 
 export async function clickButton(source: Locator, options?: ButtonClickOptions): Promise<void> {
-    const nodeType = await source.evaluate(el => el.nodeName);
+    const nodeType = await source.evaluate((el) => el.nodeName);
 
     // For a simple button, simply click it without any other stuff
     if (nodeType === 'BUTTON') {
@@ -484,8 +484,10 @@ export function copyText(page: Page, text: string): Promise<void> {
         textArea.focus();
         textArea.select();
 
-        document.execCommand("copy");
+        document.execCommand('copy');
         document.body.removeChild(textArea);
+
+        return null;
     }, text);
 }
 

@@ -36,9 +36,9 @@ describe('EditorActionsService', () => {
             ],
         });
 
-        state = TestBed.get(ApplicationStateService);
+        state = TestBed.inject(ApplicationStateService) as any;
         expect(state instanceof TestApplicationState).toBe(true, 'state is not a TestApplicationState');
-        editorActions = TestBed.get(EditorActionsService);
+        editorActions = TestBed.inject(EditorActionsService);
     });
 
     describe('previewPage()', () => {

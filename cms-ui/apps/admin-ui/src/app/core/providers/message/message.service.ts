@@ -14,10 +14,11 @@ import { Injectable } from '@angular/core';
 import {
     AccessControlledType,
     GcmsPermission,
-    MessageFromServer
+    MessageFromServer,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NotificationService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import {
     forkJoin,
     NEVER,
@@ -27,7 +28,6 @@ import {
     timer,
 } from 'rxjs';
 import { filter, map, switchMap } from 'rxjs/operators';
-import { I18nService } from '../i18n';
 import { PermissionsService } from '../permissions/permissions.service';
 
 const DEFAULT_DELAY = 2;
@@ -66,9 +66,9 @@ export class MessageService extends ServiceBase {
         intervalInSeconds: number = DEFAULT_INTERVAL,
     ): Subscription {
         if (
-            !this.subscription ||
-            delayInSeconds !== this.fetchDelay ||
-            intervalInSeconds !== this.fetchInterval
+            !this.subscription
+            || delayInSeconds !== this.fetchDelay
+            || intervalInSeconds !== this.fetchInterval
         ) {
             if (this.subscription) {
                 this.subscription.unsubscribe();
@@ -151,8 +151,8 @@ export class MessageService extends ServiceBase {
                     return true;
                 },
                 (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
+                    const errorMessage
+                        = typeof error === 'string'
                             ? error
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                             : error.message || error.toString();
@@ -181,8 +181,8 @@ export class MessageService extends ServiceBase {
                     return true;
                 },
                 (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
+                    const errorMessage
+                        = typeof error === 'string'
                             ? error
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                             : error.message || error.toString();
@@ -201,8 +201,8 @@ export class MessageService extends ServiceBase {
         messages
             .filter(
                 (message) =>
-                    message.isInstantMessage &&
-                    !deliveredInstantMessages.includes(message.id),
+                    message.isInstantMessage
+                    && !deliveredInstantMessages.includes(message.id),
             )
             .forEach((undeliveredInstantMessage) => {
                 this.sendInstantMessage(undeliveredInstantMessage);
@@ -242,8 +242,8 @@ export class MessageService extends ServiceBase {
             .then(
                 () => this.fetchAllMessages(),
                 (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
+                    const errorMessage
+                        = typeof error === 'string'
                             ? error
                             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                             : error.message || error.toString();

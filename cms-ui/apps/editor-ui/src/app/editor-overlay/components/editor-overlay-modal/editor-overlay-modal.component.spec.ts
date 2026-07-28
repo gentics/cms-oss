@@ -40,7 +40,7 @@ describe('EditorOverlayModal', () => {
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
     }));
 
     beforeEach(() => {

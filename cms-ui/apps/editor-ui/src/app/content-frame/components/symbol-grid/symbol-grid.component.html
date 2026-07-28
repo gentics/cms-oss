@@ -1,13 +1,14 @@
 <div class="gtx-symbol-grid">
-    <div class="symbol-grid-content">
-        <button
-            *ngFor="let singleSymbol of symbols"
-            class="symbol-grid-cell"
-            [class.active]="singleSymbol.symbol === (value?.symbol || value)"
-            [attr.title]="singleSymbol.label"
-            (click)="selectSymbol(singleSymbol)"
+  <div class="symbol-grid-content">
+    @for (singleSymbol of symbols; track singleSymbol.symbol) {
+      <button
+        class="symbol-grid-cell"
+        [class.active]="singleSymbol.symbol === (value?.symbol || value)"
+        [attr.title]="singleSymbol.label"
+        (click)="selectSymbol(singleSymbol)"
         >
-            <span class="symbol-grid-cell-content" [innerHTML]="singleSymbol.symbol"></span>
-        </button>
-    </div>
+        <span class="symbol-grid-cell-content" [innerHTML]="singleSymbol.symbol"></span>
+      </button>
+    }
+  </div>
 </div>

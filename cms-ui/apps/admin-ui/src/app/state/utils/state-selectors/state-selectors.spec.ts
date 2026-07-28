@@ -20,7 +20,7 @@ describe('Common state selectors', () => {
             ],
         });
 
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
     });
 

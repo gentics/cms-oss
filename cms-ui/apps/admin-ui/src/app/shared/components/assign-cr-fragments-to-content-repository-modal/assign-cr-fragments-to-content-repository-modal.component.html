@@ -1,6 +1,6 @@
 <div class="gtx-modal-datagrid">
     <div class="modal-title">
-        <h5>{{ 'shared.assign_crfragments_to_contentrepositories' | i18n }}</h5>
+        <h5>{{ 'shared.assign_crfragments_to_contentrepositories' | gtxI18n }}</h5>
     </div>
 
     <div class="modal-content">
@@ -16,10 +16,10 @@
         <gtx-button
             type="primary"
             (click)="buttonAssignContentRepositoryToCrfragmentsClicked()"
-            gtxActionAllowed="contentRepository.updateContentRepositoryInstance"
+            gtxActionAllowed="content_repository.updateContentRepositoryInstance"
             [aaInstanceId]="contentRepositoryId"
         >
-            {{ 'shared.assign' | i18n }}
+            {{ 'shared.assign' | gtxI18n }}
         </gtx-button>
 
         <gtx-button
@@ -27,7 +27,7 @@
             flat
             (click)="cancelFn()"
         >
-            {{ 'common.cancel_button' | i18n }}
+            {{ 'common.cancel_button' | gtxI18n }}
         </gtx-button>
     </div>
 </div>

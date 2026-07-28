@@ -1,18 +1,18 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction } from '@editor-ui/app/state';
 import { FolderItemType, Image, Item, Node as NodeModel, StagedItemsMap } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { EditorPermissions, ItemsInfo, UIMode } from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { UsageModalComponent } from '../../../shared/components/usage-modal/usage-modal.component';
 import { EntityStateUtil } from '../../../shared/util/entity-states';
+import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction } from '../../../state';
 
 @Component({
     selector: 'grid-item',
     templateUrl: './grid-item.component.html',
     styleUrls: ['./grid-item.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GridItemComponent {
 
@@ -83,9 +83,8 @@ export class GridItemComponent {
      */
     showUsage(item: Item): void {
         const nodeId = this.activeNode.id;
-        const currentLanguageId = this.appState.now.folder.activeLanguage;
-        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId, currentLanguageId })
-            .then(modal => modal.open())
+        this.modalService.fromComponent(UsageModalComponent, {}, { item, nodeId })
+            .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }
 

@@ -1,14 +1,15 @@
 import { ListId, listLoading } from '@admin-ui/common';
-import { EntityManagerService, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { EntityManagerService, ScheduleExecutionOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ModelType, ScheduleExecution } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { Observable, OperatorFunction } from 'rxjs';
-import { ScheduleExecutionOperations } from '../../../core';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 
 @Injectable()
-export class ScheduleExecutionDataService extends ExtendedEntityDataServiceBase<'scheduleExecution', ScheduleExecutionOperations>  {
+export class ScheduleExecutionDataService extends ExtendedEntityDataServiceBase<'scheduleExecution', ScheduleExecutionOperations> {
 
     constructor(
         state: AppStateService,

@@ -1,11 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { CloseToolAction, OpenToolAction, SetUIOverridesAction } from '@editor-ui/app/state';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService, CloseToolAction, OpenToolAction, SetUIOverridesAction } from '../../../state';
 import { UIOverrideParameters, UIOverrides, UIToolOverride } from './ui-overrides.model';
 
 @Injectable()

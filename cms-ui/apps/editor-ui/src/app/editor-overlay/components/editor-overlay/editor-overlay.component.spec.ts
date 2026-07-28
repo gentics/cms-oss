@@ -67,7 +67,7 @@ describe('EditorOverlayComponent', () => {
 
         TestBed.compileComponents();
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
     }));
 
     beforeEach(() => {

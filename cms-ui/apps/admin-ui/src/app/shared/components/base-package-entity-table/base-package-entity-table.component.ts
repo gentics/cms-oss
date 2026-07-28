@@ -1,8 +1,9 @@
 import { BusinessObject, PackageTableEntityLoader } from '@admin-ui/common';
-import { DevToolPackageTableLoaderService, I18nService } from '@admin-ui/core/providers';
+import { DevToolPackageTableLoaderService } from '@admin-ui/core/providers';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ChangesOf, ModalService, TableActionClickEvent } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { ContextMenuService } from '../../providers/context-menu/context-menu.service';
 import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
 
@@ -10,7 +11,7 @@ export const UNASSIGN_FROM_PACKAGE_ACTION = 'unassignFromPackage';
 
 @Component({
     template: '',
-    standalone: false
+    standalone: false,
 })
 export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject, A = never>
     extends BaseEntityTableComponent<T, O, A>

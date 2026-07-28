@@ -1,5 +1,3 @@
-import { StateModule } from './state.module';
-
 export * from './app-state';
 export * from './entity/entity.actions';
 export * from './entity/entity.state';
@@ -14,7 +12,8 @@ export * from './messages/message.state';
 export * from './permissions/permissions.actions';
 export * from './permissions/permissions.state';
 export * from './providers/app-state/app-state.service';
+export * from './state-store.config';
+export * from './state.module';
 export * from './ui/ui.actions';
 export * from './ui/ui.state';
 export * from './utils';
-export { StateModule };

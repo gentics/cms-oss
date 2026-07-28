@@ -6,7 +6,7 @@ xdescribe('UserGroupDataService', () => {
     beforeEach(() => TestBed.configureTestingModule({}));
 
     it('should be created', () => {
-        const service: UserGroupDataService = TestBed.get(UserGroupDataService);
+        const service: UserGroupDataService = TestBed.inject(UserGroupDataService);
         expect(service).toBeTruthy();
     });
 });

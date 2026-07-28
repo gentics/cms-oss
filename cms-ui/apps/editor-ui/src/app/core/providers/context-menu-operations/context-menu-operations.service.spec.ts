@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Type } from '@angular/core';
-import { TestBed, discardPeriodicTasks, fakeAsync, flush, tick } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
-import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { PostUpdateBehavior, TemplateActionsService } from '@editor-ui/app/state';
+import { I18nNotificationService, I18nService, TranslatedNotificationOptions, TranslateParameters } from '@gentics/cms-components';
 import { EditMode, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
@@ -35,17 +33,25 @@ import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialog
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of } from 'rxjs';
+import { LinkTemplateModal, MultiDeleteResult } from '../../../shared/components';
+import { RepositoryBrowserClient } from '../../../shared/providers';
 import { LinkTemplateService } from '../../../shared/providers/link-template/link-template.service';
-import { ApplicationStateService, FolderActionsService, STATE_MODULES, WastebinActionsService } from '../../../state';
-import { ContentStagingActionsService, UsageActionsService } from '../../../state/index';
+import {
+    ApplicationStateService,
+    ContentStagingActionsService,
+    FolderActionsService,
+    PostUpdateBehavior,
+    STATE_MODULES,
+    TemplateActionsService,
+    UsageActionsService,
+    WastebinActionsService,
+} from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiError } from '../api';
 import { DecisionModalsService } from '../decision-modals/decision-modals.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { FavouritesService } from '../favourites/favourites.service';
-import { I18nNotification, TranslatedNotificationOptions } from '../i18n-notification/i18n-notification.service';
-import { I18nService } from '../i18n/i18n.service';
 import { InstructionActions, NavigationService } from '../navigation/navigation.service';
 import { PermissionService } from '../permissions/permission.service';
 import { ContextMenuOperationsService } from './context-menu-operations.service';
@@ -83,7 +89,7 @@ describe('ContextMenuOperationsService', () => {
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: Router, useClass: MockRouter },
                 { provide: I18nService, useClass: MockI18nService },
-                { provide: I18nNotification, useClass: MockI18nNotification },
+                { provide: I18nNotificationService, useClass: MockI18nNotification },
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: WastebinActionsService, useClass: MockWastebinActions },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
@@ -119,7 +125,7 @@ describe('ContextMenuOperationsService', () => {
     afterEach(() => {
         entityResolver.ngOnDestroy();
         contextMenuOperationsService.ngOnDestroy();
-    })
+    });
 
     describe('localizing', () => {
         let activeNodeId: number;
@@ -163,7 +169,7 @@ describe('ContextMenuOperationsService', () => {
                 { name: 'Some page3', type: 'page', id: ITEM_ID + 3 },
             ];
 
-            const targetFolders: Folder[] = [ getExampleFolderData() ];
+            const targetFolders: Folder[] = [getExampleFolderData()];
 
             spyOn(repositoryBrowserClient, 'openRepositoryBrowser').and.returnValue(Promise.resolve(targetFolders));
 
@@ -234,7 +240,7 @@ describe('ContextMenuOperationsService', () => {
                 folder: {
                     [folderId]: folder,
                 },
-            }});
+            } });
 
             const modalResult: IModalInstance<LinkTemplateModal> = {
                 // Additional parameters do not need to be mocked, as they aren't called, since this isn't tested interactively
@@ -290,7 +296,6 @@ describe('ContextMenuOperationsService', () => {
 
     });
 
-
     describe('deleteItems', () => {
 
         describe('form', () => {
@@ -328,7 +333,7 @@ describe('ContextMenuOperationsService', () => {
                         name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
                         type: 'selectgroup',
                         active: true,
-                        elements: [ ],
+                        elements: [],
                         label_i18n: {
                             en: 'Label',
                             de: 'Beschriftung',
@@ -396,7 +401,7 @@ describe('ContextMenuOperationsService', () => {
                         name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
                         type: 'selectgroup',
                         active: true,
-                        elements: [ ],
+                        elements: [],
                         label_i18n: {
                             de: 'Beschriftung',
                         },
@@ -458,7 +463,7 @@ describe('ContextMenuOperationsService', () => {
                         name: 'selectgroup_a2d562eb_be5c_4fdd_b5e9_b461261e852f',
                         type: 'selectgroup',
                         active: true,
-                        elements: [ ],
+                        elements: [],
                         label_i18n: {
                             en: 'Label',
                         },
@@ -627,6 +632,7 @@ class MockFolderActions implements Partial<FolderActionsService> {
     createPageVariations(sourcePages: Page[], sourceNodeId: number, targetFolders: Folder[]): Promise<void> {
         throw new Error('createPageVariations called but not mocked');
     }
+
     localizeItem(type: 'folder', itemId: number, channelId: number): Promise<Folder<Raw>>;
     localizeItem(type: 'page', itemId: number, channelId: number): Promise<Page<Raw>>;
     localizeItem(type: 'file', itemId: number, channelId: number): Promise<File<Raw>>;
@@ -635,15 +641,19 @@ class MockFolderActions implements Partial<FolderActionsService> {
     localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw> | void> {
         return Promise.resolve(null);
     }
+
     refreshList(type: FolderItemType, itemLanguages?: string[]): Promise<void> {
         throw new Error('refreshList called but not mocked');
     }
+
     getTemplatesRaw(): Observable<any> {
         throw new Error('getTemplatesRaw called but not mocked');
     }
+
     getAllTemplatesOfNode(): Observable<any> {
         throw new Error('getAllTemplatesOfNode called but not mocked');
     }
+
     updateItem<T extends ItemType>(
         type: T,
         itemId: number,
@@ -653,13 +663,14 @@ class MockFolderActions implements Partial<FolderActionsService> {
     ): Promise<ItemTypeMap<Raw>[T] | void> {
         throw new Error('updateItem called but not mocked');
     }
-    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[] | null>  {
+
+    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<Template[] | null> {
         throw new Error('getTemplates called but not mocked');
     }
 }
 
-class MockI18nNotification implements Partial<I18nNotification> {
-    show(options: TranslatedNotificationOptions): { dismiss: () => void; } {
+class MockI18nNotification implements Partial<I18nNotificationService> {
+    show(options: TranslatedNotificationOptions): { dismiss: () => void } {
         return { dismiss: () => {} };
     }
 }
@@ -710,7 +721,7 @@ class MockModalService implements Partial<ModalService> {
         component: Type<T>,
         options?: IModalOptions,
         locals?: { [K in keyof T]?: T[K] },
-    ): Promise<IModalInstance<T>>{
+    ): Promise<IModalInstance<T>> {
         return Promise.resolve(null);
     }
 }
@@ -719,22 +730,21 @@ class MockUsageActions {
     getTotalUsage(): void { }
 }
 
-
 class MockRepositoryBrowserClientService implements Partial<RepositoryBrowserClient> {
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
-        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: false }
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: false }
     ): Promise<R>;
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
-        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: true }
+        options: RepositoryBrowserOptions & { allowedSelection: T; selectMultiple: true }
     ): Promise<R[]>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
-        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: false }
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: false }
     ): Promise<R>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
-        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: true }
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[]; selectMultiple: true }
     ): Promise<R[]>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
-    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>  {
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]> {
         return Promise.resolve([]);
     }
 }
@@ -749,9 +759,9 @@ class MockRouter {
     navigateByUrl(): void { }
 }
 
-class MockI18nService {
-    translate(key: string, params?: any): string {
-        return key;
+class MockI18nService implements Partial<I18nService> {
+    public instant(key: string | string[], params?: TranslateParameters): string {
+        return key as string;
     }
 }
 
@@ -761,7 +771,7 @@ class MockTemplateActions implements Partial<TemplateActionsService> {
         templateIds: number[],
         folderIds: number[],
         recursive: boolean = false,
-    ): Observable<boolean>  {
+    ): Observable<boolean> {
         return of(true);
     }
 }

@@ -1,8 +1,8 @@
-<ng-container *ngIf="permission">
-    <span [class.gtx-perm-denied]="!permission.value">
-        <gtx-icon
-            [name]="'perm.' + permission.type"
-            [title]="(permission.category ? (permission.category + '\n') : '') + permission.label + ': ' + ((permission.value ? 'common.yes' : 'common.no') | i18n)"
-        ></gtx-icon>
-    </span>
-</ng-container>
+@if (permission) {
+  <span [class.gtx-perm-denied]="!permission.value">
+    <gtx-icon
+      [name]="'perm.' + permission.type"
+      [title]="(permission.category ? (permission.category + '\n') : '') + permission.label + ': ' + ((permission.value ? 'common.yes' : 'common.no') | gtxI18n)"
+    ></gtx-icon>
+  </span>
+}

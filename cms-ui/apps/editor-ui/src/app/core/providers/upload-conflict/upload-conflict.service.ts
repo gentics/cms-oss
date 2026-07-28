@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
-import { UploadResponse } from '@editor-ui/app/common/models';
 import { File as FileModel } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { UploadResponse } from '../../../common/models';
 import { FolderActionsService } from '../../../state';
 import { FileNameConflictModal } from '../../components/file-name-conflict-modal/file-name-conflict-modal.component';
 

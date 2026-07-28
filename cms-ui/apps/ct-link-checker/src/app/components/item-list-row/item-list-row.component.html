@@ -1,92 +1,105 @@
 <gtx-contents-list-item class="item-row">
-    <ng-container [ngTemplateOutlet]="historyIcon" [ngTemplateOutletContext]="{ status: item.lastStatus }"></ng-container>
+  <ng-container [ngTemplateOutlet]="historyIcon" [ngTemplateOutletContext]="{ status: item.lastStatus }"></ng-container>
 
-    <div #itemPrimary class="item-primary">
-        <span *ngIf="!item?.text"  class="linkText">
-            {{ 'common.element' | translate }}:
-            <span class="linkTextInner" [innerHTML]="item?.contenttagName"></span>
+  <div #itemPrimary class="item-primary">
+    @if (!item?.text) {
+      <span  class="linkText">
+        {{ 'common.element' | gtxI18n }}:
+        <span class="linkTextInner" [innerHTML]="item?.contenttagName"></span>
+      </span>
+    }
+
+    @if (item?.text) {
+      <span class="linkTextInner">{{ 'common.inline_link' | gtxI18n }}</span>
+    }
+
+    <div class="linkText">
+      {{ 'common.url' | gtxI18n }}:
+      <a [class.hasIcon]="item.lastStatus === 'invalid'" [href]="item?.url" target="_blank">
+        <span>
+          <span [innerHTML]="item?.url | highlight:filterTerm"></span>
+          <div class="show-on-hover">
+            <icon class="live-icon">open_in_new</icon>
+          </div>
         </span>
-
-        <span class="linkTextInner" *ngIf="item?.text">{{ 'common.inline_link' | translate }}</span>
-
-        <div class="linkText">
-            {{ 'common.url' | translate }}:
-            <a [class.hasIcon]="item.lastStatus === 'invalid'" [href]="item?.url" target="_blank">
-                <span>
-                    <span [innerHTML]="item?.url | highlight:filterTerm"></span>
-                    <div class="show-on-hover">
-                        <icon class="live-icon">open_in_new</icon>
-                    </div>
-                </span>
-            </a>
-        </div>
-
-        <div class="item-name" [class.valid]="item.lastStatus !== 'invalid'">
-            <span class="linkText" *ngIf="item?.text">
-                {{ 'common.link_text' | translate }}:
-                <span class="linkTextInner" [innerHTML]="item?.text | highlight:filterTerm"></span>
-            </span>
-
-            <span class="linkText" *ngIf="!item?.text">
-                <span class="linkText">{{ 'common.part_name' | translate }}:
-                    <span class="linkTextInner" [innerHTML]="item?.partName"></span>
-                </span>
-            </span>
-
-            <gtx-tooltip
-                class="history-tooltip"
-                [hidden]="!item?.history"
-                [position]="'bottom'"
-                [align]="'left'"
-                [type]="'light'"
-            >
-                <div gtx-tooltip-trigger class="short-history history-entry">
-                    <span class="short-history-title">{{ 'common.check_history' | translate }}:</span>
-                    <span class="history-icon">
-                        <ng-container
-                            *ngFor="let historyCheck of item.history"
-                            [ngTemplateOutlet]="historyIcon"
-                            [ngTemplateOutletContext]="{ status: historyCheck.status }"
-                        ></ng-container>
-                    </span>
-                </div>
-
-                <div gtx-tooltip-content class="full-history">
-                    <div *ngFor="let historyCheck of item.history" class="history-entry">
-                        <span class="history-icon">
-                            <ng-container
-                                [ngTemplateOutlet]="historyIcon"
-                                [ngTemplateOutletContext]="{ status: historyCheck.status }"
-                            ></ng-container>
-                        </span>
-                        <span class="history-text">
-                            {{ historyCheck.timestamp | i18nDate: 'dateTime' }}
-                        </span>
-                    </div>
-                </div>
-            </gtx-tooltip>
-
-            <div *ngIf="firstUnsuccessDateCalculated" class="firstUnsuccess">
-                {{ 'common.first_unsuccess' | translate }}:
-                <span class="firstUnsuccessDate">{{ firstUnsuccessDate | i18nDate: 'dateTime' }}</span>
-            </div>
-        </div>
+      </a>
     </div>
 
-    <div class="item-actions">
-        <gtx-button
-            flat
-            type="secondary"
-            size="small"
-            (click)="onReplaceLink(item)"
+    <div class="item-name" [class.valid]="item.lastStatus !== 'invalid'">
+      @if (item?.text) {
+        <span class="linkText">
+          {{ 'common.link_text' | gtxI18n }}:
+          <span class="linkTextInner" [innerHTML]="item?.text | highlight:filterTerm"></span>
+        </span>
+      }
+
+      @if (!item?.text) {
+        <span class="linkText">
+          <span class="linkText">{{ 'common.part_name' | gtxI18n }}:
+            <span class="linkTextInner" [innerHTML]="item?.partName"></span>
+          </span>
+        </span>
+      }
+
+      <gtx-tooltip
+        class="history-tooltip"
+        [hidden]="!item?.history"
+        [position]="'bottom'"
+        [align]="'left'"
+        [type]="'light'"
         >
-            <icon left>sync_alt</icon> {{ 'modal.replace_button' | translate }}
-        </gtx-button>
+        <div gtx-tooltip-trigger class="short-history history-entry">
+          <span class="short-history-title">{{ 'common.check_history' | gtxI18n }}:</span>
+          <span class="history-icon">
+            @for (historyCheck of item.history; track historyCheck) {
+              <ng-container
+                [ngTemplateOutlet]="historyIcon"
+                [ngTemplateOutletContext]="{ status: historyCheck.status }"
+              ></ng-container>
+            }
+          </span>
+        </div>
+
+        <div gtx-tooltip-content class="full-history">
+          @for (historyCheck of item.history; track historyCheck) {
+            <div class="history-entry">
+              <span class="history-icon">
+                <ng-container
+                  [ngTemplateOutlet]="historyIcon"
+                  [ngTemplateOutletContext]="{ status: historyCheck.status }"
+                ></ng-container>
+              </span>
+              <span class="history-text">
+                {{ historyCheck.timestamp | gtxI18nDate: 'dateTime' }}
+              </span>
+            </div>
+          }
+        </div>
+      </gtx-tooltip>
+
+      @if (firstUnsuccessDateCalculated) {
+        <div class="firstUnsuccess">
+          {{ 'common.first_unsuccess' | gtxI18n }}:
+          <span class="firstUnsuccessDate">{{ firstUnsuccessDate | gtxI18nDate: 'dateTime' }}</span>
+        </div>
+      }
     </div>
+  </div>
+
+  <div class="item-actions">
+    <gtx-button
+      flat
+      type="secondary"
+      size="small"
+      (click)="onReplaceLink(item)"
+      >
+      <icon left>sync_alt</icon> {{ 'modal.replace_button' | gtxI18n }}
+    </gtx-button>
+  </div>
 </gtx-contents-list-item>
 
 <ng-template #historyIcon let-status="status">
-    <icon
-        [ngClass]="status === 'invalid' ? 'alert' : 'valid'"
-    >{{ status === 'invalid' ? 'warning' : 'check_circle' }}</icon>
+  <icon
+    [ngClass]="status === 'invalid' ? 'alert' : 'valid'"
+  >{{ status === 'invalid' ? 'warning' : 'check_circle' }}</icon>
 </ng-template>

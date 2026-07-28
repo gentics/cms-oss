@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,6 +37,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import com.gentics.lib.genericexceptions.IllegalUsageException;
 import org.apache.commons.collections.CollectionUtils;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
@@ -132,6 +134,7 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 
 import io.reactivex.Observable;
+import org.apache.commons.lang3.Strings;
 
 /**
  * An objectfactory which can create {@link Page} and {@link Content} objects, based on the {@link AbstractFactory}.
@@ -182,7 +185,7 @@ public class PageFactory extends AbstractFactory {
 			+ "contentset_id = ?, channelset_id = ?, channel_id = ?, sync_page_id = ?, sync_timestamp = ?, modified = 1 "
 			+ "WHERE id = ?";
 
-	protected final static String INSERT_CONTENT_SQL = "INSERT INTO content (creator, cdate, editor, edate, locked, locked_by, uuid) VALUES " + "(?, ?, ?, ?, ?, ?, ?)";
+	protected final static String INSERT_CONTENT_SQL = "INSERT INTO content (creator, cdate, editor, edate, locked, locked_by, uuid, partially_localized) VALUES " + "(?, ?, ?, ?, ?, ?, ?, ?)";
 
 	protected final static String UPDATE_CONTENT_SQL = "UPDATE content SET editor = ?, edate = ? WHERE id = ?";
 
@@ -1604,7 +1607,12 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.lib.base.object.NodeObject#copy()
 		 */
 		public Page copy() throws NodeException {
-			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true);
+			return copy(false);
+		}
+
+		@Override
+		public Page copy(boolean includeInheritedTags) throws NodeException {
+			return new EditableFactoryPage(this, getFactory().getFactoryHandle(Page.class).createObjectInfo(Page.class, true), true, includeInheritedTags);
 		}
 
 		/**
@@ -2326,7 +2334,7 @@ public class PageFactory extends AbstractFactory {
 
 		@Override
 		public boolean needsContenttagMigration(Template template, List<String> tagnames, boolean force) throws NodeException {
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
 				}
@@ -2342,7 +2350,7 @@ public class PageFactory extends AbstractFactory {
 				if (tagnames != null && !tagnames.contains(templateTag.getName())) {
 					continue;
 				}
-				if (getContent().getContentTag(templateTag.getName()) == null) {
+				if (getContentTag(templateTag.getName()) == null) {
 					return true;
 				}
 			}
@@ -2937,11 +2945,12 @@ public class PageFactory extends AbstractFactory {
 		 * @param asNewPage true when the editable copy shall represent a new
 		 *        page, false if it shall be the editable version of the same
 		 *        page
+		 * @param includeInheritedTags true to include inherited tags
 		 * @throws NodeException when an internal error occurred
 		 * @throws ReadOnlyException when the page could not be fetched for
 		 *         update
 		 */
-		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage) throws ReadOnlyException, NodeException {
+		protected EditableFactoryPage(FactoryPage page, NodeObjectInfo info, boolean asNewPage, boolean includeInheritedTags) throws ReadOnlyException, NodeException {
 			// set some values differently, depending on whether this is a new page
 			super(asNewPage ? null : page.getId(), info, page.name, page.niceUrl, page.description, page.filename, page.templateId, page.getFolderId(),
 					asNewPage ? null : page.contentId, page.priority, page.contentSetId, page.languageId, asNewPage ? null : page.objectTagIds,
@@ -2955,6 +2964,18 @@ public class PageFactory extends AbstractFactory {
 
 			if (asNewPage) {
 				editableContent = (EditableFactoryContent) page.getContent().copy();
+
+				// include inherited tags
+				if (includeInheritedTags && page.getContent().isPartiallyLocalized()) {
+					var masterTags = MultichannellingFactory.getNextHigherObject(page).getContentTags();
+					var masterTagCopies = new HashMap<String, ContentTag>();
+
+					for (Entry<String, ContentTag> entry : masterTags.entrySet()) {
+						masterTagCopies.put(entry.getKey(), (ContentTag)entry.getValue().copy());
+					}
+
+					addInheritedContentTags(masterTagCopies, editableContent.getContentTags());
+				}
 
 				// copy the objecttags
 				Map<String, ObjectTag> originalObjectTags = page.getObjectTags();
@@ -3201,7 +3222,7 @@ public class PageFactory extends AbstractFactory {
 			Map<String, ContentTag> contentTags = Collections.emptyMap();
 
 			if (!isEmptyId(contentId)) {
-				contentTags = getContent().getContentTags();
+				contentTags = getContentTags();
 			}
 			boolean modifiedContentTags = false;
 
@@ -3247,7 +3268,7 @@ public class PageFactory extends AbstractFactory {
 				return false;
 			}
 			// check contenttags
-			for (ContentTag contentTag : getContent().getContentTags().values()) {
+			for (ContentTag contentTag : getContentTags().values()) {
 				for (Value value : contentTag.getValues()) {
 					if (isEmptyId(value.getId())) {
 						return true;
@@ -3318,7 +3339,7 @@ public class PageFactory extends AbstractFactory {
 		public void migrateContenttags(Template template, List<String> tagnames, boolean force) throws NodeException {
 			super.migrateContenttags(template, tagnames, force);
 
-			for (Iterator<ContentTag> i = getContent().getContentTags().values().iterator(); i.hasNext();) {
+			for (Iterator<ContentTag> i = getContentTags().values().iterator(); i.hasNext();) {
 				ContentTag contentTag = i.next();
 				if (tagnames != null && !tagnames.contains(contentTag.getName())) {
 					continue;
@@ -3914,6 +3935,11 @@ public class PageFactory extends AbstractFactory {
 		 * @see com.gentics.contentnode.object.AbstractContentObject#copyFrom(com.gentics.lib.base.object.NodeObject)
 		 */
 		public <T extends NodeObject> void copyFrom(T original) throws ReadOnlyException, NodeException {
+			copyFrom(original, true);
+		}
+
+		@Override
+		public <T extends NodeObject> void copyFrom(T original, boolean copyContent) throws ReadOnlyException, NodeException {
 			super.copyFrom(original);
 			Page oPage = (Page) original;
 
@@ -3950,8 +3976,10 @@ public class PageFactory extends AbstractFactory {
 				}
 			}
 
+			if (copyContent) {
 			// copy the content
 			getContent().copyFrom(oPage.getContent());
+		}
 		}
 
 		@Override
@@ -3994,6 +4022,8 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected int lockedBy;
 
+		protected boolean partiallyLocalized;
+
 		protected final static String CONTENTTAGS = "contenttags";
 
 		/**
@@ -4004,13 +4034,14 @@ public class PageFactory extends AbstractFactory {
 			super(null, info);
 		}
 
-		public FactoryContent(Integer id, NodeObjectInfo info, int locked, int lockedBy, List<Integer> tagIds, int nodeId, int udate, GlobalId globalId) {
+		public FactoryContent(Integer id, NodeObjectInfo info, int locked, int lockedBy, List<Integer> tagIds, int nodeId, int udate, boolean partiallyLocalized, GlobalId globalId) {
 			super(id, info);
 			this.tagIds = tagIds != null ? new Vector<>(tagIds) : null;
 			pageIds = null;
 			this.locked = locked;
 			this.lockedBy = lockedBy;
 			this.udate = udate;
+			this.partiallyLocalized = partiallyLocalized;
 			this.globalId = globalId;
 			this.nodeId = nodeId;
 		}
@@ -4043,6 +4074,18 @@ public class PageFactory extends AbstractFactory {
 
 		public List<Page> getPages() throws NodeException {
 			return loadPages();
+		}
+
+		@Override
+		public boolean isPartiallyLocalized() {
+			return partiallyLocalized;
+		}
+
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			failReadOnly();
+
+			return this;
 		}
 
 		/**
@@ -4286,6 +4329,13 @@ public class PageFactory extends AbstractFactory {
 
 			return t.getObject(Node.class, nodeId);
 		}
+
+		@Override
+		public Content setModified(boolean modified) throws ReadOnlyException {
+			failReadOnly();
+
+			return this;
+		}
 	}
 
 	/**
@@ -4303,6 +4353,8 @@ public class PageFactory extends AbstractFactory {
 		 */
 		private Map<String, ContentTag> contentTags = null;
 
+		protected boolean newContent = false;
+
 		/**
 		 * Flag to mark whether the content has been modified
 		 */
@@ -4319,6 +4371,7 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected EditableFactoryContent(NodeObjectInfo info) {
 			super(info);
+			newContent = true;
 			modified = true;
 		}
 
@@ -4331,8 +4384,9 @@ public class PageFactory extends AbstractFactory {
 		 */
 		protected EditableFactoryContent(FactoryContent content, NodeObjectInfo info, boolean asNewContent) throws NodeException {
 			super(asNewContent ? null : content.getId(), info, asNewContent ? -1 : content.locked, asNewContent ? -1 : content.lockedBy,
-					asNewContent ? null : content.tagIds, content.nodeId, asNewContent ? -1 : content.getUdate(), asNewContent ? null : content.getGlobalId());
+					asNewContent ? null : content.tagIds, content.nodeId, asNewContent ? -1 : content.getUdate(), content.partiallyLocalized, asNewContent ? null : content.getGlobalId());
 			if (asNewContent) {
+				newContent = true;
 				// copy the contenttags
 				Map<String, ContentTag> originalContentTags = content.getContentTags();
 
@@ -4346,6 +4400,30 @@ public class PageFactory extends AbstractFactory {
 			}
 		}
 
+		@Override
+		public Content setPartiallyLocalized(boolean partiallyLocalized) throws NodeException {
+			if (partiallyLocalized && !this.partiallyLocalized) {
+				if (!newContent) {
+					throw new IllegalUsageException("Partial localization only supported for new content", "feature.partial_localization.only_for_new");
+				}
+
+				if (!Feature.PARTIAL_MULTICHANNELLING.isActivated(getNode())) {
+					throw new IllegalUsageException(
+						"Feature PARTIAL_MULTICHANNELLING is not available for this node",
+						"feature.missing_license",
+						Feature.PARTIAL_MULTICHANNELLING.name());
+				}
+			}
+
+			this.partiallyLocalized = partiallyLocalized;
+
+			if (partiallyLocalized) {
+				contentTags.clear();
+			}
+
+			return this;
+		}
+
 		/* (non-Javadoc)
 		 * @see com.gentics.contentnode.factory.object.PageFactory.FactoryContent#getContentTags()
 		 */
@@ -4355,7 +4433,9 @@ public class PageFactory extends AbstractFactory {
 			}
 
 			for (ContentTag tag : contentTags.values()) {
-				tag.setContent(this);
+				if (tag.getObjectInfo().isEditable()) {
+					tag.setContent(this);
+				}
 			}
 			return contentTags;
 		}
@@ -4407,11 +4487,11 @@ public class PageFactory extends AbstractFactory {
 			// take the construct's baseword and add numbers
 			String keyWord = construct.getKeyword();
 			String tagName = null;
-			int counter = 0;
 
 			do {
-				counter++;
-				tagName = keyWord + counter;
+				String uuid = Strings.CS.remove(UUID.randomUUID().toString(), "-");
+
+				tagName = keyWord + '_' + uuid;
 			} while (contentTagNames.contains(tagName) || reservedNames.contains(tagName));
 
 			tag.setName(tagName);
@@ -4496,10 +4576,11 @@ public class PageFactory extends AbstractFactory {
 			for (Iterator<ContentTag> i = tags.values().iterator(); i.hasNext();) {
 				ContentTag tag = i.next();
 
-				isModified |= tag.saveBatch(batchUpdater, () -> tag.setContentId(getId()), null);
-
-				// do not remove the tag, which was saved
-				tagIdsToRemove.remove(tag.getId());
+				if (!partiallyLocalized || tag.getObjectInfo().isEditable()) {
+					isModified |= tag.saveBatch(batchUpdater, () -> tag.setContentId(getId()), null);
+					// do not remove the tag, which was saved
+					tagIdsToRemove.remove(tag.getId());
+				}
 			}
 
 			batchUpdater.execute();
@@ -4519,6 +4600,8 @@ public class PageFactory extends AbstractFactory {
 			if (isModified) {
 				t.dirtObjectCache(Content.class, getId());
 			}
+
+			this.modified = false;
 
 			return isModified;
 		}
@@ -4540,8 +4623,11 @@ public class PageFactory extends AbstractFactory {
 				ContentTag originalTag = entry.getValue();
 
 				if (thisCTags.containsKey(tagName)) {
+					ContentTag toOverwrite = thisCTags.get(tagName);
+					if (toOverwrite.isEditable()) {
 					// found the tag in this content, copy the original tag over it
-					thisCTags.get(tagName).copyFrom(originalTag);
+						toOverwrite.copyFrom(originalTag);
+					}
 				} else {
 					// did not find the tag, so copy the original
 					thisCTags.put(tagName, (ContentTag) originalTag.copy());
@@ -4566,6 +4652,13 @@ public class PageFactory extends AbstractFactory {
 				pages.add(page);
 			}
 			return pages;
+		}
+
+		@Override
+		public EditableFactoryContent setModified(boolean modified) throws ReadOnlyException {
+			this.modified = modified;
+
+			return this;
 		}
 	}
 
@@ -5234,7 +5327,7 @@ public class PageFactory extends AbstractFactory {
 		if (isNew) {
 			// insert a new record
 			List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENT_SQL, new Object[] {
-				t.getUserId(), t.getUnixTimestamp(), t.getUserId(), t.getUnixTimestamp(), t.getUnixTimestamp(), t.getUserId(), ObjectTransformer.getString(content.getGlobalId(), "")
+				t.getUserId(), t.getUnixTimestamp(), t.getUserId(), t.getUnixTimestamp(), t.getUnixTimestamp(), t.getUserId(), ObjectTransformer.getString(content.getGlobalId(), ""), content.isPartiallyLocalized()
 			});
 
 			if (keys.size() == 1) {
@@ -5302,8 +5395,9 @@ public class PageFactory extends AbstractFactory {
 		List<Integer> tagIds = idLists != null ? idLists[0] : null;
 		int locked = rs.getInt("locked");
 		int lockedBy = rs.getInt("locked_by");
+		boolean partiallyLocalized = rs.getBoolean("partially_localized");
 
-		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), getGlobalId(rs, "content"));
+		return new FactoryContent(id, info, locked, lockedBy, tagIds, rs.getInt("node_id"), getUdate(rs), partiallyLocalized, getGlobalId(rs, "content"));
 	}
 
 	/* (non-Javadoc)
@@ -5317,7 +5411,7 @@ public class PageFactory extends AbstractFactory {
 		}
 		if (object instanceof FactoryPage) {
 			try {
-				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false);
+				EditableFactoryPage editableCopy = new EditableFactoryPage((FactoryPage) object, info, false, false);
 
 				// synchronize the contenttags with the template
 				if (editableCopy.synchronizeContentTagsWithTemplate() || editableCopy.containsNewValues()) {

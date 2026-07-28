@@ -17,6 +17,7 @@ import { FormgeneratorApiService } from '../../../providers/formgenerator-api/fo
 
 /**
  * Used to insert forms created with ct-form-generator.
+ * @deprecated Feature is not available anymore, but here for legacy reasons.
  */
 @Component({
     selector: 'formlist-tag-property-editor',

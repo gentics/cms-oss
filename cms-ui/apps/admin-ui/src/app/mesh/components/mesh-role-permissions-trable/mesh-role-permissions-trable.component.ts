@@ -1,5 +1,4 @@
 import { BO_DISPLAY_NAME, BO_ID } from '@admin-ui/common';
-import { I18nService } from '@admin-ui/core';
 import { MBO_AVILABLE_PERMISSIONS, MBO_PERMISSION_PATH, MBO_ROLE_PERMISSIONS, MeshBusinessObject } from '@admin-ui/mesh/common';
 import { MeshRolePermissionHandlerService, MeshRolePermissionsTrableLoaderOptions, MeshRolePermissionsTrableLoaderService } from '@admin-ui/mesh/providers';
 import { toPermissionInfo } from '@admin-ui/mesh/utils';
@@ -7,6 +6,7 @@ import { BaseEntityTrableComponent } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Permission, RoleReference } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshRolePermissionsEditModal } from '../mesh-role-permissions-edit-modal/mesh-role-permissions-edit-modal.component';
@@ -19,7 +19,7 @@ const APPLY_RECURSIVELY_ACTION = 'applyRecursive';
     templateUrl: './mesh-role-permissions-trable.component.html',
     styleUrls: ['./mesh-role-permissions-trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class MeshRolePermissionsTrableComponent
     extends BaseEntityTrableComponent<MeshBusinessObject, MeshBusinessObject, MeshRolePermissionsTrableLoaderOptions> {
@@ -131,16 +131,16 @@ export class MeshRolePermissionsTrableComponent
             body: this.i18n.instant('mesh.apply_permissions_recursive_body'),
             buttons: [
                 {
-                    id: 'confirm',
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'default',
-                    returnValue: true,
-                },
-                {
                     id: 'cancel',
                     label: this.i18n.instant('common.cancel_button'),
                     type: 'secondary',
                     returnValue: false,
+                },
+                {
+                    id: 'confirm',
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'default',
+                    returnValue: true,
                 },
             ],
         });

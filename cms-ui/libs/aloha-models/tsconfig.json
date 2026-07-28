@@ -1,16 +1,17 @@
 {
-    "extends": "../../tsconfig.json",
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-      "module": "commonjs"
+        "module": "commonjs",
+        "types": [
+            "node",
+            "jquery"
+        ]
     },
     "files": [],
     "include": [],
     "references": [
-      {
-        "path": "./tsconfig.lib.json"
-      },
-      {
-        "path": "./tsconfig.spec.json"
-      }
+        {
+            "path": "./tsconfig.lib.json"
+        }
     ]
-  }
+}

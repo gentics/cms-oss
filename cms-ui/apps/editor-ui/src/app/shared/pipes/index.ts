@@ -4,8 +4,6 @@ export * from './dependencies-count/dependencies-count.pipe';
 export * from './file-size/file-size.pipe';
 export * from './get-inheritance/get-inheritance.pipe';
 export * from './highlight/highlight.pipe';
-export * from './i18n-date/i18n-date.pipe';
-export * from './i18n/i18n.pipe';
 export * from './image-dimensions/image-dimensions.pipe';
 export * from './is-favourite/is-favourite.pipe';
 export * from './is-start-page/is-start-page.pipe';

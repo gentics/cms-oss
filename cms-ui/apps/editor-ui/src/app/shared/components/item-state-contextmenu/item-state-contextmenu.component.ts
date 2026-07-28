@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ItemState } from '@editor-ui/app/common/models';
+import { I18nService } from '@gentics/cms-components';
 import { Item, Language, Page, TimeManagement, User } from '@gentics/cms-models';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getFormattedTimeMgmtValue } from '../../../core/providers/i18n/i18n-utils';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
-import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
+import { ItemState } from '../../../common/models';
+import { getFormattedTimeMgmtValue } from '../../../core/utils/i18n';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 const SECONDS_PER_MINUTE = 60;
@@ -20,8 +19,7 @@ const SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
     templateUrl: './item-state-contextmenu.component.html',
     styleUrls: ['./item-state-contextmenu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [I18nDatePipe],
-    standalone: false
+    standalone: false,
 })
 export class ItemStateContextMenuComponent {
 
@@ -41,12 +39,11 @@ export class ItemStateContextMenuComponent {
         private appState: ApplicationStateService,
         private folderActions: FolderActionsService,
         private i18n: I18nService,
-        private i18nDate: I18nDatePipe,
     ) {}
 
     getUserById$(id: number): Observable<User> {
-        return this.appState.select(state => state.entities.user).pipe(
-            map(allUsers => allUsers[id]),
+        return this.appState.select((state) => state.entities.user).pipe(
+            map((allUsers) => allUsers[id]),
         );
     }
 
@@ -64,7 +61,7 @@ export class ItemStateContextMenuComponent {
         }
 
         return this.getUserById$(typeof value === 'number' ? value : value.id).pipe(
-            map(user => `${user.firstName} ${user.lastName}`),
+            map((user) => `${user.firstName} ${user.lastName}`),
         );
     }
 
@@ -72,6 +69,6 @@ export class ItemStateContextMenuComponent {
         if (!this.activeNodeId) {
             return of(false);
         }
-        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.i18nDate, this.folderActions);
+        return getFormattedTimeMgmtValue(page, field, this.activeNodeId, this.i18n, this.folderActions);
     }
 }

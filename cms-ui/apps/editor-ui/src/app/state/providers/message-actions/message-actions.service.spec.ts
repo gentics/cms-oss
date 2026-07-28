@@ -23,9 +23,9 @@ describe('MessageActionsService', () => {
                 MessageActionsService,
             ],
         });
-        state = TestBed.get(ApplicationStateService);
-        api = TestBed.get(Api);
-        messageActions = TestBed.get(MessageActionsService);
+        state = TestBed.inject(ApplicationStateService) as any;
+        api = TestBed.inject(Api);
+        messageActions = TestBed.inject(MessageActionsService);
     });
 
     describe('fetchAllMessages', () => {

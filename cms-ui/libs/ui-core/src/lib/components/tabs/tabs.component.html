@@ -1,34 +1,37 @@
 <ul class="tab-links" [class.vertical]="vertical" [class.wrap]="wrap">
+  @for (tab of displayTabs; track identifyTab($index, tab)) {
     <li
-        *ngFor="let tab of displayTabs; trackBy: identifyTab"
-        class="tab-link"
-        role="presentation"
-        [attr.data-id]="tab.id"
-        [title]="tab.title"
-        [class.disabled]="!!tab?.disabled"
-        [class.is-active]="!!tab?.active"
-        [class.has-icon]="!!tab.icon"
-        [class.icon-only]="hideTitle && !tab?.active || (tab?.icon && !tab?.title)"
-        (click)="selectTab(tab)"
-    >
-        <a *ngIf="tab.routerLink && !tab.disabled; else regularTab" [routerLink]="tab.routerLink" role="tab">
-            <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
+      class="tab-link"
+      role="presentation"
+      [attr.data-id]="tab.id"
+      [title]="tab.title"
+      [class.disabled]="!!tab?.disabled"
+      [class.is-active]="!!tab?.active"
+      [class.has-icon]="!!tab.icon"
+      [class.icon-only]="hideTitle && !tab?.active || (tab?.icon && !tab?.title)"
+      (click)="selectTab(tab)"
+      >
+      @if (tab.routerLink && !tab.disabled) {
+        <a [routerLink]="tab.routerLink" role="tab">
+          <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
         </a>
-
-        <ng-template #regularTab>
-            <a role="tab">
-                <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
-            </a>
-        </ng-template>
-
-        <ng-template #tabContent>
-            <icon *ngIf="tab.icon">{{tab.icon}}</icon>
-            <span
-                *ngIf="!hideTitle || tab.active || (!tab.active && !tab.icon)"
-                [class.animatedTitle]="hideTitle"
-            >{{ tab.title }}</span>
-        </ng-template>
+      } @else {
+        <a role="tab">
+          <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
+        </a>
+      }
+      <ng-template #tabContent>
+        @if (tab.icon) {
+          <icon>{{tab.icon}}</icon>
+        }
+        @if (!hideTitle || tab.active || (!tab.active && !tab.icon)) {
+          <span
+            [class.animatedTitle]="hideTitle"
+          >{{ tab.title }}</span>
+        }
+      </ng-template>
     </li>
+  }
 </ul>
 
 <ng-content></ng-content>

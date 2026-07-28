@@ -29,6 +29,7 @@ class MockTranslator {
     instant(key: string): string {
         return key;
     }
+
     get(key: string): Observable<string> {
         return of(key);
     }
@@ -38,7 +39,6 @@ class MockTranslator {
 export function getMockTagEditorTranslator(): Translator {
     return new MockTranslator() as any;
 }
-
 
 /**
  * Used to capture required and optional information for creating mocked EditableTags.
@@ -89,7 +89,7 @@ var excludedProperties: Set<string>;
 /** Gets the set of MockTagPropertyInfo properties that should not be copied to a TagProperty. */
 function getExludedProperties(): Set<string> {
     if (excludedProperties == null || excludedProperties.size === 0) {
-        excludedProperties = new Set([ 'editable', 'hidden', 'hideInEditor', 'keyword', 'mandatory', 'type', 'typeId' ]);
+        excludedProperties = new Set(['editable', 'hidden', 'hideInEditor', 'keyword', 'mandatory', 'type', 'typeId']);
     }
     return excludedProperties;
 }
@@ -144,6 +144,8 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         type: 'CONTENTTAG',
         properties: tagPropertyMap,
         tagType: tagType,
+        rootTag: false,
+        inherited: false,
     };
 
     return tag;
@@ -237,7 +239,7 @@ export const getExampleEditableTag: () => EditableTag = () => {
     ];
     const mocked = mockEditableTag(tagPropInfos);
     return mocked;
-}
+};
 
 /**
  * Creates a mocked TagEditorContext for the specified tag.
@@ -264,7 +266,7 @@ export function getMockedTagEditorContext(
         contextInfo.translator = getMockTagEditorTranslator();
     }
     if (!contextInfo.variableContext) {
-        contextInfo.variableContext = new BehaviorSubject<VariableTagEditorContext>({uiLanguage: 'en'});
+        contextInfo.variableContext = new BehaviorSubject<VariableTagEditorContext>({ uiLanguage: 'en' });
     }
     if (!contextInfo.gcmsUiServices) {
         contextInfo.gcmsUiServices = {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
-import { ItemState, UIMode } from '@editor-ui/app/common/models';
 import { Form, Language, Page, StagedItemsMap } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
+import { ItemState, UIMode } from '../../../common/models';
 import { PublishableStateUtil } from '../../util/entity-states';
 
 enum DisplayLabel {
@@ -20,7 +20,7 @@ enum DisplayLabel {
     templateUrl: './item-status-label.component.html',
     styleUrls: ['./item-status-label.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ItemStatusLabelComponent implements OnChanges {
 
@@ -68,7 +68,7 @@ export class ItemStatusLabelComponent implements OnChanges {
             deleted: this.item != null && PublishableStateUtil.stateDeleted(this.item),
             inherited: this.item != null && PublishableStateUtil.stateInherited(this.item),
             localized: this.item != null && PublishableStateUtil.stateLocalized(this.item),
-        }
+        };
     }
 
     private determineLabelToDisplay(): DisplayLabel {

@@ -2,7 +2,7 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { BrowserTestingModule } from '@angular/platform-browser/testing';
 import { BehaviorSubject } from 'rxjs';
 import { KeyCode } from '../../common/keycodes';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
@@ -55,7 +55,7 @@ describe('SelectComponent', () => {
             teardown: { destroyAfterEach: false },
             schemas: [NO_ERRORS_SCHEMA],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
+        TestBed.overrideModule(BrowserTestingModule, {
             set: {
                 declarations: [DropdownContentWrapperComponent, ScrollMaskComponent],
             },

@@ -2,10 +2,9 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { Normalized, Page, RecursivePartial } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import * as _ from'lodash-es'
-
+import { cloneDeep } from 'lodash-es';
 import { AppStateService } from '../providers/app-state/app-state.service';
-import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';
+import { TEST_APP_STATE, TestAppState } from '../utils/test-app-state';
 import { AddEntities, ClearAllEntities, DeleteEntities, UpdateEntities } from './entity.actions';
 import { EntityStateModel, EntityStateModule, INITIAL_ENTITY_STATE } from './entity.state';
 
@@ -18,11 +17,11 @@ describe('EntityStateModule', () => {
             imports: [NgxsModule.forRoot([EntityStateModule])],
             providers: [TEST_APP_STATE],
         }).compileComponents();
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     it('sets the correct initial state', () => {
-        appState.selectOnce(state => state.entity).subscribe(entityState => {
+        appState.selectOnce((state) => state.entity).subscribe((entityState) => {
             expect(entityState).toEqual(INITIAL_ENTITY_STATE);
         });
     });
@@ -47,7 +46,7 @@ describe('EntityStateModule', () => {
                 },
             };
 
-            appState.dispatch(new AddEntities(_.cloneDeep(newEntities as any)));
+            appState.dispatch(new AddEntities(cloneDeep(newEntities as any)));
             const result = appState.snapshot().entity;
 
             expect(result).not.toBe(initialState);
@@ -79,7 +78,7 @@ describe('EntityStateModule', () => {
                 },
             };
 
-            appState.dispatch(new AddEntities(_.cloneDeep(newEntities as any)));
+            appState.dispatch(new AddEntities(cloneDeep(newEntities as any)));
             const result = appState.snapshot().entity;
 
             expect(result).not.toBe(initialState);
@@ -107,7 +106,7 @@ describe('EntityStateModule', () => {
 
             const branches = Object.keys(result);
             expect(branches.length).toBe(Object.keys(INITIAL_ENTITY_STATE).length);
-            branches.forEach(branchKey => {
+            branches.forEach((branchKey) => {
                 if (branchKey !== 'page') {
                     expect(result[branchKey]).toBe(initialState[branchKey], `Branch ${branchKey} has changed unexpectedly`);
                 }
@@ -132,7 +131,7 @@ describe('EntityStateModule', () => {
                 },
             });
             const initialState = appState.snapshot().entity;
-            const initialStateClone = _.cloneDeep(initialState);
+            const initialStateClone = cloneDeep(initialState);
 
             const changes: Partial<EntityStateModel> = {
                 page: { },
@@ -163,7 +162,7 @@ describe('EntityStateModule', () => {
                 },
             });
             const initialState = appState.snapshot().entity;
-            const origPage2 = _.cloneDeep(initialState.page[2]);
+            const origPage2 = cloneDeep(initialState.page[2]);
 
             const changes: RecursivePartial<EntityStateModel> = {
                 page: {
@@ -449,11 +448,11 @@ describe('EntityStateModule', () => {
                 },
             };
             appState.mockState({
-                entity: _.cloneDeep(origEntities),
+                entity: cloneDeep(origEntities),
             });
             const initialState = appState.snapshot().entity;
-            const expectedState = _.cloneDeep(initialState);
-            expectedState.page[1].locked = true;
+            const expectedState = cloneDeep(initialState);
+            (expectedState.page[1] as any).locked = true;
 
             const updates: RecursivePartial<EntityStateModel> = {
                 page: {
@@ -530,7 +529,7 @@ describe('EntityStateModule', () => {
                 },
             });
             const initialState = appState.snapshot().entity;
-            const expectedUnchangedBranches = _.cloneDeep(INITIAL_ENTITY_STATE);
+            const expectedUnchangedBranches = cloneDeep(INITIAL_ENTITY_STATE);
             delete expectedUnchangedBranches.page;
 
             const updates: RecursivePartial<EntityStateModel> = {
@@ -549,7 +548,7 @@ describe('EntityStateModule', () => {
             delete resultWithoutPages.page;
             expect(resultWithoutPages).toEqual(expectedUnchangedBranches);
             Object.keys(resultWithoutPages).forEach(
-                branchKey => expect(result[branchKey]).toBe(initialState[branchKey], `reference of entityState.${branchKey} has been changed`),
+                (branchKey) => expect(result[branchKey]).toBe(initialState[branchKey], `reference of entityState.${branchKey} has been changed`),
             );
         });
 
@@ -571,7 +570,7 @@ describe('EntityStateModule', () => {
                 },
             });
             const initialState = appState.snapshot().entity;
-            const initialStateClone = _.cloneDeep(initialState);
+            const initialStateClone = cloneDeep(initialState);
 
             const changes: Partial<EntityStateModel> = {
                 page: { },
@@ -600,10 +599,10 @@ describe('EntityStateModule', () => {
                 },
             };
             appState.mockState({
-                entity: _.cloneDeep(origEntities),
+                entity: cloneDeep(origEntities),
             });
             const initialState = appState.snapshot().entity;
-            const expectedPage = _.cloneDeep(origEntities.page[1]);
+            const expectedPage = cloneDeep(origEntities.page[1]);
             expectedPage.translationStatus.inSync = false;
 
             const updates = {
@@ -637,9 +636,9 @@ describe('EntityStateModule', () => {
                 },
             };
             appState.mockState({
-                entity: _.cloneDeep(origEntities),
+                entity: cloneDeep(origEntities),
             });
-            const expectedPage = _.cloneDeep(origEntities.page[1]);
+            const expectedPage = cloneDeep(origEntities.page[1]);
             expectedPage.name = null;
 
             const updates = {
@@ -671,10 +670,10 @@ describe('EntityStateModule', () => {
                 },
             };
             appState.mockState({
-                entity: _.cloneDeep(origEntities),
+                entity: cloneDeep(origEntities),
             });
-            const expectedPage = _.cloneDeep(origEntities.page[1]);
-            expectedPage.translationStatus = null;
+            const expectedPage = cloneDeep(origEntities.page[1]);
+            (expectedPage as any).translationStatus = null;
 
             const updates = {
                 page: {
@@ -752,10 +751,10 @@ describe('EntityStateModule', () => {
                     },
                 },
             };
-            const resultEntities: RecursivePartial<EntityStateModel> = _.cloneDeep(testEntities as any);
+            const resultEntities: RecursivePartial<EntityStateModel> = cloneDeep(testEntities as any);
             delete resultEntities.page[1];
             // add test data to state
-            appState.dispatch(new AddEntities(_.cloneDeep(testEntities as any)));
+            appState.dispatch(new AddEntities(cloneDeep(testEntities as any)));
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);
@@ -805,11 +804,11 @@ describe('EntityStateModule', () => {
                     },
                 },
             };
-            const resultEntities: RecursivePartial<EntityStateModel> = _.cloneDeep(testEntities as any);
+            const resultEntities: RecursivePartial<EntityStateModel> = cloneDeep(testEntities as any);
             delete resultEntities.page[2];
             delete resultEntities.page[4];
             // add test data to state
-            appState.dispatch(new AddEntities(_.cloneDeep(testEntities as any)));
+            appState.dispatch(new AddEntities(cloneDeep(testEntities as any)));
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);
@@ -850,7 +849,7 @@ describe('EntityStateModule', () => {
                 },
             };
             // add test data to state
-            appState.dispatch(new AddEntities(_.cloneDeep(testEntities as any)));
+            appState.dispatch(new AddEntities(cloneDeep(testEntities as any)));
             const originalStateEntities = appState.snapshot().entity;
             // assure that correct test data in state
             expect(originalStateEntities).not.toBe(initialState);

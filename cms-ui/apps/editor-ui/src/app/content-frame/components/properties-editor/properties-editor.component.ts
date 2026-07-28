@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -8,11 +7,8 @@ import {
     OnChanges,
     OnInit,
     Output,
-    SimpleChange,
 } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { EditableProperties } from '@editor-ui/app/common/models';
-import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
     InheritableItem,
     ItemPermissions,
@@ -24,6 +20,8 @@ import { BaseFormElementComponent, ChangesOf, generateFormProvider, setEnabled }
 import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, skip } from 'rxjs/operators';
+import { EditableProperties } from '../../../common/models';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '../../../state';
 import { NodePropertiesMode } from '../node-properties/node-properties.component';
 
 @Component({
@@ -32,7 +30,7 @@ import { NodePropertiesMode } from '../node-properties/node-properties.component
     styleUrls: ['./properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(PropertiesEditorComponent)],
-    standalone: false
+    standalone: false,
 })
 export class PropertiesEditorComponent
     extends BaseFormElementComponent<EditableProperties>
@@ -76,7 +74,7 @@ export class PropertiesEditorComponent
         this.subscriptions.push(this.control.valueChanges.pipe(
             distinctUntilChanged(isEqual),
             skip(1),
-        ).subscribe(value => {
+        ).subscribe((value) => {
             this.triggerChange(value);
         }));
 

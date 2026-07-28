@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     MBO_AVILABLE_PERMISSIONS,
     MBO_PERMISSION_PATH,
@@ -13,6 +13,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     GenericMessageResponse,
     ListResponse,
@@ -71,7 +72,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(project: string, uuid: string, params?: NodeLoadOptions): Promise<MeshNodeBO> {
-        return this.get(project, uuid, params).then(node => this.mapToBusinessObject(project, node));
+        return this.get(project, uuid, params).then((node) => this.mapToBusinessObject(project, node));
     }
 
     public async create(project: string, body: NodeCreateRequest): Promise<NodeResponse> {
@@ -93,7 +94,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(project: string, body: NodeCreateRequest): Promise<MeshNodeBO> {
-        return this.create(project, body).then(node => this.mapToBusinessObject(project, node));
+        return this.create(project, body).then((node) => this.mapToBusinessObject(project, node));
     }
 
     public async update(project: string, uuid: string, body: NodeUpdateRequest): Promise<NodeResponse> {
@@ -116,7 +117,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(project: string, uuid: string, body: NodeUpdateRequest): Promise<MeshNodeBO> {
-        return this.update(project, uuid, body).then(node => this.mapToBusinessObject(project, node));
+        return this.update(project, uuid, body).then((node) => this.mapToBusinessObject(project, node));
     }
 
     public async delete(project: string, uuid: string, params?: NodeDeleteOptions): Promise<GenericMessageResponse> {
@@ -155,7 +156,7 @@ export class MeshNodeHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(project: string, parent?: string, params?: NodeListOptions): Promise<ListResponse<MeshNodeBO>> {
-        return this.list(project, parent, params).then(res => {
+        return this.list(project, parent, params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

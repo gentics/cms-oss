@@ -466,7 +466,7 @@ public class PublishablePageTest {
 		cellA1.setEnabled(true);
 		cellA1.setName(name);
 		cellA1.getValues().iterator().next().setValueText(valueText);
-		page.getContent().getContentTags().put(cellA1.getName(), cellA1);
+		page.getContentTags().put(cellA1.getName(), cellA1);
 	}
 
 	/**

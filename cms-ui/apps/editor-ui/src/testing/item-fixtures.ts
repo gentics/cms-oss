@@ -11,7 +11,7 @@ export function createLocalItem(): Item {
         inheritedFrom: 'Node One',
         masterNodeId: NODE_ONE_ID,
         masterNode: 'Node One',
-        path: '/Node One/Folder/'
+        path: '/Node One/Folder/',
     };
     return localFolder as Folder;
 }
@@ -24,7 +24,7 @@ export function createInheritedItem(): Item {
         inheritedFrom: 'Node One',
         masterNodeId: NODE_ONE_ID,
         masterNode: 'Node One',
-        path: '/Node Two/Folder/'
+        path: '/Node Two/Folder/',
     };
     return inheritedFolder as Folder;
 }
@@ -37,14 +37,14 @@ export function createLocalizedItem(): Item {
         inheritedFrom: 'Node Two',
         masterNodeId: NODE_ONE_ID,
         masterNode: 'Node One',
-        path: '/Node Two/Folder/'
+        path: '/Node Two/Folder/',
     };
     return localizedFolder as Folder;
 }
 
 /** Simulates old Content.Node versions with no "inheritedFromId" property */
 export function itemWithoutInheritanceIds(item: Item): Item {
-    const result = {...item} as any as Folder;
+    const result = { ...item } as any;
     delete result.masterNodeId;
     delete result.inheritedFromId;
     return result;

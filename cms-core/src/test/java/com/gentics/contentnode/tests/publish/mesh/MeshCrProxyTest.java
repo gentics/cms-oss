@@ -18,6 +18,7 @@ import java.util.List;
 
 import jakarta.ws.rs.core.Response;
 
+import org.apache.commons.lang3.Strings;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -25,7 +26,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.RuleChain;
-import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
@@ -179,8 +179,8 @@ public class MeshCrProxyTest {
 		List<String> cookies = client.get().getCookieHandler()
 				.get(new URI("http://localhost:" + restContext.getPort() + "/"), Collections.emptyMap())
 				.getOrDefault("Cookie", Collections.emptyList());
-		sessionSecret = cookies.stream().filter(value -> StringUtils.startsWith(value, SessionToken.SESSION_SECRET_COOKIE_NAME + "="))
-				.map(value -> StringUtils.removeStart(value, SessionToken.SESSION_SECRET_COOKIE_NAME + "=")).findFirst()
+		sessionSecret = cookies.stream().filter(value -> Strings.CS.startsWith(value, SessionToken.SESSION_SECRET_COOKIE_NAME + "="))
+				.map(value -> Strings.CS.removeStart(value, SessionToken.SESSION_SECRET_COOKIE_NAME + "=")).findFirst()
 				.orElseThrow(() -> new NodeException("Could not find session secret cookie"));
 		return client;
 	}

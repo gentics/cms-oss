@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms-oss</artifactId>
-	<version>6.3.18-SNAPSHOT</version>
+	<version>6.4.9-SNAPSHOT</version>
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
@@ -44,16 +44,16 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.1.17</alohaeditor.version>
+		<alohaeditor.version>2.1.18</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>12.05.2026</alohaeditor.date>
+		<alohaeditor.date>14.07.2026</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>3.1.17</mesh.version>
+		<mesh.version>3.2.12</mesh.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>
-		<jetty.version>12.0.33</jetty.version>
+		<jetty.version>12.0.37</jetty.version>
 		<jackson.version>2.21.4</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 
@@ -297,6 +297,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
+					<version>3.6.1</version>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.enunciate</groupId>

@@ -1,50 +1,58 @@
 <div class="modal-title">
-    <h5>{{ 'modal.publish_title' | i18n }}</h5>
+  <h5>{{ 'modal.publish_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <table>
-        <thead *ngIf="pages.length > 0">
-            <tr>
-                <th colspan="2">
-                    <span class="lead">
-                        {{ 'modal.publish_pages_header' | i18n:{ some: pages.length, all: allPages } }}
-                    </span>
-                </th>
-                <th class="publish-at-date">{{ 'modal.publish_at_date' | i18n }}:</th>
-            </tr>
-        </thead>
-        <tbody *ngIf="pages.length > 0">
-            <gtx-contents-list-item *ngFor="let item of pages" [ngClass]="item.type || ''">
-                <td class="item-icon">
-                    <icon>{{ item.type | gtxTypeIcon }}</icon>
-                </td>
-                <td class="item-primary">
-                    <div class="item-name">{{ item.name }}</div>
-                    <div *ngIf="item.language" class="item-language">{{ item.language }}</div>
-                </td>
-                <td>
-                    <div class="publish-at-date">{{ item.timeManagement.at | i18nDate }}, {{ item.timeManagement.at | i18nDate:'time' }}</div>
-                </td>
-            </gtx-contents-list-item>
-        </tbody>
-    </table>
+  <table>
+    @if (pages.length > 0) {
+      <thead>
+        <tr>
+          <th colspan="2">
+            <span class="lead">
+              {{ 'modal.publish_pages_header' | gtxI18n:{ some: pages.length, all: allPages } }}
+            </span>
+          </th>
+          <th class="publish-at-date">{{ 'modal.publish_at_date' | gtxI18n }}:</th>
+        </tr>
+      </thead>
+    }
+    @if (pages.length > 0) {
+      <tbody>
+        @for (item of pages; track (item.type + item.id)) {
+          <gtx-contents-list-item [ngClass]="item.type || ''">
+            <td class="item-icon">
+              <icon>{{ item.type | gtxTypeIcon }}</icon>
+            </td>
+            <td class="item-primary">
+              <div class="item-name">{{ item.name }}</div>
+              @if (item.language) {
+                <div class="item-language">{{ item.language }}</div>
+              }
+            </td>
+            <td>
+              <div class="publish-at-date">{{ item.timeManagement.at | gtxI18nDate }}, {{ item.timeManagement.at | gtxI18nDate:'time' }}</div>
+            </td>
+          </gtx-contents-list-item>
+        }
+      </tbody>
+    }
+  </table>
 
-    <div gtx-radio-group>
-        <gtx-radio-button
-            [(ngModel)]="publishAtChecked"
-            label="{{ 'modal.publish_keep_at' | i18n }}"
-            [value]="true"
-            (change)="onRadioButtonsChange()">
-        </gtx-radio-button>
-        <gtx-radio-button
-            [(ngModel)]="publishAtChecked"
-            label="{{ 'modal.publish_immediately' | i18n }}"
-            [value]="false"
-            (change)="onRadioButtonsChange()">
-        </gtx-radio-button>
-    </div>
+  <div gtx-radio-group>
+    <gtx-radio-button
+      [(ngModel)]="publishAtChecked"
+      label="{{ 'modal.publish_keep_at' | gtxI18n }}"
+      [value]="true"
+      (change)="onRadioButtonsChange()">
+    </gtx-radio-button>
+    <gtx-radio-button
+      [(ngModel)]="publishAtChecked"
+      label="{{ 'modal.publish_immediately' | gtxI18n }}"
+      [value]="false"
+      (change)="onRadioButtonsChange()">
+    </gtx-radio-button>
+  </div>
 </div>
 <div class="modal-footer">
-    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button (click)="okayClicked()" >{{ 'common.okay_button' | i18n }}</gtx-button>
+  <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+  <gtx-button (click)="okayClicked()" >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

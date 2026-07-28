@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction, Subscriber } from 'rxjs';
+import { Observable, OperatorFunction } from 'rxjs';
 
 type DiscardHandlerFn<T> = (value: T) => any;
 
@@ -7,15 +7,15 @@ type DiscardHandlerFn<T> = (value: T) => any;
  * Takes a handler which will be called if it exists with the value.
  * The result of the handler is also ignored/discarded.
  * Used for operations where the result should be consumed.
- *
  * @param handler Handler which may handle the value.
  * @returns A new discarding operator.
+ * @deprecated Use the one from `@gentics/cms-components` instead
  */
 export function discard<T>(handler?: DiscardHandlerFn<T>): OperatorFunction<T, void> {
     return (source$: Observable<T>) => {
-        return new Observable<void>(sub => {
+        return new Observable<void>((sub) => {
             source$.subscribe({
-                next: ((val: T) => {
+                next: (val: T) => {
                     if (sub.closed) {
                         return;
                     }
@@ -30,7 +30,7 @@ export function discard<T>(handler?: DiscardHandlerFn<T>): OperatorFunction<T, v
                     } else {
                         sub.next();
                     }
-                }),
+                },
                 complete: () => {
                     if (sub.closed) {
                         return;
@@ -47,5 +47,5 @@ export function discard<T>(handler?: DiscardHandlerFn<T>): OperatorFunction<T, v
                 },
             });
         });
-    }
+    };
 }

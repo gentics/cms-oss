@@ -1,27 +1,29 @@
 <div class="modal-title">
-    <h5>{{ 'modal.confirm_reload_title' | i18n }}</h5>
+  <h5>{{ 'modal.confirm_reload_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <p class="lead">
-        {{ 'modal.confirm_reload_body' | i18n }}
-    </p>
+  <p class="lead">
+    {{ 'modal.confirm_reload_body' | gtxI18n }}
+  </p>
 </div>
 <div class="modal-footer">
-    <gtx-button
-        type="secondary"
-        flat
-        (click)="cancelAndClose()"
-    >{{ 'modal.cancel_language_change_button' | i18n }}</gtx-button>
+  <gtx-button
+    type="secondary"
+    flat
+    (click)="cancelAndClose()"
+  >{{ 'modal.cancel_language_change_button' | gtxI18n }}</gtx-button>
 
+  @if (contentModified || objectPropertiesModified) {
     <gtx-button
-        *ngIf="contentModified || objectPropertiesModified"
-        type="alert"
-        (click)="reload()"
-    >{{ 'modal.discard_and_reload_button' | i18n }}</gtx-button>
+      type="alert"
+      (click)="reload()"
+    >{{ 'modal.discard_and_reload_button' | gtxI18n }}</gtx-button>
+  }
 
+  @if (!contentModified && !objectPropertiesModified) {
     <gtx-button
-        *ngIf="!contentModified && !objectPropertiesModified"
-        type="primary"
-        (click)="reload()"
-    >{{ 'modal.reload_button' | i18n }}</gtx-button>
+      type="primary"
+      (click)="reload()"
+    >{{ 'modal.reload_button' | gtxI18n }}</gtx-button>
+  }
 </div>

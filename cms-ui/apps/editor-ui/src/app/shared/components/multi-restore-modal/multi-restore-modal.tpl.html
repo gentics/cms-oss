@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.multi_restore_title' | i18n: { type: (selectionType() | i18n) } }}</h5>
+    <h5>{{ 'modal.multi_restore_title' | gtxI18n: { type: (selectionType() | gtxI18n) } }}</h5>
 </div>
 <div class="modal-content">
     <wastebin-list
@@ -36,8 +36,8 @@
     </wastebin-list>
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
     <gtx-button type="alert" (click)="restoreSelected()" class="confirm-button" [disabled]="selectionCount() === 0">
-        {{ 'modal.multi_restore_confirm_button' | i18n:{ count: selectionCount() } }}
+        {{ 'modal.multi_restore_confirm_button' | gtxI18n:{ count: selectionCount() } }}
     </gtx-button>
 </div>

@@ -52,6 +52,7 @@ export class KeycloakService {
      */
     checkKeycloakAuth(): Promise<boolean> {
         if (checkParameter(SKIP_KEYCLOAK_PARAMETER_NAME)) {
+            // eslint-disable-next-line no-console
             console.info(`Keycloak will be skipped since the parameter "${SKIP_KEYCLOAK_PARAMETER_NAME}" was found.`);
             this.store.dispatch(new SingleSignOnSkipped(true));
             // same value provided as via .catch when config was not found
@@ -127,7 +128,7 @@ export class KeycloakService {
     /**
      * Starts the entire keycloak workflow if needed.
      * Loads the config, and will redirect to keycloak if SSO is needed/available.
-     * @throws {@link KeycloakError} when an unexpected error occurs.
+     * @throws {KeycloakError} when an unexpected error occurs.
      * @returns If it was attempted to connect to keycloak.
      */
     async checkKeycloakAuthOnLoad(): Promise<boolean> {
@@ -139,6 +140,7 @@ export class KeycloakService {
             this.config = await this.client.keycloak.configuration().toPromise();
             this.config.showSSOButton = (this.config.showSSOButton || false) && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME);
 
+            // eslint-disable-next-line no-console
             console.info('Keycloak config found');
         } catch (err) {
             if (err instanceof GCMSRestClientRequestError) {
@@ -146,8 +148,9 @@ export class KeycloakService {
                     // log info that the 404 network error can safely be ignored,
                     // otherwise end-users who look in the console may get confused
                     // about why KeyCloak is being mentioned if they don't use it
-                    console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
-                        ' this notice can safely be ignored.');
+                    // eslint-disable-next-line no-console
+                    console.info('A keycloak config file was not found. If you are not using keycloak for authentication,'
+                      + ' this notice can safely be ignored.');
                     this.state = KeycloakConnectionState.CLEAN;
                     this.store.dispatch(new KeycloakLoadSuccess(false, this.state, false));
                     return false;

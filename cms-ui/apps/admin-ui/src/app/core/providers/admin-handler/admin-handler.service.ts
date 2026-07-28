@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { DirtQueueListOptions, DirtQueueResponse, DirtQueueSummaryResponse, PublishInfo, PublishQueue, Response } from '@gentics/cms-models';
 import { RequestMethod } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { catchError, MonoTypeOperatorFunction, Observable, tap, throwError } from 'rxjs';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class AdminHandlerService {
@@ -19,7 +19,7 @@ export class AdminHandlerService {
      * Returns an RxJS operator to catch an error using `ErrorHandler.notifyAndRethrow()`.
      */
     protected catchAndRethrowError<T>(): MonoTypeOperatorFunction<T> {
-        return catchError(error => this.errorHandler.notifyAndRethrow(error));
+        return catchError((error) => this.errorHandler.notifyAndRethrow(error));
     }
 
     async stopPublishing(): Promise<PublishInfo> {
@@ -57,7 +57,7 @@ export class AdminHandlerService {
                 type: 'success',
                 message: 'shared.reload_configuration_success',
             })),
-            catchError(error => {
+            catchError((error) => {
                 this.notification.show({
                     type: 'alert',
                     message: 'shared.reload_configuration_failed',

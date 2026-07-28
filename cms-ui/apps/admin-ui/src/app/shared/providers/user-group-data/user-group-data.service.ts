@@ -1,5 +1,5 @@
 import { detailLoading } from '@admin-ui/common';
-import { EntityManagerService, GroupOperations, I18nNotificationService, I18nService, UserOperations } from '@admin-ui/core';
+import { EntityManagerService, GroupOperations, UserOperations } from '@admin-ui/core';
 import { AppStateService, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Group, NormalizableEntityType, Normalized, Raw, User } from '@gentics/cms-models';
@@ -8,14 +8,16 @@ import { combineLatest, Observable, OperatorFunction } from 'rxjs';
 import { filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { GroupDataService } from '../group-data/group-data.service';
 import { UserDataService } from '../user-data/user-data.service';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
 
 @Injectable()
 export class UserGroupDataService extends GroupDataService {
 
-    @SelectState(state => state.ui.focusEntityType)
+    @SelectState((state) => state.ui.focusEntityType)
     focusEntityType$: Observable<NormalizableEntityType>;
 
-    @SelectState(state => state.ui.focusEntityId)
+    @SelectState((state) => state.ui.focusEntityId)
     focusEntityId$: Observable<number>;
 
     constructor(
@@ -64,7 +66,7 @@ export class UserGroupDataService extends GroupDataService {
             super.getRawEntitiesFromState(),
         ]).pipe(
             filter(([parentUser]: [User<Normalized>, Group<Raw>[]]) => Array.isArray(parentUser?.groups)),
-            map(([parentUser, groups]: [User<Normalized>, Group<Raw>[]]) => groups.filter(group => parentUser.groups.includes(group.id))),
+            map(([parentUser, groups]: [User<Normalized>, Group<Raw>[]]) => groups.filter((group) => parentUser.groups.includes(group.id))),
         );
     }
 

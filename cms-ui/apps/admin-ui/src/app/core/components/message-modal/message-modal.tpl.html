@@ -1,30 +1,35 @@
 <div class="modal-title">
-    <h5>{{ 'modal.message_title' | i18n }}</h5>
+  <h5>{{ 'modal.message_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <div class="title-row">
-        <span class="author">{{ (getFullName(message.sender) | async) }}</span>
-        <span class="date">
-            {{ 'modal.message_time' | i18n:{ date: (message.timestamp | i18nDate), time: (message.timestamp | i18nDate:'time') } }}
-        </span>
-    </div>
-    <div class="body-row">
-        <gtx-message-body [body]="message.message"
-                      [nodes]="nodes$ | async"
-                      (linkClick)="closeFn($event)">
-        </gtx-message-body>
-    </div>
+  <div class="title-row">
+    <span class="author">{{ (getFullName(message.sender) | async) }}</span>
+    <span class="date">
+      {{ 'modal.message_time' | gtxI18n:{ date: (message.timestamp | gtxI18nDate), time: (message.timestamp | gtxI18nDate:'time') } }}
+    </span>
+  </div>
+  <div class="body-row">
+    <gtx-message-body [body]="message.message"
+      [nodes]="nodes$ | async"
+      (linkClick)="closeFn($event)">
+    </gtx-message-body>
+  </div>
+  @if (displayReplyInput) {
     <gtx-textarea
-        class="message-textarea"
-        *ngIf="displayReplyInput"
-        [label]="'modal.send_message_message' | i18n"
-        [(ngModel)]="sendMessageText"
-        [autofocus]="true"
-        (keydown.control.Enter)="sendMessage()">
+      class="message-textarea"
+      [label]="'modal.send_message_message' | gtxI18n"
+      [(ngModel)]="sendMessageText"
+      [autofocus]="true"
+      (keydown.control.Enter)="sendMessage()">
     </gtx-textarea>
+  }
 </div>
 <div class="modal-footer">
-    <gtx-button flat type="primary" *ngIf="!displayReplyInput && message.sender !== 1" (click)="displayReplyInput = true">{{ 'common.reply_button' | i18n }}</gtx-button>
-    <gtx-button flat type="primary" *ngIf="displayReplyInput" (click)="sendMessage()">{{ 'common.send_button' | i18n }}</gtx-button>
-    <gtx-button flat type="secondary" (click)="closeFn()">{{ 'common.close_button' | i18n }}</gtx-button>
+  @if (!displayReplyInput && message.sender !== 1) {
+    <gtx-button flat type="primary" (click)="displayReplyInput = true">{{ 'common.reply_button' | gtxI18n }}</gtx-button>
+  }
+  @if (displayReplyInput) {
+    <gtx-button flat type="primary" (click)="sendMessage()">{{ 'common.send_button' | gtxI18n }}</gtx-button>
+  }
+  <gtx-button flat type="secondary" (click)="closeFn()">{{ 'common.close_button' | gtxI18n }}</gtx-button>
 </div>

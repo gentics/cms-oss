@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { PagePropertiesMode } from '@editor-ui/app/shared/components';
 import { EditablePageProps, Language, Page, Raw, Template } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { PagePropertiesMode } from '../../../shared/components';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Component({
@@ -14,7 +14,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
     templateUrl: './create-page-modal.component.html',
     styleUrls: ['./create-page-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements OnInit, OnDestroy {
 
@@ -41,13 +41,14 @@ export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements On
     }
 
     ngOnInit(): void {
-        const languages = this.appState.now.entities.language;
+        const langId = this.appState.now.folder.activeLanguage;
+        const lang = this.appState.now.entities.language[langId];
 
         this.control = new FormControl({
-            language: languages[this.appState.now.folder.activeLanguage]?.code,
+            language: lang?.code,
         });
 
-        this.subscriptions.push(this.appState.select(state => state.folder.pages.creating).subscribe(loading => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.pages.creating).subscribe((loading) => {
             this.loading = loading;
             this.changeDetector.markForCheck();
         }));
@@ -58,20 +59,20 @@ export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements On
         this.nodeId = folderState.activeNode;
 
         this.languages = folderState.activeNodeLanguages.list
-            .map(langId => this.entityResolver.getLanguage(langId));
+            .map((langId) => this.entityResolver.getLanguage(langId));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.templates.list).pipe(
+        this.subscriptions.push(this.appState.select((state) => state.folder.templates.list).pipe(
             distinctUntilChanged(isEqual),
             debounceTime(50),
-            map((ids: number[]) => ids.map(id => this.entityResolver.getTemplate(id))),
-        ).subscribe(templates => {
+            map((ids: number[]) => ids.map((id) => this.entityResolver.getTemplate(id))),
+        ).subscribe((templates) => {
             this.templates = templates;
             this.changeDetector.markForCheck();
         }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     saveChanges(): void {
@@ -84,7 +85,7 @@ export class CreatePageModalComponent extends BaseModal<Page<Raw>> implements On
             folderId: this.folderId,
             nodeId: this.nodeId,
         } as any)
-            .then(page => {
+            .then((page) => {
                 if (page) {
                     this.closeFn(page);
                 }

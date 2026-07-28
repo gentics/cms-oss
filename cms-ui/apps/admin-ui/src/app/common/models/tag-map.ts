@@ -3,39 +3,39 @@ import { MeshTagmapEntryAttributeTypes, SQLTagmapEntryAttributeTypes, TagmapEntr
 export const TAGMAP_ENTRY_ATTRIBUTES: { id: TagmapEntryAttributeTypes; label: string; }[] = [
     {
         id: TagmapEntryAttributeTypes.TEXT,
-        label: 'tagmapEntry.attributetype_text',
+        label: 'tagmap_entry.attributetype_text',
     },
     {
         id: TagmapEntryAttributeTypes.REFERENCE,
-        label: 'tagmapEntry.attributetype_reference',
+        label: 'tagmap_entry.attributetype_reference',
     },
     {
         id: TagmapEntryAttributeTypes.INTEGER,
-        label: 'tagmapEntry.attributetype_integer',
+        label: 'tagmap_entry.attributetype_integer',
     },
     {
         id: TagmapEntryAttributeTypes.TEXT_LONG,
-        label: 'tagmapEntry.attributetype_text_long',
+        label: 'tagmap_entry.attributetype_text_long',
     },
     {
         id: TagmapEntryAttributeTypes.BINARY,
-        label: 'tagmapEntry.attributetype_binary',
+        label: 'tagmap_entry.attributetype_binary',
     },
     {
         id: TagmapEntryAttributeTypes.FOREIGN_LINK,
-        label: 'tagmapEntry.attributetype_foreign_link',
+        label: 'tagmap_entry.attributetype_foreign_link',
     },
     {
         id: TagmapEntryAttributeTypes.DATE,
-        label: 'tagmapEntry.attributetype_date',
+        label: 'tagmap_entry.attributetype_date',
     },
     {
         id: TagmapEntryAttributeTypes.BOOLEAN,
-        label: 'tagmapEntry.attributetype_boolean',
+        label: 'tagmap_entry.attributetype_boolean',
     },
     {
         id: TagmapEntryAttributeTypes.MICRONODE,
-        label: 'tagmapEntry.attributetype_micronode',
+        label: 'tagmap_entry.attributetype_micronode',
     },
 ];
 

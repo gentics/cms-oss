@@ -29,13 +29,13 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ContentRepositoryFragment, ContentRepositoryFragmentListOptions, EntityIdType, Node, Raw, TagmapEntryError } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
-import { I18nNotificationService } from '../i18n-notification';
 
 @Injectable()
 export class ContentRepositoryHandlerService
@@ -73,7 +73,7 @@ export class ContentRepositoryHandlerService
         params?: EntityCreateRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.contentrepositories.createContentRepository(data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.contentRepository);
                 this.nameMap[res.contentRepository.id] = name;
 
@@ -94,7 +94,7 @@ export class ContentRepositoryHandlerService
         options?: EntityCreateRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.create(data, options).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
         );
     }
 
@@ -103,7 +103,7 @@ export class ContentRepositoryHandlerService
         params?: EntityLoadRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityLoadResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.contentrepositories.getContentRepository(id).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.contentRepository);
                 this.nameMap[res.contentRepository.id] = name;
             }),
@@ -116,7 +116,7 @@ export class ContentRepositoryHandlerService
         params?: EntityLoadRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.get(id, params).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
         );
     }
 
@@ -126,7 +126,7 @@ export class ContentRepositoryHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.contentrepositories.updateContentRepository(id, data).pipe(
-            tap(res => {
+            tap((res) => {
                 const name = this.displayName(res.contentRepository);
                 this.nameMap[res.contentRepository.id] = name;
 
@@ -148,7 +148,7 @@ export class ContentRepositoryHandlerService
         params?: EntityUpdateRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.update(id, data, params).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
         );
     }
 
@@ -179,8 +179,8 @@ export class ContentRepositoryHandlerService
         params?: EntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.contentrepositories.getContentrepositories(params).pipe(
-            tap(res => {
-                res.items.forEach(cr => {
+            tap((res) => {
+                res.items.forEach((cr) => {
                     const name = this.displayName(cr);
                     this.nameMap[cr.id] = name;
                 });
@@ -194,7 +194,7 @@ export class ContentRepositoryHandlerService
         params?: EntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]>> {
         return this.list(body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
 
@@ -213,7 +213,7 @@ export class ContentRepositoryHandlerService
         return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'contentRepository.contentRepository_successfully_added_to_package',
+                    message: 'content_repository.added_to_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -231,7 +231,7 @@ export class ContentRepositoryHandlerService
         return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
-                    message: 'contentRepository.contentRepository_successfully_removed_from_package',
+                    message: 'content_repository.added_to_package',
                     type: 'success',
                     translationParams: {
                         name: this.nameMap[entityId],
@@ -248,8 +248,8 @@ export class ContentRepositoryHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<DevToolEntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.devTools.getContentrepositories(devtoolPackage, params).pipe(
-            tap(res => {
-                res.items.forEach(cr => {
+            tap((res) => {
+                res.items.forEach((cr) => {
                     const name = this.displayName(cr);
                     this.nameMap[cr.id] = name;
                 });
@@ -264,7 +264,7 @@ export class ContentRepositoryHandlerService
         params?: DevToolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]>> {
         return this.listFromDevTool(devtoolPackage, body, params).pipe(
-            map(res => {
+            map((res) => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
 
@@ -278,8 +278,8 @@ export class ContentRepositoryHandlerService
 
     getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.api.devTools.getContentRepository(packageId, entityId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
-            tap(con => {
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
+            tap((con) => {
                 this.nameMap[con.id] = con[BO_DISPLAY_NAME];
             }),
             this.catchAndRethrowError(),
@@ -293,12 +293,12 @@ export class ContentRepositoryHandlerService
      */
     checkData(repositoryId: string | number, notify: boolean = true): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.api.contentrepositories.checkContentRepositoryData(repositoryId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
-            tap(repository => {
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
+            tap((repository) => {
                 if (notify) {
                     this.notification.show({
                         type: 'success',
-                        message: 'contentRepository.result_data_checked',
+                        message: 'content_repository.result_data_checked',
                         translationParams: { name: repository[BO_DISPLAY_NAME] },
                     });
                 }
@@ -312,12 +312,12 @@ export class ContentRepositoryHandlerService
      */
     repairData(repositoryId: string | number, notify: boolean = true): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.api.contentrepositories.repairContentRepositoryData(repositoryId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
-            tap(repository => {
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
+            tap((repository) => {
                 if (notify) {
                     this.notification.show({
                         type: 'success',
-                        message: 'contentRepository.result_data_repaired',
+                        message: 'content_repository.result_data_repaired',
                         translationParams: { name: repository[BO_DISPLAY_NAME] },
                     });
                 }
@@ -331,12 +331,12 @@ export class ContentRepositoryHandlerService
      */
     checkStructure(repositoryId: string | number, notify: boolean = true): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.api.contentrepositories.checkContentRepositoryStructure(repositoryId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
-            tap(repository => {
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
+            tap((repository) => {
                 if (notify) {
                     this.notification.show({
                         type: 'success',
-                        message: 'contentRepository.result_structure_checked',
+                        message: 'content_repository.result_structure_checked',
                         translationParams: { name: repository[BO_DISPLAY_NAME] },
                     });
                 }
@@ -350,12 +350,12 @@ export class ContentRepositoryHandlerService
      */
     repairStructure(repositoryId: string | number, notify: boolean = true): Observable<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]> {
         return this.api.contentrepositories.repairContentRepositoryStructure(repositoryId).pipe(
-            map(res => this.mapToBusinessObject(res.contentRepository)),
-            tap(repository => {
+            map((res) => this.mapToBusinessObject(res.contentRepository)),
+            tap((repository) => {
                 if (notify) {
                     this.notification.show({
                         type: 'success',
-                        message: 'contentRepository.result_structure_repaired',
+                        message: 'content_repository.result_structure_repaired',
                         translationParams: { name: repository[BO_DISPLAY_NAME] },
                     });
                 }
@@ -369,7 +369,7 @@ export class ContentRepositoryHandlerService
      */
     checkTagmapEntries(repositoryId: string | number): Observable<TagmapEntryError[]> {
         return this.api.contentrepositories.checkContentRepositoryTagmapEntries(repositoryId).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
@@ -380,8 +380,8 @@ export class ContentRepositoryHandlerService
         const crId = Number(contentRepositoryId);
 
         return this.api.node.getNodes().pipe(
-            map(res => {
-                const nodes = res.items.filter(node => node.contentRepositoryId === crId);
+            map((res) => {
+                const nodes = res.items.filter((node) => node.contentRepositoryId === crId);
                 return nodes;
             }),
         );
@@ -408,7 +408,6 @@ export class ContentRepositoryHandlerService
         );
     }
 
-
     /**
      * Change the node assigned to a contentRepository
      * @param contentRepositoryId to be changed
@@ -416,30 +415,30 @@ export class ContentRepositoryHandlerService
      */
     changeAssignedNodesOfContentRepository(contentRepositoryId: number | string, nodeIdsSelected?: number[]): Observable<void> {
         return this.api.node.getNodes().pipe(
-            map(res => res.items),
+            map((res) => res.items),
             // assign desired groups and unassign unwanted groups
-            switchMap(allNodes => {
+            switchMap((allNodes) => {
                 const crId = Number(contentRepositoryId);
                 const nodesCurrentlyLinked = allNodes
-                    .filter(node => node.contentRepositoryId === crId)
-                    .map(node => node.id);
+                    .filter((node) => node.contentRepositoryId === crId)
+                    .map((node) => node.id);
 
                 // calculate minimal amount of requests required
                 const nodesShallBeLinked = nodeIdsSelected;
                 const nodesShallNotBeLinked = allNodes
-                    .map(node => node.id)
-                    .filter(nodeId => !nodesShallBeLinked.includes(nodeId));
+                    .map((node) => node.id)
+                    .filter((nodeId) => !nodesShallBeLinked.includes(nodeId));
                 const nodesCurrentlyNotLinked = allNodes
-                    .map(node => node.id)
-                    .filter(nodeId => !nodesCurrentlyLinked.includes(nodeId));
+                    .map((node) => node.id)
+                    .filter((nodeId) => !nodesCurrentlyLinked.includes(nodeId));
 
-                const nodesToLink = nodesShallBeLinked.filter(id => !nodesCurrentlyLinked.includes(id));
-                const nodesToUnlink = nodesShallNotBeLinked.filter(id => !nodesCurrentlyNotLinked.includes(id));
+                const nodesToLink = nodesShallBeLinked.filter((id) => !nodesCurrentlyLinked.includes(id));
+                const nodesToUnlink = nodesShallNotBeLinked.filter((id) => !nodesCurrentlyNotLinked.includes(id));
 
-                const assignRequests: Observable<any>[] = nodesToLink.map(nodeId => {
+                const assignRequests: Observable<any>[] = nodesToLink.map((nodeId) => {
                     return this.addContentRepositoryToNode(contentRepositoryId, nodeId);
                 });
-                const unassignRequests: Observable<any>[] = nodesToUnlink.map(nodeId => {
+                const unassignRequests: Observable<any>[] = nodesToUnlink.map((nodeId) => {
                     return this.removeContentRepositoryFromNode(nodeId);
                 });
 
@@ -480,7 +479,7 @@ export class ContentRepositoryHandlerService
         options?: ContentRepositoryFragmentListOptions,
     ): Observable<ContentRepositoryFragment<Raw>[]> {
         return this.api.contentrepositories.getContentRepositoryFragments(contentRepositoryId, options).pipe(
-            map(res => res.items),
+            map((res) => res.items),
             this.catchAndRethrowError(),
         );
     }
@@ -518,30 +517,30 @@ export class ContentRepositoryHandlerService
     changeFragmentsOfContentRepository(contentRepositoryId: number | string, crfragmentIds: (number | string)[]): Observable<void> {
         return forkJoin([
             this.api.contentRepositoryFragments.getContentRepositoryFragments().pipe(
-                map(res => res.items.map(fragment => fragment.id)),
+                map((res) => res.items.map((fragment) => fragment.id)),
             ),
             this.getAssignedFragments(contentRepositoryId).pipe(
-                map(fragments => fragments.map(fragment => fragment.id)),
+                map((fragments) => fragments.map((fragment) => fragment.id)),
             ),
         ]).pipe(
             // assign desired groups and unassign unwanted groups
             switchMap(([allFragments, fragmentsCurrentlyLinked]) => {
-                const fragmentIds = crfragmentIds.map(id => Number(id));
+                const fragmentIds = crfragmentIds.map((id) => Number(id));
 
                 // calculate minimal amount of requests required
                 const fragmentsShallBeLinked = fragmentIds;
                 const fragmentsShallNotBeLinked = allFragments
-                    .filter(fragmentId => !fragmentsShallBeLinked.includes(fragmentId));
+                    .filter((fragmentId) => !fragmentsShallBeLinked.includes(fragmentId));
                 const fragmentsCurrentlyNotLinked = allFragments
-                    .filter(fragmentId => !fragmentsCurrentlyLinked.includes(fragmentId));
+                    .filter((fragmentId) => !fragmentsCurrentlyLinked.includes(fragmentId));
 
-                const fragmentsToLink = fragmentsShallBeLinked.filter(id => !fragmentsCurrentlyLinked.includes(id));
-                const fragmentsToUnlink = fragmentsShallNotBeLinked.filter(id => !fragmentsCurrentlyNotLinked.includes(id));
+                const fragmentsToLink = fragmentsShallBeLinked.filter((id) => !fragmentsCurrentlyLinked.includes(id));
+                const fragmentsToUnlink = fragmentsShallNotBeLinked.filter((id) => !fragmentsCurrentlyNotLinked.includes(id));
 
-                const assignRequests: Observable<void>[] = fragmentsToLink.map(fragmentId => {
+                const assignRequests: Observable<void>[] = fragmentsToLink.map((fragmentId) => {
                     return this.addContentRepositoryToFragment(contentRepositoryId, fragmentId);
                 });
-                const unassignRequests: Observable<void>[] = fragmentsToUnlink.map(fragmentId => {
+                const unassignRequests: Observable<void>[] = fragmentsToUnlink.map((fragmentId) => {
                     return this.removeContentRepositoryFromFragment(contentRepositoryId, fragmentId);
                 });
 
@@ -555,7 +554,7 @@ export class ContentRepositoryHandlerService
                             this.notification.show({
                                 type: 'alert',
                                 message: 'shared.assign_contentRepository_to_crfragments_error',
-                            })
+                            });
                             return of(null);
                         }),
                     );
@@ -578,24 +577,24 @@ export class ContentRepositoryHandlerService
 
     public getAvailableMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
         return this.api.contentrepositories.getAvailableContentRepositoryRoles(contentRepositoryId).pipe(
-            map(res => res.roles || []),
+            map((res) => res.roles || []),
             this.catchAndRethrowError(),
         );
     }
 
     public getAssignedMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
         return this.api.contentrepositories.getAssignedContentRepositoryRoles(contentRepositoryId).pipe(
-            map(res => res.roles || []),
+            map((res) => res.roles || []),
             this.catchAndRethrowError(),
         );
     }
 
     public assignMeshRoles(contentRepositoryId: EntityIdType, roles: string[]): Observable<string[]> {
         return this.api.contentrepositories.updateAssignedContentRepositoryRoles(contentRepositoryId, roles).pipe(
-            map(res => res.roles || []),
+            map((res) => res.roles || []),
             tap(() => this.notification.show({
                 type: 'success',
-                message: 'contentRepository.assign_mesh_roles_success',
+                message: 'content_repository.assign_mesh_roles_success',
             })),
             this.catchAndRethrowError(),
         );

@@ -1,4 +1,3 @@
-import { I18nNotificationService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
@@ -12,6 +11,7 @@ import {
     Output,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -28,7 +28,7 @@ const NEEDS_NEW_PASSWORD_ERROR = 'auth_login_password_change_required';
     templateUrl: './login-gate.component.html',
     styleUrls: ['./login-gate.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -39,7 +39,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     public loggedIn = false;
 
     @Output()
-    public loggedInChange = new EventEmitter<{ loggedIn: boolean, user?: User }>();
+    public loggedInChange = new EventEmitter<{ loggedIn: boolean; user?: User }>();
 
     public initialized = false;
     public canLoginWithCR = false;
@@ -62,15 +62,15 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
     ngOnInit(): void {
         this.form = new FormGroup<FormProperties<LoginRequest>>({
-            /* eslint-disable @typescript-eslint/unbound-method */
+
             username: new FormControl('', Validators.required),
             password: new FormControl(''),
             newPassword: new FormControl({ value: '', disabled: true }, Validators.required),
-            /* eslint-enable @typescript-eslint/unbound-method */
+
         });
         // Load it once instantly from the current state, and add reactivity.
         this.sid = this.appState.now.auth.sid;
-        this.subscriptions.push(this.appState.select(state => state.auth.sid).subscribe(sid => {
+        this.subscriptions.push(this.appState.select((state) => state.auth.sid).subscribe((sid) => {
             this.sid = sid;
         }));
         this.setupConnection();
@@ -86,12 +86,12 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     setupConnection(): void {
         this.canLoginWithCR = (this.repository.passwordType === ContentRepositoryPasswordType.VALUE && this.repository.username?.length > 0)
-            || (this.repository.passwordType === ContentRepositoryPasswordType.PROPERTY && this.repository.passwordProperty?.length > 0);
+          || (this.repository.passwordType === ContentRepositoryPasswordType.PROPERTY && this.repository.passwordProperty?.length > 0);
 
         const connection: MeshClientConnection = {
             absolute: false,
@@ -100,7 +100,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         };
 
         // HOW is this unsafe????
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
         this.meshClient.init({
             connection,
             // We need this interceptor to always append the SID to the request, as it's getting proxied through the CMS.
@@ -120,7 +120,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         this.loading = true;
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.meshClient.auth.me().send().then(me => {
+        this.meshClient.auth.me().send().then((me) => {
             this.loading = false;
             this.loggedIn = me.username !== 'anonymous';
             this.requiresLogin = !this.loggedIn;
@@ -128,7 +128,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             if (this.loggedIn) {
                 this.loggedInChange.emit({ loggedIn: true, user: me });
             }
-        }).catch(err => {
+        }).catch((err) => {
             // eslint-disable-next-line no-console
             console.debug('Error while loading user info from mesh', err);
 
@@ -163,7 +163,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
             this.changeDetector.markForCheck();
             this.loggedInChange.emit({ loggedIn: true });
-        }).catch(err => {
+        }).catch((err) => {
             this.loading = false;
             this.loggedIn = false;
             this.requiresLogin = true;

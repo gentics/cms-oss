@@ -138,6 +138,10 @@ public class HandlebarsRenderingSandboxTest extends AbstractHandlebarsPartTypeRe
 
 		testPage = update(testPage, p -> {
 			ContentTag urlsTag = p.getContent().addContentTag(urlConstruct.getId());
+
+			// Since adding partial localization, addContentTag() will generate a UUID suffix for generated tag. For testing
+			// purposes we need to set the tagname explicitly.
+			urlsTag.setName("url_construct1");
 			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
 			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
 		}).unlock().build();

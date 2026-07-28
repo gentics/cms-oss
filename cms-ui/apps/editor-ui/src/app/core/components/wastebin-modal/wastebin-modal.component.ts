@@ -1,20 +1,20 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { File, Folder, Form, Image, ItemType, NodeFeature, NodeFeatures, Page, SortField } from '@gentics/cms-models';
 import { IModalDialog, ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { I18nService } from '@gentics/cms-components';
+import { isEqual } from 'lodash-es';
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, map, publishReplay, refCount, takeUntil, withLatestFrom } from 'rxjs/operators';
 import { ApplicationStateService, WastebinActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../providers/error-handler/error-handler.service';
-import { I18nService } from '../../providers/i18n/i18n.service';
 import { SortingModal } from './../../../shared/components/sorting-modal/sorting-modal.component';
 
 @Component({
     selector: 'wastebin-modal',
     templateUrl: './wastebin-modal.tpl.html',
     styleUrls: ['./wastebin-modal.scss'],
-    standalone: false
+    standalone: false,
 })
 export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
 
@@ -54,56 +54,56 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
 
         this.nodeFeatIsActiveForms$.pipe(
             takeUntil(this.destroyed$),
-        ).subscribe(isActive => {
+        ).subscribe((isActive) => {
             this.wastebinActions.getWastebinContents(this.nodeId, this.sortBy, this.sortOrder, isActive);
         });
 
-        const wastebinState$ = this.appState.select(state => state.wastebin).pipe(
+        const wastebinState$ = this.appState.select((state) => state.wastebin).pipe(
             publishReplay(1),
             refCount(),
         );
         this.folders$ = wastebinState$.pipe(
-            map(state => state.folder.list.map(id => this.entityResolver.getFolder(id))),
+            map((state) => state.folder.list.map((id) => this.entityResolver.getFolder(id))),
         );
         this.forms$ = wastebinState$.pipe(
             withLatestFrom(this.nodeFeatIsActiveForms$),
-            map(([state, featureIsActive]) => featureIsActive ? state.form.list.map(id => this.entityResolver.getForm(id)) : []),
+            map(([state, featureIsActive]) => featureIsActive ? state.form.list.map((id) => this.entityResolver.getForm(id)) : []),
         );
         this.pages$ = wastebinState$.pipe(
-            map(state => state.page.list.map(id => this.entityResolver.getPage(id))),
+            map((state) => state.page.list.map((id) => this.entityResolver.getPage(id))),
         );
         this.files$ = wastebinState$.pipe(
-            map(state => state.file.list.map(id => this.entityResolver.getFile(id))),
+            map((state) => state.file.list.map((id) => this.entityResolver.getFile(id))),
         );
         this.images$ = wastebinState$.pipe(
-            map(state => state.image.list.map(id => this.entityResolver.getImage(id))),
+            map((state) => state.image.list.map((id) => this.entityResolver.getImage(id))),
         );
 
         this.fetching$ = wastebinState$.pipe(
-            map(state =>
-                state.file.requesting ||
-                state.folder.requesting ||
-                state.form.requesting ||
-                state.image.requesting ||
-                state.page.requesting,
+            map((state) =>
+                state.file.requesting
+                || state.folder.requesting
+                || state.form.requesting
+                || state.image.requesting
+                || state.page.requesting,
             ),
             distinctUntilChanged(isEqual),
         );
 
         this.empty$ = wastebinState$.pipe(
-            map(state =>
-                !state.file.requesting && !state.file.list.length &&
-                !state.folder.requesting && !state.folder.list.length &&
-                !state.form.requesting && !state.form.list.length &&
-                !state.image.requesting && !state.image.list.length &&
-                !state.page.requesting && !state.page.list.length,
+            map((state) =>
+                !state.file.requesting && !state.file.list.length
+                && !state.folder.requesting && !state.folder.list.length
+                && !state.form.requesting && !state.form.list.length
+                && !state.image.requesting && !state.image.list.length
+                && !state.page.requesting && !state.page.list.length,
             ),
             distinctUntilChanged(isEqual),
         );
 
         wastebinState$.pipe(
             takeUntil(this.destroyed$),
-            map(state => {
+            map((state) => {
                 return {
                     sortBy: state.sortBy,
                     sortOrder: state.sortOrder,
@@ -112,7 +112,7 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
             distinctUntilChanged((newValue, oldValue) => {
                 return newValue.sortBy === oldValue.sortBy && newValue.sortOrder === oldValue.sortOrder;
             }),
-        ).subscribe(state => {
+        ).subscribe((state) => {
             this.sortBy = state.sortBy;
             this.sortOrder = state.sortOrder;
             this.wastebinActions.getWastebinContents(this.nodeId, state.sortBy, state.sortOrder);
@@ -151,15 +151,15 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
         };
 
         this.modalService.fromComponent(SortingModal, {}, locals)
-            .then(modal => modal.open())
-            .then(sorting => {
+            .then((modal) => modal.open())
+            .then((sorting) => {
                 this.updateSorting(sorting);
             })
             .catch(this.errorHandler.catch);
     }
 
-    updateSorting( sorting: { sortBy: SortField; sortOrder: 'asc' | 'desc'; }): void {
-        this.wastebinActions.setSorting( sorting.sortBy, sorting.sortOrder);
+    updateSorting(sorting: { sortBy: SortField; sortOrder: 'asc' | 'desc' }): void {
+        this.wastebinActions.setSorting(sorting.sortBy, sorting.sortOrder);
     }
 
     selectionChanged(type: ItemType, selection: number[]): void {
@@ -184,18 +184,18 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
 
         const itemCount = this.selectionCount();
         this.modalService.dialog({
-            title: this.i18n.translate('modal.are_you_sure_modal_title'),
-            body: this.i18n.translate(
+            title: this.i18n.instant('modal.are_you_sure_modal_title'),
+            body: this.i18n.instant(
                 itemCount > 1 ? 'modal.wastebin_are_you_sure_body_plural' : 'modal.wastebin_are_you_sure_body_singular',
                 { count: itemCount },
             ),
             buttons: [
-                { label: this.i18n.translate('common.cancel_button'), type: 'secondary', flat: true, returnValue: false },
-                { label: this.i18n.translate('editor.delete_from_wastebin_label'), type: 'alert', returnValue: true },
+                { label: this.i18n.instant('common.cancel_button'), type: 'secondary', flat: true, returnValue: false },
+                { label: this.i18n.instant('editor.delete_from_wastebin_label'), type: 'alert', returnValue: true },
             ],
         })
-            .then(modal => modal.open())
-            .then(shouldContinue => {
+            .then((modal) => modal.open())
+            .then((shouldContinue) => {
                 if (!shouldContinue) {
                     return;
                 }
@@ -223,8 +223,8 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
     }
 
     nodeFeatureIsActive(nodeId: number, nodeFeature: keyof NodeFeatures): Observable<boolean> {
-        return this.appState.select(state => state.features.nodeFeatures).pipe(
-            map(nodeFeatures => {
+        return this.appState.select((state) => state.features.nodeFeatures).pipe(
+            map((nodeFeatures) => {
                 const activeNodeFeatures: (keyof NodeFeatures)[] = nodeFeatures[nodeId];
                 return Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(nodeFeature);
             }),

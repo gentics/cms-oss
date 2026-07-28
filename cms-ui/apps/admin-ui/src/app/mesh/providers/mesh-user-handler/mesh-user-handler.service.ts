@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler } from '@admin-ui/core';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -12,6 +12,7 @@ import {
 } from '@admin-ui/mesh/common';
 import { getUserDisplayName, toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     ListResponse,
     UserAPITokenResponse,
@@ -63,7 +64,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public getMapped(uuid: string, params?: UserLoadOptions): Promise<MeshUserBO> {
-        return this.get(uuid, params).then(user => this.mapToBusinessObject(user));
+        return this.get(uuid, params).then((user) => this.mapToBusinessObject(user));
     }
 
     public async create(body: UserCreateRequest): Promise<UserResponse> {
@@ -85,7 +86,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public createMapped(body: UserCreateRequest): Promise<MeshUserBO> {
-        return this.create(body).then(user => this.mapToBusinessObject(user));
+        return this.create(body).then((user) => this.mapToBusinessObject(user));
     }
 
     public async update(uuid: string, body: UserUpdateRequest): Promise<UserResponse> {
@@ -107,7 +108,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public updateMapped(uuid: string, body: UserUpdateRequest): Promise<MeshUserBO> {
-        return this.update(uuid, body).then(user => this.mapToBusinessObject(user));
+        return this.update(uuid, body).then((user) => this.mapToBusinessObject(user));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -140,7 +141,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public listMapped(params?: UserListOptions): Promise<ListResponse<MeshUserBO>> {
-        return this.list(params).then(res => {
+        return this.list(params).then((res) => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,

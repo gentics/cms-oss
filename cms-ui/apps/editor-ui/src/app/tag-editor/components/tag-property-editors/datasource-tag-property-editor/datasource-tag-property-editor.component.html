@@ -1,69 +1,66 @@
-<ng-container *ngIf="tagProperty">
-    <div class="tag-part-editor">
-
-        <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
-
-        <div class="row small-up-1 medium-up-3 new-option-editor">
-            <div class="column">
-                <gtx-input
-                    [label]="'tag_editor.dataSource_option_key' | i18n"
-                    [readonly]="readOnly"
-                    [(ngModel)]="newOptionKey">
-                </gtx-input>
-            </div>
-            <div class="column">
-                <gtx-textarea
-                    [label]="'tag_editor.dataSource_option_value' | i18n"
-                    [readonly]="readOnly"
-                    [(ngModel)]="newOptionValue">
-                </gtx-textarea>
-            </div>
-            <div class="column button-cell">
-                <gtx-button
-                    [disabled]="!newOptionKey || !newOptionValue || readOnly"
-                    (click)="onAddOptionClick()">
-                    {{ 'tag_editor.dataSource_add_option' | i18n }}
-                </gtx-button>
-            </div>
-        </div>
-
-        <div class="row">
-            <div *ngIf="currentOptions.length > 0; else noOptionsDefined" class="small-12 columns">
-                <sortable-array-list
-                    [allowDrag]="!readOnly"
-                    [allowRemoval]="!readOnly"
-                    [(ngModel)]="currentOptions"
-                    (orderChange)="onUserChange()"
-                    (itemRemove)="onUserChange()"
-                >
-                    <ng-template let-item="item" let-index="index">
-                        <div class="row">
-                            <div class="small-4 columns">
-                                <gtx-input
-                                    [label]="'tag_editor.dataSource_option_key' | i18n"
-                                    [readonly]="readOnly"
-                                    [(ngModel)]="item.key"
-                                    (blur)="onModifyOption(item, index)">
-                                </gtx-input>
-                            </div>
-                            <div class="small-8 columns">
-                                <gtx-textarea
-                                    [label]="'tag_editor.dataSource_option_value' | i18n"
-                                    [readonly]="readOnly"
-                                    [(ngModel)]="item.value"
-                                    (touch)="onModifyOption(item, index)">
-                                </gtx-textarea>
-                            </div>
-                        </div>
-                    </ng-template>
-                </sortable-array-list>
-            </div>
-            <ng-template #noOptionsDefined>
-                <div class="small-10 small-centered columns no-options-defined-label">
-                    {{ 'tag_editor.dataSource_no_options_defined' | i18n }}
-                </div>
-            </ng-template>
-        </div>
-
+@if (tagProperty) {
+  <div class="tag-part-editor">
+    <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
+    <div class="row small-up-1 medium-up-3 new-option-editor">
+      <div class="column">
+        <gtx-input
+          [label]="'tag_editor.dataSource_option_key' | gtxI18n"
+          [readonly]="readOnly"
+          [(ngModel)]="newOptionKey">
+        </gtx-input>
+      </div>
+      <div class="column">
+        <gtx-textarea
+          [label]="'tag_editor.dataSource_option_value' | gtxI18n"
+          [readonly]="readOnly"
+          [(ngModel)]="newOptionValue">
+        </gtx-textarea>
+      </div>
+      <div class="column button-cell">
+        <gtx-button
+          [disabled]="!newOptionKey || !newOptionValue || readOnly"
+          (click)="onAddOptionClick()">
+          {{ 'tag_editor.dataSource_add_option' | gtxI18n }}
+        </gtx-button>
+      </div>
     </div>
-</ng-container>
+    <div class="row">
+      @if (currentOptions.length > 0) {
+        <div class="small-12 columns">
+          <sortable-array-list
+            [allowDrag]="!readOnly"
+            [allowRemoval]="!readOnly"
+            [(ngModel)]="currentOptions"
+            (orderChange)="onUserChange()"
+            (itemRemove)="onUserChange()"
+            >
+            <ng-template let-item="item" let-index="index">
+              <div class="row">
+                <div class="small-4 columns">
+                  <gtx-input
+                    [label]="'tag_editor.dataSource_option_key' | gtxI18n"
+                    [readonly]="readOnly"
+                    [(ngModel)]="item.key"
+                    (blur)="onModifyOption(item, index)">
+                  </gtx-input>
+                </div>
+                <div class="small-8 columns">
+                  <gtx-textarea
+                    [label]="'tag_editor.dataSource_option_value' | gtxI18n"
+                    [readonly]="readOnly"
+                    [(ngModel)]="item.value"
+                    (touch)="onModifyOption(item, index)">
+                  </gtx-textarea>
+                </div>
+              </div>
+            </ng-template>
+          </sortable-array-list>
+        </div>
+      } @else {
+        <div class="small-10 small-centered columns no-options-defined-label">
+          {{ 'tag_editor.dataSource_no_options_defined' | gtxI18n }}
+        </div>
+      }
+    </div>
+  </div>
+}

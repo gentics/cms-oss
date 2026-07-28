@@ -7,6 +7,7 @@ export default defineConfig({
         ...nxComponentTestingPreset(__filename),
         indexHtmlFile: './cypress/support/component-index.html',
         video: false,
+        screenshotOnRunFailure: false,
     },
     ...createComponentReporterOptions('libs', 'cms-components', false),
 });

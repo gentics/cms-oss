@@ -1,55 +1,60 @@
-<gtx-search-bar
-    *ngIf="showSearch"
-    class="search-bar"
-    [query]="query"
-    [placeholder]="'shared.search' | i18n"
-    (search)="updateSearchQuery($event)"
-    (clear)="updateSearchQuery('')"
-></gtx-search-bar>
+@if (showSearch) {
+    <gtx-search-bar
+        class="search-bar"
+        [query]="query"
+        [placeholder]="'shared.search' | gtxI18n"
+        (search)="updateSearchQuery($event)"
+        (clear)="updateSearchQuery('')"
+    ></gtx-search-bar>
+}
 
-<div *ngIf="!hideActions && !sorting" class="entity-table-actions-bar">
-    <gtx-button
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        data-action="create"
-        [disabled]="disabled"
-        [gtxActionAllowed]="'constructCategory.createCategory'"
-        (click)="handleCreateButton()"
-    >
-        <icon left>add</icon> {{ 'shared.create_new_construct_category' | i18n }}
-    </gtx-button>
+@if (!hideActions && !sorting) {
+    <div class="entity-table-actions-bar">
+        <gtx-button
+            class="table-action-button"
+            flat
+            size="small"
+            type="primary"
+            data-action="create"
+            [disabled]="disabled"
+            [gtxActionAllowed]="'constructCategory.createCategory'"
+            (click)="handleCreateButton()"
+        >
+            <icon left>add</icon> {{ 'shared.create_new_construct_category' | gtxI18n }}
+        </gtx-button>
 
-    <gtx-button
-        class="table-action-button"
-        flat
-        size="small"
-        type="primary"
-        data-action="reorder"
-        [disabled]="disabled"
-        [gtxActionAllowed]="'constructCategory.updateCategoryInstance'"
-        (click)="openSortModal()"
-    >
-        <icon left>sort</icon> {{ 'construct.sort_categories' | i18n }}
-    </gtx-button>
+        <gtx-button
+            class="table-action-button"
+            flat
+            size="small"
+            type="primary"
+            data-action="reorder"
+            [disabled]="disabled"
+            [gtxActionAllowed]="'constructCategory.updateCategoryInstance'"
+            (click)="openSortModal()"
+        >
+            <icon left>sort</icon> {{ 'construct.sort_categories' | gtxI18n }}
+        </gtx-button>
 
-    <gtx-button
-        class="table-action-button reload-button"
-        flat
-        size="small"
-        type="primary"
-        data-action="reload"
-        [disabled]="disabled || loading"
-        (click)="reload()"
-    >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
-    </gtx-button>
-</div>
+        <gtx-button
+            class="table-action-button reload-button"
+            flat
+            size="small"
+            type="primary"
+            data-action="reload"
+            [disabled]="disabled || loading"
+            (click)="reload()"
+        >
+            <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+        </gtx-button>
+    </div>
+}
 
-<div *ngIf="selectable" class="entity-table-selection">
-    {{ 'construct_category.info_selected_categories' | i18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
-</div>
+@if (selectable) {
+    <div class="entity-table-selection">
+        {{ 'construct_category.info_selected_categories' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+    </div>
+}
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
 
@@ -75,7 +80,9 @@
     [sortBy]="sortBy"
     [sortOrder]="sortOrder"
 
-    [renderers]="{}"
+    [renderers]="{
+        sortorder: orderRenderer
+    }"
 
     (pageChange)="changePageTo($event)"
     (sortByChange)="updateSortBy($event)"
@@ -84,4 +91,8 @@
     (rowClick)="handleRowClick($event)"
     (actionClick)="handleAction($event)"
 ></gtx-table>
+
+<ng-template #orderRenderer let-row="row">
+    {{ sorting ? row.item[BO_NEW_SORT_ORDER] + 1 : (row.item.sortOrder ?? (category[BO_ORIGINAL_SORT_ORDER] + 1)) }}
+</ng-template>
 

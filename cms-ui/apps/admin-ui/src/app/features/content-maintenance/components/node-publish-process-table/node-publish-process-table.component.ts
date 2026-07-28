@@ -1,8 +1,9 @@
 import { NodeBO, TableLoadOptions, TableLoadResponse } from '@admin-ui/common';
-import { I18nService, NodeTableLoaderService } from '@admin-ui/core';
+import { NodeTableLoaderService } from '@admin-ui/core';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AnyModelType, Node, NormalizableEntityTypesMap, PublishQueue } from '@gentics/cms-models';
 import { ChangesOf, ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { map, Observable, of } from 'rxjs';
@@ -42,6 +43,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
 
     public expandedNodes = new Set<string>();
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
@@ -55,7 +57,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
             i18n,
             loader,
             modalService,
-        )
+        );
     }
 
     override ngOnChanges(changes: ChangesOf<this>): void {
@@ -75,7 +77,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
                         id: MaintenanceActionModalAction.REPUBLISH_OBJECTS,
                         enabled: true,
                         icon: 'refresh',
-                        label: this.i18n.instant('contentmaintenance.republish_objects'),
+                        label: this.i18n.instant('content_maintenance.republish_objects'),
                         type: 'primary',
                         single: true,
                         multiple: true,
@@ -84,7 +86,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
                         id: MaintenanceActionModalAction.DELAY_OBJECTS,
                         enabled: true,
                         icon: 'schedule',
-                        label: this.i18n.instant('contentmaintenance.delay_objects'),
+                        label: this.i18n.instant('content_maintenance.delay_objects'),
                         single: true,
                         multiple: true,
                     },
@@ -92,7 +94,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
                         id: MaintenanceActionModalAction.REPUBLISH_DELAYED_OBJECTS,
                         enabled: true,
                         icon: 'history',
-                        label: this.i18n.instant('contentmaintenance.republish_delayed_objects'),
+                        label: this.i18n.instant('content_maintenance.republish_delayed_objects'),
                         type: 'warning',
                         single: true,
                         multiple: true,
@@ -101,7 +103,7 @@ export class NodePublishProcessTableComponent extends BaseEntityTableComponent<N
                         id: MaintenanceActionModalAction.MARK_OBJECTS_AS_PUBLISHED,
                         enabled: true,
                         icon: 'approval',
-                        label: this.i18n.instant('contentmaintenance.mark_objects_as_published'),
+                        label: this.i18n.instant('content_maintenance.mark_objects_as_published'),
                         type: 'warning',
                         single: true,
                         multiple: true,

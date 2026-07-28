@@ -24,7 +24,7 @@ services:
       retries: 3
 
   mesh:
-    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-hotfix-3.1.x}
+    image: docker.gentics.com/gentics/mesh-hsqldb:${CI_MESH_VERSION:-hotfix-3.2.x}
 
     environment:
       # General Container Settings
@@ -32,7 +32,7 @@ services:
 
       # Auth settings
       MESH_INITIAL_ADMIN_PASSWORD_FORCE_RESET: false
-      MESH_INITIAL_ADMIN_PASSWORD: admin
+      MESH_INITIAL_ADMIN_PASSWORD: mesh_integrationTest#admin
       MESH_ELASTICSEARCH_URL: null
       MESH_ELASTICSEARCH_START_EMBEDDED: false
       MESH_ELASTICSEARCH_WAIT_FOR_IDLE: false
@@ -48,7 +48,7 @@ services:
       retries: 3
 
   cms:
-    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-hotfix-6.3.x}
+    image: docker.gentics.com/gentics/cms-oss:${CI_CMS_VERSION:-hotfix-6.4.x}
     ports:
       - 8080:8080
 
@@ -62,7 +62,7 @@ services:
       NODE_DB_PASSWORD: finger
 
       # Misc settings
-      NODE_USER_PASSWORD: node
+      NODE_USER_PASSWORD: cms_integrationTest#node
       ELASTICSEARCH_ENABLED: false
       ELASTICSEARCH_URL:
       CONF_FILES: cms
@@ -71,7 +71,7 @@ services:
       # Mesh CR Settings
       CR_URL_MESH_CR: http://mesh:8080/example
       CR_USERNAME_MESH_CR: admin
-      CR_PASSWORD_MESH_CR: admin
+      CR_PASSWORD_MESH_CR: mesh_integrationTest#admin
 
       # DB CR Settings
       CR_URL_MARIADB_CR: jdbc:mariadb://mariadb:3306/cr
@@ -82,6 +82,7 @@ services:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages:x
+      - ./cms/content-packages:/cms/content-packages
       - ./cms/logs:/cms/logs:x
 
     healthcheck:
@@ -99,8 +100,8 @@ services:
         condition: service_healthy
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.53.2-noble
-    entrypoint: "npx -y playwright@1.53.2 run-server --port 3000 --host 0.0.0.0"
+    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    entrypoint: "npx -y playwright@1.56.1 run-server --port 3000 --host 0.0.0.0"
     ports:
       - 3000:3000
 

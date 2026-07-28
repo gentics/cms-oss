@@ -1,8 +1,13 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { ApplicationStateService, AddFavouritesAction, RemoveFavouritesAction, ReorderFavouritesAction } from '@editor-ui/app/state';
 import { Favourite, FavouriteWithDisplayDetails, Starrable } from '@gentics/cms-models';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, map } from 'rxjs/operators';
+import {
+    AddFavouritesAction,
+    ApplicationStateService,
+    RemoveFavouritesAction,
+    ReorderFavouritesAction,
+} from '../../../state';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 

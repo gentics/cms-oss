@@ -3,53 +3,57 @@
 <h2>Demos</h2>
 
 <gtx-demo-block demoTitle="Trable with inline toggles">
-    <div class="demo-result">
-        <gtx-checkbox
-            label="Inline selection"
-            [(ngModel)]="inlineSelection"
-        ></gtx-checkbox>
+  <div class="demo-result">
+    <gtx-checkbox
+      label="Inline selection"
+      [(ngModel)]="inlineSelection"
+    ></gtx-checkbox>
 
-        <gtx-checkbox
-            label="Inline expansion"
-            [(ngModel)]="inlineExpansion"
-        ></gtx-checkbox>
+    <gtx-checkbox
+      label="Inline expansion"
+      [(ngModel)]="inlineExpansion"
+    ></gtx-checkbox>
 
-        <hr>
+    <hr>
 
-        <gtx-trable
-            [columns]="columns"
-            [rows]="rows"
-            [actions]="actions"
-            [selectable]="true"
-            [selected]="selection"
-            [active]="active"
-            [inlineSelection]="inlineSelection"
-            [inlineExpansion]="inlineExpansion"
-            [renderers]="{ name: nameRenderer }"
-            (selectedChange)="updateSelection($event)"
-            (rowClick)="setRowActive($event)"
-            (actionClick)="handleAction($event)"
-            (rowExpand)="handleRowExpansion($event)"
-        ></gtx-trable>
+      <gtx-trable
+        [columns]="columns"
+        [rows]="rows"
+        [actions]="actions"
+        [selectable]="true"
+        [selected]="selection"
+        [active]="active"
+        [inlineSelection]="inlineSelection"
+        [inlineExpansion]="inlineExpansion"
+        [renderers]="{ name: nameRenderer }"
+        (selectedChange)="updateSelection($event)"
+        (rowClick)="setRowActive($event)"
+        (actionClick)="handleAction($event)"
+        (rowExpand)="handleRowExpansion($event)"
+      ></gtx-trable>
 
-        <ng-template #nameRenderer let-value="value" let-row="row">
-            <div class="name-wrapper">
-                <icon>{{ row.item.type === 'folder' ? 'folder' : 'description' }}</icon>
-                <span>{{ value }}</span>
-            </div>
-        </ng-template>
+      <ng-template #nameRenderer let-value="value" let-row="row">
+        <div class="name-wrapper">
+          <icon>{{ row.item.type === 'folder' ? 'folder' : 'description' }}</icon>
+          <span>{{ value }}</span>
+        </div>
+      </ng-template>
 
-        <br>
+      <br>
 
-        <div *ngIf="selection.length > 0">
+        @if (selection.length > 0) {
+          <div>
             Rows selected: {{ selection | json }} ({{ selection.length}})
-        </div>
-        <div *ngIf="active">
+          </div>
+        }
+        @if (active) {
+          <div>
             Row active: {{ active }}
-        </div>
-    </div>
+          </div>
+        }
+      </div>
 
-    <div class="demo-code">
+      <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
             <gtx-trable
                 [columns]="columns"
@@ -74,5 +78,5 @@
                 </div>
             </ng-template>
         '></gtx-highlighted-code>
-    </div>
-</gtx-demo-block>
+      </div>
+    </gtx-demo-block>

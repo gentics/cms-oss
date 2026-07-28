@@ -23,7 +23,6 @@ import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
-import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { EditorOverlayService } from '../../../../editor-overlay/providers/editor-overlay.service';
 import { FilePropertiesComponent } from '../../../../shared/components/file-properties/file-properties.component';
@@ -101,7 +100,6 @@ describe('FolderUrlTagPropertyEditor', () => {
                 { provide: ApiBase, useClass: MockApiBase },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
-                { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
@@ -168,10 +166,10 @@ describe('FolderUrlTagPropertyEditor', () => {
                 } else {
                     // Simulated removed folder
                     folderReturnValue = throwError({
-                        messages: [ {
+                        messages: [{
                             message: 'The specified folder was not found.',
                             type: 'CRITICAL',
-                        } ],
+                        }],
                         responseInfo: {
                             responseCode: ResponseCode.NOT_FOUND,
                             responseMessage: 'The specified folder was not found.',
@@ -181,10 +179,10 @@ describe('FolderUrlTagPropertyEditor', () => {
             } else {
                 // Simulated removed folder
                 folderReturnValue = throwError({
-                    messages: [ {
+                    messages: [{
                         message: 'The specified folder was not found.',
                         type: 'CRITICAL',
-                    } ],
+                    }],
                     responseInfo: {
                         responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'The specified folder was not found.',
@@ -204,7 +202,6 @@ describe('FolderUrlTagPropertyEditor', () => {
             const browseBox = browseBoxElement.componentInstance as BrowseBoxComponent;
             expect(browseBox.label).toEqual(tagPart.name); // Here it is expected that the element is not mandatory.
             expect(browseBox.disabled).toBe(context.readOnly);
-
 
             if (origTagProperty.folderId) {
                 if (origTagProperty.folderId === FOLDER_A.id) {
@@ -265,8 +262,6 @@ describe('FolderUrlTagPropertyEditor', () => {
         );
 
     });
-
-
 
     describe('user input handling', () => {
 

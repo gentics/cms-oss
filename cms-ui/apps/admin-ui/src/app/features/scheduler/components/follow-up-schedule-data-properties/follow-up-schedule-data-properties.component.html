@@ -1,16 +1,18 @@
 <form [formGroup]="form">
 
-    <gtx-select
-        [label]="('scheduler.followUp_schedule' | i18n) + ' *'"
-        [required]="true"
-        [multiple]="true"
-        formControlName="scheduleId"
+  <gtx-select
+    [label]="('scheduler.followUp_schedule' | gtxI18n) + ' *'"
+    [required]="true"
+    [multiple]="true"
+    formControlName="scheduleId"
     >
-        <gtx-option *ngFor="let schedule of schedules$ | async" [value]="schedule.id">{{ schedule.name }}</gtx-option>
-    </gtx-select>
+    @for (schedule of schedules$ | async; track schedule.id) {
+      <gtx-option [value]="schedule.id">{{ schedule.name }}</gtx-option>
+    }
+  </gtx-select>
 
-    <gtx-checkbox
-        [label]="'scheduler.followUp_onlyAfterSuccess' | i18n"
-        formControlName="onlyAfterSuccess"
-    ></gtx-checkbox>
+  <gtx-checkbox
+    [label]="'scheduler.followUp_onlyAfterSuccess' | gtxI18n"
+    formControlName="onlyAfterSuccess"
+  ></gtx-checkbox>
 </form>

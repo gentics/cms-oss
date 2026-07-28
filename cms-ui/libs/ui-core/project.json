@@ -18,9 +18,6 @@
                 "ci": {}
             }
         },
-        "lint": {
-            "executor": "@nx/eslint:lint"
-        },
         "test": {
             "executor": "nx:run-commands",
             "options": {
@@ -51,12 +48,6 @@
                     "cypressConfig": "libs/ui-core/cypress.config.ci.ts",
                     "devServerTarget": "image-editor-demo:build:ci"
                 }
-            }
-        },
-        "nx-release-publish": {
-            "executor": "@nx/js:release-publish",
-            "options": {
-                "packageRoot": "{workspaceRoot}/dist/libs/ui-core"
             }
         }
     }

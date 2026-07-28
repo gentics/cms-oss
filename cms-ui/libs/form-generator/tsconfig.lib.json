@@ -1,17 +1,12 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": []
+        "types": [],
+        "moduleResolution": "bundler"
     },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "src/test.ts",
-        "src/**/*.spec.ts"
-    ]
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/test.ts", "src/**/*.spec.ts"]
 }

@@ -5,10 +5,10 @@ import {
     Input,
     OnInit,
 } from '@angular/core';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { Form, Page, PublishLogEntry, PublishLogListOption, PublishType, ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseModal } from '@gentics/ui-core';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 
 const PAGE_SIZE = 15;
 

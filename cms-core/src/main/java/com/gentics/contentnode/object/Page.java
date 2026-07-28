@@ -213,6 +213,17 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	void deleteAllLanguages() throws InsufficientPrivilegesException, NodeException;
 
 	/**
+	 * Variant of {@link Page#copyFrom(NodeObject)} that optionally copies the content
+	 * @param original original page
+	 * @param copyContent true to also copy the content
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	default <T extends NodeObject> void copyFrom(T original, boolean copyContent) throws ReadOnlyException, NodeException {
+		throw new ReadOnlyException();
+	}
+
+	/**
 	 * Create a copy of the page in the specified target folder. This method
 	 * will not commit or rollback the transaction in any case. Please invoke
 	 * those calls afterwards. This method will automatically copy language
@@ -553,6 +564,14 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	ContentTag getContentTag(String name) throws NodeException;
 
 	/**
+	 * Get the contenttag with given id.
+	 * @param id The contenttag ID.
+	 * @return The contenttag with the given ID.
+	 * @throws NodeException
+	 */
+	ContentTag getContentTag(Integer id) throws NodeException;
+
+	/**
 	 * get all page variants of this page.
 	 * @return a list of all pages using the same content.
 	 * @throws NodeException TODO
@@ -560,6 +579,18 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 	public default List<Page> getPageVariants() throws NodeException {
 		return getContent().getPages();
 	}
+
+	/**
+	 * Get content tags of this page.
+	 *
+	 * <p>
+	 *     When the contents of this page are partially localized, the result will contain the localized tags as
+	 *     well as the inherited tags from the next higher page.
+	 * </p>
+	 *
+	 * @return A map of all this page's tag names to the respective tags.
+	 */
+	Map<String, ContentTag> getContentTags() throws NodeException;
 
 	@Override
 	Map<String, Tag> getTags() throws NodeException;
@@ -1158,4 +1189,12 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 			return Optional.of(languages);
 		}
 	}
+
+	/**
+	 * Variant of {@link Page#copy()} that optionally copies inherited tags
+	 * @param includeInheritedTags true to copy also inherited tags
+	 * @return copy
+	 * @throws NodeException
+	 */
+	Page copy(boolean includeInheritedTags) throws NodeException;
 }

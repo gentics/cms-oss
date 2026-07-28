@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
-import { Action, NgxsModule, State, StateContext, Store, ofActionDispatched, ofActionSuccessful } from '@ngxs/store';
+import { Action, NgxsModule, State, StateContext, ofActionDispatched, ofActionSuccessful } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { EntityStateModel, INITIAL_ENTITY_STATE } from '../../entity/entity.state';
 import { AppStateService } from '../../providers/app-state/app-state.service';
@@ -105,7 +105,7 @@ describe('TestAppState', () => {
             imports: [ NgxsModule.forRoot([ SimpleStateModule, NestedStateModule, MockEntityStateModule ]) ],
             providers: [ TEST_APP_STATE ],
         }).compileComponents();
-        appState = TestBed.get(AppStateService);
+        appState = TestBed.inject(AppStateService) as any;
     }));
 
     it('mockState() works for a partial change in one branch', () => {

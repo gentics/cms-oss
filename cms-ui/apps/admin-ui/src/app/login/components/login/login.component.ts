@@ -1,11 +1,11 @@
-import { AuthOperations } from '@admin-ui/core';
-import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent, FormProperties } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { distinctUntilChanged } from 'rxjs/operators';
+import { AuthOperations } from '../../../core';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 
 interface LoginData {
     username: string;
@@ -17,7 +17,7 @@ interface LoginData {
     templateUrl: './login.component.html',
     styleUrls: ['./login.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class LoginComponent extends BaseComponent implements OnInit {
 
@@ -39,7 +39,7 @@ export class LoginComponent extends BaseComponent implements OnInit {
             password: new FormControl('', Validators.required),
         });
 
-        this.subscriptions.push(this.appState.select(state => state.auth.keycloakError).pipe(
+        this.subscriptions.push(this.appState.select((state) => state.auth.keycloakError).pipe(
             distinctUntilChanged(isEqual),
         ).subscribe((errMsg) => {
             this.keycloakError = errMsg;

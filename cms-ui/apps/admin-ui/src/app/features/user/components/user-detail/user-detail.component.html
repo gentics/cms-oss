@@ -1,170 +1,166 @@
 <div class="gtx-entity-detail">
-    <gtx-tabs pure [activeId]="activeTabId$ | async">
-        <gtx-tab
-            [id]="UserDetailTabs.PROPERTIES"
-            gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [hidden]="isLoading"
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.login }"
-                    saveActionAllowedId="user.updateUserInstance"
-                    [saveActionAllowedInstanceId]="currentEntity?.id"
-                    [saveDisabled]="fgPropertiesSaveDisabled$ | async"
-                    (saveClick)="btnSavePropertiesOnClick()"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
+  <gtx-tabs pure [activeId]="activeTabId$ | async">
+    <gtx-tab
+      [id]="UserDetailTabs.PROPERTIES"
+      gtxDetailTabLink
+      [title]="'shared.title_properties' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [hidden]="isLoading"
+          [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: currentEntity?.login }"
+          saveActionAllowedId="user.updateUserInstance"
+          [saveActionAllowedInstanceId]="currentEntity?.id"
+          [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+          (saveClick)="btnSavePropertiesOnClick()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
-                <div class="gtx-entity-details-tab-content-body">
-                    <form
-                        class="properties"
-                        *ngIf="fgProperties"
-                        [formGroup]="fgProperties"
-                        class="buttons-form flex-row row"
+        <div class="gtx-entity-details-tab-content-body">
+          @if (fgProperties) {
+            <form
+              class="properties"
+              [formGroup]="fgProperties"
+              class="buttons-form flex-row row"
+              >
+              <div class="small-12 medium-9 flex-row">
+                <div class="input-container small-12 medium-6 columns">
+                  <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="255"
+                    [label]="('shared.user_name' | gtxI18n) + ' *'"
+                    [placeholder]="'shared.user_name' | gtxI18n"
+                    formControlName="login"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"
+                    [disabled]="fgProperties.disabled">
+                  </gtx-input>
+                </div>
+                <div class="small-12 medium-6 columns">
+                  <gtx-button
+                    class="gtx-btn-password"
+                    flat
+                    type="primary"
+                    size="medium"
+                    (click)="btnSetPasswordClick()"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"[disabled]="fgProperties.disabled"
                     >
-                        <div class="small-12 medium-9 flex-row">
-                            <div class="input-container small-12 medium-6 columns">
-                                <gtx-input
-                                    type="text"
-                                    [required]="true"
-                                    maxlength="255"
-                                    [label]="('shared.user_name' | i18n) + ' *'"
-                                    [placeholder]="'shared.user_name' | i18n"
-                                    formControlName="login"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"
-                                    [disabled]="fgProperties.disabled">
-                                </gtx-input>
-                            </div>
-                            <div class="small-12 medium-6 columns">
-                                <gtx-button
-                                    class="gtx-btn-password"
-                                    flat
-                                    type="primary"
-                                    size="medium"
-                                    (click)="btnSetPasswordClick()"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"[disabled]="fgProperties.disabled"
-                                >
-                                    <icon left>vpn_key</icon> {{ 'common.set_new_password_button' | i18n }}
-                                </gtx-button>
-                            </div>
-
-                            <div class="input-container small-12 medium-6 columns">
-                                <gtx-input
-                                    type="text"
-                                    [pattern]="patternEmail"
-                                    maxlength="255"
-                                    [required]="false"
-                                    [label]="'shared.email' | i18n"
-                                    [placeholder]="'shared.email' | i18n"
-                                    formControlName="email"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"
-                                    [disabled]="fgProperties.disabled">
-                                </gtx-input>
-                            </div>
-                            <div class="small-12 medium-6 columns"></div>
-
-                            <div class="input-container small-12 medium-6 columns">
-                                <gtx-input
-                                    type="text"
-                                    [required]="true"
-                                    maxlength="255"
-                                    [label]="('shared.first_name' | i18n) + ' *'"
-                                    [placeholder]="'shared.first_name' | i18n"
-                                    formControlName="firstName"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"
-                                    [disabled]="fgProperties.disabled">
-                                </gtx-input>
-                            </div>
-
-                            <div class="input-container small-12 medium-6 columns">
-                                <gtx-input
-                                    type="text"
-                                    [required]="true"
-                                    maxlength="255"
-                                    [label]="('shared.last_name' | i18n) + ' *'"
-                                    [placeholder]="'shared.last_name' | i18n"
-                                    formControlName="lastName"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"
-                                    [disabled]="fgProperties.disabled">
-                                </gtx-input>
-                            </div>
-
-                            <div class="input-container medium-12 columns">
-                                <gtx-textarea
-                                    [required]="false"
-                                    maxlength="255"
-                                    [label]="'shared.description' | i18n"
-                                    [placeholder]="'shared.description' | i18n"
-                                    formControlName="description"
-                                    gtxActionAllowed="user.updateUserInstance"
-                                    [aaInstanceId]="currentEntity?.id"
-                                    [disabled]="fgProperties.disabled">
-                                </gtx-textarea>
-                            </div>
-                        </div>
-                    </form>
+                    <icon left>vpn_key</icon> {{ 'common.set_new_password_button' | gtxI18n }}
+                  </gtx-button>
                 </div>
-            </div>
-        </gtx-tab>
-
-        <!-- To be implemented -->
-        <!-- <gtx-tab
-            [id]="UserDetailTabs.PERMISSIONS_CONTENT"
-            gtxDetailTabLink
-            [title]="'shared.title_permissions_content' | i18n"
-        >
-            <gtx-entity-detail-header
-                [title]="'shared.title_permissions_content_of_entity' | i18n: { entityName: currentEntity?.login }"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
-        </gtx-tab> -->
-
-        <!-- To be implemented -->
-        <!-- <gtx-tab
-            [id]="UserDetailTabs.PERMISSIONS_ADMIN"
-            gtxDetailTabLink
-            [title]="'shared.title_permissions_admin' | i18n"
-        >
-            <gtx-entity-detail-header
-                [title]="'shared.title_permissions_admin_of_entity' | i18n: { entityName: currentEntity?.login }"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
-        </gtx-tab> -->
-
-        <gtx-tab
-            [id]="UserDetailTabs.USER_GROUPS"
-            gtxDetailTabLink
-            [title]="'shared.title_user_groups' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [title]="'shared.title_user_groups_of_entity' | i18n: { entityName: currentEntity?.login }"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
-
-                <div class="gtx-entity-details-tab-content-body">
-                    <gtx-group-table
-                        *ngIf="currentEntity && (permissionGroupsRead$ | async); else unauthorized"
-                        [userId]="currentEntity.id"
-                        [showSearch]="true"
-                        [hideActions]="true"
-                        class="small-12"
-                    ></gtx-group-table>
-
-                    <ng-template #unauthorized>
-                        <div class="message-unauthorized">
-                            <h5>{{ 'common.general_permission_required' | i18n }}</h5>
-                            <icon>warning</icon>
-                        </div>
-                    </ng-template>
+                <div class="input-container small-12 medium-6 columns">
+                  <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [required]="false"
+                    [label]="'shared.email' | gtxI18n"
+                    [placeholder]="'shared.email' | gtxI18n"
+                    formControlName="email"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"
+                    [disabled]="fgProperties.disabled">
+                  </gtx-input>
                 </div>
-            </div>
-        </gtx-tab>
-    </gtx-tabs>
+                <div class="small-12 medium-6 columns"></div>
+                <div class="input-container small-12 medium-6 columns">
+                  <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="255"
+                    [label]="('shared.first_name' | gtxI18n) + ' *'"
+                    [placeholder]="'shared.first_name' | gtxI18n"
+                    formControlName="firstName"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"
+                    [disabled]="fgProperties.disabled">
+                  </gtx-input>
+                </div>
+                <div class="input-container small-12 medium-6 columns">
+                  <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="255"
+                    [label]="('shared.last_name' | gtxI18n) + ' *'"
+                    [placeholder]="'shared.last_name' | gtxI18n"
+                    formControlName="lastName"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"
+                    [disabled]="fgProperties.disabled">
+                  </gtx-input>
+                </div>
+                <div class="input-container medium-12 columns">
+                  <gtx-textarea
+                    [required]="false"
+                    maxlength="255"
+                    [label]="'shared.description' | gtxI18n"
+                    [placeholder]="'shared.description' | gtxI18n"
+                    formControlName="description"
+                    gtxActionAllowed="user.updateUserInstance"
+                    [aaInstanceId]="currentEntity?.id"
+                    [disabled]="fgProperties.disabled">
+                  </gtx-textarea>
+                </div>
+              </div>
+            </form>
+          }
+        </div>
+      </div>
+    </gtx-tab>
+
+    <!-- To be implemented -->
+    <!-- <gtx-tab
+    [id]="UserDetailTabs.PERMISSIONS_CONTENT"
+    gtxDetailTabLink
+    [title]="'shared.title_permissions_content' | gtxI18n"
+    >
+    <gtx-entity-detail-header
+      [title]="'shared.title_permissions_content_of_entity' | gtxI18n: { entityName: currentEntity?.login }"
+      (cancelClick)="detailsClose()"
+    ></gtx-entity-detail-header>
+  </gtx-tab> -->
+
+  <!-- To be implemented -->
+  <!-- <gtx-tab
+  [id]="UserDetailTabs.PERMISSIONS_ADMIN"
+  gtxDetailTabLink
+  [title]="'shared.title_permissions_admin' | gtxI18n"
+  >
+  <gtx-entity-detail-header
+    [title]="'shared.title_permissions_admin_of_entity' | gtxI18n: { entityName: currentEntity?.login }"
+    (cancelClick)="detailsClose()"
+  ></gtx-entity-detail-header>
+</gtx-tab> -->
+
+<gtx-tab
+  [id]="UserDetailTabs.USER_GROUPS"
+  gtxDetailTabLink
+  [title]="'shared.title_user_groups' | gtxI18n"
+  >
+  <div class="detail-tab-wrapper">
+    <gtx-entity-detail-header
+      [title]="'shared.title_user_groups_of_entity' | gtxI18n: { entityName: currentEntity?.login }"
+      (cancelClick)="detailsClose()"
+    ></gtx-entity-detail-header>
+
+    <div class="gtx-entity-details-tab-content-body">
+      @if (currentEntity && (permissionGroupsRead$ | async)) {
+        <gtx-group-table
+          [userId]="currentEntity.id"
+          [showSearch]="true"
+          [hideActions]="true"
+          class="small-12"
+        ></gtx-group-table>
+      } @else {
+        <div class="message-unauthorized">
+          <h5>{{ 'common.general_permission_required' | gtxI18n }}</h5>
+          <icon>warning</icon>
+        </div>
+      }
+
+    </div>
+  </div>
+</gtx-tab>
+</gtx-tabs>
 </div>

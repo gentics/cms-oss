@@ -1,5 +1,6 @@
-<tool-iframe
-    *ngFor="let tool of toolIframes$ | async; trackBy: trackToolByKey"
+@for (tool of toolIframes$ | async; track trackToolByKey($index, tool)) {
+  <tool-iframe
     [tool]="tool"
     [class.visible]="tool.key === (displayedTool$ | async)"
-></tool-iframe>
+  ></tool-iframe>
+}

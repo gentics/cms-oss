@@ -1,4 +1,5 @@
 import { ReactiveFormsModule, UntypedFormControl } from '@angular/forms';
+import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ApplicationStateService, AuthActionsService } from '../../../state';
@@ -13,13 +14,16 @@ describe('ChangePasswordModal', () => {
                 { provide: AuthActionsService, useValue: {} },
                 { provide: ApplicationStateService, useValue: {} },
             ],
-            declarations: [ChangePasswordModal],
+            declarations: [
+                MockI18nPipe,
+                ChangePasswordModal,
+            ],
         });
     });
 
     describe('form validation', () => {
 
-        it('should allow valid characters',  componentTest(() => ChangePasswordModal, fixture => {
+        it('should allow valid characters', componentTest(() => ChangePasswordModal, (fixture) => {
             const instance: ChangePasswordModal = fixture.componentInstance;
             const password1 = instance.form.controls['password1'] as UntypedFormControl;
 
@@ -29,7 +33,7 @@ describe('ChangePasswordModal', () => {
             assertValid(password1, '--@@_._');
         }));
 
-        it('should not allow invalid characters',  componentTest(() => ChangePasswordModal, fixture => {
+        it('should not allow invalid characters', componentTest(() => ChangePasswordModal, (fixture) => {
             const instance: ChangePasswordModal = fixture.componentInstance;
             const password1 = instance.form.controls['password1'] as UntypedFormControl;
 
@@ -41,7 +45,7 @@ describe('ChangePasswordModal', () => {
             assertInvalid(password1, '\\hello');
         }));
 
-        it('should not allow passwords shorter than 4 characters',  componentTest(() => ChangePasswordModal, fixture => {
+        it('should not allow passwords shorter than 4 characters', componentTest(() => ChangePasswordModal, (fixture) => {
             const instance: ChangePasswordModal = fixture.componentInstance;
             const password1 = instance.form.controls['password1'] as UntypedFormControl;
 
@@ -52,7 +56,7 @@ describe('ChangePasswordModal', () => {
             assertValid(password1, 'abcd');
         }));
 
-        it('should not allow passwords longer than 20 characters',  componentTest(() => ChangePasswordModal, fixture => {
+        it('should not allow passwords longer than 20 characters', componentTest(() => ChangePasswordModal, (fixture) => {
             const instance: ChangePasswordModal = fixture.componentInstance;
             const password1 = instance.form.controls['password1'] as UntypedFormControl;
 
@@ -61,7 +65,7 @@ describe('ChangePasswordModal', () => {
             assertInvalid(password1, 'hello.is.it.me.you.re.looking.for');
         }));
 
-        it('should require both passwords to match',  componentTest(() => ChangePasswordModal, fixture => {
+        it('should require both passwords to match', componentTest(() => ChangePasswordModal, (fixture) => {
             const instance: ChangePasswordModal = fixture.componentInstance;
             const form = instance.form;
             const password1 = form.get('password1');

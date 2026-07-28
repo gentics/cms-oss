@@ -26,7 +26,7 @@ export const EDITOR_TAB = 'editorTab';
  * <gtx-tab
  *       [id]="NodeDetailTabs.properties"
  *       gtxDetailTabLink
- *       [title]="'shared.title_properties' | i18n"
+ *       [title]="'shared.title_properties' | gtxI18n"
  * >
  * ```
  */

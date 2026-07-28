@@ -1,26 +1,34 @@
 <div class="modal-title">
-    <h5>{{ 'modal.sorting_title' | translate }}</h5>
+  <h5>{{ 'modal.sorting_title' | gtxI18n }}</h5>
 </div>
 <div class="modal-content">
-    <gtx-contents-list-item *ngFor="let field of availableFields"
-                            (click)="toggleSort(field)"
-                            class="no-select"
-                            [class.selected]="isSortedBy(field) !== ''">
-        <div class="item-primary">
-            <div class="field">
-                {{ 'common.sort_' + field | translate }}
-            </div>
+  @for (field of availableFields; track field) {
+    <gtx-contents-list-item
+      (click)="toggleSort(field)"
+      class="no-select"
+      [class.selected]="isSortedBy(field) !== ''">
+      <div class="item-primary">
+        <div class="field">
+          {{ 'common.sort_' + field | gtxI18n }}
         </div>
-        <div class="sort-order" *ngIf="isSortedBy(field) !== ''">
-            ({{ getOrder(field) }})
-            {{ 'common.sort_' + isSortedByString(field) | translate }}
-            <i class="material-icons" *ngIf="isSortedBy(field) === '+'">arrow_upward</i>
-            <i class="material-icons" *ngIf="isSortedBy(field) === '-'">arrow_downward</i>
+      </div>
+      @if (isSortedBy(field) !== '') {
+        <div class="sort-order">
+          ({{ getOrder(field) }})
+          {{ 'common.sort_' + isSortedByString(field) | gtxI18n }}
+          @if (isSortedBy(field) === '+') {
+            <i class="material-icons">arrow_upward</i>
+          }
+          @if (isSortedBy(field) === '-') {
+            <i class="material-icons">arrow_downward</i>
+          }
         </div>
+      }
     </gtx-contents-list-item>
+  }
 </div>
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | translate }}</gtx-button>
-    <gtx-button type="secondary" flat (click)="resetOrder()">{{ 'common.reset_button' | translate }}</gtx-button>
-    <gtx-button (click)="setSort()">{{ 'common.okay_button' | translate }}</gtx-button>
+  <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+  <gtx-button type="secondary" flat (click)="resetOrder()">{{ 'common.reset_button' | gtxI18n }}</gtx-button>
+  <gtx-button (click)="setSort()">{{ 'common.okay_button' | gtxI18n }}</gtx-button>
 </div>

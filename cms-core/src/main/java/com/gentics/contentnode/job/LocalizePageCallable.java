@@ -24,16 +24,32 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 	 */
 	protected int pageId;
 
+	/** Whether to use partial localization */
+	protected boolean partial;
+
 	/**
-	 * Create an instance for the given page and channel
-	 * 
+	 * Create an instance for the given page and channel and no partial localization
+	 *
 	 * @param pageId page ID
 	 * @param channelId channel ID
 	 * @param disableInstantPublish true if instant publishing shall be disabled
 	 */
 	public LocalizePageCallable(int pageId, int channelId, boolean disableInstantPublish) {
+		this(pageId, channelId, disableInstantPublish, false);
+	}
+
+	/**
+	 * Create an instance for the given page and channel
+	 *
+	 * @param pageId page ID
+	 * @param channelId channel ID
+	 * @param disableInstantPublish true if instant publishing shall be disabled
+	 * @param partial whether to use partial localization
+	 */
+	public LocalizePageCallable(int pageId, int channelId, boolean disableInstantPublish, boolean partial) {
 		super(channelId, disableInstantPublish);
 		this.pageId = pageId;
+		this.partial = partial;
 	}
 
 	@Override
@@ -62,11 +78,12 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 				// create a copy of the published version
 				Page localCopy = null;
 				try (PublishCacheTrx pcTrx = new PublishCacheTrx(false)) {
-					localCopy = (Page) page.getPublishedObject().copy();
+					localCopy = page.getPublishedObject().copy(true);
 				}
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
 				localCopy.setChannelInfo(channelId, channelSetId);
+				localCopy.getContent().setPartiallyLocalized(partial);
 
 				// save and publish the local copy
 				localCopy.save();
@@ -78,7 +95,7 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 					long oldTimestamp = t.getTimestamp();
 					try {
 						t.setTimestamp(oldTimestamp + 1000L);
-						localCopy.copyFrom(page);
+						localCopy.copyFrom(page, !partial);
 						localCopy.save();
 						t.commit(false);
 					} finally {
@@ -90,17 +107,18 @@ public class LocalizePageCallable extends AbstractLocalizeCallable {
 				localCopy.unlock();
 			} else {
 				// create a copy of the page
-				Page localCopy = (Page) page.copy();
+				Page localCopy = page.copy(true);
 
 				// set the channel information (master pages and their local copies are grouped together with their common channelset id)
 				localCopy.setChannelInfo(channelId, channelSetId);
+				localCopy.getContent().setPartiallyLocalized(partial);
 
 				// save and unlock the local copy
 				localCopy.save();
 				localCopy.unlock();
 			}
 
-			I18nString message = new CNI18nString("page.localize.success");
+			I18nString message = new CNI18nString(partial ? "page.partially_localize.success" : "page.localize.success");
 			String translated = message.toString();
 			return new GenericResponse(new Message(Type.SUCCESS, translated), new ResponseInfo(ResponseCode.OK, translated));
 		}

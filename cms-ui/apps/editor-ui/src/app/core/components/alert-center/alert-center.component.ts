@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
-import { Alerts } from '@editor-ui/app/common/models';
 import { EmbeddedTool } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
+import { Alerts } from '../../../common/models';
 import { EmbeddedToolsService } from '../../../embedded-tools/providers/embedded-tools/embedded-tools.service';
 import { ApplicationStateService } from '../../../state';
 

@@ -5,7 +5,7 @@ import {
     PermissionsCheckResult,
     UserActionPermissions,
 } from '@admin-ui/common';
-import { I18nService, PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
+import { PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '@admin-ui/core';
 import {
     ChangeDetectorRef,
     Directive,
@@ -36,6 +36,7 @@ import {
 import { BehaviorSubject, combineLatest, Observable, of as observableOf, of, Subscription } from 'rxjs';
 import { map, switchMap, takeUntil } from 'rxjs/operators';
 import { DashboardItemComponent } from '../../../dashboard/components/dashboard-item/dashboard-item.component';
+import { I18nService } from '@gentics/cms-components';
 
 /**
  * A component that should be used with the `ActionAllowedDirective` has to implement either
@@ -79,9 +80,7 @@ export const GTX_ACTION_ALLOWED_SELECTOR = `
  * This means that `UserActionPermissions.permissions[0]` is treated as `RequiredInstancePermissions` if
  * `aaInstanceId` is set and otherwise as `RequiredTypePermissions`. All other members of
  * `UserActionPermissions.permissions[0]` are always treated as `RequiredTypePermissions`.
- *
  * @note For hiding elements the CSS class `gtx-action-no-perms-hidden` defined in `_global-styles.scss` is used.
- *
  * @example
  * // Disable the button if the user doesn't have permissions to execute 'user.createUser'.
  * <gtx-button (click)="onCreateUserClick()" gtxActionAllowed="user.createUser"></gtx-button>
@@ -90,7 +89,7 @@ export const GTX_ACTION_ALLOWED_SELECTOR = `
  */
 @Directive({
     selector: GTX_ACTION_ALLOWED_SELECTOR,
-    standalone: false
+    standalone: false,
 })
 export class ActionAllowedDirective implements OnInit, OnDestroy {
 
@@ -106,6 +105,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get actionId(): string {
         return this.actionId$.value;
     }
+
     set actionId(value: string) {
         this.actionId$.next(value);
     }
@@ -117,6 +117,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get aaHideElement(): boolean {
         return this.hideElement$.value;
     }
+
     set aaHideElement(value: boolean) {
         this.hideElement$.next(coerceToBoolean(value));
     }
@@ -128,6 +129,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get aaInstanceId(): number | string {
         return this.instanceId$.value;
     }
+
     set aaInstanceId(value: number | string) {
         this.instanceId$.next(value);
     }
@@ -139,6 +141,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get aaNodeId(): number {
         return this.nodeId$.value;
     }
+
     set aaNodeId(value: number) {
         this.nodeId$.next(value);
     }
@@ -147,11 +150,12 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get aaOverrideCheck(): PermissionsCheckResult | Observable<PermissionsCheckResult> {
         return this.overrideCheck$.value;
     }
+
     set aaOverrideCheck(value: PermissionsCheckResult | Observable<PermissionsCheckResult>) {
         // If it has a subscribe, it's an observable
         if (value != null && typeof value === 'object' && value.hasOwnProperty('subscribe') && typeof (value as any).subscribe === 'function') {
             this.unsubscribeOverrideCheck(false);
-            this.overrideCheckSub = (value as Observable<PermissionsCheckResult>).subscribe(subVal => {
+            this.overrideCheckSub = (value as Observable<PermissionsCheckResult>).subscribe((subVal) => {
                 this.overrideCheck$.next(subVal);
             });
         } else {
@@ -166,7 +170,6 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
      *
      * This property replaces the `disabled` property of the host component to avoid the `gtxActionAllowed` directive
      * overriding that property.
-     *
      * @note For info about the replacement of the host component's `disabled` property
      * see https://github.com/angular/angular/pull/3419
      */
@@ -174,6 +177,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
     get disabled(): boolean {
         return this.alwaysDisabled$.value;
     }
+
     set disabled(value: boolean) {
         this.alwaysDisabled$.next(coerceToBoolean(value));
     }
@@ -220,20 +224,20 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
         @Self() @Optional() gtxTabPane: TabPaneComponent,
         @Self() @Optional() gtxTextarea: TextareaComponent,
     ) {
-        this.hostComponent =
-            gtxButton ||
-            gtxCheckbox ||
-            gtxDashboardItem ||
-            gtxDateTimePicker ||
-            gtxDropdownItem ||
-            gtxInput ||
-            gtxRadio ||
-            gtxRange ||
-            gtxSelect ||
-            gtxSplitButton ||
-            gtxTab ||
-            gtxTabPane ||
-            gtxTextarea;
+        this.hostComponent
+            = gtxButton
+              || gtxCheckbox
+              || gtxDashboardItem
+              || gtxDateTimePicker
+              || gtxDropdownItem
+              || gtxInput
+              || gtxRadio
+              || gtxRange
+              || gtxSelect
+              || gtxSplitButton
+            || gtxTab
+            || gtxTabPane
+            || gtxTextarea;
     }
 
     ngOnInit(): void {
@@ -269,7 +273,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
 
     private setUpPermissionChecking(): void {
         const reqActionPerms$ = this.actionId$.pipe(
-            map(actionId => this.permissionsService.getUserActionPermsForId(actionId)),
+            map((actionId) => this.permissionsService.getUserActionPermsForId(actionId)),
         );
 
         const permissionsResult$ = combineLatest([
@@ -297,7 +301,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
      */
     private checkPermissions(actionPerms: UserActionPermissions, instanceId?: number | string, nodeId?: number): Observable<PermissionsCheckResult> {
         return this.overrideCheck$.pipe(
-            switchMap(result => {
+            switchMap((result) => {
                 if (result != null) {
                     if (typeof result === 'object' && result.hasOwnProperty('_isScalar') && typeof (result as any).subscribe === 'function') {
                         return result as any as Observable<PermissionsCheckResult>;
@@ -321,7 +325,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
                 }
 
                 return permissionsGranted$.pipe(
-                    map(granted => ({ actionPerms, granted })),
+                    map((granted) => ({ actionPerms, granted })),
                 );
             }),
         );
@@ -332,7 +336,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
      * If there are instancePermissions to be checked, but no instanceId, `null` is returned.
      */
     private assembleRequiredPermissions(actionPerms: UserActionPermissions, instanceId?: number | string, nodeId?: number): RequiredPermissions[] {
-        const allPerms: RequiredPermissions[] = actionPerms.typePermissions ? [ ...actionPerms.typePermissions ] : [];
+        const allPerms: RequiredPermissions[] = actionPerms.typePermissions ? [...actionPerms.typePermissions] : [];
 
         if (actionPerms.instancePermissions) {
             if (typeof instanceId === 'number' || typeof instanceId === 'string') {
@@ -395,7 +399,7 @@ export class ActionAllowedDirective implements OnInit, OnDestroy {
         this.i18nSub = this.i18n.get(i18nKey, i18nParams).pipe(
             takeUntil(this.stopper.stopper$),
         )
-            .subscribe(translation => this.elementRef.nativeElement.title = translation);
+            .subscribe((translation) => this.elementRef.nativeElement.title = translation);
     }
 
     private enableElement(): void {

@@ -1,7 +1,9 @@
-import { detailLoading, LOAD_FLATTENED, masterLoading } from '@admin-ui/common';
-import { EntityManagerService, GroupOperations, I18nNotificationService, I18nService, UserOperations } from '@admin-ui/core';
+import { LOAD_FLATTENED, masterLoading } from '@admin-ui/common';
+import { EntityManagerService, GroupOperations, UserOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
+import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import {
     Group,
     GroupSetPermissionsRequest,
@@ -13,11 +15,11 @@ import {
     User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
+import { I18nService } from '@gentics/cms-components';
 import { forkJoin, Observable, of, OperatorFunction } from 'rxjs';
-import { first, map, switchMap, tap } from 'rxjs/operators';
+import { first, map, switchMap } from 'rxjs/operators';
 import { EditPermissionsModalComponent } from '../../components/edit-permissions-modal/edit-permissions-modal.component';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
-import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 
 @Injectable()
 export class GroupDataService extends ExtendedEntityDataServiceBase<'group', GroupOperations> {
@@ -67,7 +69,7 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
                 if (groupIdsToBeAssigned.length > 0) {
                     return forkJoin([
                         of(newUser),
-                        forkJoin(groupIdsToBeAssigned.map(groupId => this.userOperations.addToGroup(newUser.id, groupId))),
+                        forkJoin(groupIdsToBeAssigned.map((groupId) => this.userOperations.addToGroup(newUser.id, groupId))),
                     ]).pipe(map(([newUserWithGroups]: [User<Raw>, Group<Raw>[]]) => newUserWithGroups));
                 } else {
                     // just return user
@@ -81,7 +83,6 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
 
     /**
      * Displays a modal for editing the specified `PermissionsSet` and saves the changes if the user clicks 'Save'.
-     *
      * @returns An Observable that emits `true` if the user clicked 'Save' and the operation was successful or
      * `false` if the user clicked 'Cancel'.
      */
@@ -129,7 +130,7 @@ export class GroupDataService extends ExtendedEntityDataServiceBase<'group', Gro
         return masterLoading(this.state);
     }
 
-    public getGroupPermissions(): Observable<{[key: number]: string[]}> {
+    public getGroupPermissions(): Observable<{ [key: number]: string[] }> {
         return this.entityOperations.getGroupPermissions();
     }
 }

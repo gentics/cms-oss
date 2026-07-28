@@ -1,3 +1,15 @@
 {
-    "extends": "../../tsconfig.json"
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "moduleResolution": "bundler",
+        "module": "preserve"
+    },
+    "references": [
+        {
+            "path": "./tsconfig.compile.json",
+        },
+        {
+            "path": "./tsconfig.app.json"
+        }
+    ]
 }

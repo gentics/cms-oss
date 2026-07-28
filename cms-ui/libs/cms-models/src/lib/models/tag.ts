@@ -33,6 +33,17 @@ export interface Tag {
     /** True, if this tag is active. */
     active: boolean;
 
+    /**
+     * If the tag is a root element, and therefore {@link inherited} can be changed.
+     * @readonly
+     */
+    rootTag: boolean;
+    /**
+     * If this tag is inherited or not.
+     * @readonly
+     */
+    inherited: boolean;
+
     /** The type of the tag (content tag, object tag, or template tag). */
     type: TagTypeType;
 

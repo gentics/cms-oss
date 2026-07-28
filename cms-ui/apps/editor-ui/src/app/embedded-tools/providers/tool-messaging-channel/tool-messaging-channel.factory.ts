@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ApplicationStateService, ToolBreadcrumbAction } from '@editor-ui/app/state';
 import { WindowRef } from '@gentics/cms-components';
+import { ApplicationStateService, ToolBreadcrumbAction } from '../../../state';
 import { ExposedUIAPI } from '../exposed-ui-api/exposed-ui-api.service';
 import { ToolMessagingChannel } from './tool-messaging-channel.class';
 

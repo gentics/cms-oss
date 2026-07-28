@@ -1,7 +1,16 @@
-import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { mockPipes } from '@gentics/ui-core/testing/mock-pipe';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { MountResponse } from 'cypress/angular';
 import { CopyValueComponent } from './copy-value.component';
+
+@Pipe({
+    name: 'gtxI18n',
+    standalone: false,
+})
+export class MockI18nPipe implements PipeTransform {
+    transform(query: string, ...args: any[]): string {
+        return query;
+    }
+}
 
 describe('CopyValueComponent', () => {
 
@@ -14,7 +23,7 @@ describe('CopyValueComponent', () => {
                 value: TEXT_VALUE,
             },
             declarations: [
-                mockPipes('i18n'),
+                MockI18nPipe,
             ],
             schemas: [
                 NO_ERRORS_SCHEMA,
@@ -28,8 +37,8 @@ describe('CopyValueComponent', () => {
 
     it('should copy the content to the clipboard', () => {
         instance.get('.copy-button').click();
-        cy.window().then(win => {
-            win.navigator.clipboard.readText().then(text => {
+        cy.window().then((win) => {
+            win.navigator.clipboard.readText().then((text) => {
                 expect(text).to.equal(TEXT_VALUE);
             });
         });

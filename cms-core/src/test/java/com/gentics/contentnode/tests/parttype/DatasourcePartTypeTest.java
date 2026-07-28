@@ -405,7 +405,7 @@ public class DatasourcePartTypeTest {
 		assertNotNull("Datasource must not be null", datasource);
 		Integer datasourceId = datasource.getId();
 
-		page.getContent().getContentTags().remove(TEMPLATETAG_NAME);
+		page.getContentTags().remove(TEMPLATETAG_NAME);
 		page.save();
 		t.commit(false);
 

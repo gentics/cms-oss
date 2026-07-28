@@ -1,57 +1,57 @@
 
-<gtx-contents-list-item class="usage-item" *ngFor="let di of displayItems | paginate:{
-    id: UNIQUE_ID,
-    currentPage: page,
-    itemsPerPage: perPage,
-    totalItems: totalCount
-}">
+@for (di of displayItems | paginate:{
+  id: UNIQUE_ID,
+  currentPage: page,
+  itemsPerPage: perPage,
+  totalItems: totalCount
+  }; track di.type + di.id) {
+  <gtx-contents-list-item class="usage-item">
     <icon
-        class="type-icon"
-        [ngClass]="di.type || type"
+      class="type-icon"
+      [ngClass]="di.type || type"
     >{{ (di.type || type) | gtxTypeIcon }}</icon>
-
     <div class="item-primary">
-        <div class="name-container">
-            <a
-                *ngIf="type !== 'template'; else templateName"
-                class="item-name"
-                (click)="triggerItemClick(di, $event)"
-            >{{ di.name }}</a>
-
-            <ng-template #templateName>
-                <span>{{ di.name }}</span>
-            </ng-template>
-
-            <item-status-label
-                [item]="di"
-                [nodeLanguages]="languages"
-                [activeNodeId]="activeNodeId"
-            ></item-status-label>
-
-            <div
-                *ngIf="di.type === 'page'"
-                class="language"
-                [title]="di.languageName"
+      <div class="name-container">
+        @if (type !== 'template') {
+          <a
+            class="item-name"
+            (click)="triggerItemClick(di, $event)"
+          >{{ di.name }}</a>
+        } @else {
+          <span>{{ di.name }}</span>
+        }
+        <item-status-label
+          [item]="di"
+          [nodeLanguages]="languages"
+          [activeNodeId]="activeNodeId"
+        ></item-status-label>
+        @if (di.type === 'page') {
+          <div
+            class="language"
+            [title]="di.languageName"
             >
-                {{ di.language }}
-            </div>
-        </div>
-
-        <div class="filename">
-            {{ di.path }}{{ di.fileName }}
-        </div>
+            {{ di.language }}
+          </div>
+        }
+      </div>
+      <div class="filename">
+        {{ di.path }}{{ di.fileName }}
+      </div>
     </div>
-
     <div class="right-details">
-        <div *ngIf="di.type === 'page'" class="template-reference">
-            <icon>dashboard</icon>
-            <span class="template-name">{{ di.template?.name }}</span>
+      @if (di.type === 'page') {
+        <div class="template-reference">
+          <icon>dashboard</icon>
+          <span class="template-name">{{ di.template?.name }}</span>
         </div>
+      }
     </div>
-</gtx-contents-list-item>
+  </gtx-contents-list-item>
+}
 
-<gtx-paging
-    *ngIf="totalCount > perPage"
+@if (totalCount > perPage) {
+  <gtx-paging
     [id]="UNIQUE_ID"
     (pageChange)="loadPage($event)"
-></gtx-paging>
+  ></gtx-paging>
+}

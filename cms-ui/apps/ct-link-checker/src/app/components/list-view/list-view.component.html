@@ -1,14 +1,16 @@
 <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
 <gtxct-item-list
-    [itemsInfo]="itemsInfo$ | async"
-    [filterTerm]="(options$ | async)?.searchTerm"
-    [items]="(pages$ | async)?.items"
-    [expandedPages]="expandedPages$ | async"
-    (expandedPagesChange)="expandedPagesChange($event)"
-    (pageChange)="pageChange($event)"></gtxct-item-list>
+  [itemsInfo]="itemsInfo$ | async"
+  [filterTerm]="(options$ | async)?.searchTerm"
+  [items]="(pages$ | async)?.items"
+  [expandedPages]="expandedPages$ | async"
+  (expandedPagesChange)="expandedPagesChange($event)"
+(pageChange)="pageChange($event)"></gtxct-item-list>
 
 
-<div class="no-pages" *ngIf="!(loading$ | async) && (pages$ | async)?.items?.length === 0">
+@if (!(loading$ | async) && (pages$ | async)?.items?.length === 0) {
+  <div class="no-pages">
     <icon>error_outline</icon>
-    <span>{{ 'common.no_pages_with_links' | translate }}</span>
-</div>
+    <span>{{ 'common.no_pages_with_links' | gtxI18n }}</span>
+  </div>
+}

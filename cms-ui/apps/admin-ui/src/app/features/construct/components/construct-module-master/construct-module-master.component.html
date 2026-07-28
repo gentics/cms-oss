@@ -1,7 +1,7 @@
 <gtx-tabs pure [activeId]="activeTab">
     <gtx-tab
         [id]="ConstructModuleTabs.CONSTRUCTS"
-        [title]="'common.construct_plural' | i18n"
+        [title]="'common.construct_plural' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-construct-master></gtx-construct-master>
@@ -9,7 +9,7 @@
 
     <gtx-tab
         [id]="ConstructModuleTabs.CATEGORIES"
-        [title]="'common.category_plural' | i18n"
+        [title]="'common.category_plural' | gtxI18n"
         (select)="setTabAsActive($event)"
     >
         <gtx-construct-category-master></gtx-construct-category-master>

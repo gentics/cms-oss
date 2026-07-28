@@ -1,18 +1,18 @@
 import { Component, Injectable, ViewChild } from '@angular/core';
-import { TestBed, fakeAsync, waitForAsync } from '@angular/core/testing';
+import { TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { PublishQueueModal } from '@editor-ui/app/core/components/publish-queue-modal/publish-queue-modal.component';
-import { Api, FolderApi } from '@editor-ui/app/core/providers/api';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { MockErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.mock';
-import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
-import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '@editor-ui/app/state';
-import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { BaseListResponse, Normalized, Page, PageRequestOptions, ResponseCode } from '@gentics/cms-models';
 import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
+import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
+import { Api, FolderApi } from '../../../core/providers/api';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
+import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
+import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
 
 let appState: TestApplicationState;
 let testPages: Page<Normalized>[];
@@ -53,7 +53,7 @@ describe('PublishQueueModal is created ok', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
         navigationService = TestBed.inject(NavigationService);
     }));
 
@@ -88,7 +88,7 @@ describe('PublishQueueModal test approve method', () => {
                 PublishQueueModal,
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
         folderActions = TestBed.inject(FolderActionsService);
         navigationService = TestBed.inject(NavigationService);
     }));
@@ -163,7 +163,7 @@ describe('PublishQueueModal test pageClicked method', () => {
             ],
         });
 
-        appState = TestBed.get(ApplicationStateService);
+        appState = TestBed.inject(ApplicationStateService) as any;
         api = TestBed.inject(Api);
         folderActions = TestBed.inject(FolderActionsService);
         navigationService = TestBed.inject(NavigationService);

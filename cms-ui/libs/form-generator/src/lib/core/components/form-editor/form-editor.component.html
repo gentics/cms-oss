@@ -1,37 +1,38 @@
 <div
-    #formBackground
-    class="form-editor-background"
-    (dragenter)="onDragEnter($event)"
-    (dragover)="onDragOver($event)"
-    (dragleave)="onDragLeave($event)"
-    (drop)="onDrop($event)"
->
-    <div
-        class="form-editor-form"
-        [class.read-only]="readonly"
+  #formBackground
+  class="form-editor-background"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+  >
+  <div
+    class="form-editor-form"
+    [class.read-only]="readonly"
     >
-        <gtx-form-editor-element-list
-            #formEditorElementListComponent
-            [elements]="mappedForm?.data?.elements"
-            [readonly]="readonly"
-            [activeUiLanguageCode]="activeUiLanguageCode"
-            [activeContentLanguageCode]="activeContentLanguageCode"
-            [hideDropZones]="dragEnterDepth === 0"
-            (elementsChange)="onElementsChange($event)"
-            (beforeFormElementInsert)="onFormElementInsert($event)"
-            (propertiesErrorChange)="onPropertiesErrorChange($event)"
-        ></gtx-form-editor-element-list>
-    </div>
+    <gtx-form-editor-element-list
+      #formEditorElementListComponent
+      [elements]="mappedForm?.data?.elements"
+      [readonly]="readonly"
+      [activeUiLanguageCode]="activeUiLanguageCode"
+      [activeContentLanguageCode]="activeContentLanguageCode"
+      [hideDropZones]="dragEnterDepth === 0"
+      (elementsChange)="onElementsChange($event)"
+      (beforeFormElementInsert)="onFormElementInsert($event)"
+      (propertiesErrorChange)="onPropertiesErrorChange($event)"
+    ></gtx-form-editor-element-list>
+  </div>
 
-    <div
-        class="form-editor-menu-container"
-        [class.read-only]="readonly"
+  <div
+    class="form-editor-menu-container"
+    [class.read-only]="readonly"
     >
-        <gtx-form-editor-menu
-            *ngIf="!readonly && configurationFetched"
-            [@fadeAnim]
-            [formType]="mappedForm?.data?.type"
-            (selected)="onMenuSelect($event)"
-        ></gtx-form-editor-menu>
-    </div>
+    @if (!readonly && configurationFetched) {
+      <gtx-form-editor-menu
+        [@fadeAnim]
+        [formType]="mappedForm?.data?.type"
+        (selected)="onMenuSelect($event)"
+      ></gtx-form-editor-menu>
+    }
+  </div>
 </div>

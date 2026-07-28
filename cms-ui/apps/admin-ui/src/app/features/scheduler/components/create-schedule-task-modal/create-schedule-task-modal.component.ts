@@ -1,6 +1,7 @@
-import { I18nNotificationService, ScheduleTaskOperations } from '@admin-ui/core';
+import { ScheduleTaskOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ScheduleTaskBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -11,7 +12,7 @@ import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule
     templateUrl: './create-schedule-task-modal.component.html',
     styleUrls: ['./create-schedule-task-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateScheduleTaskModalComponent extends BaseModal<ScheduleTaskBO | false> implements OnInit, OnDestroy {
 
@@ -58,7 +59,7 @@ export class CreateScheduleTaskModalComponent extends BaseModal<ScheduleTaskBO |
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscription = this.entityOperations.create(this.form.value).subscribe(created => {
+        this.subscription = this.entityOperations.create(this.form.value).subscribe((created) => {
             // No need to enable the form, as we close the modal anyways
             this.closeFn(created);
         }, () => {

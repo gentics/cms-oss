@@ -17,11 +17,11 @@ import { FormProperties, GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { EditableProperties, EditorPermissions, emptyItemInfo } from '../../../common/models';
+import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { DynamicDisableDirective } from '../../directives/dynamic-disable/dynamic-disable.directive';
 import { FolderPropertiesComponent, FolderPropertiesMode } from './folder-properties.component';
-import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
 
 function getInput<T extends keyof EditableFolderProps>(
     fixture: ComponentFixture<TestComponent>,

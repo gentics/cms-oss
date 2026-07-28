@@ -1,9 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { I18nService } from '../../../core/providers/i18n/i18n.service';
+import { I18nService } from '@gentics/cms-components';
 
 @Pipe({
     name: 'dependenciesCount',
-    standalone: false
+    standalone: false,
 })
 export class DependenciesCountPipe implements PipeTransform {
 
@@ -16,10 +16,10 @@ export class DependenciesCountPipe implements PipeTransform {
         const allTypes = ['page', 'file', 'image'];
 
         const dependencyTextParts = allTypes
-            .filter(type => items[type])
-            .map(type => {
+            .filter((type) => items[type])
+            .map((type) => {
                 const itemsCount = Object.keys(items[type]).length;
-                const typeText = this.i18n.translate('common.type_' + type + (itemsCount > 1 ? 's' : ''));
+                const typeText = this.i18n.instant('common.type_' + type + (itemsCount > 1 ? 's' : ''));
                 return `${itemsCount} ${typeText}`;
             });
         return dependencyTextParts.join(', ');

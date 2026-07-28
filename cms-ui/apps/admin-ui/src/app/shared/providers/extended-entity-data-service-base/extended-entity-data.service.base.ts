@@ -1,11 +1,13 @@
-import { EntityManagerService, ExtendedEntityOperationsBase, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { EntityManagerService, ExtendedEntityOperationsBase } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     NormalizableEntityType,
     NormalizableEntityTypesMapBO,
     Normalized,
     Raw,
 } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
     map,
@@ -17,7 +19,6 @@ import { EntityDataServiceBase } from '../entity-data-service-base/entity-data.s
 
 /**
  * Superclass for EntityDataService classes for admin entities.
- *
  * @see /architecture/data-loading.png
  */
 export abstract class ExtendedEntityDataServiceBase<
@@ -43,6 +44,7 @@ export abstract class ExtendedEntityDataServiceBase<
     private reload$ = new BehaviorSubject<any>(null);
     private loaderInitialized = false;
 
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         entityIdentifier: T,
         state: AppStateService,
@@ -56,7 +58,6 @@ export abstract class ExtendedEntityDataServiceBase<
 
     /**
      * In order to guarantee class construction logic this must be called explicitly.
-     *
      * @Note Call from using component
      */
     ensureEntitiesLoaded(options?: any): Observable<boolean> {
@@ -73,7 +74,7 @@ export abstract class ExtendedEntityDataServiceBase<
 
     watchAllEntities(options?: any): Observable<T_RAW[]> {
         return this.reload$.pipe(
-            switchMap(reloadOptions => this.getEntitiesFromApi({ ...options, ...reloadOptions })),
+            switchMap((reloadOptions) => this.getEntitiesFromApi({ ...options, ...reloadOptions })),
             tap(() => {
                 this.loaderInitialized = true;
                 this._hasLoaded$.next(true);
@@ -89,13 +90,13 @@ export abstract class ExtendedEntityDataServiceBase<
 
     getRawEntitiesFromState(): Observable<T_RAW[]> {
         return this.ensureEntitiesLoaded().pipe(
-            switchMap(() => this.entityManager.watchDenormalizedEntitiesList<T, T_RAW>(this.entityIdentifier) ),
+            switchMap(() => this.entityManager.watchDenormalizedEntitiesList<T, T_RAW>(this.entityIdentifier)),
         );
     }
 
     getNormalizedEntitiesFromState(): Observable<T_NORM[]> {
         return this.ensureEntitiesLoaded().pipe(
-            switchMap(() => this.entityManager.watchNormalizedEntitiesList<T, T_NORM>(this.entityIdentifier) ),
+            switchMap(() => this.entityManager.watchNormalizedEntitiesList<T, T_NORM>(this.entityIdentifier)),
         );
     }
 

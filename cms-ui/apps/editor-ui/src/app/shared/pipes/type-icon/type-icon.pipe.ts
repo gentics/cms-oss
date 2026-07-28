@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { iconForItemType } from '@editor-ui/app/common/utils/icon-for-item-type';
+import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 
 @Pipe({
     name: 'gtxTypeIcon',

@@ -1,56 +1,58 @@
 <div class="gtx-entity-detail">
-    <gtx-tabs pure [activeId]="activeTabId$ | async">
-        <gtx-tab
-            [id]="ScheduleDetailTabs.PROPERTIES"
-            gtxDetailTabLink
-            [title]="'shared.title_properties' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    saveActionAllowedId="scheduler.updateSchedule"
-                    [saveActionAllowedInstanceId]="currentEntity?.id"
-                    [saveDisabled]="fgPropertiesSaveDisabled$ | async"
-                    (saveClick)="saveProperties()"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
+  <gtx-tabs pure [activeId]="activeTabId$ | async">
+    <gtx-tab
+      [id]="ScheduleDetailTabs.PROPERTIES"
+      gtxDetailTabLink
+      [title]="'shared.title_properties' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'shared.title_properties_of_entity' | gtxI18n: { entityName: currentEntity?.name }"
+          saveActionAllowedId="scheduler.updateSchedule"
+          [saveActionAllowedInstanceId]="currentEntity?.id"
+          [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+          (saveClick)="saveProperties()"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
 
-                <div class="gtx-entity-details-tab-content-body">
-                    <div class="flex-row row">
-                        <gtx-schedule-properties
-                            class="properties small-12 medium-9"
-                            [formControl]="fgProperties"
-                            [mode]="SchedulePropertiesMode.UPDATE"
-                            [scheduleBlacklist]="currentEntity ? [currentEntity.id] : []"
-                        ></gtx-schedule-properties>
-                    </div>
-                </div>
+        <div class="gtx-entity-details-tab-content-body">
+          <div class="flex-row row">
+            <gtx-schedule-properties
+              class="properties small-12 medium-9"
+              [formControl]="fgProperties"
+              [mode]="SchedulePropertiesMode.UPDATE"
+              [scheduleBlacklist]="currentEntity ? [currentEntity.id] : []"
+            ></gtx-schedule-properties>
+          </div>
+        </div>
+      </div>
+    </gtx-tab>
+
+    <gtx-tab
+      [id]="ScheduleDetailTabs.EXECUTIONS"
+      gtxDetailTabLink
+      [title]="'scheduler.title_executions' | gtxI18n"
+      >
+      <div class="detail-tab-wrapper">
+        <gtx-entity-detail-header
+          [title]="'scheduler.title_executions_of_schedule' | gtxI18n: { scheduleName: currentEntity?.name }"
+          [saveDisabled]="true"
+          (cancelClick)="detailsClose()"
+        ></gtx-entity-detail-header>
+
+        <div class="gtx-entity-details-tab-content-body">
+          @if ((activeTabId$ | async) === ScheduleDetailTabs.EXECUTIONS) {
+            <div class="flex-row row">
+              <gtx-schedule-executions-table
+                class="properties small-12"
+                [selectable]="false"
+                [hideActions]="true"
+                [scheduleId]="currentEntity.id"
+              ></gtx-schedule-executions-table>
             </div>
-        </gtx-tab>
-
-        <gtx-tab
-            [id]="ScheduleDetailTabs.EXECUTIONS"
-            gtxDetailTabLink
-            [title]="'scheduler.title_executions' | i18n"
-        >
-            <div class="detail-tab-wrapper">
-                <gtx-entity-detail-header
-                    [title]="'scheduler.title_executions_of_schedule' | i18n: { scheduleName: currentEntity?.name }"
-                    [saveDisabled]="true"
-                    (cancelClick)="detailsClose()"
-                ></gtx-entity-detail-header>
-
-                <div class="gtx-entity-details-tab-content-body">
-                    <div *ngIf="(activeTabId$ | async) === ScheduleDetailTabs.EXECUTIONS" class="flex-row row">
-                        <gtx-schedule-executions-table
-                            class="properties small-12"
-                            [selectable]="false"
-                            [hideActions]="true"
-                            [scheduleId]="currentEntity.id"
-                        ></gtx-schedule-executions-table>
-                    </div>
-                </div>
-            </div>
-        </gtx-tab>
-    </gtx-tabs>
+          }
+        </div>
+      </div>
+    </gtx-tab>
+  </gtx-tabs>
 </div>

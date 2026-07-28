@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import {
     BaseListResponse,
     FileOrImage,
@@ -11,11 +12,10 @@ import {
     SortField,
 } from '@gentics/cms-models';
 import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { Api, ApiError } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import {
     CloseEditorAction,
     RestoreWasteBinItemsAction,
@@ -39,7 +39,7 @@ export class WastebinActionsService {
         private errorHandler: ErrorHandler,
         private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
     ) {}
 
     /**

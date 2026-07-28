@@ -1,8 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { dateToFileSystemString } from '@editor-ui/app/common/utils/date-to-string';
-import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import { downloadFromBlob } from '@gentics/cms-components';
+import { API_BASE_URL, I18nNotificationService, I18nService, downloadFromBlob } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import {
     Form,
@@ -13,16 +11,14 @@ import {
 } from '@gentics/cms-models';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
-import { TranslateService } from '@ngx-translate/core';
 import { PaginationInstance } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subject, Subscription, combineLatest, interval, throwError } from 'rxjs';
 import { catchError, finalize, map, switchMap, takeWhile } from 'rxjs/operators';
-import { API_BASE_URL } from '../../../common/utils/base-urls';
+import { dateToFileSystemString } from '../../../common/utils/date-to-string';
 import { Api } from '../../../core/providers/api';
-import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
+import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
 import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete-modal.component';
-
 
 const STATUS_POLL_INTERVAL_MS = 2_000;
 
@@ -47,7 +43,7 @@ const STATUS_POLL_INTERVAL_MS = 2_000;
             }))),
         ]),
     ],
-    standalone: false
+    standalone: false,
 })
 export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -92,18 +88,18 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
         private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
         private modalService: ModalService,
-        private notification: I18nNotification,
+        private notification: I18nNotificationService,
         private formEditorService: FormEditorService,
         private formReportService: FormReportService,
         private entityResolver: EntityResolver,
-        private translation: TranslateService,
+        private translation: I18nService,
     ) { }
 
     public ngOnInit(): void {
 
-        this.subscriptions.push(this.appState.select(state => state.auth.sid).subscribe(sid => {
+        this.subscriptions.push(this.appState.select((state) => state.auth.sid).subscribe((sid) => {
             this.sid = sid;
-        }))
+        }));
 
         this.subscriptions.push(combineLatest([
             this.currentPage$,
@@ -115,7 +111,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
             this.entryValues = [];
 
-            this.result.entries.forEach(entry => {
+            this.result.entries.forEach((entry) => {
                 delete entry.fields.errors;
                 this.entryKeys = Object.keys(entry.fields);
                 this.entryValues.push(Object.values(entry.fields));
@@ -130,7 +126,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.detectChanges();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.ui.language).subscribe((language: GcmsUiLanguage) => {
+        this.subscriptions.push(this.appState.select((state) => state.ui.language).subscribe((language: GcmsUiLanguage) => {
             /**
              * We need to set the language manually in the form editor service.
              * (This is normally done in the form editor component. However, it is not used here).
@@ -138,9 +134,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.formEditorService.activeUiLanguageCode = language;
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeFormLanguage).pipe(
-            map(languageId => this.entityResolver.getLanguage(languageId)),
-        ).subscribe(language => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeFormLanguage).pipe(
+            map((languageId) => this.entityResolver.getLanguage(languageId)),
+        ).subscribe((language) => {
             if (language) {
                 this.formEditorService.activeContentLanguageCode = language.code;
             }
@@ -172,10 +168,10 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
-    public isFile(entryValue: any): boolean {
+    public isFile(entryValue: object): boolean {
         return entryValue != null && entryValue.hasOwnProperty('fileName');
     }
 
@@ -201,9 +197,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.api.forms.createBinaryDownload(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
-                    takeWhile(status => status.requestPending, true),
+                    takeWhile((status) => status.requestPending, true),
                 )),
-            ).subscribe(status => {
+            ).subscribe((status) => {
                 if (status.downloadReady && !status.requestPending) {
                     this.notification.show({
                         message: 'editor.form_reports_binary_generate_finished',
@@ -230,7 +226,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.binaryStatus.downloadUuid).subscribe(blob => {
+        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.binaryStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.binaryStatus.downloadTimestamp);
             downloadFromBlob(blob, `form_${this.form.id}_binaries_${dateToFileSystemString(time)}`);
         }));
@@ -246,9 +242,9 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             this.api.forms.createExportDownload(this.form.id).pipe(
                 switchMap(() => interval(STATUS_POLL_INTERVAL_MS).pipe(
                     switchMap(() => this.api.forms.getExportStatus(this.form.id)),
-                    takeWhile(status => status.requestPending, true),
+                    takeWhile((status) => status.requestPending, true),
                 )),
-            ).subscribe(status => {
+            ).subscribe((status) => {
                 if (status.downloadReady && !status.requestPending) {
                     this.notification.show({
                         message: 'editor.form_reports_csv_generate_finished',
@@ -276,7 +272,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             type: 'success',
         });
 
-        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.exportStatus.downloadUuid).subscribe(blob => {
+        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.exportStatus.downloadUuid).subscribe((blob) => {
             const time = new Date(this.exportStatus.downloadTimestamp);
             downloadFromBlob(blob, `form_${this.form.id}_export_${dateToFileSystemString(time)}`);
         }));
@@ -288,7 +284,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 return false;
             }
             return Object.values(value).includes(entryValue.fileName);
-        })
+        });
 
         if (fields?.length && fields.length > 0) {
             const field = fields[0];
@@ -309,7 +305,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 pageSize: this.paginationConfig.itemsPerPage,
             },
         ).pipe(
-            catchError(err => {
+            catchError((err) => {
                 if (err.statusCode === 403) {
                     this.errorMessage = this.translation.instant('editor.reports_loading_permission_error');
                 } else {
@@ -330,7 +326,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             idProperty: 'uuid',
             iconString: 'list_alt',
         })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then(() => {
                 this.loading$.next(true);
                 return this.api.forms.deleteReport(this.form.id, this.result.entries[index].uuid).toPromise();
@@ -340,7 +336,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
                 type: 'success',
                 message: 'message.report_successfully_removed_singular',
             }))
-            .catch(error => this.notification.show({
+            .catch((error) => this.notification.show({
                 type: 'alert',
                 message: error,
             }))
@@ -352,20 +348,20 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     deleteMultipleReports(): void {
-        const selected = this.selected.filter(s => !!s);
-        const selectedItems: FormDataListEntry[] = this.result.entries.filter(s => this.selected.includes(s.uuid));
+        const selected = this.selected.filter((s) => !!s);
+        const selectedItems: FormDataListEntry[] = this.result.entries.filter((s) => this.selected.includes(s.uuid));
         this.modalService.fromComponent(SimpleDeleteModalComponent, null, {
             items: selectedItems,
             itemType: 'editor.form_reports_label',
             idProperty: 'uuid',
             iconString: 'list_alt',
         })
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .then(() => {
                 this.loading$.next(true);
-                const requests = selected.map(id => this.api.forms.deleteReport(this.form.id, id)
+                const requests = selected.map((id) => this.api.forms.deleteReport(this.form.id, id)
                     .toPromise()
-                    .catch(error => this.notification.show({
+                    .catch((error) => this.notification.show({
                         type: 'alert',
                         message: error,
                     })),
@@ -387,11 +383,11 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     isNothingSelected(): boolean {
-        return this.selected.every(element => element === null);
+        return this.selected.every((element) => element === null);
     }
 
     isValidString(entry: any): boolean {
-        return typeof(entry) === 'string' && entry.length > 0;
+        return typeof (entry) === 'string' && entry.length > 0;
     }
 
     isEmptyString(entry: any): boolean {
@@ -399,7 +395,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     hasErrors(): boolean {
-        return this.result.entries.some(e => this.isValidString(e.fields.errors));
+        return this.result.entries.some((e) => this.isValidString(e.fields.errors));
     }
 
     /**
@@ -441,7 +437,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     private reload(): void {
-        this.subscriptions.push(this.formElementLabelPropertyI18nValues$.subscribe(formElementLabelPropertyI18nValues => {
+        this.subscriptions.push(this.formElementLabelPropertyI18nValues$.subscribe((formElementLabelPropertyI18nValues) => {
             if (formElementLabelPropertyI18nValues && Object.keys(formElementLabelPropertyI18nValues).length > 0) {
                 this.reload$.next();
             }

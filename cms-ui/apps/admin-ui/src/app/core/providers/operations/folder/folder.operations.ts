@@ -1,10 +1,10 @@
 import { Injectable, Injector } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { Folder, FolderListOptions, FolderSaveRequest, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
-import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 @Injectable()
@@ -24,8 +24,8 @@ export class FolderOperations extends ExtendedEntityOperationsBase<'folder'> {
      */
     get(folderId: number): Observable<Folder<Raw>> {
         return this.api.folders.getItem(folderId, 'folder').pipe(
-            map(res => res.folder),
-            tap(folder => this.entityManager.addEntity(this.entityIdentifier, folder)),
+            map((res) => res.folder),
+            tap((folder) => this.entityManager.addEntity(this.entityIdentifier, folder)),
             this.catchAndRethrowError(),
         );
     }
@@ -34,9 +34,9 @@ export class FolderOperations extends ExtendedEntityOperationsBase<'folder'> {
      * Gets the nested list of all subfolders for some root folder that are visible to the current user and adds them to the EntityState.
      */
     getFolders(folderId: number, options?: FolderListOptions): Observable<Folder<Raw>[]> {
-        return this.api.folders.getFolders(folderId, { ...(options || {}) , wastebin: 'exclude' }).pipe(
-            map(response => response.folders),
-            tap(folders => this.entityManager.addEntities(this.entityIdentifier, folders)),
+        return this.api.folders.getFolders(folderId, { ...(options || {}), wastebin: 'exclude' }).pipe(
+            map((response) => response.folders),
+            tap((folders) => this.entityManager.addEntities(this.entityIdentifier, folders)),
             this.catchAndRethrowError(),
         );
     }
@@ -46,8 +46,8 @@ export class FolderOperations extends ExtendedEntityOperationsBase<'folder'> {
      */
     getAll(): Observable<Folder<Raw>[]> {
         return this.api.folders.getFolders(0, { wastebin: 'exclude' }).pipe(
-            map(response => response.folders),
-            tap(folders => this.entityManager.addEntities(this.entityIdentifier, folders)),
+            map((response) => response.folders),
+            tap((folders) => this.entityManager.addEntities(this.entityIdentifier, folders)),
             this.catchAndRethrowError(),
         );
     }

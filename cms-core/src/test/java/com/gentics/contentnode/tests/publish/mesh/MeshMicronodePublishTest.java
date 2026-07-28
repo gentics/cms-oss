@@ -201,7 +201,7 @@ public class MeshMicronodePublishTest {
 		TAG_CONSUMER.put(9, textType);
 		TAG_CONSUMER.put(10, textType);
 		TAG_CONSUMER.put(11, tag -> {
-			getPartType(PageTagPartType.class, tag, PART_NAME).setPageTag(targetPage, targetPage.getContent().getContentTags().values().iterator().next());
+			getPartType(PageTagPartType.class, tag, PART_NAME).setPageTag(targetPage, targetPage.getContentTags().values().iterator().next());
 		});
 		TAG_CONSUMER.put(13, tag -> {
 			fillOverview(tag, PART_NAME, "<node page.name>", Page.class, Overview.SELECTIONTYPE_SINGLE, 10, Overview.ORDER_NAME, Overview.ORDERWAY_DESC, false,
@@ -312,7 +312,7 @@ public class MeshMicronodePublishTest {
 		targetFolder = Trx.supply(() -> createFolder(node.getFolder(), "Folder"));
 
 		targetPage = Trx.supply(() -> update(update(createPage(node.getFolder(), template, "Target"), upd -> {
-			upd.getContent().addContentTag(constructId);
+			upd.getContent().addContentTag(constructId).setName("text1");
 		}), Page::publish));
 		byte[] imageData = IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg"));
 		targetImage = (ImageFile) Trx.supply(() -> createImage(node.getFolder(), "image.jpg", imageData));

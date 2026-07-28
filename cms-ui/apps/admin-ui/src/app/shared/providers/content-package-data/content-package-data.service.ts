@@ -1,8 +1,10 @@
 import { masterLoading } from '@admin-ui/common';
-import { ContentPackageOperations, EntityManagerService, I18nNotificationService, I18nService } from '@admin-ui/core';
+import { ContentPackageOperations, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
 import { ContentPackageBO, EntityIdType, ModelType } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
 import { OperatorFunction } from 'rxjs';
 import { ExtendedEntityDataServiceBase } from '../extended-entity-data-service-base/extended-entity-data.service.base';
 

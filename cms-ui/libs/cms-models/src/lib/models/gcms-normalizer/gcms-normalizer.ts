@@ -25,7 +25,6 @@ import { GcmsNormalizationSchemas } from './schemas';
  *
  * It should be used instead of the normalizr functions, because it adds
  * additional post-processing.
- *
  * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export class GcmsNormalizer {
@@ -47,7 +46,7 @@ export class GcmsNormalizer {
     normalize<
         T extends keyof NormalizableEntityTypesMapBO,
         E extends NormalizableEntityTypesMapBO<Raw>[T],
-        R extends NormalizableEntityTypesMapBO<Normalized>[T]
+        R extends NormalizableEntityTypesMapBO<Normalized>[T],
     >(type: T, entity: E): SingleNormalizationResult<R>;
     /**
      * Normalizes an array of entities.
@@ -56,12 +55,12 @@ export class GcmsNormalizer {
      */
     normalize<
         T extends keyof NormalizableEntityTypesMapBO,
-        E extends NormalizableEntityTypesMapBO<Raw>[T]
+        E extends NormalizableEntityTypesMapBO<Raw>[T],
     >(type: T, entities: E[]): ArrayNormalizationResult;
     normalize<
         T extends keyof NormalizableEntityTypesMapBO,
         E extends NormalizableEntityTypesMapBO<Raw>[T],
-        R extends NormalizableEntityTypesMapBO<Normalized>[T]
+        R extends NormalizableEntityTypesMapBO<Normalized>[T],
     >(type: T, entityOrEntities: E | E[]): NormalizationResult {
         let schema = this.getSchema(type);
         if (!schema) {
@@ -94,7 +93,7 @@ export class GcmsNormalizer {
     denormalize<
         T extends keyof NormalizableEntityTypesMapBO,
         E extends NormalizableEntityTypesMapBO<AnyModelType>[T],
-        R extends NormalizableEntityTypesMapBO<Raw>[T]
+        R extends NormalizableEntityTypesMapBO<Raw>[T],
     >(
         type: T,
         entity: E | null | undefined,
@@ -172,14 +171,14 @@ export class GcmsNormalizer {
             if (isNested) {
                 delete folder.subfolders;
             } else {
-                folder.subfolders.forEach(subfolder => this.processDenormalizedFolder(subfolder, true));
+                folder.subfolders.forEach((subfolder) => this.processDenormalizedFolder(subfolder, true));
             }
         }
     }
 
     private processDenormalizedGroup(group: Group<Raw>): void {
         if (group.children) {
-            group.children.forEach(subGroup => subGroup.children && delete subGroup.children);
+            group.children.forEach((subGroup) => subGroup.children && delete subGroup.children);
         }
     }
 
@@ -203,7 +202,7 @@ export class GcmsNormalizer {
         }
         if (page.languageVariants) {
             if (isNested) {
-                delete page.languageVariants;
+                delete (page as any).languageVariants;
             } else {
                 for (const key of Object.keys(page.languageVariants)) {
                     this.processDenormalizedPage(page.languageVariants[key], true);
@@ -212,7 +211,7 @@ export class GcmsNormalizer {
         }
         if (page.pageVariants) {
             if (isNested) {
-                delete page.pageVariants;
+                delete (page as any).pageVariants;
             } else {
                 for (const key of Object.keys(page.pageVariants)) {
                     this.processDenormalizedPage(page.pageVariants[key], true);
@@ -227,11 +226,11 @@ export class GcmsNormalizer {
 
     private processDenormalizedUser(user: User<Raw>): void {
         if (user.groups) {
-            user.groups.forEach(group => this.processDenormalizedGroup(group));
+            user.groups.forEach((group) => this.processDenormalizedGroup(group));
         }
     }
 
-    private processDenormalizedUsers(entity: { creator?: User<Raw>, editor?: User<Raw> }): void {
+    private processDenormalizedUsers(entity: { creator?: User<Raw>; editor?: User<Raw> }): void {
         if (entity.creator) {
             this.processDenormalizedUser(entity.creator);
         }
@@ -242,7 +241,7 @@ export class GcmsNormalizer {
 
     private processDenormalizedPackage(cmsPackage: Package<Raw>): void {
         if (cmsPackage.subPackages) {
-            cmsPackage.subPackages.forEach(p => this.processDenormalizedPackage(p));
+            cmsPackage.subPackages.forEach((p) => this.processDenormalizedPackage(p));
         }
     }
 

@@ -51,8 +51,8 @@ describe('DetailTabLinkDirective', () => {
             ],
         });
 
-        router = TestBed.get(Router);
-        route = TestBed.get(ActivatedRoute);
+        router = TestBed.inject(Router) as any;
+        route = TestBed.inject(ActivatedRoute) as any;
     });
 
     it('does not trigger a navigation upon initialization', componentTest(() => TestComponent, (fixture, instance) => {

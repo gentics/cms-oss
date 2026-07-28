@@ -169,6 +169,8 @@ describe('TagEditor Test Helper Functions', () => {
             constructId: 4711,
             construct: tagType,
             name: 'test0',
+            rootTag: false,
+            inherited: false,
             properties: {
                 property0: { ...expectedTagProperties[0] },
                 property1: { ...expectedTagProperties[1] },
@@ -183,7 +185,6 @@ describe('TagEditor Test Helper Functions', () => {
         const actualTag = mockEditableTag(tagPropInfos);
         expect(actualTag).toEqual(expectedTag);
     });
-
 
     it('mockEditableTag works with tagTypeInfo', () => {
 
@@ -238,6 +239,8 @@ describe('TagEditor Test Helper Functions', () => {
             constructId: tagTypeInfo.id,
             construct: tagType,
             name: 'test0',
+            rootTag: false,
+            inherited: false,
             properties: {
                 property0: { ...expectedTagProperties[0] },
             },
@@ -322,6 +325,8 @@ describe('TagEditor Test Helper Functions', () => {
             constructId: 4711,
             construct: tagType,
             name: 'object.test0',
+            rootTag: false,
+            inherited: false,
             properties: {
                 property0: { ...expectedTagProperties[0] },
                 property1: { ...expectedTagProperties[1] },
@@ -341,7 +346,6 @@ describe('TagEditor Test Helper Functions', () => {
         const actualTag = mockEditableObjectTag(tagPropInfos);
         expect(actualTag).toEqual(expectedTag);
     });
-
 
     it('mockEditableObjectTag works with objTagInfo and tagType', () => {
 
@@ -406,6 +410,8 @@ describe('TagEditor Test Helper Functions', () => {
             constructId: objTagInfo.tagType.id,
             construct: tagType,
             name: objTagInfo.name,
+            rootTag: false,
+            inherited: false,
             properties: {
                 property0: { ...expectedTagProperties[0] },
             },
@@ -482,6 +488,8 @@ describe('TagEditor Test Helper Functions', () => {
             constructId: 4711,
             construct: tagType,
             name: 'object.test0',
+            rootTag: false,
+            inherited: false,
             properties: {
                 property0: { ...expectedTagProperties[0] },
             },

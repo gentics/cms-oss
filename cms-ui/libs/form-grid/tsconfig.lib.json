@@ -11,11 +11,10 @@
     "exclude": [
         "src/**/*.spec.ts",
         "src/**/*.test.ts",
-        "jest.config.ts",
-        "jest.config.cts",
-        "src/test-setup.ts",
         "cypress/**/*",
         "cypress.config.ts",
+        "vite.config.ci.mts",
+        "vite.config.mts",
         "**/*.cy.ts",
         "**/*.cy.js",
         "**/*.cy.tsx",

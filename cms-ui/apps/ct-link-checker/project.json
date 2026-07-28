@@ -4,7 +4,7 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/ct-link-checker/src",
-    "tags": ["app", "ct", "angular"],
+    "tags": ["app", "ct", "angular", "test:karma"],
     "targets": {
         "build": {
             "executor": "@nx/angular:application",

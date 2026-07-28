@@ -31,3 +31,5 @@ report.*.json
 .angular
 
 test-output
+
+vitest.config.*.timestamp*

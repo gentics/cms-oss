@@ -78,19 +78,12 @@ services:
       CR_USERNAME_MARIADB_CR: crtest
       CR_PASSWORD_MARIADB_CR: crtest
 
-      ALOHAEDITOR_PATH: "/cms/public/alohaeditor"
-      ALOHAEDITOR_PLUGINS_PATH: "/cms/public/aloha-gcn"
-      GCNJSAPI_PATH: "/cms/public/gcnjsapi"
-
     volumes:
       - ./cms/commands:/cms/scheduler-commands
       - ./cms/conf:/cms/conf
       - ./cms/packages:/cms/packages:x
       - ./cms/content-packages:/cms/content-packages
       - ./cms/logs:/cms/logs:x
-      - "../cms-aloha-plugins/src/main/js:/cms/public/aloha-gcn"
-      - "../cms-js-lib/target:/cms/public/gcnjsapi"
-      - "../../aloha-editor/src:/cms/public/alohaeditor"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/rest/auth/globalprefix"]

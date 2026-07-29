@@ -1,5 +1,5 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, GroupBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
-import { AppStateService } from '@admin-ui/state';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, GroupBO, TableLoadOptions, applyPermissions } from '../../../common';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { Injectable } from '@angular/core';
 import { GcmsPermission, Group, GroupListOptions, GroupListResponse, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
@@ -10,21 +10,21 @@ import { EntityManagerService } from '../entity-manager';
 import { GroupOperations } from '../operations';
 
 export interface LoadUserGroupOptions {
-    userId: number;
+    userId?: number;
 }
 
 export interface LoadGroupChildrenOptions {
-    groupId: number;
+    groupId?: number;
 }
 
 export interface LoadAssignableOnlyOptions {
-    assignableOnly: boolean,
+    assignableOnly?: boolean;
 }
 
-export type GroupTableLoaderOptions = LoadUserGroupOptions | LoadGroupChildrenOptions | LoadAssignableOnlyOptions;
+export type GroupTableLoaderOptions = LoadUserGroupOptions & LoadGroupChildrenOptions & LoadAssignableOnlyOptions;
 
 const isLoadGroupChildrenOptions = (options: GroupTableLoaderOptions): options is LoadGroupChildrenOptions =>
-    options != null && typeof options === 'object' && Number.isInteger((options as LoadGroupChildrenOptions).groupId);
+    options != null && typeof options === 'object' && Number.isInteger(options.groupId);
 
 @Injectable()
 export class GroupTableLoaderService extends BaseTableLoaderService<Group<Raw>, GroupBO, GroupTableLoaderOptions> {
@@ -57,20 +57,20 @@ export class GroupTableLoaderService extends BaseTableLoaderService<Group<Raw>, 
             ...this.createDefaultOptions(options),
             perms: true,
         };
-        if ((additionalOptions as any)?.assignableOnly) {
+        if (additionalOptions?.assignableOnly) {
             loadOptions.permitted = GcmsPermission.USER_ASSIGNMENT;
         }
         let loader: Observable<GroupListResponse>;
 
-        if ((additionalOptions as any)?.userId) {
-            loader = this.api.user.getUserGroups((additionalOptions as any).userId, loadOptions);
+        if (additionalOptions?.userId) {
+            loader = this.api.user.getUserGroups(additionalOptions.userId, loadOptions);
         } else {
             loader = this.api.group.listGroups(loadOptions);
         }
 
         return loader.pipe(
-            map(response => {
-                const entities = response.items.map(group => this.mapToBusinessObject(group));
+            map((response) => {
+                const entities = response.items.map((group) => this.mapToBusinessObject(group));
                 applyPermissions(entities, response);
 
                 return {
@@ -88,8 +88,8 @@ export class GroupTableLoaderService extends BaseTableLoaderService<Group<Raw>, 
         const loadOptions = this.createDefaultOptions(options);
 
         return this.api.group.getSubgroups(additionalOptions.groupId, loadOptions).pipe(
-            map(response => {
-                const entities = response.items.map(group => this.mapToBusinessObject(group));
+            map((response) => {
+                const entities = response.items.map((group) => this.mapToBusinessObject(group));
 
                 return {
                     entities,

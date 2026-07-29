@@ -14,7 +14,8 @@
       class="table-action-button"
       flat
       size="small"
-      type="primary"
+      type="primary"]
+      data-action="create-subgroup"
       [disabled]="disabled"
       [gtxActionAllowed]="'group.createGroup'"
       (click)="handleCreateButton()"
@@ -29,6 +30,7 @@
       flat
       size="small"
       type="primary"
+      data-action="assign-users"
       [disabled]="disabled"
       [gtxActionAllowed]="'user.assignUserToGroup'"
       (click)="handleAssignUsersButton()"
@@ -42,6 +44,7 @@
     flat
     size="small"
     type="primary"
+    data-action="reload"
     [disabled]="disabled || loading"
     (click)="reload()"
     >

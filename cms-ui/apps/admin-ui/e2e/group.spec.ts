@@ -1,26 +1,23 @@
+import { GroupResponse } from '@gentics/cms-models';
 import {
+    clickModalAction,
     clickTableRow,
     EntityImporter,
     findTableRowById,
     loginWithForm,
     navigateToApp,
-    NODE_MINIMAL,
+    selectTab,
     TestSize,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { AUTH } from './common';
 import { navigateToModule } from './helpers';
 
-const SELECTORS = {
-    MASTER: 'gtx-group-master',
-    EDITOR: 'gtx-group-detail',
-    TAB_GROUP_USERS: 'li.tab-link[data-id="groupUsers"]',
-    TAB_GROUP_SUBS: 'li.tab-link[data-id="subgroups"]',
-} as const;
 const NODE_SUPER_GROUP_ID = 2;
 const NODE_SUB_SUPER_GROUP_NAME = 'Node Sub Super Group';
 
-test.describe('Group Settings', () => {
+test.describe('Group Module', () => {
 
     const IMPORTER = new EntityImporter();
 
@@ -60,63 +57,64 @@ test.describe('Group Settings', () => {
                 description: 'SUP-19628',
             }],
         }, async ({ page }) => {
-            await test.step('Navigate to the default Node Super Group editor', async () => {
-                const master = await navigateToModule(page, 'groups');
-                const masterTable = master.locator(SELECTORS.MASTER).or(master);
-                await masterTable.waitFor({ state: 'visible' });
+            const master = await navigateToModule(page, 'groups');
+            const masterTable = master.locator('gtx-group-table');
+            const editor = page.locator('gtx-group-detail');
+            let subGroupId: number = null;
 
-                const row = findTableRowById(masterTable, NODE_SUPER_GROUP_ID);
-                await row.waitFor({ state: 'visible' });
+            await test.step('Navigate to the default Node Super Group editor', async () => {
+                const row = await findTableRowById(masterTable, NODE_SUPER_GROUP_ID);
                 await clickTableRow(row);
 
-                const editor = page.locator(SELECTORS.EDITOR);
-                await editor.waitFor({ state: 'visible' });
+                await expect(editor).toBeVisible();
             });
 
+            const tabs = editor.locator('.gtx-entity-detail > gtx-tabs');
+
             await test.step('Node Super Admin group should not allow manipulating users', async () => {
-                const tab = page.locator(SELECTORS.TAB_GROUP_USERS);
-                await tab.click();
-                const actionButtons = page.locator('gtx-group-detail gtx-tab[data-id="groupUsers"] .entity-table-actions-bar');
-                await actionButtons.waitFor();
-                expect(actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Neuen Benutzer in Gruppe erstellen' })).not.toBeVisible();
-                expect(actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Benutzer zuweisen' })).not.toBeVisible();
+                const usersTab = await selectTab(tabs, 'groupUsers');
+                const usersTable = usersTab.locator('gtx-user-table');
+
+                await expect(usersTable.locator('.entity-table-actions-bar [data-action="create"]')).toBeHidden();
+                await expect(usersTable.locator('.entity-table-actions-bar [data-action="assign-to-groups"]')).toBeHidden();
             });
 
             await test.step('Node Super Admin group should allow creating a subgroup', async () => {
-                const tab = page.locator(SELECTORS.TAB_GROUP_SUBS);
-                await tab.click();
-                const actionButtons = page.locator('gtx-group-detail gtx-tab[data-id="subgroups"] .entity-table-actions-bar');
-                await actionButtons.waitFor();
-                expect(actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Neue Untergruppe erstellen' })).toBeVisible();
-                await actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Neue Untergruppe erstellen' }).click();
+                const subGroupsTab = await selectTab(tabs, 'subGroups');
+                const groupsTable = subGroupsTab.locator('gtx-group-table');
+
+                const createSubGroupButton = groupsTable.locator('.entity-table-actions-bar [data-action="create-subgroup"]');
+                await expect(createSubGroupButton).toBeVisible();
+                await createSubGroupButton.click();
+
+                // Create the sub-group, wait for the response, and save the ID of the new group for later
                 const createGroupModal = page.locator('gtx-create-group-modal');
-                await createGroupModal.waitFor();
-                await createGroupModal.locator('gtx-input[formcontrolname="name"] input').fill(NODE_SUB_SUPER_GROUP_NAME);
-                await createGroupModal.locator('gtx-button[gtxactionallowed="group.createGroup"]').click();
-                await expect(page.locator('gtx-group-detail gtx-group-table .grid-row.data-row .grid-cell.data-column[data-id="name"] .cell-content-wrapper')
-                    .filter({ hasText: NODE_SUB_SUPER_GROUP_NAME })).toBeVisible();
+                await createGroupModal.locator('.modal-content gtx-input[formcontrolname="name"] input').fill(NODE_SUB_SUPER_GROUP_NAME);
+                const createReq = waitForResponseFrom(page, 'PUT', `/rest/group/${NODE_SUPER_GROUP_ID}/groups`);
+                await clickModalAction(createGroupModal, 'confirm');
+                const createRes = await createReq;
+                const resBody: GroupResponse = await createRes.json();
+                subGroupId = resBody.group.id;
+
+                // The new group should be added to the table correctly
+                const newGroupRow = await findTableRowById(groupsTable, subGroupId);
+                await expect(newGroupRow).toBeVisible();
+
+                // Close the editor
+                await subGroupsTab.locator('gtx-entity-detail-header [data-action="cancel"]').click();
             });
 
             await test.step('Node Sub Super Admin group should allow manipulating users', async () => {
-                await page.locator('gtx-group-detail gtx-tab[data-id="subgroups"]')
-                    .locator('.gtx-entity-details-tab-content-header-buttons gtx-button[data-action="cancel"]').click();
+                const subGroupRow = await findTableRowById(masterTable, subGroupId);
+                await subGroupRow.click();
 
-                const masterTable = page.locator(SELECTORS.MASTER);
-                await masterTable.waitFor({ state: 'visible' });
-                const row = masterTable.locator('gtx-table .grid-row.data-row .grid-cell.data-column[data-id="name"] .cell-content-wrapper')
-                    .filter({ hasText: NODE_SUB_SUPER_GROUP_NAME });
-                await row.waitFor({ state: 'visible' });
-                await row.click();
+                await expect(editor).toBeVisible();
 
-                const editor = page.locator(SELECTORS.EDITOR);
-                await editor.waitFor({ state: 'visible' });
+                const usersTab = await selectTab(tabs, 'groupUsers');
+                const usersTable = usersTab.locator('gtx-user-table');
 
-                const tab = page.locator(SELECTORS.TAB_GROUP_USERS);
-                await tab.click();
-                const actionButtons = page.locator('gtx-group-detail gtx-tab[data-id="groupUsers"] .entity-table-actions-bar');
-                await actionButtons.waitFor();
-                expect(actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Neuen Benutzer in Gruppe erstellen' })).toBeVisible();
-                expect(actionButtons.locator('.table-action-button button.btn').filter({ hasText: 'Benutzer zuweisen' })).toBeVisible();
+                await expect(usersTable.locator('.entity-table-actions-bar [data-action="create"]')).toBeVisible();
+                await expect(usersTable.locator('.entity-table-actions-bar [data-action="assign-to-groups"]')).toBeVisible();
             });
         });
     });

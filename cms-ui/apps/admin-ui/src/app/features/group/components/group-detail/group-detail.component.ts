@@ -1,14 +1,3 @@
-import { detailLoading, FormGroupTabHandle, FormTabHandle, GroupDetailTabs, NULL_FORM_TAB_HANDLE, PermissionsTreeType } from '@admin-ui/common';
-import {
-    BREADCRUMB_RESOLVER,
-    EditorTabTrackerService,
-    GroupOperations,
-    GroupTableLoaderService,
-    PermissionsService,
-    ResolveBreadcrumbFn,
-} from '@admin-ui/core';
-import { BaseDetailComponent, GroupDataService } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -21,7 +10,18 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { Observable, of } from 'rxjs';
-import { map, takeUntil, tap, publishReplay, refCount, switchMap } from 'rxjs/operators';
+import { map, publishReplay, refCount, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { detailLoading, FormGroupTabHandle, FormTabHandle, GroupDetailTabs, NULL_FORM_TAB_HANDLE, PermissionsTreeType } from '../../../../common';
+import {
+    BREADCRUMB_RESOLVER,
+    EditorTabTrackerService,
+    GroupOperations,
+    GroupTableLoaderService,
+    PermissionsService,
+    ResolveBreadcrumbFn,
+} from '../../../../core';
+import { BaseDetailComponent, GroupDataService } from '../../../../shared';
+import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 
 // *************************************************************************************************
 /**
@@ -55,7 +55,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
 
     /** TRUE if logged-in user is allowed to read entity `content` */
     permissionContentRead$: Observable<boolean>;
-	/** TRUE if logged in user is allowed to assign the group */
+    /** TRUE if logged in user is allowed to assign the group */
     isGroupAssignable$: Observable<boolean>;
 
     activeTabId$: Observable<string>;
@@ -90,7 +90,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         const appState = injector.get<AppStateService>(AppStateService as Type<AppStateService>);
         const entity = appState.now.entity.group[Number(route.params.id)];
         return of(entity ? { title: entity.name, doNotTranslate: true } : null);
-    }
+    };
 
     ngOnInit(): void {
         super.ngOnInit();
@@ -109,7 +109,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         });
 
         this.permissionContentRead$ = this.permissionsService.getPermissions(AccessControlledType.CONTENT).pipe(
-            map(typePermissions => typePermissions.hasPermission(GcmsPermission.READ)),
+            map((typePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
         );
         this.isGroupAssignable$ = this.currentEntity$.pipe(
             switchMap((entity) => {
@@ -117,7 +117,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
                     return of(false);
                 }
                 return this.permissionsService.getPermissions(AccessControlledType.GROUP_ADMIN, entity.id).pipe(
-                    map(typePermissions => {
+                    map((typePermissions) => {
                         return typePermissions.hasPermission(GcmsPermission.USER_ASSIGNMENT);
                     }),
                 );

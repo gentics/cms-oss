@@ -1029,7 +1029,7 @@ test.describe('Page Management', () => {
         });
     });
 
-    test('should be able to see the template without permissions', {
+    test('should be able to see unlinked template name', {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19775',

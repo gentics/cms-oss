@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AlohaColorPickerComponent, ColorValue, NormalizedColor, RGBAColor } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Color, ColorEvent, RGBA } from 'ngx-color';
-import { colorToHex, colorToRGBA, constrastColor, patchMultipleAlohaFunctions } from '../../utils';
+import { colorToHex, colorToRGBA, contrastColor, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 function clamp(value: number, min: number, max: number): number {
@@ -79,6 +79,8 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     protected override onValueChange(): void {
         if (this.value == null && !this.settings.allowClear) {
             this.value = DEFAULT_COLOR;
+        } else {
+            this.value = colorToRGBA(this.value);
         }
 
         this.updateAndNormalizeValue();
@@ -108,7 +110,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
             .filter((color) => color != null)
             .map((color) => ({
                 color,
-                contrast: constrastColor(color),
+                contrast: contrastColor(color),
             }));
     }
 }

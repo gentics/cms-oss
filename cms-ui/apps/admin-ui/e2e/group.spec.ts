@@ -107,7 +107,7 @@ test.describe('Group Module', () => {
 
             await test.step('Node Sub Super Admin group should allow manipulating users', async () => {
                 const subGroupRow = await findTableRowById(masterTable, subGroupId);
-                await subGroupRow.click();
+                await clickTableRow(subGroupRow);
 
                 await expect(editor).toBeVisible();
 
@@ -115,7 +115,7 @@ test.describe('Group Module', () => {
                 const usersTable = usersTab.locator('gtx-user-table');
 
                 await expect(usersTable.locator('.entity-table-actions-bar [data-action="create"]')).toBeVisible();
-                await expect(usersTable.locator('.entity-table-actions-bar [data-action="assign-to-groups"]')).toBeVisible();
+                await expect(usersTable.locator('.entity-table-actions-bar [data-action="assign-users"]')).toBeVisible();
             });
         });
     });

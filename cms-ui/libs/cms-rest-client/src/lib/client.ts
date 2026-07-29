@@ -554,7 +554,7 @@ export class GCMSRestClient implements GCMSRootAPI {
     public group: GCMSGroupAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/group', null, options),
         create: (id, body) => this.executeMappedJsonRequest(PUT, `/group/${id}/groups`, body),
-        get: (id) => this.executeMappedJsonRequest(GET, `/group/${id}`),
+        get: (id, options) => this.executeMappedJsonRequest(GET, `/group/${id}`, null, options),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/group/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/group/${id}`),
 

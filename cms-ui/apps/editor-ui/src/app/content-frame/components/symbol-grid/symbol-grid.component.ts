@@ -14,11 +14,19 @@ export class SymbolGridComponent extends BaseFormElementComponent<SymbolGridItem
 
     @Input()
     public symbols: SymbolGridItem[];
+    private readonly invisibleSymbols = new Set([
+        '&nbsp;',
+        '&shy;',
+    ]);
 
     public selectSymbol(symbol: SymbolGridItem): void {
         this.triggerChange(symbol);
     }
 
     protected onValueChange(): void {
+    }
+
+    public isInvisibleSymbol(symbol: string): boolean {
+        return this.invisibleSymbols.has(symbol);
     }
 }

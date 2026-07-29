@@ -633,3 +633,29 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
     });
 }
 
+export async function addTemporaryAlohaPlugin(page, plugin: string) {
+    await page.route('**/alohapage**', async route => {
+        const response = await route.fetch();
+        let body = await response.text();
+
+        /*
+        this adds the plugin to the data-aloha-plugins array like so::
+
+        data-aloha-plugins="gcn/gcn,common/ui,common/block,common/format,
+        common/autoparagraph,common/highlighteditables,common/list,common/link,
+        common/table,common/paste,common/contenthandler,common/commands,
+        gcn/gcnlinkchecker,common/dom-to-xhtml,common/abbr,extra/textcolor,[TEMP_PLUGIN]"
+        */
+
+        body = body.replace(
+            /data-aloha-plugins\s*=\s*"([^"]*)"/,
+            (_, plugins) =>
+                `data-aloha-plugins="${plugins},${plugin}"`
+        );
+
+        await route.fulfill({
+            response,
+            body
+        });
+    });
+}

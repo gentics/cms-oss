@@ -2,6 +2,7 @@
 /* eslint-disable import/no-nodejs-modules */
 import { Variant } from '@gentics/cms-models';
 import {
+    FixtureFile,
     FormattedText,
     FORMATTING_NODES,
     LoginInformation,
@@ -480,4 +481,17 @@ export function hexToRGB(hex: string): null | RGBColor | RGBAColor {
     }
 
     return parts.map((val) => parseInt(val, 16)) as any;
+}
+
+export function getFileName(fixture: FixtureFile): string {
+    if (fixture.name) {
+        return fixture.name;
+    }
+
+    const idx = fixture.fixturePath.lastIndexOf('/');
+    if (idx < 0) {
+        return fixture.fixturePath;
+    }
+
+    return fixture.fixturePath.substring(idx + 1);
 }

@@ -13,8 +13,9 @@ import {
     ENV_E2E_APP_PATH,
     ENV_E2E_KEYCLOAK_URL,
 } from './config';
-import { hasMatchingParams, matchesPath } from './utils';
 import { createClient } from './importer';
+import { ClickOptions } from './playwright-types';
+import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
 const TOAST_CLOSE_BUTTON = '.gtx-toast-btn_close:not([hidden])';
@@ -512,4 +513,13 @@ export async function createClientFromPage(page: Page): Promise<GCMSRestClient> 
     client.sid = parseInt(JSON.parse(sid), 10);
 
     return client;
+}
+
+export async function uploadFileFromInput(page: Page, fileInput: Locator, files: string[], clickOptions?: ClickOptions): Promise<void> {
+    const fileChooserPromise = page.waitForEvent('filechooser');
+
+    await fileInput.click(clickOptions);
+    const fileChooser = await fileChooserPromise;
+
+    await fileChooser.setFiles(files);
 }

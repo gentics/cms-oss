@@ -1257,7 +1257,7 @@ test.describe('Page Editing', () => {
             test('should change scope to tables when adding a caption', async ({ page }) => {
                 await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
-                
+
                 await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
 
                 const tableTab = page.locator(`gtx-page-editor-tabs button[data-id="table"]`);
@@ -1622,12 +1622,17 @@ test.describe('Page Editing', () => {
             });
         });
 
-        test.describe('Textcolor', () => {
+        test.describe('Text Color', () => {
             test.beforeEach(() => {
                 editingPage = IMPORTER.get(PAGE_ONE);
             });
 
-            test('should be able to select a palette color correctly', async ({ page }) => {
+            test('should be able to select a palette color correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19852',
+                }],
+            }, async ({ page }) => {
                 const FIRST_COLOR = 'blue';
                 const SECOND_COLOR = '#f00';
 

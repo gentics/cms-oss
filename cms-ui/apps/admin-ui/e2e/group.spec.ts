@@ -80,10 +80,11 @@ test.describe('Group Module', () => {
             });
 
             await test.step('Node Super Admin group should allow creating a subgroup', async () => {
-                const subGroupsTab = await selectTab(tabs, 'subGroups');
+                const subGroupsTab = await selectTab(tabs, 'subgroups');
                 const groupsTable = subGroupsTab.locator('gtx-group-table');
 
                 const createSubGroupButton = groupsTable.locator('.entity-table-actions-bar [data-action="create-subgroup"]');
+                await createSubGroupButton.waitFor();
                 await expect(createSubGroupButton).toBeVisible();
                 await createSubGroupButton.click();
 

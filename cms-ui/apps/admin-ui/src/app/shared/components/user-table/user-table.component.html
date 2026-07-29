@@ -10,7 +10,7 @@
 
 @if (!hideActions) {
     <div class="entity-table-actions-bar">
-        @if (group || assignable) {
+        @if (group && assignable) {
             <gtx-button
                 class="table-action-button"
                 flat

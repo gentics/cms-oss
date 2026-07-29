@@ -35,6 +35,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response.Status;
+import org.apache.commons.lang3.StringUtils;
 
 @Authenticated
 @Produces({MediaType.APPLICATION_JSON})
@@ -101,10 +102,10 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	 * @throws NodeException
 	 */
 	private void validateRequest(String typeFilter) throws NodeException {
-		if(typeFilter.isEmpty()) {
+		if(StringUtils.isBlank(typeFilter)) {
 			return;
 		}
-		
+
 		try {
 			PublishTypeDto.fromString(typeFilter);
 		} catch (IllegalArgumentException e) {

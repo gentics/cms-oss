@@ -101,6 +101,10 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	 * @throws NodeException
 	 */
 	private void validateRequest(String typeFilter) throws NodeException {
+		if(typeFilter.isEmpty()) {
+			return;
+		}
+		
 		try {
 			PublishTypeDto.fromString(typeFilter);
 		} catch (IllegalArgumentException e) {

@@ -78,7 +78,17 @@ function ANDropDownReferenceElement(props: IFormComponentAttributes) {
     }
   }, [props.jsonpath, props.handleSearch, searchReferenceValueMinLength, loading]);
 
-  const debouncedLoadOptions = useRef(debounce(loadOptions, 500)).current;
+  // loadOptions must not be captured directly by the debounce instance: useRef keeps
+  // only the value of the first render, which would pin the mount-time props (and with
+  // them a stale formState/handleSearch/updateState) for the lifetime of the element.
+  const loadOptionsRef = useRef(loadOptions);
+  useEffect(() => {
+    loadOptionsRef.current = loadOptions;
+  });
+
+  const debouncedLoadOptions = useRef(
+    debounce((text: string) => loadOptionsRef.current(text), 500),
+  ).current;
 
   const handleChangeInputValue = (value: string) => {
     if (loading) return;

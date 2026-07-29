@@ -7,6 +7,7 @@ import {
     FIXTURE_IMAGE_JPEG2,
     FIXTURE_IMAGE_PNG1,
     FIXTURE_IMAGE_PNG2,
+    getFileName,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -239,11 +240,25 @@ test.describe('Media Upload', () => {
         const item = findItem(list, fileObj.id);
         await itemAction(item, 'properties');
 
-        const fileInput = page.locator('content-frame gtx-file-preview gtx-file-picker[data-action="replace"] gtx-button button');
+        const preview = page.locator('content-frame gtx-file-preview');
+        const filePicker = preview.locator(' gtx-file-picker[data-action="replace"]');
+        const fileInput = filePicker.locator('gtx-button button');
+        const keepFilename = filePicker.locator('+ .keep-filename input[type="checkbox"]');
+
+        /*
+         * We want to have a new file-name to verify that the view has correctly updated as well
+         */
+        // eslint-disable-next-line playwright/no-conditional-in-test
+        if (await keepFilename.evaluate((el: HTMLInputElement) => el.checked)) {
+            await keepFilename.locator('+ label').click();
+        }
 
         const uploadReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${fileObj.id}`);
+        const loadReq = waitForResponseFrom(page, 'GET', `/rest/file/load/${fileObj.id}`);
         await uploadFileFromInput(page, fileInput, [FIXTURE_FILE_TXT2.fixturePath]);
-        await uploadReq;
+        await Promise.all([uploadReq, loadReq]);
+
+        await expect(preview.locator('.file-preview .file-details .name')).toHaveText(getFileName(FIXTURE_FILE_TXT2));
     });
 
     test('replacing a image with a new binary', {
@@ -273,10 +288,24 @@ test.describe('Media Upload', () => {
         const item = findItem(list, fileObj.id);
         await itemAction(item, 'properties');
 
-        const fileInput = page.locator('content-frame gtx-file-preview gtx-file-picker[data-action="replace"] gtx-button button');
+        const preview = page.locator('content-frame gtx-file-preview');
+        const filePicker = preview.locator(' gtx-file-picker[data-action="replace"]');
+        const fileInput = filePicker.locator('gtx-button button');
+        const keepFilename = filePicker.locator('+ .keep-filename input[type="checkbox"]');
+
+        /*
+         * We want to have a new file-name to verify that the view has correctly updated as well
+         */
+        // eslint-disable-next-line playwright/no-conditional-in-test
+        if (await keepFilename.evaluate((el: HTMLInputElement) => el.checked)) {
+            await keepFilename.locator('+ label').click();
+        }
 
         const uploadReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${fileObj.id}`);
+        const loadReq = waitForResponseFrom(page, 'GET', `/rest/image/load/${fileObj.id}`);
         await uploadFileFromInput(page, fileInput, [FIXTURE_IMAGE_JPEG2.fixturePath]);
-        await uploadReq;
+        await Promise.all([uploadReq, loadReq]);
+
+        await expect(preview.locator('.image-preview .filename')).toHaveText(getFileName(FIXTURE_IMAGE_JPEG2));
     });
 });

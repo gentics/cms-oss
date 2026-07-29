@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -1535,7 +1536,8 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 		}
 
 		public String[] getStackKeywords() {
-			return new String[] { "ds", getOverviewTag().getName()};
+			return Optional.ofNullable(getOverviewTag()).map(Tag::getName).map(name -> new String[] { "ds", name })
+					.orElse(new String[] { "ds" });
 		}
 
 		public Resolvable getKeywordResolvable(String keyword) throws NodeException {

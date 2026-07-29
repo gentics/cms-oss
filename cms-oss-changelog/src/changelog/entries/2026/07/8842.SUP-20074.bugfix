@@ -1,0 +1,2 @@
+When an overview tag was removed from a page, rendering older versions of the page failed with errors or would not render the overview tag.
+This has been fixed.

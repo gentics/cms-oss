@@ -1,0 +1,1 @@
+Admin UI: fixed error when calling the Publish/State endpoint with no type(null)

@@ -1,0 +1,15 @@
+h2 Entering image inormation after upload
+
+After uploading an image editors have to leave the page to be able to enter image informations, which are available in each project, as object properties for the image.
+
+h3. Feature activation
+
+If you want to use this feature, you first have to enable it node.conf
+
+<javascript filename="conf/features.yml">
+feature:
+    UPLOAD_IMAGE_PROPERTIES: true
+</javascript>
+
+After that a modal window will appear after an upload, displaying the image properties and object properties.
+(These could also be set afterward by clicking on the image anyway.)

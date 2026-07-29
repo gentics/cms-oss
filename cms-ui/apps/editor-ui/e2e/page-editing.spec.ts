@@ -1621,6 +1621,86 @@ test.describe('Page Editing', () => {
                 await checkKeys(14);
             });
         });
+
+        test.describe('Textcolor', () => {
+            test.beforeEach(() => {
+                editingPage = IMPORTER.get(PAGE_ONE);
+            });
+
+            test('should be able to select a palette color correctly', async ({ page }) => {
+                const FIRST_COLOR = 'blue';
+                const SECOND_COLOR = '#f00';
+
+                await overwriteAlohaConfigWith(page, `
+                    Aloha.settings.plugins ??= {};
+                    Aloha.settings.plugins.textcolor = {
+                        config: {
+                            color: {
+                                enabled: true,
+                                palette: ${JSON.stringify([FIRST_COLOR, SECOND_COLOR])},
+                            }
+                        }
+                    };
+                `);
+                await openEditingPageInEditmode(page);
+
+                // Select the text
+                await test.step('Fill content', async () => {
+                    await mainEditable.click();
+                    await mainEditable.fill('Some text');
+                    await mainEditable.press('ControlOrMeta+a');
+                });
+
+                let textColorButton: Locator;
+                let pickerDropdown: Locator;
+
+                await test.step('Open text-color picker', async () => {
+                    // Open the dropdown
+                    await selectEditorTab(page, 'formatting');
+                    textColorButton = findAlohaComponent(page, { slot: 'textColor', type: 'context-button' });
+                    await textColorButton.click();
+                    pickerDropdown = findDynamicDropdown(page, 'textColor');
+                    await expect(pickerDropdown).toBeVisible();
+                });
+
+                let dropdownConfirm: Locator;
+                let firstColorEntry: Locator;
+                let secondColorEntry: Locator;
+
+                await test.step('Apply the first color', async () => {
+                    const colorPicker = pickerDropdown.locator('gtx-aloha-color-picker-renderer');
+                    // The clear button + the two colors we defined
+                    await expect(colorPicker.locator('.palette-wrapper .palette-entry')).toHaveCount(3);
+                    // The blue color from the config
+                    firstColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#0000ffff"]');
+                    await expect(firstColorEntry).toBeVisible();
+                    secondColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#ff0000ff"]');
+                    await expect(secondColorEntry).toBeVisible();
+
+                    await firstColorEntry.click();
+                    dropdownConfirm = pickerDropdown.locator('.context-menu-header .header-confirm-button');
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(0, 0, 255)');
+                });
+
+                await test.step('Apply the second color', async () => {
+                    await mainEditable.click();
+                    await mainEditable.press('ControlOrMeta+a');
+                    await textColorButton.click();
+
+                    // First one should be marked as active
+                    await expect(firstColorEntry).toContainClass('active');
+
+                    await secondColorEntry.click();
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(255, 0, 0)');
+                });
+            });
+        });
     });
 
     test('should load edit mode correctly when switching from preview mode', {

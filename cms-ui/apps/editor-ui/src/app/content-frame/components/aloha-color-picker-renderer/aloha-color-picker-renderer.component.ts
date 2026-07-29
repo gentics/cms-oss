@@ -5,7 +5,6 @@ import { Color, ColorEvent, RGBA } from 'ngx-color';
 import { colorToHex, colorToRGBA, constrastColor, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
-
 function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(value, max));
 }
@@ -15,8 +14,7 @@ function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColo
 
     if (!allowAlpha) {
         raw[3] = 255;
-    }
-    else {
+    } else {
         const normalizedValue = Math.round(raw[3] * 255);
         raw[3] = clamp(normalizedValue, 0, 255);
     }
@@ -24,8 +22,8 @@ function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColo
     return raw;
 }
 
-function toNGXColor(rgba: RGBAColor): RGBA {
-    return rgba == null ? null : { r: rgba[0], g: rgba[1], b: rgba[2], a: rgba[3] };
+function toNGXColor(rgba: RGBAColor): string | RGBA {
+    return rgba == null ? '' : { r: rgba[0], g: rgba[1], b: rgba[2], a: rgba[3] / 255 };
 }
 
 interface PaletteColor {
@@ -41,11 +39,11 @@ const DEFAULT_COLOR: RGBAColor = [0, 0, 0, 255];
     styleUrls: ['./aloha-color-picker-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaColorPickerRendererComponent)],
-    standalone: false
+    standalone: false,
 })
 export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponent<AlohaColorPickerComponent, NormalizedColor> implements OnInit {
 
-    public ngxColorValue: RGBA;
+    public ngxColorValue: RGBA | string;
     public hexValue: string;
     public normalizedPalette: PaletteColor[] = [];
 
@@ -107,8 +105,8 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.normalizedPalette = (this.settings.palette || [])
             .map((color: ColorValue) => colorToHex(color))
-            .filter(color => color != null)
-            .map(color => ({
+            .filter((color) => color != null)
+            .map((color) => ({
                 color,
                 contrast: constrastColor(color),
             }));

@@ -23,10 +23,14 @@ public enum JsonContentValueResolver implements ValueResolver {
 	@Override
 	public Object resolve(Object context, String name) {
 		if (context instanceof JsonArray ja) {
-			try {
-				int index = Integer.parseInt(name);
-				return ja.getValue(index);
-			} catch (NumberFormatException e) {
+			if ("length".equals(name)) {
+				return ja.size();
+			} else {
+				try {
+					int index = Integer.parseInt(name);
+					return ja.getValue(index);
+				} catch (NumberFormatException e) {
+				}
 			}
 		} else if (context instanceof JsonObject jo) {
 			return jo.getValue(name);

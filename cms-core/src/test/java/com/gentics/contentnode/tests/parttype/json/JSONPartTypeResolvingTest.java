@@ -31,6 +31,8 @@ import com.gentics.contentnode.tests.parttype.handlebars.HandlebarsPartTypeResol
 @RunWith(value = Parameterized.class)
 public class JSONPartTypeResolvingTest extends HandlebarsPartTypeResolvingTest {
 
+	protected static final String JSON_INPUT = "{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}";
+
 	@Parameter(2)
 	public String defaultValue;
 
@@ -108,10 +110,19 @@ public class JSONPartTypeResolvingTest extends HandlebarsPartTypeResolvingTest {
 					"", 
 					HANDLEBARS_CONTENT_ITERATE_KEYS },
 			new Object[] { JSONPartType.class, "wherever, wherever, who", 
-					"{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}", 
+					JSON_INPUT, 
 					"{{cms.tag.parts.otherpart.whatever.whoever}}, {{cms.tag.parts.otherpart.whoever.0.whatever}}, {{cms.tag.parts.otherpart.wherever.1}}" },
 			new Object[] { JSONPartType.class, "wherever, wherever, who", 
-					"{\"whatever\":{\"whoever\": \"wherever\"}, \"whoever\":[{\"whatever\": \"wherever\"}], \"wherever\": [\"what\", \"who\", \"where\"]}", 
+					JSON_INPUT, 
+					"{{cms.tag.parts.otherpart.whatever.whoever}}, {{cms.tag.parts.otherpart.whoever.[0].whatever}}, {{cms.tag.parts.otherpart.wherever.[1]}}" },
+			new Object[] { JSONPartType.class, "1, 3", 
+					JSON_INPUT, 
+					"{{cms.tag.parts.otherpart.whoever.length}}, {{cms.tag.parts.otherpart.wherever.length}}" },
+			new Object[] { JSONPartType.class, "whoever:whoever=wherever , :{\"whatever\":\"wherever\"} , 0:what 1:who 2:where ", 
+					JSON_INPUT, 
+					"{{#each cms.tag.parts.otherpart.whatever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.whoever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.wherever}}{{@key}}:{{{this}}} {{/each}}" },
+			new Object[] { JSONPartType.class, "wherever, wherever, who", 
+					JSON_INPUT, 
 					"{{json_path cms.tag.parts.otherpart \"$[*]['whoever']\"}}, {{json_path cms.tag.parts.otherpart \"$.whoever[0].whatever\"}}, {{json_path cms.tag.parts.otherpart \"$.wherever[1]\"}}" }
 		);
 		return data;

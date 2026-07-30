@@ -89,7 +89,7 @@ public class OverviewSettingsRenderTest {
 
 		page = supply(() -> update(createPage(node.getFolder(), template, "Page"), upd -> {
 			getPartType(HandlebarsPartType.class, upd.getTag(TAG_NAME), HBS_PARTNAME).setText(
-					"{{#with cms.tag.parts.ds}}listType: {{gtx_render listType}}, selectType: {{gtx_render selectType}}, orderBy: {{gtx_render orderBy, orderDirection: {{gtx_render orderDirection}}, maxItems: {{gtx_render maxItems}}, recursive: {{gtx_render recursive}}{{/with}}");
+					"{{#with cms.tag.parts.ds}}listType: {{gtx_render listType}}, selectType: {{gtx_render selectType}}, orderBy: {{gtx_render orderBy}}, orderDirection: {{gtx_render orderDirection}}, maxItems: {{gtx_render maxItems}}, recursive: {{gtx_render recursive}}{{/with}}");
 		}));
 	}
 

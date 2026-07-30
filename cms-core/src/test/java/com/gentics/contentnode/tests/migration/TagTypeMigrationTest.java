@@ -890,8 +890,8 @@ public class TagTypeMigrationTest {
 
 		// migrate source part "template" to target part "template"
 		partMapping = new MigrationPartMapping();
-		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "template").getId(), 0));
-		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "template").getId(), 0));
+		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "hbs").getId(), 0));
+		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "hbs").getId(), 0));
 		partMappings.add(partMapping);
 
 		// Create list of objects to apply mappings to

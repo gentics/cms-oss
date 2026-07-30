@@ -17,6 +17,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -28,6 +29,7 @@ import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Test case for publishing pages that have more the !6MB of content
@@ -63,6 +65,8 @@ public class LargePagePublishTest {
 	 */
 	@BeforeClass
 	public static void setupOnce() throws Exception {
+		TestHelpersHandlebarsService.addHelper(RangeHelperSource.class);
+
 		try (Trx trx = new Trx(null, 1)) {
 			DBUtils.executeUpdate("UPDATE node SET disable_publish = ?", new Object[] {1});
 
@@ -77,8 +81,8 @@ public class LargePagePublishTest {
 			// add a template tag that renders more than 16M of content, so that inserting the rendered page into the publish table must fail
 			TemplateTag hbsTag = ContentNodeTestDataUtils.createTemplateTag(hbsConstructId, "content", false, false);
 			template.getTemplateTags().put(hbsTag.getName(), hbsTag);
-			// FIXME
-			hbsTag.getValues().getByKeyname("hbs").setValueText("#foreach($i in [1..1700000])0123456789#end");
+			hbsTag.getValues().getByKeyname("hbs")
+					.setValueText("{{#each (gtx_test_range 1700000)}}0123456789{{/each}}");
 			template.setSource("<node " + hbsTag.getName() + ">");
 			template.save();
 			trx.success();

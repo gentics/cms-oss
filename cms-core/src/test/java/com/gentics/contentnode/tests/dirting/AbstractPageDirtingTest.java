@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -33,6 +34,8 @@ import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.db.SQLExecutor;
 
 public class AbstractPageDirtingTest {
@@ -91,7 +94,7 @@ public class AbstractPageDirtingTest {
 	protected int pagetagPageId;
 
 	/**
-	 * ID of the page rendering a vtl list
+	 * ID of the page rendering a hbs list
 	 */
 	protected int hbsListPage;
 
@@ -124,6 +127,11 @@ public class AbstractPageDirtingTest {
 	 * List of pages dependent on the publishdate
 	 */
 	protected List<Integer> pdateDependentPages;
+
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -300,9 +308,9 @@ public class AbstractPageDirtingTest {
 		page.setFolderId(folder.getId());
 		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
 		Folder targetFolder = targetPage.getFolder();
-		// FIXME
 		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject().setValueText(
-				"#set($folder = $cms.imps.loader.getFolder(" + targetFolder.getId() + "))#foreach($page in $folder.pages)#if($page.online)Page [$page.name]\n#end#end");
+				"{{#with (gtx_test_folder %d)}}{{#each pages}}{{#if online}}Page [{{name}}]\n{{/if}}{{/each}}{{/with}}".formatted(targetFolder.getId())
+				);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -331,9 +339,10 @@ public class AbstractPageDirtingTest {
 		page.setTemplateId(template.getId());
 		page.setFolderId(folder.getId());
 		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
-		// FIXME
 		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject()
-				.setValueText("#set($page = $cms.imps.loader.getPage(" + targetPage.getId() + "))#if($page.online)$page.name#end");
+				.setValueText(
+						"{{#with (gtx_test_page %d)}}{{#if online}}{{name}}{{/if}}{{/with}}".formatted(targetPage.getId())
+					);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -363,9 +372,10 @@ public class AbstractPageDirtingTest {
 		page.setTemplateId(template.getId());
 		page.setFolderId(folder.getId());
 		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
-		// FIXME
 		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject()
-				.setValueText("#set($page = $cms.imps.loader.getPage(" + targetPage.getId() + "))#if($page.online)$page.name - $page.publishtimestamp#end");
+				.setValueText(
+						"{{#with (gtx_test_page %d)}}{{#if online}}{{name}} - {{publishtimestamp}}{{/if}}{{/with}}".formatted(targetPage.getId())
+					);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -467,9 +477,9 @@ public class AbstractPageDirtingTest {
 			assertPublishedContent(targetPageId, "Target page: [Target content]");
 			assertPublishedContent(urlPageId, "Url page: [/Content.Node/Target-page.html]");
 			assertPublishedContent(pagetagPageId, "Pagetag page: [Target content]");
-			assertPublishedContent(hbsListPage, "Vtl list page: [Page [Target page]\n]");
-			assertPublishedContent(hbsLoaderPage, "Vtl loader page: [Target page]");
-			assertPublishedContent(hbsPdatePage, "Vtl pdate page: [Target page - " + expectedPdate + "]");
+			assertPublishedContent(hbsListPage, "Hbs list page: [Page [Target page]\n]");
+			assertPublishedContent(hbsLoaderPage, "Hbs loader page: [Target page]");
+			assertPublishedContent(hbsPdatePage, "Hbs pdate page: [Target page - " + expectedPdate + "]");
 			assertPublishedContent(manualOverviewPage, "Manual overview page: [Target page]");
 			assertPublishedContent(folderOverviewPage, "Folder overview page: [Target page]");
 		} else {
@@ -483,9 +493,9 @@ public class AbstractPageDirtingTest {
 																						// pages
 																						// as
 																						// well
-			assertPublishedContent(hbsListPage, "Vtl list page: []");
-			assertPublishedContent(hbsLoaderPage, "Vtl loader page: []");
-			assertPublishedContent(hbsPdatePage, "Vtl pdate page: []");
+			assertPublishedContent(hbsListPage, "Hbs list page: []");
+			assertPublishedContent(hbsLoaderPage, "Hbs loader page: []");
+			assertPublishedContent(hbsPdatePage, "Hbs pdate page: []");
 			assertPublishedContent(manualOverviewPage, "Manual overview page: []");
 			assertPublishedContent(folderOverviewPage, "Folder overview page: []");
 		}

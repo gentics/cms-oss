@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,6 +33,7 @@ import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.rest.model.formtype.FormGenTranslations;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.mesh.rest.client.MeshRequest;
 
 import io.reactivex.Completable;
 import io.vertx.core.json.JsonObject;
@@ -185,6 +187,7 @@ public class FormsPublisherService implements MeshPublisherService {
 		String activationUrl = "%s/active".formatted(pluginUrl);
 		String formtypeConfigUrl = "%s/formtypeconfigs".formatted(pluginUrl);
 		String translationsUrl = "%s/translations".formatted(pluginUrl);
+		String noIndexUrl = "%s/noindex".formatted(pluginUrl);
 
 		FormsPluginStatusResponse formsStatus = publisher.client.get(activationUrl, FormsPluginStatusResponse.class)
 				.toSingle().onErrorReturn(t -> {
@@ -196,12 +199,40 @@ public class FormsPublisherService implements MeshPublisherService {
 						return response;
 					});
 				}).blockingGet();
+
+		Boolean noIndex = Boolean.valueOf(publisher.cr.isNoFormsIndex());
+		Runnable setNoIndex = () -> {
+			MeshRequest<FormsPluginStatusResponse> update = publisher.cr.isNoFormsIndex()
+					? publisher.client.post(noIndexUrl, FormsPluginStatusResponse.class)
+					: publisher.client.delete(noIndexUrl, FormsPluginStatusResponse.class);
+			update.toSingle().doOnSuccess(response -> {
+				publisher.info("noIndex setting %b has been successfully updated for %s", publisher.cr.isNoFormsIndex(), currentProjectName);
+			}).onErrorReturn(t -> {
+				return ifNotFound(t, () -> {
+					publisher.error("Could not update noIndex forms plugin status. Maybe plugin is not deployed or incompatible.");
+					FormsPluginStatusResponse response = new FormsPluginStatusResponse();
+					response.setNoIndex(noIndex);
+					return response;
+				});
+			}).blockingGet();
+		};
+
 		if (formsStatus.getActive() == Boolean.TRUE) {
 			publisher.info("%s plugin is active for project %s", pluginName, currentProjectName);
 
 			publisher.info("Writing form type configurations and translations to %s plugin for project %s", pluginName, currentProjectName);
 			publisher.client.post(formtypeConfigUrl, new JsonObject(configuration.toString())).blockingAwait();
 			publisher.client.post(translationsUrl, translations, JsonObject.class).blockingAwait();
+
+			if (!Objects.equals(noIndex, formsStatus.getNoIndex())) {
+				if (repair) {
+					setNoIndex.run();
+				} else {
+					error("Forms plugin noIndex status for project %s should be %s, but is %s",
+							currentProjectName, noIndex.toString(), formsStatus.getNoIndex());
+					success.set(false);
+				}
+			}
 		} else {
 			if (repair) {
 				publisher.info("Activating %s plugin for project %s", pluginName, currentProjectName);
@@ -213,6 +244,7 @@ public class FormsPublisherService implements MeshPublisherService {
 					publisher.client.post(formtypeConfigUrl, new JsonObject(configuration.toString()))
 							.blockingAwait();
 					publisher.client.post(translationsUrl, translations, JsonObject.class).blockingAwait();
+					setNoIndex.run();
 				} else {
 					publisher.error("Could not activate %s plugin for project %s", pluginName, currentProjectName);
 					success.set(false);

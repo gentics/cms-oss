@@ -7,11 +7,14 @@
         [attr.title]="singleSymbol.label"
         (click)="selectSymbol(singleSymbol)"
         >
-            <span
-              class="symbol-grid-cell-content"
-              [class.material-symbols-outlined]="singleSymbol.icon"
-              [innerHTML]="singleSymbol.icon ? singleSymbol.icon : singleSymbol.symbol"
-              ></span>
+        @if(singleSymbol.icon) {
+          <icon>{{singleSymbol.icon}}</icon>
+        } @else {
+          <span
+            class="symbol-grid-cell-content"
+            [innerHTML]="singleSymbol.symbol"
+            ></span>
+        }
       </button>
     }
   </div>

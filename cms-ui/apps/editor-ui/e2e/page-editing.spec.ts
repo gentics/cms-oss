@@ -1595,19 +1595,20 @@ test.describe('Page Editing', () => {
 
                 const characterCells = page.locator(CHARACTER_CELL);
                 // select a 'regular' icon in that case the last in the roster
-                // amd check that it does not have the 'material-symbols-outlined' class
+                // and check that it does not have an icon tag as a child
                 const lastCharacterCell = characterCells.last();
                 const lastCharacter = lastCharacterCell.locator('.symbol-grid-cell-content');
                 const lastCharacterContent = await lastCharacter.textContent();
 
-                await expect(lastCharacter).not.toHaveClass("material-symbols-outlined");
+                await expect(lastCharacterCell.locator("icon")).not.toBeAttached();
                 
                 // select an 'invisible' icon like non-breaking space
-                // amd check if it has the 'material-symbols-outlined' class
-                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="non-breaking space"]`);
-                const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('.symbol-grid-cell-content');
+                // and check if it has an icon tag as a child
 
-                await expect(nonBreakingSpaceCharacter).toHaveClass("symbol-grid-cell-content material-symbols-outlined");
+                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="non-breaking space"]`);
+                const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('icon');
+
+                await expect(nonBreakingSpaceCharacter).toBeVisible();
                 
                 // click on the 'regular' icon and check the content of the editor input
                 await lastCharacter.click();

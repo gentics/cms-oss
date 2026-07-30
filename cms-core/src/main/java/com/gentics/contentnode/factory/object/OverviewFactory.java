@@ -217,7 +217,7 @@ public class OverviewFactory extends AbstractFactory {
 
 		public Tag getContainer() throws NodeException {
 			if (containerId != null && Tag.class.isAssignableFrom(containerClass)) {
-				return (Tag) TransactionManager.getCurrentTransaction().getObject(containerClass, containerId);
+				return (Tag) TransactionManager.getCurrentTransaction().getObject(containerClass, containerId, info.getVersionTimestamp());
 			} else {
 				return null;
 			}

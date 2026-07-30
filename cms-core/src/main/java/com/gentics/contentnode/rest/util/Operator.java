@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,6 +17,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import jakarta.ws.rs.WebApplicationException;
@@ -27,6 +30,7 @@ import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.messaging.MessageSender;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -151,7 +155,7 @@ public class Operator {
 			Runnable backgroundCallback) {
 		try {
 			RestCallable wrapper = new RestCallable(description, lock, callable);
-			Future<GenericResponse> futureResult = executor.submit(wrapper);
+			CompletableFuture<GenericResponse> futureResult = submit(wrapper);
 
 			try {
 				if (timeout <= 0) {
@@ -160,15 +164,11 @@ public class Operator {
 					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
 				}
 			} catch (TimeoutException e) {
-				wrapper.sendToBackground();
-				I18nString msg = new CNI18nString("job_sent_to_background");
-				msg.setParameter("0", description);
+				futureResult.whenComplete(handleInBackground(wrapper));
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
 				}
-				String translatedMsg = msg.toString();
-
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				return continueInBackground(description);
 			}
 		} catch (Exception exception) {
 			if (exception.getCause() instanceof ReadOnlyException) {
@@ -215,7 +215,7 @@ public class Operator {
 		try {
 			RestCallable wrapper = new RestCallable(description, lock, callable);
 			wrapper.setThrowNodeException(true);
-			Future<GenericResponse> futureResult = executor.submit(wrapper);
+			CompletableFuture<GenericResponse> futureResult = submit(wrapper);
 
 			try {
 				if (timeout <= 0) {
@@ -224,18 +224,14 @@ public class Operator {
 					return futureResult.get(timeout, TimeUnit.MILLISECONDS);
 				}
 			} catch (TimeoutException e) {
-				wrapper.sendToBackground();
-				I18nString msg = new CNI18nString("job_sent_to_background");
-				msg.setParameter("0", description);
-				String translatedMsg = msg.toString();
-
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				futureResult.whenComplete(handleInBackground(wrapper));
+				return continueInBackground(description);
 			}
 		} catch (NodeException e) {
 			throw e;
 		} catch (Exception e) {
-			if (e.getCause() instanceof NodeException) {
-				throw (NodeException)e.getCause();
+			if (e.getCause() instanceof NodeException ne) {
+				throw ne;
 			}
 			logger.error("Error while " + description, e);
 			I18nString message = new CNI18nString("rest.general.error");
@@ -257,10 +253,10 @@ public class Operator {
 		}
 		try {
 			QueueResult queueResult = new QueueResult(description, wrappedCallables.size());
-			List<Future<GenericResponse>> futureResults = new ArrayList<>();
+			List<CompletableFuture<GenericResponse>> futureResults = new ArrayList<>();
 			for (RestCallable wrapper : wrappedCallables) {
 				wrapper.addToQueue(queueResult);
-				futureResults.add(executor.submit(wrapper));
+				futureResults.add(submit(wrapper));
 			}
 
 			try {
@@ -279,15 +275,17 @@ public class Operator {
 
 				return merged;
 			} catch (TimeoutException e) {
-				for (RestCallable wrapper : wrappedCallables) {
-					wrapper.sendToBackground();
+				for (CompletableFuture<GenericResponse> future : futureResults) {
+					future.whenComplete((result, ex) -> {
+						try {
+							queueResult.handleInBackground();
+						} catch (NodeException ne) {
+							logger.error("Error while handling result in background", ne);
+						}
+					});
 				}
-				queueResult.sendToBackground();
 
-				I18nString msg = new CNI18nString("job_sent_to_background");
-				msg.setParameter("0", description);
-				String translatedMsg = msg.toString();
-				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
+				return continueInBackground(description);
 			}
 		} catch (Exception e) {
 			logger.error("Error while " + description, e);
@@ -396,6 +394,50 @@ public class Operator {
 	}
 
 	/**
+	 * Submit the callable wrapper to the executor
+	 * @param wrapper callable wrapper
+	 * @return completable future
+	 */
+	protected static CompletableFuture<GenericResponse> submit(RestCallable wrapper) {
+		return CompletableFuture.supplyAsync(() -> {
+			try {
+				return wrapper.call();
+			} catch (Exception e) {
+				throw new CompletionException(e);
+			}
+		}, executor);
+	}
+
+	/**
+	 * Return a consumer which will handle the result or exception of the given callable wrapper in the background
+	 * @param wrapper callable wrapper
+	 * @return consumer
+	 */
+	protected static BiConsumer<? super GenericResponse, ? super Throwable> handleInBackground(RestCallable wrapper) {
+		return (result, ex) -> {
+			try {
+				if (result != null) {
+					wrapper.handleInBackground(result);
+				} else if (ex != null) {
+					wrapper.handleInBackground(ex);
+				}
+			} catch (NodeException ne) {
+				logger.error("Error while handling result in background", ne);
+			}
+		};
+	}
+
+	/**
+	 * Return a response stating that the job will be continued in the background
+	 * @param description job description
+	 * @return response
+	 */
+	protected static GenericResponse continueInBackground(String description) {
+		String msg = I18NHelper.get("job_sent_to_background", description);
+		return new GenericResponse(new Message(Type.INFO, msg), new ResponseInfo(ResponseCode.OK, msg)).setInBackground(true);
+	}
+
+	/**
 	 * Get the currently running jobs
 	 * @return collection of {@link RestCallable} wrappers for the currently running jobs
 	 */
@@ -474,11 +516,6 @@ public class Operator {
 
 		protected int resultCounter = 0;
 
-		/**
-		 * Flag to mark, whether the job queue was sent to the background
-		 */
-		protected boolean background = false;
-
 		protected GenericResponse mergedResponse = new GenericResponse(null, null);
 
 		protected QueueResult(String description, int queueSize) throws NodeException {
@@ -487,19 +524,13 @@ public class Operator {
 			this.queueSize = queueSize;
 		}
 
-		/**
-		 * Send this job queue to the background. Once the job is finished, instant
-		 * messages will be sent to the user
-		 */
-		public void sendToBackground() {
-			background = true;
-		}
-
 		public synchronized void handleResponse(GenericResponse response) throws NodeException {
 			mergeInto(response, mergedResponse);
 			resultCounter++;
+		}
 
-			if (resultCounter >= queueSize && background) {
+		public void handleInBackground() throws NodeException {
+			if (resultCounter >= queueSize) {
 				TransactionManager.execute(new Executable() {
 					@Override
 					public void execute() throws NodeException {

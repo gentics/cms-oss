@@ -84,30 +84,22 @@ public abstract class AbstractContentRenderUrl implements RenderUrl {
 		if (publishedNodeId != null) {
 			sourceNodeId = publishedNodeId;
 		} else if (source != null) {
-			if (source instanceof Page) {
-				Page page = (Page) source;
-
-				sourceNodeId = page.getFolder().getNode().getId();
+			if (source instanceof Page page) {
+				sourceNodeId = page.getOwningNode().getId();
 			}
-			if (source instanceof Folder) {
-				Folder folder = (Folder) source;
-
-				sourceNodeId = folder.getNode().getId();
+			if (source instanceof Folder folder) {
+				sourceNodeId = folder.getOwningNode().getId();
 			}
-			if (source instanceof Node) {
-				Node node = (Node) source;
-
+			if (source instanceof Node node) {
 				sourceNodeId = node.getId();
 			}
-			if (source instanceof File) {
-				File file = (File) source;
-
-				sourceNodeId = file.getFolder().getNode().getId();
+			if (source instanceof File file) {
+				sourceNodeId = file.getOwningNode().getId();
 			}
 		}
 
 		if (sourceNodeId == null) {
-			sourceNodeId = new Integer(0);
+			sourceNodeId = 0;
 		}
 
 		if (logger.isDebugEnabled()) {

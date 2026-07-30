@@ -71,7 +71,7 @@ export function colorToHex(inputColor: any, removeAlpha: boolean = false): strin
     }).join('');
 }
 
-export function constrastColor(color: ColorValue): string {
+export function contrastColor(color: ColorValue): string {
     const rgba = colorToRGBA(color);
     if (!rgba) {
         return null;

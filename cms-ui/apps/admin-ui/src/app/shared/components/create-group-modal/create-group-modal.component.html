@@ -39,6 +39,7 @@
     type="primary"
     [disabled]="!isValid() || loading"
     (click)="buttonCreateEntityClicked()"
+    data-action="confirm"
     gtxActionAllowed="group.createGroup"
     >
     {{ 'modal.create_group_button' | gtxI18n }}
@@ -47,6 +48,7 @@
   <gtx-button
     type="secondary"
     flat
+    data-action="cancel"
     (click)="cancelFn()"
     >
     {{ 'common.cancel_button' | gtxI18n }}

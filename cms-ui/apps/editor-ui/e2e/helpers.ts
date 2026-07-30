@@ -7,6 +7,7 @@ import {
     dismissNotifications,
     FixtureFile,
     ITEM_TYPE_FORM,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
@@ -14,11 +15,13 @@ import {
     reroute,
     selectDateInPicker,
     wait,
+    waitForResponseFrom,
+    uploadFileFromInput,
 } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { Disposable, expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
+import { readFileSync } from 'node:fs';
 
 export function findList(page: Page, type: string): Locator {
     if (type === ITEM_TYPE_FORM) {
@@ -135,14 +138,8 @@ export async function uploadFiles(
 
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
-            // Filechooser is a lot simpler, as it can handle native files
-            const fileChooserPromise = page.waitForEvent('filechooser');
             const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-            await uploadButton.waitFor({ state: 'visible' });
-            await uploadButton.click();
-            const fileChooser = await fileChooserPromise;
-
-            await fileChooser.setFiles(files.map((f) => f.fixturePath));
+            await uploadFileFromInput(page, uploadButton, files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
@@ -557,11 +554,11 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 
-export function overwriteAlohaConfigWith(page: Page, content: string): Promise<void> {
+export function overwriteAlohaConfigWith(page: Page, content: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', (route) => {
         route.fulfill({
             status: 200,
@@ -747,4 +744,16 @@ export function fgFindEditSidebar(grid: Locator): Locator {
 export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
     await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
     return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}
+
+export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {
+    await test.step(`Navigating to folder: ${folderId}`, async () => {
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const folder = findItem(list, folderId);
+        // Use the wildcard here instead, since if we used a globalId for the selector, the breadcrumb would
+        // still be loaded with the local ID, causing this to fail otherwise.
+        const breadcrumbReq = waitForResponseFrom(page, 'GET', '/rest/folder/breadcrumb/*');
+        await folder.locator('.item-primary .item-name-router-link').click();
+        await breadcrumbReq;
+    });
 }

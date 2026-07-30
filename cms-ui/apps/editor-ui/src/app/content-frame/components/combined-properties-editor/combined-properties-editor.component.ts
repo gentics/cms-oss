@@ -423,7 +423,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     }
                 }
 
-                this.hasUpdatePermission = true;
+                this.hasUpdatePermission = this.itemPermissions?.edit;
                 return null;
             }),
             publishReplay(1),
@@ -533,7 +533,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     openContentTag(item: ItemWithContentTags, tagElement: Tag): void {
-        this.tagEditorService.openTagEditor(tagElement, tagElement.construct, item).then(
+        this.tagEditorService.openTagEditor(tagElement, tagElement.construct, item, {
+            readOnly: !this.hasUpdatePermission,
+        }).then(
             (result) => {
                 this.saveObjectProperty(result.tag as any, {}, true).then(() => {
                     this.item$.next(this.item as ItemWithContentTags);
@@ -550,7 +552,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         this.contentTagActions = [
             {
                 id: ACTION_DELETE,
-                enabled: true,
+                enabled: () => this.hasUpdatePermission,
                 icon: 'delete',
                 label: this.i18n.instant('editor.tagtype_delete_label'),
                 type: 'alert',
@@ -562,7 +564,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (!this.tagFillLightEnabled) {
             this.contentTagActions.unshift({
                 id: ACTION_ACTIVATE,
-                enabled: (item) => item == null || !item.active,
+                enabled: (item) => this.hasUpdatePermission && (item == null || !item.active),
                 icon: 'check_circle',
                 label: this.i18n.instant('editor.tagtype_activate_label'),
                 type: 'success',
@@ -570,7 +572,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 multiple: true,
             }, {
                 id: ACTION_DEACTIVATE,
-                enabled: (item) => item == null || item.active,
+                enabled: (item) => this.hasUpdatePermission && (item == null || item.active),
                 icon: 'cancel',
                 label: this.i18n.instant('editor.tagtype_deactivate_label'),
                 type: 'warning',
@@ -582,7 +584,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (this.item?.type === 'page' && this.item.localizationType === LocalizationType.PARTIAL) {
             this.contentTagActions.unshift({
                 id: ACTION_LOCALIZE_TAG,
-                enabled: (tag) => tag == null || (tag.rootTag && tag.inherited),
+                enabled: (tag) => this.hasUpdatePermission && (tag == null || (tag.rootTag && tag.inherited)),
                 icon: 'insert_drive_file',
                 type: 'primary',
                 label: this.i18n.instant('tag_inheritance.action_localize'),
@@ -590,7 +592,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 multiple: true,
             }, {
                 id: ACTION_DELETE_TAG_LOCALIZATION,
-                enabled: (tag) => tag == null || (tag.rootTag && !tag.inherited),
+                enabled: (tag) => this.hasUpdatePermission && (tag == null || (tag.rootTag && !tag.inherited)),
                 icon: 'restore_page',
                 type: 'alert',
                 label: this.i18n.instant('tag_inheritance.action_delete_localization'),

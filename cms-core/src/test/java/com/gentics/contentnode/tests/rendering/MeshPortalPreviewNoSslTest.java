@@ -9,7 +9,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 @GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.PUB_DIR_SEGMENT })
-public class MeshPortalPreviewNoSslTest extends MeshPortalPreviewTestBase {
+public class MeshPortalPreviewNoSslTest extends AbstractMeshPortalPreviewTestCases {
 
 	/**
 	 * REST Application used as "preview" portal

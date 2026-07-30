@@ -189,6 +189,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --target=build --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
@@ -211,6 +212,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --targets=test,component-test --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
@@ -233,6 +235,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --targets=e2e --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>

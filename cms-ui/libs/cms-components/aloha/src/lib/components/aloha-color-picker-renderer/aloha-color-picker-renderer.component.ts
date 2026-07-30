@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AlohaColorPickerComponent, ColorValue, NormalizedColor, RGBAColor } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Color, ColorEvent, RGBA } from 'ngx-color';
-import { colorToHex, colorToRGBA, constrastColor, patchMultipleAlohaFunctions } from '../../utils';
+import { colorToHex, colorToRGBA, contrastColor, patchMultipleAlohaFunctions } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 function clamp(value: number, min: number, max: number): number {
@@ -22,8 +22,8 @@ function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColo
     return raw;
 }
 
-function toNGXColor(rgba: RGBAColor): RGBA {
-    return rgba == null ? null : { r: rgba[0], g: rgba[1], b: rgba[2], a: rgba[3] };
+function toNGXColor(rgba: RGBAColor): string | RGBA {
+    return rgba == null ? '' : { r: rgba[0], g: rgba[1], b: rgba[2], a: rgba[3] / 255 };
 }
 
 interface PaletteColor {
@@ -43,7 +43,7 @@ const DEFAULT_COLOR: RGBAColor = [0, 0, 0, 255];
 })
 export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponent<AlohaColorPickerComponent, NormalizedColor> implements OnInit {
 
-    public ngxColorValue: RGBA;
+    public ngxColorValue: RGBA | string;
     public hexValue: string;
     public normalizedPalette: PaletteColor[] = [];
 
@@ -79,6 +79,8 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     protected override onValueChange(): void {
         if (this.value == null && !this.settings.allowClear) {
             this.value = DEFAULT_COLOR;
+        } else {
+            this.value = colorToRGBA(this.value);
         }
 
         this.updateAndNormalizeValue();
@@ -108,7 +110,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
             .filter((color) => color != null)
             .map((color) => ({
                 color,
-                contrast: constrastColor(color),
+                contrast: contrastColor(color),
             }));
     }
 }

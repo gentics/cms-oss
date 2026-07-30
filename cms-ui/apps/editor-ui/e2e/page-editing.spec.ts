@@ -1585,16 +1585,42 @@ test.describe('Page Editing', () => {
                 }
             });
 
-            test('should be able to select a character', async ({ page }) => {
+            test('should be able to select a character', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
                 await editPageAndOpenCharacterGrid(page);
 
                 const characterCells = page.locator(CHARACTER_CELL);
-                const lastCharacter = characterCells.last();
-                const expectedCharacter = await lastCharacter.locator('.symbol-grid-cell-content').textContent();
+                // select a 'regular' icon in that case the last in the roster
+                // amd check that it does not have the 'material-symbols-outlined' class
+                const lastCharacterCell = characterCells.last();
+                const lastCharacter = lastCharacterCell.locator('.symbol-grid-cell-content');
+                const lastCharacterContent = await lastCharacter.textContent();
 
+                await expect(lastCharacter).not.toHaveClass("material-symbols-outlined");
+                
+                // select an 'invisible' icon like non-breaking space
+                // amd check if it has the 'material-symbols-outlined' class
+                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="non-breaking space"]`);
+                const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('.symbol-grid-cell-content');
+
+                await expect(nonBreakingSpaceCharacter).toHaveClass("symbol-grid-cell-content material-symbols-outlined");
+                
+                // click on the 'regular' icon and check the content of the editor input
                 await lastCharacter.click();
 
-                await expect(mainEditable).toContainText(expectedCharacter ?? '');
+                await expect(mainEditable).toContainText(lastCharacterContent ?? '');
+
+                //click on the non-breaking space symbol and check the content  of the editor input
+                await clearEditable();
+                await openCharacterGrid(page);
+
+                await nonBreakingSpaceCell.click();
+
+                await expect(mainEditable).toContainText(" ");
             });
 
             async function editPageAndOpenCharacterGrid(page) {
@@ -1602,11 +1628,19 @@ test.describe('Page Editing', () => {
                 editingPage = IMPORTER.get(PAGE_ONE);
 
                 await openEditingPageInEditmode(page);
-                await mainEditable.click();
-                await mainEditable.clear();
+                await clearEditable();
                 
+                await openCharacterGrid(page);
+            }
+
+            async function openCharacterGrid(page) {               
                 await selectEditorTab(page, 'insert');
                 await findAlohaComponent(page, { slot: SLOT_CHARACTER_GRID }).click();
+            }
+
+            async function clearEditable() {               
+                await mainEditable.click();
+                await mainEditable.clear();
             }
         });
     });

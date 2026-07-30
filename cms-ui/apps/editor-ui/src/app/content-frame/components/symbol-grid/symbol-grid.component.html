@@ -7,10 +7,11 @@
         [attr.title]="singleSymbol.label"
         (click)="selectSymbol(singleSymbol)"
         >
-        <span
-          class="symbol-grid-cell-content"
-          [innerHTML]="isInvisibleSymbol(singleSymbol.symbol) ? singleSymbol.icon : singleSymbol.symbol"
-          ></span>
+            <span
+              class="symbol-grid-cell-content"
+              [class.material-symbols-outlined]="singleSymbol.icon"
+              [innerHTML]="singleSymbol.icon ? singleSymbol.icon : singleSymbol.symbol"
+              ></span>
       </button>
     }
   </div>

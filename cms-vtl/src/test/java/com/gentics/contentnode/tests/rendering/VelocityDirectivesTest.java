@@ -56,6 +56,7 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.testutils.GenericTestUtils;
@@ -105,7 +106,7 @@ public class VelocityDirectivesTest {
 		node = ContentNodeTestDataUtils.createNode("testnode", "Test Node", PublishTarget.NONE);
 
 		// Create velocity construct that renders the given template
-		int vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, "vtl", "vtl");
+		int vtlConstructId = ContentNodeVTLTestUtils.createVelocityConstruct(node, "vtl", "vtl");
 
 		// Create template using the construct
 		Transaction t = TransactionManager.getCurrentTransaction();

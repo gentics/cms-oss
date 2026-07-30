@@ -12,17 +12,12 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections4.SetUtils;
-import org.apache.commons.pool.KeyedObjectPool;
-import org.apache.commons.pool.KeyedPoolableObjectFactory;
-import org.apache.commons.pool.impl.GenericKeyedObjectPool;
-import org.apache.commons.pool.impl.GenericObjectPool;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableBean;
-import com.gentics.api.portalnode.imp.GenticsImpInterface;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.formatter.CNDateFormatterImp;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -31,16 +26,11 @@ import com.gentics.contentnode.object.ObjectTagResolvable;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.object.parttype.imps.CMSLoaderImp;
 import com.gentics.contentnode.render.RenderInfo;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.lib.log.NodeLogger;
-import com.gentics.portalnode.formatter.GenticsStringFormatter;
-import com.gentics.portalnode.formatter.SortImp;
-import com.gentics.portalnode.formatter.URLIncludeImp;
-import com.gentics.portalnode.formatter.VelocityToolsImp;
 
 /**
  * Resolver for objects put into the context for AbstractExtensiblePartTypes
@@ -49,13 +39,17 @@ import com.gentics.portalnode.formatter.VelocityToolsImp;
 public class CMSResolver implements ResolvableMapWrappable {
 	protected ModeResolver modeResolver;
 
-	protected ImpsResolver impsResolver;
-
 	protected static Map<String, Property> properties = new HashMap<>();
 
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(CMSResolver.class);
 
 	protected final static Set<String> resolvableKeys;
+
+	/**
+	 * Service loader for {@link CMSResolverService}s
+	 */
+	private final static ServiceLoaderUtil<CMSResolverService> cmsResolverServiceLoader = ServiceLoaderUtil
+			.load(CMSResolverService.class);
 
 	static {
 		properties.put("rendermode", new Property() {
@@ -98,11 +92,11 @@ public class CMSResolver implements ResolvableMapWrappable {
 				return cmsResolver.getFile();
 			}
 		});
-		properties.put("imps", new Property() {
-			public Object get(CMSResolver cmsResolver) {
-				return cmsResolver.getImpsResolver();
-			}
-		});
+//		properties.put("imps", new Property() {
+//			public Object get(CMSResolver cmsResolver) {
+//				return cmsResolver.getImpsResolver();
+//			}
+//		});
 
 		resolvableKeys = SetUtils.difference(properties.keySet(), Collections.singleton("imps"));
 	}
@@ -125,6 +119,11 @@ public class CMSResolver implements ResolvableMapWrappable {
 	protected NodeObject rootObject;
 
 	/**
+	 * Map of all resolvers, provided by {@link CMSResolverService}s
+	 */
+	protected Map<String, ProvidedResolver> providedResolvers = new HashMap<>();
+
+	/**
 	 * Create an instance of the cms resolver
 	 * @param page page
 	 * @param template template
@@ -136,7 +135,10 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 */
 	public CMSResolver(Page page, Template template, Tag tag, Folder folder, Node node,
 			ContentFile file) throws NodeException {
-		impsResolver = new ImpsResolver();
+		cmsResolverServiceLoader.forEach(service -> {
+			providedResolvers.putAll(service.getResolvers());
+		});
+
 		this.page = page;
 		this.file = file;
 		this.template = template;
@@ -198,6 +200,11 @@ public class CMSResolver implements ResolvableMapWrappable {
 
 			addDependency(key, value);
 			return value;
+		} else if (providedResolvers.containsKey(key)) {
+			Object value = providedResolvers.get(key);
+
+			addDependency(key, value);
+			return value;
 		} else {
 			return null;
 		}
@@ -229,14 +236,6 @@ public class CMSResolver implements ResolvableMapWrappable {
 				logger.error("Error while adding dependency {" + rootObject + "}/{" + property + "}", e);
 			}
 		}
-	}
-
-	/**
-	 * Get the imps resolver
-	 * @return imps resolver
-	 */
-	protected ImpsResolver getImpsResolver() {
-		return impsResolver;
 	}
 
 	/**
@@ -437,333 +436,9 @@ public class CMSResolver implements ResolvableMapWrappable {
 	}
 
 	/**
-	 * Imps resolver
-	 */
-	public static class ImpsResolver {
-
-		/**
-		 * velocity tools imp (when fetched from the pool)
-		 */
-		protected GenticsImpInterface velocityToolsImp;
-
-		/**
-		 * gentics string formatter (when fetched from the pool)
-		 */
-		protected GenticsImpInterface genticsStringFormatter;
-
-		/**
-		 * date formatter (when fetched from the pool)
-		 */
-		protected GenticsImpInterface genticsDateFormatter;
-
-		/**
-		 * sort imp (when fetched from the pool)
-		 */
-		protected GenticsImpInterface sortImp;
-        
-		/**
-		 * loader imp
-		 */
-		protected GenticsImpInterface loaderImp;
-
-		/**
-		 * URL include imp
-		 */
-		protected GenticsImpInterface urlIncludeImp;
-
-		/**
-		 * constant for the velo imp
-		 */
-		public final static String VELOIMP = "velocitytools";
-
-		/**
-		 * constant for the string imp
-		 */
-		public final static String STRINGIMP = "string";
-
-		/**
-		 * constant for the date imp
-		 */
-		public final static String DATEIMP = "date";
-
-		/**
-		 * constant for the sorter imp
-		 */
-		public final static String SORTIMP = "sorter";
-        
-		/**
-		 * constant for the loader imp
-		 */
-		public final static String LOADERIMP = "loader";
-
-		/**
-		 * constant for the url imp
-		 */
-		public final static String URLIMP = "url";
-
-		/**
-		 * Create instance of the imps resolver
-		 */
-		public ImpsResolver() {}
-
-		/**
-		 * Get the velocity tools imp
-		 * @return velocity tools imp
-		 */
-		public GenticsImpInterface getVelocitytools() {
-			if (velocityToolsImp == null) {
-				velocityToolsImp = ImpProvider.getImp(VELOIMP);
-			}
-			return velocityToolsImp;
-		}
-
-		/**
-		 * Get the velocity tools imp - an alias which is the same as in PN 3.3
-		 * @return velocity tools imp
-		 */
-		public GenticsImpInterface getVelocityTools() {
-			if (velocityToolsImp == null) {
-				velocityToolsImp = ImpProvider.getImp(VELOIMP);
-			}
-			return velocityToolsImp;
-		}
-
-		/**
-		 * Get the gentics string formatter imp
-		 * @return gentics string formatter imp
-		 */
-		public GenticsImpInterface getString() {
-			if (genticsStringFormatter == null) {
-				genticsStringFormatter = ImpProvider.getImp(STRINGIMP);
-			}
-			return genticsStringFormatter;
-		}
-
-		/**
-		 * Get the sorter imp
-		 * @return sorter imp
-		 */
-		public GenticsImpInterface getSorter() {
-			if (sortImp == null) {
-				sortImp = ImpProvider.getImp(SORTIMP);
-			}
-			return sortImp;
-		}
-
-		/**
-		 * Get the date formatter imp
-		 * @return date formatter imp
-		 */
-		public GenticsImpInterface getDate() {
-			if (genticsDateFormatter == null) {
-				genticsDateFormatter = ImpProvider.getImp(DATEIMP);
-			}
-			return genticsDateFormatter;
-		}
-        
-		public GenticsImpInterface getLoader() {
-			if (loaderImp == null) {
-				loaderImp = ImpProvider.getImp(LOADERIMP);
-			}
-			return loaderImp;
-		}
-
-		public GenticsImpInterface getUrl() {
-			if (urlIncludeImp == null) {
-				urlIncludeImp = ImpProvider.getImp(URLIMP);
-			}
-			return urlIncludeImp;
-		}
-	}
-
-	/**
-	 * Class for the singleton imp provider, that provides imps which are held
-	 * in pools
-	 */
-	protected final static class ImpProvider {
-
-		/**
-		 * internal imp pool
-		 */
-		protected KeyedObjectPool impPool = null;
-
-		/**
-		 * the singleton instance
-		 */
-		protected static ImpProvider instance = null;
-
-		/**
-		 * static method to get an imp from the pool
-		 * @param impId id of the imp
-		 * @return imp or null
-		 */
-		public static GenticsImpInterface getImp(String impId) {
-			try {
-				ImpProvider impProvider = getInstance();
-				Object borrowedObject = impProvider.impPool.borrowObject(impId);
-
-				if (logger.isInfoEnabled()) {
-					logger.info(
-							"borrowed imp {" + impId + "}. Active: " + impProvider.impPool.getNumActive(impId) + ", Idle: " + impProvider.impPool.getNumIdle(impId));
-				}
-				return (GenticsImpInterface) borrowedObject;
-			} catch (Exception e) {
-				logger.error("Error while fetching imp {" + impId + "}", e);
-				return null;
-			}
-		}
-
-		/**
-		 * static method to return an imp
-		 * @param imp imp to return
-		 * @param impId id of the imp
-		 */
-		public static void returnImp(GenticsImpInterface imp, String impId) {
-			try {
-				ImpProvider impProvider = getInstance();
-
-				impProvider.impPool.returnObject(impId, imp);
-				if (logger.isInfoEnabled()) {
-					logger.info(
-							"returned imp {" + impId + "}. Active: " + impProvider.impPool.getNumActive(impId) + ", Idle: " + impProvider.impPool.getNumIdle(impId));
-				}
-			} catch (Exception e) {
-				logger.error("Error while returning imp {" + impId + "} to pool.", e);
-			}
-		}
-
-		/**
-		 * Get the singleton instance of the imp provider
-		 * @return imp provider
-		 */
-		protected static ImpProvider getInstance() {
-			if (instance == null) {
-				instance = new ImpProvider();
-			}
-			return instance;
-		}
-
-		/**
-		 * private constructor for the singleton
-		 */
-		private ImpProvider() {
-			// create the pool
-			impPool = new GenericKeyedObjectPool(new ImpFactory(), 20, GenericObjectPool.WHEN_EXHAUSTED_GROW, -1, 5, false, false);
-		}
-
-		/**
-		 * Internal imp factory
-		 */
-		protected class ImpFactory implements KeyedPoolableObjectFactory {
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.apache.commons.pool.KeyedPoolableObjectFactory#activateObject(java.lang.Object,
-			 *      java.lang.Object)
-			 */
-			public void activateObject(Object key, Object imp) throws Exception {}
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.apache.commons.pool.KeyedPoolableObjectFactory#destroyObject(java.lang.Object,
-			 *      java.lang.Object)
-			 */
-			public void destroyObject(Object key, Object imp) throws Exception {}
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.apache.commons.pool.KeyedPoolableObjectFactory#makeObject(java.lang.Object)
-			 */
-			public Object makeObject(Object key) throws Exception {
-				try {
-					if (ImpsResolver.VELOIMP.equals(key)) {
-						VelocityToolsImp velocityToolsImp = new VelocityToolsImp();
-
-						velocityToolsImp.init("velocitytools", new HashMap());
-
-						return velocityToolsImp;
-					} else if (ImpsResolver.STRINGIMP.equals(key)) {
-						GenticsStringFormatter genticsStringFormatter = new GenticsStringFormatter();
-
-						genticsStringFormatter.init("genticsstringformatter", new HashMap());
-
-						return genticsStringFormatter;
-					} else if (ImpsResolver.SORTIMP.equals(key)) {
-						SortImp sortImp = new SortImp();
-
-						sortImp.init("sorter", new HashMap());
-
-						return sortImp;
-					} else if (ImpsResolver.LOADERIMP.equals(key)) {
-						CMSLoaderImp loaderImp = new CMSLoaderImp();
-
-						loaderImp.init("loader", new HashMap());
-
-						return loaderImp;
-					} else if (ImpsResolver.URLIMP.equals(key)) {
-						URLIncludeImp urlIncludeImp = new URLIncludeImp();
-
-						urlIncludeImp.init("url", new HashMap());
-
-						return urlIncludeImp;
-					} else if (ImpsResolver.DATEIMP.equals(key)) {
-						CNDateFormatterImp dateformatterImp = new CNDateFormatterImp();
-						return dateformatterImp;
-					}
-				} catch (Exception e) {
-					logger.error("Imp {" + key + "} could not be initialized.", e);
-				}
-				return null;
-			}
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.apache.commons.pool.KeyedPoolableObjectFactory#passivateObject(java.lang.Object,
-			 *      java.lang.Object)
-			 */
-			public void passivateObject(Object key, Object imp) throws Exception {}
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.apache.commons.pool.KeyedPoolableObjectFactory#validateObject(java.lang.Object,
-			 *      java.lang.Object)
-			 */
-			public boolean validateObject(Object key, Object imp) {
-				return true;
-			}
-		}
-	}
-
-	/**
 	 * Clean the cms resolver (give imps back to pool, etc.)
 	 */
 	public void clean() {
-		if (impsResolver != null) {
-			if (impsResolver.genticsDateFormatter != null) {
-				ImpProvider.returnImp(impsResolver.genticsDateFormatter, ImpsResolver.DATEIMP);
-				impsResolver.genticsDateFormatter = null;
-			}
-			if (impsResolver.genticsStringFormatter != null) {
-				ImpProvider.returnImp(impsResolver.genticsStringFormatter, ImpsResolver.STRINGIMP);
-				impsResolver.genticsStringFormatter = null;
-			}
-			if (impsResolver.sortImp != null) {
-				ImpProvider.returnImp(impsResolver.sortImp, ImpsResolver.SORTIMP);
-				impsResolver.sortImp = null;
-			}
-			if (impsResolver.velocityToolsImp != null) {
-				ImpProvider.returnImp(impsResolver.velocityToolsImp, ImpsResolver.VELOIMP);
-				impsResolver.velocityToolsImp = null;
-			}
-			if (impsResolver.loaderImp != null) {
-				ImpProvider.returnImp(impsResolver.loaderImp, ImpsResolver.LOADERIMP);
-				impsResolver.loaderImp = null;
-			}
-			if (impsResolver.urlIncludeImp != null) {
-				ImpProvider.returnImp(impsResolver.urlIncludeImp, ImpsResolver.URLIMP);
-				impsResolver.urlIncludeImp = null;
-			}
-			impsResolver = null;
-		}
+		providedResolvers.values().forEach(ProvidedResolver::clean);
 	}
 }

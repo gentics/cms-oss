@@ -18,10 +18,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
-import org.apache.velocity.runtime.resource.util.StringResourceRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -54,6 +50,8 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.mesh.core.rest.common.RestModel;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.io.StringTemplateSource;
 
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -390,15 +388,16 @@ public abstract class MeshPortalPreviewTestBase {
 			ObjectMapper objectMapper = new ObjectMapper();
 			Map<?, ?> sentNode = objectMapper.readValue(body, Map.class);
 
-			VelocityContext context = new VelocityContext();
-			context.put("node", sentNode);
+			com.github.jknack.handlebars.Context context = com.github.jknack.handlebars.Context.newBuilder(null)
+				.combine("node", sentNode)
+				.build();
 
-			StringResourceRepository srr = StringResourceLoader.getRepository();
-			srr.putStringResource("portaltemplate", "<div class=\"tag\">$node.fields.tag</div><div class=\"live\">$node.fields.live</div>");
-
+			Handlebars handlebars = new Handlebars();
 			StringWriter outwriter = new StringWriter();
-
-			Velocity.getTemplate("portaltemplate").merge(context, outwriter);
+			com.github.jknack.handlebars.Template template = handlebars.compile(new StringTemplateSource(
+					"portaltemplate",
+					"<div class=\"tag\">{{node.fields.tag}}</div><div class=\"live\">{{node.fields.live}}</div>"));
+			template.apply(context, outwriter);
 
 			return outwriter.toString();
 		}
@@ -416,15 +415,16 @@ public abstract class MeshPortalPreviewTestBase {
 			ObjectMapper objectMapper = new ObjectMapper();
 			Map<?, ?> sentNode = objectMapper.readValue(body, Map.class);
 
-			VelocityContext context = new VelocityContext();
-			context.put("node", sentNode);
+			com.github.jknack.handlebars.Context context = com.github.jknack.handlebars.Context.newBuilder(null)
+					.combine("node", sentNode)
+					.build();
 
-			StringResourceRepository srr = StringResourceLoader.getRepository();
-			srr.putStringResource("portaltemplate", "tag: $node.fields.tag, live: $node.fields.live");
-
+			Handlebars handlebars = new Handlebars();
 			StringWriter outwriter = new StringWriter();
-
-			Velocity.getTemplate("portaltemplate").merge(context, outwriter);
+			com.github.jknack.handlebars.Template template = handlebars.compile(new StringTemplateSource(
+					"portaltemplate",
+					"tag: {{node.fields.tag}}, live: {{node.fields.live}}"));
+			template.apply(context, outwriter);
 
 			return outwriter.toString();
 		}

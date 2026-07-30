@@ -4,7 +4,6 @@ import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.addTagmapEntry;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
@@ -13,10 +12,10 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectTagDefinition;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertPublishCR;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +47,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -69,7 +68,7 @@ public class CrRenderTagmapTest {
 
 	private static Integer htmlConstructId;
 
-	private static Integer vtlConstructId;
+	private static Integer hbsConstructId;
 
 	private static Template template;
 
@@ -95,7 +94,7 @@ public class CrRenderTagmapTest {
 		node = supply(() -> createNode("host", "Node", PublishTarget.CONTENTREPOSITORY));
 
 		htmlConstructId = supply(() -> createConstruct(node, LongHTMLPartType.class, TAGTYPENAME, TAGTYPENAME));
-		vtlConstructId = supply(() -> createVelocityConstruct(node, "vtl", "vtl"));
+		hbsConstructId = supply(() -> createConstruct(node, HandlebarsPartType.class, "vtl", "vtl"));
 
 		template = supply(() -> create(Template.class, tmpl -> {
 			tmpl.setName("Template");
@@ -171,13 +170,13 @@ public class CrRenderTagmapTest {
 
 			return update(page, upd -> {
 				ContentTag cTag = create(ContentTag.class, tag -> {
-					tag.setConstructId(vtlConstructId);
+					tag.setConstructId(hbsConstructId);
 					tag.setEnabled(true);
 					tag.setName("overview");
 				}, false);
-				getPartType(LongHTMLPartType.class, cTag, ContentNodeTestDataUtils.TEMPLATE_PARTNAME).getValueObject()
+				getPartType(HandlebarsPartType.class, cTag, "hbs").getValueObject()
 						.setValueText(
-								"#set($pages =  $cms.folder.pages)##\n#set($pages = $cms.imps.sorter.sort($pages, \"page.name\"))##\n#foreach($page in $pages)##\n$page.name ($page.online)\n#end##");
+								"{{#each (gtx_sort cms.folder.pages \"name\"}}{{name (online)}}<br>{{/each}}");
 				upd.getContentTags().put("overview", cTag);
 			});
 		}, res -> {

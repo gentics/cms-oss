@@ -18,15 +18,12 @@ import java.util.TimeZone;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import com.gentics.api.portalnode.imp.ImpException;
-import com.gentics.contentnode.tests.category.BaseLibTest;
 import com.gentics.lib.jaxb.JAXBHelper;
 
 import jakarta.xml.bind.JAXBException;
 
-@Category(BaseLibTest.class)
 public class GenticsDateFormatterTest {
 
 	private static GenericGenticsDateFormatter formatter;

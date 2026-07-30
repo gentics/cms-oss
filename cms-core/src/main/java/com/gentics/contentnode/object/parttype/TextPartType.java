@@ -78,11 +78,13 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 		super.render(result, template);
 		// if the part is inline editable and is rendered as template for a velocity part, we make the content safe by replacing # and $
 		// with the escape tool. Otherwise, if the editor entered e.g. ## into the content, this would break the velocity template
-		if (getValueObject().getPart().isInlineEditable() && ObjectTransformer
-				.getBoolean(TransactionManager.getCurrentTransaction().getRenderType().getParameter(VelocityPartType.SAFE_INLINE_RENDERING), false)
-				&& !isVelocityTemplate()) {
-			return parsedText.replaceAll("\\$", "\\${cms.imps.velocitytools.esc.d}").replaceAll("#", "\\${cms.imps.velocitytools.esc.h}");
-		}
+
+		// FIXME
+//		if (getValueObject().getPart().isInlineEditable() && ObjectTransformer
+//				.getBoolean(TransactionManager.getCurrentTransaction().getRenderType().getParameter(VelocityPartType.SAFE_INLINE_RENDERING), false)
+//				&& !isVelocityTemplate()) {
+//			return parsedText.replaceAll("\\$", "\\${cms.imps.velocitytools.esc.d}").replaceAll("#", "\\${cms.imps.velocitytools.esc.h}");
+//		}
 		return parsedText;
 	}
 

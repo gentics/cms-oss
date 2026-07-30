@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import com.gentics.contentnode.tests.category.BaseLibTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,9 +11,7 @@ import org.junit.Test;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.portalnode.formatter.URLIncludeImp;
 import com.gentics.testutils.http.HttpServer;
-import org.junit.experimental.categories.Category;
 
-@Category(BaseLibTest.class)
 public class UrlIncludeImpTest {
 
 	public final static int HTTPPORT = 0;

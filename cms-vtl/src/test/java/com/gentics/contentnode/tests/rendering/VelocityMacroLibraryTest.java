@@ -5,8 +5,8 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils.createVelocityConstruct;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -38,6 +38,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.render.velocity.SerializableVelocityTemplateWrapper;
 

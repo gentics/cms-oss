@@ -24,6 +24,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -68,16 +69,17 @@ public class LargePagePublishTest {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Node node = ContentNodeTestDataUtils.createNode();
 
-			int vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, "vtl", "vtl");
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
 
 			page = ContentNodeTestDataUtils.createTemplateAndPage(node.getFolder(), "Test");
 			Template template = t.getObject(Template.class, page.getTemplate().getId(), true);
 
-			// add a template tag that renders more the 16M of content, so that inserting the rendered page into the publish table must fail
-			TemplateTag vtlTag = ContentNodeTestDataUtils.createTemplateTag(vtlConstructId, "content", false, false);
-			template.getTemplateTags().put(vtlTag.getName(), vtlTag);
-			vtlTag.getValues().getByKeyname("template").setValueText("#foreach($i in [1..1700000])0123456789#end");
-			template.setSource("<node " + vtlTag.getName() + ">");
+			// add a template tag that renders more than 16M of content, so that inserting the rendered page into the publish table must fail
+			TemplateTag hbsTag = ContentNodeTestDataUtils.createTemplateTag(hbsConstructId, "content", false, false);
+			template.getTemplateTags().put(hbsTag.getName(), hbsTag);
+			// FIXME
+			hbsTag.getValues().getByKeyname("hbs").setValueText("#foreach($i in [1..1700000])0123456789#end");
+			template.setSource("<node " + hbsTag.getName() + ">");
 			template.save();
 			trx.success();
 		}

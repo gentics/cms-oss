@@ -2,8 +2,8 @@ package com.gentics.contentnode.tests.rendering;
 
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
+import static com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils.createVelocityConstruct;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;

@@ -19,6 +19,7 @@ import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -41,7 +42,7 @@ public class RenderDirectiveReferenceTest {
 		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
 		velocityConstruct = Trx.supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
-			Construct construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
+			Construct construct = ContentNodeVTLTestUtils.createVelocityConstruct(node);
 			construct = t.getObject(construct, true);
 			for (Part p : construct.getParts()) {
 				if ("template".equals(p.getKeyname())) {

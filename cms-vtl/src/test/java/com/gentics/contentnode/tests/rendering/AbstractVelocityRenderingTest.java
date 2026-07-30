@@ -14,6 +14,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeVTLTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 public class AbstractVelocityRenderingTest {
@@ -57,7 +58,7 @@ public class AbstractVelocityRenderingTest {
 		node = ContentNodeTestDataUtils.createNode();
 		//
 		// Create velocity construct that renders the given template
-		construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
+		construct = ContentNodeVTLTestUtils .createVelocityConstruct(node);
 		//
 		// // Create template using the construct
 		template = createTemplate(node.getFolder(), construct);

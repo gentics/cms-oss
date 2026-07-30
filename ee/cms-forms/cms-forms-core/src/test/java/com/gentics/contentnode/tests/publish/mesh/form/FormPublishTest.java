@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -85,18 +86,23 @@ public class FormPublishTest extends AbstractFormPublishTest {
 
 	protected final static String IMAGE_NAME = "image-dpi66x44-res311x211.jpg";
 
-	@Parameters(name = "{index}: type: {0}")
+	@Parameters(name = "{index}: type: {0}, noIndex: {1}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (String formType : Arrays.asList(FormTypeConfigurationModifier.GENERIC_TYPE,
 				FormTypeConfigurationModifier.ANDP_TYPE)) {
-			data.add(new Object[] { formType });
+			for (boolean noIndex : List.of(true, false)) {
+				data.add(new Object[] { formType, noIndex });
+			}
 		}
 		return data;
 	}
 
 	@Parameter(0)
 	public String formType;
+
+	@Parameter(1)
+	public boolean noIndex;
 
 	/**
 	 * Name of the mesh project
@@ -116,6 +122,9 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			FormFactory.removeFormTypeFromNode(FormTypeConfigurationModifier.ANDP_TYPE, node.getId());
 			FormFactory.addFormTypeToNode(formType, node.getId());
 		});
+		operate(t -> update(t.getObject(ContentRepository.class, crId), cr -> {
+			cr.setNoFormsIndex(noIndex);
+		}));
 
 		meshProjectName = supply(() -> MeshPublisher.getMeshProjectName(node));
 		pluginName = supply(() -> FormConfigProvider.getConfig().get(formType).pluginName);

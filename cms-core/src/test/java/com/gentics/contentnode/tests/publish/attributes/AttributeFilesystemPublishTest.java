@@ -31,10 +31,11 @@ import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.tests.publish.filesystem.FilesystemPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
-import com.gentics.contentnode.tests.utils.CountHelper;
+import com.gentics.contentnode.tests.utils.CountHelperSource;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Test cases for publishing into the filesystem with attribute dirting (these tests only make sense for pages)
@@ -46,7 +47,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	 * Template for the hbs construct that counts, how often it is rendered
 	 */
 	// FIXME
-	public final static String HBS = "value of $cms.tag.name: [#gtx_test_count($cms.tag.name)]";
+	public final static String HBS = "value of {{cms.tag.name}}: [{{gtx_test_count cms.tag.name}}]";
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -81,6 +82,8 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		TestHelpersHandlebarsService.addHelper(CountHelperSource.class);
+
 		testContext.getContext().getTransaction().commit();
 
 		node = supply(() -> createNode("hostname", "Node name", PublishTarget.FILESYSTEM, getLanguage("de"), getLanguage("en")));
@@ -97,7 +100,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Override
 	public void prepareData() throws Exception {
 		super.prepareData();
-		CountHelper.reset();
+		CountHelperSource.reset();
 	}
 
 	@Override
@@ -126,7 +129,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeFilename() throws Exception {
 		// the page will be republished -> content will be rendered
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testChangeFilename();
 		}
 	}
@@ -135,7 +138,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeFolderPubdir() throws Exception {
 		// page will be dirted as dependency -> content not rendered
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 0)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 0)) {
 			super.testChangeFolderPubdir();
 		}
 	}
@@ -144,7 +147,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeHostname() throws Exception {
 		// page will be dirted as dependency -> content not rendered
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 0)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 0)) {
 			super.testChangeHostname();
 		}
 	}
@@ -153,7 +156,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveFolderToNode() throws Exception {
 		// page will be dirted as as a whole -> content will be rendered
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveFolderToNode();
 		}
 	}
@@ -162,7 +165,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveToFolder() throws Exception {
 		// move dirts page as a whole
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveToFolder();
 		}
 	}
@@ -171,7 +174,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveToNode() throws Exception {
 		// move dirts page as a whole
-		try (AutoCloseable asserter = CountHelper.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveToNode();
 		}
 	}

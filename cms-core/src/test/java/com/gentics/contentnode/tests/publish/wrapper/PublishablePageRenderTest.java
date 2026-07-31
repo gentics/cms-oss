@@ -105,8 +105,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderPageProperties() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRender(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRender(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -117,8 +117,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderTags() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRender(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRender(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -129,8 +129,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderLanguageVariants() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			Page page = createHandlebarsPage(vtl);
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
 			Page englishVariant = (Page)page.copy();
 			englishVariant.setContentsetId(page.getContentsetId());
 			englishVariant.setLanguage(en);
@@ -149,8 +149,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderPagePropertiesProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRenderProxy(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderProxy(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -161,8 +161,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderTagsProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRenderProxy(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderProxy(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -173,8 +173,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderLanguageVariantsProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			Page page = createHandlebarsPage(vtl);
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
 			Page englishVariant = (Page)page.copy();
 			englishVariant.setContentsetId(page.getContentsetId());
 			englishVariant.setLanguage(en);
@@ -193,8 +193,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderPagePropertiesPublishableProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRenderPublishablePageProxy(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderPublishablePageProxy(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -205,8 +205,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderTagsPublishableProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			assertRenderPublishablePageProxy(createHandlebarsPage(vtl));
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderPublishablePageProxy(createHandlebarsPage(hbs));
 		}
 	}
 
@@ -217,8 +217,8 @@ public class PublishablePageRenderTest {
 	@Test
 	public void testRenderLanguageVariantsPublishableProxy() throws Exception {
 		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
-			String vtl = FileUtil.stream2String(in, "UTF-8");
-			Page page = createHandlebarsPage(vtl);
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
 			Page englishVariant = (Page)page.copy();
 			englishVariant.setContentsetId(page.getContentsetId());
 			englishVariant.setLanguage(en);

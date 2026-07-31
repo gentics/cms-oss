@@ -94,7 +94,7 @@ public class CrRenderTagmapTest {
 		node = supply(() -> createNode("host", "Node", PublishTarget.CONTENTREPOSITORY));
 
 		htmlConstructId = supply(() -> createConstruct(node, LongHTMLPartType.class, TAGTYPENAME, TAGTYPENAME));
-		hbsConstructId = supply(() -> createConstruct(node, HandlebarsPartType.class, "vtl", "vtl"));
+		hbsConstructId = supply(() -> createConstruct(node, HandlebarsPartType.class, "hbs", "hbs"));
 
 		template = supply(() -> create(Template.class, tmpl -> {
 			tmpl.setName("Template");
@@ -176,7 +176,7 @@ public class CrRenderTagmapTest {
 				}, false);
 				getPartType(HandlebarsPartType.class, cTag, "hbs").getValueObject()
 						.setValueText(
-								"{{#each (gtx_sort cms.folder.pages \"name\"}}{{name (online)}}<br>{{/each}}");
+								"{{#each (gtx_sort cms.folder.pages \"name\")}}{{name}} ({{online}})\n{{/each}}");
 				upd.getContentTags().put("overview", cTag);
 			});
 		}, res -> {

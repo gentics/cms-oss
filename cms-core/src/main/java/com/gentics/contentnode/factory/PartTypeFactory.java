@@ -32,6 +32,11 @@ public class PartTypeFactory {
 	 */
 	protected final static Set<Integer> OPTIONAL_TYPE_IDS = Set.of(33, 34, 35);
 
+	/**
+	 * Type IDs of optional part types, which are valueless
+	 */
+	protected final static Set<Integer> OPTIONAL_VALUELESS_IDS = Set.of(33, 34, 35);
+
 	private static PartTypeFactory factory;
     
 	private static final ConcurrentHashMap<Integer, PartTypeInfo> partTypeInfoCache = new ConcurrentHashMap<Integer, PartTypeInfo>();
@@ -71,6 +76,10 @@ public class PartTypeFactory {
 	 */
 	public boolean isValueless(int typeId, boolean failIfPartTypeNotFound) throws NodeException {
 		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId, failIfPartTypeNotFound);
+
+		if (OPTIONAL_VALUELESS_IDS.contains(typeId)) {
+			return true;
+		}
 
 		// check if classname is set
 		if (null == partTypeInfo) {

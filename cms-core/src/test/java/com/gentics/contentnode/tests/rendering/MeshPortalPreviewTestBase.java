@@ -396,7 +396,7 @@ public abstract class MeshPortalPreviewTestBase {
 			StringWriter outwriter = new StringWriter();
 			com.github.jknack.handlebars.Template template = handlebars.compile(new StringTemplateSource(
 					"portaltemplate",
-					"<div class=\"tag\">{{node.fields.tag}}</div><div class=\"live\">{{node.fields.live}}</div>"));
+					"<div class=\"tag\">{{{node.fields.tag}}}</div><div class=\"live\">{{{node.fields.live}}}</div>"));
 			template.apply(context, outwriter);
 
 			return outwriter.toString();
@@ -423,7 +423,7 @@ public abstract class MeshPortalPreviewTestBase {
 			StringWriter outwriter = new StringWriter();
 			com.github.jknack.handlebars.Template template = handlebars.compile(new StringTemplateSource(
 					"portaltemplate",
-					"tag: {{node.fields.tag}}, live: {{node.fields.live}}"));
+					"tag: {{{node.fields.tag}}}, live: {{{node.fields.live}}}"));
 			template.apply(context, outwriter);
 
 			return outwriter.toString();

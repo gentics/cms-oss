@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CountHelper {
+import com.github.jknack.handlebars.helper.HelperFunction;
+
+public class CountHelperSource {
 	/**
 	 * Render counts
 	 */
@@ -53,6 +55,17 @@ public class CountHelper {
 	}
 
 	/**
+	 * Count the occurrance of the given name
+	 * @param name name
+	 * @return which should be rendered
+	 */
+	@HelperFunction("gtx_test_count")
+	public static String count(String name) {
+		renderCounts.computeIfAbsent(name, key -> new AtomicInteger()).incrementAndGet();
+		return render;
+	}
+
+	/**
 	 * Asserter for the CountDirective
 	 */
 	protected static class Asserter implements AutoCloseable {
@@ -68,12 +81,12 @@ public class CountHelper {
 		protected Asserter(String name, int expectedCount) {
 			this.name = name;
 			this.expectedCount = expectedCount;
-			CountHelper.reset();
+			CountHelperSource.reset();
 		}
 
 		@Override
 		public void close() throws Exception {
-			assertThat(CountHelper.get(name)).as("Count for " + name).isEqualTo(expectedCount);
+			assertThat(CountHelperSource.get(name)).as("Count for " + name).isEqualTo(expectedCount);
 		}
 	}
 }

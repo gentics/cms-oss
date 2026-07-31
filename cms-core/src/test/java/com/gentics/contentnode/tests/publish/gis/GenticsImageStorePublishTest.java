@@ -55,7 +55,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -162,11 +162,11 @@ public class GenticsImageStorePublishTest {
 				part.setHidden(false);
 				part.setKeyname("hbs");
 				part.setName("hbs", 1);
-				part.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+				part.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 				part.setDefaultValue(create(Value.class, v -> {
 					v.setValueText("{{gtx_gis cms.tag.parts.image.target width=50 mode=\"smart\"}}"
-							+ "{{gtx_gis cms.tag.parts.image.target height=100 mode=\"prop\"}}"
-							+ "{{gtx_render cms.tag.parts.image}}");
+							+ " {{gtx_gis cms.tag.parts.image.target height=100 mode=\"prop\"}}"
+							+ " {{gtx_render cms.tag.parts.image}}");
 				}, false));
 			}, false));
 		}));
@@ -273,7 +273,7 @@ public class GenticsImageStorePublishTest {
 			String gisUrl2 = getExpectedUrl(gisFile2);
 			String imageUrl = getExpectedUrl(imageFile);
 
-			assertThat(gisUrl1 + " " + gisUrl2 + " " + imageUrl).as("URLs").isEqualTo(source);
+			assertThat(source).as("URLs").isEqualTo(gisUrl1 + " " + gisUrl2 + " " + imageUrl);
 
 			if (mesh && publishImageVariants) {
 				List<ImageManipulationParametersImpl> params = new ArrayList<>(2);

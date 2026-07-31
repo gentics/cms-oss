@@ -1,6 +1,8 @@
-h2 Translate Pages
+h2. Translate Pages
 
 This option allows pages to be automatically translated using a translation tool.
+
+endprologue.
 
 h3. Feature activation
 

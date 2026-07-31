@@ -224,7 +224,7 @@ public class FormsPublisherService implements MeshPublisherService {
 			publisher.client.post(formtypeConfigUrl, new JsonObject(configuration.toString())).blockingAwait();
 			publisher.client.post(translationsUrl, translations, JsonObject.class).blockingAwait();
 
-			if (!Objects.equals(noIndex, formsStatus.getNoIndex())) {
+			if (formsStatus.getNoIndex() != null && !Objects.equals(noIndex, formsStatus.getNoIndex())) {
 				if (repair) {
 					setNoIndex.run();
 				} else {

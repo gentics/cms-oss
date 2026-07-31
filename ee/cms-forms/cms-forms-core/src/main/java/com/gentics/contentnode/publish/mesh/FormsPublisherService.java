@@ -228,7 +228,7 @@ public class FormsPublisherService implements MeshPublisherService {
 				if (repair) {
 					setNoIndex.run();
 				} else {
-					error("Forms plugin noIndex status for project %s should be %s, but is %s",
+					publisher.error("Forms plugin noIndex status for project %s should be %s, but is %s",
 							currentProjectName, noIndex.toString(), formsStatus.getNoIndex());
 					success.set(false);
 				}

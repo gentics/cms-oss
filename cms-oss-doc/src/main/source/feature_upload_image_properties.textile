@@ -1,6 +1,8 @@
-h2 Entering image inormation after upload
+h2. Entering image inormation after upload
 
 After uploading an image editors have to leave the page to be able to enter image informations, which are available in each project, as object properties for the image.
+
+endprologue.
 
 h3. Feature activation
 

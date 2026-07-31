@@ -1,6 +1,8 @@
-h2 Entering file inormation after upload
+h2. Entering file inormation after upload
 
 After uploading a file, editors have to leave the page to be able to enter file informations, which are available in each project, as object properties for the file.
+
+endprologue.
 
 h3. Feature activation
 

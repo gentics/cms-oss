@@ -1,6 +1,8 @@
-h2 Partial localization
+h2. Partial localization
 
 Bei der Lokalisierung von Seiten kann wahlweise die komplette Seite lokalisiert werden, oder nur ausgewählte Root-Tags.
+
+endprologue.
 
 h3. Feature activation
 

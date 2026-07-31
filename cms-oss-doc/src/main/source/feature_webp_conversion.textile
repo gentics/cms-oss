@@ -1,6 +1,8 @@
-h2 Automatic WEBP Conversion
+h2. Automatic WEBP Conversion
 
 Uploaded images are automatically converted to the WEBP format. The “Convert Images” scheduler task converts existing images in nodes that have this feature enabled.
+
+endprologue.
 
 h3. Feature activation
 

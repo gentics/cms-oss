@@ -3,6 +3,7 @@ package com.gentics.contentnode.testutils;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
@@ -36,6 +37,18 @@ public class LoaderHelperSource {
 	public static Object getPage(int id) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		return wrap(t.getObject(Page.class, id));
+	}
+
+	/**
+	 * Load a file with given id
+	 * @param id file id
+	 * @return file
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_test_file")
+	public static Object getFile(int id) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(File.class, id));
 	}
 
 	/**

@@ -245,7 +245,7 @@ public class RestCallable<T extends GenericResponse> implements Callable<T> {
 	 * @return response
 	 * @throws NodeException
 	 */
-	protected GenericResponse handleInQueue(final GenericResponse response) throws NodeException {
+	protected T handleInQueue(final T response) throws NodeException {
 		if (queueResult != null) {
 			queueResult.handleResponse(response);
 		}
@@ -263,7 +263,7 @@ public class RestCallable<T extends GenericResponse> implements Callable<T> {
 		if (queueResult != null) {
 			queueResult.handleResponse(response);
 		} else if (userId != null) {
-			try (Trx trx = new Trx(sessionId, userId)) {
+			try (Trx trx = new Trx(session, true)) {
 				Transaction t = trx.getTransaction();
 				t.setTimestamp(trxTimestamp);
 

@@ -273,7 +273,7 @@ public class OperatorTest {
 					Thread.sleep(100);
 					latch.countDown();
 					return new GenericResponse(new Message(Type.SUCCESS, "%s succeeded".formatted(jobDescription)), ResponseInfo.ok(""));
-				});
+				}, Function.identity());
 			});
 
 			consume(r -> {

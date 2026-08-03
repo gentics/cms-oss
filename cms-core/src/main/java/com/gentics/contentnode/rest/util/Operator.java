@@ -158,7 +158,7 @@ public class Operator {
 			Callable<T> callable, Function<Exception, WebApplicationException> errorHandler,
 			Runnable backgroundCallback, Function<GenericResponse, T> responseTransformer) {
 		try {
-			RestCallable<T> wrapper = new RestCallable<>(description, lock, callable);
+			RestCallable<T> wrapper = new RestCallable<>(description, lock, callable, responseTransformer);
 			CompletableFuture<T> futureResult = submit(wrapper);
 
 			try {
@@ -172,7 +172,7 @@ public class Operator {
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
 				}
-				return continueInBackground(description);
+				return continueInBackground(description, responseTransformer);
 			}
 		} catch (Exception exception) {
 			if (exception.getCause() instanceof ReadOnlyException) {
@@ -231,7 +231,7 @@ public class Operator {
 				}
 			} catch (TimeoutException e) {
 				futureResult.whenComplete(handleInBackground(wrapper));
-				return continueInBackground(description);
+				return continueInBackground(description, responseTransformer);
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -292,7 +292,7 @@ public class Operator {
 					});
 				}
 
-				return continueInBackground(description);
+				return continueInBackground(description, responseTransformer);
 			}
 		} catch (Exception e) {
 			logger.error("Error while " + description, e);
@@ -405,7 +405,7 @@ public class Operator {
 	 * @param wrapper callable wrapper
 	 * @return completable future
 	 */
-	protected static CompletableFuture<GenericResponse> submit(RestCallable wrapper) {
+	protected static <T extends GenericResponse> CompletableFuture<T> submit(RestCallable<T> wrapper) {
 		return CompletableFuture.supplyAsync(() -> {
 			try {
 				return wrapper.call();
@@ -420,7 +420,7 @@ public class Operator {
 	 * @param wrapper callable wrapper
 	 * @return consumer
 	 */
-	protected static BiConsumer<? super GenericResponse, ? super Throwable> handleInBackground(RestCallable wrapper) {
+	protected static <T extends GenericResponse> BiConsumer<T, ? super Throwable> handleInBackground(RestCallable<T> wrapper) {
 		return (result, ex) -> {
 			try {
 				if (result != null) {
@@ -437,11 +437,12 @@ public class Operator {
 	/**
 	 * Return a response stating that the job will be continued in the background
 	 * @param description job description
+	 * @param responseTransformer response transformer
 	 * @return response
 	 */
-	protected static GenericResponse continueInBackground(String description) {
+	protected static <T extends GenericResponse> T continueInBackground(String description, Function<GenericResponse, T> responseTransformer) {
 		String msg = I18NHelper.get("job_sent_to_background", description);
-		return new GenericResponse(new Message(Type.INFO, msg), new ResponseInfo(ResponseCode.OK, msg)).setInBackground(true);
+		return responseTransformer.apply(new GenericResponse(new Message(Type.INFO, msg), new ResponseInfo(ResponseCode.OK, msg)).setInBackground(true));
 	}
 
 	/**

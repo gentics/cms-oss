@@ -230,7 +230,6 @@ function BinaryElement(props: IFormComponentAttributes) {
 
     let binaryLink = '';
 
-    // Mesh file => build URL from value
     if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,

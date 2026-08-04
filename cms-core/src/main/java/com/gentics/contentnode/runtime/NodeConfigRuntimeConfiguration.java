@@ -373,22 +373,4 @@ public class NodeConfigRuntimeConfiguration {
 			throw new NodeException(e);
 		}
 	}
-
-	/**
-	 * initialize velocity
-	 * @throws Exception if there is a fatal error while initializing velocity
-	 */
-	// FIXME: do this in a service
-	public static void initVelocity() throws Exception {
-//		NodePreferences prefs = getDefault().getNodeConfig().getDefaultPreferences();
-//
-//		Map<String, Object> velocityConfig = prefs.getPropertyMap("velocity");
-//		for (Map.Entry<String, Object> entry : velocityConfig.entrySet()) {
-//			// we transform every value into a string, because some values, like the modificationCheckInterval
-//			// are expected to be Long, but will be provided by YAML config as Integer
-//			Velocity.setProperty(entry.getKey(), ObjectTransformer.getString(entry.getValue(), null));
-//		}
-//
-//		Velocity.init();
-	}
 }

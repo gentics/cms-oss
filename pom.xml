@@ -40,7 +40,6 @@
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
 		<module>cms-integration-tests</module>
-		<module>cms-vtl</module>
 	</modules>
 
 	<properties>

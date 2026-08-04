@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, TouchableOpacity, Platform, Linking } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { View, TouchableOpacity, Platform, Linking } from "react-native";
 import {
   FormState,
   IFormGridOptions,
@@ -8,27 +8,26 @@ import {
   IBinary,
   IBinaryFile,
   BinarySource,
-} from '../../../../types/interfaces';
-import { useTranslation } from 'react-i18next';
-import { binaryElementStyles } from '../../../../styles/common/common-style';
-import { binaryElementStyles as customBinaryElementStyles } from '../../../../styles/custom/custom-style';
-import { TFunction } from 'i18next';
-import * as BinaryValidationUtils from '../../../../utils/BinaryValidationUtils';
-import * as formEventsUtils from '../../../../utils/FormEventsUtils';
-import * as utils from '../../../../utils/Utils';
-import { SummaryElement } from '../../helper/SummaryElement';
-import { FormElementWrapper } from '../../helper/FormElementWrapper';
-import AndpText from '@andp/core/src/components/AndpText';
-import { mergeStyles } from '@andp/core/src/AndpUtils';
-import { RestService } from '../../../../services/RestService';
-import FileCard from './parts/FileCard/FileCard.web';
-import * as DocumentPicker from 'expo-document-picker';
+} from "../../../../types/interfaces";
+import { useTranslation } from "react-i18next";
+import { binaryElementStyles } from "../../../../styles/common/common-style";
+import { binaryElementStyles as customBinaryElementStyles } from "../../../../styles/custom/custom-style";
+import { TFunction } from "i18next";
+import * as BinaryValidationUtils from "../../../../utils/BinaryValidationUtils";
+import * as formEventsUtils from "../../../../utils/FormEventsUtils";
+import * as utils from "../../../../utils/Utils";
+import { SummaryElement } from "../../helper/SummaryElement";
+import { FormElementWrapper } from "../../helper/FormElementWrapper";
+import AndpText from "@andp/core/src/components/AndpText";
+import { mergeStyles } from "@andp/core/src/AndpUtils";
+import { RestService } from "../../../../services/RestService";
+import FileCard from "./parts/FileCard/FileCard.web";
+import * as DocumentPicker from "expo-document-picker";
 
-import { v4 as uuidv4 } from 'uuid';
-import { IOverlayFullScreenTextEnum } from '../../../../constants/enums/IOverlayFullScreenTextEnum';
-import { OverlayTypeEnum } from '../../../../custom/OverlayTypes';
-import * as overlayUtils from '../../../../utils/OverlayUtils';
-
+import { v4 as uuidv4 } from "uuid";
+import { IOverlayFullScreenTextEnum } from "../../../../constants/enums/IOverlayFullScreenTextEnum";
+import { OverlayTypeEnum } from "../../../../custom/OverlayTypes";
+import * as overlayUtils from "../../../../utils/OverlayUtils";
 
 /**
  * In-memory per-field cache to keep local (unuploaded) files across unmount/remount
@@ -44,7 +43,7 @@ function BinaryElement(props: IFormComponentAttributes) {
   const [files, setFiles] = useState<BinaryFileWithUid[]>([]);
   const labelText =
     utils.getI18nText(props.formState, props.label) +
-    (props.required ? ' *' : '');
+    (props.required ? " *" : "");
   const errorMessageElementId = `${props.id}_errorMessage`;
   const [localErrMsg, setLocalErrMsg] = useState(props.error);
 
@@ -97,11 +96,10 @@ function BinaryElement(props: IFormComponentAttributes) {
     props.isList,
   ]);
 
-
   const cacheKey = useMemo(() => {
-    const formid = props.formState?.formid ?? 'noform';
-    const jsonpath = String(props.jsonpath ?? '');
-    const id = String(props.id ?? '');
+    const formid = props.formState?.formid ?? "noform";
+    const jsonpath = String(props.jsonpath ?? "");
+    const id = String(props.id ?? "");
     return `${formid}::${jsonpath}::${id}`;
   }, [props.formState?.formid, props.jsonpath, props.id]);
   // Load files from cache on mount or cacheKey change
@@ -116,7 +114,6 @@ function BinaryElement(props: IFormComponentAttributes) {
   useEffect(() => {
     binaryLocalCache.set(cacheKey, files);
   }, [cacheKey, files]);
-
 
   // Sync local error
   useEffect(() => {
@@ -133,18 +130,22 @@ function BinaryElement(props: IFormComponentAttributes) {
   function normalizeFiles(value: any): IBinary[] {
     if (!value) return [];
     if (Array.isArray(value)) return value.filter((v) => !!v?.fileName);
-    if (typeof value === 'object' && value.fileName) return [value];
+    if (typeof value === "object" && value.fileName) return [value];
     return [];
   }
 
   // --- V2 helpers -------------------------------------------------------------
-  const readExt = (name: string) =>
-    name?.split('.').pop()?.toLowerCase() ?? '';
+  const readExt = (name: string) => name?.split(".").pop()?.toLowerCase() ?? "";
 
   const classifySource = (b: IBinary): BinarySource => {
-    if (!b?.value || String(b.value).startsWith('mesh(not uploaded yet)')) return BinarySource.LOCAL;
-    if (String(b.value).startsWith('FormInstanceContent|') || String(b.value).startsWith('ActaNovaDocument|')) return BinarySource.ACTANOVA;
-    if (String(b.value).startsWith('mesh:')) return BinarySource.MESH;
+    if (!b?.value || String(b.value).startsWith("mesh(not uploaded yet)"))
+      return BinarySource.LOCAL;
+    if (
+      String(b.value).startsWith("FormInstanceContent|") ||
+      String(b.value).startsWith("ActaNovaDocument|")
+    )
+      return BinarySource.ACTANOVA;
+    if (String(b.value).startsWith("mesh:")) return BinarySource.MESH;
     return BinarySource.LOCAL;
   };
 
@@ -153,31 +154,31 @@ function BinaryElement(props: IFormComponentAttributes) {
     type: file.type,
     ext: readExt(file.name),
     uri: URL.createObjectURL(file),
-    value: '',
+    value: "",
   });
 
   const toIBinaryFileFromServer = (formFile: IBinary): BinaryFileWithUid => {
-    const fileExt = readExt(formFile.fileName || '');
+    const fileExt = readExt(formFile.fileName || "");
     const source = classifySource(formFile);
     const withUri: IBinary = {
       ...formFile,
       uri:
         props.formState?.formid && formFile.value
           ? props.restService.ANGetBinaryURL(
-            props.formState.formid,
-            formFile.value,
-            props.formState.businessObjectID
-          )
+              props.formState.formid,
+              formFile.value,
+              props.formState.businessObjectID,
+            )
           : formFile.uri,
       ext: fileExt,
-      type: formFile.type ?? ''
+      type: formFile.type ?? "",
     };
     return {
       binary: withUri,
       file: null,
       source,
       fileExt: fileExt,
-      mimeType: formFile.type ?? '',
+      mimeType: formFile.type ?? "",
       uid: uuidv4(),
     };
   };
@@ -191,9 +192,16 @@ function BinaryElement(props: IFormComponentAttributes) {
     const filesToAdd = ctx.isList ? rawFiles : [rawFiles[0]];
 
     await formEventsUtils.handleBinaryAdd(
-      ctx.formState, ctx.uiState, ctx.jsonpath, ctx.id,
-      ctx.updateState, ctx.restService, filesToAdd,
-      ctx.isLoggedIn, ctx.formGridOptions, ctx.editable,
+      ctx.formState,
+      ctx.uiState,
+      ctx.jsonpath,
+      ctx.id,
+      ctx.updateState,
+      ctx.restService,
+      filesToAdd,
+      ctx.isLoggedIn,
+      ctx.formGridOptions,
+      ctx.editable,
     );
 
     const additions: BinaryFileWithUid[] = filesToAdd.map((f) => ({
@@ -205,12 +213,11 @@ function BinaryElement(props: IFormComponentAttributes) {
       uid: uuidv4(),
     }));
 
-    setFiles((prev) => ctx.isList ? [...prev, ...additions] : additions);
+    setFiles((prev) => (ctx.isList ? [...prev, ...additions] : additions));
   }
 
-
   useEffect(() => {
-    if (Platform.OS !== 'web') return;
+    if (Platform.OS !== "web") return;
 
     // RN Web >= 0.20 removed findNodeHandle; refs on web resolve to the host element
     const node = dropRef.current as unknown as HTMLElement | null;
@@ -227,7 +234,7 @@ function BinaryElement(props: IFormComponentAttributes) {
       if (inside(e)) {
         e.preventDefault();
         setIsDragOver(true);
-        e.dataTransfer && (e.dataTransfer.dropEffect = 'copy');
+        e.dataTransfer && (e.dataTransfer.dropEffect = "copy");
       } else {
         setIsDragOver(false);
       }
@@ -247,17 +254,16 @@ function BinaryElement(props: IFormComponentAttributes) {
     };
 
     const onDragLeave = () => setIsDragOver(false);
-    window.addEventListener('dragover', onDragOver);
-    window.addEventListener('drop', onDrop);
-    window.addEventListener('dragleave', onDragLeave);
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("drop", onDrop);
+    window.addEventListener("dragleave", onDragLeave);
 
     return () => {
-      window.removeEventListener('dragover', onDragOver);
-      window.removeEventListener('drop', onDrop);
-      window.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("drop", onDrop);
+      window.removeEventListener("dragleave", onDragLeave);
     };
   }, []);
-
 
   // Reconcile props.value (server) with local state:
   // - Convert server IBinary[] to IBinaryFile[]
@@ -270,10 +276,12 @@ function BinaryElement(props: IFormComponentAttributes) {
       (f) =>
         !!f?.fileName &&
         !!f?.value &&
-        !String(f.value).startsWith('mesh(not uploaded yet)'),
+        !String(f.value).startsWith("mesh(not uploaded yet)"),
     );
 
-    const serverList: BinaryFileWithUid[] = serverListRaw.map(toIBinaryFileFromServer);
+    const serverList: BinaryFileWithUid[] = serverListRaw.map(
+      toIBinaryFileFromServer,
+    );
 
     setFiles((prev) => {
       const serverNames = new Set(serverList.map((s) => s.binary.fileName));
@@ -281,7 +289,9 @@ function BinaryElement(props: IFormComponentAttributes) {
       // ("mesh(not uploaded yet)"). If a local file's name is no longer present in
       // props.value — e.g. because the upload failed and the state was rolled back —
       // the card is removed from the UI automatically.
-      const allValueNames = new Set(normalizeFiles(props.value).map((f) => f.fileName));
+      const allValueNames = new Set(
+        normalizeFiles(props.value).map((f) => f.fileName),
+      );
       const remainingLocals = prev.filter(
         (x) =>
           x.source === BinarySource.LOCAL &&
@@ -318,16 +328,25 @@ function BinaryElement(props: IFormComponentAttributes) {
 
   const renderItems = files.map((item, index) => {
     const key = getFileKey(item);
+
     let binaryLink = "";
-    if (item.source === BinarySource.LOCAL) {
-      binaryLink = item.binary.uri || "";
-    } else if (item.source === BinarySource.ACTANOVA) {
+
+    if (item.source === BinarySource.ACTANOVA) {
       binaryLink = props.restService.ANGetBinaryURL(
         props.formState.formid,
         item.binary.value,
         props.formState.businessObjectID,
       );
     }
+    // Local file => use local URI (from picker)
+    else if (item.source === BinarySource.LOCAL) {
+      binaryLink = item.binary.uri || "";
+    }
+    // Server / generic case => fall back to binary.uri if set by toIBinaryFileFromServer
+    else if (item.binary.uri) {
+      binaryLink = item.binary.uri;
+    }
+
     return (
       <FileCard
         index={index}
@@ -338,7 +357,7 @@ function BinaryElement(props: IFormComponentAttributes) {
           Linking.openURL(binaryLink);
         }}
         showDelete={props.editable}
-        showDownload={(binaryLink !== '')}
+        showDownload={binaryLink !== ""}
         onRemove={async () => {
           await formEventsUtils.handleBinaryDelete(
             props.formState,
@@ -351,11 +370,11 @@ function BinaryElement(props: IFormComponentAttributes) {
             item.binary.fileName,
             props.isLoggedIn,
             props.formGridOptions,
-            props.editable
+            props.editable,
           );
           // Immediately reflect removal in local UI state (covers local files that server doesn't know about yet)
-          setFiles(prev => prev.filter(f => getFileKey(f) !== key));
-        } } 
+          setFiles((prev) => prev.filter((f) => getFileKey(f) !== key));
+        }}
         parentJsonPath={props.jsonpath}
       />
     );
@@ -379,24 +398,24 @@ function BinaryElement(props: IFormComponentAttributes) {
           <TouchableOpacity
             accessible
             accessibilityRole="button"
-            accessibilityLabel={t('form_accessibility_binary_file_chooser', {
+            accessibilityLabel={t("form_accessibility_binary_file_chooser", {
               label: labelText,
             })}
             accessibilityHint={
               props.error
-                ? t('form_accessibility_binary_file_chooser_error_hint', {
-                  error: props.error,
-                })
-                : t('form_accessibility_binary_file_chooser_hint')
+                ? t("form_accessibility_binary_file_chooser_error_hint", {
+                    error: props.error,
+                  })
+                : t("form_accessibility_binary_file_chooser_hint")
             }
             accessibilityState={{ disabled: !props.editable }}
             accessibilityLiveRegion="polite"
             importantForAccessibility="yes"
-            {...(Platform.OS === 'web'
+            {...(Platform.OS === "web"
               ? {
-                'aria-invalid': !!props.error,
-                'aria-haspopup': 'false',
-              }
+                  "aria-invalid": !!props.error,
+                  "aria-haspopup": "false",
+                }
               : {})}
             style={[
               styles.fileChooser,
@@ -411,10 +430,16 @@ function BinaryElement(props: IFormComponentAttributes) {
                 props.formState,
                 OverlayTypeEnum.FULL_SCREEN_LOADING,
                 latestRef.current.updateState,
-                { loadingText: IOverlayFullScreenTextEnum.FileUploadClientProcess },
+                {
+                  loadingText:
+                    IOverlayFullScreenTextEnum.FileUploadClientProcess,
+                },
               );
               const newFiles = await onBinaryPress(props);
-              overlayUtils.hideOverlay(latestRef.current.uiState, latestRef.current.updateState);
+              overlayUtils.hideOverlay(
+                latestRef.current.uiState,
+                latestRef.current.updateState,
+              );
 
               if (newFiles && newFiles.length > 0) {
                 await addFiles(newFiles, latestRef.current);
@@ -439,27 +464,21 @@ function BinaryElement(props: IFormComponentAttributes) {
         <View style={styles.fileContainer}>
           <View style={styles.fileContainerInner}>
             {files.length > 0 && (
-              <View
-                style={[
-                  styles.fileList
-                ]}
-              >
-                {renderItems}
-              </View>
+              <View style={[styles.fileList]}>{renderItems}</View>
             )}
           </View>
         </View>
       )}
     </FormElementWrapper>
   );
-
 }
 
-async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | null> {
+async function onBinaryPress(
+  props: IFormComponentAttributes,
+): Promise<File[] | null> {
   try {
-     
     const pickerResult = await DocumentPicker.getDocumentAsync({
-      type: '*/*',
+      type: "*/*",
       multiple: props.isList,
     });
     if (pickerResult.canceled) return null;
@@ -468,7 +487,7 @@ async function onBinaryPress(props: IFormComponentAttributes): Promise<File[] | 
       .filter((asset) => !!asset.file)
       .map((asset) => asset.file!);
   } catch (error) {
-    console.error('DocumentPicker error: ', error);
+    console.error("DocumentPicker error: ", error);
     return null;
   }
 }
@@ -492,7 +511,7 @@ BinaryElement.getSummaryValue = function (
 
   let summaryValue: any = [];
   let fileArray: any = [];
-  if (schemaState.isList && !value.hasOwnProperty('fileName')) {
+  if (schemaState.isList && !value.hasOwnProperty("fileName")) {
     if (Array.isArray(value)) {
       fileArray = value;
     } else {
@@ -527,7 +546,7 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
   restService: RestService,
 ) {
   const styles = mergeStyles(binaryElementStyles, customBinaryElementStyles);
-  let binaryLink = '';
+  let binaryLink = "";
   if (formState?.formid && fileObject?.value) {
     binaryLink = restService.ANGetBinaryURL(
       formState.formid,
@@ -535,9 +554,9 @@ BinaryElement.getRenderedBinaryLinkMarkup = function (
       formState.businessObjectID,
     );
   }
-  let notUploadedYet = fileObject.value.startsWith('mesh(not uploaded yet):');
+  let notUploadedYet = fileObject.value.startsWith("mesh(not uploaded yet):");
 
-  if (binaryLink !== '' && formState.isLoggedIn && !notUploadedYet) {
+  if (binaryLink !== "" && formState.isLoggedIn && !notUploadedYet) {
     return (
       <AndpText
         numberOfLines={1}

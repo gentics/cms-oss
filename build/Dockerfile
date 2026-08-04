@@ -40,28 +40,15 @@ Suites: $(. /etc/os-release && echo "$DEBIAN_RELEASE")
 Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
-RUN apt update
-RUN apt install --assume-yes docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Google chrome
-RUN wget -q -O /etc/apt/keyrings/linux_signing_key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub
-RUN tee /etc/apt/sources.list.d/google-chrome.sources > /dev/null <<EOF
-Types: deb
-URIs: http://dl.google.com/linux/chrome/deb/
-Suites: stable
-Components: main
-Architectures: amd64
-Signed-By: /etc/apt/keyrings/linux_signing_key.pub
-EOF
-RUN apt update
-RUN apt install --assume-yes google-chrome-stable
+RUN apt-get update
+RUN apt-get install --assume-yes docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Cypress Dependencies
 # From https://docs.cypress.io/guides/getting-started/installing-cypress#UbuntuDebian
 # And https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
 RUN apt-get install --assume-yes \
 	libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb libgbm1 libcups2 libatk-bridge2.0-0 libatk1.0-0
-RUN apt-get install --assume-yes --allow-unauthenticated google-chrome-beta
+RUN apt-get install --assume-yes --allow-unauthenticated chromium chromium-l10n
 
  # "fake" dbus address to prevent errors
 # https://github.com/SeleniumHQ/docker-selenium/issues/87
@@ -73,12 +60,6 @@ RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && loca
 ENV LANG=en_US.UTF-8 \
 	LANGUAGE=en_US:en \
 	LC_ALL=en_US.UTF-8
-
-# Python 2 - Do we still need this?
-RUN apt install --assume-yes python2.7
-RUN sudo update-alternatives --install /usr/local/bin/python python /usr/bin/python2.7 20 \
- && sudo chmod +x /usr/local/bin/python
-ENV PYTHON /usr/local/bin/python
 
 # Install docker-compose v2 and compatibility for v1
 # RUN mkdir -p /usr/local/lib/docker/cli-plugins/ \
@@ -93,9 +74,10 @@ ENV PYTHON /usr/local/bin/python
 
 # Install NVM so we can install the correct node version.
 # Doing so hardcoded is a hassle and error-prone.
+# Create a script file sourced by both interactive and non-interactive bash shells
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
-RUN nvm install ${NODE_VERSION}
-ENV NODE_VERSION=${NODE_VERSION}
+ENV NVM_DIR=/root/.nvm
+RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
 
 # Install Ruby 2.3 with RVM
 ENV PATH "/usr/local/rvm/bin:$PATH"
@@ -125,10 +107,6 @@ RUN echo "StrictHostKeyChecking no" > /etc/ssh/ssh_config \
  && echo "BatchMode yes" >> /etc/ssh/ssh_config \
  && mv /usr/share/maven/conf/settings.xml /usr/share/maven/conf/settings-original.xml
 ADD build/settings.xml /usr/share/maven/conf/settings.xml
-
-# Allow updating Google Chrome
-RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkins \
- && echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get install --assume-yes --allow-unauthenticated google-chrome-beta" >> /etc/sudoers.d/jenkins
 
 # Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
 ENV XDG_CACHE_HOME "/tmp"

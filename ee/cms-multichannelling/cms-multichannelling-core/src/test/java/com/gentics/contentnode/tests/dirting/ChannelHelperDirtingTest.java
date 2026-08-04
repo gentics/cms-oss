@@ -37,6 +37,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
@@ -45,11 +46,12 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.db.SQLExecutor;
 
 /**
- * Test whether dependant pages are dirted correctly when using the
- * <code>#gtx_channel</code> directive.
+ * Test whether dependent pages are dirted correctly when using the
+ * <code>#gtx_channel</code> helper.
  */
 @GCNFeature(set = { Feature.MULTICHANNELLING })
-public class ChannelDirectiveDirtingTest {
+public class ChannelHelperDirtingTest {
+	private static final String HBS_PART_NAME = "hbs";
 	private static final String TAG_NAME = "channeldirectivetest";
 	private static final String PART_NAME_NODE = "targetnode";
 	private static final String PART_NAME_PAGE = "pageurl";
@@ -67,22 +69,21 @@ public class ChannelDirectiveDirtingTest {
 
 	@Before
 	public void setup() throws Exception {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
 		master = Creator.createNode("Master Node", "masternode", "/master/", "/master/", null);
 		channel1 = Creator.createNode("Channel 1", "channel1", "/channel1/", "/channel1/", null, master);
 		channel2 = Creator.createNode("Channel 2", "channel2", "/channel2/", "/channel2/", null, master);
 		srcFolder = Creator.createFolder(master.getFolder(), "Home", "/home/");
 
-		Construct construct = ContentNodeTestDataUtils.createVelocityConstruct(master);
+		int hbsConstructId = ContentNodeTestDataUtils.createConstruct(master, HandlebarsPartType.class, HBS_PART_NAME, HBS_PART_NAME);
+		Construct construct = t.getObject(Construct.class, hbsConstructId, true);
 		List<Part> parts = construct.getParts();
 
 		for (Part part : parts) {
-			if ("template".equals(part.getKeyname())) {
-				String tpl = String.format(
-					// "(Directive: <a href=\"$cms.tag.parts.%2$s\">Page ID : $cms.tag.parts.%2$s.id)",
-					"(Directive: #gtx_channel(\"$cms.tag.parts.%1$s\")<a href=\"$cms.tag.parts.%2$s\">Page ID : $cms.tag.parts.%2$s.id#end)",
-					PART_NAME_NODE,
-					PART_NAME_PAGE);
-
+			if (HBS_PART_NAME.equals(part.getKeyname())) {
+				String tpl = "(Helper: {{#gtx_channel cms.tag.parts.%1$s}}<a href=\"{{cms.tag.parts.%2$s}}\">Page ID : {{cms.tag.parts.%2$s.id}}{{/gtx_channel}})"
+						.formatted(PART_NAME_NODE, PART_NAME_PAGE);
 				part.getDefaultValue().setValueText(tpl);
 
 				break;
@@ -104,8 +105,6 @@ public class ChannelDirectiveDirtingTest {
 
 		template.getTags().put(TAG_NAME, tt);
 		template.save();
-
-		Transaction t = TransactionManager.getCurrentTransaction();
 
 		masterPage = ContentNodeTestDataUtils.createPage(srcFolder, template, "Master page");
 		masterPage = t.getObject(masterPage, true);

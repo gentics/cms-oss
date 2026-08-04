@@ -39,6 +39,7 @@
 		<module>cms-doc</module>
 		<module>cms-translation</module>
 		<module>formgen</module>
+		<module>cms-velocity</module>
   </modules>
 
 	<properties>

@@ -5,7 +5,7 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.localize;
 import static com.gentics.contentnode.tests.utils.Builder.update;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +51,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -71,7 +72,7 @@ public class PageOverviewRenderTest {
 
 	private static Template template;
 
-	private static Construct vtlConstruct;
+	private static Construct hbsConstruct;
 
 	private static Integer overviewPartTypeId;
 
@@ -112,12 +113,12 @@ public class PageOverviewRenderTest {
 		channel = supply(() -> ContentNodeTestDataUtils.createChannel(node, "Channel", "channel", "/"));
 		channelId = execute(Node::getId, channel);
 
-		// create velocity construct
-		vtlConstruct = supply(t -> t.getObject(Construct.class, createVelocityConstruct(node, "vtl", "vtl")));
+		// create handlebars construct
+		hbsConstruct = supply(t -> t.getObject(Construct.class, createConstruct(node, HandlebarsPartType.class, "hbs", "hbs")));
 
 		overviewPartTypeId = supply(() -> getPartTypeId(OverviewPartType.class));
 
-		vtlConstruct = update(vtlConstruct, c -> {
+		hbsConstruct = update(hbsConstruct, c -> {
 			Part dsPart = create(Part.class, p -> {
 				p.setEditable(1);
 				p.setHidden(true);
@@ -133,7 +134,7 @@ public class PageOverviewRenderTest {
 			t.addFolder(node.getFolder());
 			t.setSource("<node overview>");
 			TemplateTag tag = create(TemplateTag.class, tt -> {
-				tt.setConstructId(vtlConstruct.getId());
+				tt.setConstructId(hbsConstruct.getId());
 				tt.setName("overview");
 				tt.setEnabled(true);
 				tt.setPublic(true);
@@ -295,7 +296,7 @@ public class PageOverviewRenderTest {
 	 */
 	@Before
 	public void setup() throws NodeException {
-		vtlConstruct = update(vtlConstruct, c -> {
+		hbsConstruct = update(hbsConstruct, c -> {
 			Optional<Part> optionalPart = c.getParts().stream().filter(p -> p.getPartTypeId() == overviewPartTypeId)
 					.findFirst();
 			if (optionalPart.isPresent()) {
@@ -411,7 +412,7 @@ public class PageOverviewRenderTest {
 				}
 
 				// set the template to be rendered
-				overviewTag.getValues().getByKeyname(ContentNodeTestDataUtils.TEMPLATE_PARTNAME).setValueText("#foreach($item in $cms.tag.parts.ds.items)$item.name,$item.folder.node.folder.name\n#end");
+				overviewTag.getValues().getByKeyname("hbs").setValueText("{{#each cms.tag.parts.ds.items}}{{name}},{{folder.node.folder.name}}\n{{/each}}");
 			}).build();
 
 			// sort the expected output lines and combine to the expected output

@@ -41,6 +41,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.MCTestedType;
@@ -72,14 +73,14 @@ public class StickyChannelOverviewRenderTest {
 	};
 
 	/**
-	 * Map of Velocity Templates
+	 * Map of Handlebars Templates
 	 */
-	protected static Map<MCTestedType, String> VTL_TEMPLATES = new HashMap<>();
+	protected static Map<MCTestedType, String> HBS_TEMPLATES = new HashMap<>();
 
 	/**
-	 * Renderer implementation for rendering velocity
+	 * Renderer implementation for rendering handlebars
 	 */
-	protected static BiFunction<LocalizableNodeObject<?>, Node, String> vtlRenderer = overviewRenderer;
+	protected static BiFunction<LocalizableNodeObject<?>, Node, String> hbsRenderer = overviewRenderer;
 
 	private static Node node;
 
@@ -93,10 +94,10 @@ public class StickyChannelOverviewRenderTest {
 		TEMPLATES.put(MCTestedType.page, "<node page.name>,<node page.folder.name>,<node page.folder.node.folder.name>\n");
 		TEMPLATES.put(MCTestedType.folder, "<node folder.name>,<node folder.parent.name>,<node folder.node.folder.name>\n");
 
-		VTL_TEMPLATES.put(MCTestedType.file, "#foreach($item in $cms.tag.parts.ds.items)$item.name,$item.folder.name,$item.folder.node.folder.name\n#end");
-		VTL_TEMPLATES.put(MCTestedType.image, "#foreach($item in $cms.tag.parts.ds.items)$item.name,$item.folder.name,$item.folder.node.folder.name\n#end");
-		VTL_TEMPLATES.put(MCTestedType.page, "#foreach($item in $cms.tag.parts.ds.items)$item.name,$item.folder.name,$item.folder.node.folder.name\n#end");
-		VTL_TEMPLATES.put(MCTestedType.folder, "#foreach($item in $cms.tag.parts.ds.items)$item.name,$item.parent.name,$item.node.folder.name\n#end");
+		HBS_TEMPLATES.put(MCTestedType.file, "{{#each cms.tag.parts.ds.items}}{{name}},{{folder.name}},{{folder.node.folder.name}}\n{{/each}}");
+		HBS_TEMPLATES.put(MCTestedType.image, "{{#each cms.tag.parts.ds.items}}{{name}},{{folder.name}},{{folder.node.folder.name}}\\n{{/each}}");
+		HBS_TEMPLATES.put(MCTestedType.page, "{{#each cms.tag.parts.ds.items}}{{name}},{{folder.name}},{{folder.node.folder.name}}\\n{{/each}}");
+		HBS_TEMPLATES.put(MCTestedType.folder, "{{#each cms.tag.parts.ds.items}}{{name}},{{parent.name}},{{node.folder.name}}\\n{{/each}}");
 	}
 
 	@Parameters(name = "{index}: sticky: {0}, type: {1}, sort: {2}, ascending: {3}")
@@ -250,13 +251,13 @@ public class StickyChannelOverviewRenderTest {
 	}
 
 	/**
-	 * Test rendering the overview using velocity
+	 * Test rendering the overview using handlebars
 	 * @throws NodeException
 	 */
 	@Test
-	public void testRenderVelocity() throws NodeException {
-		// create velocity construct
-		final Integer constructId = Trx.supply(() -> ContentNodeTestDataUtils.createVelocityConstruct(node, "vtl", "vtl"));
+	public void testRenderHandlebars() throws NodeException {
+		// create handlebars construct
+		final Integer constructId = Trx.supply(() -> ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs"));
 
 		Trx.consume(id -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -289,12 +290,12 @@ public class StickyChannelOverviewRenderTest {
 		List<NameAndRenderedLine> channelLines = new ArrayList<>();
 
 		// create test page
-		Page testPage = createTestPage(testTemplate, masterLines, channelLines, vtlRenderer);
+		Page testPage = createTestPage(testTemplate, masterLines, channelLines, hbsRenderer);
 
-		// set the vtl in the page
+		// set the hbs in the page
 		Trx.operate(() -> {
 			ContentNodeTestDataUtils.update(testPage, p -> {
-				p.getContentTag("overview").getValues().getByKeyname(ContentNodeTestDataUtils.TEMPLATE_PARTNAME).setValueText(VTL_TEMPLATES.get(type));
+				p.getContentTag("overview").getValues().getByKeyname("hbs").setValueText(HBS_TEMPLATES.get(type));
 			});
 		});
 

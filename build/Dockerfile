@@ -77,16 +77,17 @@ ENV LANG=en_US.UTF-8 \
 # Create a script file sourced by both interactive and non-interactive bash shells
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
 ENV NVM_DIR=/root/.nvm
-RUN bash -c "source $NVM_DIR/nvm.sh && nvm install $NODE_VERSION"
+ENV NODE_VERSION=${NODE_VERSION}
+RUN bash -c "source $NVM_DIR/nvm.sh && nvm install --default $NODE_VERSION"
 
 # Install Ruby 2.3 with RVM
-ENV PATH "/usr/local/rvm/bin:$PATH"
-ENV rvm_path "/usr/local/rvm"
+ENV PATH="/usr/local/rvm/bin:$PATH"
+ENV RVM_PATH="/usr/local/rvm"
 RUN curl -sSL https://rvm.io/mpapis.asc | gpg2 --import - \
  && curl -sSL https://rvm.io/pkuczynski.asc | gpg2 --import - \
  && curl -sSL https://get.rvm.io | bash \
  && rvm pkg install openssl \
- && rvm install --autolibs=disable 2.3 -C --with-openssl-dir=$rvm_path/usr
+ && rvm install --autolibs=disable 2.3 -C --with-openssl-dir=$RVM_PATH/usr
 
 # Install Guides
 ADD ./build/guides-wrapper.sh /usr/local/bin/guides
@@ -109,25 +110,25 @@ RUN echo "StrictHostKeyChecking no" > /etc/ssh/ssh_config \
 ADD build/settings.xml /usr/share/maven/conf/settings.xml
 
 # Set the XDG cache to a directory which can be written to (In our CI, .cache isn't mounted/writable)
-ENV XDG_CACHE_HOME "/tmp"
+ENV XDG_CACHE_HOME="/tmp"
 # Disable mesa cache entirely
-ENV MESA_SHADER_CACHE_DISABLE "true"
+ENV MESA_SHADER_CACHE_DISABLE="true"
 
 # Switch user
 USER ${USER_NAME}
 
 # Workaround for Maven not outputting colors and silence download progress messages
-ENV MAVEN_OPTS "-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=256m"
+ENV MAVEN_OPTS="-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=256m"
 
 RUN mkdir -p ~/workspace \
 	&& mkdir -p ~/.m2/repository
 
 # TestDB Manager
-ENV TESTMANAGER_HOSTNAME "gcn-testdb-manager.gtx-dev.svc"
-ENV TESTMANAGER_PORT "8080"
+ENV TESTMANAGER_HOSTNAME="gcn-testdb-manager.gtx-dev.svc"
+ENV TESTMANAGER_PORT="8080"
 
 # path to the docker.sock file to be mounted in the ryuk container (for testcontainers)
-ENV TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE "/run/user/1000/docker.sock"
-ENV JAVA_HOME "/usr/lib/jvm/java-17-amazon-corretto/"
+ENV TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE="/run/user/1000/docker.sock"
+ENV JAVA_HOME="/usr/lib/jvm/java-17-amazon-corretto/"
 
 EXPOSE 80

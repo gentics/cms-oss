@@ -103,8 +103,6 @@ spec:
 
     options {
         withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
-        gitLabConnection('git.gentics.com')
-        gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
         timeout(time: 4, unit: 'HOURS')
         ansiColor('xterm')
@@ -142,7 +140,7 @@ spec:
                 script {
                     dir(path: 'cms-ui') {
                         // Use the correct node version
-                        sh "nvm use $NODE_VERSION"
+                        sh "nvm use ${env.NODE_VERSION}"
 
                         // Add private repository credentials and scopes
                         withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
@@ -200,8 +198,6 @@ spec:
 			}
 
             steps {
-                updateGitlabCommitStatus name: 'Jenkins build', state: "running"
-
                 script {
                     def mvnGoal       = "package"
                     def mvnProjects   = ""
@@ -255,24 +251,6 @@ spec:
                             mvnGoal = "test"
                             mvnProjects = " -am -pl 'cms-core,cms-oss-server'"
                             mvnArguments += "  -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
-                        }
-
-                        // Check if triggered by a Gitlab merge request
-                        if (env.gitlabTargetBranch) {
-                            runJUnitTests = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch,(String[])[
-                                "base-api/",
-                                "base-lib/",
-                                "cms-api/",
-                                "cms-cache/",
-                                "cms-cache/",
-                                "cms-core/",
-                                "cms-oss-server/",
-                                "cms-restapi/"
-                            ])
-
-                            if (!runJUnitTests) {
-                                mvnArguments += " -Dskip.unit.tests"
-                            }
                         }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests=true"
@@ -395,7 +373,7 @@ spec:
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
 					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+						(qaDeployBranchList.contains(branchName))
 				}
 			}
 
@@ -429,7 +407,7 @@ spec:
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
 					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+						(qaDeployBranchList.contains(branchName))
 				}
 			}
 

@@ -140,7 +140,7 @@ spec:
                 script {
                     dir(path: 'cms-ui') {
                         // Use the correct node version
-                        sh "source ${env.NVM_DIR}/nvm.sh && nvm use ${env.NODE_VERSION}"
+                        sh "source /root/.nvm/nvm.sh && nvm use"
 
                         // Add private repository credentials and scopes
                         withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {

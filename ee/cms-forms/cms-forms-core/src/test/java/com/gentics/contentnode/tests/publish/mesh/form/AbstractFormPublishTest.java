@@ -199,7 +199,7 @@ public abstract class AbstractFormPublishTest {
 				p.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 				p.setDefaultValue(create(Value.class, v -> {
 					v.setPart(p);
-					v.setValueText("{{#gtx_form cms.tag.parts.form type=\"java\"}}{{this}}{{else}}No Form{{/gtx_form}}");
+					v.setValueText("{{#gtx_form cms.tag.parts.form type=\"java\"}}{{{this}}}{{else}}No Form{{/gtx_form}}");
 				}, false));
 			}, false));
 

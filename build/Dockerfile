@@ -72,14 +72,6 @@ ENV LANG=en_US.UTF-8 \
 #  && update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/local/bin/compose-switch 99 \
 #  && sudo chmod +x /usr/local/bin/docker-compose
 
-# Install NVM so we can install the correct node version.
-# Doing so hardcoded is a hassle and error-prone.
-# Create a script file sourced by both interactive and non-interactive bash shells
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-ENV NODE_VERSION=${NODE_VERSION}
-RUN bash -c "source $NVM_DIR/nvm.sh && nvm install --default $NODE_VERSION"
-
 # Install Ruby 2.3 with RVM
 ENV PATH="/usr/local/rvm/bin:$PATH"
 ENV RVM_PATH="/usr/local/rvm"
@@ -116,6 +108,14 @@ ENV MESA_SHADER_CACHE_DISABLE="true"
 
 # Switch user
 USER ${USER_NAME}
+
+# Install NVM so we can install the correct node version.
+# Doing so hardcoded is a hassle and error-prone.
+# Create a script file sourced by both interactive and non-interactive bash shells
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
+ENV NODE_VERSION=${NODE_VERSION}
+ENV NVM_DIR="/home/${USER_NAME}/.nvm"
+RUN bash -c "source ~/.nvm/nvm.sh && nvm install --default $NODE_VERSION"
 
 # Workaround for Maven not outputting colors and silence download progress messages
 ENV MAVEN_OPTS="-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=256m"

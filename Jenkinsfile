@@ -140,7 +140,7 @@ spec:
                 script {
                     dir(path: 'cms-ui') {
                         // Use the correct node version
-                        sh "bash -c 'source /root/.nvm/nvm.sh && nvm use'"
+                        sh "bash -c 'source ~/.nvm/nvm.sh && nvm use'"
 
                         version = params.forceVersion
                         if (!version && params.runReleaseBuild) {

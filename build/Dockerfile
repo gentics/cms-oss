@@ -86,6 +86,40 @@ ADD ./build/guides-wrapper.sh /usr/local/bin/guides
 RUN rvm-exec 2.3 gem install guides -- --with-cflags="-O2 -pipe -march=native -w -Wno-error=implicit-function-declaration" \
  &&	chmod +x /usr/local/bin/guides
 
+# Update public keys for node installs.
+RUN set -ex \
+	&& for key in \
+		5BE8A3F6C8A5C01D106C0AD820B1A390B168D356 \
+		DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7 \
+		CC68F5A3106FF448322E48ED27F5E38D5B0A215F \
+		8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 \
+		890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4 \
+		C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C \
+		108F52B48DB57BB0CC439B2997B01419BD92F80A \
+		655F3B5C1FB3FA8D1A0CA6BDE4A7D232B936D2FD \
+		A363A499291CBBC940DD62E41F10027AF002F8B0 \
+		; do \
+			gpg2 --batch --keyserver keys.openpgp.org --recv-keys "$key"; \
+		done
+
+# Download NodeJS
+RUN mkdir /opt/node \
+	&& curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
+	&& curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt" \
+	&& curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.sig"
+# Verify downloaded NodeJS files
+RUN gpg --verify SHASUMS256.txt.sig SHASUMS256.txt \
+	&& grep " node-v$NODE_VERSION-linux-x64.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+# Install NodeJS
+RUN tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /opt/node --strip-components=1 \
+	&& rm "node-v$NODE_VERSION-linux-x64.tar.xz" SHASUMS256.txt.sig SHASUMS256.txt \
+	&& ln -s /opt/node/bin/node /usr/local/bin/node \
+	&& ln -s /opt/node/bin/npm /usr/local/bin/npm \
+	&& ln -s /opt/node/bin/npx /usr/local/bin/npx \
+	&& echo "export PATH=\$PATH:/opt/node/bin" > /etc/profile.d/nodejs.sh \
+    && chmod +x /etc/profile.d/* \
+	&& chown -R 10000:10000 /opt/node
+
 # Add user
 # The ID / GID 10000 is used by the jenkinsci/slave Dockerfile and has to match here, because Jenkins
 # does the SCM checkout in the jnlp container for some reasons.
@@ -108,14 +142,6 @@ ENV MESA_SHADER_CACHE_DISABLE="true"
 
 # Switch user
 USER ${USER_NAME}
-
-# Install NVM so we can install the correct node version.
-# Doing so hardcoded is a hassle and error-prone.
-# Create a script file sourced by both interactive and non-interactive bash shells
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.6/install.sh | bash
-ENV NODE_VERSION=${NODE_VERSION}
-ENV NVM_DIR="/home/${USER_NAME}/.nvm"
-RUN bash -c "source ~/.nvm/nvm.sh && nvm install --default $NODE_VERSION"
 
 # Workaround for Maven not outputting colors and silence download progress messages
 ENV MAVEN_OPTS="-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=256m"

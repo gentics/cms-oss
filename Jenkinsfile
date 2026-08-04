@@ -139,9 +139,7 @@ spec:
             steps {
                 script {
                     dir(path: 'cms-ui') {
-                        // Use the correct node version
-                        sh "bash -c 'source ~/.nvm/nvm.sh && nvm use'"
-
+                        // Get the correct version
                         version = params.forceVersion
                         if (!version && params.runReleaseBuild) {
                             version = MavenHelper.getVersion()

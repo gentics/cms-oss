@@ -140,12 +140,7 @@ spec:
                 script {
                     dir(path: 'cms-ui') {
                         // Use the correct node version
-                        sh "source /root/.nvm/nvm.sh && nvm use"
-
-                        // Add private repository credentials and scopes
-                        withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
-                            sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
-                        }
+                        sh "bash -c 'source /root/.nvm/nvm.sh && nvm use'"
 
                         version = params.forceVersion
                         if (!version && params.runReleaseBuild) {
@@ -517,6 +512,11 @@ spec:
             steps {
                 script {
                     dir(path: 'cms-ui') {
+                        // Add private repository credentials and scopes
+                        withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                            sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
+                        }
+
                         // Publish the packages to npm repository
                         sh "npm run nx -- release publish --output-style=static"
                     }

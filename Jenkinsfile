@@ -136,12 +136,25 @@ spec:
 				}
 			}
 
+            environment {
+                // Disable colors/special characters, if projects do properly check it
+                TERM="dumb"
+                // Disable node based color libraries
+                FORCE_COLOR="0"
+            }
+
             steps {
                 script {
                     dir(path: 'cms-ui') {
                         // Get the correct version
                         version = params.forceVersion
-                        if (!version && params.runReleaseBuild) {
+
+                        if (
+                            // If the version isn't semver, we can't set it, as NX just explodes
+                            !(version ==~ /[\d]+\.[\d]+\.[\d]+(?:\.[a-zA-Z0-9-]+)?/)
+                            // Or for release-builds, we can't override it
+                            || (!version && params.runReleaseBuild)
+                        ) {
                             version = MavenHelper.getVersion()
                         }
 
@@ -505,6 +518,13 @@ spec:
                 expression {
                     return params.runReleaseBuild && params.deploy
                 }
+            }
+
+            environment {
+                // Disable colors/special characters, if projects do properly check it
+                TERM="dumb"
+                // Disable node based color libraries
+                FORCE_COLOR="0"
             }
 
             steps {

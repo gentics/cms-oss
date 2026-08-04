@@ -1,21 +1,14 @@
 package com.gentics.contentnode.rest.resource.impl;
 
 import java.util.List;
+import java.util.Map;
 
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Response.Status;
-
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.UserLanguageFactory;
 import com.gentics.contentnode.object.UserLanguage;
@@ -29,6 +22,17 @@ import com.gentics.contentnode.rest.model.response.UILanguagesResponse;
 import com.gentics.contentnode.rest.resource.I18nResource;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.lib.i18n.CNI18nString;
+
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Resource to translate given keys (optionally including parameters)
@@ -79,7 +83,11 @@ public class I18nResourceImpl implements I18nResource {
 						Response.status(Status.OK).entity(new GenericResponse(null, new ResponseInfo(ResponseCode.INVALIDDATA, "Invalid language code provided"))).build());
 			}
 
-			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", language.getId(), trx.getTransaction().getSession().getSessionId());
+			TextNode json = TextNode.valueOf(language.getCode());
+
+			DBUtils.updateOrInsert("systemuser_data", Map.of("systemuser_id",
+					trx.getTransaction().getSession().getUserId(), "name", Session.UI_LANGUAGE_DATA_KEY),
+					Map.of("json", ObjectTransformer.getString(json, null)));
 			trx.success();
 
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully modified language"));

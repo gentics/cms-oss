@@ -107,7 +107,6 @@ function editImageState(fixture: ComponentFixture<any>): void {
             lastError: '',
             loggingIn: false,
             loggingOut: false,
-            sid: 1234,
         },
         entities: {
             image: {

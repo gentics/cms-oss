@@ -118,7 +118,7 @@ export class AppComponent implements OnDestroy, OnInit {
 
         this.keycloakSignOut$ = this.appState.select(state => state.features.global[Feature.KEYCLOAK_SIGNOUT]);
 
-        this.authOps.validateSessionFromLocalStorage();
+        this.authOps.validateSession();
 
         // Maintenance Mode
         this.maintenanceMode.refreshPeriodically(30000);
@@ -178,7 +178,7 @@ export class AppComponent implements OnDestroy, OnInit {
 
     onLogoutClick(): void {
         this.keycloakSignOut$.pipe(first()).subscribe(singleSignOut => {
-            this.authOps.logout(this.appState.now.auth.sid)
+            this.authOps.logout()
                 .then(() => {
                     if (singleSignOut) {
                         return this.keycloakService.logout();

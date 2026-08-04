@@ -137,12 +137,6 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	void clearNodeObjectCache() throws NodeException;
 
 	/**
-	 * Get the session id that has been used to initialize the transaction.
-	 * @return the session id
-	 */
-	String getSessionId();
-
-	/**
 	 * Get the user id associated with this transaction
 	 * @return the user id for this session
 	 */

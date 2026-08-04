@@ -281,7 +281,7 @@ public class InstantPublisher {
 		File dbFilesDir = new File(ConfigurationValue.DBFILES_PATH.get());
 
 		// set the rendertype
-		RenderType myRenderType = RenderType.getDefaultRenderType(prefs, RenderType.EM_PUBLISH, null, -1);
+		RenderType myRenderType = RenderType.getDefaultRenderType(prefs, RenderType.EM_PUBLISH, -1);
 
 		myRenderType.setRenderUrlFactory(
 				new StaticUrlFactory(RenderType.parseLinkWay(prefs.getProperty("contentnode.linkway")),

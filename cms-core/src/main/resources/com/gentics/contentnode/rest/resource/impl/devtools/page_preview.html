@@ -1,11 +1,11 @@
 <html>
 <body style="margin: 0px" marginwidth="0" marginheight="0">
-<iframe frameborder="0" style="margin: 0px; padding: 0px; height: 100%; width: 100%; border: 0px; position: absolute;" width="100%" height="100%" src="/CNPortletapp/rest/devtools/preview/{{uuid}}?sid={{sid}}&time={{time}}" id="livepreview"></iframe>
+<iframe frameborder="0" style="margin: 0px; padding: 0px; height: 100%; width: 100%; border: 0px; position: absolute;" width="100%" height="100%" src="/CNPortletapp/rest/devtools/preview/{{uuid}}?time={{time}}" id="livepreview"></iframe>
 <script>
 if (typeof(EventSource) !== "undefined") {
-	var source = new EventSource("/CNPortletapp/rest/devtools/listen/{{uuid}}?sid={{sid}}");
+	var source = new EventSource("/CNPortletapp/rest/devtools/listen/{{uuid}}");
 	source.onmessage = function(event) {
-		var url = "/CNPortletapp/rest/devtools/preview/{{uuid}}?sid={{sid}}&time=" + Date.now();
+		var url = "/CNPortletapp/rest/devtools/preview/{{uuid}}?time=" + Date.now();
 		document.getElementById('livepreview').contentWindow.location.href = url;
 	};
 

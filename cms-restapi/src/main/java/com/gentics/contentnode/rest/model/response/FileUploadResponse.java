@@ -12,6 +12,8 @@ import com.gentics.contentnode.rest.model.File;
 @XmlRootElement
 public class FileUploadResponse extends GenericResponse {
 
+	private static final long serialVersionUID = -6708034663165697950L;
+
 	/**
 	 * Used for fileuploader.js response identification
 	 */
@@ -26,7 +28,15 @@ public class FileUploadResponse extends GenericResponse {
 	 * Empty Constructor
 	 */
 	public FileUploadResponse() {}
-    
+
+	/**
+	 * Create instance as copy
+	 * @param other other instance
+	 */
+	public FileUploadResponse(GenericResponse other) {
+		super(other);
+	}
+
 	/**
 	 * Constructor with message, response info and success 
 	 * @param message message

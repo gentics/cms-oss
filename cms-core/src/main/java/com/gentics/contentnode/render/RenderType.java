@@ -2,7 +2,6 @@ package com.gentics.contentnode.render;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -15,9 +14,7 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.Vector;
 
-import com.gentics.contentnode.utils.ResourcePath;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -51,6 +48,7 @@ import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType.Pac
 import com.gentics.contentnode.object.parttype.handlebars.HelperSource;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.resolving.StackResolver;
+import com.gentics.contentnode.utils.ResourcePath;
 import com.gentics.lib.genericexceptions.NotYetImplementedException;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
@@ -359,11 +357,10 @@ public class RenderType implements RenderInfo {
 	 *
 	 * @param prefs the preferences to use for configuring this renderType.
 	 * @param editMode the editmode, for which the rendertype should be created.
-	 * @param cnSessionID the content.node session id, or null if not available.
 	 * @param versionTimestamp versiontimestamp
 	 * @return a new preconfigured editmode.
 	 */
-	public static RenderType getDefaultRenderType(NodePreferences prefs, int editMode, String cnSessionID, int versionTimestamp) {
+	public static RenderType getDefaultRenderType(NodePreferences prefs, int editMode, int versionTimestamp) {
 		RenderType renderType = null;
 
 		// TODO get correct linkway, urlFactory, defaultrenderer and rendererlist by nodeconfig

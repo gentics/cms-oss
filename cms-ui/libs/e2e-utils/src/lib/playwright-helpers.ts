@@ -542,8 +542,6 @@ export async function createClientFromPage(page: Page): Promise<GCMSRestClient> 
         context: page.request,
         isPageContext: true,
     });
-    const sid: string = await page.evaluate(() => window.localStorage.getItem('GCMSUI_sid'));
-    client.sid = parseInt(JSON.parse(sid), 10);
 
     return client;
 }

@@ -25,7 +25,6 @@ export class TagEditorContextImpl implements TagEditorContext {
     editedTag: EditableTag;
     readOnly: boolean;
     validator: TagValidator;
-    sid: number;
     translator: Translator;
     variableContext: Observable<VariableTagEditorContext>;
     gcmsUiServices: GcmsUiServices;
@@ -39,7 +38,6 @@ export class TagEditorContextImpl implements TagEditorContext {
      * @param readOnly true, if the tag may not be edited, otherwise false.
      * @param tagOwner The page, folder, image, or file to which the tag belongs.
      * @param node The node, from which the tagOwner has been opened.
-     * @param sid The current GCMS session ID.
      * @param translator The Translator that should be used by custom TagEditors and TagPropertyEditors for resolving i18n keys.
      * @param variableContext An Observable (ideally a BehaviorSubjet) that provides the VariableTagEditorContext.
      * @param gcmsUiServices Services for opening the repository browser and the image editor.
@@ -50,7 +48,6 @@ export class TagEditorContextImpl implements TagEditorContext {
         readOnly: boolean,
         tagOwner: Page<Raw> | Folder<Raw> | Image<Raw> | File<Raw> | Template<Raw>,
         node: Node<Raw>,
-        sid: number,
         translator: Translator,
         variableContext: Observable<VariableTagEditorContext>,
         gcmsUiServices: GcmsUiServices,
@@ -60,7 +57,6 @@ export class TagEditorContextImpl implements TagEditorContext {
         context.editedTag = tag;
         context.readOnly = readOnly;
         context.node = node;
-        context.sid = sid;
         context.translator = translator;
         context.validator = new TagValidatorImpl(tag.tagType);
         context.variableContext = variableContext;
@@ -100,7 +96,6 @@ export class TagEditorContextImpl implements TagEditorContext {
         clone.readOnly = this.readOnly;
         clone.node = cloneDeep(this.node);
         clone.validator = this.validator.clone();
-        clone.sid = this.sid;
         clone.translator = this.translator;
         clone.page = cloneDeep(this.page);
         clone.folder = cloneDeep(this.folder);

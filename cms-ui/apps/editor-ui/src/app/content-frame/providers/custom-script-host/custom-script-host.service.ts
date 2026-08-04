@@ -177,15 +177,6 @@ export class CustomScriptHostService {
     }
 
     /**
-     * Returns the current sid for the loggen-in user
-     */
-    getSid(): number {
-        return this.ngZone.runGuarded(() => {
-            return this.appState.now.auth.sid;
-        });
-    }
-
-    /**
      * Translate a text in the UI language from inside an iframe
      * Needed e.g. for the tagfill dialog where we insert custom buttons.
      */

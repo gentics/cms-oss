@@ -48,8 +48,6 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
 
     public form: FormGroup<FormProperties<LoginRequest>>;
 
-    protected sid: number;
-
     protected subscriptions: Subscription[] = [];
 
     constructor(
@@ -68,11 +66,6 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             newPassword: new FormControl({ value: '', disabled: true }, Validators.required),
 
         });
-        // Load it once instantly from the current state, and add reactivity.
-        this.sid = this.appState.now.auth.sid;
-        this.subscriptions.push(this.appState.select((state) => state.auth.sid).subscribe((sid) => {
-            this.sid = sid;
-        }));
         this.setupConnection();
     }
 
@@ -109,7 +102,6 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
                     ...data,
                     params: {
                         ...data.params,
-                        sid: `${this.sid}`,
                     },
                 };
             }],

@@ -57,8 +57,6 @@
 											   "should be set within the url");
 				ok(uploadUrl.indexOf("createSimple.json") !== -1, "The rest " +
 										"method should be set within the url");
-				ok(uploadUrl.indexOf("sid=" + GCN.sid) !== -1, "The sid " +
-													"should be set correctly");
 				start();
 				next();
 			});
@@ -79,8 +77,6 @@
 				var uploadUrl = folder.multipartUploadURL();
 				ok(uploadUrl.indexOf("create.json") !== -1, "The rest " +
 										"method should be set within the url");
-				ok(uploadUrl.indexOf("sid=" + GCN.sid) !== -1, "The sid " +
-													"should be set correctly");
 													
 				uploadUrl = folder.multipartUploadURL(false,"customtype");
 				ok(uploadUrl.indexOf("=customtype") !== -1, "The customtype " + 

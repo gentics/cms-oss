@@ -29,8 +29,10 @@ public class SetLanguageRequest {
 	/**
 	 * Set the language code
 	 * @param code language code
+	 * @return fluent API
 	 */
-	public void setCode(String code) {
+	public SetLanguageRequest setCode(String code) {
 		this.code = code;
+		return this;
 	}
 }

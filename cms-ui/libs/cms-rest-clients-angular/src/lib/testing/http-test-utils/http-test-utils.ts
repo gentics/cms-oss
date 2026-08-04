@@ -44,8 +44,7 @@ export function respondTo<T extends Response | string>(req: TestRequest, mockRes
  * @param httpTestingController The HttpTestingController on which to expect the request.
  * @param url The URL (without `API_BASE_URL` and query parameters) that is expected to be requested.
  * @param method The HTTP method of the request.
- * @param queryParams (optional) The parameters contained in the HTTP query string (`sid` is automatically appended to all requests,
- * the `gcms_ts` parameter is appended to GET requests).
+ * @param queryParams (optional) The parameters contained in the HTTP query string (the `gcms_ts` parameter is appended to GET requests).
  * @returns The `TestRequest` returned by `HttpTestingController.expectOne()`.
  */
 export function expectOneRequest(httpTestingController: HttpTestingController, url: string, method: HttpVerb, queryParams?: HttpParams): TestRequest {
@@ -54,7 +53,7 @@ export function expectOneRequest(httpTestingController: HttpTestingController, u
         // We need to implement the matcher manually, because by default expectOne() doesn't know about the gcms_ts query parameter.
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         req => req.url === expectedUrl && checkHttpParamsEqual(req.params, queryParams, method === 'GET'),
-        `${expectedUrl}?sid=<any>${method === 'GET' ? '&gcms_ts=<any>' : ''}${queryParams ? '&' + queryParams.toString() : ''}`,
+        `${expectedUrl}${method === 'GET' ? '?gcms_ts=<any>' : ''}${queryParams ? '&' + queryParams.toString() : ''}`,
     );
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     expect(req.request.method).toEqual(method);
@@ -65,7 +64,7 @@ export function expectOneRequest(httpTestingController: HttpTestingController, u
  * Checks if the actual HttpParams contain all expected HttpParams (keys and values).
  */
 function checkHttpParamsEqual(actual: HttpParams, expected: HttpParams, isGetRequest: boolean): boolean {
-    const defaultParams = isGetRequest ? ['gcms_ts', 'sid'] : ['sid'];
+    const defaultParams = isGetRequest ? ['gcms_ts'] : [];
     const expectedKeys = expected ? expected.keys() : [];
     if (actual.keys().length !== expectedKeys.length + defaultParams.length) {
         return false;

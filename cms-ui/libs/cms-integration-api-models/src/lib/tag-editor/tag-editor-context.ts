@@ -47,12 +47,6 @@ export interface TagEditorContext {
     validator: TagValidator;
 
     /**
-     * The ID of the current GCMS REST API session.
-     * This is provided in case a custom TagEditor or TagPropertyEditor needs to use the REST API.
-     */
-    sid: number;
-
-    /**
      * Used in custom TagEditors and custom TagPropertyEditors to obtain translations of
      * i18n keys that come from the GCMS UI.
      */
@@ -70,7 +64,7 @@ export interface TagEditorContext {
     /**
      * Creates a clone of this TagEditorContext.
      *
-     * All properties will be deep copies, except for sid and translator (which are immutable) and variableContext,
+     * All properties will be deep copies, except for translator (which are immutable) and variableContext,
      * which will be an observable that is connected to the original observable,
      * such that the cloned context's obervable emits whenever the observable
      * of the original context emits.

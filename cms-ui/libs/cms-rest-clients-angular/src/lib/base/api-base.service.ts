@@ -31,11 +31,6 @@ export const CONTENT_TYPE_TEXT = 'text/plain';
 export const GCMS_API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
 /**
- * This injection token is used to provide an Observable for the session ID to be used in the GCMS API requests.
- */
-export const GCMS_API_SID = new InjectionToken<Observable<number>>('GCMS_API_SID');
-
-/**
  * This injection token is used to provide the error handler used by the GcmsApi classes.
  */
 export const GCMS_API_ERROR_HANDLER = new InjectionToken<GcmsApiErrorHandler>('GCMS_API_ERROR_HANDLER');
@@ -99,16 +94,13 @@ export interface HttpBodyOnlyBlobRequestOptions {
 export class ApiBase implements OnDestroy {
 
     private subscriptions = new Subscription();
-    private sid: number;
 
     constructor(
         private http: HttpClient,
         private uploaderFactory: FileUploaderFactory,
         @Inject(GCMS_API_BASE_URL) private apiBaseUrl: string,
-        @Inject(GCMS_API_SID) sid$: Observable<number>,
         @Inject(GCMS_API_ERROR_HANDLER) private errorHandler: GcmsApiErrorHandler,
     ) {
-        this.subscriptions.add(sid$.subscribe(sid => { this.sid = sid; }));
     }
 
     ngOnDestroy(): void {
@@ -121,7 +113,7 @@ export class ApiBase implements OnDestroy {
         // Append a timestamp to all GET requests to force cache-busting in IE11
         params['gcms_ts'] = Date.now().toString(10);
 
-        options.params = this.encodeParamsAndAddSid(params);
+        options.params = this.encodeParams(params);
         let response: HttpResponse<T>;
 
         return this.http.get<T>(`${this.apiBaseUrl}/${url}`, options).pipe(
@@ -141,7 +133,7 @@ export class ApiBase implements OnDestroy {
             headers: {
                 [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
             },
-            params: this.encodeParamsAndAddSid(params),
+            params: this.encodeParams(params),
         }
 
         return this.http.get(`${this.apiBaseUrl}/${url}`, options);
@@ -151,7 +143,7 @@ export class ApiBase implements OnDestroy {
         const bodyJSON: string = typeof body === 'string' ? body : JSON.stringify(body);
         const options = this.getDefaultOptions();
         let response: HttpResponse<T>;
-        options.params = this.encodeParamsAndAddSid(params);
+        options.params = this.encodeParams(params);
 
         return this.http.post<T>(`${this.apiBaseUrl}/${url}`, bodyJSON, options).pipe(
             map(res => (response = res).body),
@@ -175,7 +167,7 @@ export class ApiBase implements OnDestroy {
         const bodyJSON: string = typeof body === 'string' ? body : JSON.stringify(body);
         const options = this.getDefaultOptions();
         let response: HttpResponse<T>;
-        options.params = this.encodeParamsAndAddSid(params);
+        options.params = this.encodeParams(params);
 
         return this.http.put<T>(`${this.apiBaseUrl}/${url}`, bodyJSON, options).pipe(
             map(res => (response = res).body),
@@ -191,7 +183,7 @@ export class ApiBase implements OnDestroy {
 
     delete<T extends Response | void>(url: string, params: any = {}): Observable<T> {
         const options = this.getDefaultOptions();
-        options.params = this.encodeParamsAndAddSid(params);
+        options.params = this.encodeParams(params);
         let response: HttpResponse<T>;
 
         return this.http.delete<T>(`${this.apiBaseUrl}/${url}`, options).pipe(
@@ -223,7 +215,7 @@ export class ApiBase implements OnDestroy {
             url: `${this.apiBaseUrl}/${url}`,
             fileField: options.fileField,
             fileNameField: options.fileNameField,
-            parameters: Object.assign({ sid: this.sid }, options.params),
+            parameters: Object.assign(options.params),
         });
 
         files.forEach(file => uploader.upload(file, {}, fileName));
@@ -275,12 +267,7 @@ export class ApiBase implements OnDestroy {
      * Given an object of key-value pairs, construct an HttpParams
      * object from them to be used in an HTTP request.
      */
-    private encodeParamsAndAddSid(paramsObject: any): HttpParams {
-        // all requests need the current session id.
-        if (this.sid) {
-            paramsObject['sid'] = String(this.sid);
-        }
-
+    private encodeParams(paramsObject: any): HttpParams {
         // it is possible to specify multiple "type" keys for list requests, e.g.
         // `&type=file&type=image`, but HttpParams handles this already.
         return new HttpParams({ fromObject: paramsObject });

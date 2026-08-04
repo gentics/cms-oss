@@ -157,7 +157,6 @@ function editImageState(): void {
             lastError: '',
             loggingIn: false,
             loggingOut: false,
-            sid: 1234,
         },
         entities: {
             image: {

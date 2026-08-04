@@ -38,7 +38,7 @@ import com.gentics.contentnode.changelog.ChangeLogHandler;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.factory.ContentNodeFactory;
-import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -182,7 +182,7 @@ public class PropertyNodeConfig implements NodeConfig {
 		}
 
 		// Restart the cleaning of old session.s
-		Session.scheduleSessionCleaning();
+		DBSession.scheduleSessionCleaning();
 
 		PublishQueueStats.get().init(ObjectTransformer.getLong(defPrefs.getProperty("publish_queue_stats.refresh_delay"), 60_000));
 

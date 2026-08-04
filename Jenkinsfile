@@ -204,7 +204,7 @@ spec:
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
                         if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
-                            mvnProjects = " -am -pl cms-server"
+                            mvnProjects = " -am -pl cms-server,cms-velocity"
                         }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
@@ -213,7 +213,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl cms-server,formgen"
+                        mvnProjects = " -am -pl cms-server,formgen,cms-velocity"
                     }
 
                     // Update chrome to the latest version

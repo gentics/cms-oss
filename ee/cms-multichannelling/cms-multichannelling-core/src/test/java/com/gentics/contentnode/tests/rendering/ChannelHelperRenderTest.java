@@ -113,7 +113,7 @@ public class ChannelHelperRenderTest {
 			ContentNodeTestDataUtils.getPartType(PageURLPartType.class, p.getContentTag("page"), "page")
 				.setTargetPage(p);
 
-			String valueText = String.format("{{#gtx_channel %s}}<PageId:{{ cms.page.tags.page.parts.page.id}}>{{/gtx_channel}}", sourceChannel.getId());
+			String valueText = String.format("{{#gtx_channel %s}}<PageId:{{gtx_render cms.page.tags.page.parts.page.target.id}}>{{/gtx_channel}}", sourceChannel.getId());
 
 			ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, p.getContentTag("hbs"), "hbs")
 				.getValueObject()

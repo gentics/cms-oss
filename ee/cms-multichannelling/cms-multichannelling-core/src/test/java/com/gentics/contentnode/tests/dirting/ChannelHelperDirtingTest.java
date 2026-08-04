@@ -82,7 +82,7 @@ public class ChannelHelperDirtingTest {
 
 		for (Part part : parts) {
 			if (HBS_PART_NAME.equals(part.getKeyname())) {
-				String tpl = "(Helper: {{#gtx_channel cms.tag.parts.%1$s}}<a href=\"{{cms.tag.parts.%2$s}}\">Page ID : {{cms.tag.parts.%2$s.id}}{{/gtx_channel}})"
+				String tpl = "(Helper: {{#gtx_channel cms.tag.parts.%1$s}}<a href=\"{{gtx_render cms.tag.parts.%2$s}}\">Page ID : {{gtx_render cms.tag.parts.%2$s.target.id}}{{/gtx_channel}})"
 						.formatted(PART_NAME_NODE, PART_NAME_PAGE);
 				part.getDefaultValue().setValueText(tpl);
 

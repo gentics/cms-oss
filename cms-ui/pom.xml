@@ -109,8 +109,8 @@
 
                         <configuration>
                             <skip>${ui.skip.report}</skip>
-                            <dependenciesFile>${project.build.directory}/prepared_dependencies.json</dependenciesFile>
-                            <outdatedFile>${project.build.directory}/outdated.json</outdatedFile>
+                            <dependenciesFile>${project.basedir}/prepared_dependencies.json</dependenciesFile>
+                            <outdatedFile>${project.basedir}/outdated_dependencies.json</outdatedFile>
                             <componentName>CMS OSS</componentName>
                             <moduleName>User Interface</moduleName>
                         </configuration>

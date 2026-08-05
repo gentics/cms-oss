@@ -222,6 +222,10 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         getPublishQueue: () => this.executeMappedJsonRequest(GET, '/admin/content/publishqueue'),
         modifyPublishQueue: (body) => this.executeMappedJsonRequest(POST, '/admin/content/publishqueue', body),
+
+        getApiTokens: () => this.executeMappedJsonRequest(GET, '/admin/token'),
+        addApiTokens: (body) => this.executeMappedJsonRequest(POST, '/admin/token/', body),
+        deleteApiTokens: (id) => this.executeMappedJsonRequest(DELETE, `/admin/token/${id}`),
     } as const;
 
     public auth: GCMSAuthenticationAPI = {

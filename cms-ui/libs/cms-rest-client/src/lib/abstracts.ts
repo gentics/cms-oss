@@ -383,6 +383,8 @@ import {
     WastebinDeleteOptions,
     WastebinRestoreOptions,
     FormExportOptions,
+    ApiTokenCreateRequest,
+    ApiTokenResponse,
 } from '@gentics/cms-models';
 import {
     LoginResponse as MeshLoginResponse,
@@ -415,6 +417,10 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     getPublishQueue: () => PublishQueue;
     modifyPublishQueue: (body: ContentMaintenanceActionRequest) => Response;
+
+    getApiTokens: () => ListResponse<ApiTokenResponse>;
+    addApiTokens: (body: ApiTokenCreateRequest) => ApiTokenResponse;
+    deleteApiTokens: (id: string) => void;
 }
 
 export interface AbstractAuthenticationAPI extends BasicAPI {

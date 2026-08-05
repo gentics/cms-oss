@@ -1,0 +1,18 @@
+<div class="modal-content">
+    <h2>{{ 'api_token.delete' | gtxI18n }}</h2>
+    <p>{{ 'api_token.delete_warning' | gtxI18n }}</p>
+</div>
+<div class="modal-footer">
+    <gtx-button
+      type="alert"
+      (click)="deleteApiTokens()"
+      >
+      {{ 'common.delete_button' | gtxI18n }}
+    </gtx-button>
+  <gtx-button
+    type="secondary" flat
+    (click)="closeModal()"
+    >
+    {{ 'common.cancel_button' | gtxI18n }}
+  </gtx-button>
+</div>

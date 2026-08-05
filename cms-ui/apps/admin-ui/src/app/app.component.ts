@@ -32,6 +32,7 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from './common';
 import { SetBackendLanguage } from './state/ui/ui.actions';
+import { ApiTokensModalComponent } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-app-root',
@@ -220,6 +221,13 @@ export class AppComponent implements OnDestroy, OnInit {
         this.modalService.fromComponent(ChangePasswordModalComponent)
             .then(modal => modal.open())
             .catch(this.errorHandler.catch);
+    }
+
+    onShowApiTokenModal(): void {
+        this.modalService.fromComponent(ApiTokensModalComponent)
+            .then(modal => modal.open())
+            .catch(this.errorHandler.catch);
+            
     }
 
     private onLogin(): void {

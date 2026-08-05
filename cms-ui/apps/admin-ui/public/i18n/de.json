@@ -753,7 +753,7 @@
         "change_password_label": "Passwort ändern",
         "log_in": "Anmelden",
         "log_out": "Abmelden",
-        "logged_in_as": "'Angemeldet als <strong>{{name}}</strong>'",
+        "logged_in_as": "'Angemeldet als ",
         "password": "Passwort",
         "user_name": "Benutzername",
         "confirm_delete": "Nochmals klicken um zu löschen",

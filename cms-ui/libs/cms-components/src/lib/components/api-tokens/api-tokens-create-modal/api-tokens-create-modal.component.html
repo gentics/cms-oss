@@ -1,0 +1,44 @@
+<div class="modal-content">
+  @if(createdToken() !== null) {
+    <h2>{{ 'api_token.token_created' | gtxI18n }}</h2>
+    <div class="success-message">
+      <p>{{ 'api_token.token_store' | gtxI18n }}</p>
+      <p>
+        <gtx-mesh-copy-value
+            class="copy-api-token"
+            [value]="createdToken()"
+            [animate]="true"
+        />
+      </p>
+    </div>
+  } @else {
+    <h2>{{ 'api_token.new' | gtxI18n }}</h2>
+    <gtx-api-tokens-create-form
+      [apiTokenNames]="apiTokenNames"
+      (onCreated)="submitCallback($event)"
+      (onValidChange)="isFormVaid($event)"
+    ></gtx-api-tokens-create-form>
+  }
+</div>
+<div class="modal-footer">
+  @if(createdToken() === null) {
+    <gtx-button
+      type="primary"
+      [class.loading]="isLoading"
+      [disabled]="!formvalid"
+      (click)="saveForm()"
+      >
+      {{ 'modal.create_button' | gtxI18n }}
+    </gtx-button>
+  }
+  <gtx-button
+    type="secondary" flat
+    (click)="closeModal()"
+    >
+    @if(createdToken() === null) {
+      {{ 'common.cancel_button'  | gtxI18n }}
+    } @else {
+      {{ 'common.close_button' | gtxI18n }}
+    }
+  </gtx-button>
+</div>

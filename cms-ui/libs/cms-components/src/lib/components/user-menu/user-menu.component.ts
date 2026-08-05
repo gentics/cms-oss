@@ -73,6 +73,8 @@ export class UserMenuComponent {
     @Output() toggle = new EventEmitter<boolean>();
     /** On event user clicks showPasswordModal button. */
     @Output() showPasswordModal = new EventEmitter<void>();
+    /** On event user clicks showPasswordModal button. */
+    @Output() showApiTokensModal = new EventEmitter<void>();
 
     getUserName(): string {
         return this.user ? this.user.firstName + ' ' + this.user.lastName : '';
@@ -88,5 +90,9 @@ export class UserMenuComponent {
 
     showPasswordModalClicked(): void {
         this.showPasswordModal.emit();
+    }
+
+    showApiTokensModalClicked(): void {
+        this.showApiTokensModal.emit();
     }
 }

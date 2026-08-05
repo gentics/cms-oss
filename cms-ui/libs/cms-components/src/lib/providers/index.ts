@@ -6,3 +6,4 @@ export * from './i18n/i18n.service';
 export * from './initializable-service-base/initializable-service.base';
 export * from './service-base/service.base';
 export * from './window-ref';
+export * from './api-token-handler/api-token-handler.service';

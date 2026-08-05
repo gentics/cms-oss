@@ -1533,3 +1533,28 @@ export interface KeycloakConfiguration {
     'resource': string;
     'showSSOButton': boolean;
 }
+
+// API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ApiTokenListResponse extends ListResponse<ApiTokenResponse> { }
+
+export interface ApiTokenResponse extends Response {
+    token: string;
+    id: number;
+    userId: number;
+    name:string;
+    cdate: number;
+    expires: number;
+    lastUsed: number;
+    valid: boolean;
+}
+
+export interface ApiTokenData {
+    id: number;
+    userId: number;
+    name:string;
+    cdate: string;
+    expires: string;
+    lastUsed: string;
+    valid: boolean;
+}

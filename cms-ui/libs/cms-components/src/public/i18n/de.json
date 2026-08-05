@@ -228,5 +228,16 @@
         "keycloak_not_available": "Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.",
         "keycloak_invalid_config": "Die konfiguration für Keycloak ist nicht valide. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.",
         "keycloak_unknown_error": "Ein unerwarteter Fehler ist bei der Keycloak überprüfung aufgetreten. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
+    },
+    "api_token" : {
+        "management": "Api Tokens verwalten",
+        "new": "Api Token erstellen",
+        "tokens": "Api Tokens",
+        "expires_at": "Gültig bis",
+        "last_used": "Zuletzt verwendet",
+        "token_created": "Token erstellt",
+        "token_store": "Bitte bewahren Sie ihn gut auf, man kann ihn nicht noch mal ansehen.",
+        "delete": "Api Token löschen",
+        "delete_warning": "Dieser Vorgang ist unwiderruflich"
     }
 }

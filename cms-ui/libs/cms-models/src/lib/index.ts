@@ -60,4 +60,5 @@ export * from './type-util';
 export * from './user';
 export * from './usersnap';
 export * from './version';
+export * from './api-token';
 

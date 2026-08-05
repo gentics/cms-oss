@@ -6,8 +6,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
+    ApiTokensCreateFormComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensDeleteModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
+    CopyValueComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
@@ -38,6 +44,7 @@ import {
     ValuesPipe,
 } from './pipes';
 import {
+    ApiTokenHandlerService,
     I18nDatePickerFormatService,
     I18nNotificationService,
     I18nRelativeDateService,
@@ -60,6 +67,12 @@ const COMPONENTS: any[] = [
     UserMenuComponent,
     UserMenuToggleComponent,
     VersionModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensDeleteModalComponent,
+    ApiTokensCreateFormComponent,
+    CopyValueComponent
 ];
 
 const DIRECTIVES: Type<any>[] = [
@@ -92,6 +105,7 @@ const PROVIDERS: Provider[] = [
     I18nDatePickerFormatService,
     I18nService,
     WindowRef,
+    ApiTokenHandlerService,
     ...PIPES,
 ];
 

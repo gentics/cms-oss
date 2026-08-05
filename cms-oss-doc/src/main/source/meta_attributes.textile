@@ -156,109 +156,6 @@ h4. Rendermode
 | frontend | +true+ when rendering in frontend mode. The return value is valid in edit mode only. |
 | backend | +true+ when rendering in backend mode. The return value is valid in edit mode only. |
 
-h4. Imps
-
-|_. Property name          |_. Description                                                                                                       |
-| velocitytools            | Velocity ToolsImp                                                                                                   |
-| velocitytools.date       | "DateTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/DateTool.html             |
-| velocitytools.math       | "MathTool":http://velocity.apache.org/tools/1.4/generic/MathTool.html                                               |
-| velocitytools.number     | "NumberTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/NumberTool.html         |
-| velocitytools.esc        | "EscapeTool":http://velocity.apache.org/tools/1.4/generic/EscapeTool.html                                           |
-| velocitytools.alternator | "AlternatorTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/AlternatorTool.html |
-| velocitytools.list       | "ListTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/ListTool.html             |
-| velocitytools.iterator   | "IteratorTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/IteratorTool.html     |
-| string                   | "String Formatter Imp":#string-formatter-imp                                                                        |
-| date                     | "Date Formatter Imp":#date-formatter-imp                                                                            |
-| sorter                   | "Sort Imp":#sort-imp                                                                                                |
-| loader                   | "Loader Imp":#loader-imp                                                                                            |
-| url                      | "URL Include Imp":#url-include-imp                                                                                  |
-
-h5. String Formatter Imp
-
-The String Formatter Imp provides methods for escaping and other string manipulation:
-
-|_. Syntax                                                               |_. Description |
-| $cms.imps.string.escapeHTML(string)                                    | Escape special characters (like '<', '>', '&') with entities. |
-| $cms.imps.string.escapeJS(string)                                      | Escapes special javascript characters (like '\', ''', '"') with \ to make them save for output in javascript strings. |
-| $cms.imps.string.stripML(string)                                       | Remove the embedded HTML tags from user input string to prevent potential problems (in fact it removes anything beginning with < and ending with > ). |
-| $cms.imps.string.trim(string, length)                                  | Trim the given string to be no longer than length characters. |
-| $cms.imps.string.regexp(string, pattern, replacement)                  | Replace all occurances of the pattern with replacement. |
-| $cms.imps.string.testRegex(string, regex)                              | Test whether the string matches the regex. |
-| $cms.imps.string.trimWords(string, length)                             | Trim all words in @string@ to be no longer than @length@. Longer words are trimmed using ... as ellipsis. |
-| $cms.imps.string.trimWords(string, length, ellipsis)                   | Trim all words in @string@ to be no longer than @length@. Longer words are trimmed using @ellipsis@. |
-| $cms.imps.string.trimWords(string, length, ellipsis, template)         | Trim all words in @string@ to be no longer than @length@. Longer words are replaced by @template@, where @$trimmedword@ will be replaced by the trimmed word and @$word@ with the original one. |
-| $cms.imps.string.encodeURL(string[, string])                           | URL - encode the specified @string@ and return it. The encoding used to get the bytes for unsafe characters defaults to "utf-8" but may be given as second parameter (e.g. "iso-8859-1"). |
-| $cms.imps.string.implode(Array/Collection, seperator)                  | Convert the given array or collection into a string separating the items with the given string separator. |
-| $cms.imps.string.implode(Array/Collection, separator, prefix, postfix) | See above. In addition the items will be pre- and postfixed. |
-| $cms.imps.string.toUpper(string)                                       | Convert the given string to all uppercase. |
-| $cms.imps.string.md5(string)                                           | Compute the md5 hash of the given String. |
-
-h5. Date Formatter Imp
-
-The DateFormatterImp allows you to format date strings and date objects.
-
-<shell filename="Example: using the DateFormatterImp">
-  // Format the date using the given pattern and the english locale
-  $cms.imps.date.format($date, "dd MMM yyyy HH:mm:ss", "en")
-
-  // Format the date using the given pattern. The local is deduced by inspecting the page language.
-  $cms.imps.date.format($date, "dd MMM yyyy HH:mm:ss")
-
-  // Create a date by using a timestamp
-  $cms.imps.date.fromTimestamp($timestamp)
-
-  // Parse a date string and create a date object
-  $cms.imps.date.parse("22 MAR 1984 12:30:00", "dd MMM yyyy HH:mm:ss", "EN")
-
-  // Calculate difference in years between dateA and dateB
-  $cms.imps.date.dateDiff($dateA, $dateB, "y")
-
-  // Example of using the imp with edittimestamps
-  $cms.imps.date.format($cms.imps.date.fromTimestamp($cms.page.edittimestamp), "MMMM dd, yyyy", "en")
-</shell>
-
-h5. Sort Imp
-
-Sort the given collection (might also be an array or a map) by the given list of properties.
-
-<shell filename="Syntax of the Sort Imp">
-  $cms.imps.sorter.sort(Collection collection, String[] properties[, boolean caseSensitive][, String languageCode])
-</shell>
-
-Sort the given collection (might also be an array or a map) by the given list of properties.
-The sortorder can be independently set for each property in the list.
-When sorting by only one property, one can also pass a single String instead of an array of Strings as value for the parameter properties.
-
-| __collection__    | Collection to be sorted. |
-| __properties__    | Array of sorted properties. The general syntax for a sorted property is @[path.to.property][:asc][:desc]@. If neither @:asc@ nor @:desc@ are given, the sorting is done ascending. |
-| __caseSensitive__ | Optional boolean flag to sort case sensitive (default is @false@). |
-| __languageCode__  | Optional language code. Must be a lower-case, two-letter code as defined by "ISO-639-1":http://www.loc.gov/standards/iso639-2/php/code_list.php. |
-
-h5. Loader Imp
-
-The Loader Imp can be used to retrieve content objects by id.
-
-|_. Syntax                             |_. Description                                                                                       |
-| $cms.imps.loader.getObject(type, id) | Load the object of @type@ with @id@. @type@ can be one of "page", "folder", "image", "file", "node" |
-| $cms.imps.loader.getPage(id)         | Load the page with @id@.                                                                            |
-| $cms.imps.loader.getFolder(id)       | Load the folder with @id@.                                                                          |
-| $cms.imps.loader.getImage(id)        | Load the image with @id@.                                                                           |
-| $cms.imps.loader.getFile(id)         | Load the file with @id@.                                                                            |
-| $cms.imps.loader.getNode(id)         | Load the node with @id@.                                                                            |
-
-h5. URL Include Imp
-
-The +URLIncludeImp+ allows you to include contents from other URLs.
-
-<shell filename="Example: using the URLIncludeImp">
-  $cms.imps.url.include(url, cache, timeout, default)
-</shell>
-
-| __url__     | URL to be requested |
-| __cache__   |  cache lifetime in secs, defaults to 300 secs (5 mins) |
-| __timeout__ |  timeout for accessing the URL and getting the contents in ms, defaults to 2000 ms (2 secs) |
-| __default__ |  default content to be returned, if the URL cannot be accessed (default: null, will result in an error if URL cannot be accessed) |
-
 h3. Childobjects
 
 h4. Language
@@ -309,9 +206,9 @@ h3. Parttypes
 
 h4. Overview Parttype
 
-h5. Velocity Properties
+h5. Handlebars Properties
 
-Properties available when rendering an overview using velocity:
+Properties available when rendering an overview using Handlebars:
 
 |_. Property name |_. Description |
 | items           | Collection, viewable objects of the overview |
@@ -322,15 +219,15 @@ Properties available when rendering an overview using velocity:
 | maxItems        | Maximum number of listed items |
 | recursive       | True to select items recursively (when selectType is either FOLDER or AUTO) |
 
-<shell filename="Example: iterating an overview using velocity">
-#foreach($item in $cms.page.tags.overviewtag.overviewpart.items)
-$item.key $item.value
-#end
+<shell filename="Example: iterating an overview using Handlebars">
+{{#each cms.page.tags.iverviewtag.parts.overviewpart.items}}
+{{key}} {{value}}
+{{/each}}
 </shell>
 
 h5. &lt;node&gt; Template Properties
 
-These placeholders are available in overview templates (when the overview part is rendered directly, without the use of velocity):
+These placeholders are available in overview templates (when the overview part is rendered directly, without the use of Handlebars):
 
 |_. Property name |_. Description |
 | &lt;node ds.nr&gt; | iteration counter |
@@ -339,7 +236,7 @@ These placeholders are available in overview templates (when the overview part i
 
 h4. Datasource/Select (Single)/Select (Multiple) Parttype
 
-h5. Velocity Properties
+h5. Handlebars Properties
 
 |_. Property name |_. Description |
 | items | Collection of all entries in the database |
@@ -352,14 +249,14 @@ h5. Velocity Properties
 | dsid | internal id of the element |
 
 <shell filename="Example: list items of a multiselect part">
-#foreach( $item in $cms.tag.parts.multiselect.items )
-$item.key - $item.value
-#end
+{{#each cms.tag.parts.multiselect.items}}
+{{key}} - {{value}}
+{{/each}}
 </shell>
 
 h5. &lt;node&gt; Template Properties
 
-These placeholders are available in datasource templates (when the part is rendered directly, without the use of velocity).
+These placeholders are available in datasource templates (when the part is rendered directly, without the use of Handlebars).
 
 |_. Property name |_. Description |
 | &lt;ds value&gt; | the selected value |

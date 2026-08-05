@@ -18,40 +18,11 @@ h3. Overview
 | 30        | Select (multiple)       | This part type provides static datasources from which a user can pick multiple values. |
 | 31        | Checkbox                | Part type for input of boolean value. |
 | 32        | Datasource              | With this part type, the user can define individual datasources in the tag. |
-| 33        | Velocity                | The velocity part type can be used to evaluate all previously generated text using the velocity markup parser. |
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
 | 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
 | 43        | Handlebars              | The Handlebars part type renders its content with the Handlebars rendering engine. See "Rendering with Handlebars":handlebars.html for details. |
 
 NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type @HTML@.
-
-h3. Velocity Part Type
-
-An example for this tag part type can be found within the demo server in the folder "Demo-CMS-Projekt/Home/Node Tags".
-
-* Parameter "template"
-* Type: HTML lang
-* Content: The Velocity Template Code that should be rendered by the visible Velocity Part Type.
-
-* Parameter "macros":
-* Type: HTML lang
-* Content: VTL Macros which can be used within the implementation.
-
-Example Velocity Tagtyp:
-
-* Part 1: Typ Velocity, Keyword vtl, Visible
-* Part 2: Typ HTML lang, Keyword template, Not visible
-* Part 3: Typ HTML lang, Keyword macros, Not visible
-
-Errors within the velocity implementation will be diplayed within the Gentics CMS im "error stream".
-
-NOTE: Use always the __.toString()__ method when comparing two tags within a __#if()__ command.
-
-Example:
-
-<shell>
-#if( $cms.page.object.myprop.toString() == "test" )
-</shell>
 
 h3. Custom Part Type Implementations
 

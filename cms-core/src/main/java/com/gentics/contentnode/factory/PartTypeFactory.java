@@ -9,6 +9,7 @@ import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -250,6 +251,16 @@ public class PartTypeFactory {
 	}
 
 	/**
+	 * Check whether the part type with given ID is available
+	 * @param typeId type ID
+	 * @return true iff available
+	 * @throws NodeException
+	 */
+	public boolean isAvailable(int typeId) throws NodeException {
+		return Optional.ofNullable(getPartTypeInfo(typeId, false)).map(PartTypeInfo::isAvailable).orElse(false);
+	}
+
+	/**
 	 * Class for parttype info (class and annotation name)
 	 */
 	protected class PartTypeInfo {
@@ -315,6 +326,14 @@ public class PartTypeFactory {
 		 */
 		public String getOriginalClassName() {
 			return originalClassName;
+		}
+
+		/**
+		 * Check whether the part type is available
+		 * @return true iff available
+		 */
+		public boolean isAvailable() {
+			return !clazz.isAssignableFrom(UnavailablePartType.class);
 		}
 	}
 }

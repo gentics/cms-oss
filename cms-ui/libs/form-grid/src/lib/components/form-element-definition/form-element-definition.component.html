@@ -8,6 +8,7 @@
 
     <div class="definition-checkboxes">
         <gtx-checkbox
+            data-control="mandatory"
             [label]="'form_grid.definition_mandatory' | gtxI18n"
             [value]="elementSchema().mandatory ?? false"
             [disabled]="mode() !== FormGridEditMode.FULL"
@@ -15,6 +16,7 @@
         ></gtx-checkbox>
 
         <gtx-checkbox
+            data-control="updateOnChange"
             [label]="'form_grid.definition_sync_on_change' | gtxI18n"
             [value]="elementSchema().updateOnChange ?? false"
             [disabled]="mode() !== FormGridEditMode.FULL"

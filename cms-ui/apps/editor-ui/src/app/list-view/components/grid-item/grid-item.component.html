@@ -89,6 +89,14 @@
           </gtx-button>
         </a>
       }
+      @if (uiMode === UIMode.STAGING) {
+        <item-status-label
+            [item]="$any(item)"
+            [activeNodeId]="activeNode?.id"
+            [uiMode]="uiMode"
+            [stagingMap]="stagingMap"
+        ></item-status-label>
+      }
       @if (uiMode === UIMode.EDIT) {
         <file-status-label [item]="item"></file-status-label>
       }

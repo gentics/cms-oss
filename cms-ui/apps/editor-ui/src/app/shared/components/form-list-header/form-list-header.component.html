@@ -123,19 +123,6 @@
                     }
 
                     @if (uiMode() === UIMode.EDIT) {
-                        <gtx-dropdown-item
-                            class="page-language-toggle"
-                            data-action="toggle-status-icons"
-                            [attr.data-active]="showStatusIcons()"
-                            (click)="toggleDisplayStatusIcons()"
-                        >
-                            <gtx-checkbox
-                                [label]="'editor.display_status_icons_label' | gtxI18n "
-                                [value]="showStatusIcons()"
-                                (valueChange)="toggleDisplayStatusIcons()"
-                            ></gtx-checkbox>
-                        </gtx-dropdown-item>
-
                         @if (wastebinEnabled()) {
                             <gtx-dropdown-item
                                 class="show-deleted-toggle"

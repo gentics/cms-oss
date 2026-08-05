@@ -50,9 +50,6 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     @Input()
     public languages: Language[] = [];
 
-    @Input()
-    public currentLanguageId: number;
-
     @Output()
     public pageLoadStart = new EventEmitter<PageLoadStartEvent>();
 
@@ -83,7 +80,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.type || changes.item || changes.nodeId || changes.currentLanguageId) {
+        if (changes.type || changes.item || changes.nodeId) {
             this.loaded = false;
             this.loadPage(0, true);
         }

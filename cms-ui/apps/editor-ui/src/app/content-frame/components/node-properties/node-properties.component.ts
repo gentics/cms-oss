@@ -115,7 +115,7 @@ export class NodePropertiesComponent
         this.subscriptions.push(this.client.contentRepository.list().subscribe((res) => {
             this.contentRepositories = res.items;
             if (this.form) {
-                this.configureForm(this.form.value as any, false);
+                this.configureForm(this.form.value, false);
             }
             this.changeDetector.markForCheck();
         }));
@@ -161,7 +161,6 @@ export class NodePropertiesComponent
             publishContentMapFolders: new FormControl(this.safeValue('publishContentMapFolders') ?? false),
             urlRenderWayPages: new FormControl(this.safeValue('urlRenderWayPages') || 0),
             urlRenderWayFiles: new FormControl(this.safeValue('urlRenderWayFiles') || 0),
-            contentRepositoryId: new FormControl(this.safeValue('contentRepositoryId')),
         });
     }
 
@@ -169,13 +168,13 @@ export class NodePropertiesComponent
         loud = !!loud;
         const options = { emitEvent: loud, onlySelf: true };
 
-        setControlsEnabled(this.form, CR_CONTROLS, !this.disabled && value?.contentRepositoryId > 0, options);
+        setControlsEnabled(this.form, CR_CONTROLS, !this.disabled && this.item?.contentRepositoryId > 0, options);
         setControlsEnabled(this.form, PUBLISH_MAP_CONTROLS, !this.disabled && value?.publishContentMap, options);
         setControlsEnabled(this.form, FS_CONTROLS, !this.disabled && value?.publishFs, options);
 
         let cr: ContentRepository | null = null;
-        if (this.form.value.contentRepositoryId > 0) {
-            cr = this.contentRepositories.find((cr) => cr.id === this.form.value.contentRepositoryId);
+        if (this.item?.contentRepositoryId > 0) {
+            cr = this.contentRepositories.find((cr) => cr.id === this.item.contentRepositoryId);
         }
         const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
         const isProjectPerNode = cr?.projectPerNode;
@@ -259,7 +258,7 @@ export class NodePropertiesComponent
             this.form.controls.binaryPublishDir.setValue(value.publishDir, {
                 emitEvent: loud,
             });
-            this.triggerChange(this.form.value as any);
+            this.triggerChange(this.form.value);
         }
     }
 

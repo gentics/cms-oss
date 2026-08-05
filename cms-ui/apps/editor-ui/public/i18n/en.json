@@ -574,7 +574,7 @@
         "broken": "Broken",
         "search_hintbox": "Query parameter changed. Press Enter key or click search icon to execute new query."
     },
-    "rich-content": {
+    "rich_content": {
         "manage_link_title": "Manage link",
         "display_text": "Display text",
         "link_type": "Link Type",
@@ -747,6 +747,9 @@
         "disinherited_from_label": "Disinherited from {{channel}}",
         "display_field_selector_title": "Select details to display",
         "edit_inherited_body": "\"{{name}}\" is inherited from \"{{master}}\". You can either edit the original or create a localized version in \"{{local}}\" to edit.",
+        "edit_inherited_partial_body": "\"{{name}}\" is inherited from \"{{master}}\". You can either edit the original or create a (partially or fully) localized version in \"{{local}}\" to edit.",
+        "localize_full_and_edit_button": "Fully localize & Edit",
+        "localize_partial_and_edit_button": "Partially localize & Edit",
         "edit_inherited_title": "{{type}} is inherited",
         "edit_original_button": "Edit Original",
         "files": "Files",
@@ -960,7 +963,8 @@
         "select_content_package_title": "Select Content Package",
         "image_properties_title": "Properties of \"{{fileName}}\"",
         "choose_localization_type_title": "Choose localization type",
-        "choose_localization_type_body": "Please choose the type of localization.<br><ul><li><b>Full localization</b>: The entire page, including all of it's content is being localized, based on the current state of the master node, and is fully editable. After localization, no more content will be inherited.</li><li><b>Partial localization</b>: Only the root-tags of a page can be individually localized; All other content is being inherited from the master node.</li></ul>",
+        "choose_localization_type_body": "Please choose the type of localization.",
+        "localization_type_description": "<ul><li><b>Full localization</b>: The entire page, including all of it's content is being localized, based on the current state of the master node, and is fully editable. After localization, no more content will be inherited.</li><li><b>Partial localization</b>: Only the root-tags of a page can be individually localized; All other content is being inherited from the master node.</li></ul>",
         "save_tag_inheritance_title": "Save changes to inheritance?",
         "save_tag_inheritance_localize": "The following tags will be localized: {{tags}}",
         "save_tag_inheritance_inherit": "The followiing localizations, and the content of these tags, will be deleted: {{tags}}",

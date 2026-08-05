@@ -74,7 +74,7 @@ export class DisplayFieldSelectorModal extends BaseModal<DisplayFieldSelection> 
     showPath: boolean;
 
     availableFields: LabeledField[] = [];
-    private selected: { [fieldName: string]: boolean } = {};
+    public selected: { [fieldName: string]: boolean } = {};
 
     constructor(private changeDetector: ChangeDetectorRef) {
         super();

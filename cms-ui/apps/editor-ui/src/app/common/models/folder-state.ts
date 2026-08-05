@@ -41,7 +41,6 @@ export interface FolderState {
     activeLanguage: number;
     activeFormLanguage: number;
     displayAllLanguages: boolean;
-    displayStatusIcons: boolean;
     displayDeleted: boolean;
     displayImagesGridView: boolean;
     filterTerm: string;

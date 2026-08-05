@@ -43,13 +43,6 @@ export default function DefineVersionPlugin(pluginOptions) {
 
             const options = build.initialOptions;
             options.define = options.define || {};
-            /*
-             * FIXME: Figure out why this doesn't properly work.
-             * According to the documentation:
-             *  - https://nx.dev/docs/technologies/angular/guides/use-environment-variables-in-angular#using-a-custom-esbuild-plugin
-             *  - https://esbuild.github.io/plugins/#build-options
-             * this is exactly how you do it, but it is simply never set.
-             */
             options.define['GCMSUI_VERSION'] = `"${pkgContent.version}"`;
         },
     };

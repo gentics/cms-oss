@@ -9,7 +9,7 @@ import { cancelEvent } from '@gentics/common';
  * <gtx-button size="large">Buy Now!</gtx-button>
  * <gtx-button type="alert">Delete all stuff</gtx-button>
  * <gtx-button icon>
- *     <i class="material-icons">settings</i>
+ *     <icon>settings</icon>
  * </gtx-button>
  * ```
  */

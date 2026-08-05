@@ -4,7 +4,7 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/image-editor-demo/src",
-    "tags": ["app", "docs", "demo", "angular"],
+    "tags": ["app", "docs", "demo", "angular", "test:karma"],
     "implicitDependencies": ["image-editor", "ui-core"],
     "targets": {
         "build": {

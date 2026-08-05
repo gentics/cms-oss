@@ -1,15 +1,15 @@
 {
   "name": "@gentics/cms-rest-clients-angular",
-  "version": "6.5.0",
+  "version": "6.5.1",
   "peerDependencies": {
     "@angular/common": "^21.2.0",
     "@angular/core": "^21.2.0",
-    "@gentics/cms-models": "^6.5.0"
+    "@gentics/cms-models": "^6.5.1"
   },
   "devDependencies": {
     "@angular/common": "^21.2.0",
     "@angular/core": "^21.2.0",
-    "@gentics/cms-models": "^6.5.0"
+    "@gentics/cms-models": "^6.5.1"
   },
   "sideEffects": false
 }

@@ -1,13 +1,5 @@
-import { Pipe, PipeTransform } from '@angular/core';
 import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
-
-@Pipe({
-    name: 'i18n',
-    standalone: false
-})
-class MockI18nPipe implements PipeTransform {
-    transform(): void {}
-}
+import { MockI18nPipe } from './mocks';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -15,7 +7,7 @@ class MockI18nPipe implements PipeTransform {
 function mergeUnique(a: any[], b: any[]): any[] {
     const arr1 = a instanceof Array ? a : [];
     const arr2 = b instanceof Array ? b : [];
-    return arr1.concat(arr2.filter(item => arr1.indexOf(item) < 0));
+    return arr1.concat(arr2.filter((item) => arr1.indexOf(item) < 0));
 }
 
 /**
@@ -29,7 +21,7 @@ export function configureComponentTest(config: TestModuleMetadata): void {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [],
-        declarations: [ MockI18nPipe ],
+        declarations: [MockI18nPipe],
         providers: [],
     };
 

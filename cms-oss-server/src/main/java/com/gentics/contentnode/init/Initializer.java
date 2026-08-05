@@ -313,7 +313,9 @@ public class Initializer {
 				FixPageVersionsJob job = new FixPageVersionsJob();
 
 				job.execute(-1, TimeUnit.SECONDS);
-				DBUtils.executeUpdate("DELETE FROM nodesetup WHERE name = ?", new Object[] { FixPageVersionsJob.NODESETUP });
+				Trx.operate(() -> {
+					DBUtils.executeUpdate("DELETE FROM nodesetup WHERE name = ?", new Object[] { FixPageVersionsJob.NODESETUP });
+				});
 			}
 		} catch (NodeException e) {
 			logger.error("Error while starting background jobs upon startup", e);

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -16,10 +15,10 @@ import {
     FormTypeConfiguration,
     I18nString,
     ItemInNode,
+    ItemRef,
     Language,
     MarkupLanguageType,
     Page,
-    PageRequestOptions,
     Raw,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
@@ -87,10 +86,10 @@ export class FormPropertiesComponent
     public activeConfiguration: FormTypeConfiguration | null = null;
 
     public useEmailPageTemplate: boolean;
-    public loadedMailTemplate: Page | null = null;
+    public loadedMailTemplate: ItemRef | null = null;
 
     public useInternalSuccessPage: boolean;
-    public loadedSuccessPage: Page | null = null;
+    public loadedSuccessPage: ItemRef | null = null;
 
     public formLanguages: Language[] = [];
     public activeLanguage: Language | null = null;
@@ -132,27 +131,20 @@ export class FormPropertiesComponent
         super.initializeWithData();
 
         if (Number.isInteger(this.item?.data?.successPageId) && this.item.data.successPageId !== 0) {
-            const options: PageRequestOptions = {};
-            if (Number.isInteger(this.item.data?.successNodeId) && this.item.data.successNodeId !== 0) {
-                options.nodeId = this.item.data.successNodeId;
-            }
-
-            this.subscriptions.push(this.client.page.get(this.item.data.successPageId, options).subscribe((res) => {
-                this.loadedSuccessPage = res.page;
-                this.changeDetector.markForCheck();
-            }));
+            this.loadedSuccessPage = {
+                type: 'page',
+                id: this.item.data.successPageId,
+                nodeId: this.item.data.successNodeId,
+            } as any;
+            this.changeDetector.markForCheck();
         }
 
         if (Number.isInteger(this.item?.data?.adminEmailPageId) && this.item.data.adminEmailPageId !== 0) {
-            const options: PageRequestOptions = {};
-            if (Number.isInteger(this.item?.data?.adminEmailNodeId) && this.item.data.adminEmailNodeId !== 0) {
-                options.nodeId = this.item.data.adminEmailNodeId;
-            }
-
-            this.subscriptions.push(this.client.page.get(this.item.data.adminEmailPageId, options).subscribe((res) => {
-                this.loadedMailTemplate = res.page;
-                this.changeDetector.markForCheck();
-            }));
+            this.loadedMailTemplate = {
+                type: 'page',
+                id: this.item.data.adminEmailPageId,
+                nodeId: this.item.data.adminEmailNodeId,
+            } as any;
         }
 
         // set initial value for useInternalSuccessPage and useEmailPage radio button group

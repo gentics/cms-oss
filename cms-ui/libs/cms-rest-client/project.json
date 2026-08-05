@@ -3,30 +3,6 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-rest-client/src",
     "projectType": "library",
-    "tags": [
-        "lib",
-        "publish"
-    ],
-    "targets": {
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": [
-                "{projectRoot}/test-output/jest"
-            ],
-            "options": {
-                "jestConfig": "libs/cms-rest-client/jest.config.cts"
-            },
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {
-                    "color": false,
-                    "colors": false,
-                    "ci": true,
-                    "jestConfig": "libs/cms-rest-client/jest.config.ci.cts"
-                }
-            }
-        }
-    }
+    "tags": ["lib", "publish", "test:vitest"],
+    "targets": {}
 }

@@ -6,6 +6,7 @@
     <div
         class="display-value"
         [class.placeholder]="!displayValue"
+        [attr.data-value]="selectedItemHashes"
     >{{ displayValue || placeholder }}</div>
 
     <button

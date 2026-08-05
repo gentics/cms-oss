@@ -410,6 +410,21 @@ test.describe('Multichannelling', () => {
                 expect(resData.page.tags[testTag.name].inherited).toBe(true);
             });
         });
+
+        test('should show both localization options when trying to edit an inherited page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19609',
+            }],
+        }, async ({ page }) => {
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, testPage.id);
+            await itemAction(item, 'edit');
+
+            const modal = page.locator('gtx-modal-dialog');
+            await expect(modal.locator('.modal-footer [data-action="localize"]')).toBeVisible();
+            await expect(modal.locator('.modal-footer [data-action="partial-localize"]')).toBeVisible();
+        });
     });
 
     test.describe('Localization', () => {
@@ -487,6 +502,22 @@ test.describe('Multichannelling', () => {
             await expect(notifications.locator('.message')).toContainText(backgroundMessage);
 
             await expect(item.locator('.item-primary .inherited-icon')).toBeVisible();
+        });
+
+        test('should show only full localization option when trying to edit an inherited page', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19609',
+            }],
+        }, async ({ page }) => {
+            const TEST_PAGE = IMPORTER.get(PAGE_FOUR);
+            const list = findList(page, ITEM_TYPE_PAGE);
+            const item = findItem(list, TEST_PAGE.id);
+            await itemAction(item, 'edit');
+
+            const modal = page.locator('gtx-modal-dialog');
+            await expect(modal.locator('.modal-footer [data-action="localize"]')).toBeVisible();
+            await expect(modal.locator('.modal-footer [data-action="partial-localize"]')).not.toBeAttached();
         });
     });
 });

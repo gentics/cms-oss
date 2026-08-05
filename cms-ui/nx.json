@@ -1,6 +1,8 @@
 {
     "$schema": "./node_modules/nx/schemas/nx-schema.json",
     "analytics": false,
+    "neverConnectToCloud": true,
+    "useDaemonProcess": true,
     "workspaceLayout": {
         "appsDir": "apps",
         "libsDir": "libs"
@@ -10,7 +12,7 @@
     },
     "defaultProject": "editor-ui",
     "parallel": 3,
-    "useInferencePlugins": false,
+    "useInferencePlugins": true,
     "defaultBase": "dev",
     "release": {
         "projects": ["tag:publish", "@gentics/root"],
@@ -24,9 +26,7 @@
             "currentVersionResolver": "registry",
             "fallbackCurrentVersionResolver": "disk",
             "versionPrefix": "^",
-            "manifestRootsToUpdate": [
-                "{projectRoot}"
-            ],
+            "manifestRootsToUpdate": ["{projectRoot}"],
             "preserveLocalDependencyProtocols": false,
             "preserveMatchingDependencyRanges": false
         },
@@ -57,12 +57,6 @@
             }
         },
         {
-            "plugin": "@nx/jest/plugin",
-            "options": {
-                "targetName": "test"
-            }
-        },
-        {
             "plugin": "@nx/cypress/plugin",
             "options": {
                 "targetName": "e2e",
@@ -76,18 +70,26 @@
             "options": {
                 "targetName": "e2e"
             }
+        },
+        {
+            "plugin": "@nx/vitest",
+            "options": {
+                "testTargetName": "test",
+                "ciTargetName": "test-ci",
+                "testMode": "watch"
+            }
         }
     ],
     "generators": {
         "@nx/angular:application": {
-            "style": "scss",
+            "e2eTestRunner": "playwright",
             "linter": "eslint",
-            "unitTestRunner": "jest",
-            "e2eTestRunner": "playwright"
+            "style": "scss",
+            "unitTestRunner": "vitest"
         },
         "@nx/angular:library": {
             "linter": "eslint",
-            "unitTestRunner": "jest"
+            "unitTestRunner": "vitest"
         },
         "@nx/angular:component": {
             "style": "scss",
@@ -172,7 +174,8 @@
             "{projectRoot}/ng-package.json",
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
-            "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/vitest.config(ci)?.[jt]s",
+            "!{projectRoot}/vite.config(ci)?.[jt]s",
             "!{projectRoot}/src/test-setup.[jt]s",
             "!{projectRoot}/test-setup.[jt]s",
             "!{projectRoot}/cypress/**/*",
@@ -197,21 +200,23 @@
             "{workspaceRoot}/karma.conf.js",
             "{workspaceRoot}/ng-workspace/angular.json"
         ],
-        "jestTests": [
+        "vitestTests": [
             "!{projectRoot}/src/**/*.cy.ts",
-            "{projectRoot}/src/**/*.spec.ts",
+            "{projectRoot}/**/*.spec.ts",
+            "!{projectRoot}/e2e/**/*.spec.ts",
             "{projectRoot}/tsconfig.spec.json",
-            "{projectRoot}/jest.config.ci.(c)?[tj]s",
-            "{projectRoot}/jest.config.(c)?[tj]s",
-            "{workspaceRoot}/jest.config.ts",
-            "{workspaceRoot}/jest.preset.ts"
+            "{projectRoot}/vitest.config.ci.(m)?[tj]s",
+            "{projectRoot}/vitest.config.(m)?[tj]s",
+            "{workspaceRoot}/vitest.project.ts",
+            "{workspaceRoot}/vitest.workspace.ts"
         ],
         "cypressTests": [
             "!{projectRoot}/src/**/*.spec.ts",
             "{projectRoot}/cypress/**/*",
             "{projectRoot}/cypress.config.ci.ts",
             "{projectRoot}/cypress.config.ts",
-            "{workspaceRoot}/cypress.preset.js"
+            "{workspaceRoot}/cypress.preset.js",
+            "{projectRoot}/**/*.cy.ts"
         ],
         "playwrightTests": [
             "envFiles",
@@ -251,24 +256,60 @@
             "dependsOn": ["^build"],
             "inputs": ["production", "^production"]
         },
-        "test": {
-            "inputs": ["default", "karmaTests", "^default"],
-            "cache": true,
-            "dependsOn": ["^build"]
-        },
-        "@nx/jest:jest": {
-            "inputs": ["default", "jestTests", "^default"],
-            "cache": true,
-            "options": {
-                "passWithNoTests": true
+        "test": [
+            {
+                "filter": {
+                    "projects": ["tag:test:karma"]
+                },
+                "inputs": ["default", "karmaTests", "^default"],
+                "cache": true,
+                "dependsOn": ["^build"]
             },
-            "configurations": {
-                "ci": {
-                    "ci": true,
-                    "codeCoverage": true
+            {
+                "filter": {
+                    "plugin": "@nx/vitest"
+                },
+                "inputs": ["default", "vitestTests", "^production"],
+                "outputs": [
+                    "{workspaceRoot}/.reports/{projectRoot}/VITEST-report.xml",
+                    "{workspaceRoot}/coverage/{projectRoot}"
+                ],
+                "cache": true,
+                "options": {
+                    "watch": false
+                },
+                "configurations": {
+                    "watch": {
+                        "mode": "watch"
+                    },
+                    "ci": {
+                        "mode": "ci"
+                    }
+                }
+            },
+            {
+                "filter": {
+                    "executor": "@nx/angular:unit-test"
+                },
+                "inputs": ["default", "vitestTests", "^production"],
+                "outputs": [
+                    "{workspaceRoot}/.reports/{projectRoot}/VITEST-report.xml",
+                    "{workspaceRoot}/coverage/{projectRoot}"
+                ],
+                "cache": true,
+                "options": {
+                    "watch": false
+                },
+                "configurations": {
+                    "watch": {
+                        "watch": true
+                    },
+                    "ci": {
+                        "runnerConfig": "{projectRoot}/vite.config.ci.mts"
+                    }
                 }
             }
-        },
+        ],
         "@nx/cypress:cypress": {
             "inputs": ["default", "cypressTests", "^default"],
             "cache": true,
@@ -299,6 +340,25 @@
             "cache": true,
             "dependsOn": ["^build"],
             "inputs": ["production", "^production"]
+        },
+        "@angular-devkit/build-angular:browser": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@nx/angular:ng-packagr-lite": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@angular/build:application": {
+            "cache": true,
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"]
+        },
+        "@nx/vitest:test": {
+            "cache": true,
+            "inputs": ["default", "vitestTests", "^production"]
         }
     }
 }

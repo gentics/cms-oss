@@ -161,8 +161,10 @@ spec:
                         // Install the dependencies
                         sh "npm ci --no-audit --no-fund"
 
-                        // Setup the packages to use the correct version for publishing
-                        sh "npm run nx -- release version $version --verbose"
+                        if (version && (version ==~ /[\d]+\.[\d]+\.[\d]+(?:\.[a-zA-Z0-9-]+)?/)) {
+                            // Setup the packages to use the correct version for publishing
+                            sh "npm run nx -- release version $version"
+                        }
 
                         // Build everything
                         sh "npm run many -- --target=build --configuration=ci --output-style=static"

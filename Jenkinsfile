@@ -209,6 +209,7 @@ spec:
                 script {
                     def mvnGoal       = "package"
                     def mvnProjects   = ""
+                    def mvnArguments  = " "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()

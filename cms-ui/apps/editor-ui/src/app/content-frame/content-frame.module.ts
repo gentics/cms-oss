@@ -3,8 +3,6 @@ import { RouterModule } from '@angular/router';
 import { AlohaModule } from '@gentics/cms-components/aloha';
 import { FormGridModule } from '@gentics/form-grid';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { ColorAlphaModule } from 'ngx-color/alpha';
-import { ColorSliderModule } from 'ngx-color/slider';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
@@ -72,8 +70,6 @@ const MODULE_INITIALIZER = provideAppInitializer(() => {
         SharedModule,
         TagEditorModule,
         EditorOverlayModule,
-        ColorSliderModule,
-        ColorAlphaModule,
         FormGridModule,
         RouterModule.forChild(CONTENT_FRAME_ROUTES),
         GenticsUICoreModule,

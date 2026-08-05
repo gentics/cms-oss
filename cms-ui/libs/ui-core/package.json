@@ -42,7 +42,8 @@
     "sortablejs": "^1.15.2"
   },
   "optionalDependencies": {
-    "cypress": "^15.9.0"
+    "cypress": "^15.9.0",
+    "jasmine-core": "^4.2.0"
   },
   "sideEffects": false
 }

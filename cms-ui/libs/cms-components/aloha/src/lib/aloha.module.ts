@@ -6,6 +6,8 @@ import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { provideStates } from '@ngxs/store';
+import { ColorAlphaModule } from 'ngx-color/alpha';
+import { ColorSliderModule } from 'ngx-color/slider';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
@@ -85,6 +87,8 @@ const PROVIDERS = [
         ReactiveFormsModule,
         CmsComponentsModule,
         GenticsUICoreModule,
+        ColorSliderModule,
+        ColorAlphaModule,
     ],
     declarations: [...COMPONENTS],
     providers: [...PROVIDERS],

@@ -7,12 +7,14 @@ package com.gentics.contentnode.object.parttype;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
@@ -25,6 +27,11 @@ import com.gentics.contentnode.rest.model.Property;
  * TypeIDs: 1 (Text), 2 (Text/Html), 3 (HTML), 9 (Text Short), 10 (Text Html Long), 21 (HTML lang), 26 (Java), 27 (DHTML)
  **/
 public abstract class TextPartType extends AbstractPartType implements PartType {
+	/**
+	 * Service loader for {@link TextRenderService}s
+	 */
+	private final static ServiceLoaderUtil<TextRenderService> textRenderServiceLoader = ServiceLoaderUtil
+			.load(TextRenderService.class);
 
 	/**
 	 * do not replace any newlines
@@ -76,16 +83,13 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 
 	public String render(RenderResult result, String template) throws NodeException {
 		super.render(result, template);
-		// if the part is inline editable and is rendered as template for a velocity part, we make the content safe by replacing # and $
-		// with the escape tool. Otherwise, if the editor entered e.g. ## into the content, this would break the velocity template
 
-		// FIXME
-//		if (getValueObject().getPart().isInlineEditable() && ObjectTransformer
-//				.getBoolean(TransactionManager.getCurrentTransaction().getRenderType().getParameter(VelocityPartType.SAFE_INLINE_RENDERING), false)
-//				&& !isVelocityTemplate()) {
-//			return parsedText.replaceAll("\\$", "\\${cms.imps.velocitytools.esc.d}").replaceAll("#", "\\${cms.imps.velocitytools.esc.h}");
-//		}
-		return parsedText;
+		Value valueObject = getValueObject();
+		String retVal = parsedText;
+		for (TextRenderService service : textRenderServiceLoader) {
+			retVal = service.render(valueObject, retVal);
+		}
+		return retVal;
 	}
 
 	/**
@@ -401,20 +405,6 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Determines whether the value is the "template" part of a VTL-tag
-	 * @return true iff the value is template of a VTL-part
-	 * @throws NodeException
-	 */
-	private boolean isVelocityTemplate() throws NodeException {
-		if ("template".equals(getValueObject().getPart().getKeyname())
-				&& getValueObject().getContainer().getConstruct().getParts().stream().filter(p -> p.getPartTypeId() == 33).findFirst().isPresent()) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	/**

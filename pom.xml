@@ -45,7 +45,7 @@
 		<!-- Dynamic third party dependencies -->
 		<cms-oss.version>6.6.0-SNAPSHOT</cms-oss.version>
 		<generic-testutils.version>1.15.7</generic-testutils.version>
-		<mesh.forms.plugin.version>3.3.0</mesh.forms.plugin.version>
+		<mesh.forms.plugin.version>3.3.1</mesh.forms.plugin.version>
 		<mesh.andp.plugin.version>8.5.0</mesh.andp.plugin.version>
 		<hazelcast.version>5.5.0</hazelcast.version>
 		<license.checker.version>2.0.4</license.checker.version>

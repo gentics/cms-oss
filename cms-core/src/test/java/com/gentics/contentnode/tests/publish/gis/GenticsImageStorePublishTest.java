@@ -138,7 +138,6 @@ public class GenticsImageStorePublishTest {
 			n.setBinaryPublishDir("binary");
 		});
 
-		// FIXME refactor to handlebars
 		gisConstruct = supply(() -> create(Construct.class, construct -> {
 			construct.setAutoEnable(true);
 			construct.setKeyword("gistag");

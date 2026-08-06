@@ -7,7 +7,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -24,8 +23,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import jakarta.ws.rs.core.MediaType;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -34,7 +31,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Assert;
 
-import com.gentics.api.contentnode.parttype.ExtensiblePartType;
 import com.gentics.api.contentnode.publish.CnMapPublishHandler;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InsufficientPrivilegesException;
@@ -82,17 +78,13 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
-// import com.gentics.contentnode.object.parttype.BreadcrumbPartType;
 import com.gentics.contentnode.object.parttype.ChangeableListPartType;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
-import com.gentics.contentnode.object.parttype.ExtensiblePartTypeWrapper;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.ListPartType;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-// import com.gentics.contentnode.object.parttype.NavigationPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.PageTagPartType;
@@ -101,7 +93,6 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.object.parttype.TemplateTagPartType;
 import com.gentics.contentnode.object.parttype.TextPartType;
-// import com.gentics.contentnode.object.parttype.VelocityPartType;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
@@ -127,6 +118,8 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.infrastructure.TestEnvironment;
+
+import jakarta.ws.rs.core.MediaType;
 
 
 /**
@@ -198,9 +191,6 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 */
 	public static <T extends PartType> int createConstruct(Node node, Class<T> clazz, String constructKeyword, String partKeyword) throws NodeException {
-//		if (clazz.isAssignableFrom(ExtensiblePartTypeWrapper.class)) {
-//			return createVelocityConstruct(node, constructKeyword, partKeyword);
-//		}
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// when creating a construct with a SelectPartType part, we create a Datasource first
@@ -225,158 +215,6 @@ public class ContentNodeTestDataUtils {
 
 		return createConstruct(node, getPartTypeId(clazz), constructKeyword, partKeyword, ds);
 	}
-
-//	/**
-//	 * Create a construct containing a velocity part
-//	 * @param node node
-//	 * @param constructKeyword construct keyword
-//	 * @param partKeyword part keyword for the velocity part
-//	 * @return construct id
-//	 * @throws NodeException
-//	 */
-//	public static int createVelocityConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
-//		Transaction t = TransactionManager.getCurrentTransaction();
-//		Construct construct = t.createObject(Construct.class);
-//		construct.setAutoEnable(true);
-//		construct.setKeyword(constructKeyword);
-//		construct.setName(constructKeyword, 1);
-//		if (node != null) {
-//			construct.getNodes().add(node);
-//		}
-//
-//		Part vtlPart = t.createObject(Part.class);
-//		vtlPart.setEditable(0);
-//		vtlPart.setHidden(false);
-//		vtlPart.setKeyname(partKeyword);
-//		vtlPart.setName(partKeyword, 1);
-//		vtlPart.setPartTypeId(getPartTypeId(VelocityPartType.class));
-//		construct.getParts().add(vtlPart);
-//
-//		Part templatePart = t.createObject(Part.class);
-//		templatePart.setEditable(1);
-//		templatePart.setHidden(true);
-//		templatePart.setKeyname(TEMPLATE_PARTNAME);
-//		templatePart.setName(TEMPLATE_PARTNAME, 1);
-//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-//		t.createObject(Value.class).setPart(templatePart);
-//		construct.getParts().add(templatePart);
-//
-//		construct.save();
-//		t.commit(false);
-//
-//		return ObjectTransformer.getInt(construct.getId(), 0);
-//	}
-
-//	/**
-//	 * Create a default breadcrumb construct
-//	 * @param node node
-//	 * @param constructKeyword construct keyword
-//	 * @param partKeyword part keyword
-//	 * @return construct id
-//	 * @throws NodeException
-//	 */
-//	public static int createBreadcrumbConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
-//		Transaction t = TransactionManager.getCurrentTransaction();
-//		Construct construct = t.createObject(Construct.class);
-//		construct.setAutoEnable(true);
-//		construct.setKeyword(constructKeyword);
-//		construct.setName(constructKeyword, 1);
-//		construct.getNodes().add(node);
-//
-//		// breadcrumb part
-//		Part vtlPart = t.createObject(Part.class);
-//		vtlPart.setEditable(0);
-//		vtlPart.setHidden(false);
-//		vtlPart.setKeyname(partKeyword);
-//		vtlPart.setName(partKeyword, 1);
-//		vtlPart.setPartTypeId(getPartTypeId(BreadcrumbPartType.class));
-//		construct.getParts().add(vtlPart);
-//
-//		// template part
-//		Part templatePart = t.createObject(Part.class);
-//		templatePart.setEditable(1);
-//		templatePart.setHidden(true);
-//		templatePart.setKeyname(TEMPLATE_PARTNAME);
-//		templatePart.setName(TEMPLATE_PARTNAME, 1);
-//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-//		templatePart.setDefaultValue(t.createObject(Value.class));
-//		try {
-//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("breadcrumb.vm")));
-//		} catch (IOException e) {
-//			throw new NodeException("Could not create breadcrumb part", e);
-//		}
-//		construct.getParts().add(templatePart);
-//
-//		// startfolder part
-//		Part startfolderPart = t.createObject(Part.class);
-//		startfolderPart.setEditable(1);
-//		startfolderPart.setHidden(true);
-//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
-//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
-//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
-//		startfolderPart.setDefaultValue(t.createObject(Value.class));
-//		construct.getParts().add(startfolderPart);
-//
-//		construct.save();
-//		t.commit(false);
-//
-//		return ObjectTransformer.getInt(construct.getId(), 0);
-//	}
-
-//	/**
-//	 * Create a default navigation construct
-//	 * @param node node
-//	 * @param constructKeyword construct keyword
-//	 * @param partKeyword part keyword
-//	 * @return construct id
-//	 * @throws NodeException
-//	 */
-//	public static int createNavigationConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
-//		Transaction t = TransactionManager.getCurrentTransaction();
-//		Construct construct = t.createObject(Construct.class);
-//		construct.setAutoEnable(true);
-//		construct.setKeyword(constructKeyword);
-//		construct.setName(constructKeyword, 1);
-//		construct.getNodes().add(node);
-//
-//		// breadcrumb part
-//		Part vtlPart = t.createObject(Part.class);
-//		vtlPart.setEditable(0);
-//		vtlPart.setHidden(false);
-//		vtlPart.setKeyname(partKeyword);
-//		vtlPart.setName(partKeyword, 1);
-//		vtlPart.setPartTypeId(getPartTypeId(NavigationPartType.class));
-//		construct.getParts().add(vtlPart);
-//
-//		// template part
-//		Part templatePart = t.createObject(Part.class);
-//		templatePart.setEditable(1);
-//		templatePart.setHidden(true);
-//		templatePart.setKeyname(TEMPLATE_PARTNAME);
-//		templatePart.setName(TEMPLATE_PARTNAME, 1);
-//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-//		templatePart.setDefaultValue(t.createObject(Value.class));
-//		try {
-//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("navigation.vm")));
-//		} catch (IOException e) {
-//			throw new NodeException("Could not create breadcrumb part", e);
-//		}
-//		construct.getParts().add(templatePart);
-//
-//		// startfolder part
-//		Part startfolderPart = t.createObject(Part.class);
-//		startfolderPart.setEditable(1);
-//		startfolderPart.setHidden(true);
-//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
-//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
-//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
-//		startfolderPart.setDefaultValue(t.createObject(Value.class));
-//		construct.getParts().add(startfolderPart);
-//
-//		construct.save();
-//		t.commit(false);
-//
-//		return ObjectTransformer.getInt(construct.getId(), 0);	}
 
 	/**
 	 * Get the parttype id for the given parttype class

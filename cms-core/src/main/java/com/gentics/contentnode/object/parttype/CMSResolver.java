@@ -92,11 +92,6 @@ public class CMSResolver implements ResolvableMapWrappable {
 				return cmsResolver.getFile();
 			}
 		});
-//		properties.put("imps", new Property() {
-//			public Object get(CMSResolver cmsResolver) {
-//				return cmsResolver.getImpsResolver();
-//			}
-//		});
 
 		resolvableKeys = SetUtils.difference(properties.keySet(), Collections.singleton("imps"));
 	}

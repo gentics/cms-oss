@@ -53,6 +53,8 @@
 		<mesh.version>3.2.13</mesh.version>
         <liveness.version>0.0.1-SNAPSHOT</liveness.version>
 
+		<otel.javaagent.version>2.27.0</otel.javaagent.version>
+
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
 		<jersey.version>3.1.10</jersey.version>
 		<jetty.version>12.0.37</jetty.version>

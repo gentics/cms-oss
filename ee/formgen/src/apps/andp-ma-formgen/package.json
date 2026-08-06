@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
+    "copy-mock-files": "copyfiles -f \"../../packages/feature-formgen/src/mock-files/*\" ./public/mock-files",
+    "prestart": "npm run copy-mock-files",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "preweb": "npm run copy-mock-files",
     "web": "expo start --web",
     "postinstall": "patch-package",
+    "prebuild": "npm run copy-mock-files",
     "build": "expo export --platform web",
     "postbuild": "copyfiles -f ../../node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./dist/_expo/static/js/web/"
   },

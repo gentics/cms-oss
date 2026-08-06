@@ -4,6 +4,6 @@ import { createProjectConfiguration, getPlugins } from '../../vitest.project';
 
 export default defineConfig((env: ConfigEnv) => ({
     root: __dirname,
-    ...createProjectConfiguration('libs', 'e2e-utils', env.mode),
+    ...createProjectConfiguration('libs', 'cms-rest-client', env.mode),
     plugins: getPlugins('library'),
 }));

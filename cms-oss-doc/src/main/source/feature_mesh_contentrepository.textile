@@ -96,7 +96,7 @@ The user (identified either by username/password or be API Token) must have suff
 
 h4. Roles Property
 
-By setting the field _Roles Property_ it is possible to assign the +readPublished+ permission on published objects to specific roles in Gentics Mesh. This property can be either an object property with a select part, or an expression that evaluates fields in a Velocity context.
+By setting the field _Roles Property_ it is possible to assign the +readPublished+ permission on published objects to specific roles in Gentics Mesh. This property can be an object property with a select part.
 
 h5. Roles Objectproperty
 
@@ -108,21 +108,6 @@ Permissions in Mesh can neither be set language specific nor branch specific. Th
 
 NOTE: If one of the roles object properties is *not* synchronized, the action +Check+ in the ContentRepository will fail (and the log will show an error). The publish process will not fail
 in such cases, but will possibly lead to unexpected permission settings in Mesh.
-
-h5. Velocity Expression
-
-Variables used in a Velocity template can be resolved using the "Expression Parser":https://www.gentics.com/Content.Node/guides/tagmap_expression_parser.html. Such expressions can be used to define the desired roles. For example:
-
-# Create a tagtype with a Velocity part called +vtl+ and the following template:
-<shell>
-#set($roles = [])
-$roles.add("role_a")
-$roles.add("role_b")
-</shell>
-# Create Folder/File/Page object properties with the name +meshroles+ using the created tagtype.
-# Set the ContentRepositories _Roles Property_ to +object.meshroles.parts.vtl.roles+.
-
-For more complex solution additional tagparts will be needed, and the corespondig logic must be implemented in the Velocity template.
 
 h4. Default Role
 
@@ -223,7 +208,7 @@ h6. Transformation of tagtypes
 When a Mesh ContentRepository contains at least one tagmap entry of type "Micronode", all constructs that meet all of the following requirements will be transformed into microschemas:
 
 # The construct must be assigned to at least one Node that publishes into the Mesh ContentRepository
-# The construct must contain at least one editable Part with a non-empty keyword - other than @Tag (global)@, @File (localpath)@, @Table ext@, @Velocity@, @Breadcrumb@, @Navigation@
+# The construct must contain at least one editable Part with a non-empty keyword - other than @Tag (global)@, @File (localpath)@, @Table ext@
 # The construct matches at least one of the micronode filters
 
 h6. Part Types with special mapping

@@ -82,13 +82,13 @@ public class DiffSandboxTest {
 
 		request.setContent1("<span>one two four five</span>");
 		request.setContent2("<span>one two three four five</span>");
-		request.setInsertTemplate("[$insert]");
+		request.setInsertTemplate("[{{insert}}]");
 		DiffResponse response = diffResource.diffHTML(request);
 
 		assertEquals("Check diff", "<span>one two [three ]four five</span>", response.getDiff());
 
 		// test again using a template with wrong placeholder
-		request.setInsertTemplate("[$remove]");
+		request.setInsertTemplate("[{{remove}}]");
 		response = diffResource.diffHTML(request);
 		assertEquals("Check diff", "<span>one two []four five</span>", response.getDiff());
 	}
@@ -103,13 +103,13 @@ public class DiffSandboxTest {
 
 		request.setContent1("<span>one two three four five</span>");
 		request.setContent2("<span>one two four five</span>");
-		request.setRemoveTemplate("[$remove]");
+		request.setRemoveTemplate("[{{remove}}]");
 		DiffResponse response = diffResource.diffHTML(request);
 
 		assertEquals("Check diff", "<span>one two [three ]four five</span>", response.getDiff());
 
 		// test again using a template with wrong placeholder
-		request.setRemoveTemplate("[$insert]");
+		request.setRemoveTemplate("[{{insert}}]");
 		response = diffResource.diffHTML(request);
 		assertEquals("Check diff", "<span>one two []four five</span>", response.getDiff());
 	}
@@ -124,13 +124,13 @@ public class DiffSandboxTest {
 
 		request.setContent1("<span>one two three four five</span>");
 		request.setContent2("<span>one two THREE four five</span>");
-		request.setChangeTemplate("[$remove|$insert]");
+		request.setChangeTemplate("[{{remove}}|{{insert}}]");
 		DiffResponse response = diffResource.diffHTML(request);
 
 		assertEquals("Check diff", "<span>one two [three|THREE] four five</span>", response.getDiff());
 
 		// test again using a different template
-		request.setChangeTemplate("[$insert|$remove]");
+		request.setChangeTemplate("[{{insert}}|{{remove}}]");
 		response = diffResource.diffHTML(request);
 		assertEquals("Check diff", "<span>one two [THREE|three] four five</span>", response.getDiff());
 	}
@@ -145,7 +145,7 @@ public class DiffSandboxTest {
 
 		request.setContent1("<span>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15</span>");
 		request.setContent2("<span>1 2 3 4 5 6 7 8 9 10 11 12 13 NEW 14 15</span>");
-		request.setInsertTemplate("[($before) $insert]");
+		request.setInsertTemplate("[({{before}}) {{insert}}]");
 
 		// first test with the default value (10 words, spaces count as words)
 		DiffResponse response = diffResource.diffHTML(request);
@@ -168,7 +168,7 @@ public class DiffSandboxTest {
 
 		request.setContent1("<span>1 2 3 4 5 6 7 8 9 10 11 12 13 14 15</span>");
 		request.setContent2("<span>1 2 NEW 3 4 5 6 7 8 9 10 11 12 13 14 15</span>");
-		request.setInsertTemplate("[$insert ($after)]");
+		request.setInsertTemplate("[{{insert}} ({{after}})]");
 
 		// first test with the default value (10 words, spaces count as words)
 		DiffResponse response = diffResource.diffHTML(request);

@@ -1,0 +1,2 @@
+The REST API Endpoints @/diff/html@ and @/diff/source@ will now use Handlebars instead of
+Velocity to render the diff. If requests are made using custom templates, they must be converted to Handlebars templates.

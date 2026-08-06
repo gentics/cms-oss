@@ -9,6 +9,8 @@ import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.gentics.api.contentnode.parttype.ExtensiblePartType;
@@ -18,6 +20,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.ExtensiblePartTypeWrapper;
 import com.gentics.contentnode.object.parttype.PartType;
+import com.gentics.contentnode.object.parttype.UnavailablePartType;
 import com.gentics.lib.etc.StringUtils;
 
 /**
@@ -25,6 +28,15 @@ import com.gentics.lib.etc.StringUtils;
  * parttype-id.
  */
 public class PartTypeFactory {
+	/**
+	 * Type IDs of optional part types (33: VelocityPartType, 34: BreadcrumbPartType, 35: NavigationPartType)
+	 */
+	protected final static Set<Integer> OPTIONAL_TYPE_IDS = Set.of(33, 34, 35);
+
+	/**
+	 * Type IDs of optional part types, which are valueless
+	 */
+	protected final static Set<Integer> OPTIONAL_VALUELESS_IDS = Set.of(33, 34, 35);
 
 	private static PartTypeFactory factory;
     
@@ -65,6 +77,10 @@ public class PartTypeFactory {
 	 */
 	public boolean isValueless(int typeId, boolean failIfPartTypeNotFound) throws NodeException {
 		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId, failIfPartTypeNotFound);
+
+		if (OPTIONAL_VALUELESS_IDS.contains(typeId)) {
+			return true;
+		}
 
 		// check if classname is set
 		if (null == partTypeInfo) {
@@ -113,9 +129,10 @@ public class PartTypeFactory {
 			res = p.executeQuery();
 
 			if (res.next()) {
-				Class partTypeClass = null;
+				Class<?> partTypeClass = null;
 				String partTypeClassName = res.getString("javaclass");
 				String partTypeName = res.getString("name");
+				String originalClassName = null;
 
 				res.close();
 
@@ -127,10 +144,15 @@ public class PartTypeFactory {
 				try {
 					partTypeClass = Class.forName(partTypeClassName);
 				} catch (ClassNotFoundException e) {
-					throw new NodeException("No class for partType " + partTypeId, e);
+					if (OPTIONAL_TYPE_IDS.contains(partTypeId)) {
+						partTypeClass = UnavailablePartType.class;
+						originalClassName = partTypeClassName;
+					} else {
+						throw new NodeException("No class for partType " + partTypeId, e);
+					}
 				}
 
-				partTypeInfo = new PartTypeInfo(partTypeClass, partTypeName);
+				partTypeInfo = new PartTypeInfo(partTypeClass, partTypeName, originalClassName);
 				partTypeInfoCache.put(partTypeId, partTypeInfo);
 				return partTypeInfo;
 			} else {
@@ -184,6 +206,13 @@ public class PartTypeFactory {
 			if (!PartType.class.isAssignableFrom(partTypeInfo.getClazz())) {// TODO error handling
 			}
 
+			// special handling for UnavailablePartType
+			if (partTypeInfo.getClazz() == UnavailablePartType.class) {
+				PartType partType = new UnavailablePartType(value, partTypeInfo.getOriginalClassName());
+				partType.setAnnotationClass(partTypeInfo.getAnnotationClass());
+				return partType;
+			}
+
 			try {
 				// get the desired constructor
 				Constructor constructor = partTypeInfo.getClazz().getConstructor(new Class[] { Value.class});
@@ -222,6 +251,16 @@ public class PartTypeFactory {
 	}
 
 	/**
+	 * Check whether the part type with given ID is available
+	 * @param typeId type ID
+	 * @return true iff available
+	 * @throws NodeException
+	 */
+	public boolean isAvailable(int typeId) throws NodeException {
+		return Optional.ofNullable(getPartTypeInfo(typeId, false)).map(PartTypeInfo::isAvailable).orElse(false);
+	}
+
+	/**
 	 * Class for parttype info (class and annotation name)
 	 */
 	protected class PartTypeInfo {
@@ -237,13 +276,20 @@ public class PartTypeFactory {
 		protected String annotationClass;
 
 		/**
+		 * If the {@link #clazz} is {@link UnavailablePartType}, this string specifies the original class name (which is unavailable)
+		 */
+		protected String originalClassName;
+
+		/**
 		 * Create an instance
 		 * @param clazz class
 		 * @param name name (will be transformed to the annotation class)
+		 * @param originalClassName optional original class name
 		 */
-		public PartTypeInfo(Class<?> clazz, String name) {
+		public PartTypeInfo(Class<?> clazz, String name, String originalClassName) {
 			this.clazz = clazz;
 			this.annotationClass = buildAnnotationClass(name);
+			this.originalClassName = originalClassName;
 		}
 
 		/**
@@ -272,6 +318,22 @@ public class PartTypeFactory {
 		 */
 		public String getAnnotationClass() {
 			return annotationClass;
+		}
+
+		/**
+		 * Get the original class name
+		 * @return original class name
+		 */
+		public String getOriginalClassName() {
+			return originalClassName;
+		}
+
+		/**
+		 * Check whether the part type is available
+		 * @return true iff available
+		 */
+		public boolean isAvailable() {
+			return !clazz.isAssignableFrom(UnavailablePartType.class);
 		}
 	}
 }

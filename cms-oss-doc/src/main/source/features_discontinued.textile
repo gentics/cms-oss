@@ -319,7 +319,6 @@ user_importexport_permissions
 usergroup_popup
 UTF8
 var_field
-velocity_helplink
 versiondiff
 wikiedit
 win_halt

@@ -10,6 +10,7 @@ import static org.junit.Assert.fail;
 import java.io.InputStream;
 import java.sql.ResultSet;
 
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -21,6 +22,8 @@ import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.testutils.GenericTestUtils;
 
 /**
@@ -29,7 +32,11 @@ import com.gentics.testutils.GenericTestUtils;
  * @author johannes2
  * 
  */
-public class ImageFileEditSandboxTest {
+public class ImageFileEditSandboxTest extends AbstractEditSandboxTest {
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext(false);
@@ -296,6 +303,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByBinaryupdate() throws Exception {
+		migrateVtlPagesToHbsPages();
+		
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -337,6 +346,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByDpiX() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -369,6 +380,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByDpiY() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -401,6 +414,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByHeight() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -431,6 +446,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByWidth() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -462,6 +479,8 @@ public class ImageFileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByBinaryupdate2() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 

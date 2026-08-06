@@ -33,7 +33,6 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
-import com.gentics.contentnode.object.parttype.BreadcrumbPartType;
 import com.gentics.contentnode.object.parttype.ChangeableListPartType;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.DHTMLPartType;
@@ -51,7 +50,6 @@ import com.gentics.contentnode.object.parttype.JavaEditorPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLTextPartType;
 import com.gentics.contentnode.object.parttype.MultiSelectPartType;
-import com.gentics.contentnode.object.parttype.NavigationPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.NormalTextPartType;
 import com.gentics.contentnode.object.parttype.OrderedListPartType;
@@ -66,7 +64,6 @@ import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.object.parttype.TablePartType;
 import com.gentics.contentnode.object.parttype.TemplateTagPartType;
 import com.gentics.contentnode.object.parttype.UnorderedListPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -341,19 +338,6 @@ public class PublishablePageTest {
 			protected void fillContentTag(Page page, ContentTag tag) throws Exception {
 				tag.getValues().iterator().next().setValueText(TEST_CONTENT);
 			}
-		}, new PartTypeTest(ExtensiblePartTypeWrapper.class, VelocityPartType.class, null) {
-			@Override
-			protected void fillContentTag(Page page, ContentTag tag) throws Exception {
-				tag.getValues().getByKeyname("template").setValueText("$page.name");
-			}
-		}, new PartTypeTest(ExtensiblePartTypeWrapper.class, BreadcrumbPartType.class, null) {
-			@Override
-			protected void fillContentTag(Page page, ContentTag tag) throws Exception {
-			}
-		}, new PartTypeTest(ExtensiblePartTypeWrapper.class, NavigationPartType.class, null) {
-			@Override
-			protected void fillContentTag(Page page, ContentTag tag) throws Exception {
-			}
 		}, new PartTypeTest(OverviewPartType.class, "single page") {
 			@Override
 			protected void fillContentTag(Page page, ContentTag tag) throws Exception {
@@ -484,11 +468,7 @@ public class PublishablePageTest {
 	@Before
 	public void setUp() throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		if (test.wrappedClazz != null) {
-			constructId = ContentNodeTestDataUtils.createExtensibleConstruct(node, test.wrappedClazz, CONSTRUCT_KEYWORD, PART_KEYWORD);
-		} else {
-			constructId = ContentNodeTestDataUtils.createConstruct(node, test.clazz, CONSTRUCT_KEYWORD, PART_KEYWORD);
-		}
+		constructId = ContentNodeTestDataUtils.createConstruct(node, test.clazz, CONSTRUCT_KEYWORD, PART_KEYWORD);
 
 		// for selectparttypes, set the datasource id
 		if (SelectPartType.class.isAssignableFrom(test.clazz)) {
@@ -545,11 +525,6 @@ public class PublishablePageTest {
 		protected Class<? extends PartType> clazz;
 
 		/**
-		 * Wrapped Parttype class, if {@link #clazz} is {@link ExtensiblePartTypeWrapper}
-		 */
-		protected Class<? extends ExtensiblePartType> wrappedClazz;
-
-		/**
 		 * Description to be shown in the test overview
 		 */
 		protected String description;
@@ -560,18 +535,7 @@ public class PublishablePageTest {
 		 * @param description description
 		 */
 		protected PartTypeTest(Class<? extends PartType> clazz, String description) {
-			this(clazz, null, description);
-		}
-
-		/**
-		 * Create an instance for testing the clazz with a description
-		 * @param clazz tested class
-		 * @param wrappedClazz wrapped class
-		 * @param description description
-		 */
-		protected PartTypeTest(Class<? extends PartType> clazz, Class<? extends ExtensiblePartType> wrappedClazz, String description) {
 			this.clazz = clazz;
-			this.wrappedClazz = wrappedClazz;
 			this.description = description;
 		}
 
@@ -586,11 +550,7 @@ public class PublishablePageTest {
 		@Override
 		public String toString() {
 			StringBuilder str = new StringBuilder();
-			if (wrappedClazz != null) {
-				str.append(wrappedClazz.getSimpleName());
-			} else {
-				str.append(clazz.getSimpleName());
-			}
+			str.append(clazz.getSimpleName());
 			if (!ObjectTransformer.isEmpty(description)) {
 				str.append(" - ").append(description);
 			}

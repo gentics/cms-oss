@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -30,8 +31,11 @@ import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.PageTagPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.db.SQLExecutor;
 
 public class AbstractPageDirtingTest {
@@ -45,9 +49,7 @@ public class AbstractPageDirtingTest {
 
 	protected static final String URL_PARTNAME = "url";
 
-	protected static final String VTL_PARTNAME = "vtl";
-
-	protected static final String TEMPLATE_PARTNAME = "template";
+	protected static final String HBS_PARTNAME = "hbs";
 
 	protected static final String OVERVIEW_PARTNAME = "ds";
 
@@ -92,19 +94,19 @@ public class AbstractPageDirtingTest {
 	protected int pagetagPageId;
 
 	/**
-	 * ID of the page rendering a vtl list
+	 * ID of the page rendering a hbs list
 	 */
-	protected int vtlListPage;
+	protected int hbsListPage;
 
 	/**
 	 * ID of the page rendering another page after loading it
 	 */
-	protected int vtlLoaderPage;
+	protected int hbsLoaderPage;
 
 	/**
 	 * ID of the page rendering the publishdate of another page after loading it
 	 */
-	protected int vtlPdatePage;
+	protected int hbsPdatePage;
 
 	/**
 	 * ID of the page rendering a manual page overview
@@ -125,6 +127,11 @@ public class AbstractPageDirtingTest {
 	 * List of pages dependent on the publishdate
 	 */
 	protected List<Integer> pdateDependentPages;
+
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	@Before
 	public void setUp() throws Exception {
@@ -175,7 +182,7 @@ public class AbstractPageDirtingTest {
 		targetPageId = createTargetPage(targetFolder, template);
 		Page targetPage = t.getObject(Page.class, targetPageId);
 
-		int vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, VTL_PARTNAME, VTL_PARTNAME);
+		int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, HBS_PARTNAME, HBS_PARTNAME);
 		int overviewConstructId = ContentNodeTestDataUtils.createConstruct(node, OverviewPartType.class, OVERVIEW_PARTNAME, OVERVIEW_PARTNAME);
 
 		Construct c = t.getObject(Construct.class, overviewConstructId, true);
@@ -185,16 +192,16 @@ public class AbstractPageDirtingTest {
 
 		urlPageId = createUrlPage(folder, template, targetPage);
 		pagetagPageId = createPageTagPage(folder, template, targetPage);
-		vtlListPage = createVtlListPage(folder, template, targetPage, vtlConstructId);
-		vtlLoaderPage = createVtlLoaderPage(folder, template, targetPage, vtlConstructId);
-		vtlPdatePage = createVtlPdatePage(folder, template, targetPage, vtlConstructId);
+		hbsListPage = createHbsListPage(folder, template, targetPage, hbsConstructId);
+		hbsLoaderPage = createHbsLoaderPage(folder, template, targetPage, hbsConstructId);
+		hbsPdatePage = createHbsPdatePage(folder, template, targetPage, hbsConstructId);
 		manualOverviewPage = createManualOverviewPage(folder, template, targetPage, overviewConstructId);
 		folderOverviewPage = createFolderOverviewPage(folder, template, targetPage, overviewConstructId);
 
 		// Note: the page rendering the page tag is not dependent on the
 		// targetpage being online
-		dependentPages = Arrays.asList(urlPageId, vtlListPage, vtlLoaderPage, vtlPdatePage, manualOverviewPage, folderOverviewPage);
-		pdateDependentPages = Arrays.asList(vtlPdatePage);
+		dependentPages = Arrays.asList(urlPageId, hbsListPage, hbsLoaderPage, hbsPdatePage, manualOverviewPage, folderOverviewPage);
+		pdateDependentPages = Arrays.asList(hbsPdatePage);
 
 		// run the publish process
 		testContext.publish(initialPublishTime);
@@ -280,7 +287,7 @@ public class AbstractPageDirtingTest {
 	}
 
 	/**
-	 * Create test page that renders a velocity list of pages
+	 * Create test page that renders a handlebars list of pages
 	 *
 	 * @param folder
 	 *            folder
@@ -288,21 +295,22 @@ public class AbstractPageDirtingTest {
 	 *            template
 	 * @param targetPage
 	 *            target page
-	 * @param vtlConstructId
-	 *            velocity construct id
+	 * @param hbsConstructId
+	 *            handlebars construct id
 	 * @return test page id
 	 * @throws NodeException
 	 */
-	protected int createVtlListPage(Folder folder, Template template, Page targetPage, int vtlConstructId) throws NodeException {
+	protected int createHbsListPage(Folder folder, Template template, Page targetPage, int hbsConstructId) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = t.createObject(Page.class);
-		page.setName("Vtl list page");
+		page.setName("Hbs list page");
 		page.setTemplateId(template.getId());
 		page.setFolderId(folder.getId());
-		ContentTag tag = page.getContent().addContentTag(vtlConstructId);
+		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
 		Folder targetFolder = targetPage.getFolder();
-		ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, tag, TEMPLATE_PARTNAME).getValueObject().setValueText(
-				"#set($folder = $cms.imps.loader.getFolder(" + targetFolder.getId() + "))#foreach($page in $folder.pages)#if($page.online)Page [$page.name]\n#end#end");
+		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject().setValueText(
+				"{{#with (gtx_test_folder %d)}}{{#each pages}}{{#if online}}Page [{{name}}]\n{{/if}}{{/each}}{{/with}}".formatted(targetFolder.getId())
+				);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -319,20 +327,22 @@ public class AbstractPageDirtingTest {
 	 *            template
 	 * @param targetPage
 	 *            target page
-	 * @param vtlConstructId
-	 *            velocity construct id
+	 * @param hbsConstructId
+	 *            handlebars construct id
 	 * @return test page id
 	 * @throws NodeException
 	 */
-	protected int createVtlLoaderPage(Folder folder, Template template, Page targetPage, int vtlConstructId) throws NodeException {
+	protected int createHbsLoaderPage(Folder folder, Template template, Page targetPage, int hbsConstructId) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = t.createObject(Page.class);
-		page.setName("Vtl loader page");
+		page.setName("Hbs loader page");
 		page.setTemplateId(template.getId());
 		page.setFolderId(folder.getId());
-		ContentTag tag = page.getContent().addContentTag(vtlConstructId);
-		ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, tag, TEMPLATE_PARTNAME).getValueObject()
-				.setValueText("#set($page = $cms.imps.loader.getPage(" + targetPage.getId() + "))#if($page.online)$page.name#end");
+		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
+		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject()
+				.setValueText(
+						"{{#with (gtx_test_page %d)}}{{#if online}}{{name}}{{/if}}{{/with}}".formatted(targetPage.getId())
+					);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -350,20 +360,22 @@ public class AbstractPageDirtingTest {
 	 *            template
 	 * @param targetPage
 	 *            target page
-	 * @param vtlConstructId
-	 *            velocity construct id
+	 * @param hbsConstructId
+	 *            handlebars construct id
 	 * @return test page id
 	 * @throws NodeException
 	 */
-	protected int createVtlPdatePage(Folder folder, Template template, Page targetPage, int vtlConstructId) throws NodeException {
+	protected int createHbsPdatePage(Folder folder, Template template, Page targetPage, int hbsConstructId) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = t.createObject(Page.class);
-		page.setName("Vtl pdate page");
+		page.setName("Hbs pdate page");
 		page.setTemplateId(template.getId());
 		page.setFolderId(folder.getId());
-		ContentTag tag = page.getContent().addContentTag(vtlConstructId);
-		ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, tag, TEMPLATE_PARTNAME).getValueObject()
-				.setValueText("#set($page = $cms.imps.loader.getPage(" + targetPage.getId() + "))#if($page.online)$page.name - $page.publishtimestamp#end");
+		ContentTag tag = page.getContent().addContentTag(hbsConstructId);
+		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, tag, HBS_PARTNAME).getValueObject()
+				.setValueText(
+						"{{#with (gtx_test_page %d)}}{{#if online}}{{name}} - {{publishtimestamp}}{{/if}}{{/with}}".formatted(targetPage.getId())
+					);
 		page.getContentTag(CONTENT_TAGNAME).getValues().getByKeyname(TEXT_PARTNAME).setValueText("<node " + tag.getName() + ">");
 		page.save();
 		page.publish();
@@ -465,9 +477,9 @@ public class AbstractPageDirtingTest {
 			assertPublishedContent(targetPageId, "Target page: [Target content]");
 			assertPublishedContent(urlPageId, "Url page: [/Content.Node/Target-page.html]");
 			assertPublishedContent(pagetagPageId, "Pagetag page: [Target content]");
-			assertPublishedContent(vtlListPage, "Vtl list page: [Page [Target page]\n]");
-			assertPublishedContent(vtlLoaderPage, "Vtl loader page: [Target page]");
-			assertPublishedContent(vtlPdatePage, "Vtl pdate page: [Target page - " + expectedPdate + "]");
+			assertPublishedContent(hbsListPage, "Hbs list page: [Page [Target page]\n]");
+			assertPublishedContent(hbsLoaderPage, "Hbs loader page: [Target page]");
+			assertPublishedContent(hbsPdatePage, "Hbs pdate page: [Target page - " + expectedPdate + "]");
 			assertPublishedContent(manualOverviewPage, "Manual overview page: [Target page]");
 			assertPublishedContent(folderOverviewPage, "Folder overview page: [Target page]");
 		} else {
@@ -481,9 +493,9 @@ public class AbstractPageDirtingTest {
 																						// pages
 																						// as
 																						// well
-			assertPublishedContent(vtlListPage, "Vtl list page: []");
-			assertPublishedContent(vtlLoaderPage, "Vtl loader page: []");
-			assertPublishedContent(vtlPdatePage, "Vtl pdate page: []");
+			assertPublishedContent(hbsListPage, "Hbs list page: []");
+			assertPublishedContent(hbsLoaderPage, "Hbs loader page: []");
+			assertPublishedContent(hbsPdatePage, "Hbs pdate page: []");
 			assertPublishedContent(manualOverviewPage, "Manual overview page: []");
 			assertPublishedContent(folderOverviewPage, "Folder overview page: []");
 		}

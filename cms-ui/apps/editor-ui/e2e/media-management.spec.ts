@@ -408,7 +408,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -417,7 +417,7 @@ test.describe('Media Management', () => {
             },
         ]);
 
-        let list = findList(page, ITEM_TYPE_IMAGE);
+        const list = findList(page, ITEM_TYPE_IMAGE);
 
         await test.step('Setup image list display', async () => {
             const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
@@ -432,10 +432,10 @@ test.describe('Media Management', () => {
             await clickModalAction(modal, 'confirm');
         });
 
-        let item = await findImage(list, IMAGE.id);
+        const item = await findImage(list, IMAGE.id);
         await item.locator('list-item-details detail-chip.usage').click();
 
-        expect(page.locator('gtx-usage-modal')).toBeVisible();
+        await expect(page.locator('gtx-usage-modal')).toBeVisible();
     });
 
     test('image usage information is clickable in list view', {
@@ -454,7 +454,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -463,7 +463,7 @@ test.describe('Media Management', () => {
             },
         ]);
 
-        let list = findList(page, ITEM_TYPE_IMAGE);
+        const list = findList(page, ITEM_TYPE_IMAGE);
 
         await test.step('Setup display fields', async () => {
             const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
@@ -473,9 +473,9 @@ test.describe('Media Management', () => {
             await clickModalAction(modal, 'confirm');
         });
 
-        let item = await findImage(list, IMAGE.id);
+        const item = await findImage(list, IMAGE.id);
         await item.locator('list-item-details detail-chip.usage').click();
 
-        expect(page.locator('gtx-usage-modal')).toBeVisible();
+        await expect(page.locator('gtx-usage-modal')).toBeVisible();
     });
 });

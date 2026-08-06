@@ -114,6 +114,7 @@ import {
     FormDataListOptions,
     FormDataListResponse,
     FormDownloadInfoResponse,
+    FormExportOptions,
     FormListOptions,
     FormListResponse,
     FormLoadOptions,
@@ -123,12 +124,11 @@ import {
     FormTranslations,
     FormTranslationsLanguagesResponse,
     FormTranslationsResponse,
-    FormTypeConfigirationListOptions,
+    FormTypeConfigurationListOptions,
     FormTypeConfigurationListResponse,
     FormTypeConfigurationResponse,
     FormUnpublishRequest,
     GcmsPermission,
-    GenericItemResponse,
     Group,
     GroupCreateRequest,
     GroupCreateResponse,
@@ -185,6 +185,7 @@ import {
     LinkCheckerUpdateResponse,
     LinkResponse,
     ListResponse,
+    LoadGroupOptions,
     LocalizationInfoOptions,
     LocalizationInfoResponse,
     LocalizationsResponse,
@@ -310,14 +311,14 @@ import {
     RoleUpdateRequest,
     RoleUpdateResponse,
     RotateParameters,
-    ScheduleCreateReqeust,
+    ScheduleCreateRequest,
     ScheduleExecutionListOptions,
     ScheduleExecutionListResponse,
     ScheduleExecutionResponse,
     ScheduleListOptions,
     ScheduleListResponse,
     ScheduleResponse,
-    ScheduleSaveReqeust,
+    ScheduleSaveRequest,
     ScheduleTaskCreateRequest,
     ScheduleTaskListOptions,
     ScheduleTaskListResponse,
@@ -382,11 +383,10 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
-    FormExportOptions,
 } from '@gentics/cms-models';
 import {
     LoginResponse as MeshLoginResponse,
-    NodeResponse as MeshNodeResponse
+    NodeResponse as MeshNodeResponse,
 } from '@gentics/mesh-models';
 import { BasicAPI } from './common';
 
@@ -444,7 +444,9 @@ export interface AbstractConstructAPI extends BasicAPI {
     unlinkFromNode: (body: ConstructNodeLinkRequest) => ConstructNodeLinkResponse;
 }
 
-export interface AbstractConstrctCategoryAPI extends BasicAPI {
+/** @deprecated Use {AbstractConstructCategoryAPI}; Only here to not break it instantly. */
+export type AbstractConstrctCategoryAPI = AbstractConstructCategoryAPI;
+export interface AbstractConstructCategoryAPI extends BasicAPI {
     list: (options?: ConstructCategoryListOptions) => ConstructCategoryListResponse;
     create: (body: ConstructCategoryCreateRequest) => ConstructCategoryCreateResponse;
     get: (id: number | string) => ConstructCategoryLoadResponse;
@@ -699,7 +701,7 @@ export interface AbstractFormAPI extends BasicAPI {
     removeScheduledPublish: (id: number | string) => FormResponse;
     removeScheduledUnpublish: (id: number | string) => FormResponse;
 
-    listConfigurations: (options?: FormTypeConfigirationListOptions) => FormTypeConfigurationListResponse;
+    listConfigurations: (options?: FormTypeConfigurationListOptions) => FormTypeConfigurationListResponse;
     getConfiguration: (type: string) => FormTypeConfigurationResponse;
     assignConfiguration: (type: string, nodeId: number | string) => Response;
     unassignConfiguration: (type: string, nodeId: number | string) => Response;
@@ -753,7 +755,7 @@ export interface AbstractFormAPI extends BasicAPI {
 export interface AbstractGroupAPI extends BasicAPI {
     list: (options?: GroupListOptions) => GroupListResponse;
     create: (id: number | string, body: GroupCreateRequest) => GroupCreateResponse;
-    get: (id: number | string) => GroupResponse;
+    get: (id: number | string, options?: LoadGroupOptions) => GroupResponse;
     update: (id: number | string, body: GroupUpdateRequest) => GroupResponse;
     delete: (id: number | string) => void;
 
@@ -1032,9 +1034,9 @@ export interface AbstractRoleAPI extends BasicAPI {
 
 export interface AbstractSchedulerAPI extends BasicAPI {
     list: (options?: ScheduleListOptions) => ScheduleListResponse;
-    create: (body: ScheduleCreateReqeust) => ScheduleResponse;
+    create: (body: ScheduleCreateRequest) => ScheduleResponse;
     get: (id: number | string) => ScheduleResponse;
-    update: (id: number | string, body: ScheduleSaveReqeust) => ScheduleResponse;
+    update: (id: number | string, body: ScheduleSaveRequest) => ScheduleResponse;
     delete: (id: number | string) => Response;
 
     status: () => SchedulerStatusResponse;
@@ -1148,7 +1150,7 @@ export interface AbstractRootAPI {
     auth: AbstractAuthenticationAPI;
     cluster: AbstractClusterAPI;
     construct: AbstractConstructAPI;
-    constructCategory: AbstractConstrctCategoryAPI;
+    constructCategory: AbstractConstructCategoryAPI;
     contentRepository: AbstractContentRepositoryAPI;
     contentRepositoryFragment: AbstractContentRepositoryFragmentAPI;
     contentStaging: AbstractContentStagingAPI;

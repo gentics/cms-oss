@@ -25,7 +25,7 @@ import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { DependencyType } from './package-check';
 import { EditablePageProps, Page, PageStatus } from './page';
-import { AccessControlledType } from './permissions';
+import { AccessControlledType, GcmsPermission } from './permissions';
 import { PrivilegeFlagName } from './privileges';
 import { Role, RoleAssignment, RolePermissions } from './role';
 import { Schedule } from './schedule';
@@ -730,7 +730,9 @@ export interface FormExportOptions {
     lang?: string;
 }
 
-export interface FormTypeConfigirationListOptions extends BaseListOptionsWithPaging<{
+/** @deprecated Use {FormTypeConfigurationListOptions} instead. */
+export type FormTypeConfigirationListOptions = FormTypeConfigurationListOptions;
+export interface FormTypeConfigurationListOptions extends BaseListOptionsWithPaging<{
     type: string;
     name: string;
     description: string;
@@ -1828,6 +1830,18 @@ export interface GroupTreeOptions extends BaseListOptionsWithSkipCount {
  * Query parameters for `/group/list`
  */
 export interface GroupListOptions extends BaseListOptionsWithPaging<Group>, EmbedListOptions<'group'> {
+    /** should include permission data? */
+    perms?: boolean;
+
+    /** permission filters */
+    permitted?: GcmsPermission | GcmsPermission[];
+}
+
+/**
+ * Query parameters for `/group/{id}`
+ */
+export interface LoadGroupOptions {
+    /** should include permission data? */
     perms?: boolean;
 }
 
@@ -1976,7 +1990,7 @@ export interface ConstructListOptions extends BaseListOptionsWithSkipCount, Embe
     partTypeId?: number | number[];
     search?: string;
     sortby?: 'category' | 'description' | 'keyword' | 'name';
-};
+}
 
 /**
  * Request used for saving a `TagType`.
@@ -2364,9 +2378,13 @@ export type ScheduleTaskSaveRequest = Partial<WritableScheduleTask>;
 
 type WriteableSchedule = Omit<Schedule, 'id' | 'creatorId' | 'cdate' | 'editorId' | 'edate' | 'status' | 'runs' | 'averageTime' | 'lastExecution'>;
 
-export type ScheduleCreateReqeust = WriteableSchedule;
+/** @deprecated Use {ScheduleCreateRequest} instead */
+export type ScheduleCreateReqeust = ScheduleCreateRequest;
+export type ScheduleCreateRequest = WriteableSchedule;
 
-export type ScheduleSaveReqeust = Partial<WriteableSchedule>;
+/** @deprecated Use {ScheduleSaveRequest} */
+export type ScheduleSaveReqeust = ScheduleSaveRequest;
+export type ScheduleSaveRequest = Partial<WriteableSchedule>;
 
 // CONTENT STAGING /////////////////////////////////////////////////////////////////////////////////////////////////////
 

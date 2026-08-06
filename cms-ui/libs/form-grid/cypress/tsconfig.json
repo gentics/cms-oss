@@ -6,7 +6,19 @@
         "outDir": "../../dist/out-tsc",
         "module": "commonjs",
         "types": ["cypress", "node"],
-        "sourceMap": false
+        "sourceMap": false,
+        "strict": false,
+        "noImplicitOverride": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": true,
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": false,
+        "strictInputAccessModifiers": false,
+        "strictTemplates": false,
+        "compilationMode": "partial"
     },
     "include": [
         "**/*.ts",

@@ -8,10 +8,11 @@
         "test": {
             "executor": "@nx/jest:jest",
             "outputs": [
-                "{projectRoot}/test-output/jest"
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
             ],
             "options": {
-                "jestConfig": "{projectRoot}/jest.config.cts"
+                "jestConfig": "{projectRoot}/jest.config.ts"
             },
             "configurations": {
                 "watch": {
@@ -21,7 +22,7 @@
                     "color": false,
                     "colors": false,
                     "ci": true,
-                    "jestConfig": "{projectRoot}/jest.config.ci.cts"
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
                 }
             }
         }

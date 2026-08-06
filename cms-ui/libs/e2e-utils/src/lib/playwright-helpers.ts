@@ -14,6 +14,8 @@ import {
     ENV_E2E_APP_PATH,
     ENV_E2E_KEYCLOAK_URL,
 } from './config';
+import { createClient } from './importer';
+import { ClickOptions } from './playwright-types';
 import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
@@ -287,20 +289,43 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
     });
 }
 
+/**
+ * Helper function to find the source-element for further chaining.
+ * Usually used in other functions, to get a locator you know the node-type of.
+ * @example ```ts
+ * // Helper function to click our special button
+ * async function clickSpecialButton(source: Page | Locator): Promise<void> {
+ *      const btn = await getSourceLocator(source, 'my-cool-button');
+ *      await btn.first().locator('.button-container a').click();
+ * }
+ *
+ * // Would click the first button it would find
+ * await clickSpecialButton(page);
+ * // Would click the first button in the header
+ * await clickSpecialButton(page.locator('header'));
+ * // Would do the exact same as the one above
+ * await clickSpecialButton(page.locator('header my-cool-button'));
+ * // Would click our especially cool button
+ * await clickSpecialButton(page.locator('my-cool-button.very-cool'));
+ * ```
+ * @param source Source element from where it should search from
+ * @param nodeName The nodeName of source element we search for
+ * @returns A Locator which points to the searched nodeName element
+ */
 export async function getSourceLocator(source: Page | Locator, nodeName: string): Promise<Locator> {
-    if (
-        typeof (source as Page).reload === 'function'
-        || await (source as Locator).evaluate(
-            (el, args) => el == null
-              || typeof el !== 'object'
-              || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase(),
-            { nodeName },
-        )
-    ) {
+    // Determine if it's a page by checking if it has the reload function
+    if (typeof (source as Page).reload === 'function') {
         return source.locator(nodeName);
     }
 
-    return source as Locator;
+    // Check if the source is already the source we are looking for.
+    const sourceIsOtherType = await (source as Locator).evaluate((el, args) => {
+        return el == null
+          || typeof el !== 'object'
+          || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase();
+    }, { nodeName });
+
+    return sourceIsOtherType ? source.locator(nodeName) : source as Locator;
 }
 
 /**
@@ -510,4 +535,24 @@ export async function setI18nGroupLanguage(group: Locator, language: number): Pr
     }
 
     await langTab.click();
+}
+
+export async function createClientFromPage(page: Page): Promise<GCMSRestClient> {
+    const client = await createClient({
+        context: page.request,
+        isPageContext: true,
+    });
+    const sid: string = await page.evaluate(() => window.localStorage.getItem('GCMSUI_sid'));
+    client.sid = parseInt(JSON.parse(sid), 10);
+
+    return client;
+}
+
+export async function uploadFileFromInput(page: Page, fileInput: Locator, files: string[], clickOptions?: ClickOptions): Promise<void> {
+    const fileChooserPromise = page.waitForEvent('filechooser');
+
+    await fileInput.click(clickOptions);
+    const fileChooser = await fileChooserPromise;
+
+    await fileChooser.setFiles(files);
 }

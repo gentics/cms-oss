@@ -95,7 +95,8 @@
         "link_checker_edit": "Bearbeiten",
         "link_checker_delete": "Entfernen",
         "link_checker_no_content": "Keine defekten Links vorhanden",
-        "constructs_empty": "Keine TagTypen einsetzbar/verfügbar"
+        "constructs_empty": "Keine TagTypen einsetzbar/verfügbar",
+        "clear_color": "Farbe entfernen"
     },
     "editor": {
         "alert_center_title": "Warnungszentrale",

@@ -104,6 +104,25 @@
 							<overWriteSnapshots>true</overWriteSnapshots>
 						</configuration>
 					</execution>
+					<execution>
+						<?m2e ignore?>
+						<id>copy-otel-javaagent</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>io.opentelemetry.javaagent</groupId>
+									<artifactId>opentelemetry-javaagent</artifactId>
+									<version>${otel.javaagent.version}</version>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+									<destFileName>opentelemetry-javaagent.jar</destFileName>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -267,6 +286,10 @@
 			<artifactId>cms-ui</artifactId>
 			<type>zip</type>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics</groupId>
+			<artifactId>cms-monitoring</artifactId>
 		</dependency>
 
 		<!-- Test Dependencies -->

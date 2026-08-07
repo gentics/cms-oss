@@ -31,7 +31,6 @@ import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, gene
 import {
     createBlacklistValidator,
     createI18nRequiredValidator,
-    JSON_VALIDATOR,
 } from '../../../../common';
 
 export interface TagPartPropertiesFormData {
@@ -270,7 +269,7 @@ export class ConstructPartPropertiesComponent
             defaultProperty: new FormControl(null),
 
             /** JSON schema (for JSON type only) */
-            jsonSchema: new FormControl(null, JSON_VALIDATOR),
+            jsonSchema: new FormControl(null),
             // ///// TYPE-DEPENDANT:
 
             // ///// ONLY for HTML/Text inputs

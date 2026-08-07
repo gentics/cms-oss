@@ -3,32 +3,6 @@ import { isEqual } from 'lodash-es';
 import { combineLatest, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
-export const JSON_VALIDATOR: ValidatorFn = (control) => {
-    const value = control.value;
-    control.hasError('errorIsInvalidJson');
-    const validationError = { errorIsInvalidJson: true };
-
-    // if input is empty, there is no error
-    if (!value) {
-        return null;
-    }
-
-    if (typeof value === 'string') {
-        let parsed: object;
-        try {
-            parsed = JSON.parse(value);
-            if (parsed != null && typeof parsed === 'object') {
-                return null;
-            }
-        } catch (error) {
-            return validationError;
-        }
-    }
-
-    // if in doubt, return error
-    return validationError;
-};
-
 /**
  * @returns An observable that emits the validity status of the specified `AbstractControl`.
  */

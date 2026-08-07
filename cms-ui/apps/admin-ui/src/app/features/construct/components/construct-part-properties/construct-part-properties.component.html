@@ -144,11 +144,11 @@
         }
         <!-- jsonSchema -->
         @if (form.controls.jsonSchema.enabled) {
-          <gtx-textarea
+          <gtx-json-input
             [label]="'construct.jsonSchema' | gtxI18n"
             [type]="TagPartTypePropertyType[form?.value?.typeId]"
             formControlName="jsonSchema"
-          ></gtx-textarea>
+          ></gtx-json-input>
         }
       </div>
     </div>

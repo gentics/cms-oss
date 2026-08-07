@@ -26,7 +26,7 @@ export enum TagmapEntryDisplayFields {
     selector: 'gtx-create-update-tagmap-entry-modal',
     templateUrl: './create-update-tagmapentry-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntryBO<Normalized>> implements OnInit {
 
@@ -85,6 +85,7 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             noIndex: this.value?.noIndex ?? null,
             elasticsearch: this.value?.elasticsearch ?? null,
             micronodeFilter: this.value?.micronodeFilter ?? '',
+            jsonSchemaFilter: this.value?.jsonSchemaFilter ?? '',
             fragmentName: this.value?.fragmentName ?? '',
         };
         // instantiate form

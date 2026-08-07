@@ -71,6 +71,14 @@
     @if (form.get('allow').enabled) {
       <div class="row">
         @switch (effectiveType) {
+          @case (FieldType.JSON) {
+            <gtx-string-list
+              class="columns small-12"
+              [label]="'mesh.allow' | gtxI18n"
+              [addLabel]="'mesh.allow_addString' | gtxI18n"
+              formControlName="allow"
+            ></gtx-string-list>
+          }
           @case (FieldType.NODE) {
             <gtx-select
               class="columns small-12"

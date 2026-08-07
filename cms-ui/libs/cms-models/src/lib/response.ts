@@ -52,6 +52,7 @@ import { Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
+import { ApiToken, ApiTokenData } from './api-token';
 
 // GENERIC RESPONSE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1533,3 +1534,8 @@ export interface KeycloakConfiguration {
     'resource': string;
     'showSSOButton': boolean;
 }
+
+// API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ApiTokenResponse extends Response, ApiTokenData {}
+export interface ApiTokenCreateResponse extends Response, ApiToken {}

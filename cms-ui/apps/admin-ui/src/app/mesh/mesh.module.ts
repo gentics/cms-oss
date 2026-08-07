@@ -5,7 +5,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
     CopyTokenModal,
-    CopyValueComponent,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,
@@ -75,7 +74,6 @@ import {
 
 const COMPONENTS: Type<any>[] = [
     CopyTokenModal,
-    CopyValueComponent,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,

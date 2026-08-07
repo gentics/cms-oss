@@ -1,0 +1,16 @@
+:host {
+    .success-message {
+        padding-top: 10px;
+        text-align: center;
+
+        .copy-icon {
+            vertical-align: bottom;
+            cursor: pointer;
+        }
+    }
+
+    gtx-button.loading {
+        pointer-events: none;
+        opacity: 0.3;
+    }
+}

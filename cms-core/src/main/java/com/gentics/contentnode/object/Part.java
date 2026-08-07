@@ -70,7 +70,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 	public static final int FILEUPLOAD = 38;
 	public static final int FOLDERUPLOAD = 39;
 	public static final int NODE = 40;
-	
+	public static final int HANDLEBARS = 43;
+	public static final int GROOVY = 44;
+
 	/**
 	 * The ttype of the part object.
 	 */

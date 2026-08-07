@@ -36,7 +36,7 @@ import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
-import { ApiToken } from './api-token';
+import { ApiToken, EditableApiToken } from './api-token';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -2511,9 +2511,6 @@ export interface ApiTokenListOptions extends BaseListOptionsWithPaging<ApiToken>
 
 /**
  * Request object used to add an api token for the
- * `/adnim/token` endpoint.
+ * `/admin/token` endpoint.
  */
-export interface ApiTokenCreateRequest {
-    name: string;
-    expires?: number;
-}
+export interface ApiTokenCreateRequest extends EditableApiToken {}

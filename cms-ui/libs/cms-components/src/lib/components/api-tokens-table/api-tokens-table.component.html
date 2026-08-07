@@ -16,15 +16,27 @@
   <gtx-table
       [selectAllType]="TableSelectAllType.PAGE"
       [selectable]="true"
-      [columns]="apiTokenColumns"
-      [rows]="apiTokenRows()"
-      [actions]="apiTokenActions"
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
       [(selected)]="apiTokenSelection"
       (selectedChange)="updateSelection($event)"
+      [page]="page()"
+      [totalCount]="totalCount()"
+      [disabled]="false"
+      [perPage]="perPage"
+      [sortBy]="sortBy()"
+      [sortOrder]="sortOrder()"
       [renderers]="{
+          cdate: dateRenderer,
+          expires: dateRenderer,
+          lastUsed: dateRenderer,
           valid: boolIconRenderer,
           inherited: boolIconRenderer
       }"
+      (pageChange)="changePage($event)"
+      (sortOrderChange)="updateSortOrder($event)"
+      (sortByChange)="updateSortBy($event)"
       (actionClick)="handleAction($event)"
   ></gtx-table>
 </div>
@@ -33,4 +45,9 @@
     class="gtx-table-cell-boolean"
     [ngClass]="'gtx-table-cell-boolean-' + value"
   >{{ value == null ? '' : (value ? 'check' : 'close') }}</icon>
+</ng-template>
+<ng-template #dateRenderer let-value="value">
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDate:'date' }}
+  </span>
 </ng-template>

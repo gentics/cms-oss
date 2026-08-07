@@ -1,12 +1,16 @@
 import {
     ChangeDetectionStrategy,
     Component,
+    ErrorHandler,
     EventEmitter,
     Input,
     Output,
 } from '@angular/core';
+
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { I18nLanguage, Raw, User } from '@gentics/cms-models';
+import { ModalService } from '@gentics/ui-core';
+import { ApiTokensModalComponent } from '../api-tokens-modal/api-tokens-modal.component';
 
 /**
  * The right-hand side menu for user information and settings.
@@ -51,10 +55,10 @@ import { I18nLanguage, Raw, User } from '@gentics/cms-models';
  */
 @Component({
     selector: 'gtx-user-menu',
-    templateUrl: './user-menu.tpl.html',
+    templateUrl: './user-menu.component.html',
     styleUrls: ['./user-menu.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class UserMenuComponent {
     /** If TRUE, this user menu is rendered as open. */
@@ -73,8 +77,11 @@ export class UserMenuComponent {
     @Output() toggle = new EventEmitter<boolean>();
     /** On event user clicks showPasswordModal button. */
     @Output() showPasswordModal = new EventEmitter<void>();
-    /** On event user clicks showPasswordModal button. */
-    @Output() showApiTokensModal = new EventEmitter<void>();
+
+    constructor(
+        private modalService: ModalService,
+        private errorHandler: ErrorHandler,
+    ) {}
 
     getUserName(): string {
         return this.user ? this.user.firstName + ' ' + this.user.lastName : '';
@@ -93,6 +100,8 @@ export class UserMenuComponent {
     }
 
     showApiTokensModalClicked(): void {
-        this.showApiTokensModal.emit();
+        this.modalService.fromComponent(ApiTokensModalComponent)
+            .then((modal) => modal.open())
+            .catch(this.errorHandler.handleError);
     }
 }

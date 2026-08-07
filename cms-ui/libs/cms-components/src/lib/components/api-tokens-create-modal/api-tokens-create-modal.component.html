@@ -1,22 +1,21 @@
+<gtx-api-token-properties [formControl]="control" />
 <div class="modal-content">
   @if(createdToken() !== null) {
     <h2>{{ 'api_token.token_created' | gtxI18n }}</h2>
     <div class="success-message">
       <p>{{ 'api_token.token_store' | gtxI18n }}</p>
-      <p>
-        <gtx-mesh-copy-value
-            class="copy-api-token"
-            [value]="createdToken()"
-            [animate]="true"
-        />
-      </p>
+      <gtx-copy-value
+          class="copy-api-token"
+          [value]="createdToken()"
+          [animate]="true"
+      />
     </div>
   } @else {
     <h2>{{ 'api_token.new' | gtxI18n }}</h2>
     <gtx-api-tokens-create-form
       [apiTokenNames]="apiTokenNames"
-      (onCreated)="submitCallback($event)"
-      (onValidChange)="isFormVaid($event)"
+      [control]="control"
+      (validChange)="isFormVaid($event)"
     ></gtx-api-tokens-create-form>
   }
 </div>
@@ -24,9 +23,9 @@
   @if(createdToken() === null) {
     <gtx-button
       type="primary"
-      [class.loading]="isLoading"
-      [disabled]="!formvalid"
+      [disabled]="!formvalid || loading()"
       (click)="saveForm()"
+      data-action="confirm"
       >
       {{ 'modal.create_button' | gtxI18n }}
     </gtx-button>

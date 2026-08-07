@@ -52,6 +52,7 @@ import { Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
+import { ApiToken, ApiTokenData } from './api-token';
 
 // GENERIC RESPONSE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1536,25 +1537,5 @@ export interface KeycloakConfiguration {
 
 // API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface ApiTokenListResponse extends ListResponse<ApiTokenResponse> { }
-
-export interface ApiTokenResponse extends Response {
-    token: string;
-    id: number;
-    userId: number;
-    name:string;
-    cdate: number;
-    expires: number;
-    lastUsed: number;
-    valid: boolean;
-}
-
-export interface ApiTokenData {
-    id: number;
-    userId: number;
-    name:string;
-    cdate: string;
-    expires: string;
-    lastUsed: string;
-    valid: boolean;
-}
+export interface ApiTokenResponse extends Response, ApiTokenData {}
+export interface ApiTokenCreateResponse extends Response, ApiToken {}

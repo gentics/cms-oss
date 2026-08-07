@@ -8,7 +8,6 @@ import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
     ApiTokensCreateFormComponent,
     ApiTokensCreateModalComponent,
-    ApiTokensDeleteModalComponent,
     ApiTokensModalComponent,
     ApiTokensTableComponent,
     AppVersionLabelComponent,
@@ -44,7 +43,6 @@ import {
     ValuesPipe,
 } from './pipes';
 import {
-    ApiTokenHandlerService,
     I18nDatePickerFormatService,
     I18nNotificationService,
     I18nRelativeDateService,
@@ -70,9 +68,8 @@ const COMPONENTS: any[] = [
     ApiTokensModalComponent,
     ApiTokensTableComponent,
     ApiTokensCreateModalComponent,
-    ApiTokensDeleteModalComponent,
     ApiTokensCreateFormComponent,
-    CopyValueComponent
+    CopyValueComponent,
 ];
 
 const DIRECTIVES: Type<any>[] = [
@@ -105,7 +102,6 @@ const PROVIDERS: Provider[] = [
     I18nDatePickerFormatService,
     I18nService,
     WindowRef,
-    ApiTokenHandlerService,
     ...PIPES,
 ];
 

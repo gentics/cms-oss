@@ -1,30 +1,24 @@
-
 /**
  * An Api Token object as returned from the /admin/token endpoint:
  */
 
-export interface ApiTokenBo {
-    tmpId: string;
-    name: string;
-    cdate: string;
-    expires: string;
-    lastUsed: string;
-    valid: boolean;
-}
-
 export interface ApiToken {
     token: string;
-    data: TokenData
+    data: ApiTokenData;
 }
 
-interface TokenData {
+export interface ApiTokenData {
+    token: string;
     id: number;
     userId: number;
     name: string;
-    cdate: string;
-    expires: string;
-    lastUsed: string;
+    cdate: number;
+    expires: number;
+    lastUsed: number;
     valid: boolean;
 }
 
-export type EditableApiTokenPackage = Pick<TokenData, 'name' | 'expires'>;
+export type EditableApiToken = {
+    name: ApiTokenData['name'];
+    expires?: string;
+};

@@ -1,4 +1,4 @@
-{{- if and .Values.cms.backup.persistence.enabled (not .Values.cms.backup.persistence.existingClaim) }}
+{{- if and .Values.cms.backup.enabled .Values.cms.backup.persistence.enabled (not .Values.cms.backup.persistence.existingClaim) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:

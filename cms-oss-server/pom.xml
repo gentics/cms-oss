@@ -34,10 +34,11 @@
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
+				<filtering>true</filtering>
 				<excludes>
 					<exclude>**/build.txt</exclude>
 					<exclude>**/cms.build.properties</exclude>
+					<exclude>**/openapiconfig.yaml</exclude>
 				</excludes>
 			</resource>
 		</resources>
@@ -109,6 +110,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.6.1</version>
 				<executions>
 					<!-- Run shade goal on package phase -->
 					<execution>
@@ -321,6 +323,37 @@
 			<artifactId>cms-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>
+		</dependency>		
+		<!-- Swagger / OpenAPI -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-models</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>jakarta.validation</groupId>
+		    <artifactId>jakarta.validation-api</artifactId>
+		    <scope>test</scope>
 		</dependency>
 	</dependencies>
 

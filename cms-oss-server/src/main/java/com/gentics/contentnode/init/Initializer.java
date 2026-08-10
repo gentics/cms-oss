@@ -189,12 +189,6 @@ public class Initializer {
 			throw new RuntimeException(e);
 		}
 
-		try {
-			NodeConfigRuntimeConfiguration.initVelocity();
-		} catch (Exception e) {
-			throw new RuntimeException("Error while initializing Velocity Engine", e);
-		}
-
 		// this is optional, but we rather preload the validation API on startup
 		// than waiting for the first user-input to happen. Loading the default
 		// configuration takes a while (the AntiSamy policy in particular).

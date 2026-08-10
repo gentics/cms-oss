@@ -37,7 +37,7 @@ h4. Single Root Tags
 
 Use single root tags for your constructs. This will allow Gentics CMS to re-use your root tags as container elements. Make sure that *there are no whitespaces* before or after your root tag. It is *possible, yet discouraged to add your own ID attributes to the root tags*: along with making sure that those IDs are unique on the page, one must remember that the root tag is changed in the terms of attributes (including an ID) to make it recognizable by the tagging mechanism, and having a custom ID can trigger unwanted side effects while adding/editing/removing the tag in an editor. If it is possible, please eliminate adding own IDs in the root tags, by, for example, wrapping the tag with an ID with another empty tag (making it a root).
 
-WARNING: No whitespace also means: no line breaks! Avoid line breaks in velocity implementations by putting velocity comments at the end of the line (##).
+WARNING: No whitespace also means: no line breaks! Avoid line breaks in Handlebars implementations.
 
 <html filename="Bad example">
 <!-- your tag should *NOT* render that way -->
@@ -202,7 +202,6 @@ The Part Type names are simplified by first removing the characters '(', ')' and
 The following table will show, how Part Type names are simplified:
 
 |_.Name                 |_.Class              |
-| Breadcrumb            | breadcrumb          |
 | Checkbox              | checkbox            |
 | Datasource            | datasource          |
 | DHTML Editor          | dhtml_editor        |
@@ -216,7 +215,6 @@ The following table will show, how Part Type names are simplified:
 | List                  | list                |
 | List (ordered)        | list_ordered        |
 | List (unordered)      | list_unordered      |
-| Navigation            | navigation          |
 | Overview              | overview            |
 | Select (image-height) | select_image_height |
 | Select (image-width)  | select_image_width  |
@@ -235,6 +233,5 @@ The following table will show, how Part Type names are simplified:
 | URL (folder)          | url_folder          |
 | URL (image)           | url_image           |
 | URL (page)            | url_page            |
-| Velocity              | velocity            |
 
 For the sake of completeness, this table contains +all+ existing Part Types, although most of them can not be used as editables.

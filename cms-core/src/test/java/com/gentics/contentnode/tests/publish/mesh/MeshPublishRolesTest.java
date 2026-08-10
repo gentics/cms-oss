@@ -50,14 +50,12 @@ import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.Value;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.MultiSelectPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
@@ -69,7 +67,6 @@ import com.gentics.contentnode.rest.model.response.MeshRolesResponse;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.Expected;
@@ -106,10 +103,6 @@ public class MeshPublishRolesTest {
 	 * Mesh roles
 	 */
 	public final static List<String> ROLES = Arrays.asList("role_a", "role_b", "role_c");
-
-	private final static String VTL_OBJECT_TAG_KEYWORD = "vtlroles";
-	private final static String VTL_PART_KEYWORD = "vtl";
-	private final static String VTL_ROLES_FIELD = "roles";
 
 	@ClassRule
 	public static DBTestContext context = new DBTestContext();
@@ -172,10 +165,7 @@ public class MeshPublishRolesTest {
 			}, false));
 		}));
 
-		int velocityRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createVelocityConstruct(node, "roleConstruct", VTL_PART_KEYWORD));
-
 		rolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, rolesConstruct.getId(), "Roles", "roles");
-		velocityRolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, velocityRolesConstructId, "VTLRoles", VTL_OBJECT_TAG_KEYWORD);
 	}
 
 	@Before
@@ -713,133 +703,6 @@ public class MeshPublishRolesTest {
 	}
 
 	/**
-	 * Test the permissions on a folder when using values from a Velocity context.
-	 * @throws Exception
-	 */
-	@Test
-	public void testFolderPermissionsWithoutDs() throws Exception {
-		Folder folder = Trx.supply(() -> createFolder(node.getFolder(), "Folder"));
-
-		setVelocityPermissionProperty();
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_b");
-
-		Trx.operate(() -> update(folder, f -> setVelocityRoles(f, "role_a", "role_c")));
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "role_a", "role_c");
-	}
-
-	/**
-	 * Test the permissions on a page when using values from a Velocity context.
-	 * @throws Exception
-	 */
-	@Test
-	public void testPagePermissionsWithoutDs() throws Exception {
-		Folder folder = Trx.supply(() -> createFolder(node.getFolder(), "Folder"));
-		Page page = Trx.supply(() -> update(createPage(folder, template, "testpage"), Page::publish));
-
-		setVelocityPermissionProperty();
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_b");
-
-		update(folder, f -> setVelocityRoles(f, "role_a", "role_c"));
-		update(page, Page::publish);
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "role_a", "role_c");
-	}
-
-	/**
-	 * Test the permissions on a file when using values from a Velocity context.
-	 * @throws Exception
-	 */
-	@Test
-	public void testFilePermissionsWithoutDs() throws Exception {
-		Folder folder = Trx.supply(() -> createFolder(node.getFolder(), "Folder"));
-		File file = Trx.supply(() -> createFile(folder, "file.txt", "File contents".getBytes()));
-
-		setVelocityPermissionProperty();
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// Assert that the page has the default permission set.
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_b");
-
-		Trx.operate(() -> update(folder, f -> setVelocityRoles(f, "role_a", "role_c")));
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "role_a", "role_c");
-	}
-
-
-	/**
-	 * Test that permissions on project are set
-	 * @throws Exception
-	 */
-	@Test
-	public void testProjectPermissionsWithoutDs() throws Exception {
-		setVelocityPermissionProperty();
-		setVelocityRoles(node.getFolder(), "anonymous", "role_b");
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "anonymous", "role_b");
-		List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
-		Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
-		assertThat(optionalDefaultBranch).isPresent();
-		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "anonymous", "role_b");
-	}
-
-	/**
-	 * Test permissions on root node
-	 * @throws Exception
-	 */
-	@Test
-	public void testProjectRootNodePermissionsWithoutDs() throws Exception {
-		setVelocityPermissionProperty();
-		setVelocityRoles(node.getFolder(), "anonymous", "role_b");
-
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
-		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "anonymous", "role_b");
-	}
-
-	/**
 	 * Get the expected datasource entries for the roles datasource (only keys and values filled)
 	 * @return list of expected datasource entries
 	 * @throws NodeException
@@ -879,42 +742,6 @@ public class MeshPublishRolesTest {
 			return e1.getKey().compareTo(e2.getKey());
 		});
 		return entries;
-	}
-
-	/**
-	 * The the {@link ContentRepository#setPermissionProperty(String) permission property} of the Mesh Contentrepository
-	 * to the {@code roles} field in the Velocity context of the object tag.
-	 */
-	protected void setVelocityPermissionProperty() throws NodeException {
-		Trx.operate(t -> {
-			ContentRepository cr = t.getObject(ContentRepository.class, crId, true);
-
-			cr.setPermissionProperty(String.format("object.%s.parts.%s.%s", VTL_OBJECT_TAG_KEYWORD, VTL_PART_KEYWORD, VTL_ROLES_FIELD));
-			cr.save();
-		});
-	}
-
-	/**
-	 * Set the given roles via the velocity object tag.
-	 *
-	 * @param container The container to set the roles for.
-	 * @param roles The roles to set.
-	 */
-	protected void setVelocityRoles(ObjectTagContainer container, String... roles) throws NodeException {
-		ObjectTag objTag = container.getObjectTag(VTL_OBJECT_TAG_KEYWORD);
-		StringBuilder valueText = new StringBuilder(String.format("#set($%s = [])\n", VTL_ROLES_FIELD));
-
-		for (String role : roles) {
-			valueText.append(String.format("$%s.add(\"%s\")\n", VTL_ROLES_FIELD, role));
-		}
-
-		update(objTag, tag -> {
-			tag.setEnabled(true);
-
-			getPartType(LongHTMLPartType.class, tag, ContentNodeTestDataUtils.TEMPLATE_PARTNAME)
-				.getValueObject()
-				.setValueText(valueText.toString());
-		});
 	}
 
 	/**

@@ -1,8 +1,11 @@
 package com.gentics.contentnode.tests.publish.wrapper;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+
+import java.io.InputStream;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -19,6 +22,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.wrapper.PublishablePage;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -41,7 +45,7 @@ public class PublishablePageRenderTest {
 	 */
 	private static Node node;
 
-	private static int vtlConstructId;
+	private static int hbsConstructId;
 
 	private static Template template;
 
@@ -62,7 +66,7 @@ public class PublishablePageRenderTest {
 		renderType.setFrontEnd(true);
 
 		node = ContentNodeTestDataUtils.createNode("Test", "test", "/", null, false, false);
-		vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, "velocity", "vtl");
+		hbsConstructId = createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
 
 		de = t.createObject(ContentLanguage.class);
 		de.setCode("de");
@@ -84,7 +88,7 @@ public class PublishablePageRenderTest {
 		template.setSource("<node " + TEMPLATE_TAG_NAME + ">");
 		template.getFolders().add(node.getFolder());
 		TemplateTag templateTag = t.createObject(TemplateTag.class);
-		templateTag.setConstructId(vtlConstructId);
+		templateTag.setConstructId(hbsConstructId);
 		templateTag.setEnabled(true);
 		templateTag.setName(TEMPLATE_TAG_NAME);
 		templateTag.setPublic(true);
@@ -100,8 +104,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderPageProperties() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("page_props.vm"), "UTF-8");
-		assertRender(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRender(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -110,8 +116,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderTags() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("tags.vm"), "UTF-8");
-		assertRender(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRender(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -120,16 +128,18 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderLanguageVariants() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("language_variants.vm"), "UTF-8");
-		Page page = createVelocityPage(vtl);
-		Page englishVariant = (Page)page.copy();
-		englishVariant.setContentsetId(page.getContentsetId());
-		englishVariant.setLanguage(en);
-		englishVariant.save();
-		TransactionManager.getCurrentTransaction().commit(false);
+		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
+			Page englishVariant = (Page)page.copy();
+			englishVariant.setContentsetId(page.getContentsetId());
+			englishVariant.setLanguage(en);
+			englishVariant.save();
+			TransactionManager.getCurrentTransaction().commit(false);
 
-		assertRender(page);
-		assertRender(englishVariant);
+			assertRender(page);
+			assertRender(englishVariant);
+		}
 	}
 
 	/**
@@ -138,8 +148,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderPagePropertiesProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("page_props.vm"), "UTF-8");
-		assertRenderProxy(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderProxy(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -148,8 +160,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderTagsProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("tags.vm"), "UTF-8");
-		assertRenderProxy(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderProxy(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -158,16 +172,18 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderLanguageVariantsProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("language_variants.vm"), "UTF-8");
-		Page page = createVelocityPage(vtl);
-		Page englishVariant = (Page)page.copy();
-		englishVariant.setContentsetId(page.getContentsetId());
-		englishVariant.setLanguage(en);
-		englishVariant.save();
-		TransactionManager.getCurrentTransaction().commit(false);
+		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
+			Page englishVariant = (Page)page.copy();
+			englishVariant.setContentsetId(page.getContentsetId());
+			englishVariant.setLanguage(en);
+			englishVariant.save();
+			TransactionManager.getCurrentTransaction().commit(false);
 
-		assertRenderProxy(page);
-		assertRenderProxy(englishVariant);
+			assertRenderProxy(page);
+			assertRenderProxy(englishVariant);
+		}
 	}
 
 	/**
@@ -176,8 +192,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderPagePropertiesPublishableProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("page_props.vm"), "UTF-8");
-		assertRenderPublishablePageProxy(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("page_props.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderPublishablePageProxy(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -186,8 +204,10 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderTagsPublishableProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("tags.vm"), "UTF-8");
-		assertRenderPublishablePageProxy(createVelocityPage(vtl));
+		try (InputStream in = getClass().getResourceAsStream("tags.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			assertRenderPublishablePageProxy(createHandlebarsPage(hbs));
+		}
 	}
 
 	/**
@@ -196,32 +216,34 @@ public class PublishablePageRenderTest {
 	 */
 	@Test
 	public void testRenderLanguageVariantsPublishableProxy() throws Exception {
-		String vtl = FileUtil.stream2String(getClass().getResourceAsStream("language_variants.vm"), "UTF-8");
-		Page page = createVelocityPage(vtl);
-		Page englishVariant = (Page)page.copy();
-		englishVariant.setContentsetId(page.getContentsetId());
-		englishVariant.setLanguage(en);
-		englishVariant.save();
-		TransactionManager.getCurrentTransaction().commit(false);
+		try (InputStream in = getClass().getResourceAsStream("language_variants.hbs")) {
+			String hbs = FileUtil.stream2String(in, "UTF-8");
+			Page page = createHandlebarsPage(hbs);
+			Page englishVariant = (Page)page.copy();
+			englishVariant.setContentsetId(page.getContentsetId());
+			englishVariant.setLanguage(en);
+			englishVariant.save();
+			TransactionManager.getCurrentTransaction().commit(false);
 
-		assertRenderPublishablePageProxy(page);
-		assertRenderPublishablePageProxy(englishVariant);
+			assertRenderPublishablePageProxy(page);
+			assertRenderPublishablePageProxy(englishVariant);
+		}
 	}
 
 	/**
-	 * Create a page rendering the given vtl code
-	 * @param vtl vtl code
+	 * Create a page rendering the given hbs code
+	 * @param hbs hbs code
 	 * @return page instance
 	 * @throws Exception
 	 */
-	protected Page createVelocityPage(String vtl) throws Exception {
+	protected Page createHandlebarsPage(String hbs) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Page page = t.createObject(Page.class);
 		page.setDescription("Rendering test page");
 		page.setTemplateId(template.getId());
 		page.setFolderId(node.getFolder().getId());
 		page.setLanguage(de);
-		page.getContentTag(TEMPLATE_TAG_NAME).getValues().getByKeyname("template").setValueText(vtl);
+		page.getContentTag(TEMPLATE_TAG_NAME).getValues().getByKeyname("hbs").setValueText(hbs);
 		page.save();
 		page.publish();
 		t.commit(false);

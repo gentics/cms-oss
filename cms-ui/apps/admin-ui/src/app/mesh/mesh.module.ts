@@ -1,8 +1,8 @@
-import { SharedModule } from '@admin-ui/shared/shared.module';
 import { CommonModule } from '@angular/common';
 import { NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { SharedModule } from '../shared/shared.module';
 import {
     CopyTokenModal,
     CopyValueComponent,
@@ -22,6 +22,7 @@ import {
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenTableComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
@@ -61,6 +62,7 @@ import {
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    MeshUserTokenTableLoaderService,
     MicroschemaHandlerService,
     MicroschemaTableLoaderService,
     ProjectHandlerService,
@@ -92,6 +94,7 @@ const COMPONENTS: Type<any>[] = [
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenTableComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
@@ -140,6 +143,7 @@ const SERVICES: Provider[] = [
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    MeshUserTokenTableLoaderService,
     MicroschemaHandlerService,
     MicroschemaTableLoaderService,
     ProjectHandlerService,

@@ -16,6 +16,7 @@ export * from './mesh-role-table/mesh-role-table.component';
 export * from './mesh-user-modal/mesh-user-modal.component';
 export * from './mesh-user-properties/mesh-user-properties.component';
 export * from './mesh-user-table/mesh-user-table.component';
+export * from './mesh-user-token-table/mesh-user-token-table.component';
 export * from './microschema-modal/microschema-modal.component';
 export * from './microschema-properties/microschema-properties.component';
 export * from './microschema-table/microschema-table.component';

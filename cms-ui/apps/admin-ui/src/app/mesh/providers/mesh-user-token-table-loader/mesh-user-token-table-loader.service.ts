@@ -1,15 +1,18 @@
 import { Injectable } from '@angular/core';
-import { User } from '@gentics/mesh-models';
-import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { UserTokenData } from '@gentics/mesh-models';
+import { from, map, Observable } from 'rxjs';
 import { EntityPageResponse, TableLoadOptions } from '../../../common';
 import { BaseTableLoaderService, EntityManagerService } from '../../../core';
 import { AppStateService } from '../../../state';
-import { MeshUserBO } from '../../common';
+import { MeshUserTokenBO } from '../../common';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
 
+interface MeshUserTokenTableLoaderOptions {
+    user: string;
+}
+
 @Injectable()
-export class MeshUserTableLoaderService extends BaseTableLoaderService<User, MeshUserBO> {
+export class MeshUserTokenTableLoaderService extends BaseTableLoaderService<UserTokenData, MeshUserTokenBO, MeshUserTokenTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -23,20 +26,20 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
         );
     }
 
-    public canDelete(): Promise<boolean> {
+    public canDelete(entityId: string | number): Promise<boolean> {
         return Promise.resolve(true);
     }
 
-    public deleteEntity(entityId: string | number): Promise<void> {
-        return this.handler.delete(entityId as any);
+    public deleteEntity(entityId: string | number, additionalOptions?: MeshUserTokenTableLoaderOptions): Promise<void> {
+        return this.handler.deleteToken(additionalOptions.user, entityId as any);
     }
 
-    protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshUserBO>> {
-        return from(this.handler.listMapped({
+    protected loadEntities(options: TableLoadOptions, additionalOptions?: MeshUserTokenTableLoaderOptions): Observable<EntityPageResponse<MeshUserTokenBO>> {
+        return from(this.handler.listTokens(additionalOptions.user, {
             page: Math.max(options.page, 1),
             perPage: options.perPage,
-            order: options.sortOrder?.toLowerCase?.() as any,
-            sortBy: options.sortBy,
+            // order: options.sortOrder?.toLowerCase?.() as any,
+            // sortBy: options.sortBy,
         })).pipe(
             map((res) => ({
                 entities: res.data,

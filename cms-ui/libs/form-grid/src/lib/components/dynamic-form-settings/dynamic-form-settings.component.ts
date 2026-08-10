@@ -164,4 +164,12 @@ export class DynamicFormSettingsComponent {
             this.updateData(setting, sanitizeItemReference(value));
         }
     }
+
+    public getTypeIfValid(setting: FormSettingConfiguration): string {
+        if(Boolean(setting)) {
+            return setting.type;
+        }
+
+        return "";
+    }
 }

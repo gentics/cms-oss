@@ -4,11 +4,7 @@
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/admin-ui/src",
-    "tags": [
-        "app",
-        "ui",
-        "angular"
-    ],
+    "tags": ["app", "ui", "angular", "test:karma"],
     "targets": {
         "build": {
             "executor": "@nx/angular:application",

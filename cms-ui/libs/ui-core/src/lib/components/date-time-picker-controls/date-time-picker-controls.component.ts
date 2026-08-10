@@ -5,12 +5,14 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     HostBinding,
     Input,
     OnChanges,
     OnDestroy,
     OnInit,
     Optional,
+    Output,
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
@@ -115,6 +117,12 @@ export class DateTimePickerControlsComponent
      */
     @Input()
     public displaySeconds = false;
+
+    @Output()
+    public override valueChange = new EventEmitter<number>();
+
+    @Output()
+    change = new EventEmitter<number>();
 
     /**
      * When `true`, the controls use the "compact" (small screen) styling for all screen sizes. Defaults to `false`

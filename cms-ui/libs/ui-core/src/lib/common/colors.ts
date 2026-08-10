@@ -1,1 +1,1 @@
-export type ColorThemes = 'primary' | 'secondary' | 'success' | 'warning' | 'alert';
+export type ColorThemes = 'primary' | 'secondary' | 'success' | 'warning' | 'alert' | 'default';

@@ -11,8 +11,8 @@
             <gtx-select
                 [value]="selectedYear"
                 (valueChange)="setYear($event)"
-                (focus)="handleFocus($event)"
-                (blur)="handleBlur($event)"
+                (focus)="handleFocus()"
+                (blur)="handleBlur()"
             >
                 @for (year of years; track year) {
                     <gtx-option [value]="year">{{ year }}</gtx-option>
@@ -40,13 +40,13 @@
 
                     <gtx-input
                         type="number"
-                        min="0"
-                        max="23"
+                        [min]="0"
+                        [max]="23"
                         [label]="formatProvider.strings.hours"
                         [attr.data-value]="time.h"
                         [(ngModel)]="time.h"
-                        (focus)="handleFocus($event)"
-                        (blur)="updateTime('hours', time.h, $event)"
+                        (focus)="handleFocus()"
+                        (blur)="updateTime('hours', time.h)"
                         (keydown)="timeKeyHandler('hours', $event)"
                     ></gtx-input>
 
@@ -62,13 +62,13 @@
 
                     <gtx-input
                         type="number"
-                        min="0"
-                        max="59"
+                        [min]="0"
+                        [max]="59"
                         [label]="formatProvider.strings.minutes"
                         [attr.data-value]="time.m"
                         [(ngModel)]="time.m"
-                        (focus)="handleFocus($event)"
-                        (blur)="updateTime('minutes', time.m, $event)"
+                        (focus)="handleFocus()"
+                        (blur)="updateTime('minutes', time.m)"
                         (keydown)="timeKeyHandler('minutes', $event)"
                     ></gtx-input>
 
@@ -85,13 +85,13 @@
 
                         <gtx-input
                             type="number"
-                            min="0"
-                            max="59"
+                            [min]="0"
+                            [max]="59"
                             [label]="formatProvider.strings.seconds"
                             [attr.data-value]="time.s"
                             [(ngModel)]="time.s"
-                            (focus)="handleFocus($event)"
-                            (blur)="updateTime('seconds', time.s, $event)"
+                            (focus)="handleFocus()"
+                            (blur)="updateTime('seconds', time.s)"
                             (keydown)="timeKeyHandler('seconds', $event)"
                         ></gtx-input>
 

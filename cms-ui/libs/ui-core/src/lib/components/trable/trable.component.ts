@@ -89,4 +89,8 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
 
         return id;
     }
+
+    public cancel(event?: MouseEvent) {
+        cancelEvent(event);
+    }
 }

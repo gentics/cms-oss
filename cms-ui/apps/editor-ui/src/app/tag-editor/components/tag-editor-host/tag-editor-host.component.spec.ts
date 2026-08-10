@@ -1,5 +1,5 @@
 import { Component, ViewChild } from '@angular/core';
-import { tick } from '@angular/core/testing';
+import { TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { I18nService } from '@gentics/cms-components';
 import { TagChangedFn, TagEditorResult } from '@gentics/cms-integration-api-models';
@@ -9,7 +9,6 @@ import { mockPipes } from '@gentics/ui-core/testing';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
-import { spyOnDynamicallyCreatedComponent } from '../../../../testing/dynamic-components';
 import { getExampleEditableTag, getMockedTagEditorContext } from '../../../../testing/test-tag-editor-data.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService } from '../../../state';
@@ -20,13 +19,18 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TagEditorHostComponent } from './tag-editor-host.component';
+import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
+import { spyWithOriginalFn } from '../../../../testing/spy-with-original';
 
 describe('TagEditorHostComponent', () => {
+
+    let resolver: TagPropertyEditorResolverService;
 
     beforeEach(() => {
         configureComponentTest({
             imports: [GenticsUICoreModule.forRoot()],
             providers: [
+                TagPropertyEditorResolverService,
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: I18nService, useClass: MockI18nService },
@@ -41,12 +45,14 @@ describe('TagEditorHostComponent', () => {
                 mockPipes('objTagName'),
             ],
         });
+
+        resolver = TestBed.inject(TagPropertyEditorResolverService);
     });
 
     describe('editTag()', () => {
 
         it('creates and shows the GenticsTagEditor and passes on the result\'s resolve(), and destroys the TagEditor again',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 const expectedEditedTag = getExampleEditableTag();
                 (expectedEditedTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified Value';
@@ -54,10 +60,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (tag: TagEditorResult) => void = null;
-                spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
                         new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -100,7 +110,7 @@ describe('TagEditorHostComponent', () => {
         );
 
         it('creates and shows the CustomTagEditorHostComponent and passes on the result\'s resolve(), and destroys the TagEditor again',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 tag.tagType.externalEditorUrl = 'http://localhost/customTagEditor';
                 const expectedEditedTag = getExampleEditableTag();
@@ -110,14 +120,22 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (tag: TagEditorResult) => void = null;
-                spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
+                spyWithOriginalFn(resolver, 'createCustomTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
                         new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
                 const result = fixture.componentInstance.tagEditorHost.editTag(tag, context);
+
+                tick();
+                fixture.detectChanges();
+                await fixture.whenRenderingDone();
 
                 // Make sure that the TagEditor's editTag() method has been called appropriately.
                 expect(editTagSpy.calls.argsFor(0)[0]).toEqual(tag);
@@ -156,16 +174,20 @@ describe('TagEditorHostComponent', () => {
         );
 
         it('creates and shows the GenticsTagEditor, passes on the result\'s reject(), and destroys the TagEditor again',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagSpy: jasmine.Spy = null;
                 let reject: (error?: any) => void = null;
-                spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise((resolveFn, rejectFn) => reject = rejectFn),
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
+                        new Promise((_, rejectFn) => reject = rejectFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -204,7 +226,7 @@ describe('TagEditorHostComponent', () => {
         );
 
         it('creates and shows the GenticsTagEditor in read-only mode, rejects the promise if the TagEditor resolves it, and destroys the TagEditor again',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 const editedTag = getExampleEditableTag();
                 (editedTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified Value';
@@ -213,10 +235,14 @@ describe('TagEditorHostComponent', () => {
 
                 let editTagSpy: jasmine.Spy = null;
                 let resolve: (error?: any) => void = null;
-                spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
-                        new Promise((resolveFn, rejectFn) => resolve = resolveFn),
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagSpy = spyOn(ref.instance, 'editTag').and.returnValue(
+                        new Promise((resolveFn) => resolve = resolveFn),
                     );
+
+                    return ref;
                 });
 
                 fixture.detectChanges();
@@ -281,15 +307,19 @@ describe('TagEditorHostComponent', () => {
         }
 
         it('creates and shows the GenticsTagEditor and passes on onChangeFn calls',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagLiveSpy: jasmine.Spy = null;
                 let onChangeFn: TagChangedFn;
-                spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
-                    editTagLiveSpy = spyOn(componentInstance.instance, 'editTagLive').and
+                spyWithOriginalFn(resolver, 'createGenticsTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagLiveSpy = spyOn(ref.instance, 'editTagLive').and
                         .callFake((tag, context, changeFn) => onChangeFn = changeFn);
+
+                    return ref;
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];
@@ -314,16 +344,20 @@ describe('TagEditorHostComponent', () => {
         );
 
         it('creates and shows the CustomTagEditorHostComponent and passes on onChangeFn calls that pass validation',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 const tag = getExampleEditableTag();
                 tag.tagType.externalEditorUrl = 'http://localhost/customTagEditor';
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagLiveSpy: jasmine.Spy = null;
                 let onChangeFn: TagChangedFn;
-                spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
-                    editTagLiveSpy = spyOn(componentInstance.instance, 'editTagLive').and
+                spyWithOriginalFn(resolver, 'createCustomTagEditor', (original, container) => {
+                    const ref = original(container);
+
+                    editTagLiveSpy = spyOn(ref.instance, 'editTagLive').and
                         .callFake((tag, context, changeFn) => onChangeFn = changeFn);
+
+                    return ref;
                 });
 
                 const reportedChangedStates: TagPropertyMap[] = [];

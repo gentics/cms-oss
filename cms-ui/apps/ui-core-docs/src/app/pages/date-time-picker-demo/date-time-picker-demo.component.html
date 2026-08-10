@@ -27,7 +27,7 @@
 <gtx-demo-block demoTitle="Date And Time with Clear Option">
     <div class="demo-result">
         <gtx-date-time-picker
-            clearable
+            [clearable]
             label="Pick a time"
             placeholder="Click me to pick"
             [(ngModel)]="timestamp"
@@ -38,7 +38,7 @@
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
                 <gtx-date-time-picker
-                    clearable
+                    [clearable]
                     label="Pick a date"
                     placeholder="Click me to pick"
                     [(ngModel)]="timestamp"
@@ -53,7 +53,7 @@
         <gtx-date-time-picker
             label="Pick a date"
             placeholder="Click me to pick"
-            displayTime="false"
+            [displayTime]="false"
             [(ngModel)]="timestamp"
         ></gtx-date-time-picker>
         timestamp: <code>{{ timestamp }}</code>
@@ -63,7 +63,7 @@
                 <gtx-date-time-picker
                     label="Pick a date"
                     placeholder="Click me to pick"
-                    displayTime="false"
+                    [displayTime]="false"
                     [(ngModel)]="timestamp"
                 ></gtx-date-time-picker>
                 timestamp: <code>(( timestamp ))</code>
@@ -76,8 +76,8 @@
         <gtx-date-time-picker
             label="Pick a date"
             placeholder="Click me to pick"
-            displayTime="false"
-            selectYear="true"
+            [displayTime]="false"
+            [selectYear]="true"
             [(ngModel)]="timestamp"
         ></gtx-date-time-picker>
         timestamp: <code>{{ timestamp }}</code>
@@ -88,8 +88,8 @@
             <gtx-date-time-picker
                 label="Pick a date"
                 placeholder="Click me to pick"
-                displayTime="false"
-                selectYear="true"
+                [displayTime]="false"
+                [selectYear]="true"
                 [(ngModel)]="timestamp"
             ></gtx-date-time-picker>
         '></gtx-highlighted-code>

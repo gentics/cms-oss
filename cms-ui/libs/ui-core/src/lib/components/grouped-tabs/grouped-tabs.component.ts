@@ -4,16 +4,16 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    ElementRef,
     EventEmitter,
     Input,
     OnChanges,
     Output,
     QueryList,
     SimpleChanges,
+    TemplateRef,
 } from '@angular/core';
-import { BehaviorSubject, combineLatest, ObjectUnsubscribedError } from 'rxjs';
-import { debounceTime, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { debounceTime, startWith } from 'rxjs/operators';
 import { BaseComponent } from '../base-component/base.component';
 import { TabGroupComponent } from '../tab-group/tab-group.component';
 import { TabPaneComponent } from '../tab-pane/tab-pane.component';
@@ -249,7 +249,11 @@ export class GroupedTabsComponent
     /**
      * Toggle TabGroup open/close state.
      */
-    toggleGroup(group: TabGroupComponent): void {
+    toggleGroup(group: TabPaneComponent | TabGroupComponent): void {
+        if (!(group instanceof TabGroupComponent)) {
+            return;
+        }
+
         group.toggle();
     }
 
@@ -281,5 +285,21 @@ export class GroupedTabsComponent
         this.changeDetector.markForCheck();
 
         this.collectTabs();
+    }
+
+    public isTabGroup(tab: TabPaneComponent | TabGroupComponent): tab is TabGroupComponent {
+        return tab instanceof TabGroupComponent;
+    }
+
+    public get currentTemplate(): TemplateRef<any> | null {
+        const content = this.currentTab?.content;
+
+        if (!content) {
+            return null;
+        }
+
+        return content instanceof TemplateRef
+            ? content
+            : content.template;
     }
 }

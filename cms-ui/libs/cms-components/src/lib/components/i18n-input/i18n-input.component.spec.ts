@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { Component, model, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MockI18nPipe } from '@gentics/cms-components/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
+import { distinctUntilChanged, Subscription } from 'rxjs';
 import { I18nInputComponent } from './i18n-input.component';
+import { isEqual } from 'lodash-es';
 
 const DEFAULT_LANGUAGE = 'de';
 const SECOND_LANGUAGE = 'en';
@@ -63,12 +64,12 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(2);
+        expect(changeSpy).toHaveBeenCalledTimes(1);
         expect(component.currentValue).toEqual({ [DEFAULT_LANGUAGE]: firstValue });
 
         // --------------------
 
-        component.activeLanguage = SECOND_LANGUAGE;
+        component.activeLanguage.set(SECOND_LANGUAGE);
         tick();
         fixture.detectChanges();
         changeSpy.calls.reset();
@@ -82,7 +83,7 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(2);
+        expect(changeSpy).toHaveBeenCalledTimes(1);
         expect(component.currentValue).toEqual({
             [DEFAULT_LANGUAGE]: firstValue,
             [SECOND_LANGUAGE]: secondValue,
@@ -113,7 +114,7 @@ describe('I18nInputComponent', () => {
         tick();
         fixture.detectChanges();
 
-        expect(changeSpy).toHaveBeenCalledTimes(2);
+        expect(changeSpy).toHaveBeenCalledTimes(1);
         expect(component.currentValue).toEqual({
             [DEFAULT_LANGUAGE]: newValue,
             [SECOND_LANGUAGE]: secondValue,
@@ -130,16 +131,16 @@ describe('I18nInputComponent', () => {
     template: `
         <gtx-i18n-input
             [formControl]="control"
-            [language]="activeLanguage"
-            [availableLanguages]="availableLanguages"
+            [language]="activeLanguage()"
+            [availableLanguages]="availableLanguages()"
         ></gtx-i18n-input>`,
     standalone: false,
 })
 class TestComponent implements OnInit, OnDestroy {
 
     public control: FormControl;
-    public activeLanguage = DEFAULT_LANGUAGE;
-    public availableLanguages = AVAILABLE_LANGUAGES;
+    public readonly activeLanguage = model<string>(DEFAULT_LANGUAGE);
+    public readonly availableLanguages = model<string[]>(AVAILABLE_LANGUAGES);
 
     public currentValue: Record<string, string>;
 
@@ -147,7 +148,9 @@ class TestComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.control = new FormControl();
-        this.subscription = this.control.valueChanges.subscribe((value) => {
+        this.subscription = this.control.valueChanges.pipe(
+            distinctUntilChanged(isEqual),
+        ).subscribe((value) => {
             this.valueChangeHandler(value);
         });
     }

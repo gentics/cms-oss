@@ -21,9 +21,9 @@
                 <gtx-input
                     placeholder="Number Input Placeholder"
                     type="number"
-                    min="0"
-                    max="100"
-                    step="5"
+                    [min]="0"
+                    [max]="100"
+                    [step]="5"
                 ></gtx-input>
             </div>
             <div class="col m4">
@@ -150,7 +150,7 @@
                     <gtx-input formControlName="last" label="Last name"></gtx-input>
                 </div>
             </div>
-            <gtx-input [formControl]="addressForm.get('address').get('streetName')" label="Street name"></gtx-input>
+            <gtx-input [formControl]="streetNameControl" label="Street name"></gtx-input>
         </form>
         <div>
             <pre>name.value: {{ addressForm.get('name').value | json }}</pre>

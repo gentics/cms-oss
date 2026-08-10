@@ -35,7 +35,7 @@
   <div class="demo-result">
 
     <p>Passing <code>disabled: true</code> disables the drop area.</p>
-    <div gtxFileDropArea [gtxFileDropArea]="{ disabled: isDisabled }">
+    <div [gtxFileDropArea]="{ disabled: isDisabled }">
       @if (!isDisabled) {
         <span>Drop files here</span>
       }
@@ -188,7 +188,7 @@
     <p>Below is a <a routerLink="/sortable-list">SortableList</a> that accepts files via drag & drop.</p>
 
     <gtx-sortable-list (dragEnd)="reorderList($event)"
-      gtxFileDropArea #listArea="gtxFileDropArea"
+      [gtxFileDropArea] #listArea="gtxFileDropArea"
       [class.dragging-over]="listArea.dragHovered"
       [class.dragging-in-page]="listArea.filesDraggedInPage"
       (fileDrop)="addFilesToReorderableList($event)">
@@ -250,7 +250,7 @@
 <gtx-demo-block demoTitle="Accepting Only Specific File Types">
   <div class="demo-result">
 
-    <div gtxFileDropArea [gtxFileDropArea]="{accept: 'text/*'}" #textDrop="gtxFileDropArea"
+    <div [gtxFileDropArea]="{accept: 'text/*'}" #textDrop="gtxFileDropArea"
       (fileDrop)="droppedTextFiles = droppedTextFiles.concat($event)"
       (fileDropReject)="rejectedTextFiles = rejectedTextFiles.concat($event)"
       [class.dragging-over]="textDrop.dragHovered"
@@ -264,7 +264,7 @@
       <li><s>{{ rejectedTextFile.name }} <small>{{ rejectedTextFile.type }}</small></s></li>
     }</ul>
 
-    <div gtxFileDropArea [gtxFileDropArea]="{accept: 'image/*, !image/gif'}" #imageDrop="gtxFileDropArea"
+    <div [gtxFileDropArea]="{accept: 'image/*, !image/gif'}" #imageDrop="gtxFileDropArea"
       (fileDrop)="droppedImages = droppedImages.concat($event)"
       (fileDropReject)="rejectedImages = rejectedImages.concat($event)"
       [class.dragging-over]="imageDrop.dragHovered"
@@ -327,8 +327,8 @@
 
 <gtx-demo-block demoTitle="Preventing file drop on specific elements">
   <div class="demo-result">
-    <div class="outlined-block" gtxPreventFileDrop>This container does not accept files.</div>
-    <div class="outlined-block" gtxPreventFileDrop="true">This container does not accept files.</div>
+    <div class="outlined-block" [gtxPreventFileDrop]>This container does not accept files.</div>
+    <div class="outlined-block" [gtxPreventFileDrop]="true">This container does not accept files.</div>
     <div class="outlined-block" [gtxPreventFileDrop]="true">This container does not accept files.</div>
     <div class="outlined-block" [gtxPreventFileDrop]="preventLocal">This container does@if (preventLocal) {
       <span> not</span>
@@ -338,8 +338,8 @@
   </div>
   <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-            <div gtxPreventFileDrop>This does not accept files</div>
-            <div gtxPreventFileDrop="true">This does not accept files</div>
+            <div [gtxPreventFileDrop]>This does not accept files</div>
+            <div [gtxPreventFileDrop]="true">This does not accept files</div>
             <div [gtxPreventFileDrop]="true">This does not accept files</div>
             <div [gtxPreventFileDrop]="prevent">This does not accept files if prevent is true</div>
         '></gtx-highlighted-code>
@@ -411,7 +411,7 @@
 
 <gtx-demo-block demoTitle="Events">
   <div class="demo-result">
-    <div gtxFileDropArea #eventDrop="gtxFileDropArea"
+    <div [gtxFileDropArea] #eventDrop="gtxFileDropArea"
       [class.dragging-over]="eventDrop.dragHovered">
       Drag files into the page or drop here to trigger events
     </div>

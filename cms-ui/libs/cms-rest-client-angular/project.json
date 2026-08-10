@@ -4,31 +4,11 @@
     "sourceRoot": "libs/cms-rest-client-angular/src",
     "prefix": "lib",
     "projectType": "library",
-    "tags": ["lib", "angular", "publish"],
+    "tags": ["lib", "angular", "publish", "test:vitest"],
     "targets": {
-        "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": [
-                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
-                "{workspaceRoot}/coverage/{projectRoot}"
-            ],
-            "options": {
-                "jestConfig": "{projectRoot}/jest.config.ts"
-            },
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {
-                    "color": false,
-                    "colors": false,
-                    "ci": true,
-                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
-                }
-            }
-        },
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
+            "defaultConfiguration": "production",
             "options": {
                 "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json",
                 "project": "libs/cms-rest-client-angular/ng-package.json"
@@ -38,11 +18,13 @@
                     "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.prod.json"
                 },
                 "development": {}
-            },
-            "defaultConfiguration": "production"
+            }
         },
         "lint": {
             "executor": "@nx/eslint:lint"
+        },
+        "test": {
+            "executor": "@nx/angular:unit-test"
         }
     }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Component, NO_ERRORS_SCHEMA, provideZoneChangeDetection } from '@angular/core';
+import { Component, model, NO_ERRORS_SCHEMA, provideZoneChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '../../ui-core.module';
@@ -282,7 +282,7 @@ describe('InputComponent', () => {
             standalone: false,
         })
         class Test2WayBindingComponent {
-            public value = INITIAL_VALUE;
+            public readonly value = model(INITIAL_VALUE);
         }
 
         const INBETWEEN_VALUE = 'value from parent';
@@ -296,7 +296,7 @@ describe('InputComponent', () => {
                 cy.get(QUERY_INPUT).should('have.value', INITIAL_VALUE);
             })
             .updateInstance((instance) => {
-                instance.value = INBETWEEN_VALUE;
+                instance.value.set(INBETWEEN_VALUE);
             })
             .tap(() => {
                 cy.get(QUERY_INPUT)
@@ -307,7 +307,7 @@ describe('InputComponent', () => {
             })
             .detectChanges()
             .tap((mounted) => {
-                expect(mounted.component.value).to.equal(NEW_VALUE);
+                expect(mounted.component.value()).to.equal(NEW_VALUE);
             });
     });
 

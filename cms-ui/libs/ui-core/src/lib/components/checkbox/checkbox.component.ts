@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { cancelEvent, coerceToBoolean, randomId } from '@gentics/common';
 import { CHECKBOX_STATE_INDETERMINATE, type CheckboxState } from '../../common';
 import { generateFormProvider } from '../../utils';
@@ -80,6 +80,12 @@ export class CheckboxComponent extends BaseFormElementComponent<CheckboxState> {
      */
     @Input()
     public formValue: string | null = null;
+
+    @Input()
+    public indeterminate = false;
+
+    @Output()
+    public override valueChange = new EventEmitter<boolean>();
 
     protected onValueChange(): void {
         // no-op

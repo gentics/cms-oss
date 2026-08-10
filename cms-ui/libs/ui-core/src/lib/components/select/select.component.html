@@ -1,8 +1,8 @@
 <gtx-form-element-container
     [disabled]="disabled"
     [focusable]="true"
-    (focus)="handleFocus($event)"
-    (blur)="handleBlur($event)"
+    (focus)="handleFocus()"
+    (blur)="handleBlur()"
 >
     @if (label != null) {
         <label (click)="viewValueContainer.click()">{{ label }}</label>
@@ -10,7 +10,7 @@
 
     <gtx-dropdown-list
         width="expand"
-        belowTrigger="false"
+        [belowTrigger]="false"
         [sticky]="multiple"
         [disabled]="disabled"
         [class.with-label]="label != null"

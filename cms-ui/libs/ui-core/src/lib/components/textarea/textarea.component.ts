@@ -131,7 +131,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         }
     }
 
-    public textAreaInputHandler(event: KeyboardEvent): void {
+    public textAreaInputHandler(event: KeyboardEvent | InputEvent): void {
         const elementValue = (event.target as HTMLTextAreaElement).value;
         this.triggerChange(elementValue);
     }

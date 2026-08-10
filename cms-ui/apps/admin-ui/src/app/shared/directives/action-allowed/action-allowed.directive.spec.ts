@@ -1,6 +1,8 @@
 import { componentTest } from '@admin-ui/testing';
-import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, model, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { I18nService } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ButtonComponent, GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
@@ -14,11 +16,9 @@ import {
 } from '../../../common';
 import { PermissionsService, RequiredInstancePermissions, RequiredPermissions } from '../../../core';
 import { ACTION_HIDDEN_CSS_CLASS, ActionAllowedDirective, DEFAULT_DISABLED_TOOLTIP } from './action-allowed.directive';
-import { I18nService } from '@gentics/cms-components';
-import { MockI18nService } from '@gentics/cms-components/testing';
 
 function assembleTestTemplate(additionalAttributes: string): string {
-    return `<gtx-button #actionButton [gtxActionAllowed]="userAction" ${additionalAttributes}>Action Button</gtx-button>`;
+    return `<gtx-button #actionButton [gtxActionAllowed]="userAction()" ${additionalAttributes}>Action Button</gtx-button>`;
 }
 
 @Component({
@@ -26,7 +26,7 @@ function assembleTestTemplate(additionalAttributes: string): string {
     standalone: false,
 })
 class TestComponent {
-    userAction = 'typeTests.testAction';
+    public readonly userAction = model<string>('typeTests.testAction');
 
     @ViewChild('actionButton')
     actionButton: ButtonComponent;
@@ -42,12 +42,12 @@ class TestComponent {
 }
 
 @Component({
-    template: '<gtx-input #inputField [gtxActionAllowed]="userAction"></gtx-input>',
+    template: '<gtx-input #inputField [gtxActionAllowed]="userAction()"></gtx-input>',
     standalone: false,
 })
 class InputTestComponent implements AfterViewInit {
 
-    userAction = 'typeTests.testAction';
+    public readonly userAction = model<string>('typeTests.testAction');
 
     @ViewChild('inputField')
     inputField: InputComponent;
@@ -301,7 +301,7 @@ describe('ActionAllowedDirective', () => {
                 expect(permissions.checkPermissions).toHaveBeenCalledWith(MOCK_USER_ACTIONS.typeTests.testAction.typePermissions);
                 assertActionState(instance, { disabled: false, hidden: false });
 
-                instance.userAction = 'typeTests.testAction2';
+                instance.userAction.set('typeTests.testAction2');
                 runDoubleChangeDetection(fixture);
                 expect(permissions.checkPermissions).toHaveBeenCalledTimes(2);
                 expect(permissions.checkPermissions).toHaveBeenCalledWith(MOCK_USER_ACTIONS.typeTests.testAction2.typePermissions);
@@ -311,7 +311,7 @@ describe('ActionAllowedDirective', () => {
 
         it('leaves the control enabled if actionId is null',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.userAction = null;
+                instance.userAction.set(null);
                 runDoubleChangeDetection(fixture);
 
                 expect(permissions.checkPermissions).not.toHaveBeenCalled();
@@ -321,7 +321,7 @@ describe('ActionAllowedDirective', () => {
 
         it('leaves the control enabled if actionId is an empty string',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.userAction = '';
+                instance.userAction.set('');
                 runDoubleChangeDetection(fixture);
 
                 expect(permissions.checkPermissions).not.toHaveBeenCalled();
@@ -338,7 +338,7 @@ describe('ActionAllowedDirective', () => {
             assembleTestTemplate('[aaInstanceId]="instanceId"'),
             (fixture, instance) => {
                 initServices();
-                instance.userAction = 'instanceTests.instancePermsOnly';
+                instance.userAction.set('instanceTests.instancePermsOnly');
                 runDoubleChangeDetection(fixture);
 
                 // Since we haven't provided an instanceId yet, the component should be disabled.
@@ -364,7 +364,7 @@ describe('ActionAllowedDirective', () => {
             assembleTestTemplate('[aaInstanceId]="instanceId" [aaNodeId]="nodeId"'),
             (fixture, instance) => {
                 initServices();
-                instance.userAction = 'instanceTests.typeAndInstancePerms';
+                instance.userAction.set('instanceTests.typeAndInstancePerms');
                 instance.instanceId = INSTANCE_ID_A;
                 instance.nodeId = NODE_ID_A;
                 runDoubleChangeDetection(fixture);
@@ -387,7 +387,7 @@ describe('ActionAllowedDirective', () => {
             assembleTestTemplate('[aaInstanceId]="instanceId" [aaNodeId]="nodeId"'),
             (fixture, instance) => {
                 initServices();
-                instance.userAction = 'instanceTests.instancePermsOnly';
+                instance.userAction.set('instanceTests.instancePermsOnly');
                 instance.instanceId = INSTANCE_ID_A;
                 instance.nodeId = NODE_ID_A;
                 runDoubleChangeDetection(fixture);
@@ -415,7 +415,7 @@ describe('ActionAllowedDirective', () => {
             assembleTestTemplate('[aaInstanceId]="instanceId" [aaNodeId]="nodeId"'),
             (fixture, instance) => {
                 initServices();
-                instance.userAction = 'instanceTests.instancePermsOnly';
+                instance.userAction.set('instanceTests.instancePermsOnly');
                 instance.instanceId = INSTANCE_ID_A;
                 instance.nodeId = NODE_ID_A;
                 runDoubleChangeDetection(fixture);
@@ -591,7 +591,7 @@ describe('ActionAllowedDirective', () => {
 
         it('uses the default tooltip if none is provided',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.userAction = 'tooltipTests.noTooltip';
+                instance.userAction.set('tooltipTests.noTooltip');
                 runDoubleChangeDetection(fixture);
 
                 assertActionState(instance, { disabled: true, tooltip: DEFAULT_DISABLED_TOOLTIP, hidden: false });
@@ -600,7 +600,7 @@ describe('ActionAllowedDirective', () => {
 
         it('tooltip params work, if provided',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.userAction = 'tooltipTests.tooltipParams';
+                instance.userAction.set('tooltipTests.tooltipParams');
                 runDoubleChangeDetection(fixture);
 
                 assertActionState(instance, { disabled: true, tooltip: TEST_TOOLTIP, hidden: false });

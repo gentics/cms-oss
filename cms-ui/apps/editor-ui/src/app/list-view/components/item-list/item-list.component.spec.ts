@@ -3,6 +3,7 @@ import {
     Component,
     EventEmitter,
     Input,
+    model,
     NO_ERRORS_SCHEMA,
     OnInit,
     Pipe,
@@ -103,18 +104,18 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
 @Component({
     template: `
         <item-list #itemList
-            [class]="itemType"
-            [itemType]="itemType"
-            [filterTerm]="filterTerm"
-            [items]="items | filterItems:filterTerm"
+            [class]="itemType()"
+            [itemType]="itemType()"
+            [filterTerm]="filterTerm()"
+            [items]="items() | filterItems:filterTerm()"
             [itemsInfo]="itemsInfo$ | async"
             [currentFolderId]="currentFolderId$ | async"
-            [activeNode]="activeNode"
-            [nodeLanguages]="activeNodeLanguages"
-            [startPageId]="startPageId"
-            [activeItemId]="activeItemId"
-            [folderPermissions]="permissions"
-            [linkPaths]="isSearching"
+            [activeNode]="activeNode()"
+            [nodeLanguages]="activeNodeLanguages()"
+            [startPageId]="startPageId()"
+            [activeItemId]="activeItemId()"
+            [folderPermissions]="permissions()"
+            [linkPaths]="isSearching()"
         ></item-list>`,
     standalone: false,
 })
@@ -122,31 +123,32 @@ class TestComponent implements OnInit {
     @ViewChild('itemList', { static: true })
     itemList: ItemListComponent;
 
-    itemType = 'folder';
-    items: Array<Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File>> = [
+    readonly itemType = model<'folder' | 'page' | 'image' | 'file'>('folder');
+    readonly items = model<Array<Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File>>>([
         { id: 1, name: 'item1', path: 'root/item1', type: 'folder' },
         { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
         { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
-    ];
+    ]);
 
-    activeNode: any = {
+    readonly activeNode = model<{ name: string; id: number }>({
         name: '',
         id: 1,
-    };
+    });
 
-    filterTerm = '';
-    itemsInfo$: Observable<ItemsInfo>;
-    currentFolderId$: Observable<number>;
-    selectedItems: number[] = [];
-    startPageId: number = Number.NaN;
-    activeItemId: number;
-    permissions = allPermissions();
-    isSearching = true;
-    itemsInfoPipe$: Observable<boolean>;
-    activeNodeLanguages: Language[] = [
+    readonly filterTerm = model<string>('');
+    readonly selectedItems = model<number[]>([]);
+    readonly startPageId = model<number>(Number.NaN);
+    readonly activeItemId = model<number>();
+    readonly permissions = model(allPermissions());
+    readonly isSearching = model(true);
+    readonly activeNodeLanguages = model<Language[]>([
         { id: 1, code: 'en', name: 'English' },
         { id: 2, code: 'de', name: 'Deutsch (German)' },
-    ];
+    ]);
+
+    itemsInfoPipe$: Observable<boolean>;
+    itemsInfo$: Observable<ItemsInfo>;
+    currentFolderId$: Observable<number>;
 
     constructor(public appState: ApplicationStateService) { }
 
@@ -424,13 +426,13 @@ describe('ItemListComponent', () => {
 
     it('calls getTotalUsage correct times with the correct parameters',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
+            instance.itemType.set('page');
             instance.itemsInfo$ = state.select((state) => state.folder.pages);
-            instance.items = [
+            instance.items.set([
                 { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                 { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                 { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
-            ];
+            ]);
             instance.itemList.itemsInfo = { list: [1, 2] } as ItemsInfo;
             instance.itemList.activeNode = { id: 11 } as NodeModel;
             instance.itemList.itemType = 'page';
@@ -478,11 +480,11 @@ describe('ItemListComponent', () => {
 
     it('checks if getTotalUsage gets called with the correct parameters when usage display field is active and the saving state is false',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.activeNode = {
+            instance.itemType.set('page');
+            instance.activeNode.set({
                 name: '',
                 id: 33,
-            };
+            });
             const usageActions = TestBed.inject(UsageActionsService);
             state.mockState({
                 folder: {
@@ -524,7 +526,7 @@ describe('ItemListComponent', () => {
 
     it('checks if getTotalUsage gets called when usage display field is active',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
+            instance.itemType.set('page');
             const usageActions = TestBed.inject(UsageActionsService);
             state.mockState({
                 ...state.now,
@@ -565,7 +567,7 @@ describe('ItemListComponent', () => {
     it('displays the live URL for images',
         componentTest(() => TestComponent, (fixture, instance) => {
             const testImage: Partial<Image> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'image' };
-            instance.items = [testImage];
+            instance.items.set([testImage]);
             fixture.detectChanges();
             tick();
             const getImageLiveURL = (el: Element) => (el.querySelector('image-thumbnail .liveurl-icon'));
@@ -575,12 +577,12 @@ describe('ItemListComponent', () => {
 
     it('displays the live URL for files',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'file';
-            instance.items = [
+            instance.itemType.set('file');
+            instance.items.set([
                 { type: 'file', name: 'file1', id: 1, path: 'root/file1' },
                 { type: 'file', name: 'file2', id: 2, path: 'root/file2' },
                 { type: 'file', name: 'file3', id: 3, path: 'root/file3' },
-            ];
+            ]);
             fixture.detectChanges();
             tick();
             const getFileLiveURL = (el: Element) => (el.querySelector('.liveurl-icon'));
@@ -590,10 +592,10 @@ describe('ItemListComponent', () => {
 
     it('displays the correct path for pages if showPath is true',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1', publishPath: '/root/page1' },
-            ];
+            ]);
             updateItemsInfoState({
                 showPath: true,
             });
@@ -608,10 +610,10 @@ describe('ItemListComponent', () => {
 
     it('does not display the path for pages if showPath is false',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1' },
-            ];
+            ]);
             updateItemsInfoState({
                 showPath: false,
             });
@@ -627,7 +629,7 @@ describe('ItemListComponent', () => {
 
         it('filters based on filterTerm',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 const listItems: HTMLElement[] = getListItems(fixture);
@@ -640,14 +642,14 @@ describe('ItemListComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 let listItems: HTMLElement[];
 
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 listItems = getListItems(fixture);
                 expect(listItems.length).toBe(1);
                 expect(getItemName(listItems[0])).toContain('item2');
 
-                instance.filterTerm = '';
+                instance.filterTerm.set('');
                 fixture.detectChanges();
                 listItems = getListItems(fixture);
                 expect(listItems.length).toBe(3);
@@ -660,13 +662,13 @@ describe('ItemListComponent', () => {
         it('handles unexpected filterTerm values',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const detectChanges = () => fixture.detectChanges();
-                instance.filterTerm = <any>2;
+                instance.filterTerm.set(2 as any); // why?
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = null;
+                instance.filterTerm.set(null);
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = undefined;
+                instance.filterTerm.set(undefined);
                 expect(detectChanges).not.toThrow();
                 tick();
             }),
@@ -674,13 +676,13 @@ describe('ItemListComponent', () => {
 
         it('copies only selected items that match filterTerm',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
+                instance.itemType.set('page');
                 instance.itemsInfo$ = state.select((state) => state.folder.pages);
-                instance.items = [
+                instance.items.set([
                     { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                     { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                     { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
-                ];
+                ]);
                 const contextMenuService = TestBed.inject(ContextMenuOperationsService);
                 spyOn(contextMenuService, 'copyItems').and.stub();
 
@@ -697,7 +699,7 @@ describe('ItemListComponent', () => {
                 fixture.detectChanges();
                 expect(state.now.folder.pages.selected).toEqual([1, 2]);
 
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 const copyButton: HTMLElement = fixture.debugElement
@@ -707,7 +709,7 @@ describe('ItemListComponent', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]] as any, state.now.folder.activeNode);
+                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items()[1]] as any, state.now.folder.activeNode);
             }),
         );
 
@@ -851,7 +853,7 @@ describe('ItemListComponent', () => {
 
         it('emits with all items when toggleAll is clicked and a filterTerm is being applied',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
@@ -968,11 +970,11 @@ describe('ItemListComponent', () => {
 
         it(`focuses the editor when a ${itemType} item is clicked`,
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.items = [
+                instance.items.set([
                     { id: 1, name: 'item1', path: 'root/item1', type: <any>itemType },
                     { id: 2, name: 'item2', path: 'root/item2', type: <any>itemType },
                     { id: 3, name: 'item3', path: 'root/item3', type: <any>itemType },
-                ];
+                ]);
                 // editorIsFocused won't change unless the editor is open
                 state.mockState({
                     editor: {
@@ -995,11 +997,11 @@ describe('ItemListComponent', () => {
 
     it('does not focus the editor when a folder item is clicked',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.items = [
+            instance.items.set([
                 { id: 1, name: 'item1', path: 'root/item1', type: 'folder' },
                 { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
                 { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
-            ];
+            ]);
             fixture.detectChanges();
             tick();
             const listItems = getListItems(fixture);
@@ -1029,8 +1031,8 @@ describe('ItemListComponent', () => {
                 },
             });
 
-            instance.isSearching = true;
-            instance.items = [1, 2, 3].map((id) => state.now.entities.page[id]);
+            instance.isSearching.set(true);
+            instance.items.set([1, 2, 3].map((id) => state.now.entities.page[id]));
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1056,8 +1058,8 @@ describe('ItemListComponent', () => {
         function setupTestCase(fixture: ComponentFixture<TestComponent>): void {
             testPage = { type: 'page', id: 1, name: 'page1', path: 'root/page1', globalId: 'pageA' } as Page;
             const instance = (currentFixture = fixture).componentRef.instance;
-            instance.itemType = 'page';
-            instance.items = [testPage];
+            instance.itemType.set('page');
+            instance.items.set([testPage]);
             updateItemsInfoState({
                 list: [1],
                 total: 1,
@@ -1065,7 +1067,7 @@ describe('ItemListComponent', () => {
         }
 
         function mockIsStartPage(startPage: boolean): void {
-            currentFixture.componentRef.instance.startPageId = startPage ? 1 : 99999;
+            currentFixture.componentRef.instance.startPageId.set(startPage ? 1 : 99999);
             currentFixture.detectChanges();
         }
 
@@ -1113,10 +1115,10 @@ describe('ItemListComponent', () => {
 
         it('shows a language indicator for pages with language variants ',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.items = [
+                instance.itemType.set('page');
+                instance.items.set([
                     { ...getExamplePageData({ id: 1 }), languageVariants: [1, 324423], deleted: { at: 0, by: null } },
-                ];
+                ]);
                 updateItemsInfoState({
                     list: [66],
                     total: 1,
@@ -1125,6 +1127,7 @@ describe('ItemListComponent', () => {
 
                 const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(1);
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
                 expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
 
@@ -1132,12 +1135,12 @@ describe('ItemListComponent', () => {
             }),
         );
 
-        it('shows a language indicator for pages with no language variants but an assigned language if displayAllLangauges is enabled',
+        it('shows a language indicator for pages with no language variants but an assigned language if displayAllLanguages is enabled',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.items = [
+                instance.itemType.set('page');
+                instance.items.set([
                     { ...getExamplePageData({ id: 1 }), languageVariants: [1, 2], deleted: { at: 0, by: null } },
-                ];
+                ]);
                 updateItemsInfoState({
                     list: [66],
                     total: 1,
@@ -1149,9 +1152,11 @@ describe('ItemListComponent', () => {
                 const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(2);
 
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
                 expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
 
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                 expect(links[1].querySelector('.language-button').classList.contains('available')).toBeTrue;
                 expect(links[1].querySelector('.language-code').textContent).toMatch(new RegExp(/(de)/, 'i'));
 
@@ -1163,12 +1168,12 @@ describe('ItemListComponent', () => {
 
     it('highlights the item currently opened in the editor (folders, pages, files, and images in list view)',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1' },
                 { type: 'page', name: 'page2', id: 2, path: 'root/page2' },
                 { type: 'page', name: 'page3', id: 3, path: 'root/page3' },
-            ];
+            ]);
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1181,7 +1186,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.activeItemId = instance.items[2].id;
+            instance.activeItemId.set(instance.items()[2].id);
             fixture.detectChanges();
 
             const backgroundColors = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('gtx-contents-list-item'))
@@ -1198,12 +1203,12 @@ describe('ItemListComponent', () => {
 
     it('highlights the item currently opened in the editor (images)',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'image';
-            instance.items = [
+            instance.itemType.set('image');
+            instance.items.set([
                 { type: 'image', name: 'image1', id: 1, path: 'root/image1' },
                 { type: 'image', name: 'image2', id: 2, path: 'root/image2' },
                 { type: 'image', name: 'image3', id: 3, path: 'root/image3' },
-            ];
+            ]);
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1221,7 +1226,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.activeItemId = instance.items[2].id;
+            instance.activeItemId.set(instance.items()[2].id);
             fixture.detectChanges();
 
             const boxShadows = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('image-thumbnail'))

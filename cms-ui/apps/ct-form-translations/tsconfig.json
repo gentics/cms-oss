@@ -4,13 +4,14 @@
         "target": "es2022",
         "moduleResolution": "bundler",
         "module": "preserve",
+        "ignoreDeprecations": "6.0"
     },
     "files": [],
     "include": [],
     "angularCompilerOptions": {
         "annotateForClosureCompiler": true,
         "strictTemplates": false,
-        "strictInjectionParameters": true,
+        "strictInjectionParameters": true
     },
     "references": [
         {

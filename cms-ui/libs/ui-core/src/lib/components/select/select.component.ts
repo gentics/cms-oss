@@ -5,8 +5,10 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
+    EventEmitter,
     Input,
     OnChanges,
+    Output,
     QueryList,
     SimpleChanges,
     ViewChild,
@@ -113,13 +115,16 @@ export class SelectComponent
     @Input()
     public disableUnknownValues = false;
 
+    @Output()
+    public override valueChange = new EventEmitter<number>();
+
     @ViewChild(DropdownListComponent, { static: true })
     private dropdownList: DropdownListComponent;
 
     @ViewChild(DropdownContentComponent, { static: true })
     private dropdownContent: DropdownContentComponent;
 
-    // TODO: Rework the options (and groups), to be simply inputs. Provding the options as
+    // TODO: Rework the options (and groups), to be simply inputs. Providing the options as
     // children is messy and just causes unnecessary back and forth mapping, for no benefit.
     @ContentChildren(SelectOptionDirective, { descendants: false })
     private selectOptions: QueryList<SelectOptionDirective>;

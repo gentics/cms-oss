@@ -33,7 +33,7 @@ import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-
     templateUrl: './gentics-tag-editor.component.html',
     styleUrls: ['./gentics-tag-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewInit, OnDestroy {
 
@@ -108,7 +108,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     ngAfterViewInit(): void {
         this.subscriptions.add(
             this.propertyEditorHosts.changes.subscribe((newPropEditorHosts: QueryList<TagPropertyEditorHostComponent>) => {
-                this.tagPropertyEditors = newPropEditorHosts.map(propEditorHost => propEditorHost.tagPropertyEditor);
+                this.tagPropertyEditors = newPropEditorHosts.map((propEditorHost) => propEditorHost.tagPropertyEditor);
                 this.executeSafely(() => this.setUpPropertyEditors());
             }),
         );
@@ -153,8 +153,8 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
                 },
             ],
         })
-            .then(modal => modal.open())
-            .then(shouldContinue => {
+            .then((modal) => modal.open())
+            .then((shouldContinue) => {
                 if (!shouldContinue) {
                     return;
                 }
@@ -185,7 +185,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
         this.currentTagState = cloneDeep(tag.properties);
         this.context = context;
         this.editableTagParts = this.originalTag.tagType.parts
-            .filter(tagPart => tagPart.editable && !tagPart.hideInEditor);
+            .filter((tagPart) => tagPart.editable && !tagPart.hideInEditor);
         this.changeDetector.markForCheck();
     }
 
@@ -218,7 +218,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
         const context = this.context.clone();
 
         editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
-        editor.registerOnChange(changes => this.onTagPropertyChange(changes, editor));
+        editor.registerOnChange((changes) => this.onTagPropertyChange(changes, editor));
     }
 
     /**
@@ -260,7 +260,6 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     /**
      * Validates the specified changes, deleting invalid changes, and updates
      * the currentTagState with the valid changes and latestValidationResults with all validation results.
-     *
      * @param changes The changes to be validated. Invalid changes will be deleted from this object.
      */
     private validateChangesAndUpdateTagState(changes: Partial<TagPropertyMap>): MultiValidationResult {
@@ -346,7 +345,6 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     /**
      * Executes the specified function, catching all exceptions
      * thrown during its execution and passing them to the errorHandler.
-     *
      * @returns true if the function was executed successfully, false if it threw an exception
      */
     private executeSafely(fn: () => void): boolean {

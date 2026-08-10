@@ -6,13 +6,13 @@ import {
     ROUTE_SKIP_BREADCRUMB,
     RouteData,
 } from '@admin-ui/common';
-import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
+import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base/initializable-service.base';
 import { SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, PRIMARY_OUTLET, Router, UrlSegment } from '@angular/router';
+import { I18nService } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { has as _has, isEqual as _isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { filter, map, switchMap, takeUntil } from 'rxjs/operators';
@@ -170,7 +170,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
 
                 let ret: RouteSegment;
 
-                if (data[ROUTE_BREADCRUMB_KEY]) {
+                if (data[ROUTE_BREADCRUMB_KEY]?.title) {
                     ret = {
                         routerCommands: routerLink,
                         breadcrumb: data[ROUTE_BREADCRUMB_KEY],

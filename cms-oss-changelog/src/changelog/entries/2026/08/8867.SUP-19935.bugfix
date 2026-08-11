@@ -1,0 +1,1 @@
+Editor User Interface: In some occurrences of referencing a master node item from a channel page, the repository browser pointing to the item fails to resolve its environment. This has been fixed. 

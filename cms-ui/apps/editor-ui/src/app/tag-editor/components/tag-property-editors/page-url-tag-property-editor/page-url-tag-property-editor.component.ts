@@ -276,6 +276,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
             selectMultiple: false,
             contentLanguage,
             startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
+            startNode: this.uploadDestination ? this.uploadDestination.nodeId : undefined,
         }).then((selectedPage) => this.changeSelectedPage(selectedPage));
     }
 

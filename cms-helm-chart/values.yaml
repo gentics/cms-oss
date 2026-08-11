@@ -38,6 +38,8 @@ cms:
     #secret: 
 
   nodeUserPassword: ""
+  #optionally - specify the secret name where the node user password is already stored (key need to be "password")
+  #nodeUserPasswordSecret: "cms.nodeuser.secret"
 
   #configure gentics support login (Public/Private Key Auth)
   supportLogin: false
@@ -56,14 +58,22 @@ cms:
   #  - name: EXAMPLE_ENV
   #    value: "EXAMPLE_VALUE"
 
+  # Resource requests/limits for the CMS container.
+  # Passed through to the container as-is, so any field of the Kubernetes
   resources:
     requests:
       cpu: 500m
       memory: 1Gi
+      cpu: 500m
     limits:
       cpu: 1000m
       memory: 2Gi
-  
+      cpu: 1000m
+
+  # Override the global podSecurityContext/securityContext for the CMS pod only
+  #podSecurityContext: {}
+  #securityContext: {}
+
   ## Configure the service
   service:
     ## Specify a service type
@@ -91,6 +101,9 @@ cms:
     onlyData: false
     # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
     # existingClaim: ""
+    # If unset, the default StorageClass of the cluster is used.
+    # Set to "-" to disable dynamic provisioning (storageClassName: "")
+    # storageClass: ""
     annotations: {}
     accessModes:
       - ReadWriteOnce
@@ -102,6 +115,9 @@ cms:
       enabled: false
       # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
       # existingClaim: ""
+      # If unset, the default StorageClass of the cluster is used.
+      # Set to "-" to disable dynamic provisioning (storageClassName: "")
+      # storageClass: ""
       annotations: {}
       accessModes:
         - ReadWriteOnce
@@ -132,11 +148,18 @@ cms:
         memory: 1Gi
         cpu: 250m
 
+    # Override the global podSecurityContext/securityContext for the backup job only
+    #podSecurityContext: {}
+    #securityContext: {}
+
     ## Persist backup data to a persistent volume
     persistence:
       enabled: true
       # Use existingClaim if you want to use a pre-exising claim. No new backup volume will be requested
       # existingClaim: ""
+      # If unset, the default StorageClass of the cluster is used.
+      # Set to "-" to disable dynamic provisioning (storageClassName: "")
+      # storageClass: ""
       annotations: {}
       accessModes:
         - ReadWriteOnce
@@ -201,6 +224,10 @@ spellchecker:
       memory: 512Mi
       cpu: 500m
 
+  # Override the global podSecurityContext/securityContext for the spellchecker pod only
+  #podSecurityContext: {}
+  #securityContext: {}
+
 # CMS ConfigMap files
 # Override defaults or add more
 # mountPath must be specified if it should be mounted into the CMS pod
@@ -229,6 +256,39 @@ serviceAccount:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Pod-level security context, applied to all pods of this chart
+# (CMS, spellchecker and the backup job).
+# Can be overridden per workload via cms.podSecurityContext,
+# spellchecker.podSecurityContext and cms.backup.podSecurityContext
+podSecurityContext: 
+  runAsUser: null
+  fsGroup: null
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+
+# Container-level security context, applied to all containers of this chart.
+# Can be overridden per workload via cms.securityContext,
+# spellchecker.securityContext and cms.backup.securityContext
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Container lifecycle hooks for the CMS and spellchecker containers
+#lifecycle:
+#  preStop:
+#    exec:
+#      command: ["/bin/sh", "-c", "sleep 10"]
+
+# Additional entries for /etc/hosts of the CMS pod
+#hostAliases:
+#  - ip: "10.0.0.1"
+#    hostnames:
+#      - "internal.example.local"
 
 # Define additional volumes which can be
 # added to the Gentics CMS pod

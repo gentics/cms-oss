@@ -7,6 +7,7 @@ export * from './base-modal/base-modal.component';
 export * from './blank-modal/blank-modal.component';
 export * from './breadcrumbs/breadcrumbs.component';
 export * from './button/button.component';
+export * from './calendar/calendar.component';
 export * from './checkbox/checkbox.component';
 export * from './contents-list-item/contents-list-item.component';
 export * from './date-time-picker-controls/date-time-picker-controls.component';

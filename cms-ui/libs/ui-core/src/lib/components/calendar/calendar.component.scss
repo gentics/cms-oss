@@ -1,0 +1,111 @@
+.calendar-months {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.25rem;
+
+    .month-button {
+        background: none;
+        border: none;
+        padding: 0;
+        color: #0096DC;
+        font-size: 3rem;
+        cursor: pointer;
+        height: 1em;
+
+        > icon {
+            font-size: inherit;
+        }
+
+        &[disabled] {
+            color: #bebebe;
+            cursor: not-allowed;
+        }
+    }
+
+    .current-display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 0.25rem;
+
+    &.show-weeks {
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    .day-indicator {
+        font-weight: bold;
+    }
+
+    .day {
+        border: none;
+        background: none;
+        padding: 0;
+        text-align: center;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+
+        .day-label {
+            padding: 0.375em;
+            display: inline-block;
+            width: 1.75em;
+            height: 1.75em;
+            position: relative;
+            transition: 300ms;
+            display: block;
+            border-radius: 50%;
+            line-height: 1;
+
+            &:hover {
+                color: #000;
+                background-color: #7bc5e7;
+            }
+        }
+
+        &.overflow {
+            .day-label {
+                color: #a0a0a0;
+            }
+        }
+
+        &.active {
+            .day-label {
+                color: #efefef;
+                background-color: #0096DC;
+            }
+        }
+
+        &[disabled] {
+            cursor: not-allowed;
+
+            .day-label {
+                color: #bebebe;
+            }
+
+            &:hover .day-label {
+                color: #bebebe;
+                background: none;
+            }
+        }
+    }
+
+    .day-indicator,
+    .day {
+        border-bottom: 1px solid #e8e8e8;
+    }
+}

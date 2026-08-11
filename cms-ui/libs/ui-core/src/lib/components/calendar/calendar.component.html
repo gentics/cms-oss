@@ -1,0 +1,69 @@
+<div class="calendar-months">
+    <button
+        class="month-button previous-month"
+        data-action="previous-month"
+        [disabled]="min != null && (
+            ($any(min).year > activeYear)
+            || ($any(min).year === activeYear && $any(min).month >= activeMonth)
+        )"
+        (click)="goToPreviousMonth()"
+    >
+        <icon>arrow_left</icon>
+    </button>
+
+    <div class="current-display">
+        <div class="month-label">{{ formatStrings.months[activeMonth] }}</div>
+        <div class="year-label">{{ activeYear }}</div>
+    </div>
+
+    <button
+        class="month-button next-month"
+        data-action="next-month"
+        [disabled]="max != null && (
+            ($any(max).year < activeYear)
+            || ($any(max).year === activeYear && $any(max).month <= activeMonth)
+        )"
+        (click)="goToNextMonth()"
+    >
+        <icon>arrow_right</icon>
+    </button>
+</div>
+
+<div class="calendar-grid" [class.show-overflow]="showOverflowDays" [class.show-weeks]="showWeeks">
+    @if (showWeeks) {
+        <div class="week-indicator"></div>
+    }
+    @for (weekIdx of (startDate | gtxRange: 6 + startDate); track weekIdx) {
+        <div class="day-indicator">{{ dayIndicators[weekIdx % 7] }}</div>
+    }
+    @for (week of weeks; track week.numInYear) {
+        @if (showWeeks) {
+            <div class="week-indicator">
+                <div class="week-label">{{ week.numInYear }}</div>
+            </div>
+        }
+
+        @for (day of week.days; track `${day.year}-${day.month}-${day.date}`) {
+            <button
+                class="day"
+                [class.overflow]="day.year !== activeYear || day.month !== activeMonth"
+                [class.active]="dateValue != null
+                    && day.year === dateValue.year
+                    && day.month === dateValue.month
+                    && day.date === dateValue.date"
+                [disabled]="(min != null && (
+                    min.year > day.year
+                    || (min.year === day.year && min.month > day.month)
+                    || (min.year === day.year && min.month === day.month && min.date > day.date)
+                )) || (max != null && (
+                    max.year < day.year
+                    || (max.year === day.year && max.month < day.month)
+                    || (max.year === day.year && max.month === day.month && max.date < day.date)
+                ))"
+                (click)="handleDaySelect(day, $event)"
+            >
+                <span class="day-label" >{{ day.date }}</span>
+            </button>
+        }
+    }
+</div>

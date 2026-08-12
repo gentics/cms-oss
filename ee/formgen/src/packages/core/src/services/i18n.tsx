@@ -79,7 +79,11 @@ async function initI18n(
             payload: {} | string,
             callback: RequestCallback
           ): void => {
-            const targetUrl = new URL(url, window.location as any);
+
+            const targetUrl = new URL(url, (window.top != null && window.top !== window
+                ? window.top.location
+                : window.location) as any,
+            );
             if (previewInfo.cmsSid) {
               targetUrl.searchParams.set('sid', `${previewInfo.cmsSid}`);
             }

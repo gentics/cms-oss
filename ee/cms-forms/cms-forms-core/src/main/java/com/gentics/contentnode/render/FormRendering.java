@@ -102,7 +102,15 @@ public class FormRendering {
 					preview.append("\n<script type=\"module\" src=\"%s\"></script>".formatted(jsPath));
 				}
 
-				writer.write(preview.toString());
+				String wrapper = "<iframe class=\"formgen-preview-frame\" sandbox=\"allow-scripts allow-same-origin\" referrerpolicy=\"same-origin\" srcdoc='<html>";
+				wrapper += "<head>";
+				wrapper += "<meta charset=\"utf-8\">";
+				wrapper += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+				wrapper += "</head>";
+				wrapper += "<body>" + preview + "</body>";
+				wrapper += "</html>'></iframe>";
+
+				writer.write(wrapper);
 			}
 		} else {
 			writer.write(translate(options.getNoForm()));

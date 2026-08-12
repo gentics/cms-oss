@@ -582,6 +582,72 @@ define([
 				this.previewForms($('body'));
 			}
 
+			// TODO: To be replaced with the new https://developer.mozilla.org/en-US/docs/Web/API/Window/requestResize
+			// API once it is available in all browsers. Since it's currently experimental behind a flag,
+			// this solution is used instead.
+			function setupPreviewFrames() {
+				var CLASS_PREVIEW_FRAME = 'formgen-preview-frame';
+				/** @param {HTMLIFrameElement} frame */
+				function setupResizingForFrame(frame) {
+					function updateFrameHeight() {
+						if (frame.contentDocument != null && frame.contentDocument.body != null) {
+							frame.style.height = frame.contentDocument.body.scrollHeight + 'px';
+						}
+					}
+					function addMessageListener() {
+						frame.contentWindow.addEventListener('message', function(event) {
+						if (event.data === 'formgen.preview.resize') {
+							updateFrameHeight();
+						}
+					});
+					}
+
+					updateFrameHeight();
+					addMessageListener();
+					frame.contentWindow.addEventListener('load', function() {
+						addMessageListener();
+					});
+				}
+
+				var observer = new MutationObserver(function(mutations) {
+					// Filter out all mutations which aren't newly added preview-frames.
+					for (var mut of mutations) {
+						if (mut.type !== 'childList' || mut.addedNodes.length === 0) {
+							continue;
+						}
+						for (var added of mut.addedNodes) {
+							if (
+								added.nodeType === Node.ELEMENT_NODE
+								&& added.nodeName === 'IFRAME'
+								&& /** @type {HTMLIFrameElement} */(added).classList.contains(CLASS_PREVIEW_FRAME)
+							) {
+								setupResizingForFrame(added);
+							}
+						}
+					}
+				});
+
+				// Observe all changes to the page, as we need to know when a frame is being added.
+				// These will be replaced when editing/re-rendering the form, since it's added as a tag,
+				// and therefore does server-side rendering (which just renders the new frame).
+				// We sadly have to listen for all changes, as editables can be added/removed at any time.
+				observer.observe(document.body, {
+					childList: true,
+					subtree: true,
+				});
+
+				// And check for all which are here from the beginning, but with a delay, because for whatever
+				// reason, the initial frames aren't attached to the DOM anymore, and are loaded again without
+				// the observer noticing.
+				setTimeout(function() {
+					document.querySelectorAll('.' + CLASS_PREVIEW_FRAME).forEach(function(frame) {
+						setupResizingForFrame(frame);
+					});
+				}, 100);
+			}
+
+			setupPreviewFrames();
+
 			return this._deferred;
 		},
 

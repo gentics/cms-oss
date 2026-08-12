@@ -184,3 +184,12 @@ div.gcn-tag-insert-placeholder {
 	display: block !important;
 	margin-left: 0;
 }
+
+/* Special styles for the formgen-frames */
+.formgen-preview-frame {
+	width: 100%;
+	outline: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+}

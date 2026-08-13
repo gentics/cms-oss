@@ -585,27 +585,62 @@ define([
 			// TODO: To be replaced with the new https://developer.mozilla.org/en-US/docs/Web/API/Window/requestResize
 			// API once it is available in all browsers. Since it's currently experimental behind a flag,
 			// this solution is used instead.
-			function setupPreviewFrames() {
+			(function setupPreviewFrames() {
 				var CLASS_PREVIEW_FRAME = 'formgen-preview-frame';
+				var SHRINK_THRESHOLD = 6;
+				var cleanup = new AbortController();
+
 				/** @param {HTMLIFrameElement} frame */
-				function setupResizingForFrame(frame) {
-					function updateFrameHeight() {
-						if (frame.contentDocument != null && frame.contentDocument.body != null) {
-							frame.style.height = frame.contentDocument.body.scrollHeight + 'px';
-						}
-					}
-					function addMessageListener() {
-						frame.contentWindow.addEventListener('message', function(event) {
-						if (event.data === 'formgen.preview.resize') {
-							updateFrameHeight();
-						}
-					});
+				function updateFrameHeight(frame) {
+					// If for some reason, a frame is not correctly attached to the DOM anymore,
+					// then we remove the message listeners from all registered frame-windows and
+					// register all frames anew.
+					if (frame.parentElement == null) {
+						cleanup.abort();
+						cleanup = new AbortController();
+						setupAllCurrentFrames();
+						return;
 					}
 
-					updateFrameHeight();
-					addMessageListener();
-					frame.contentWindow.addEventListener('load', function() {
-						addMessageListener();
+					if (frame.contentDocument != null && frame.contentDocument.body != null) {
+						var currentHeight = frame.scrollHeight;
+						var newHeight = frame.contentDocument.body.scrollHeight;
+
+						// If the iframe is only going to shrink below the threshold, it's usually because
+						// of some hover effects. This prevents excessive resizing which is annoying for users.
+						if (newHeight < currentHeight && (currentHeight - newHeight) < SHRINK_THRESHOLD) {
+							return;
+						}
+						frame.style.height = newHeight + 'px';
+					}
+				}
+
+				/** @param {HTMLIFrameElement} frame */
+				function addMessageListener(frame) {
+					frame.contentWindow.addEventListener('message', function(event) {
+						if (event.data === 'formgen.preview.resize') {
+							updateFrameHeight(frame);
+						}
+					}, {
+						signal: cleanup.signal,
+					});
+				}
+
+				/** @param {HTMLIFrameElement} frame */
+				function setupResizingForFrame(frame) {
+					updateFrameHeight(frame);
+					addMessageListener(frame);
+
+					frame.addEventListener('load', function() {
+						addMessageListener(frame);
+					}, {
+						signal: cleanup.signal,
+					});
+				}
+
+				function setupAllCurrentFrames() {
+					document.querySelectorAll('.' + CLASS_PREVIEW_FRAME).forEach(function(frame) {
+						setupResizingForFrame(frame);
 					});
 				}
 
@@ -636,17 +671,8 @@ define([
 					subtree: true,
 				});
 
-				// And check for all which are here from the beginning, but with a delay, because for whatever
-				// reason, the initial frames aren't attached to the DOM anymore, and are loaded again without
-				// the observer noticing.
-				setTimeout(function() {
-					document.querySelectorAll('.' + CLASS_PREVIEW_FRAME).forEach(function(frame) {
-						setupResizingForFrame(frame);
-					});
-				}, 100);
-			}
-
-			setupPreviewFrames();
+				setupAllCurrentFrames();
+			})();
 
 			return this._deferred;
 		},

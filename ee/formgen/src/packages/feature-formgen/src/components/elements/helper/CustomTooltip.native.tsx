@@ -20,11 +20,6 @@ import {
   Text,
 } from '@expo/ui/swift-ui';
 import {
-  AlertDialog as AndroidBottomSheet,
-  Button as AndroidButton,
-  shadow,
-} from '@expo/ui/jetpack-compose';
-import {
   background,
   cornerRadius,
   fixedSize,
@@ -82,7 +77,11 @@ export default function CustomTooltip({
     return (
       <View>
         <Host style={{ position: 'absolute' }}>
-          <BottomSheet isOpened={open} onIsOpenedChange={handleClose}>
+          <BottomSheet
+            isPresented={open}
+            onIsPresentedChange={handleClose}
+            fitToContents
+          >
             <VStack
               spacing={20}
               modifiers={[
@@ -94,14 +93,14 @@ export default function CustomTooltip({
             >
               <HStack>
                 <Spacer />
-                <Button variant="default" onPress={handleClose}>
-                  <Text>{closeInfoButtonText}</Text>
-                </Button>
+                <Button label={closeInfoButtonText} onPress={handleClose} />
               </HStack>
 
               <Text
-                color={formElementWrapperTheme.tooltip.tooltipContentFontColor}
                 modifiers={[
+                  foregroundColor(
+                    formElementWrapperTheme.tooltip.tooltipContentFontColor,
+                  ),
                   fixedSize({ vertical: true }),
                   multilineTextAlignment('center'),
                 ]}

@@ -209,6 +209,18 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
   const [open, setOpen] = useState(false);
   const [displayValue, setDisplayValue] = useState<string>(initialDisplayValue);
 
+  const toPickerDate = (v: any): Date => {
+    const m = moment.isMoment(v) ? v : v ? moment(v) : null;
+    return m && m.isValid() ? m.toDate() : new Date();
+  };
+  const [pickerDate, setPickerDate] = useState<Date>(() =>
+    toPickerDate(dateValue),
+  );
+
+  React.useLayoutEffect(() => {
+    if (open) setPickerDate(toPickerDate(dateValue));
+  }, [open]);
+
   //Animated Label
   const labelText =
     utils.getI18nText(formProps.formState, formProps.label) +
@@ -532,13 +544,13 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
   const {
     BottomSheet,
     Button,
-    DateTimePicker,
+    DatePicker,
     Host,
     HStack,
     Spacer,
     VStack,
   } = require('@expo/ui/swift-ui');
-  const { padding } = require('@expo/ui/swift-ui/modifiers');
+  const { padding, datePickerStyle } = require('@expo/ui/swift-ui/modifiers');
 
   const openPicker = () => {
     prevDisplayRef.current = displayValue;
@@ -560,6 +572,7 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
   const handleChange = (date: any) => {
     runFocus();
     const iso = date?.toISOString?.() ?? new Date(date).toISOString();
+    setPickerDate(new Date(iso));
     setDisplayValue(convertISOToHumanDisplay(iso));
   };
 
@@ -573,28 +586,28 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
   return (
     <View>
       <Host style={{ position: 'absolute' }}>
-        <BottomSheet isOpened={open} onIsOpenedChange={closePicker}>
+        <BottomSheet
+          isPresented={open}
+          onIsPresentedChange={closePicker}
+          fitToContents
+        >
           <VStack>
             <HStack
               modifiers={[padding({ leading: 20, trailing: 20, top: 20 })]}
             >
-              <Button variant="default" onPress={handleCancel}>
-                Cancel
-              </Button>
+              <Button label="Cancel" onPress={handleCancel} />
               <Spacer />
-              <Button variant="default" onPress={handleSave}>
-                Save
-              </Button>
+              <Button label="Save" onPress={handleSave} />
             </HStack>
-            <DateTimePicker
-              onDateSelected={(date: Date) => handleChange(date)}
-              displayedComponents={type}
-              initialDate={
-                moment.isMoment(dateValue)
-                  ? dateValue.toISOString()
-                  : dateValue || new Date().toISOString()
+            <DatePicker
+              onDateChange={(date: Date) => handleChange(date)}
+              displayedComponents={
+                type === 'dateAndTime' ? ['date', 'hourAndMinute'] : [type]
               }
-              variant={type === 'dateAndTime' ? 'graphical' : 'wheel'}
+              selection={pickerDate}
+              modifiers={[
+                datePickerStyle(type === 'dateAndTime' ? 'graphical' : 'wheel'),
+              ]}
             />
           </VStack>
         </BottomSheet>

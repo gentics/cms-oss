@@ -549,7 +549,7 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rerouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 

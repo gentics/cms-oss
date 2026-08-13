@@ -62,7 +62,7 @@ import {
     openPageForEditing,
     overwriteAlohaConfigWith,
     pickPaletteColor,
-    rereouteAlohaConfig,
+    rerouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
@@ -360,7 +360,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
-                await rereouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await rerouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
                 await openEditingPageInEditmode(page);
 
                 await mainEditable.click();
@@ -1177,7 +1177,7 @@ test.describe('Page Editing', () => {
             test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1202,7 +1202,7 @@ test.describe('Page Editing', () => {
             test('should be able to style column with config', async ({ page }) => {
                 const STYLE_NAME = 'column-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1230,7 +1230,7 @@ test.describe('Page Editing', () => {
             test('should be able to style row with config', async ({ page }) => {
                 const STYLE_NAME = 'row-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1256,7 +1256,7 @@ test.describe('Page Editing', () => {
             });
 
             test('should change scope to tables when adding a caption', async ({ page }) => {
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
@@ -1622,11 +1622,16 @@ test.describe('Page Editing', () => {
                 await checkKeys(14);
             });
         });
-        test.describe('CharacterPicker', () => {
+        test.describe('Character Picker', () => {
             const SLOT_CHARACTER_GRID = 'characterPicker';
             const CHARACTER_CELL = '.symbol-grid-cell';
 
-            test('should display available characters and character should have a title', async ({ page }) => {
+            test('should display available characters and character should have a title', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
                 await editPageAndOpenCharacterGrid(page);
 
                 const characterCells = page.locator(CHARACTER_CELL);
@@ -1638,7 +1643,7 @@ test.describe('Page Editing', () => {
                 }
             });
 
-            test('should be able to select a character', {
+            test('should be able to select a icon character', {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-19600',
@@ -1658,7 +1663,7 @@ test.describe('Page Editing', () => {
                 // select an 'invisible' icon like non-breaking space
                 // and check if it has an icon tag as a child
 
-                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="non-breaking space"]`);
+                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="Non-breaking space"]`);
                 const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('icon');
 
                 await expect(nonBreakingSpaceCharacter).toBeVisible();

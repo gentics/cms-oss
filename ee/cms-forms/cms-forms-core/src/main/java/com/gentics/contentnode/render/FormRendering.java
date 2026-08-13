@@ -22,6 +22,7 @@ import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Helper class containing functionality for rendering forms common to velocity and handlebars
@@ -102,13 +103,28 @@ public class FormRendering {
 					preview.append("\n<script type=\"module\" src=\"%s\"></script>".formatted(jsPath));
 				}
 
-				String wrapper = "<iframe class=\"formgen-preview-frame\" sandbox=\"allow-scripts allow-same-origin\" referrerpolicy=\"same-origin\" srcdoc='<html>";
-				wrapper += "<head>";
-				wrapper += "<meta charset=\"utf-8\">";
-				wrapper += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
-				wrapper += "</head>";
-				wrapper += "<body>" + preview + "</body>";
-				wrapper += "</html>'></iframe>";
+				// The preview has to be loaded into an own iframe, so it doesn't clash with aloha, or any other apps on the page.
+				String iframeContent = "<!DOCTYPE html>" +
+					"<html>" +
+						"<head>" +
+							"<meta charset=\"utf-8\">" +
+							"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+						"</head>" +
+						"<body>" +
+							preview +
+						"</body>" +
+					"</html>";
+
+				// In order to use it inline in the 'srcdoc' attribute, we have to escape the iframe-content so it doesn't break out of the attribute-value.
+				String escapedIframeContent = iframeContent
+						.replace("'", "&apos;")
+						.replace("\"", "&quot;")
+						.replace(">", "&gt;")
+						.replace("<", "&lt;");
+
+				String wrapper = "<iframe class=\"formgen-preview-frame\" sandbox=\"allow-scripts allow-same-origin\" referrerpolicy=\"same-origin\" srcdoc=\"" +
+						escapedIframeContent +
+				"\"></iframe>";
 
 				writer.write(wrapper);
 			}

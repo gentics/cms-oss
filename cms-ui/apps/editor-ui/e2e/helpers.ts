@@ -549,7 +549,7 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rerouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 
@@ -627,6 +627,29 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
         }
 
         return pickedHexColor;
+    });
+}
+
+/**
+ * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
+ * @param page - The current page.
+ * @param plugin - The plugin source (example: "common/characterpicker").
+ */
+export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+    return page.route('**/alohapage**', async (route) => {
+        const response = await route.fetch();
+        let body = await response.text();
+
+        body = body.replace(
+            /data-aloha-plugins\s*=\s*"([^"]*)"/,
+            (_, plugins) =>
+                `data-aloha-plugins="${plugins},${plugin}"`,
+        );
+
+        await route.fulfill({
+            response,
+            body,
+        });
     });
 }
 

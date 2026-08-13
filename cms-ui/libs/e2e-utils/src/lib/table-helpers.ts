@@ -11,8 +11,9 @@ export function findTableAction(source: Page | Locator, id: string): Locator {
 /**
  * Finds a table row that contains the specified text
  */
-export function findTableRowByText(source: Page | Locator, text: string, exact: boolean = false): Locator {
-    return source.locator('gtx-table .data-row .data-column', {
+export async function findTableRowByText(source: Page | Locator, text: string, exact: boolean = false): Promise<Locator> {
+    source = await getSourceLocator(source, 'gtx-table');
+    return source.locator('.data-row .data-column', {
         hasText: exact ? new RegExp(`^[\\s]*${text}[\\s]*$`) : text,
     }).locator('..');
 }

@@ -1,0 +1,2 @@
+Handlebars has been updated to 4.5.4 to fix the issue that prefixed helpers would not be called in parameterized blocks.
+See "Handlebars Issue 1183":https://github.com/jknack/handlebars.java/issues/1183

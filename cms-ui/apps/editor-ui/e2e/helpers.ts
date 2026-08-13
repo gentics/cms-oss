@@ -6,13 +6,16 @@ import {
     clickModalAction,
     dismissNotifications,
     FixtureFile,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
     openContext,
     reroute,
     selectDateInPicker,
-    wait
+    uploadFileFromInput,
+    wait,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -130,14 +133,8 @@ export async function uploadFiles(
 
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
-            // Filechooser is a lot simpler, as it can handle native files
-            const fileChooserPromise = page.waitForEvent('filechooser');
             const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-            await uploadButton.waitFor({ state: 'visible' });
-            await uploadButton.click();
-            const fileChooser = await fileChooserPromise;
-
-            await fileChooser.setFiles(files.map((f) => f.fixturePath));
+            await uploadFileFromInput(page, uploadButton, files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
@@ -318,7 +315,7 @@ export async function createInternalLink(
 
         // If the handler didn't confirm/close the modal, we do it now
         if (await repoBrowser.isVisible()) {
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
         }
 
         // Fill out rest of the form
@@ -611,7 +608,7 @@ export function findColorPickerPaletteColor(picker: Locator, color: string): Loc
 }
 
 export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
-    return picker.locator(`.palette .palette-entry`).nth(index);
+    return picker.locator('.palette .palette-entry').nth(index);
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
@@ -635,23 +632,35 @@ export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: s
 
 /**
  * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
- * @param {string} page - The current page.
- * @param {string} plugin - The plugin source (example: "common/characterpicker").
+ * @param page - The current page.
+ * @param plugin - The plugin source (example: "common/characterpicker").
  */
-export async function addTemporaryAlohaPlugin(page, plugin: string) {
-    await page.route('**/alohapage**', async route => {
+export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+    return page.route('**/alohapage**', async (route) => {
         const response = await route.fetch();
         let body = await response.text();
 
         body = body.replace(
             /data-aloha-plugins\s*=\s*"([^"]*)"/,
             (_, plugins) =>
-                `data-aloha-plugins="${plugins},${plugin}"`
+                `data-aloha-plugins="${plugins},${plugin}"`,
         );
 
         await route.fulfill({
             response,
-            body
+            body,
         });
+    });
+}
+
+export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {
+    await test.step(`Navigating to folder: ${folderId}`, async () => {
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const folder = findItem(list, folderId);
+        // Use the wildcard here instead, since if we used a globalId for the selector, the breadcrumb would
+        // still be loaded with the local ID, causing this to fail otherwise.
+        const breadcrumbReq = waitForResponseFrom(page, 'GET', '/rest/folder/breadcrumb/*');
+        await folder.locator('.item-primary .item-name-router-link').click();
+        await breadcrumbReq;
     });
 }

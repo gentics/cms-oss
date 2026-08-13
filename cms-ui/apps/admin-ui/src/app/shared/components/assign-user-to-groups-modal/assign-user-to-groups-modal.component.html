@@ -7,15 +7,16 @@
     <gtx-progress-bar></gtx-progress-bar>
   }
 
-  <gtx-group-table
-    class="group-table modal-table"
-    [hideActions]="true"
-    [extraActions]="actions"
-    [disabled]="loading"
-    [useSelectionMap]="true"
-    [(selected)]="selected"
-    (actionClick)="handleActionClick($event)"
-  ></gtx-group-table>
+    <gtx-group-table
+        class="group-table modal-table"
+        [hideActions]="true"
+        [extraActions]="actions"
+        [disabled]="loading"
+        [useSelectionMap]="true"
+        [assignableOnly]="true"
+        [(selected)]="selected"
+        (actionClick)="handleActionClick($event)"
+    ></gtx-group-table>
 </div>
 
 <div class="modal-footer">

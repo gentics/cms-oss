@@ -16,3 +16,4 @@ export {default as CmsContainerElement} from '../components/elements/cms/CmsCont
 export {default as CMSBooleanElement} from '../components/elements/cms/CMSBooleanElement';
 export {default as CmsUserMailElement} from '../components/elements/cms/CmsUserMailElement';
 export {default as CatalogElement} from '../components/elements/shared/CatalogElement';
+export {default as TitleElement} from '../components/elements/shared/TitleElement';

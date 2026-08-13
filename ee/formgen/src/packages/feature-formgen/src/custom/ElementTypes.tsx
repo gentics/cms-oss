@@ -43,7 +43,7 @@ const sharedElementTypes: IElementTypes = {
     datetime: Elements.DateTimeElement as unknown as IElementType,
     time: Elements.DateTimeElement as unknown as IElementType,
     binary: Elements.BinaryElement as unknown as IElementType,
-    // text: TextElement,                 // shared
+    sectionheadline: Elements.TitleElement as unknown as IElementType,
     // label: LabelElement,               // shared
     // No: aggregate, autocomplete, lazycatalog, reference (not in CMS Forms)
 };

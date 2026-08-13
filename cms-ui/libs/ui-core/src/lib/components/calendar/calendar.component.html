@@ -29,19 +29,15 @@
     </button>
 </div>
 
-<div class="calendar-grid" [class.show-overflow]="showOverflowDays" [class.show-weeks]="showWeeks">
-    @if (showWeeks) {
-        <div class="week-indicator"></div>
-    }
+<div class="calendar-grid" [class.show-overflow]="displayOverflowDays" [class.show-weeks]="displayWeeks">
+    <div class="week-indicator"></div>
     @for (weekIdx of (startDate | gtxRange: 6 + startDate); track weekIdx) {
         <div class="day-indicator">{{ dayIndicators[weekIdx % 7] }}</div>
     }
     @for (week of weeks; track week.numInYear) {
-        @if (showWeeks) {
-            <div class="week-indicator">
-                <div class="week-label">{{ week.numInYear }}</div>
-            </div>
-        }
+        <div class="week-indicator">
+            <div class="week-label">{{ week.numInYear }}</div>
+        </div>
 
         @for (day of week.days; track `${day.year}-${day.month}-${day.date}`) {
             <button

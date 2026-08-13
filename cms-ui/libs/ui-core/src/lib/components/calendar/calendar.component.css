@@ -12,7 +12,7 @@
         background: none;
         border: none;
         padding: 0;
-        color: #0096DC;
+        color: var(--gtx-primary);
         font-size: 3rem;
         cursor: pointer;
         height: 1em;
@@ -22,7 +22,7 @@
         }
 
         &[disabled] {
-            color: #bebebe;
+            color: var(--gtx-mid-gray);
             cursor: not-allowed;
         }
     }
@@ -41,12 +41,32 @@
     text-align: center;
     gap: 0.25rem;
 
-    &.show-weeks {
-        grid-template-columns: repeat(8, 1fr);
-    }
-
     .day-indicator {
         font-weight: bold;
+    }
+
+    .week-indicator {
+        display: none;
+        border-right: 1px solid var(--gtx-very-light-gray);
+        text-align: center;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-family: monospace;
+        user-select: none;
+
+        .week-label {
+            padding: 0.375em;
+            display: inline-block;
+            width: 1.75em;
+            height: 1.75em;
+            position: relative;
+            transition: 300ms;
+            display: block;
+            border-radius: 50%;
+            line-height: 1;
+        }
     }
 
     .day {
@@ -59,6 +79,7 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        user-select: none;
 
         .day-label {
             padding: 0.375em;
@@ -72,8 +93,8 @@
             line-height: 1;
 
             &:hover {
-                color: #000;
-                background-color: #7bc5e7;
+                color: var(--gtx-off-black);
+                background-color: color-mix(in srgb, var(--gtx-primary), transparent 60%);
             }
         }
 
@@ -85,8 +106,8 @@
 
         &.active {
             .day-label {
-                color: #efefef;
-                background-color: #0096DC;
+                color: var(--gtx-very-light-gray);
+                background-color: var(--gtx-primary);
             }
         }
 
@@ -94,11 +115,11 @@
             cursor: not-allowed;
 
             .day-label {
-                color: #bebebe;
+                color: var(--gtx-mid-gray);
             }
 
             &:hover .day-label {
-                color: #bebebe;
+                color: var(--gtx-mid-gray);
                 background: none;
             }
         }
@@ -106,6 +127,26 @@
 
     .day-indicator,
     .day {
-        border-bottom: 1px solid #e8e8e8;
+        border-bottom: 1px solid var(--gtx-very-light-gray);
+    }
+
+    &.show-weeks {
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    &:not(.show-weeks) {
+        .week-indicator {
+            display: none;
+        }
+    }
+
+    &:not(.show-overflow) {
+        .day.overflow {
+            pointer-events: none;
+
+            .day-label {
+                display: none;
+            }
+        }
     }
 }

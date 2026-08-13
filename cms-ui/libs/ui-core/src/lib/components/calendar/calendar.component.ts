@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, Optional, SimpleChanges } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    OnInit,
+    Optional,
+    Output,
+    SimpleChanges,
+} from '@angular/core';
 import { cancelEvent } from '@gentics/common';
 import { Subscription } from 'rxjs';
 import { DateTimePickerStrings } from '../../common';
@@ -20,7 +30,7 @@ interface Week {
 @Component({
     selector: 'gtx-calendar',
     templateUrl: './calendar.component.html',
-    styleUrls: ['./calendar.component.scss'],
+    styleUrl: './calendar.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [
         generateFormProvider(CalendarComponent),
@@ -52,20 +62,38 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
      * and this is set to `true`, it'll switch the view to display the current value.
      */
     @Input()
-    public showDateChange = false;
+    public followValue = false;
 
     /**
      * If overflow days, i.E. days which aren't part of the current visible month,
      * but which are part of the first/last week, should be displayed.
      */
     @Input()
-    public showOverflowDays = false;
+    public displayOverflowDays = false;
 
     /**
      * If it should show the number of the week in a own column
      */
     @Input()
-    public showWeeks = false;
+    public displayWeeks = false;
+
+    /**
+     * The year that is actively being displayed
+     */
+    @Input()
+    public activeYear: number;
+
+    /**
+     * The month that is actively being displayed
+     */
+    @Input()
+    public activeMonth: number;
+
+    @Output()
+    public activeYearChange = new EventEmitter<number>();
+
+    @Output()
+    public activeMonthChange = new EventEmitter<number>();
 
     /**
      * The `value` parsed as Date object for easier handling.
@@ -86,8 +114,6 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
      */
     public startDate = 0;
 
-    public activeYear: number;
-    public activeMonth: number;
     public formatStrings: DateTimePickerStrings;
 
     private providerSubscription: Subscription;
@@ -103,8 +129,8 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
     public ngOnInit(): void {
         if (!this.value) {
             const now = new Date();
-            this.activeYear = now.getFullYear();
-            this.activeMonth = now.getMonth();
+            this.updateActiveYear(now.getFullYear());
+            this.updateActiveMonth(now.getMonth());
         }
         this.updateFormatProvider();
     }
@@ -114,6 +140,12 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
 
         if (changes.formatProvider && !changes.formatProvider.firstChange) {
             this.updateFormatProvider();
+        }
+        if (
+            (changes.activeYear && !changes.activeYear.firstChange)
+            || (changes.activeMonth && !changes.activeMonth.firstChange)
+        ) {
+            this.rebuildWeeks();
         }
     }
 
@@ -131,17 +163,17 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
 
         if (this.activeYear == null || this.activeMonth == null) {
             const dateToShow = tmp == null ? new Date() : tmp;
-            this.activeYear = dateToShow.getFullYear();
-            this.activeMonth = dateToShow.getMonth();
+            this.updateActiveYear(dateToShow.getFullYear());
+            this.updateActiveMonth(dateToShow.getMonth());
         }
 
-        if (!this.showDateChange || anyDateNull) {
+        if (!this.followValue || anyDateNull) {
             return;
         }
 
         if (this.activeYear !== tmp.getFullYear() || this.activeMonth !== tmp.getMonth()) {
-            this.activeYear = tmp.getFullYear();
-            this.activeMonth = tmp.getMonth();
+            this.updateActiveYear(tmp.getFullYear());
+            this.updateActiveMonth(tmp.getMonth());
 
             this.rebuildWeeks();
         }
@@ -163,18 +195,18 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
 
         let needsRebuild = false;
         if (newDate.getUTCFullYear() !== this.activeYear) {
-            this.activeYear = newDate.getUTCFullYear();
+            this.updateActiveYear(newDate.getUTCFullYear());
             needsRebuild = true;
         }
         if (newDate.getUTCMonth() !== this.activeMonth) {
-            this.activeMonth = newDate.getUTCMonth();
+            this.updateActiveMonth(newDate.getUTCMonth());
             needsRebuild = true;
         }
         if (needsRebuild) {
             this.rebuildWeeks();
         }
 
-        this.triggerChange(newDate.getTime() / 1000);
+        this.triggerChange(newDate.getTime());
     }
 
     public goToPreviousMonth(): void {
@@ -218,6 +250,16 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
         this.rebuildWeeks();
     }
 
+    private updateActiveYear(year: number): void {
+        this.activeYear = year;
+        this.activeYearChange.emit(year);
+    }
+
+    private updateActiveMonth(month: number): void {
+        this.activeMonth = month;
+        this.activeMonthChange.emit(month);
+    }
+
     private rebuildWeeks(): void {
         this.startDate = (this.formatStrings.weekStart ?? 0) % 7;
         this.dayIndicators = this.formatStrings.weekdaysMin
@@ -249,19 +291,10 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
                     date: monthEnd - i,
                 });
             }
-
-            // Now fill the first week days with the remaining days of the week
-            for (let i = 0; i < 7 - startOffset; i++) {
-                currentWeek.days.push({
-                    year: displayDate.getUTCFullYear(),
-                    month: displayDate.getMonth(),
-                    date: i + 1,
-                });
-            }
         }
         const endOfCurrentMonth = getLastDayOfMonth(displayDate);
 
-        for (let i = startOffset; i < endOfCurrentMonth.getDate(); i++) {
+        for (let i = 0; i < endOfCurrentMonth.getDate(); i++) {
             if (currentWeek.days.length === 7) {
                 if (weekInYearCounter > 52) {
                     weekInYearCounter = 1;

@@ -1,20 +1,20 @@
 {
   "name": "@gentics/form-grid",
-  "version": "6.5.2",
+  "version": "6.6.0-SNAPSHOT",
   "peerDependencies": {
     "@angular/common": "^20.3.0",
     "@angular/core": "^20.3.0",
-    "@gentics/cms-models": "^6.5.2",
-    "@gentics/cms-integration-api-models": "^6.5.2",
-    "@gentics/common": "^6.5.2",
-    "@gentics/ui-core": "^6.5.2"
+    "@gentics/cms-models": "^6.6.0-SNAPSHOT",
+    "@gentics/cms-integration-api-models": "^6.6.0-SNAPSHOT",
+    "@gentics/common": "^6.6.0-SNAPSHOT",
+    "@gentics/ui-core": "^6.6.0-SNAPSHOT"
   },
   "devDependencies": {
     "@angular/common": "^20.3.0",
     "@angular/core": "^20.3.0",
-    "@gentics/cms-models": "^6.5.2",
-    "@gentics/cms-integration-api-models": "^6.5.2",
-    "@gentics/ui-core": "^6.5.2"
+    "@gentics/cms-models": "^6.6.0-SNAPSHOT",
+    "@gentics/cms-integration-api-models": "^6.6.0-SNAPSHOT",
+    "@gentics/ui-core": "^6.6.0-SNAPSHOT"
   },
   "sideEffects": false
 }

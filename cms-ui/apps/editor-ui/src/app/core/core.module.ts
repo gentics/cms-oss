@@ -2,14 +2,14 @@ import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE, GCMS_UI_SERVICES_PROVIDER, I18nDatePickerFormatService } from '@gentics/cms-components';
+import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { AlohaModule } from '@gentics/cms-components/aloha';
 import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { FormGridModule } from '@gentics/form-grid';
-import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { throwIfAlreadyLoaded } from '../common/utils/module-import-guard';
@@ -46,6 +46,7 @@ import {
     UsersList,
     WastebinModal,
 } from './components';
+import { FormListLoaderService } from './providers';
 import { Api } from './providers/api/api.service';
 import { ContextMenuOperationsService } from './providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from './providers/decision-modals/decision-modals.service';
@@ -69,7 +70,6 @@ import { ServerStorage } from './providers/server-storage/server-storage.service
 import { UploadConflictService } from './providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 import { UsersnapService } from './providers/usersnap/usersnap.service';
-import { FormListLoaderService } from './providers';
 
 export const getSidFromAppState = (appState: ApplicationStateService): Observable<number> =>
     appState.select((state) => state.auth.sid);
@@ -135,7 +135,6 @@ const PROVIDERS = [
     UserSettingsService,
     UsersnapService,
     FormListLoaderService,
-    { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormatService },
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },

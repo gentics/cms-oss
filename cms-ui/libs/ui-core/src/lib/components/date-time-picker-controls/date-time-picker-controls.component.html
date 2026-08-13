@@ -1,9 +1,11 @@
 <div class="controls-header" [ngClass]="'order-' + dateOrder">
-    <div class="day">{{ formatWith('dddd') }}</div>
-    <div class="month">{{ formatWith('MMM') }}</div>
-    <div class="date">{{ formatWith('D') }}</div>
-    @if (selectYear) {
-        <div class="year">{{ formatWith('YYYY') }}</div>
+    @if (dateValue) {
+        <div class="day">{{ formatProvider.strings.weekdays[dateValue.getDay()] }}</div>
+        <div class="month">{{ (formatProvider.strings.monthsShort || formatProvider.strings.months)[dateValue.getMonth()] }}</div>
+        <div class="date">{{ dateValue.getDate() }}</div>
+        @if (selectYear) {
+            <div class="year">{{ dateValue.getFullYear() }}</div>
+        }
     }
 
     @if (selectYear) {
@@ -11,8 +13,6 @@
             <gtx-select
                 [value]="selectedYear"
                 (valueChange)="setYear($event)"
-                (focus)="handleFocus()"
-                (blur)="handleBlur()"
             >
                 @for (year of years; track year) {
                     <gtx-option [value]="year">{{ year }}</gtx-option>
@@ -24,11 +24,19 @@
 
 <div
     class="controls-content"
-    [attr.data-value-year]="momentValue.year()"
-    [attr.data-value-month]="momentValue.month()"
-    [attr.data-value-date]="momentValue.date()"
+    [attr.data-value-year]="dateValue == null ? null : dateValue.getFullYear()"
+    [attr.data-value-month]="dateValue == null ? null : dateValue.getMonth()"
+    [attr.data-value-date]="dateValue == null ? null : dateValue.getDate()"
   >
-    <div #calendarContainer class="calendar-container"></div>
+    <gtx-calendar
+        [formatProvider]="formatProvider"
+        [value]="value"
+        [min]="min"
+        [max]="max"
+        [displayOverflowDays]="true"
+        [(activeYear)]="selectedYear"
+        (valueChange)="triggerChange($event)"
+    />
 
     @if (displayTime) {
         <div class="time-picker">

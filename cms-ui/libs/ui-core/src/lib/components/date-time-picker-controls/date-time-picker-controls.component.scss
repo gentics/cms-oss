@@ -6,7 +6,7 @@
     .date,
     .year {
         display: inline-block;
-        font-size: $gtx-font-size-regular;
+        font-size: 1rem;
         margin: 0 2px;
     }
 }
@@ -30,13 +30,13 @@
         flex: 0 0 auto;
         min-height: 1px;
         text-align: center;
-        background-color: $secondary-color;
+        background-color: var(--gtx-primary);
         font-weight: 300;
 
         .day {
             color: white;
             padding: 5px;
-            background-color: darken($secondary-color, 10%);
+            background-color: color-mix(in oklab, var(--gtx-primary), black 25%);
         }
 
         .month {
@@ -52,7 +52,7 @@
         }
 
         .year {
-            color: lighten($secondary-color, 30%);
+            color: color-mix(in oklab, var(--gtx-primary), white 40%);
             font-size: 1.5rem;
         }
 
@@ -83,7 +83,7 @@
                 >.view-value {
                     position: relative;
                     display: flex;
-                    color: lighten($secondary-color, 30%);
+                    color: color-mix(in oklab, var(--gtx-primary), white 40%);
                     font-size: 1.5rem;
                     display: flex;
                     align-items: center;
@@ -93,7 +93,7 @@
                     icon {
                         position: absolute;
                         right: 0;
-                        color: $gtx-color-off-white;
+                        color: var(--gtx-off-white);
                     }
                 }
             }
@@ -153,7 +153,7 @@
         transition: background 0.2s;
 
         &:hover {
-            background-color: transparentize($secondary-color, 0.5);
+            background-color: color-mix(in srgb, var(--gtx-primary), transparent 50%);
         }
     }
 

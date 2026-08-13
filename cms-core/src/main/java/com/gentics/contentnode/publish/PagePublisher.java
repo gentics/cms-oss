@@ -59,6 +59,12 @@ import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.genericexceptions.GenericFailureException;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.render.exception.RecoverableException;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 
 /**
  * The pagepublisher translates all pages to publish and writes the results into the
@@ -82,6 +88,8 @@ public class PagePublisher {
 	protected IWorkPhase workPhase;
 
 	protected SimplePublishInfo publishInfo;
+
+	protected Tracer tracer;
 
 	protected boolean force;
 	
@@ -117,6 +125,9 @@ public class PagePublisher {
 		this.workPhase = workPhase;
 		this.force = config.getDefaultPreferences().getFeature("override_publish_errors");
 		this.publishInfo = publishInfo;
+		this.tracer = GlobalOpenTelemetry.isSet()
+			? GlobalOpenTelemetry.get().getTracer("cms.publish.render")
+			: null;
 	}
 
 	/**
@@ -350,7 +361,23 @@ public class PagePublisher {
 			}
 		}
 
-		source = page.render(pageRenderResult, renderedAttributes, attributes, linkTransformer, times);
+		if (tracer != null) {
+			Span span = tracer.spanBuilder("cms.publish.renderPage")
+				.setSpanKind(SpanKind.INTERNAL)
+				.setAttribute("page.id", page.getId())
+				.startSpan();
+
+			try (Scope scope = span.makeCurrent()) {
+				source = page.render(pageRenderResult, renderedAttributes, attributes, linkTransformer, times);
+			} catch (NodeException e) {
+				span.recordException(e);
+				span.setStatus(StatusCode.ERROR);
+
+				throw e;
+			} finally {
+				span.end();
+			}
+		}
 
 		if (publishTablePathRenderer != null) {
 			publishTablePath = ObjectTransformer.getString(renderedAttributes.get(publishTablePathRenderer), null);

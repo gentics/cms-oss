@@ -47,6 +47,7 @@ import {
     AUTH,
 } from './common';
 import {
+    addTemporaryAlohaPlugin,
     createExternalLink,
     createInternalLink,
     editorAction,
@@ -61,7 +62,7 @@ import {
     openPageForEditing,
     overwriteAlohaConfigWith,
     pickPaletteColor,
-    rereouteAlohaConfig,
+    rerouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
@@ -361,7 +362,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
-                await rereouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await rerouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
                 await openEditingPageInEditmode(page);
 
                 await mainEditable.click();
@@ -1178,7 +1179,7 @@ test.describe('Page Editing', () => {
             test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1203,7 +1204,7 @@ test.describe('Page Editing', () => {
             test('should be able to style column with config', async ({ page }) => {
                 const STYLE_NAME = 'column-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1231,7 +1232,7 @@ test.describe('Page Editing', () => {
             test('should be able to style row with config', async ({ page }) => {
                 const STYLE_NAME = 'row-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1257,14 +1258,14 @@ test.describe('Page Editing', () => {
             });
 
             test('should change scope to tables when adding a caption', async ({ page }) => {
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
 
-                const tableTab = page.locator(`gtx-page-editor-tabs button[data-id="table"]`);
+                const tableTab = page.locator('gtx-page-editor-tabs button[data-id="table"]');
 
-                await expect(tableTab).toContainClass("active");
+                await expect(tableTab).toContainClass('active');
             });
 
             async function editPageAndCreateTable(page) {
@@ -1622,6 +1623,86 @@ test.describe('Page Editing', () => {
                 // Check again now
                 await checkKeys(14);
             });
+        });
+        test.describe('Character Picker', () => {
+            const SLOT_CHARACTER_GRID = 'characterPicker';
+            const CHARACTER_CELL = '.symbol-grid-cell';
+
+            test('should display available characters and character should have a title', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+
+                await expect(characterCells.first()).toBeVisible();
+
+                for (const character of await characterCells.all()) {
+                    await expect(character).toHaveAttribute('title');
+                }
+            });
+
+            test('should be able to select a icon character', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+                // select a 'regular' icon in that case the last in the roster
+                // and check that it does not have an icon tag as a child
+                const lastCharacterCell = characterCells.last();
+                const lastCharacter = lastCharacterCell.locator('.symbol-grid-cell-content');
+                const lastCharacterContent = await lastCharacter.textContent();
+
+                await expect(lastCharacterCell.locator('icon')).not.toBeAttached();
+
+                // select an 'invisible' icon like non-breaking space
+                // and check if it has an icon tag as a child
+
+                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="Non-breaking space"]`);
+                const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('icon');
+
+                await expect(nonBreakingSpaceCharacter).toBeVisible();
+
+                // click on the 'regular' icon and check the content of the editor input
+                await lastCharacter.click();
+
+                await expect(mainEditable).toContainText(lastCharacterContent ?? '');
+
+                // click on the non-breaking space symbol and check the content  of the editor input
+                await clearEditable();
+                await openCharacterGrid(page);
+
+                await nonBreakingSpaceCell.click();
+
+                await expect(mainEditable).toContainText(' ');
+            });
+
+            async function editPageAndOpenCharacterGrid(page) {
+                await addTemporaryAlohaPlugin(page, 'common/characterpicker');
+                editingPage = IMPORTER.get(PAGE_ONE);
+
+                await openEditingPageInEditmode(page);
+                await clearEditable();
+
+                await openCharacterGrid(page);
+            }
+
+            async function openCharacterGrid(page) {
+                await selectEditorTab(page, 'insert');
+                await findAlohaComponent(page, { slot: SLOT_CHARACTER_GRID }).click();
+            }
+
+            async function clearEditable() {
+                await mainEditable.click();
+                await mainEditable.clear();
+            }
         });
 
         test.describe('Text Color', () => {

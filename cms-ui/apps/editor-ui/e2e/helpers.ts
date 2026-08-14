@@ -554,7 +554,7 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<Disposable> {
+export function rerouteAlohaConfig(page: Page, configFilename: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 
@@ -744,6 +744,29 @@ export function fgFindEditSidebar(grid: Locator): Locator {
 export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
     await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
     return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}
+
+/**
+ * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
+ * @param page - The current page.
+ * @param plugin - The plugin source (example: "common/characterpicker").
+ */
+export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+    return page.route('**/alohapage**', async (route) => {
+        const response = await route.fetch();
+        let body = await response.text();
+
+        body = body.replace(
+            /data-aloha-plugins\s*=\s*"([^"]*)"/,
+            (_, plugins) =>
+                `data-aloha-plugins="${plugins},${plugin}"`,
+        );
+
+        await route.fulfill({
+            response,
+            body,
+        });
+    });
 }
 
 export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {

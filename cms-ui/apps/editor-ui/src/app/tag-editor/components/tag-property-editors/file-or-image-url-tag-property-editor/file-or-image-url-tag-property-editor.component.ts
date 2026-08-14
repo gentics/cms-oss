@@ -233,6 +233,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
             selectMultiple: false,
             contentLanguage,
             startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
+            startNode: this.uploadDestination ? this.uploadDestination.nodeId : undefined,
         };
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)

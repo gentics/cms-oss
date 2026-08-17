@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.StreamingOutput;
 import jakarta.ws.rs.core.UriInfo;
 
 import org.apache.commons.httpclient.Header;
@@ -399,6 +400,33 @@ public class ProxyResource {
 			}
 			responseBuilder.header(name, header.getValue());
 		}
-		return responseBuilder.entity(method.getResponseBodyAsStream()).build();
+
+		responseBuilder.header("X-Proxy-Streaming", "1");
+
+		InputStream responseBodyStream = method.getResponseBodyAsStream();
+		if (responseBodyStream == null) {
+			method.releaseConnection();
+			return responseBuilder.build();
+		}
+
+		StreamingOutput streamingBody = output -> {
+			try {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = responseBodyStream.read(buffer)) >= 0) {
+					if (read > 0) {
+						output.write(buffer, 0, read);
+						output.flush();
+					}
+				}
+			} finally {
+				try {
+					responseBodyStream.close();
+				} catch (IOException ignored) {
+				}
+				method.releaseConnection();
+			}
+		};
+		return responseBuilder.entity(streamingBody).build();
 	}
 }

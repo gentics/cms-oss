@@ -113,8 +113,7 @@ h5. Sample data
 h4. Sample implementation
 
 E. g. CELUM provides an asset selection application called "Asset Picker" and must be adapted similar to the following code.
-"Link to CELUM Asset Picker repository":https://portal.celum.com/main/opennodeview.do?tab=producttab&nodeId=13411&assetId=69942 (active account required)
-
+The Asset Picker itself (JavaScript) depends on your Celum version an can be obtained from Celum directly (active account required)
 
 h5. File structure
 

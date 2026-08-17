@@ -204,6 +204,12 @@ h3. Elasticsearch
 | 9        | Yes        |  since 6.4.0  |
 | 8        | Yes        |  since 6.2.0  |
 
+h3. Keycloak
+
+|_.Version |_.Supported |_.Notes |
+| 26.7     | Yes[2]     |    |
+| < 17     | No         |    |
+
 h3. Footnotes
 
 fn1. Tested using automatic tests.

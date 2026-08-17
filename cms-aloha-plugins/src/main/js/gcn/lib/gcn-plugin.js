@@ -587,6 +587,7 @@ define([
 			// this solution is used instead.
 			(function setupPreviewFrames() {
 				var CLASS_PREVIEW_FRAME = 'formgen-preview-frame';
+				var ATTR_HAS_STYLES = 'data-forgen-styles-loaded';
 				var SHRINK_THRESHOLD = 6;
 				var cleanup = new AbortController();
 
@@ -627,15 +628,37 @@ define([
 				}
 
 				/** @param {HTMLIFrameElement} frame */
+				function syncStylesToFrame(frame) {
+					// Only do it once
+					if (frame.contentDocument.body.hasAttribute(ATTR_HAS_STYLES)) {
+						return;
+					}
+					
+					document.querySelectorAll('link[rel="stylesheet"],style').forEach(function(styleEl) {
+						frame.contentDocument.head.append(styleEl.cloneNode(true));
+					});
+					frame.contentDocument.body.setAttribute(ATTR_HAS_STYLES, 'true');
+				}
+
+				/** @param {HTMLIFrameElement} frame */
 				function setupResizingForFrame(frame) {
 					updateFrameHeight(frame);
 					addMessageListener(frame);
+					syncStylesToFrame(frame);
 
 					frame.addEventListener('load', function() {
 						addMessageListener(frame);
+						syncStylesToFrame(frame);
 					}, {
 						signal: cleanup.signal,
 					});
+
+					setTimeout(function() {
+						updateFrameHeight(frame);
+					}, 500);
+					setTimeout(function() {
+						updateFrameHeight(frame);
+					}, 1000);
 				}
 
 				function setupAllCurrentFrames() {

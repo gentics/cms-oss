@@ -1,21 +1,52 @@
 import {
+    createClient,
     EntityImporter,
     findNotification,
     findTableAction,
+    GroupImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_USER,
+    ImportPermissions,
     loginWithForm,
+    matchRequest,
     navigateToApp,
     openContext,
     TestSize,
+    UserImportData,
 } from '@gentics/e2e-utils';
 import { expect, Page, test } from '@playwright/test';
-import { AUTH } from './common';
+import { cloneWithSymbols } from '@gentics/common';
+import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
 
 const API_MODAL = 'gtx-api-tokens-modal';
 const API_CREATE_MODAL = 'gtx-api-tokens-create-modal';
+const BASE_GROUP: GroupImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+    [IMPORT_ID]: 'apiTokenMaintenance_group_base',
+    name: 'apiTokenMaintenance_base',
+    description: 'Api-Token-Maintenance: Base',
+    permissions: [],
+};
+
+const TEST_USER: UserImportData = {
+    [IMPORT_TYPE]: IMPORT_TYPE_USER,
+    [IMPORT_ID]: 'apiTokenMaintenance_user_test',
+
+    email: 'test@example.com',
+    firstName: 'Content-Maintenance',
+    lastName: 'Test',
+    group: BASE_GROUP,
+
+    login: 'apiTokenMaintenance_test',
+    password: 'foobar2026',
+};
 
 test.describe('Api Tokens', () => {
 
     const IMPORTER = new EntityImporter();
+    let login: LoginResponse;
 
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
@@ -27,8 +58,6 @@ test.describe('Api Tokens', () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.bootstrapSuite(TestSize.MINIMAL);
         });
-
-        await clearEntries(IMPORTER);
     });
 
     test.beforeEach(async ({ page, request, context }) => {
@@ -45,7 +74,15 @@ test.describe('Api Tokens', () => {
         });
 
         await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
+
+        await setupWithPermissions(IMPORTER, login, page, [
+            {
+                type: AccessControlledType.ADMIN,
+                perms: [
+                    { type: GcmsPermission.SET_PERMISSION, value: true },
+                ],
+            },
+        ]);
     });
 
     test('should show api modal', async ({ page }) => {
@@ -109,6 +146,7 @@ test.describe('Api Tokens', () => {
     });
 
     test('can delete Api Tokens', async ({ page }) => {
+        await addEntries(login, page, 1);
         await openApiTokenModal(page);
 
         const table = page.locator(API_MODAL).locator('gtx-manage-api-tokens-table');
@@ -117,7 +155,6 @@ test.describe('Api Tokens', () => {
 
         const row = table.locator('.data-row').first();
 
-        // const deleteButton = row.locator('[title="editor.tagtype_delete_label"]').first();
         const deleteButton = findTableAction(row, 'delete');
 
         await deleteButton.click();
@@ -132,7 +169,7 @@ test.describe('Api Tokens', () => {
     });
 
     test('can delete multiple Api Tokens', async ({ page }) => {
-        await addEntries(IMPORTER);
+        await addEntries(login, page, 2);
         await openApiTokenModal(page);
 
         const table = page.locator(API_MODAL).locator('gtx-manage-api-tokens-table');
@@ -157,9 +194,10 @@ test.describe('Api Tokens', () => {
 });
 
 async function openApiTokenModal(page: Page) {
-    await page.locator('.ng-trigger-toggleState').click();
-    await page.locator('gtx-dropdown-list gtx-button').last().click();
-    await page.locator('[data-action="manage-api-tokens"]').click();
+    await page.locator('gtx-user-menu .toggle-button').click();
+    const menu = page.locator('gtx-user-menu');
+    const dropdown = await openContext(menu.locator('.user-name gtx-dropdown-list'));
+    await dropdown.locator('[data-action="manage-api-tokens"]').click();
 }
 
 async function openApiTokenCreateModal(page: Page) {
@@ -168,14 +206,34 @@ async function openApiTokenCreateModal(page: Page) {
     await createNewBtn.click();
 }
 
-async function clearEntries(IMPORTER: EntityImporter) {
-    const tokens = await IMPORTER.client.admin.getApiTokens().send();
-    for (const item of tokens.items) {
-        await IMPORTER.client.admin.deleteApiTokens(`${item.id}`).send();
+async function addEntries(login: LoginResponse, page: Page, amount: number) {
+    const client = await createClient({
+        context: page.context().request,
+        isPageContext: true,
+    });
+
+    client.sid = login?.sid ?? null;
+
+    for (let i = 0; i < amount; i++) {
+        await client.admin.addApiTokens({ name: `token ${i + 1}` }).send();
     }
 }
 
-async function addEntries(IMPORTER: EntityImporter) {
-    await IMPORTER.client.admin.addApiTokens({ name: 'token 1' }).send();
-    await IMPORTER.client.admin.addApiTokens({ name: 'token 2' }).send();
+async function setupWithPermissions(importer: EntityImporter, login: LoginResponse, page: Page, permissions: ImportPermissions[]): Promise<void> {
+    await test.step('Test User Setup', async () => {
+        const TEST_GROUP = cloneWithSymbols(BASE_GROUP);
+        TEST_GROUP.permissions = permissions;
+
+        await importer.importData([
+            TEST_GROUP,
+            TEST_USER,
+        ]);
+    });
+
+    await test.step('Open ADMIN-UI', async () => {
+        await navigateToApp(page);
+        const loginReq = page.waitForResponse(matchRequest('POST', '/rest/auth/login'));
+        await loginWithForm(page, TEST_USER);
+        login = await (await loginReq).json();
+    });
 }

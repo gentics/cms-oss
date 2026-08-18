@@ -152,6 +152,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setAutoEnable(from.isAutoEnable());
 		to.setMayBeSubtag(from.mayBeSubtag());
 		to.setMayContainSubtags(from.mayContainSubtags());
+		to.setLiveEditorTagName(from.getLiveEditorTagName());
 		to.setOpenEditorOnInsert(from.editOnInsert());
 		to.setEditorControlStyle(from.editorControlStyle());
 		to.setEditorControlsInside(from.editorControlInside());

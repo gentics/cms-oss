@@ -1647,7 +1647,15 @@ test.describe('Page Editing', () => {
 
                 const actualMainEditable = mainEditable.first();
 
+                // The placeholder should be a span, since that's what the element is gonna be
+                const placeholder = actualMainEditable.locator('.gcn-tag-insert-placeholder');
+                await expect(placeholder).toBeVisible();
+                expect(await placeholder.evaluate((el) => el.nodeName)).toEqual('SPAN');
+
                 await expect(actualMainEditable.locator('span[contenteditable]')).toBeAttached();
+                // placeholder should be removed once the element has been added
+                await expect(placeholder).not.toBeAttached();
+
                 // It should still only have one paragraph - Just because we added a tag shouldn't split the content
                 await expect(actualMainEditable.locator('p')).toHaveCount(1);
             });

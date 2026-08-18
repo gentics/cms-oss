@@ -585,7 +585,8 @@ test.describe('Page Management', () => {
         await page.waitForTimeout(500);
 
         const toasts = page.locator('gtx-toast');
-        await expect(toasts).toHaveCount(1);
+        // eslint-disable-next-line playwright/prefer-to-have-count
+        expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message'))
             .toContainText(resMessage.replace('<br/>', '\n'));
         // expect(errorMessages).toHaveLength(1); // Disabled until further notice
@@ -672,7 +673,8 @@ test.describe('Page Management', () => {
             // Get all notifications now, and check length.
             // Using the build in helper is wrong in this case, as when 2 are displayed,
             // it'd wait until one fades away and resolves to true.
-            await expect(toasts).toHaveCount(1);
+            // eslint-disable-next-line playwright/prefer-to-have-count
+            expect(await toasts.all()).toHaveLength(1);
 
             await expect(toasts.locator('.message')).toContainText(toastMessage);
 
@@ -1141,6 +1143,7 @@ test.describe('Page Management', () => {
             ];
 
             // We should have all interactable elements now
+            expect(inputElements).toHaveLength(10);
             expect(inputElements).toHaveLength(10);
 
             // All of them should be disabled

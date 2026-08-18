@@ -6,14 +6,20 @@ import {
     NodePageLanguageCode,
     NodeUrlMode,
     ResponseCode,
+    Template,
 } from '@gentics/cms-models';
 import {
+    BASIC_TEMPLATE_ID,
     clickModalAction,
     clickNotificationAction,
+    clickTableRow,
     CONTENT_REPOSITORY_MESH,
+    createClientFromPage,
     EntityImporter,
     findContextContent,
     findNotification,
+    findTableRowByText,
+    FOLDER_A,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -34,6 +40,7 @@ import {
     onRequest,
     openContext,
     PAGE_ONE,
+    PageImportData,
     PageTranslationImportData,
     pickSelectValue,
     SCHEDULE_PUBLISHER,
@@ -51,6 +58,7 @@ import {
     findItem,
     findList,
     itemAction,
+    navigateToFolder,
     openObjectPropertyEditor,
     openTagList,
     pageListRowLanguage,
@@ -63,6 +71,7 @@ test.describe('Page Management', () => {
 
     const IMPORTER = new EntityImporter();
     const NAMESPACE = 'pagemngt';
+    let TEARDOWNS: (() => Promise<any>)[] = [];
 
     const TEST_GROUP_BASE: GroupImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
@@ -157,6 +166,11 @@ test.describe('Page Management', () => {
         try {
             await IMPORTER.client.page.update(TEST_PAGE.id, { unlock: true, page: {} }).send();
         } catch (err) {}
+
+        for (const fn of TEARDOWNS) {
+            await fn();
+        }
+        TEARDOWNS = [];
     });
 
     async function setupWithPermissions(
@@ -850,6 +864,7 @@ test.describe('Page Management', () => {
     test('should display correct publish status for page in a node with one language', async ({ page }) => {
         const nodeData = cloneWithSymbols(NODE_SINGLE_LANGUAGE);
         const cr = IMPORTER.get(CONTENT_REPOSITORY_MESH);
+        // eslint-disable-next-line playwright/no-conditional-in-test
         if (cr) {
             nodeData.node.contentRepositoryId = cr.id;
         }
@@ -1015,6 +1030,134 @@ test.describe('Page Management', () => {
         });
     });
 
+    test('should be able to see unlinked template name', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19775',
+        }],
+    }, async ({ page }) => {
+        const TEMPLATE = IMPORTER.get(BASIC_TEMPLATE_ID) as Template;
+        const NEW_PAGE: PageImportData = {
+            [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+            [IMPORT_ID]: 'page_sup19775',
+
+            folderId: FOLDER_A[IMPORT_ID],
+            nodeId: NODE_MINIMAL[IMPORT_ID],
+
+            pageName: 'foobar',
+            templateId: BASIC_TEMPLATE_ID,
+            language: LANGUAGE_EN,
+        };
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    // Only happens when the properties are editable, and if you can select a new template.
+                    // As when they are disabled, the values are shown differently.
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.READ_TEMPLATES, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Specialized Test setup', async () => {
+            await IMPORTER.importData([NEW_PAGE]);
+
+            // Make sure to unlock the page after the test
+            TEARDOWNS.push(async () => {
+                const client = await createClientFromPage(page);
+                await client.page.update(IMPORTER.get(NEW_PAGE).id, { unlock: true, page: {} }).send();
+            });
+
+            // The template has to be unassigned from the folder, in order for this bug to occur
+            await IMPORTER.client.template.unlink(TEMPLATE.id, {
+                folderIds: [IMPORTER.get(FOLDER_A).id],
+                nodeId: IMPORTER.get(NODE_MINIMAL).id,
+            }).send();
+        });
+
+        await navigateToFolder(page, IMPORTER.get(FOLDER_A).id);
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, IMPORTER.get(NEW_PAGE).id);
+        await itemAction(item, 'properties');
+
+        const properties = page.locator('content-frame combined-properties-editor gtx-page-properties');
+        const placeholder = properties.locator('[formControlName="templateId"] .view-value .placeholder.unknown-values');
+        await expect(placeholder).toBeVisible();
+        await expect(placeholder).toHaveText(TEMPLATE.name);
+        await expect(properties.locator('.no-templates')).toBeVisible();
+        await expect(properties.locator('.link-templates')).not.toBeAttached();
+    });
+
+    test('opens the tag-editor from the tag-list in read-only mode when no edit permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19653',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        await test.step('Open tag-list', async () => {
+            await itemAction(item, 'properties');
+            await openTagList(page);
+        });
+
+        const tagListTable = page.locator('content-frame combined-properties-editor .item-tag-list gtx-table');
+        await expect(tagListTable).toBeVisible();
+        // Can't use IDs here, as they are ever changing, as these are sequential IDs of all tags from the system.
+        const tagRow = await findTableRowByText(tagListTable, 'header');
+        await clickTableRow(tagRow);
+
+        const editor = page.locator('gtx-tag-editor-modal gentics-tag-editor');
+        const body = editor.locator('.tag-property-editors');
+
+        await test.step('Validate tag-editor input state', async () => {
+            // TODO: Find a better way to wait for it to be rendered/stable
+            await page.waitForTimeout(3_000);
+
+            // All input/button elements collected together
+            const inputElements = [
+                ...(await body.locator('input,textarea,select,button').filter({ visible: true }).all()),
+                ...(await body.locator('gtx-radio-button input[type="radio"],gtx-checkbox input[type="checkbox"]').all()),
+            ];
+
+            // We should have all interactable elements now
+            expect(inputElements.length).toEqual(10);
+
+            // All of them should be disabled
+            for (const input of inputElements) {
+                await expect.poll(() => {
+                    return input.evaluate((el) => el.hasAttribute('disabled') || el.hasAttribute('readonly'));
+                }, {
+                    message: 'element should be disabled or readonly',
+                }).toBe(true);
+            }
+        });
+
+        const footer = editor.locator('.footer');
+        const buttons = footer.locator('gtx-button');
+        await expect(buttons).toHaveCount(1);
+        await expect(buttons).toHaveAttribute('data-action', 'close');
+    });
+  
     test('should be possible to toggle display of deleted items', {
         annotation: [{
             type: 'ticket',

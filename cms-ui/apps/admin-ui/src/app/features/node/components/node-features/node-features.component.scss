@@ -26,6 +26,19 @@ icon.feature-info {
     color: $gtx-color-primary;
     font-size: 1rem;
     cursor: help;
+    position: relative;
+
+    &:hover {
+        &::after {
+            display: block;
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            top: -10px;
+            left: -10px;
+            content: "";
+        }
+    }
 }
 
 .feature-description {

@@ -39,6 +39,9 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
     @Input()
     public groupId: number;
 
+    @Input()
+    public assignableOnly = false;
+
     protected rawColumns: TableColumn<GroupBO>[] = [
         {
             id: 'name',
@@ -143,6 +146,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         return {
             userId: this.userId,
             groupId: this.groupId,
+            assignableOnly: this.assignableOnly,
         };
     }
 

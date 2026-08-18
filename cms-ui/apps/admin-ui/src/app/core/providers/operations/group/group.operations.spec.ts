@@ -31,7 +31,7 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityManagerService, EntityManagerService, ErrorHandler } from '../..';
+import { ActivityManagerService, EntityManagerService, ErrorHandler, PermissionsService } from '../..';
 import { ObservableStopper } from '../../../../common';
 import { InterfaceOf } from '../../../../common/utils/util-types/util-types';
 import { AppStateService } from '../../../../state';
@@ -110,6 +110,10 @@ class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
     };
 }
 
+class MockPermissionsService implements Partial<PermissionsService> {
+
+}
+
 const MOCKED_GROUPS_COUNT = 10;
 const TEST_GROUP_ID = 2;
 
@@ -141,6 +145,7 @@ describe('GroupOperations', () => {
                 ActivityManagerService,
                 EntityManagerService,
                 GroupOperations,
+                { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: GcmsApi, useClass: MockApi },

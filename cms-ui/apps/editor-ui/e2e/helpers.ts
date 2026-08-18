@@ -757,14 +757,11 @@ export async function toggleDisplayAllCheckbox(
     await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
 
     const [request] = await Promise.all([
-        page.waitForRequest((request) =>
-            request.method() === 'POST'
-            && request.url().includes(dataAction.includes('wastebin') ? '/displayDeleted' : '/displayAllLanguages'),
-        ),
+        waitForResponseFrom(page, 'POST', dataAction.indexOf('wastebin') >= 0 ? 'rest/user/me/data/displayDeleted' : 'rest/user/me/data/displayAllLanguages'),
         dropdown.locator(`[data-action="${dataAction}"]`).click(),
     ]);
 
-    const body = request.postDataJSON();
+    const body = request.request().postDataJSON();
 
     expect(body).toBe(!toggled);
 

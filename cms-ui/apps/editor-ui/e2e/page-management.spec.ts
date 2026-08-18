@@ -1144,7 +1144,6 @@ test.describe('Page Management', () => {
 
             // We should have all interactable elements now
             expect(inputElements).toHaveLength(10);
-            expect(inputElements).toHaveLength(10);
 
             // All of them should be disabled
             for (const input of inputElements) {

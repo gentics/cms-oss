@@ -37,6 +37,7 @@ import {
     openFilePropertiesTab,
     openObjectPropertyEditor,
     selectNode,
+    toggleDisplayAllCheckbox,
     uploadFiles,
 } from './helpers';
 
@@ -408,7 +409,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -417,7 +418,7 @@ test.describe('Media Management', () => {
             },
         ]);
 
-        let list = findList(page, ITEM_TYPE_IMAGE);
+        const list = findList(page, ITEM_TYPE_IMAGE);
 
         await test.step('Setup image list display', async () => {
             const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
@@ -432,10 +433,10 @@ test.describe('Media Management', () => {
             await clickModalAction(modal, 'confirm');
         });
 
-        let item = await findImage(list, IMAGE.id);
+        const item = await findImage(list, IMAGE.id);
         await item.locator('list-item-details detail-chip.usage').click();
 
-        expect(page.locator('gtx-usage-modal')).toBeVisible();
+        await expect(page.locator('gtx-usage-modal')).toBeVisible();
     });
 
     test('image usage information is clickable in list view', {
@@ -454,7 +455,7 @@ test.describe('Media Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -463,7 +464,7 @@ test.describe('Media Management', () => {
             },
         ]);
 
-        let list = findList(page, ITEM_TYPE_IMAGE);
+        const list = findList(page, ITEM_TYPE_IMAGE);
 
         await test.step('Setup display fields', async () => {
             const listOptions = await openContext(list.locator('item-list-header [data-action="open-list-context"]'));
@@ -473,9 +474,37 @@ test.describe('Media Management', () => {
             await clickModalAction(modal, 'confirm');
         });
 
-        let item = await findImage(list, IMAGE.id);
+        const item = await findImage(list, IMAGE.id);
         await item.locator('list-item-details detail-chip.usage').click();
 
-        expect(page.locator('gtx-usage-modal')).toBeVisible();
+        await expect(page.locator('gtx-usage-modal')).toBeVisible();
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const files = findList(page, ITEM_TYPE_FILE);
+        const images = findList(page, ITEM_TYPE_IMAGE);
+        await toggleDisplayAllCheckbox(page, files, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, files, 'toggle-wastebin', true);
+        await toggleDisplayAllCheckbox(page, images, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, images, 'toggle-wastebin', true);
     });
 });

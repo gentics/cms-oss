@@ -748,3 +748,28 @@ export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | '
     await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
     return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
 }
+
+export async function toggleDisplayAllCheckbox(
+    page: Page,
+    elements: Locator,
+    dataAction: 'toggle-wastebin' | 'toggle-language-display',
+    toggled: boolean,
+): Promise<void> {
+    const dropdown = await openContext(elements.locator('item-list-header gtx-dropdown-list').last());
+
+    await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
+
+    const [request] = await Promise.all([
+        page.waitForRequest((request) =>
+            request.method() === 'POST'
+            && request.url().includes(dataAction.includes('wastebin') ? '/displayDeleted' : '/displayAllLanguages'),
+        ),
+        dropdown.locator(`[data-action="${dataAction}"]`).click(),
+    ]);
+
+    const body = request.postDataJSON();
+
+    expect(body).toBe(!toggled);
+
+    await expect(dropdown).toBeHidden();
+}

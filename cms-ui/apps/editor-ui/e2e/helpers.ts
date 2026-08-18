@@ -756,7 +756,7 @@ export async function toggleDisplayAllCheckbox(
     const formDropdown = elements.locator('gtx-form-list-header gtx-dropdown-list').last();
 
     // if the itemsDropdown element doesn't exist, it is a form so the formDropdown element should be used
-    const dropdown = await itemDropdown.count()
+    const dropdown = await itemDropdown.count() > 0
         ? await openContext(itemDropdown)
         : await openContext(formDropdown);
 

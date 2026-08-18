@@ -524,7 +524,8 @@ test.describe('Page Management', () => {
 
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500); // Allow for notifications to spawn
-        await expect(toasts).toHaveCount(1);
+        // eslint-disable-next-line playwright/prefer-to-have-count
+        expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message')).toContainText(offlineBody.messages[0].message);
     });
 
@@ -1140,7 +1141,7 @@ test.describe('Page Management', () => {
             ];
 
             // We should have all interactable elements now
-            expect(inputElements.length).toEqual(10);
+            expect(inputElements).toHaveLength(10);
 
             // All of them should be disabled
             for (const input of inputElements) {
@@ -1157,7 +1158,7 @@ test.describe('Page Management', () => {
         await expect(buttons).toHaveCount(1);
         await expect(buttons).toHaveAttribute('data-action', 'close');
     });
-  
+
     test('should be possible to toggle display of deleted items', {
         annotation: [{
             type: 'ticket',

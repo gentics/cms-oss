@@ -5,6 +5,7 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_INLINE_TEXT,
     CONSTRUCT_TEST_SELECT_COLOR,
     CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
     CONSTRUCT_TEST_SELECT_COLOR_INLINE,
@@ -1620,6 +1621,35 @@ test.describe('Page Editing', () => {
 
                 // Check again now
                 await checkKeys(14);
+            });
+
+            test('should insert and handle inline tags correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20135',
+                }],
+            }, async ({ page }) => {
+                await mainEditable.click();
+                await mainEditable.press('Enter');
+                await mainEditable.fill('text beforetextafter');
+                await expect(mainEditable.locator('p')).toHaveCount(1);
+                expect(await selectRangeIn(mainEditable, 11, 11)).toEqual(true);
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Add tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_INLINE_TEXT}"]`).click();
+                });
+
+                const actualMainEditable = mainEditable.first();
+
+                await expect(actualMainEditable.locator('span[contenteditable]')).toBeAttached();
+                // It should still only have one paragraph - Just because we added a tag shouldn't split the content
+                await expect(actualMainEditable.locator('p')).toHaveCount(1);
             });
         });
         test.describe('Character Picker', () => {

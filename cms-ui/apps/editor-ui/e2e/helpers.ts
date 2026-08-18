@@ -752,7 +752,13 @@ export async function toggleDisplayAllCheckbox(
     dataAction: 'toggle-wastebin' | 'toggle-language-display',
     toggled: boolean,
 ): Promise<void> {
-    const dropdown = await openContext(elements.locator('item-list-header gtx-dropdown-list').last());
+    const itemDropdown = elements.locator('item-list-header gtx-dropdown-list').last();
+    const formDropdown = elements.locator('gtx-form-list-header gtx-dropdown-list').last();
+
+    // if the itemsDropdown element doesn't exist, it is a form so the formDropdown element should be used
+    const dropdown = await itemDropdown.count()
+        ? await openContext(itemDropdown)
+        : await openContext(formDropdown);
 
     await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
 

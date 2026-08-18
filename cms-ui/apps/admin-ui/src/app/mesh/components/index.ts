@@ -1,5 +1,6 @@
 export * from './copy-token-modal/copy-token-modal.component';
 export * from './copy-value/copy-value.component';
+export * from './create-user-token-modal/create-user-token-modal.component';
 export * from './login-gate/login-gate.component';
 export * from './manage-tag-families-modal/manage-tag-families-modal.component';
 export * from './management-tabs/management-tabs.component';
@@ -16,6 +17,8 @@ export * from './mesh-role-table/mesh-role-table.component';
 export * from './mesh-user-modal/mesh-user-modal.component';
 export * from './mesh-user-properties/mesh-user-properties.component';
 export * from './mesh-user-table/mesh-user-table.component';
+export * from './mesh-user-token-modal/mesh-user-token-modal.component';
+export * from './mesh-user-token-properties/mesh-user-token-properties.component';
 export * from './mesh-user-token-table/mesh-user-token-table.component';
 export * from './microschema-modal/microschema-modal.component';
 export * from './microschema-properties/microschema-properties.component';

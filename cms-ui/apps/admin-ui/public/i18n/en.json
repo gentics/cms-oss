@@ -333,7 +333,9 @@
         "schema_singular": "Schema",
         "schema_plural": "Schemas",
         "microschema_singular": "Microschema",
-        "microschema_plural": "Microschemas"
+        "microschema_plural": "Microschemas",
+        "mesh_user_token_singular": "API Token",
+        "mesh_user_token_plural": "API Token"
     },
     "dashboard": {
         "archive_message_title": "Archive message",
@@ -469,6 +471,7 @@
         "info_selected_nodes": "{{amountSelected}} of {{amountTotal}} nodes selected",
         "info_selected_nodes_no_count": "{{amountSelected}} nodes selected",
         "info_selected_users": "{{amountSelected}} of {{amountTotal}} users selected",
+        "info_selected_user_tokens": "{{amountSelected}} of {{amountTotal}} API Tokens selected",
         "info_active_languages": "{{amountSelected}} of {{amountTotal}} languages selected",
         "action_success": "Action succcessful",
         "item_created": "{{name}} has been created successfully",
@@ -1086,10 +1089,6 @@
         "new_password_required_warning": "You have to supply a new password for you user",
         "update_password": "Update Password",
         "password_missmatch": "Passwords don not match",
-        "create_api_token": "Create new API Token",
-        "create_api_token_warning": "Are you sure you want to create a new API Token for the user \"{{ user }}\"?<br/><b>The previously created token will become invalid and cannot be used anymore.</b><br/>Do you wish to proceed?",
-        "api_token": "API Token",
-        "api_token_from": "API Token of \"{{ user }}\"",
         "copy_token": "Copy token",
         "copy_token_success": "The Token has been copied to the clipboard",
         "copy_token_error": "The Token could not be copied",
@@ -1242,7 +1241,14 @@
         "published_state_draft": "Draft",
         "published_state_updated": "Updated",
         "published_state_changed": "Last modified at: {{ date }}",
-        "download_binary_content": "Download binary content"
+        "download_binary_content": "Download binary content",
+        "api_token": "API Token",
+        "manage_api_tokens_button": "Manage API-Tokens",
+        "manage_user_token_title": "API Token of \"{{ user }}\"",
+        "create_user_token": "Create user token",
+        "token_expires": "Expires at",
+        "token_issued": "Created at",
+        "token_valid": "Valid"
     },
     "object_property": {
         "objectProperty_plural": "Object Properties",

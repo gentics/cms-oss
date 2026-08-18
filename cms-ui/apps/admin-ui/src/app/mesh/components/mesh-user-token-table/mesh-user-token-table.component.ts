@@ -1,14 +1,19 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
-import { UserTokenData } from '@gentics/mesh-models';
-import { ModalService, TableColumn } from '@gentics/ui-core';
+import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { User, UserTokenData, UserTokenResponse } from '@gentics/mesh-models';
+import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { map, Observable } from 'rxjs';
 import { BaseEntityTableComponent } from '../../../shared';
 import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { MeshUserTokenBO } from '../../common';
 import { MeshUserHandlerService } from '../../providers/mesh-user-handler/mesh-user-handler.service';
-import { MeshUserTokenTableLoaderService } from '../../providers/mesh-user-token-table-loader/mesh-user-token-table-loader.service';
-import { NormalizableEntityTypesMap, AnyModelType } from '@gentics/cms-models';
+import {
+    MeshUserTokenTableLoaderOptions,
+    MeshUserTokenTableLoaderService,
+} from '../../providers/mesh-user-token-table-loader/mesh-user-token-table-loader.service';
 import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
+import { CreateMeshUserTokenModal } from '../create-user-token-modal/create-user-token-modal.component';
 
 @Component({
     selector: 'gtx-mesh-user-token-table',
@@ -17,13 +22,35 @@ import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class MeshUserTokenTableComponent extends BaseEntityTableComponent<UserTokenData, MeshUserTokenBO> {
+export class MeshUserTokenTableComponent extends BaseEntityTableComponent<UserTokenData, MeshUserTokenBO, MeshUserTokenTableLoaderOptions> {
 
     @Input({ required: true })
-    public user: string;
+    public user: User;
 
-    protected rawColumns: TableColumn<MeshUserTokenBO>[] = [];
-    protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType>;
+    protected rawColumns: TableColumn<MeshUserTokenBO>[] = [
+        {
+            id: 'name',
+            fieldPath: 'name',
+            label: 'common.name',
+        },
+        {
+            id: 'expires',
+            fieldPath: 'expires',
+            label: 'mesh.token_expires',
+        },
+        {
+            id: 'issued',
+            fieldPath: 'issued',
+            label: 'mesh.token_issued',
+        },
+        {
+            id: 'valid',
+            fieldPath: 'valid',
+            label: 'mesh.token_valid',
+        },
+    ];
+
+    protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'mesh_user_token' as any;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -42,19 +69,46 @@ export class MeshUserTokenTableComponent extends BaseEntityTableComponent<UserTo
         );
     }
 
-    public handleCreateButton(): void {
+    protected override createAdditionalLoadOptions(): MeshUserTokenTableLoaderOptions {
+        return {
+            user: this.user.uuid,
+        };
+    }
 
+    protected override createTableActionLoading(): Observable<TableAction<MeshUserTokenBO>[]> {
+        return this.actionRebuildTrigger$.pipe(
+            map(() => {
+                const actions: TableAction<MeshUserTokenBO>[] = [
+                    {
+                        id: 'delete',
+                        enabled: true,
+                        icon: 'delete',
+                        label: this.i18n.instant('shared.delete'),
+                        type: 'alert',
+                        multiple: true,
+                        single: true,
+                    },
+                ];
+                return actions;
+            }),
+        );
+    }
+
+    public handleCreateButton(): void {
+        this.createApiToken();
     }
 
     async createApiToken(): Promise<void> {
-        const shouldProceed = false;
-        if (!shouldProceed) {
+        const modal = await this.modalService.fromComponent(CreateMeshUserTokenModal, {}, {
+            user: this.user,
+        });
+        const res: UserTokenResponse = await modal.open();
+
+        if (!res) {
             return;
         }
 
-        const res = await this.handler.createToken(this.user, {
-            name: 'FIXME: Yo',
-        });
+        this.reload();
         const copyModal = await this.modalService.fromComponent(CopyTokenModal, {
             closeOnEscape: false,
             closeOnOverlayClick: false,

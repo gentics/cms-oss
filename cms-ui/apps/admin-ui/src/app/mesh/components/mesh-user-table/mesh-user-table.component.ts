@@ -13,6 +13,7 @@ import { MeshGroupHandlerService, MeshUserHandlerService, MeshUserTableLoaderSer
 import { MeshUserModal } from '../mesh-user-modal/mesh-user-modal.component';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
+import { MeshUserTokenModal } from '../mesh-user-token-modal/mesh-user-token-modal.component';
 
 const EDIT_ACTION = 'edit';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
@@ -92,7 +93,7 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
                     {
                         id: SHOW_API_TOKEN_ACTION,
                         icon: 'vpn_key',
-                        label: this.i18n.instant('mesh.create_api_token'),
+                        label: this.i18n.instant('mesh.manage_api_tokens_button'),
                         enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
                         type: 'warning',
                         single: true,
@@ -170,7 +171,9 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
     }
 
     public showUserTokens(user: MeshUserBO): void {
-        // this.modalService.fromComponent();
+        this.modalService.fromComponent(MeshUserTokenModal, {}, {
+            user: user,
+        }).then((modal) => modal.open());
     }
 
     async manageGroupAssignment(user: MeshUserBO): Promise<void> {

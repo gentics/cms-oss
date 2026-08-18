@@ -6,6 +6,7 @@ import { SharedModule } from '../shared/shared.module';
 import {
     CopyTokenModal,
     CopyValueComponent,
+    CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,
@@ -22,6 +23,8 @@ import {
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenModal,
+    MeshUserTokenPropertiesComponent,
     MeshUserTokenTableComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
@@ -51,7 +54,7 @@ import {
     TagPropertiesComponent,
     TagTableComponent,
 } from './components';
-import { MeshIconPipe } from './pipes';
+import { MeshIconPipe, MeshUsernamePipe } from './pipes';
 import {
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
@@ -78,6 +81,7 @@ import {
 const COMPONENTS: Type<any>[] = [
     CopyTokenModal,
     CopyValueComponent,
+    CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,
@@ -94,7 +98,9 @@ const COMPONENTS: Type<any>[] = [
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenModal,
     MeshUserTokenTableComponent,
+    MeshUserTokenPropertiesComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
@@ -126,6 +132,7 @@ const COMPONENTS: Type<any>[] = [
 
 const PIPES: Type<any>[] = [
     MeshIconPipe,
+    MeshUsernamePipe,
 ];
 
 const DECLARATIONS = [

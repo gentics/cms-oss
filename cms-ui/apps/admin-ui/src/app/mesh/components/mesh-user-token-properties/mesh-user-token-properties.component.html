@@ -1,0 +1,20 @@
+@if (form) {
+    <form [formGroup]="form" class="flex-row">
+        <gtx-input
+            class="columns small-6"
+            formControlName="name"
+            [label]="('common.name' | gtxI18n) + '*'"
+            [required]="true"
+        />
+
+        <gtx-date-time-picker
+            class="columns small-6"
+            formControlName="expires"
+            [label]="'mesh.token_expires' | gtxI18n"
+            [displayTime]="true"
+            [selectYear]="true"
+            [clearable]="true"
+            [min]="NOW"
+        />
+    </form>
+}

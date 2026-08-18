@@ -1,4 +1,4 @@
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { BaseListOptionsWithPaging, NormalizableEntityType, PagingSortOrder } from '@gentics/cms-models';
 import { TableRow, TableSortOrder } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -6,7 +6,7 @@ import { map, tap } from 'rxjs/operators';
 import { BO_ID, BusinessObject, EntityPageResponse, TableEntityLoader, TableLoadOptions, TableLoadResponse } from '../../../common/models';
 import { EntityManagerService } from '../entity-manager';
 
-interface PagingationCreationOptions {
+interface PaginationCreationOptions {
     /** If it should lowercase the `sortBy` field. Defaults to `true` */
     lowerCase?: boolean;
 }
@@ -25,19 +25,19 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
 
     public abstract canDelete(entityId: string | number): Promise<boolean>;
 
-    public abstract deleteEntity(entityId: string | number, additonalOptions?: A): Promise<void>;
+    public abstract deleteEntity(entityId: string | number, additionalOptions?: A): Promise<void>;
 
     protected abstract loadEntities(options: TableLoadOptions, additionalOptions?: A): Observable<EntityPageResponse<O>>;
 
-    public loadTablePage(options: TableLoadOptions, addtionalOptions?: A): Observable<TableLoadResponse<O>> {
-        return this.loadEntities(options, addtionalOptions).pipe(
-            tap(page => {
+    public loadTablePage(options: TableLoadOptions, additionalOptions?: A): Observable<TableLoadResponse<O>> {
+        return this.loadEntities(options, additionalOptions).pipe(
+            tap((page) => {
                 if (this.entityIdentifier) {
                     this.entityManager.addEntities(this.entityIdentifier, page.entities as any);
                 }
             }),
-            map(page => {
-                const rows = page.entities.map(bo => this.mapToTableRow(bo));
+            map((page) => {
+                const rows = page.entities.map((bo) => this.mapToTableRow(bo));
 
                 return {
                     rows,
@@ -51,7 +51,7 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
         this.reloadSubject.next(null);
     }
 
-    protected createDefaultOptions(options: TableLoadOptions, config?: PagingationCreationOptions): BaseListOptionsWithPaging<T> {
+    protected createDefaultOptions(options: TableLoadOptions, config?: PaginationCreationOptions): BaseListOptionsWithPaging<T> {
         const loadOptions: BaseListOptionsWithPaging<T> = {
             page: options.page,
             pageSize: options.perPage,
@@ -76,7 +76,7 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
             case TableSortOrder.ASCENDING:
                 return PagingSortOrder.Asc;
             case TableSortOrder.DESCENDING:
-                return PagingSortOrder.Desc
+                return PagingSortOrder.Desc;
             default:
                 return PagingSortOrder.None;
         }

@@ -7,7 +7,7 @@ import { AppStateService } from '../../../state';
 import { MeshUserTokenBO } from '../../common';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
 
-interface MeshUserTokenTableLoaderOptions {
+export interface MeshUserTokenTableLoaderOptions {
     user: string;
 }
 

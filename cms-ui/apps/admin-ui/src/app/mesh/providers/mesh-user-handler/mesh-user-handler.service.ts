@@ -158,7 +158,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
             const res = await this.mesh.users.listTokens(uuid, options).send();
             const mapped: MeshUserTokenBO[] = res.data.map((token) => ({
                 [BO_DISPLAY_NAME]: token.name,
-                [BO_ID]: token.name,
+                [BO_ID]: token.uuid,
                 [BO_PERMISSIONS]: [],
                 ...token,
             }));

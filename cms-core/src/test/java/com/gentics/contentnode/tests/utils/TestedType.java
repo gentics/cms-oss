@@ -12,8 +12,12 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderMoveRequest;
+import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
+import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
 import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
@@ -137,6 +141,28 @@ public enum TestedType {
 			return new FileResourceImpl().restoreFromWastebin(object.getId().toString(), 0);
 		case image:
 			return new ImageResourceImpl().restoreFromWastebin(object.getId().toString(), 0);
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Save the object
+	 * 
+	 * @param object
+	 * @param request
+	 * @return
+	 */
+	public GenericResponse save(LocalizableNodeObject<?> object, Object request) {
+		switch(this) {
+		case file:
+			return new FileResourceImpl().save(object.getId(), (FileSaveRequest) request);
+		case folder:
+			return new FolderResourceImpl().save(object.getId().toString(), (FolderSaveRequest) request);
+		case image:
+			return new ImageResourceImpl().save(object.getId(), (ImageSaveRequest) request);
+		case page:
+			return new PageResourceImpl().save(object.getId().toString(), (PageSaveRequest) request);
 		default:
 			return null;
 		}

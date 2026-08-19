@@ -436,6 +436,12 @@
 			<artifactId>handlebars</artifactId>
 		</dependency>
 
+		<!-- JSON -->
+		<dependency>
+			<groupId>com.jayway.jsonpath</groupId>
+			<artifactId>json-path</artifactId>
+		</dependency>
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.glassfish.jersey.containers</groupId>

@@ -62,6 +62,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
@@ -741,6 +742,9 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		} catch (InsufficientPrivilegesException e) {
 			InsufficientPrivilegesMapper.log(e);
 			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (ObjectModificationException e) {
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
 		} catch (NodeException e) {
 			logger.error("Error while saving image " + id, e);
 			I18nString message = new CNI18nString("rest.general.error");

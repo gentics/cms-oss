@@ -36,6 +36,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -140,6 +141,7 @@ import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
 import com.gentics.mesh.MeshStatus;
+import com.gentics.mesh.core.rest.JsonSchema;
 import com.gentics.mesh.core.rest.MeshServerInfoModel;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyCheckResponse;
 import com.gentics.mesh.core.rest.admin.consistency.ConsistencyRating;
@@ -164,6 +166,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
 import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
 import com.gentics.mesh.core.rest.node.field.BinaryField;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
@@ -173,12 +176,14 @@ import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
+import com.gentics.mesh.core.rest.node.field.impl.JsonFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NumberFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.StringFieldImpl;
 import com.gentics.mesh.core.rest.node.field.list.FieldList;
 import com.gentics.mesh.core.rest.node.field.list.impl.BooleanFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.DateFieldListImpl;
+import com.gentics.mesh.core.rest.node.field.list.impl.JsonFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.MicronodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListImpl;
 import com.gentics.mesh.core.rest.node.field.list.impl.NodeFieldListItemImpl;
@@ -198,6 +203,7 @@ import com.gentics.mesh.core.rest.schema.change.impl.SchemaChangeOperation;
 import com.gentics.mesh.core.rest.schema.impl.BinaryFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.BooleanFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.DateFieldSchemaImpl;
+import com.gentics.mesh.core.rest.schema.impl.JsonFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.ListFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.MicronodeFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.NodeFieldSchemaImpl;
@@ -240,6 +246,7 @@ import io.reactivex.SingleSource;
 import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response.Status;
@@ -3205,6 +3212,25 @@ public class MeshPublisher implements AutoCloseable {
 				fieldSchema = new DateFieldSchemaImpl();
 			}
 			break;
+		case json:
+			if (entry.isMultivalue()) {
+				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.JSON.toString());
+			} else {
+				JsonSchema[] allowedSchemas;
+				if (StringUtils.isEmpty(entry.getJSONSchemaFilter())) {
+					allowedSchemas = new JsonSchema[0];
+				} else {
+					JsonContent jsonSchemaContent = JsonContent.fromString(entry.getJSONSchemaFilter());
+					if (jsonSchemaContent.isArray()) {
+						JsonArray jsonSchemas = jsonSchemaContent.getArray();
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+					} else {
+						allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+					}
+				}
+				fieldSchema = new JsonFieldSchemaImpl().setAllowedSchemas(allowedSchemas);
+			}
+			break;
 		case bool:
 			if (entry.isMultivalue()) {
 				fieldSchema = new ListFieldSchemaImpl().setListType(FieldTypes.BOOLEAN.toString());
@@ -3698,6 +3724,22 @@ public class MeshPublisher implements AutoCloseable {
 						}
 					} else {
 						fields.put(entry.getMapname(), new BooleanFieldImpl().setValue(ObjectTransformer.getBoolean(value, null)));
+					}
+					break;
+				}
+				case json:
+				{
+					if (entry.isMultivalue()) {
+						FieldList<JsonContent> field = new JsonFieldListImpl();
+						fields.put(entry.getMapname(), field);
+						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
+							String jsonString = ObjectTransformer.getString(o, null);
+							if (jsonString != null) {
+								field.add(JsonContent.fromString(jsonString));
+							}
+						}
+					} else {
+						fields.put(entry.getMapname(), new JsonFieldImpl().setJson(JsonContent.fromString(ObjectTransformer.getString(value, null))));
 					}
 					break;
 				}

@@ -6,7 +6,6 @@ import Resizer from './Resizer';
 import { useHoverStyle } from '@andp/core/src/AndpUtils';
 import { expertSearchTableTheme } from '@andp/core/src/styles/theme';
 import CheckBox from './Checkbox';
-import { useMemo } from 'react';
 import { IReportResultHeaderColumn } from '../../../types/interfaces';
 
 /**
@@ -35,6 +34,88 @@ interface HeaderProps {
   sortTable: (colIdx: number) => void;
   startResize: (idx: number, pageX: number) => void;
 }
+
+/**
+ * Props for a single header cell.
+ *
+ * @property {IReportResultHeaderColumn} col - Definition of the column this cell renders.
+ * @property {number} idx - Position of the column within `visibleColumns` (not the raw column index).
+ * @property {any} cellStyle - Precalculated width/border style for this cell.
+ * @property {boolean} showResizer - Whether a resize handle is rendered after this cell.
+ * @property {string | undefined} sortDirection - Current sort direction ('asc' or 'desc') for this cell.
+ * @property {any} styles - StyleSheet object containing header and cell styles.
+ * @property {(colIdx: number) => void} sortTable - Callback invoked to sort by this column.
+ * @property {(idx: number, pageX: number) => void} startResize - Callback invoked when a column resize starts.
+ */
+interface HeaderCellProps {
+  col: IReportResultHeaderColumn;
+  idx: number;
+  cellStyle: any;
+  showResizer: boolean;
+  sortDirection?: string;
+  styles: any;
+  sortTable: (colIdx: number) => void;
+  startResize: (idx: number, pageX: number) => void;
+}
+
+/**
+ * HeaderCell
+ * ----------------------------------------
+ * Renders a single header cell including its hover animation, sort control
+ * and (optionally) the resize handle.
+ *
+ * @component
+ * @param {HeaderCellProps} props - Properties to configure the cell.
+ * @returns {JSX.Element} The rendered header cell.
+ */
+const HeaderCell: React.FC<HeaderCellProps> = ({
+  col,
+  idx,
+  cellStyle,
+  showResizer,
+  sortDirection,
+  styles,
+  sortTable,
+  startResize,
+}: HeaderCellProps) => {
+  // +------------------------------------------------------------+
+  // | Animation variables for hover effects for the header cells |
+  // +------------------------------------------------------------+
+  const { animatedStyle, onHoverIn, onHoverOut } = useHoverStyle(
+    styles.headerCell,
+    styles.headerCellOnHover,
+    expertSearchTableTheme.table.headerCell.hoverTransitionDuration,
+  );
+  // +-------------------------------------------------------+
+  return (
+    <Animated.View style={[cellStyle, animatedStyle]}>
+      <Pressable
+        onHoverIn={onHoverIn}
+        onHoverOut={onHoverOut}
+        onPress={col.type !== 'button' ? () => sortTable(idx) : undefined}
+        style={styles.headerPressable}
+      >
+        <AndpText
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={styles.headerText}
+        >
+          {col.name}
+        </AndpText>
+        {sortDirection && col.type !== 'button' && (
+          <AndpIcon
+            name={sortDirection === 'asc' ? 'arrowUp' : 'arrowDown'}
+            size={expertSearchTableTheme.table.headerCell.iconSize}
+            color={expertSearchTableTheme.table.headerCell.iconColor}
+          />
+        )}
+      </Pressable>
+      {showResizer && (
+        <Resizer idx={idx} styles={styles} onStartResize={startResize} />
+      )}
+    </Animated.View>
+  );
+};
 
 /**
  * Header
@@ -66,64 +147,27 @@ const Header: React.FC<HeaderProps> = ({
           {CheckBox(isMultiSelectChecked)}
         </Pressable>
       )}
-      {visibleColumns.map((colIndex, idx) => {
-        const col = headerColumns[colIndex];
-        // Using memoization to store the styles and avoid inlinestyle to reduce Styles-Diff -> reduced re-renders
-        const cellStyles = useMemo(
-          () =>
-            visibleColumns.map((_, i) => [
-              { width: colWidths[i] },
-              (i > 0 || isMultiSelect) && {
-                borderLeftWidth:
-                  expertSearchTableTheme.table.headerCell.borderWidth,
-              },
-            ]),
-          [colWidths, visibleColumns, isMultiSelect],
-        );
-        // +------------------------------------------------------------+
-        // | Animation variables for hover effects for the header cells |
-        // +------------------------------------------------------------+
-        const { animatedStyle, onHoverIn, onHoverOut } = useHoverStyle(
-          styles.headerCell,
-          styles.headerCellOnHover,
-          expertSearchTableTheme.table.headerCell.hoverTransitionDuration,
-        );
-        // +-------------------------------------------------------+
-        return (
-          <Animated.View
-            key={colIndex}
-            style={[
-              cellStyles[colIndex],
-              animatedStyle,
-            ]}
-          >
-            <Pressable
-              onHoverIn={onHoverIn}
-              onHoverOut={onHoverOut}
-              onPress={col.type !== 'button' ? () => sortTable(idx) : undefined}
-              style={styles.headerPressable}
-            >
-              <AndpText
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={styles.headerText}
-              >
-                {col.name}
-              </AndpText>
-              {sortDirection[idx] && col.type !== 'button' && (
-                <AndpIcon
-                  name={sortDirection[idx] === 'asc' ? 'arrowUp' : 'arrowDown'}
-                  size={expertSearchTableTheme.table.headerCell.iconSize}
-                  color={expertSearchTableTheme.table.headerCell.iconColor}
-                />
-              )}
-            </Pressable>
-            {idx < visibleColumns.length - 1 && (
-              <Resizer idx={idx} styles={styles} onStartResize={startResize} />
-            )}
-          </Animated.View>
-        );
-      })}
+      {visibleColumns.map((colIndex, idx) => (
+        <HeaderCell
+          key={colIndex}
+          col={headerColumns[colIndex]}
+          idx={idx}
+          // colWidths is indexed by the position within visibleColumns,
+          // not by the raw column index of headerColumns.
+          cellStyle={[
+            { width: colWidths[idx] },
+            (idx > 0 || isMultiSelect) && {
+              borderLeftWidth:
+                expertSearchTableTheme.table.headerCell.borderWidth,
+            },
+          ]}
+          showResizer={idx < visibleColumns.length - 1}
+          sortDirection={sortDirection[idx]}
+          styles={styles}
+          sortTable={sortTable}
+          startResize={startResize}
+        />
+      ))}
     </View>
   );
 };

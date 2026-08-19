@@ -186,6 +186,11 @@ export interface TagTypeBase<T extends ModelType> {
     visibleInMenu?: boolean;
     /** True if tags of this construct shall be enabled by default */
     autoEnable?: boolean;
+    /**
+     * HTML tag name, which is used when tags based on this construct are edited with the live editorHTML tag name,
+     * which is used when tags based on this construct are edited with the live editor.
+     */
+    liveEditorTagName?: 'div' | 'span';
     /** If the tag-editor should be opened when the tag get's inserted in a page. */
     openEditorOnInsert?: boolean;
     /** How the controls should be displayed in the page. */

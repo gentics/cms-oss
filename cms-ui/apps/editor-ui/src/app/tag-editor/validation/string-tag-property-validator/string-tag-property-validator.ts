@@ -1,5 +1,5 @@
 import { TagPropertyValidator, ValidationResult } from '@gentics/cms-integration-api-models';
-import { RegexValidationInfo, StringTagPartProperty, TagPart } from '@gentics/cms-models';
+import { RegexValidationInfo, StringTagPartProperty, TagPart, TagPartType } from '@gentics/cms-models';
 
 interface RegExpMap {
     [expression: string]: RegExp;
@@ -14,7 +14,9 @@ export class StringTagPropertyValidator implements TagPropertyValidator<StringTa
 
     validate(editedProperty: StringTagPartProperty, tagPart: TagPart): ValidationResult {
         if (editedProperty.stringValue) {
-            if (tagPart.regex) {
+            if (tagPart.typeId === TagPartType.Json) {
+                return this.validateJson(editedProperty.stringValue);
+            } else if (tagPart.regex) {
                 return this.validateString(editedProperty.stringValue, tagPart.regex);
             } else {
                 return {
@@ -28,6 +30,22 @@ export class StringTagPropertyValidator implements TagPropertyValidator<StringTa
                 success: !tagPart.mandatory,
             };
         }
+    }
+
+    private validateJson(value: string): ValidationResult {
+        let jsonError = null;
+        let parsed: object;
+        try {
+            parsed = JSON.parse(value);
+        } catch (error) {
+            jsonError = error;
+        }
+        const result: ValidationResult = {
+            isSet: true,
+            success: parsed != null && typeof parsed === 'object',
+            errorMessage: jsonError
+        };
+        return result;
     }
 
     private validateString(value: string, regexInfo: RegexValidationInfo): ValidationResult {

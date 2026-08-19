@@ -33,7 +33,9 @@ The context of a rendered Handlebars part will always contain the base object +c
 INFO: To find out all possible attributes that can be resolved from the base object "cms", you can use something like +{{#each cms}}{{ @key }}:{{ this }}<br>{{/each}}+.
 This obviously does not only work for "cms", but for every object in the context.
 
-WARNING: The Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
+INFO: The inner content of "JSON":gcn_part_type.html part type can also be resolved, including array indices. For instance, resolving +{{cms.tag.parts.otherpart.whoever.0.whatever}}+ on +{"whatever":{"whoever": "wherever"}, "whoever":[{"whatever": "wherever"}]+ results in +wherever+ being rendered.
+
+The Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
 it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work. 
 Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, it is possible to use
 either +{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+ with +target+ image dereferencing, or 
@@ -65,6 +67,7 @@ h4. Additional Helpers
 | "gtx_gis":#gtx_gis | Include a resized image into the output | +<img src="{{gtx_gis cms.tag.parts.image width=100 mode="prop" }}">+ |
 | "gtx_form":#gtx_form | Include a form | +{{gtx_form cms.tag.parts.form type="java" }}+ |
 | "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
+| "json_path":json_path | Navigate over a "JSON":gcn_part_type.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ | +{{json_path cms.tag.parts.json "$.objarray[0].objfield"}}+ |
 
 h5. gtx_render
 
@@ -265,6 +268,42 @@ Then it will fall back to the remaining languages of the current node (if the no
 Finally it will fall back to "default".
 
 If no translation is found, it will render nothing.
+
+h5. json_path
+
+Helps navigating over a "JSON":gcn_part_type.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ notation input. 
+
+General usage is:
+
+<shell>
+{{json_path [object] [JSONPath-string]}}
+</shell>
+
+Where the parameters are
+
+|_. Name |_. Description |_. Default |
+| +object+ | JSON part type object to resolve from | _mandatory_ |
+| +JSONPath-string+ | JSONPath notated string | _mandatory_ |
+
+An example of rendering a JSON part type "otherpart" of a current tag, having content
+
+<shell>
+{"whatever":{"whoever": "wherever"}, "whoever":[{"whatever": "wherever"}], "wherever": ["what", "who", "where"]}
+</shell>
+
+using the following calls
+
+<shell>
+{{json_path cms.tag.parts.otherpart "$[*]['whoever']"}}, {{json_path cms.tag.parts.otherpart "$.whoever[0].whatever"}}, {{json_path cms.tag.parts.otherpart "$.wherever[1]"}}
+</shell>
+
+will result in
+
+<shell>
+"wherever, wherever, who"
+</shell>
+
+Please refer to the "implementing library documentation":https://github.com/json-path/JsonPath/blob/master/README.md for the whole possibilities of JSONPath.
 
 h4. Custom helpers
 

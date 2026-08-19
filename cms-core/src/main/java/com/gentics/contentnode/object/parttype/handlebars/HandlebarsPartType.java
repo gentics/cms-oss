@@ -84,7 +84,7 @@ public class HandlebarsPartType extends TextPartType {
 			StringTemplateSource source = new StringTemplateSource(templateName, getText());
 			Template handlebarsTemplate = handlebars.compile(source);
 			Context context = Context.newBuilder(null)
-					.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE)
+					.resolver(MapValueResolver.INSTANCE, JavaBeanValueResolver.INSTANCE, JsonContentValueResolver.INSTANCE)
 					.combine("cms", new ResolvableMapWrapper(cmsResolver))
 					.build();
 			String rendered = handlebarsTemplate.apply(context);

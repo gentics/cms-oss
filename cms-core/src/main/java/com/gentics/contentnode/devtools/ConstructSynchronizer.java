@@ -447,6 +447,9 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		switch (to.getPartTypeId()) {
+		case Part.JSON:
+			to.setInfoText(from.getHtmlClass());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -455,11 +458,6 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		case Part.HTMLLONG:
 			to.setInfoInt(from.getRegexId());
 			break;
-		default:
-			break;
-		}
-
-		switch (to.getPartTypeId()) {
 		case Part.LIST:
 		case Part.LISTORDERED:
 		case Part.LISTUNORDERED:

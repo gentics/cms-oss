@@ -163,6 +163,7 @@ The fields in the schemas are defined by the tagmap entries of the _Mesh Content
 | Date                          | date                |
 | Boolean                       | boolean             |
 | "Micronode":#micronode-fields | micronode           |
+| "JSON":#json-fields           | json                |
 
 NOTE: When a new Mesh ContentRepository is created, it will have some default tagmap entries. Some of them are Reserved and cannot be modified or removed, because they are
 absolutely necessary.
@@ -202,6 +203,53 @@ h5. Micronode Fields
 Tagmap entries of type "Micronode" will publish the editable data contained in tags into micronodes. It is possible to publish single tags (e.g. by using the tagname @page.tags.content@ to publish the tag @content@) into a single value
 field of type Micronode.
 When using e.g. @page.tags@, the field must be multivalue and will contain all tags of the page as list of micronodes.
+
+h5. JSON Fields
+
+These tagmap entries will validate its contents against "JavaScript Object Notation":https://www.json.org/json-en.html . Additionally, one may limit the allowed content with JSON schemas. As the simplest example of allowance limits, the following JSON schemas depict the person data, and a simple array of strings:
+
+<shell>
+{
+    "type" : "object",
+    "properties" : {
+        "firstName" : {
+            "type" : "string"
+        },
+        "lastName" : {
+            "type" : "string"
+        }
+    },
+    "required" : [
+        "firstName",
+        "lastName"
+    ]
+
+}
+</shell>
+<shell>
+{
+    "type" : "array",
+    "items" : {
+        "type" : "string"
+    }
+}
+</shell>
+
+So the following contents will pass the corresponding schema filters:
+
+<shell>
+{
+    "firstName" : "John",
+    "lastName" : "Doe"
+}
+</shell>
+<shell>
+[
+    "a string",
+    "another string"
+]
+</shell>
+For looking up into the full possibilities of JSON schemas filtering one may inspect the link:https://json-schema.org/[official JSON Schema guide].
 
 h6. Transformation of tagtypes
 

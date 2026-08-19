@@ -25,6 +25,7 @@ import {
     TagPartValidatorConfigs,
     TagPartValidatorId,
     TagPropertyType,
+    MarkupLanguageType,
 } from '@gentics/cms-models';
 import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import {
@@ -73,6 +74,9 @@ export interface TagPartPropertiesFormData {
 
     /** FROM TAG EDITOR */
     defaultProperty: TagPartProperty;
+
+    /** JSON schema */
+    jsonSchema: string;
 }
 
 export enum ConstructPartPropertiesMode {
@@ -96,6 +100,7 @@ export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.SelectMultiple,
     TagPartType.Velocity,
     TagPartType.Handlebars,
+    TagPartType.Json,
 ];
 
 export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
@@ -263,6 +268,8 @@ export class ConstructPartPropertiesComponent
             // Tag-Editor
             defaultProperty: new FormControl(null),
 
+            /** JSON schema (for JSON type only) */
+            jsonSchema: new FormControl(null),
             // ///// TYPE-DEPENDANT:
 
             // ///// ONLY for HTML/Text inputs
@@ -294,6 +301,7 @@ export class ConstructPartPropertiesComponent
         let selectSettingsEnabled = false;
         let overviewSettingsEnabled = false;
         let defaultPropertyEnabled = false;
+        let jsonSchemaEnabled = false;
 
         switch (value?.typeId) {
             case TagPartType.SelectSingle:
@@ -302,6 +310,9 @@ export class ConstructPartPropertiesComponent
                 selectSettingsEnabled = true;
                 break;
 
+            case TagPartType.Json:
+                jsonSchemaEnabled = true;
+                // eslint-disable-next-line no-fallthrough
             case TagPartType.DataSource:
                 defaultPropertyEnabled = true;
                 break;
@@ -344,6 +355,7 @@ export class ConstructPartPropertiesComponent
         setControlsEnabled(this.form, ['selectSettings'], selectSettingsEnabled, options);
         setControlsEnabled(this.form, ['overviewSettings'], overviewSettingsEnabled, options);
         setControlsEnabled(this.form, ['defaultProperty'], defaultPropertyEnabled, options);
+        setControlsEnabled(this.form, ['jsonSchema'], jsonSchemaEnabled, options);
     }
 
     protected assembleValue(formData: TagPartPropertiesFormData): TagPartPropertiesFormData {
@@ -359,7 +371,9 @@ export class ConstructPartPropertiesComponent
             output.name = this.value?.name;
             output.type = this.value?.type;
         }
-
+        if (formData.typeId === TagPartType.Json) {
+            (output as TagPartPropertiesFormData).markupLanguageId = MarkupLanguageType.JSON;
+        }
         return output as TagPartPropertiesFormData;
     }
 }

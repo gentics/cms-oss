@@ -93,6 +93,7 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.object.parttype.TemplateTagPartType;
 import com.gentics.contentnode.object.parttype.TextPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
@@ -120,7 +121,6 @@ import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.infrastructure.TestEnvironment;
 
 import jakarta.ws.rs.core.MediaType;
-
 
 /**
  * Static helper class for generation of test data
@@ -215,6 +215,214 @@ public class ContentNodeTestDataUtils {
 
 		return createConstruct(node, getPartTypeId(clazz), constructKeyword, partKeyword, ds);
 	}
+
+//	/**
+//	 * Create a construct with a visible part of given clazz.
+//	 * This method can be used for {@link VelocityPartType}, {@link BreadcrumbPartType} or {@link NavigationPartType}
+//	 * @param node node
+//	 * @param clazz parttype class
+//	 * @param constructKeyword keyword of the construct
+//	 * @param partKeyword keyword of the part
+//	 * @return id of the construct
+//	 * @throws NodeException
+//	 */
+//	public static <T extends ExtensiblePartType> int createExtensibleConstruct(Node node, Class<T> clazz, String constructKeyword, String partKeyword)
+//			throws NodeException {
+//		if (clazz.isAssignableFrom(VelocityPartType.class)) {
+//			return createVelocityConstruct(node, constructKeyword, partKeyword);
+//		} else if (clazz.isAssignableFrom(BreadcrumbPartType.class)) {
+//			return createBreadcrumbConstruct(node, constructKeyword, partKeyword);
+//		} else if (clazz.isAssignableFrom(NavigationPartType.class)) {
+//			return createNavigationConstruct(node, constructKeyword, partKeyword);
+//		} else {
+//			throw new NodeException("Unable to create construct for parttype " + clazz);
+//		}
+//	}
+//
+//	/**
+//	 * Create a construct containing a velocity part
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword for the velocity part
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createVelocityConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		if (node != null) {
+//			construct.getNodes().add(node);
+//		}
+//
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(VelocityPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		t.createObject(Value.class).setPart(templatePart);
+//		construct.getParts().add(templatePart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);
+//	}
+
+	/**
+	 * Create a construct containing a Handlebars part
+	 * @param node node
+	 * @param constructKeyword construct keyword
+	 * @param partKeyword part keyword for the velocity part
+	 * @return construct id
+	 * @throws NodeException
+	 */
+	public static int createHandlebarsConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Construct construct = t.createObject(Construct.class);
+		construct.setAutoEnable(true);
+		construct.setKeyword(constructKeyword);
+		construct.setName(constructKeyword, 1);
+		if (node != null) {
+			construct.getNodes().add(node);
+		}
+
+		Part hbsPart = t.createObject(Part.class);
+		hbsPart.setEditable(1);
+		hbsPart.setHidden(false);
+		hbsPart.setKeyname(partKeyword);
+		hbsPart.setName(partKeyword, 1);
+		hbsPart.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
+		t.createObject(Value.class).setPart(hbsPart);
+		construct.getParts().add(hbsPart);
+
+		construct.save();
+		t.commit(false);
+
+		return ObjectTransformer.getInt(construct.getId(), 0);
+	}
+
+//	/**
+//	 * Create a default breadcrumb construct
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createBreadcrumbConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		construct.getNodes().add(node);
+//
+//		// breadcrumb part
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(BreadcrumbPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		// template part
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		templatePart.setDefaultValue(t.createObject(Value.class));
+//		try {
+//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("breadcrumb.vm")));
+//		} catch (IOException e) {
+//			throw new NodeException("Could not create breadcrumb part", e);
+//		}
+//		construct.getParts().add(templatePart);
+//
+//		// startfolder part
+//		Part startfolderPart = t.createObject(Part.class);
+//		startfolderPart.setEditable(1);
+//		startfolderPart.setHidden(true);
+//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
+//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
+//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
+//		startfolderPart.setDefaultValue(t.createObject(Value.class));
+//		construct.getParts().add(startfolderPart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);
+//	}
+//
+//	/**
+//	 * Create a default navigation construct
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createNavigationConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		construct.getNodes().add(node);
+//
+//		// breadcrumb part
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(NavigationPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		// template part
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		templatePart.setDefaultValue(t.createObject(Value.class));
+//		try {
+//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("navigation.vm")));
+//		} catch (IOException e) {
+//			throw new NodeException("Could not create breadcrumb part", e);
+//		}
+//		construct.getParts().add(templatePart);
+//
+//		// startfolder part
+//		Part startfolderPart = t.createObject(Part.class);
+//		startfolderPart.setEditable(1);
+//		startfolderPart.setHidden(true);
+//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
+//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
+//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
+//		startfolderPart.setDefaultValue(t.createObject(Value.class));
+//		construct.getParts().add(startfolderPart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);	}
 
 	/**
 	 * Get the parttype id for the given parttype class

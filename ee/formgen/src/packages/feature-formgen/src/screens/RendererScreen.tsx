@@ -1624,7 +1624,7 @@ const RendererScreen: React.FC<{
               formState.data.hasValidationErrors = false;
               //formState.customElementErrorMessages = []; TODO
               //formState.fullScreenOverlay = false; TODO
-              // updateState(StatesToUpdateEnum.FormState);
+              updateState(StatesToUpdateEnum.ALL;
               callbackOverlay(nextReportResult);
             } else {
               errorFunc(null);
@@ -1653,7 +1653,7 @@ const RendererScreen: React.FC<{
               formState.data.hasValidationErrors = false;
               //formState.customElementErrorMessages = []; TODO
               //formState.fullScreenOverlay = false; TODO
-              // updateState(StatesToUpdateEnum.FormState);
+              updateState(StatesToUpdateEnum.ALL);
               callbackOverlay(nextReportResult);
             } else {
               errorFunc(null);

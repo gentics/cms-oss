@@ -1,5 +1,6 @@
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
+    CONTENT_REPOSITORY_MESH,
     EntityImporter,
     GroupImportData,
     IMPORT_ID,
@@ -91,6 +92,7 @@ test.describe('Node Management', () => {
     }
 
     test('should be possible to edit the node properties', async ({ page }) => {
+        const CR = (await IMPORTER.client.contentRepository.get(CONTENT_REPOSITORY_MESH).send()).contentRepository;
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
@@ -101,6 +103,35 @@ test.describe('Node Management', () => {
                     { type: GcmsPermission.UPDATE, value: true },
                     { type: GcmsPermission.READ_ITEMS, value: true },
                     { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+            // No idea why we need permissions to the full admin chain,
+            // or permissions to edit the content-repository,
+            // but otherwise updates to the node will simply not work due to missing permissions.
+            {
+                type: AccessControlledType.ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_REPOSITORY,
+                instanceId: `${CR.id}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
                 ],
             },
         ]);

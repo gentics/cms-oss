@@ -617,7 +617,7 @@ export function findNthColorPickerPaletteColor(picker: Locator, index: number): 
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
-    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index' + colorOrIndex : colorOrIndex}`, async () => {
+    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index ' + colorOrIndex : colorOrIndex}`, async () => {
         const dropdown = findDynamicDropdown(page, slot);
         const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
         const paletteColor = typeof colorOrIndex === 'number'

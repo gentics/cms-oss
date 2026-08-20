@@ -1,0 +1,1 @@
+Editor User Interface: Resolved an issue, where inserting an inline-editable tag into an existing text, the text would be split into two paragraphs.

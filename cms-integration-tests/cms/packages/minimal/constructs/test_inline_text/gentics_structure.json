@@ -1,0 +1,46 @@
+{
+  "globalId" : "3d69.d0cdd57f-9b19-11f1-944f-ae59088be6cd",
+  "keyword" : "test_inline_text",
+  "name" : {
+    "de" : "[Test] Inline Text",
+    "en" : "[Test] Inline Text"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "liveEditorTagName" : "span",
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "editOnInsert" : false,
+  "editorControlStyle" : "ABOVE",
+  "editorControlsInside" : false,
+  "autoEnable" : false,
+  "externalEditorUrl" : "",
+  "parts" : [ {
+    "globalId" : "3d69.e0789538-9b19-11f1-944f-ae59088be6cd",
+    "name" : {
+      "de" : "Inhalt",
+      "en" : "Content"
+    },
+    "keyword" : "content",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : true,
+    "hideInEditor" : false,
+    "externalEditorUrl" : "",
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "57a5.00407459-3223-11ef-862c-0242ac110002",
+    "name" : {
+      "de" : "Integrations Test",
+      "en" : "Integration Test"
+    },
+    "sortOrder" : 2
+  }
+}

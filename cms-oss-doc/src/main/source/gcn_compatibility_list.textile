@@ -201,8 +201,14 @@ h5. Microsoft SQL JDBC Connector
 h3. Elasticsearch
 
 |_.Version |_.Supported |_.Notes |
-| 6        | Yes        |        |
-| 5        | Yes        |        |
+| 9        | Yes        |  since 6.4.0  |
+| 8        | Yes        |  since 6.2.0  |
+
+h3. Keycloak
+
+|_.Version |_.Supported |_.Notes |
+| 26.7     | Yes[2]     |    |
+| < 17     | No         |    |
 
 h3. Footnotes
 

@@ -149,9 +149,9 @@ public interface FolderResource extends AuthenticatedResource {
 	 * @deprecated Use {@link FileResource#list(InFolderParameterBean, FileListParameterBean, FilterParameterBean, SortParameterBean, PagingParameterBean, EditableParameterBean, WastebinParameterBean)} instead
 	 */
 	@GET
-	@Path("/getFiles/{folderId}")
+	@Path("/getFiles/{pathFolderId}")
 	LegacyFileListResponse getFiles(
-		@PathParam("folderId") String folderId,
+		@PathParam("pathFolderId") String folderId,
 		@BeanParam InFolderParameterBean inFolder,
 		@BeanParam FileListParameterBean fileListParams,
 		@BeanParam LegacyFilterParameterBean filterParams,
@@ -173,9 +173,9 @@ public interface FolderResource extends AuthenticatedResource {
 	 * @deprecated Use {@link ImageResource#list(InFolderParameterBean, FileListParameterBean, FilterParameterBean, SortParameterBean, PagingParameterBean, EditableParameterBean, WastebinParameterBean)} instead
 	 */
 	@GET
-	@Path("/getImages/{folderId}")
+	@Path("/getImages/{pathFolderId}")
 	LegacyFileListResponse getImages(
-		@PathParam("folderId") String folderId,
+		@PathParam("pathFolderId") String folderId,
 		@BeanParam InFolderParameterBean inFolder,
 		@BeanParam FileListParameterBean fileListParams,
 		@BeanParam LegacyFilterParameterBean filterParams,
@@ -304,8 +304,8 @@ public interface FolderResource extends AuthenticatedResource {
 	 * @return list of templates
 	 */
 	@GET
-	@Path("/getTemplates/{folderId}")
-	TemplateListResponse getTemplates(@PathParam("folderId") String folderId,
+	@Path("/getTemplates/{pathFolderId}")
+	TemplateListResponse getTemplates(@PathParam("pathFolderId") String folderId,
 			@BeanParam InFolderParameterBean inFolder,
 			@BeanParam TemplateListParameterBean templateListParams,
 			@BeanParam LegacyFilterParameterBean filterParams,
@@ -337,9 +337,9 @@ public interface FolderResource extends AuthenticatedResource {
 	 * @return list of items
 	 */
 	@GET
-	@Path("/getItems/{folderId}")
+	@Path("/getItems/{pathFolderId}")
 	ItemListResponse getItems(
-			@PathParam("folderId") String folderId,
+			@PathParam("pathFolderId") String folderId,
 			@QueryParam("type") List<ItemType> types,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("template") @DefaultValue("false") boolean template,
@@ -399,9 +399,9 @@ public interface FolderResource extends AuthenticatedResource {
 	 * @return list of pages including its external links (see {@link FolderExternalLinksResponse}).
 	 */
 	@GET
-	@Path("/getExternalLinks/{folderId}")
+	@Path("/getExternalLinks/{pathFolderId}")
 	FolderExternalLinksResponse getExternalLinks(
-			@PathParam("folderId") Integer folderId,
+			@PathParam("pathFolderId") Integer folderId,
 			@QueryParam("recursive")@DefaultValue("false") boolean recursive);
 
 	/**

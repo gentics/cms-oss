@@ -1,19 +1,19 @@
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-
 import { KNOWN_PLACEHOLDERS } from './common';
 import {
     findFilterButton,
     findSearchInput,
     findTable,
     findTableRow,
+    navigateToToolWithLogin,
     setFilter,
     setSearch,
-    navigateToToolWithSid,
     waitForToolReady,
 } from './helpers';
+import { NodeFeature } from '@gentics/cms-models';
 
-test.describe('form-translations · Search & Filter', () => {
+test.describe('Search & Filter', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
@@ -39,11 +39,13 @@ test.describe('form-translations · Search & Filter', () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.syncPackages(TestSize.MINIMAL);
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
         });
 
         await test.step('Open tool', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToToolWithLogin(page);
             await waitForToolReady(page);
         });
     });
@@ -52,9 +54,9 @@ test.describe('form-translations · Search & Filter', () => {
         /* "submit" is a substring of the well-known submit-button placeholder. */
         await setSearch(page, 'submit');
 
-        await expect(findTableRow(page, KNOWN_PLACEHOLDERS.SUBMIT_BUTTON)).toBeVisible();
+        await expect(findTableRow(page, KNOWN_PLACEHOLDERS.SUBMIT)).toBeVisible();
         /* Cancel button shouldn't be in the result set. */
-        await expect(findTableRow(page, KNOWN_PLACEHOLDERS.CANCEL_BUTTON)).toHaveCount(0);
+        await expect(findTableRow(page, KNOWN_PLACEHOLDERS.CANCEL)).toHaveCount(0);
     });
 
     test('should reflect the shown/total counter when filtering by search', async ({ page }) => {

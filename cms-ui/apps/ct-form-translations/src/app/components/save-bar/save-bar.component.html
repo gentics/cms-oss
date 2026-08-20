@@ -2,7 +2,7 @@
     class="save-bar"
     data-region="save-bar"
     [attr.data-visible]="dirtyCount > 0"
-    [attr.data-saving]="isSaving"
+    [attr.data-saving]="saving"
     [class.is-visible]="dirtyCount > 0"
 >
     <div class="save-bar__info">
@@ -18,7 +18,7 @@
         type="secondary"
         flat
         data-action="discard"
-        [disabled]="dirtyCount === 0 || isSaving"
+        [disabled]="dirtyCount === 0 || saving"
         (click)="discard.emit()"
     >
         {{ 'common.discard_button' | gtxI18n }}
@@ -27,10 +27,10 @@
     <gtx-button
         type="default"
         data-action="save"
-        [disabled]="dirtyCount === 0 || isSaving"
+        [disabled]="dirtyCount === 0 || saving"
         (click)="save.emit()"
     >
-        <icon left [class.spin]="isSaving">{{ isSaving ? 'refresh' : 'save' }}</icon>
-        <span class="button-text">{{ (isSaving ? 'common.saving' : 'common.save_button') | gtxI18n }}</span>
+        <icon left [class.spin]="saving">{{ saving ? 'refresh' : 'save' }}</icon>
+        <span class="button-text">{{ (saving ? 'common.saving' : 'common.save_button') | gtxI18n }}</span>
     </gtx-button>
 </div>

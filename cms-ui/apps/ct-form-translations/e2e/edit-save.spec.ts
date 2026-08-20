@@ -1,6 +1,5 @@
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
-
 import { KNOWN_PLACEHOLDERS } from './common';
 import {
     clickDiscardAndConfirm,
@@ -12,12 +11,13 @@ import {
     findCellInput,
     findSaveButton,
     findTableRow,
-    navigateToToolWithSid,
+    navigateToToolWithLogin,
     readDirtyCount,
     waitForToolReady,
 } from './helpers';
+import { NodeFeature } from '@gentics/cms-models';
 
-test.describe('form-translations · Edit, Save & Discard', () => {
+test.describe('Edit, Save & Discard', () => {
     const IMPORTER = new EntityImporter();
 
     /**
@@ -25,7 +25,7 @@ test.describe('form-translations · Edit, Save & Discard', () => {
      * well-known global placeholder so the row exists regardless of CMS-side
      * defaults. Language must be one that the CMS reports as available.
      */
-    const TARGET_KEY  = KNOWN_PLACEHOLDERS.LOADING;
+    const TARGET_KEY = KNOWN_PLACEHOLDERS.LOADING;
     const TARGET_LANG = 'en';
 
     /** Token suffix added to differentiate the test value from any real translation. */
@@ -54,11 +54,13 @@ test.describe('form-translations · Edit, Save & Discard', () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.syncPackages(TestSize.MINIMAL);
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
         });
 
         await test.step('Open tool', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToToolWithLogin(page);
             await waitForToolReady(page);
             await findTableRow(page, TARGET_KEY).waitFor({ state: 'visible' });
         });
@@ -76,7 +78,7 @@ test.describe('form-translations · Edit, Save & Discard', () => {
     });
 
     test('should disable save and discard while there are no changes', async ({ page }) => {
-        await expect(findSaveButton(page)).toBeDisabled();
+        await expect(findSaveButton(page).locator('button')).toBeDisabled();
     });
 
     test('should persist a change across reload after saving', async ({ page }) => {
@@ -90,8 +92,7 @@ test.describe('form-translations · Edit, Save & Discard', () => {
         await expectCellValue(page, TARGET_KEY, TARGET_LANG, newValue);
 
         await test.step('Reload and re-verify persistence', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await page.reload();
             await waitForToolReady(page);
             await findTableRow(page, TARGET_KEY).waitFor({ state: 'visible' });
             await expectCellValue(page, TARGET_KEY, TARGET_LANG, newValue);
@@ -115,11 +116,13 @@ test.describe('form-translations · Edit, Save & Discard', () => {
         const headerCount = await langHeaders.count();
         test.skip(headerCount < 2, 'Needs at least 2 languages configured');
 
-        const secondLang = await langHeaders.nth(1).getAttribute('data-lang');
+        const secondLang = await langHeaders.filter({
+            hasNot: langHeaders.locator(`[data-lang="${TARGET_LANG}"]`),
+        }).first().getAttribute('data-lang');
         expect(secondLang, 'second language header should expose data-lang').not.toBeNull();
 
         await fillCell(page, TARGET_KEY, TARGET_LANG, `value-a ${TEST_TOKEN}`);
-        await fillCell(page, TARGET_KEY, secondLang!, `value-b ${TEST_TOKEN}`);
+        await fillCell(page, TARGET_KEY, secondLang, `value-b ${TEST_TOKEN}`);
 
         expect(await readDirtyCount(page)).toBe(2);
     });

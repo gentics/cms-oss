@@ -468,7 +468,9 @@ test.describe('Page Editing', () => {
                         type: 'ticket',
                         description: 'SUP-19597',
                     }],
-                }, async ({ page }) => {
+                }, async ({ page, browserName }) => {
+                    test.skip(browserName === 'firefox', 'Disabled in Firefox, due to inconsistencies of color-parsing');
+
                     const PICK_COLOR = '#CD000089';
 
                     await overwriteAlohaConfigWith(page, `

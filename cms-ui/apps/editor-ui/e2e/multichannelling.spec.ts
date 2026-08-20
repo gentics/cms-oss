@@ -333,14 +333,14 @@ test.describe('Multichannelling', () => {
             const item = findItem(list, testPage.id);
             await itemAction(item, 'localize');
 
-            const localizeReq = page.waitForRequest(matchRequest('POST', `/rest/page/localize/${testPage.id}`));
-            const loadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+            const localizeReq = waitForResponseFrom(page, 'POST', `/rest/page/localize/${testPage.id}`);
+            const loadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${testPage.id}`);
             const modal = page.locator('gtx-modal-dialog');
             await clickModalAction(modal, 'partial');
 
             await test.step('Validate localize request', async () => {
                 const req = await localizeReq;
-                const reqData: PageLocalizeRequest = req.postDataJSON();
+                const reqData: PageLocalizeRequest = req.request().postDataJSON();
                 expect(reqData.channelId).toEqual(channelNode.id);
                 expect(reqData.localizationType).toEqual(LocalizationType.PARTIAL);
             });
@@ -365,7 +365,7 @@ test.describe('Multichannelling', () => {
             await itemAction(item, 'localize');
 
             const modal = page.locator('gtx-modal-dialog');
-            const pageLoadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+            const pageLoadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${testPage.id}`);
             await clickModalAction(modal, 'partial');
             const pageLoadRes = await pageLoadReq;
             testPage = (await pageLoadRes.json() as PageResponse).page;
@@ -384,8 +384,8 @@ test.describe('Multichannelling', () => {
                 const titleRow = await findTableRowById(table, testTag.id);
                 await expect(titleRow).toBeVisible();
 
-                const localizeReq = page.waitForResponse(matchRequest('POST', `/rest/page/localize/${testPage.id}/tags/${testTag.name}`));
-                const loadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${testPage.id}`));
+                const localizeReq = waitForResponseFrom(page, 'POST', `/rest/page/localize/${testPage.id}/tags/${testTag.name}`);
+                const loadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${testPage.id}`);
 
                 await findTableAction(titleRow, 'localize-tag').click();
 
@@ -400,8 +400,8 @@ test.describe('Multichannelling', () => {
                 const titleRow = await findTableRowById(table, testTag.id);
                 await expect(titleRow).toBeVisible();
 
-                const unlocalizeReq = page.waitForResponse(matchRequest('POST', `/rest/page/unlocalize/${testPage.id}/tags/${testTag.name}`));
-                const loadReq = page.waitForResponse(matchRequest('GET', '/rest/page/load/*'));
+                const unlocalizeReq = waitForResponseFrom(page, 'POST', `/rest/page/unlocalize/${testPage.id}/tags/${testTag.name}`);
+                const loadReq = waitForResponseFrom(page, 'GET', '/rest/page/load/*');
 
                 await findTableAction(titleRow, 'delete-tag-localization').click();
 

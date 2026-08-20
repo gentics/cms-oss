@@ -1,5 +1,6 @@
-import { AccessControlledType, GcmsPermission } from "@gentics/cms-models";
+import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
+    CONTENT_REPOSITORY_MESH,
     EntityImporter,
     GroupImportData,
     IMPORT_ID,
@@ -13,10 +14,11 @@ import {
     openContext,
     TestSize,
     UserImportData,
-} from "@gentics/e2e-utils";
-import { cloneWithSymbols } from "@gentics/ui-core/utils/clone-with-symbols";
-import { test, expect, Page } from "@playwright/test";
-import { editorAction, selectNode } from "./helpers";
+    waitForResponseFrom,
+} from '@gentics/e2e-utils';
+import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
+import { test, expect, Page } from '@playwright/test';
+import { editorAction, selectNode } from './helpers';
 
 test.describe('Node Management', () => {
 
@@ -85,15 +87,16 @@ test.describe('Node Management', () => {
         await test.step('Open Editor-UI', async () => {
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
     }
 
     test('should be possible to edit the node properties', async ({ page }) => {
+        const CR = (await IMPORTER.client.contentRepository.get(CONTENT_REPOSITORY_MESH).send()).contentRepository;
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
@@ -101,7 +104,36 @@ test.describe('Node Management', () => {
                     { type: GcmsPermission.READ_ITEMS, value: true },
                     { type: GcmsPermission.UPDATE_FOLDER, value: true },
                 ],
-            }
+            },
+            // No idea why we need permissions to the full admin chain,
+            // or permissions to edit the content-repository,
+            // but otherwise updates to the node will simply not work due to missing permissions.
+            {
+                type: AccessControlledType.ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.CONTENT_REPOSITORY,
+                instanceId: `${CR.id}`,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                ],
+            },
         ]);
 
         const NEW_NODE_NAME = 'testtesttest';
@@ -114,7 +146,9 @@ test.describe('Node Management', () => {
         await form.locator('[formcontrolname="name"] input').fill(NEW_NODE_NAME);
         await page.waitForTimeout(500); // Have to wait for internals to propagate
 
+        const saveReq = waitForResponseFrom(page, 'POST', `/rest/node/${IMPORTER.get(NODE_MINIMAL).id}`);
         await editorAction(page, 'save');
+        await saveReq;
 
         await expect(nodeTitle.locator('.title-name')).toHaveText(NEW_NODE_NAME);
     });
@@ -128,12 +162,12 @@ test.describe('Node Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                 ],
-            }
+            },
         ]);
 
         const nodeTitle = page.locator('folder-contents > .title');

@@ -19,7 +19,4 @@ export class SaveBarComponent {
 
     @Output() readonly save = new EventEmitter<void>();
     @Output() readonly discard = new EventEmitter<void>();
-
-    /** Backwards-compatible alias for the template (`isSaving`). */
-    get isSaving(): boolean { return this.saving; }
 }

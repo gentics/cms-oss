@@ -64,6 +64,7 @@ import {
     pageListRowLanguage,
     selectNode,
     setListLanguage,
+    toggleDisplayAllCheckbox,
 } from './helpers';
 
 test.describe('Page Management', () => {
@@ -523,6 +524,7 @@ test.describe('Page Management', () => {
 
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(500); // Allow for notifications to spawn
+        // eslint-disable-next-line playwright/prefer-to-have-count
         expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message')).toContainText(offlineBody.messages[0].message);
     });
@@ -583,6 +585,7 @@ test.describe('Page Management', () => {
         await page.waitForTimeout(500);
 
         const toasts = page.locator('gtx-toast');
+        // eslint-disable-next-line playwright/prefer-to-have-count
         expect(await toasts.all()).toHaveLength(1);
         await expect(toasts.locator('.message'))
             .toContainText(resMessage.replace('<br/>', '\n'));
@@ -670,6 +673,7 @@ test.describe('Page Management', () => {
             // Get all notifications now, and check length.
             // Using the build in helper is wrong in this case, as when 2 are displayed,
             // it'd wait until one fades away and resolves to true.
+            // eslint-disable-next-line playwright/prefer-to-have-count
             expect(await toasts.all()).toHaveLength(1);
 
             await expect(toasts.locator('.message')).toContainText(toastMessage);
@@ -1139,7 +1143,7 @@ test.describe('Page Management', () => {
             ];
 
             // We should have all interactable elements now
-            expect(inputElements.length).toEqual(10);
+            expect(inputElements).toHaveLength(10);
 
             // All of them should be disabled
             for (const input of inputElements) {
@@ -1155,5 +1159,55 @@ test.describe('Page Management', () => {
         const buttons = footer.locator('gtx-button');
         await expect(buttons).toHaveCount(1);
         await expect(buttons).toHaveAttribute('data-action', 'close');
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', true);
+    });
+
+    test('should be possible to toggle display of all languages', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
     });
 });

@@ -33,7 +33,7 @@ export enum AccessControlledType {
     MAINTENANCE = 'maintenance',
     CONTENT_MAP_BROWSER = 'contentmapbrowser',
     CONTENT_REPOSITORY_ADMIN = 'contentrepositoryadmin',
-    CONTENT_REPOSITORY = 'contentRepository',
+    CONTENT_REPOSITORY = 'contentrepository',
     DEVTOOL_ADMIN = 'devtooladmin',
     CR_FRAGMENT_ADMIN = 'crfragmentadmin',
     CR_FRAGMENT = 'crfragment',

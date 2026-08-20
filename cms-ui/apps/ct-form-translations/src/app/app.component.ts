@@ -111,13 +111,29 @@ export class AppComponent implements OnInit {
                 return true;
             });
         } catch (err) {
-            debugger;
             return [];
         }
     });
 
     public readonly dirtyCount = computed(() => {
-        return Object.keys(this.draft()).length;
+        let counter = 0;
+
+        const draftVal = this.draft() || {};
+        const currentVal = this.activeTranslations() || {};
+
+        for (const key of Object.keys(draftVal)) {
+            const compVal = currentVal[key];
+            if (compVal == null) {
+                continue;
+            }
+            for (const lang of Object.keys(draftVal[key])) {
+                if (draftVal[key][lang] !== compVal[lang]) {
+                    counter++;
+                }
+            }
+        }
+
+        return counter;
     });
 
     public readonly scopeTabs = computed<ScopeTabInfo[]>(() => {

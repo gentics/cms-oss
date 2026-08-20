@@ -37,6 +37,7 @@ import {
     openFilePropertiesTab,
     openObjectPropertyEditor,
     selectNode,
+    toggleDisplayAllCheckbox,
     uploadFiles,
 } from './helpers';
 
@@ -477,5 +478,33 @@ test.describe('Media Management', () => {
         await item.locator('list-item-details detail-chip.usage').click();
 
         await expect(page.locator('gtx-usage-modal')).toBeVisible();
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const files = findList(page, ITEM_TYPE_FILE);
+        const images = findList(page, ITEM_TYPE_IMAGE);
+        await toggleDisplayAllCheckbox(page, files, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, files, 'toggle-wastebin', true);
+        await toggleDisplayAllCheckbox(page, images, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, images, 'toggle-wastebin', true);
     });
 });

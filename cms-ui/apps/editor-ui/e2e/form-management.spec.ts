@@ -46,6 +46,7 @@ import {
     findList,
     itemAction,
     selectNode,
+    toggleDisplayAllCheckbox,
 } from './helpers';
 
 test.describe('Form Management', () => {
@@ -563,5 +564,55 @@ test.describe('Form Management', () => {
             const deLangIndicator = deEnFormItem.locator('.item-primary .language-indicator [data-action="page-language"][data-id="de"]');
             await expect(deLangIndicator.locator('.indicator.indicator-untranslated')).not.toBeAttached();
         });
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', true);
+    });
+
+    test('should be possible to toggle display of all languages', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
     });
 });

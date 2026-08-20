@@ -10,6 +10,8 @@
  */
 
 import { expect, Locator, Page, test } from '@playwright/test';
+import { clickModalAction, createClient } from '@gentics/e2e-utils';
+import { AUTH } from './common';
 
 /* =====================================================================
  *  Top-level regions
@@ -61,7 +63,7 @@ export async function clickScopeTab(page: Page, scopeId: string): Promise<void> 
  * ===================================================================== */
 
 export function findSearchInput(page: Page): Locator {
-    return findToolbar(page).locator('[data-action="search"]');
+    return findToolbar(page).locator('[data-action="search"] input');
 }
 
 export async function setSearch(page: Page, term: string): Promise<void> {
@@ -199,49 +201,47 @@ export async function clickSaveAndWait(page: Page): Promise<void> {
  */
 export async function clickDiscardAndConfirm(page: Page): Promise<void> {
     await test.step('Discard with confirm', async () => {
-        page.once('dialog', dialog => void dialog.accept());
         await findDiscardButton(page).click();
+        const modal = page.locator('gtx-modal-dialog');
+        await clickModalAction(modal, 'confirm');
         await expect(findSaveBar(page)).toHaveAttribute('data-visible', 'false', { timeout: 5_000 });
     });
 }
 
-/**
- * Navigates to the form-translations tool using the supplied session id
- * (in the URL, as the CMS shell would do when embedding the tool).
- *
- * Uses the `ENV_E2E_APP_PATH` env that `createConfiguration` sets up — i.e.
- * the same base URL as for the regular `navigateToApp` helper, but with
- * `?sid=…` instead of `?skip-sso#/`.
- */
-export async function navigateToToolWithSid(page: Page, sid: string): Promise<void> {
-    await test.step(`Navigate to tool with SID "${sid}"`, async () => {
-        let appPath = process.env['E2E_APP_PATH'] ?? '/tools/form-translations/';
-        if (appPath === '/') {
-            appPath = '';
-        } else if (appPath.endsWith('/')) {
-            appPath = appPath.slice(0, -1);
-        }
-        await page.goto(`${appPath}/?sid=${encodeURIComponent(sid)}`);
+function getAppPath(): string {
+    let appPath = process.env['E2E_APP_PATH'] ?? '/tools/form-translations/';
+    if (appPath === '/') {
+        appPath = '';
+    } else if (appPath.endsWith('/')) {
+        appPath = appPath.slice(0, -1);
+    }
+
+    return appPath;
+}
+
+export async function navigateToTool(page: Page): Promise<void> {
+    await test.step('Navigate to tool', async () => {
+        const appPath = getAppPath();
+        await page.goto(`${appPath}`);
     });
 }
 
-/* =====================================================================
- *  Confirm-dialog helpers
- * ===================================================================== */
-
 /**
- * Register a one-shot handler that accepts the next `window.confirm` dialog.
- * The tool uses native confirms for "discard all changes?" and for switching
- * scopes while dirty.
+ * Navigates to the form-translations tool, the performs a login on the page
+ * via the REST API to store the appropriate cookie, and then reloads the whole
+ * page with the received SID.
  */
-export function autoAcceptNextConfirm(page: Page): void {
-    page.once('dialog', dialog => void dialog.accept());
-}
+export async function navigateToToolWithLogin(page: Page): Promise<void> {
+    await navigateToTool(page);
+    await test.step('Login with default user', async () => {
+        const client = await createClient({
+            context: page.context().request,
+            isPageContext: true,
+            autoLogin: AUTH.admin,
+        });
 
-/**
- * Register a one-shot handler that dismisses (i.e. clicks "Cancel" on) the
- * next `window.confirm` dialog.
- */
-export function autoDismissNextConfirm(page: Page): void {
-    page.once('dialog', dialog => void dialog.dismiss());
+        const appUrl = URL.parse(page.url());
+        appUrl.searchParams.set('sid', `${client.sid}`);
+        await page.goto(appUrl.toString());
+    });
 }

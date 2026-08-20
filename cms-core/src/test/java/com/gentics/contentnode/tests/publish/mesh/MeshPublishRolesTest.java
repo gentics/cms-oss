@@ -44,9 +44,9 @@ public class MeshPublishRolesTest extends AbstractMeshPublishRoleTest {
 	public static void setupOnce() throws Exception {
 		AbstractMeshPublishRoleTest.setupOnce();
 
-		int velocityRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createVelocityConstruct(node, "roleConstruct", TPL_PART_KEYWORD));
-		rolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, rolesConstruct.getId(), "Roles", "roles");
-		templateRolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, velocityRolesConstructId, "VTLRoles", TPL_OBJECT_TAG_KEYWORD);
+//		int velocityRolesConstructId = Trx.supply(t -> ContentNodeTestDataUtils.createVelocityConstruct(node, "roleConstruct", TPL_PART_KEYWORD));
+//		rolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, rolesConstruct.getId(), "Roles", "roles");
+//		templateRolesProperty = createObjectPropertyDefinition(Folder.TYPE_FOLDER, velocityRolesConstructId, "VTLRoles", TPL_OBJECT_TAG_KEYWORD);
 	}
 
 	/**

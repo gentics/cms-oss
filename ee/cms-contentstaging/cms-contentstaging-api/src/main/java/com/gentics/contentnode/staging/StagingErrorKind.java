@@ -11,6 +11,8 @@ public enum StagingErrorKind implements Serializable {
 	MISMATCH,
 	DUPLICATION,
 	NO_BINARY,
+	INTEGRITY,
+	CONFIGURATION,
 	OTHER;
 
 	public static StagingErrorKind fromValue(String value) {

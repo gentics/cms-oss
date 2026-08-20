@@ -25,6 +25,11 @@ public class StagedForm extends StagingBase {
 	private static final long serialVersionUID = 9012361259459603486L;
 
 	/**
+	 * Form type
+	 */
+	private String formType;
+
+	/**
 	 * Description of the form
 	 */
 	private String description;
@@ -35,14 +40,14 @@ public class StagedForm extends StagingBase {
 	private List<String> languages;
 
 	/**
-	 * ID of the success page
+	 * Optional external ID
 	 */
-	private String successPageId;
+	private String externalId;
 
 	/**
-	 * ID of the success form
+	 * Optional external Hash
 	 */
-	private String successNodeId;
+	private String externalHash;
 
 	/**
 	 * Form data
@@ -53,6 +58,22 @@ public class StagedForm extends StagingBase {
 	 * Version data
 	 */
 	private StagedObjectVersion version = new StagedObjectVersion();
+
+	/**
+	 * Form type
+	 * @return form type
+	 */
+	public String getFormType() {
+		return formType;
+	}
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 */
+	public void setFormType(String formType) {
+		this.formType = formType;
+	}
 
 	/**
 	 * Form description
@@ -87,35 +108,35 @@ public class StagedForm extends StagingBase {
 	}
 
 	/**
-	 * ID of the success page
-	 * @return success page ID
+	 * External ID
+	 * @return external ID
 	 */
-	public String getSuccessPageId() {
-		return successPageId;
+	public String getExternalId() {
+		return externalId;
 	}
 
 	/**
-	 * Set the success page ID
-	 * @param successPageId success page ID
+	 * Set the external ID
+	 * @param externalId external ID
 	 */
-	public void setSuccessPageId(String successPageId) {
-		this.successPageId = successPageId;
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
 	}
 
 	/**
-	 * ID of the success node
-	 * @return success node ID
+	 * External Hash
+	 * @return external Hash
 	 */
-	public String getSuccessNodeId() {
-		return successNodeId;
+	public String getExternalHash() {
+		return externalHash;
 	}
 
 	/**
-	 * Set the success node ID
-	 * @param successNodeId success node ID
+	 * Set the external Hash
+	 * @param externalHash external Hash
 	 */
-	public void setSuccessNodeId(String successNodeId) {
-		this.successNodeId = successNodeId;
+	public void setExternalHash(String externalHash) {
+		this.externalHash = externalHash;
 	}
 
 	/**

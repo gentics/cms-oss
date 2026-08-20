@@ -60,8 +60,12 @@ public class StagingError implements Serializable, Comparable<StagingError> {
 	public static final StagingError fromThrowable(String globalId, Path path, Throwable throwable) {
 		var errorMessage = throwable.getMessage();
 
+		if (throwable instanceof StagingErrorException stagingErrorException) {
+			return stagingErrorException.getStagingError();
+		}
+
 		if (throwable instanceof NodeException) {
-				errorMessage = ((NodeException) throwable).getLocalizedMessage();
+			errorMessage = ((NodeException) throwable).getLocalizedMessage();
 		}
 		var stagingError = new StagingError(globalId, path.toString(), errorMessage, StagingErrorKind.EXCEPTION);
 		stagingError.setRecommendation(StagingErrorRecommendation.fromThrowable(throwable).toString());

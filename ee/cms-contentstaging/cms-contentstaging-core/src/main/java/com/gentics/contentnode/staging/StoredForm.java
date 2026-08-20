@@ -30,8 +30,6 @@ public class StoredForm extends StagedForm implements StoredModel {
 
 	@Override
 	public void makeSafe() {
-		setSuccessPageId(null);
-		setSuccessNodeId(null);
 		setData(null);
 	}
 }

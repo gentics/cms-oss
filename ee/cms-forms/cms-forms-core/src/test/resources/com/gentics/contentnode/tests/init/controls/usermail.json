@@ -1,0 +1,55 @@
+{
+	"elements": [
+		{
+			"globalId": "350f48a1-2176-4c69-80f8-df5357b4b15d",
+			"name": "usermail_350f48a1_2176_4c69_80f8_df5357b4b15d",
+			"type": "usermail",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Geben Sie hier Ihre eMail Adresse an"
+			},
+			"mandatory_i18n": {
+				"de": true
+			},
+			"description_i18n": {
+				"de": "eMail Adresse"
+			},
+			"maxCharCount_i18n": {
+				"de": 200
+			},
+			"mailsubject_i18n": {
+				"de": "Hier kommt Ihr eMail"
+			},
+			"mailtemplate_i18n": {
+				"de": "useremail"
+			}
+		},
+		{
+			"globalId": "aa37bb42-5a36-46a9-bfb9-bdc934522677",
+			"name": "usermail_aa37bb42_5a36_46a9_bfb9_bdc934522677",
+			"type": "usermail",
+			"active": true,
+			"elements": [],
+			"label_i18n": {
+				"de": "Ein Feld mit Vorlage aus der Seite"
+			},
+			"mandatory_i18n": null,
+			"placeholder_i18n": null,
+			"description_i18n": null,
+			"tooltip_i18n": null,
+			"maxCharCount_i18n": null,
+			"mailsubject_i18n": null,
+			"mailtemplate_i18n": null,
+			"mailsource_pageid": 4712,
+			"mailsource_nodeid": 43
+		}
+	],
+	"email": "",
+	"mailsubject_i18n": {},
+	"mailsource_pageid": 0,
+	"mailsource_nodeid": 0,
+	"mailtemp_i18n": {},
+	"type": "GENERIC",
+	"templateContext": "theme-red"
+}

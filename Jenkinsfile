@@ -180,7 +180,8 @@ spec:
 
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
                         echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
-                        MavenHelper.setProperty("cms-oss.version", params.cmsOssVersion.trim())
+                        sh "mvn -B versions:set-property -DgenerateBackupPoms=false -Dproperty=cms-oss.version -DnewVersion=" + params.cmsOssVersion.trim() + " -Dcms-oss.version=" + params.cmsOssVersion.trim()
+                        // MavenHelper.setProperty("cms-oss.version", params.cmsOssVersion.trim())
                         mvnProjects = " -am -pl '!cms-changelog,!cms-doc'"
                     }
 
@@ -199,6 +200,8 @@ spec:
                         currentBuild.description = version
                     }
 
+                    mvnArguments += " -Dnodejs.npm.bin=/opt/node/bin/npm";
+
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
                         if (params.useOpenApiTestClient) {
@@ -214,7 +217,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl cms-server"
+                        mvnProjects = " -am -pl cms-server,formgen"
                     }
 
                     // Update chrome to the latest version

@@ -1,0 +1,6 @@
+export enum IMockFormTypeEnum {
+    DEFAULT_AN_FORM,
+    DEFAULT_CMS_FORM,
+    EXTENDED_FORM,
+    EXPERTSEARCH_FORM
+}

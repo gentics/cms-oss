@@ -2,16 +2,6 @@ package com.gentics.contentnode.translation;
 
 import static com.gentics.contentnode.etc.JsoupValidator.VALIDATOR;
 
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.TranslationException;
-import com.gentics.contentnode.aloha.AlohaRenderer;
-import com.gentics.contentnode.api.translation.TranslationService;
-import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.rest.model.Property;
-import com.gentics.contentnode.rest.model.Tag;
-import com.gentics.lib.i18n.CNI18nString;
-import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,8 +9,21 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
+import com.gentics.contentnode.aloha.AlohaRenderer;
+import com.gentics.contentnode.api.translation.TranslationService;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.TranslationStats;
+import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.Tag;
+import com.gentics.lib.log.NodeLogger;
 
 /**
  * Service to combine all tags into a combined/resolved string.
@@ -31,11 +34,27 @@ public class TagResolveService {
 	private static final Pattern NODE_TAGS_PATTERN = Pattern.compile("(<node [a-z]+\\d*>)",
 			Pattern.CASE_INSENSITIVE);
 	private static final Pattern RESOLVED_TAGS_PATTERN = Pattern.compile(
-			"<span data-translate-id=\"(.*?)\">(.*?)</span>", Pattern.DOTALL);
+			"<span data-translate-id=\"(.*?)\">(.*?)<\\/span>", Pattern.DOTALL);
 	private final int linkConstructId;
 
+	/**
+	 * Node ctor.
+	 * 
+	 * @param node
+	 * @throws NodeException
+	 */
 	public TagResolveService(Node node) throws NodeException {
-		this.linkConstructId = this.getConstructIdForLinks(node);
+		this(getConstructIdForLinks(node));
+	}
+
+	/**
+	 * Non-node ctor. Avoid to use, unless absolutely sure.
+	 * 
+	 * @param linkConstructId
+	 * @throws NodeException
+	 */
+	protected TagResolveService(int linkConstructId) throws NodeException {
+		this.linkConstructId = linkConstructId;
 	}
 
 	/**
@@ -45,7 +64,7 @@ public class TagResolveService {
 	 * @return The construct ID associated with the links of the given node.
 	 * @throws NodeException If an error occurs while retrieving the construct ID.
 	 */
-	private int getConstructIdForLinks(Node node) throws NodeException {
+	private static int getConstructIdForLinks(Node node) throws NodeException {
 		final var linkKeyword = AlohaRenderer.getMagicLinkConstructKeyword(node);
 
 		return DBUtils.select("SELECT id FROM construct WHERE keyword = ?",
@@ -59,13 +78,14 @@ public class TagResolveService {
 	 * @param translationService The translation service to use for translating the resolved text.
 	 * @param sourceLanguageCode The source language code for translation.
 	 * @param targetLanguageCode The target language code for translation.
+	 * @param stats              Statistics
 	 * @throws Exception If an error occurs during the process.
 	 */
 	public void resolveAndTranslateContentTags(
 			List<Tag> contentTags,
 			TranslationService translationService,
 			String sourceLanguageCode,
-			String targetLanguageCode
+			String targetLanguageCode, TranslationStats stats
 	) throws Exception {
 		final var tagsToResolve = contentTags.stream()
 				.filter(tag -> tag.getConstructId() != this.linkConstructId)
@@ -76,34 +96,69 @@ public class TagResolveService {
 
 			for (var textProperty : textProperties) {
 				var resolvableText = textProperty.getStringValue();
-				var isMarkupCorrupt = false;
-				if (!VALIDATOR.test(resolvableText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), ""))) {
-					isMarkupCorrupt = true;
-					logger.warn(new CNI18nString("feature.translation.error.markup_invalid").toString());
-				}
-
-				final var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
-						resolvableText);
-				final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
-
-				final var resolvedAndTranslatedText = translationService.translate(
-						resolvedText,
-						sourceLanguageCode,
-						targetLanguageCode);
-
-				final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
-						resolvedAndTranslatedText);
-
-				final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
-				if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
-					CNI18nString errorMessage = new CNI18nString("feature.translation.error");
-					CNI18nString errorReason = new CNI18nString("feature.translation.error.reason.markup_invalid");
-					errorMessage.addParameter(errorReason.toString());
-					throw new TranslationException(errorMessage.toString());
-				}
-				textProperty.setStringValue(unresolvedAndTranslatedText);
+				textProperty.setStringValue(resolveAndTranslateTextContent(resolvableText, contentTags, translationService, sourceLanguageCode, targetLanguageCode, stats));
 			}
 		}
+	}
+
+	/**
+	 * Resolve and translate text content.
+	 * 
+	 * @param resolvableText     The text to resolve and translate
+	 * @param contentTags        The whole list of content tags.
+	 * @param translationService The translation service to use for translating the resolved text.
+	 * @param sourceLanguageCode The source language code for translation.
+	 * @param targetLanguageCode The target language code for translation.
+	 * @param stats              Statistics
+	 * @return
+	 * @throws Exception
+	 */
+	protected String resolveAndTranslateTextContent(
+			String resolvableText,
+			List<Tag> contentTags,
+			TranslationService translationService,
+			String sourceLanguageCode,
+			String targetLanguageCode, 
+			TranslationStats stats
+	) throws Exception {
+		if (StringUtils.isBlank(resolvableText)) {
+			return resolvableText;
+		}
+		var isMarkupCorrupt = false;
+		if (!VALIDATOR.test(resolvableText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), ""))) {
+			isMarkupCorrupt = true;
+			logger.warn(I18NHelper.get("feature.translation.error.markup_invalid"));
+		}
+
+		final var untranslatedTagMap = this.getOccurringTagsFromResolvableText(contentTags,
+				resolvableText);
+		final var resolvedText = this.resolveTags(untranslatedTagMap, resolvableText);
+
+		final var resolvedAndTranslatedText = translationService.translate(
+				resolvedText,
+				sourceLanguageCode,
+				targetLanguageCode);
+
+		if (stats != null) {
+			stats.addRequest(resolvedText.length(), resolvedAndTranslatedText.length());
+		}
+
+		final var unresolvedAndTranslatedText = this.unresolveTags(untranslatedTagMap,
+				resolvedAndTranslatedText);
+
+		final var cleanHtml = unresolvedAndTranslatedText.replaceAll(String.valueOf(NODE_TAGS_PATTERN), "");
+		if (!isMarkupCorrupt && !VALIDATOR.test(cleanHtml)) {
+			// if debug logging is enabled, we also log what has been sent to the translation service
+			// and what has been received
+			// but we log this as error (since the result was invalid markup)
+			if (logger.isDebugEnabled()) {
+				logger.error("Translated from %s into %s resulted in invalid markup:\n%s\ntranslation:\n%s".formatted(sourceLanguageCode,
+						targetLanguageCode, resolvedText, resolvedAndTranslatedText));
+			}
+			throw new TranslationException(I18NHelper.get("feature.translation.error",
+					I18NHelper.get("feature.translation.error.reason.markup_invalid")));
+		}
+		return unresolvedAndTranslatedText;
 	}
 
 	/**

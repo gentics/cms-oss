@@ -1,0 +1,137 @@
+
+
+
+/* Popup-Container */
+.custom-datetime .rdtPicker {
+  z-index: 9999 !important;
+  font-family: Roboto, sans-serif;
+  border-color: '#ccc';
+  border-radius: 6px;
+  border-width: 1px;
+  background-color: #fff;
+  box-shadow: 0px 5px 20px 4px rgba(0,0,0,0.1);
+}
+
+/* Zeit-Auswahl */
+.custom-datetime .rdtTime {
+  padding: 10px;
+}
+
+.rdt .rdtPicker .rdtBtn {
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols', 'Apple Color Emoji',
+               'Noto Color Emoji', 'Segoe UI', Roboto, Arial, sans-serif !important;
+}
+
+.custom-datetime .rdtCounter .rdtBtn {
+  cursor: pointer;
+  font-size: 20px;
+  color: black;
+}
+
+.custom-datetime .rdtCounter .rdtBtn:hover {
+  border-radius: 4px;
+  background-color: #eee;
+}
+
+.custom-datetime .rdtCounter .rdtCount {
+  font-size: 25px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Trennzeichen */
+.custom-datetime .rdtCounters .rdtCounterSeparator {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 4px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+
+
+/* Aktive Auswahl */
+.custom-datetime td.rdtDay.rdtActive,
+.custom-datetime td.rdtDay.rdtActive:hover {
+  background-color: #0096DC;
+  color: #fff;
+  font-weight: bold;
+}
+
+.custom-datetime .rdtPicker .rdtTime .rdtSwitch:hover{
+  background-color: #eee;
+}
+
+.custom-datetime .rdtPicker .rdtDays,
+.custom-datetime .rdtPicker .rdtMonths,
+.custom-datetime .rdtPicker .rdtYears,
+.custom-datetime .rdtPicker .rdtTime {
+  border-collapse: separate;
+}
+
+.custom-datetime .rdtPicker .rdtDays .rdtSwitch,
+.custom-datetime .rdtPicker .rdtMonths .rdtSwitch,
+.custom-datetime .rdtPicker .rdtYears .rdtSwitch,
+.custom-datetime .rdtPicker .rdtTime .rdtSwitch {
+  height: 40px;
+  border-radius: 4px;
+  transition: 0.1s;
+  border-bottom: none;
+}
+.custom-datetime .rdtPicker .rdtDays .rdtPrev,
+.custom-datetime .rdtPicker .rdtDays .rdtNext,
+.custom-datetime .rdtPicker .rdtMonths .rdtPrev,
+.custom-datetime .rdtPicker .rdtMonths .rdtNext,
+.custom-datetime .rdtPicker .rdtYears .rdtPrev,
+.custom-datetime .rdtPicker .rdtYears .rdtNext {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-bottom: none;
+  border-radius: 4px;
+  transition: 0.1s;
+}
+
+.custom-datetime .rdtPicker .rdtDays .dow {
+  height: 40px;
+  width: 40px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.custom-datetime .rdtPicker .rdtMonth, 
+.custom-datetime .rdtPicker .rdtYear {
+  border-radius: 4px;
+  transition: 0.1s;
+}
+
+/* Day Button */
+.custom-datetime .rdtPicker .rdtDay {
+  height: 40px;
+  width: 40px;
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: middle;
+  transition: 0.1s;
+}
+
+/* Today Button */
+.custom-datetime .rdtPicker td.rdtToday {
+  border: 1px solid #0096DC;
+  border-radius: 4px
+}
+
+/* Selected Day Button */
+.custom-datetime .rdtPicker .rdtActive {
+  border-radius: 4px;
+}
+
+.custom-datetime .rdtPicker .rdtDays .rdtTimeToggle {
+  border-radius: 4px;
+  height: 36;
+  transition: 0.1s;
+}

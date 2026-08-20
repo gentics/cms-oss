@@ -52,6 +52,8 @@ public class StagedNode extends StagingBase {
 
 	private Set<String> features = new TreeSet<>();
 
+	private Set<String> formTypes = new TreeSet<>();
+
 	private Set<String> constructIds = new TreeSet<>();
 
 	private Set<String> objectPropertyIds = new TreeSet<>();
@@ -381,6 +383,23 @@ public class StagedNode extends StagingBase {
 	public void setFeatures(Set<String> features) {
 		this.features.clear();
 		this.features.addAll(features);
+	}
+
+	/**
+	 * Get the form types
+	 * @return form types
+	 */
+	public Set<String> getFormTypes() {
+		return formTypes;
+	}
+
+	/**
+	 * Set the form types
+	 * @param formTypes form types to set
+	 */
+	public void setFormTypes(Set<String> formTypes) {
+		this.formTypes.clear();
+		this.formTypes.addAll(formTypes);
 	}
 
 	/**

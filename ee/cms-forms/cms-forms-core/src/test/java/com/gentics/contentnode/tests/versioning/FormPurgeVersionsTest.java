@@ -26,6 +26,8 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.scheduler.PurgeVersionsJob;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 
@@ -33,6 +35,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for purging versions of forms
  */
 @GCNFeature(set = { Feature.FORMS, Feature.WASTEBIN, Feature.MESH_CONTENTREPOSITORY })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FormPurgeVersionsTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -44,7 +47,9 @@ public class FormPurgeVersionsTest {
 		testContext.getContext().getTransaction().commit();
 
 		node = supply(() -> createNode("hostname", "Test Node", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
-		consume(n -> n.activateFeature(Feature.FORMS), node);
+		consume(n -> {
+			n.activateFeature(Feature.FORMS);
+		}, node);
 	}
 
 	@After
@@ -228,6 +233,7 @@ public class FormPurgeVersionsTest {
 		return supply(t -> {
 			t.setTimestamp(timestamp * 1000L);
 			return create(Form.class, f -> {
+				f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
 				f.setFolderId(node.getFolder().getId());
 				f.setName(name);
 			});

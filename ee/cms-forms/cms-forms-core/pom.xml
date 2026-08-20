@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-forms</artifactId>
-		<version>6.5.0-SNAPSHOT</version>
+		<version>6.6.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-forms-core</artifactId>
@@ -19,17 +19,17 @@
 	<name>Gentics CMS Forms - Core</name>
 	<url>http://www.gentics.com</url>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.gentics.cms</groupId>
-				<artifactId>cms-bom</artifactId>
-				<type>pom</type>
-				<scope>import</scope>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.gentics.cms</groupId>
+                <artifactId>cms-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -52,6 +52,25 @@
 			<groupId>com.gentics</groupId>
 			<artifactId>license-checker</artifactId>
 		</dependency>
+		<!-- TODO: Remove the pinned version here in favor of the version from the bom -->
+		<dependency>
+			<groupId>org.apache.groovy</groupId>
+			<artifactId>groovy</artifactId>
+			<version>5.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.groovy</groupId>
+			<artifactId>groovy-json</artifactId>
+			<version>5.0.5</version>
+		</dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+        </dependency>
 
 		<!--Test dependencies -->
 		<dependency>
@@ -98,16 +117,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty.ee10</groupId>
-			<artifactId>jetty-ee10-servlet</artifactId>
-			<scope>test</scope>
-		</dependency>		
+
 		<!-- Swagger / OpenAPI -->
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
@@ -198,6 +208,14 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
 									<destFileName>mesh-forms-plugin.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>com.gentics.andp</groupId>
+									<artifactId>mesh-acta-nova-plugin</artifactId>
+									<type>jar</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/plugins</outputDirectory>
+									<destFileName>mesh-andp-plugin.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
 						</configuration>

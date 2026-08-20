@@ -1,0 +1,52 @@
+{
+	"adminEmailAddress": "",
+	"adminEmailSubject": {},
+	"adminEmailPageId": 0,
+	"adminEmailNodeId": 0,
+	"adminEmailTemplate": {},
+	"successPageId": 4711,
+	"successNodeId": 42,
+	"successUrl": {},
+	"templateContext": "theme-red",
+	"schema": {
+		"properties": {
+			"textarea_bc335b96_bc49_4b97_9d98_efd642c074f0": {
+				"type": "string",
+				"updateOnChange": false,
+				"validation": {
+					"maxLength": 200.0
+				},
+				"mandatory": false,
+				"isList": false,
+				"name": "textarea_bc335b96_bc49_4b97_9d98_efd642c074f0"
+			}
+		}
+	},
+	"ui-schema": {
+		"formname": {
+			"de": "Test Form",
+			"en": "Test Form"
+		},
+		"formdescription": {
+			"de": "This is the Test Form",
+			"en": "This is the Test Form"
+		},
+		"pages": [
+			{
+				"elements": [
+					{
+						"type": "property",
+						"id": "textarea_bc335b96_bc49_4b97_9d98_efd642c074f0",
+						"label": {
+							"de": "Mehrzeilig"
+						},
+						"description": {},
+						"formGridOptions": {
+							"numberOfLines": 5
+						}
+					}
+				]
+			}
+		]
+	}
+}

@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms</artifactId>
-		<version>6.5.0-SNAPSHOT</version>
+		<version>6.6.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms</groupId>
@@ -141,6 +141,12 @@
 				<version>${mesh.forms.plugin.version}</version>
 				<type>jar</type>
 			</dependency>
+			<dependency>
+				<groupId>com.gentics.andp</groupId>
+				<artifactId>mesh-acta-nova-plugin</artifactId>
+				<version>${mesh.andp.plugin.version}</version>
+				<type>jar</type>
+			</dependency>
 
 			<!-- Multichannelling -->
 			<dependency>
@@ -208,6 +214,14 @@
 			    <artifactId>jakarta.validation-api</artifactId>
 			    <version>3.1.1</version>
 			    <scope>test</scope>
+			</dependency>
+
+			<!-- FormGen -->
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>formgen</artifactId>
+				<type>zip</type>
+				<version>${project.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

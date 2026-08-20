@@ -1,18 +1,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>com.gentics</groupId>
-		<artifactId>cms</artifactId>
-		<version>6.5.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <groupId>com.gentics</groupId>
+        <artifactId>cms</artifactId>
+        <version>6.6.0-SNAPSHOT</version>
+    </parent>
 
-	<groupId>com.gentics.cms</groupId>
-	<artifactId>cms-server</artifactId>
+    <groupId>com.gentics.cms</groupId>
+    <artifactId>cms-server</artifactId>
 
-	<packaging>jar</packaging>
+    <packaging>jar</packaging>
 
 	<organization>
 		<name>Gentics Software</name>
@@ -66,6 +66,13 @@
 									<outputDirectory>${project.build.directory}/classes/webroot/tools</outputDirectory>
 								</artifactItem>
 							</artifactItems>
+							<artifactItem>
+								<groupId>com.gentics.cms</groupId>
+								<artifactId>formgen</artifactId>
+								<type>zip</type>
+								<overWrite>true</overWrite>
+								<outputDirectory>${project.build.directory}/classes/webroot</outputDirectory>
+							</artifactItem>
 							<includes>**/*</includes>
 							<overWriteReleases>false</overWriteReleases>
 							<overWriteSnapshots>true</overWriteSnapshots>
@@ -247,88 +254,69 @@
 		</plugins>
 	</build>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.gentics.cms</groupId>
-				<artifactId>cms-bom</artifactId>
-				<type>pom</type>
-				<scope>import</scope>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.gentics.cms</groupId>
+                <artifactId>cms-bom</artifactId>
+                <type>pom</type>
+                <scope>import</scope>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-	<dependencies>
-		<!-- Internal Dependencies -->
-		<dependency>
-			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>cms-oss-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-contentstaging-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-linkchecker-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-search-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-keycloak</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-cluster-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-forms-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-multichannelling-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>cms-ui</artifactId>
-			<classifier>custom-tools</classifier>
-			<type>zip</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics.cms</groupId>
-			<artifactId>cms-translation-core</artifactId>
-		</dependency>
+    <dependencies>
+        <!-- Internal Dependencies -->
+        <dependency>
+            <groupId>com.gentics.cms-oss</groupId>
+            <artifactId>cms-oss-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-contentstaging-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-linkchecker-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-search-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-keycloak</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-cluster-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-forms-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-multichannelling-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms-oss</groupId>
+            <artifactId>cms-ui</artifactId>
+            <classifier>custom-tools</classifier>
+            <type>zip</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>cms-translation-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics.cms</groupId>
+            <artifactId>formgen</artifactId>
+            <type>zip</type>
+        </dependency>
 
-		<!--Test dependencies -->
-		<dependency>
-			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>cms-core</artifactId>
-			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.gentics</groupId>
-			<artifactId>generic-testutils</artifactId>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		
 		<!-- Swagger / OpenAPI -->
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
@@ -360,19 +348,43 @@
 		    <artifactId>jakarta.validation-api</artifactId>
 		    <scope>test</scope>
 		</dependency>
-	</dependencies>
 
-	<repositories>
-		<repository>
-			<id>maven.gentics.com</id>
-			<name>Gentics Maven Repository</name>
-			<url>https://maven.gentics.com/maven2</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+        <!--Test dependencies -->
+        <dependency>
+            <groupId>com.gentics.cms-oss</groupId>
+            <artifactId>cms-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.gentics</groupId>
+            <artifactId>generic-testutils</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>maven.gentics.com</id>
+            <name>Gentics Maven Repository</name>
+            <url>https://maven.gentics.com/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>

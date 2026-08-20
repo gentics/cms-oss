@@ -14,12 +14,15 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Multichannelling test for staging of files
  */
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.NICE_URLS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class FileMultichannellingStagingTest extends AbstractMultichannellingContentStagingTest<File> {
 	/**
 	 * Create test instance

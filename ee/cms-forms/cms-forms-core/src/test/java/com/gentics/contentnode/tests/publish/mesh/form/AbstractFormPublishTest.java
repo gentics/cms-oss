@@ -4,6 +4,7 @@ import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertObject;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.TEMPLATE_PARTNAME;
@@ -21,7 +22,9 @@ import static org.assertj.core.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -33,14 +36,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
+import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.MarkupLanguage;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
@@ -50,36 +57,48 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
-import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 
 import okhttp3.FormBody;
+import okhttp3.FormBody.Builder;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import okhttp3.FormBody.Builder;
 
 /**
  * Abstract base class for form publish tests
  */
 @Category(MeshTest.class)
+@ConfigBy(FormTypeConfigurationModifier.class)
 public abstract class AbstractFormPublishTest {
 	/**
 	 * Name of the mesh project
 	 */
 	public final static String MESH_PROJECT_NAME = "form_project";
 
-	public final static String pluginFileName = "mesh-forms-plugin.jar";
+	public final static String formsPluginFileName = "mesh-forms-plugin.jar";
 
-	public final static String pluginFilePath = "target/plugins/" + pluginFileName;
+	public final static String formsPluginFilePath = "target/plugins/" + formsPluginFileName;
 
-	public static File pluginJarFile;
+	public static File formsPluginJarFile;
 
-	public static File pluginConfigDir;
+	public static File formsPluginConfigDir;
+
+	public final static String andpPluginFileName = "mesh-andp-plugin.jar";
+
+	public final static String andpPluginFilePath = "target/plugins/" + andpPluginFileName;
+
+	public static File andpPluginJarFile;
+
+	public static File andpPluginConfigDir;
 
 	public static File licenseKeyFile;
 
@@ -87,9 +106,16 @@ public abstract class AbstractFormPublishTest {
 
 	static {
 		try {
-			pluginJarFile = new File(pluginFilePath);
-			assertThat(pluginJarFile).as("Plugin File").exists().canRead().isFile();
-			pluginConfigDir = new File(FormPublishTest.class.getResource("/config").toURI());
+			// forms plugin
+			formsPluginJarFile = new File(formsPluginFilePath);
+			assertThat(formsPluginJarFile).as("Forms Plugin File").exists().canRead().isFile();
+			formsPluginConfigDir = new File(FormPublishTest.class.getResource("/forms/config").toURI());
+
+			// andp plugin
+			andpPluginJarFile = new File(andpPluginFilePath);
+			assertThat(andpPluginJarFile).as("ANDP Plugin File").exists().canRead().isFile();
+			andpPluginConfigDir = new File(FormPublishTest.class.getResource("/andp/config").toURI());
+
 			licenseKeyFile = new File(FormPublishTest.class.getResource("/license.key").toURI());
 		} catch (URISyntaxException e) {
 			fail("Error while preparing plugin", e);
@@ -110,8 +136,10 @@ public abstract class AbstractFormPublishTest {
 	 */
 	@ClassRule
 	public static MeshContext mesh = new MeshContext()
-			.withFileSystemBind(pluginJarFile.getAbsolutePath(), "/plugins/" + pluginFileName, BindMode.READ_ONLY)
-			.withFileSystemBind(pluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
+			.withFileSystemBind(formsPluginJarFile.getAbsolutePath(), "/plugins/" + formsPluginFileName, BindMode.READ_ONLY)
+			.withFileSystemBind(formsPluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY)
+			.withFileSystemBind(andpPluginJarFile.getAbsolutePath(), "/plugins/" + andpPluginFileName, BindMode.READ_ONLY)
+			.withFileSystemBind(andpPluginConfigDir.getAbsolutePath(), "/plugins/andp", BindMode.READ_ONLY)
 			.withFileSystemBind(licenseKeyFile.getAbsolutePath(), "/mesh/license.key", BindMode.READ_ONLY);
 
 	protected static final Logger log = LoggerFactory.getLogger(AbstractFormPublishTest.class);
@@ -229,6 +257,11 @@ public abstract class AbstractFormPublishTest {
 
 		operate(() -> clear(node));
 
+		operate(() -> {
+			DBUtils.update("DELETE FROM publishqueue");
+			DBUtils.update("DELETE FROM dirtqueue");
+		});
+
 		node = update(node, n -> {
 			n.setContentrepositoryId(crId);
 			n.activateFeature(Feature.FORMS);
@@ -270,24 +303,64 @@ public abstract class AbstractFormPublishTest {
 	/**
 	 * Post some data to a form
 	 * @param projectName project name
+	 * @param pluginName plugin name
 	 * @param formUuid form uuid
 	 * @param data data as key/value pairs
 	 * @throws IOException
 	 */
 	@SafeVarargs
-	protected final void postFormData(String projectName, String formUuid, Pair<String, String>...data) throws IOException {
-		Builder bodyBuilder = new FormBody.Builder();
+	protected final void postFormData(String projectName, String pluginName, String formUuid, Pair<String, String>...data) throws IOException {
+		ObjectNode dataObject = mapper.createObjectNode();
+		dataObject.put("formID", formUuid);
+		dataObject.put("hasValidationErrors", false);
+		ObjectNode properties = dataObject.withObjectProperty("properties");
 		for (Pair<String, String> pair : data) {
-			bodyBuilder.add(pair.getKey(), pair.getValue());
+			properties.withObjectProperty(pair.getKey()).put("value", pair.getValue());
 		}
 
-		Request request = new Request.Builder().url("http://" + mesh.getContainerIpAddress() + ":" + mesh.getMappedPort(8080) + "/api/v1/"
-				+ projectName + "/plugins/forms/forms/" + formUuid + "/data")
-			.post(bodyBuilder.build())
+		Builder bodyBuilder = new FormBody.Builder();
+		bodyBuilder.add("formdata", dataObject.toString());
+
+		Request request = new Request.Builder()
+				.url("http://" + mesh.getContainerIpAddress() + ":" + mesh.getMappedPort(8080) + "/api/v1/"
+						+ projectName + "/plugins/" + pluginName + "/form/" + formUuid + "/submit?lang=en")
+				.post(bodyBuilder.build())
 			.build();
 		try (Response response = okHttpClient.newCall(request).execute()) {
 			assertThat(response.isSuccessful()).as("POSTing data succeeded (response code is " + response.code() + ")")
 					.isTrue();
 		}
+	}
+
+	/**
+	 * Expect that the form has been published with the JSON from the the given file
+	 * @param form form
+	 * @param expectedDataFile name of the file containing the expected JSON
+	 * @throws NodeException
+	 * @throws IOException
+	 */
+	protected void assertPublishedForm(Form form, String expectedDataFile) throws NodeException, IOException {
+		AtomicReference<ObjectNode> expected = new AtomicReference<>();
+		try (InputStream in = getClass().getResourceAsStream(expectedDataFile)) {
+			expected.set(mapper.readValue(in, ObjectNode.class));
+		}
+		expected.get()
+			.put(FIELD_DOWNLOAD_BASE_URL, String.format(FMT_DOWNLOAD_BASE_URL, form.getId()))
+			.put("cms_id", form.getId())
+			.put("type", form.getFormType())
+			.put("name", form.getName())
+			.put("submitOnce", FormConfigProvider.getConfig().get(form.getFormType()).submitOnce);
+
+		operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, "en", true,
+				response -> {
+					try {
+						JsonNode actual = mapper.readValue(response.getFields().getStringField("json").getString(),
+								ObjectNode.class);
+						assertThat(actual).as("Published JSON").isEqualTo(expected.get());
+					} catch (IOException e) {
+						throw new NodeException(e);
+					}
+				}));
+
 	}
 }

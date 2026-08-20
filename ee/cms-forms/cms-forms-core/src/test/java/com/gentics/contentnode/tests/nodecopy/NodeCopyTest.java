@@ -5,7 +5,6 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.create;
-import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.NODE_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.copy;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
@@ -59,6 +58,8 @@ import com.gentics.contentnode.perm.PermissionPair;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.request.NodeCopyRequest;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
+import com.gentics.contentnode.tests.utils.FormTypeConfigurationModifier;
+import com.gentics.contentnode.testutils.ConfigBy;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
@@ -68,6 +69,7 @@ import com.gentics.testutils.GenericTestUtils;
  */
 @RunWith(Parameterized.class)
 @GCNFeature(set = { Feature.FORMS, Feature.DEVTOOLS, Feature.NICE_URLS })
+@ConfigBy(FormTypeConfigurationModifier.class)
 public class NodeCopyTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();

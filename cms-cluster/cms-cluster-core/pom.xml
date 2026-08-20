@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-cluster</artifactId>
-		<version>6.5.0-SNAPSHOT</version>
+		<version>6.6.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-cluster-core</artifactId>

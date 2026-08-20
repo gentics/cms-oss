@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.publish.mesh.form;
 
+import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.Builder.create;
@@ -11,20 +12,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.configuration.FormTypeConfiguration;
+import com.gentics.contentnode.configuration.FormTypeConfigurationMap;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.FormConfigProvider;
+import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.publish.PublishQueue;
+import com.gentics.contentnode.rest.model.formtype.ControlConfig;
+import com.gentics.contentnode.rest.model.formtype.Controls;
+import com.gentics.contentnode.rest.model.formtype.PublishAsType;
+import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
+import com.gentics.contentnode.rest.model.formtype.ReferenceType;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.testutils.ConfigBy;
+import com.gentics.contentnode.testutils.ConfigModifier;
 import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
@@ -32,7 +49,10 @@ import com.gentics.contentnode.testutils.GCNFeature;
  */
 @GCNFeature(set = { Feature.FORMS, Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING, Feature.WASTEBIN, Feature.DISABLE_INSTANT_DELETE })
 @Category(MeshTest.class)
-public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
+@ConfigBy(FormReferencingPageDirtTest.class)
+public class FormReferencingPageDirtTest extends AbstractFormPublishTest implements ConfigModifier {
+	protected final static String FORM_TYPE = "generic";
+
 	/**
 	 * Referenced page (english variant)
 	 */
@@ -62,6 +82,11 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 	@Before
 	public void setup() throws NodeException {
 		super.setup();
+
+		consume(n -> {
+			FormFactory.addFormTypeToNode(FORM_TYPE, n.getId());
+		}, node);
+
 		refPageEn = create(Page.class, create -> {
 			create.setFolderId(node.getFolder().getId());
 			create.setTemplateId(eMailTemplate.getId());
@@ -93,15 +118,19 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 		}).at(1).publish().build();
 
 		formDe = create(Form.class, f -> {
+			f.setFormType(FORM_TYPE);
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de"));
 			f.setFolderId(node.getFolder().getId());
 
 			try {
-				ObjectNode data = mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class);
-				data.put("mailsource_pageid", refPageEn.getId());
-				ObjectNode element = (ObjectNode)data.get("elements").get(0);
-				element.put("test_pageid", otherRefPageEn.getId());
+				ObjectNode data = mapper.readValue(getClass().getResource("generic_form_data.json"), ObjectNode.class);
+				data.put("adminEmailPageId", refPageEn.getId());
+				addUiSchemaElement(data, "control")
+					.withObjectProperty("contentPage")
+					.put("id", otherRefPageEn.getId())
+					.put("nodeId", node.getId())
+					.put("type", "page");
 				f.setData(data);
 			} catch (IOException e) {
 				throw new NodeException(e);
@@ -157,5 +186,39 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 
 		operate(() -> context.waitForDirtqueueWorker());
 		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Form.class, false, node))).as("Dirted form IDs").doesNotContain(formDe.getId());
+	}
+
+	/**
+	 * Add an element of the given type to the ui-schema
+	 * @param data data
+	 * @param elementType element type
+	 * @return added element
+	 */
+	protected ObjectNode addUiSchemaElement(ObjectNode data, String elementType) {
+		ArrayNode pages = data.withObjectProperty("ui-schema").withArrayProperty("pages");
+		ObjectNode page = pages.addObject();
+		ObjectNode element = page.withArrayProperty("elements").addObject();
+		return element.withObjectProperty("formGridOptions")
+			.put("type", elementType);
+	}
+
+	@Override
+	public void accept(MapPreferences prefs) throws NodeException {
+		FormTypeConfigurationMap formTypeConfiguration = new FormTypeConfigurationMap();
+
+		FormTypeConfiguration formsConfig = new FormTypeConfiguration(Map.of("en", "Testing Type"), "forms");
+
+		ControlConfig control = new ControlConfig(Map.of("de", "Kontrollelement"));
+
+		ReferenceSetting pageContentReference = new ReferenceSetting("contentPage", Map.of(),
+				Set.of(ReferenceType.page), PublishAsType.content);
+
+		control.settings = List.of(pageContentReference);
+
+		formsConfig.controls = new Controls(Map.of("control", control));
+
+		formTypeConfiguration.put(FORM_TYPE, formsConfig);
+
+		prefs.set(FormConfigProvider.TYPES_CONFIG_PATH, formTypeConfiguration);
 	}
 }

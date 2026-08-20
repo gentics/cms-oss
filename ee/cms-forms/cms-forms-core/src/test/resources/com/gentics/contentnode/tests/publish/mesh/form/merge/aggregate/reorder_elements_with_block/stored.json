@@ -1,0 +1,87 @@
+{
+	"ui-schema": {
+		"pages": [
+			{
+				"pagename": {
+					"de-AT": "1. Seite",
+					"en-AT": "1st Page"
+				},
+				"elements": [
+					{
+						"type": "aggregate",
+						"id": "aggregate_element",
+						"label": {
+							"de-AT": "Aggregat",
+							"en-AT": "Aggregate"
+						},
+						"elements": [
+							{
+								"type": "property",
+								"id": "first_element",
+								"label": {
+									"de-AT": "Erstes Element",
+									"en-AT": "First Element"
+								},
+								"formGridOptions": {
+									"numberOfColumns": "1"
+								},
+								"uiSchemaPage": 0
+							},
+							{
+								"type": "property",
+								"id": "third_element",
+								"label": {
+									"de-AT": "Drittes Element",
+									"en-AT": "Third Element"
+								},
+								"formGridOptions": {
+									"numberOfColumns": "2"
+								},
+								"uiSchemaPage": 0
+							},
+							{
+								"id": "spacer_67c1aa47bf3c487f86858690c0b9d427",
+								"type": "property",
+								"label": {
+									"de": "Abstand"
+								},
+								"formGridOptions": {
+									"type": "spacer",
+									"numberOfColumns": 6,
+									"value": {},
+									"valueSummary": {},
+									"inForm": true,
+									"inSummary": false,
+									"overlayOptions": {
+										"isShowOverlay": false,
+										"texts": {
+											"textPre": {},
+											"textPost": {}
+										}
+									}
+								},
+								"uiSchemaPage": 0
+							},
+							{
+								"type": "property",
+								"id": "second_element",
+								"label": {
+									"de-AT": "Zweites Element",
+									"en-AT": "Second Element"
+								},
+								"formGridOptions": {
+									"numberOfColumns": "3"
+								},
+								"uiSchemaPage": 0
+							}
+						],
+						"formGridOptions": {
+							"numberOfColumns": "4"
+						},
+						"uiSchemaPage": 0
+					}
+				]
+			}
+		]
+	}
+}

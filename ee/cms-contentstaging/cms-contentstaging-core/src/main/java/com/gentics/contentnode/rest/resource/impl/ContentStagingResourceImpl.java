@@ -1571,6 +1571,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				StagingModelBuilder.getNode(s, n);
 			}, maybeHaveOrphans, null, Optional.of((s, n) -> {
 				StagingModelBuilder.setFeatures(s, n);
+				StagingModelBuilder.setFormTypes(s, n);
 				StagingModelBuilder.setConstructs(s, n);
 				StagingModelBuilder.setObjectProperties(s, n);
 				StagingModelBuilder.setPackages(s, n);
@@ -1622,7 +1623,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						Optional.of((s, n) -> StagingModelBuilder.setMultichannellingRestrictions(s, n)));
 			} else if (filename.endsWith(FORM_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, Form.class, new StoredForm(),
-						(n, s) -> StagingModelBuilder.getForm(n, s, onReferenceNotFound), maybeHaveOrphans, node, Optional.empty());
+						(n, s) -> StagingModelBuilder.getForm(currentPath, n, s, errors, onReferenceNotFound), maybeHaveOrphans, node, Optional.empty());
 			} else if (filename.endsWith(FILE_EXTENSION)) {
 				processed = importFromStageable(currentPath, pathRoot, File.class, new StoredFile(),
 						(s, n) -> StagingModelBuilder.getFile(currentPath, s, n, errors, onReferenceNotFound, node), maybeHaveOrphans, node,

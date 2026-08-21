@@ -213,7 +213,6 @@
 			    <groupId>jakarta.validation</groupId>
 			    <artifactId>jakarta.validation-api</artifactId>
 			    <version>3.1.1</version>
-			    <scope>test</scope>
 			</dependency>
 
 			<!-- FormGen -->

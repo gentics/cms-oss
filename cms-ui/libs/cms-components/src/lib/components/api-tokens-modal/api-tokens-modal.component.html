@@ -1,0 +1,12 @@
+<div class="modal-content">
+  <gtx-manage-api-tokens-table></gtx-manage-api-tokens-table>
+</div>
+<div class="modal-footer">
+  <gtx-button
+    type="secondary" flat
+    (click)="cancelFn()"
+    data-action="api-token-modal-close"
+    >
+    {{ 'common.close_button' | gtxI18n }}
+  </gtx-button>
+</div>

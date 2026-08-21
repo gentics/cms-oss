@@ -755,7 +755,7 @@
         "change_password_label": "Change password",
         "log_in": "Log In",
         "log_out": "Log out",
-        "logged_in_as": "'Logged in as <strong>{{name}}</strong>'",
+        "logged_in_as": "'Logged in as ",
         "password": "Password",
         "user_name": "User Name",
         "confirm_delete": "Click again to confirm delete",
@@ -1495,7 +1495,10 @@
         "assign_to_category": "Assign Constructs to Category",
         "overwrite_button": "Overwrite",
         "tagpart_conflict_title": "Edit Construct \"{{ keyword }}\"",
-        "tagpart_conflict_body": "Data on the file system has changed during the editing process.<br>Are you sure you want to overwrite these changes?"
+        "tagpart_conflict_body": "Data on the file system has changed during the editing process.<br>Are you sure you want to overwrite these changes?",
+        "liveEditorTagName": "Editor tag-name",
+        "liveEditorTagName_type_div": "div",
+        "liveEditorTagName_type_span": "span"
     },
     "package": {
         "package_name": "Name",

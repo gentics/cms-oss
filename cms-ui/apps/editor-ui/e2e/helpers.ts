@@ -617,7 +617,7 @@ export function findNthColorPickerPaletteColor(picker: Locator, index: number): 
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
-    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index' + colorOrIndex : colorOrIndex}`, async () => {
+    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index ' + colorOrIndex : colorOrIndex}`, async () => {
         const dropdown = findDynamicDropdown(page, slot);
         const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
         const paletteColor = typeof colorOrIndex === 'number'
@@ -744,6 +744,34 @@ export function fgFindEditSidebar(grid: Locator): Locator {
 export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
     await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
     return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}
+
+export async function toggleDisplayAllCheckbox(
+    page: Page,
+    elements: Locator,
+    dataAction: 'toggle-wastebin' | 'toggle-language-display',
+    toggled: boolean,
+): Promise<void> {
+    const itemDropdown = elements.locator('item-list-header gtx-dropdown-list').last();
+    const formDropdown = elements.locator('gtx-form-list-header gtx-dropdown-list').last();
+
+    // if the itemsDropdown element doesn't exist, it is a form so the formDropdown element should be used
+    const dropdown = await itemDropdown.count() > 0
+        ? await openContext(itemDropdown)
+        : await openContext(formDropdown);
+
+    await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
+
+    const [request] = await Promise.all([
+        waitForResponseFrom(page, 'POST', dataAction.indexOf('wastebin') >= 0 ? 'rest/user/me/data/displayDeleted' : 'rest/user/me/data/displayAllLanguages'),
+        dropdown.locator(`[data-action="${dataAction}"]`).click(),
+    ]);
+
+    const body = request.request().postDataJSON();
+
+    expect(body).toBe(!toggled);
+
+    await expect(dropdown).toBeHidden();
 }
 
 /**

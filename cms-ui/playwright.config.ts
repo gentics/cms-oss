@@ -116,7 +116,7 @@ export function createConfiguration(
          */
         forbidOnly: isCI,
         /*
-         * Don't perserve data on the CI, as it can't be retrieved anyways.
+         * Don't preserve data on the CI, as it can't be retrieved anyways.
          */
         preserveOutput: 'failures-only',
         /*
@@ -156,7 +156,14 @@ export function createConfiguration(
         projects: [
             {
                 name: 'chromium',
-                use: { ...devices['Desktop Chrome'] },
+                use: {
+                    ...devices['Desktop Chrome'],
+                    // Required for the tests of aloha to work, as the CMS and iframe are loaded
+                    // via http, and not via https, which chromium really doesn't like.
+                    launchOptions: {
+                        args: ['--disable-web-security'],
+                    },
+                },
             },
             {
                 name: 'firefox',

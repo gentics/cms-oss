@@ -21,10 +21,11 @@ import {
     navigateToApp,
     NODE_MINIMAL,
     OBJECT_PROPERTY_CATEGORY_TESTS,
+    openContext,
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
     editorAction,
@@ -34,6 +35,7 @@ import {
     itemAction,
     openObjectPropertyEditor,
     selectNode,
+    toggleDisplayAllCheckbox,
 } from './helpers';
 
 test.describe('Folder Management', () => {
@@ -226,15 +228,15 @@ test.describe('Folder Management', () => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
                 subObjects: true,
                 perms: [
                     { type: GcmsPermission.READ, value: true },
                 ],
-            }
+            },
         ]);
 
-        const folder = IMPORTER.get(FOLDER_A)!;
+        const folder = IMPORTER.get(FOLDER_A);
         const list = findList(page, ITEM_TYPE_FOLDER);
         const item = findItem(list, folder.id);
         await itemAction(item, 'properties');
@@ -395,6 +397,39 @@ test.describe('Folder Management', () => {
             // Has to be visible for at least 95%
             await expect(lastTab).toBeInViewport({ ratio: 0.95 });
         });
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.OBJECT_PROPERTY_TYPE,
+                instanceId: '10002',
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', true);
     });
 });
 

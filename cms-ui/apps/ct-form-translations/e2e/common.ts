@@ -32,7 +32,7 @@ export const GLOBAL_SCOPE_ID = 'global';
  * minimal test fixture.
  */
 export const KNOWN_PLACEHOLDERS = {
-    SUBMIT_BUTTON: 'form_submit_button',
-    CANCEL_BUTTON: 'form_cancel_button',
-    LOADING:       'form_loading',
+    SUBMIT: 'form_submit',
+    CANCEL: 'form_cancel',
+    LOADING: 'form_loading',
 } as const;

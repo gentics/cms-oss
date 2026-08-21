@@ -7,4 +7,4 @@ import { createConfiguration } from '../../playwright.config';
  * (matches `baseHref` in `project.json`'s production configuration and the
  * `toolUrl` in `cms-registration-config.json`).
  */
-export default createConfiguration(__filename, 'form-translations', '/tools/form-translations/');
+export default createConfiguration(__filename, 'ct-form-translations', '/tools/form-translations/');

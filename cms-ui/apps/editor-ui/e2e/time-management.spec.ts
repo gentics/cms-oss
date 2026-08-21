@@ -76,7 +76,7 @@ test.describe('Time Management', () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
             // Create a copy, so we have a clean base object
-            const TEST_GROUP = {...TEST_GROUP_BASE};
+            const TEST_GROUP = { ...TEST_GROUP_BASE };
 
             TEST_GROUP.permissions = [
                 {
@@ -134,7 +134,8 @@ test.describe('Time Management', () => {
             const publishRes = await publishReq;
             const reqBody: PagePublishRequest = publishRes.request().postDataJSON();
             const diff = Math.trunc(futureDate.getTime() / 1_000) - reqBody.at;
-            expect([0, 3_600]).toContain(diff)
+            // Different times due to timezone differences which may occur
+            expect([0, 3_600, 7_200]).toContain(diff);
         });
 
         await test.step('Clear page publish', async () => {

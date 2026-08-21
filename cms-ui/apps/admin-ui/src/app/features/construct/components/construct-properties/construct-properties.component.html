@@ -1,116 +1,131 @@
 @if (form) {
-  <form
-    [formGroup]="form"
-    class="row small-12 medium-12"
+    <form
+        [formGroup]="form"
+        class="row small-12 medium-12"
     >
-    <div class="input-container small-12 columns" [class.medium-6]="supportedLanguages">
-      <gtx-input
-        type="text"
-        maxlength="255"
-        [label]="('construct.keyword' | gtxI18n) + ' *'"
-        [required]="true"
-        formControlName="keyword"
-      ></gtx-input>
-      @if (form.get('nodeIds').enabled) {
-        <gtx-select
-          [label]="('construct.nodes' | gtxI18n) + ' *'"
-          [required]="true"
-          [multiple]="true"
-          formControlName="nodeIds"
-          >
-          @for (node of nodes$ | async; track node.id) {
-            <gtx-option
-              [value]="node.id"
-            >{{ node.name }}</gtx-option>
-          }
-        </gtx-select>
-      }
-      @if (mode !== ConstructPropertiesMode.COPY) {
-        <gtx-input
-          type="text"
-          maxlength="255"
-          [label]="'construct.externalEditorUrl' | gtxI18n"
-          formControlName="externalEditorUrl"
-        ></gtx-input>
-      }
-      @if (mode !== ConstructPropertiesMode.COPY) {
-        <gtx-select
-          [label]="'construct.category' | gtxI18n"
-          formControlName="categoryId"
-          [clearable]="true"
-          >
-          @for (item of constructCategories$ | async; track item.id) {
-            <gtx-option
-              [value]="item.id"
-            >{{ item.nameI18n?.[activeTabI18nLanguage?.code] ?? item.name }}</gtx-option>
-          }
-        </gtx-select>
-      }
-      <gtx-select
-        formControlName="editorControlStyle"
-        [label]="('construct.editorControlStyle' | gtxI18n) + ' *'"
-        [required]="true"
-        >
-        @for (style of (EditorControlStyle | gtxEntries); track style.key) {
-          <gtx-option
-            [value]="style.key"
-          >{{ ('construct.editorControlStyle_' + style.value) | gtxI18n }}</gtx-option>
-        }
-      </gtx-select>
-      @if (mode !== ConstructPropertiesMode.COPY) {
-        <gtx-checkbox
-          formControlName="mayBeSubtag"
-          [label]="'construct.mayBeSubtag' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (mode !== ConstructPropertiesMode.COPY) {
-        <gtx-checkbox
-          formControlName="mayContainSubtags"
-          [label]="'construct.mayContainSubtags' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      @if (mode !== ConstructPropertiesMode.COPY) {
-        <gtx-checkbox
-          formControlName="autoEnable"
-          [label]="'construct.autoEnable' | gtxI18n"
-        ></gtx-checkbox>
-      }
-      <gtx-checkbox
-        formControlName="openEditorOnInsert"
-        [label]="'construct.openEditorOnInsert' | gtxI18n"
-      ></gtx-checkbox>
-      <gtx-checkbox
-        formControlName="editorControlsInside"
-        [label]="'construct.editorControlsInside' | gtxI18n"
-      ></gtx-checkbox>
-    </div>
-    @if (supportedLanguages) {
-      <div class="input-container small-12 medium-6 columns">
-        @if (supportedLanguages) {
-          <gtx-i18n-panel-group
-            [label]="'shared.i18n_properties_label' | gtxI18n"
-            [languages]="supportedLanguages"
-            [invalidLanguages]="invalidLanguages"
-            [(activeLanguage)]="activeTabI18nLanguage"
-            >
-            <gtx-i18n-input
-              [label]="('common.name' | gtxI18n) + ' *'"
-              formControlName="nameI18n"
-              [requiredInCurrentLanguage]="true"
-              [language]="activeTabI18nLanguage?.code"
-              [availableLanguages]="supportedLanguages"
-            ></gtx-i18n-input>
-            @if (mode !== ConstructPropertiesMode.COPY && form.get('descriptionI18n')) {
-              <gtx-i18n-input
-                [label]="'common.description' | gtxI18n"
-                formControlName="descriptionI18n"
-                [language]="activeTabI18nLanguage?.code"
-                [availableLanguages]="supportedLanguages"
-              ></gtx-i18n-input>
+        <div class="input-container small-12 columns" [class.medium-6]="supportedLanguages">
+            <gtx-input
+                type="text"
+                maxlength="255"
+                [label]="('construct.keyword' | gtxI18n) + ' *'"
+                [required]="true"
+                formControlName="keyword"
+            />
+
+            @if (form.controls.nodeIds.enabled) {
+                <gtx-select
+                    [label]="('construct.nodes' | gtxI18n) + ' *'"
+                    [required]="true"
+                    [multiple]="true"
+                    formControlName="nodeIds"
+                >
+                    @for (node of nodes$ | async; track node.id) {
+                        <gtx-option [value]="node.id">{{ node.name }}</gtx-option>
+                    }
+                </gtx-select>
             }
-          </gtx-i18n-panel-group>
+
+            @if (mode !== ConstructPropertiesMode.COPY) {
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="'construct.externalEditorUrl' | gtxI18n"
+                    formControlName="externalEditorUrl"
+                />
+            }
+
+            @if (mode !== ConstructPropertiesMode.COPY) {
+                <gtx-select
+                    [label]="'construct.category' | gtxI18n"
+                    formControlName="categoryId"
+                    [clearable]="true"
+                >
+                    @for (item of constructCategories$ | async; track item.id) {
+                        <gtx-option
+                            [value]="item.id"
+                        >{{ item.nameI18n?.[activeTabI18nLanguage?.code] ?? item.name }}</gtx-option>
+                    }
+                </gtx-select>
+            }
+
+            <gtx-select
+                formControlName="editorControlStyle"
+                [label]="('construct.editorControlStyle' | gtxI18n) + ' *'"
+                [required]="true"
+            >
+                @for (style of (EditorControlStyle | gtxEntries); track style.key) {
+                    <gtx-option
+                        [value]="style.key"
+                    >{{ ('construct.editorControlStyle_' + style.value) | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            <gtx-select
+                formControlName="liveEditorTagName"
+                [label]="'construct.liveEditorTagName' | gtxI18n"
+                [required]="true"
+            >
+                @for (tagName of EDITOR_TAG_NAMES; track tagName.value) {
+                    <gtx-option [value]="tagName.value">{{ tagName.label | gtxI18n }}</gtx-option>
+                }
+            </gtx-select>
+
+            @if (mode !== ConstructPropertiesMode.COPY) {
+                <gtx-checkbox
+                    formControlName="mayBeSubtag"
+                    [label]="'construct.mayBeSubtag' | gtxI18n"
+                ></gtx-checkbox>
+
+                <gtx-checkbox
+                    formControlName="mayContainSubtags"
+                    [label]="'construct.mayContainSubtags' | gtxI18n"
+                ></gtx-checkbox>
+
+                <gtx-checkbox
+                    formControlName="autoEnable"
+                    [label]="'construct.autoEnable' | gtxI18n"
+                ></gtx-checkbox>
+            }
+
+            <gtx-checkbox
+                formControlName="openEditorOnInsert"
+                [label]="'construct.openEditorOnInsert' | gtxI18n"
+            ></gtx-checkbox>
+
+            <gtx-checkbox
+                formControlName="editorControlsInside"
+                [label]="'construct.editorControlsInside' | gtxI18n"
+            ></gtx-checkbox>
+        </div>
+
+        @if (supportedLanguages) {
+            <div class="input-container small-12 medium-6 columns">
+                @if (supportedLanguages) {
+                    <gtx-i18n-panel-group
+                        [label]="'shared.i18n_properties_label' | gtxI18n"
+                        [languages]="supportedLanguages"
+                        [invalidLanguages]="invalidLanguages"
+                        [(activeLanguage)]="activeTabI18nLanguage"
+                    >
+                        <gtx-i18n-input
+                            [label]="('common.name' | gtxI18n) + ' *'"
+                            formControlName="nameI18n"
+                            [requiredInCurrentLanguage]="true"
+                            [language]="activeTabI18nLanguage?.code"
+                            [availableLanguages]="supportedLanguages"
+                        ></gtx-i18n-input>
+
+                        @if (mode !== ConstructPropertiesMode.COPY && form.get('descriptionI18n')) {
+                            <gtx-i18n-input
+                                [label]="'common.description' | gtxI18n"
+                                formControlName="descriptionI18n"
+                                [language]="activeTabI18nLanguage?.code"
+                                [availableLanguages]="supportedLanguages"
+                            ></gtx-i18n-input>
+                        }
+                    </gtx-i18n-panel-group>
+                }
+            </div>
         }
-      </div>
-    }
   </form>
 }

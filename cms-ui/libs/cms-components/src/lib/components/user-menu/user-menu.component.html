@@ -33,18 +33,19 @@
     <div class="user-details">
       <div class="user-name">
         <div>
-          <span [innerHTML]="'user.logged_in_as' | gtxI18n:{ name: getUserName() }"></span>
-          <gtx-dropdown-list>
-            <gtx-dropdown-trigger>
-              <a>
-                <gtx-button icon type="secondary" size="small">
-                  <i class="material-icons" [attr.translate]="'no'">more_vert</i>
-                </gtx-button>
-              </a>
+          <gtx-dropdown-list data-context-id="user-details-options">
+            <gtx-dropdown-trigger data-context-trigger>
+              <span [innerHTML]="'user.logged_in_as' | gtxI18n:{ name: getUserName() }"></span>
+              <gtx-button data-context-trigger icon type="secondary" size="small">
+                <i class="material-icons" [attr.translate]="'no'">more_vert</i>
+              </gtx-button>
             </gtx-dropdown-trigger>
-            <gtx-dropdown-content>
+            <gtx-dropdown-content data-context-id="user-details-options">
               <gtx-dropdown-item overrideSlot="changePasswordOption" (click)="showPasswordModalClicked()">
                 {{ 'user.change_password_label' | gtxI18n }}
+              </gtx-dropdown-item>
+              <gtx-dropdown-item data-action="manage-api-tokens" (click)="showApiTokensModalClicked()">
+                  {{ 'api_token.management' | gtxI18n }}
               </gtx-dropdown-item>
             </gtx-dropdown-content>
           </gtx-dropdown-list>

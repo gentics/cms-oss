@@ -12,3 +12,8 @@ export * from './string-list/string-list.component';
 export * from './user-menu-toggle/user-menu-toggle.component';
 export * from './user-menu/user-menu.component';
 export * from './versions-modal/versions-modal.component';
+export * from './api-tokens-modal/api-tokens-modal.component';
+export * from './api-tokens-table/api-tokens-table.component';
+export * from './api-tokens-create-modal/api-tokens-create-modal.component';
+export * from './api-tokens-create-form/api-tokens-create-form.component';
+export * from './copy-value/copy-value.component';

@@ -6,8 +6,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
+    ApiTokensCreateFormComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
+    CopyValueComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
@@ -60,6 +65,11 @@ const COMPONENTS: any[] = [
     UserMenuComponent,
     UserMenuToggleComponent,
     VersionModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensCreateFormComponent,
+    CopyValueComponent,
 ];
 
 const DIRECTIVES: Type<any>[] = [

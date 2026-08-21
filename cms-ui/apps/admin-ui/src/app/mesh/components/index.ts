@@ -1,5 +1,4 @@
 export * from './copy-token-modal/copy-token-modal.component';
-export * from './copy-value/copy-value.component';
 export * from './login-gate/login-gate.component';
 export * from './manage-tag-families-modal/manage-tag-families-modal.component';
 export * from './management-tabs/management-tabs.component';

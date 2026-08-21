@@ -231,12 +231,18 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.changeDetector.markForCheck();
 
         this.modifySubscription = upload.pipe(
-            switchMap(() => this.folderActions.getImage(this.file.id, { nodeId: this.nodeId })),
+            switchMap(() => {
+                if (this.file.type === 'file') {
+                    return this.folderActions.getFile(this.file.id, { nodeId: this.nodeId });
+                } else {
+                    return this.folderActions.getImage(this.file.id, { nodeId: this.nodeId });
+                }
+            }),
         ).subscribe({
-            next: (loadedImage) => {
-                this.fileChange.emit(loadedImage);
+            next: (loadedFile) => {
+                this.fileChange.emit(loadedFile);
 
-                this.file = loadedImage;
+                this.file = loadedFile;
                 this.handleFileUpdate();
 
                 this.loading = false;

@@ -185,6 +185,7 @@ import {
     LinkCheckerUpdateResponse,
     LinkResponse,
     ListResponse,
+    LoadGroupOptions,
     LocalizationInfoOptions,
     LocalizationInfoResponse,
     LocalizationsResponse,
@@ -761,7 +762,7 @@ export interface AbstractFormAPI extends BasicAPI {
 export interface AbstractGroupAPI extends BasicAPI {
     list: (options?: GroupListOptions) => GroupListResponse;
     create: (id: number | string, body: GroupCreateRequest) => GroupCreateResponse;
-    get: (id: number | string) => GroupResponse;
+    get: (id: number | string, options?: LoadGroupOptions) => GroupResponse;
     update: (id: number | string, body: GroupUpdateRequest) => GroupResponse;
     delete: (id: number | string) => void;
 

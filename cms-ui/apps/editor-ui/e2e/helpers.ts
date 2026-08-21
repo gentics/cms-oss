@@ -7,6 +7,7 @@ import {
     dismissNotifications,
     FixtureFile,
     ITEM_TYPE_FORM,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
     matchRequest,
     onResponse,
@@ -14,11 +15,13 @@ import {
     reroute,
     selectDateInPicker,
     wait,
+    waitForResponseFrom,
+    uploadFileFromInput,
 } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { Disposable, expect, Frame, Locator, Page, Response, test } from '@playwright/test';
 import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
+import { readFileSync } from 'node:fs';
 
 export function findList(page: Page, type: string): Locator {
     if (type === ITEM_TYPE_FORM) {
@@ -135,14 +138,8 @@ export async function uploadFiles(
 
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
-            // Filechooser is a lot simpler, as it can handle native files
-            const fileChooserPromise = page.waitForEvent('filechooser');
             const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-            await uploadButton.waitFor({ state: 'visible' });
-            await uploadButton.click();
-            const fileChooser = await fileChooserPromise;
-
-            await fileChooser.setFiles(files.map((f) => f.fixturePath));
+            await uploadFileFromInput(page, uploadButton, files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
@@ -557,11 +554,11 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function rereouteAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rerouteAlohaConfig(page: Page, configFilename: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
 }
 
-export function overwriteAlohaConfigWith(page: Page, content: string): Promise<void> {
+export function overwriteAlohaConfigWith(page: Page, content: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', (route) => {
         route.fulfill({
             status: 200,
@@ -620,7 +617,7 @@ export function findNthColorPickerPaletteColor(picker: Locator, index: number): 
 }
 
 export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
-    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index' + colorOrIndex : colorOrIndex}`, async () => {
+    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index ' + colorOrIndex : colorOrIndex}`, async () => {
         const dropdown = findDynamicDropdown(page, slot);
         const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
         const paletteColor = typeof colorOrIndex === 'number'
@@ -747,4 +744,67 @@ export function fgFindEditSidebar(grid: Locator): Locator {
 export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
     await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
     return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}
+
+export async function toggleDisplayAllCheckbox(
+    page: Page,
+    elements: Locator,
+    dataAction: 'toggle-wastebin' | 'toggle-language-display',
+    toggled: boolean,
+): Promise<void> {
+    const itemDropdown = elements.locator('item-list-header gtx-dropdown-list').last();
+    const formDropdown = elements.locator('gtx-form-list-header gtx-dropdown-list').last();
+
+    // if the itemsDropdown element doesn't exist, it is a form so the formDropdown element should be used
+    const dropdown = await itemDropdown.count() > 0
+        ? await openContext(itemDropdown)
+        : await openContext(formDropdown);
+
+    await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
+
+    const [request] = await Promise.all([
+        waitForResponseFrom(page, 'POST', dataAction.indexOf('wastebin') >= 0 ? 'rest/user/me/data/displayDeleted' : 'rest/user/me/data/displayAllLanguages'),
+        dropdown.locator(`[data-action="${dataAction}"]`).click(),
+    ]);
+
+    const body = request.request().postDataJSON();
+
+    expect(body).toBe(!toggled);
+
+    await expect(dropdown).toBeHidden();
+}
+
+/**
+ * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
+ * @param page - The current page.
+ * @param plugin - The plugin source (example: "common/characterpicker").
+ */
+export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+    return page.route('**/alohapage**', async (route) => {
+        const response = await route.fetch();
+        let body = await response.text();
+
+        body = body.replace(
+            /data-aloha-plugins\s*=\s*"([^"]*)"/,
+            (_, plugins) =>
+                `data-aloha-plugins="${plugins},${plugin}"`,
+        );
+
+        await route.fulfill({
+            response,
+            body,
+        });
+    });
+}
+
+export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {
+    await test.step(`Navigating to folder: ${folderId}`, async () => {
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const folder = findItem(list, folderId);
+        // Use the wildcard here instead, since if we used a globalId for the selector, the breadcrumb would
+        // still be loaded with the local ID, causing this to fail otherwise.
+        const breadcrumbReq = waitForResponseFrom(page, 'GET', '/rest/folder/breadcrumb/*');
+        await folder.locator('.item-primary .item-name-router-link').click();
+        await breadcrumbReq;
+    });
 }

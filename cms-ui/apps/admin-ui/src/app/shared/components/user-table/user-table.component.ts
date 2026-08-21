@@ -38,6 +38,9 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
     public group: Group;
 
     @Input()
+    public assignable = false;
+
+    @Input()
     public linkGroups = true;
 
     public sortBy = 'firstName';

@@ -574,7 +574,7 @@ export class GCMSRestClient implements GCMSRootAPI {
     public group: GCMSGroupAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/group', null, options),
         create: (id, body) => this.executeMappedJsonRequest(PUT, `/group/${id}/groups`, body),
-        get: (id) => this.executeMappedJsonRequest(GET, `/group/${id}`),
+        get: (id, options) => this.executeMappedJsonRequest(GET, `/group/${id}`, null, options),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/group/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/group/${id}`),
 
@@ -882,7 +882,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
-        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
+        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/unlink/${id}`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),
 
         listTagStatus: (id, options) => this.executeMappedJsonRequest(GET, `/template/${id}/tagstatus`, null, options),

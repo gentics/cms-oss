@@ -11,7 +11,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
 @GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.PUB_DIR_SEGMENT })
-public class MeshPortalPreviewPropertySubstitutionTest extends MeshPortalPreviewTestBase {
+public class MeshPortalPreviewPropertySubstitutionTest extends AbstractMeshPortalPreviewTestCases {
 	/**
 	 * Name of the system property
 	 */

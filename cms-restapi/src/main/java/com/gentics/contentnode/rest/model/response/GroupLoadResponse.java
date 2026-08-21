@@ -1,6 +1,9 @@
 package com.gentics.contentnode.rest.model.response;
 
+import java.util.Set;
+
 import com.gentics.contentnode.rest.model.Group;
+import com.gentics.contentnode.rest.model.request.Permission;
 
 /**
  * Response containing a single group
@@ -15,6 +18,8 @@ public class GroupLoadResponse extends GenericResponse {
 	 * The loaded group
 	 */
 	private Group group;
+
+	private Set<Permission> perms;
 
 	/**
 	 * Create an empty instance
@@ -55,5 +60,23 @@ public class GroupLoadResponse extends GenericResponse {
 	 */
 	public Group getGroup() {
 		return group;
+	}
+
+	/**
+	 * Get the group permissions.
+	 * 
+	 * @return
+	 */
+	public Set<Permission> getPerms() {
+		return perms;
+	}
+
+	/**
+	 * Set the group permissions.
+	 * 
+	 * @param perms
+	 */
+	public void setPerms(Set<Permission> perms) {
+		this.perms = perms;
 	}
 }

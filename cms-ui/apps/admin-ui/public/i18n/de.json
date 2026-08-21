@@ -403,7 +403,7 @@
         "assign_crfragments_to_contentrepositories": "CR-Fragments zu ContentRepository zuweisen",
         "assign_entity_to_package": "{{entityNamePlural}} zu Paket zuweisen",
         "assign_entity_to_package_button": "Zu Paket zuweisen",
-        "assign_group_to_users_title": "Benutzer der Gruppe „{{ entityName }} zuweisen",
+        "assign_group_to_users_title": "Benutzer der Gruppe „{{ entityName }}“ zuweisen",
         "assign_group_to_users_button": "Benutzer der Gruppe zuweisen",
         "assign_user_to_groups_title": "Benutzer „{{ entityName }}“ zu Gruppen zuweisen",
         "assign_user_to_groups": "Benutzer zu Gruppen zuweisen",
@@ -1490,7 +1490,10 @@
         "assign_to_category": "Tagtypen zu Kategorie zuweisen",
         "overwrite_button": "Überschreiben",
         "tagpart_conflict_title": "Tagtyp „{{ entityName }}“ bearbeiten",
-        "tagpart_conflict_body": "Die Daten im Dateisystem wurden während des Bearbeitungsvorgangs geändert.<br>Sind Sie sicher, dass Sie diese Änderungen überschreiben wollen?"
+        "tagpart_conflict_body": "Die Daten im Dateisystem wurden während des Bearbeitungsvorgangs geändert.<br>Sind Sie sicher, dass Sie diese Änderungen überschreiben wollen?",
+        "liveEditorTagName": "Bearbeitungs Tag-Element name",
+        "liveEditorTagName_type_div": "div",
+        "liveEditorTagName_type_span": "span"
     },
     "package": {
         "package_name": "Name",

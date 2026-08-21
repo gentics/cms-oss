@@ -5,6 +5,7 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_INLINE_TEXT,
     CONSTRUCT_TEST_SELECT_COLOR,
     CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
     CONSTRUCT_TEST_SELECT_COLOR_INLINE,
@@ -47,6 +48,7 @@ import {
     AUTH,
 } from './common';
 import {
+    addTemporaryAlohaPlugin,
     createExternalLink,
     createInternalLink,
     editorAction,
@@ -61,7 +63,7 @@ import {
     openPageForEditing,
     overwriteAlohaConfigWith,
     pickPaletteColor,
-    rereouteAlohaConfig,
+    rerouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
@@ -361,7 +363,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
-                await rereouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await rerouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
                 await openEditingPageInEditmode(page);
 
                 await mainEditable.click();
@@ -468,7 +470,9 @@ test.describe('Page Editing', () => {
                         type: 'ticket',
                         description: 'SUP-19597',
                     }],
-                }, async ({ page }) => {
+                }, async ({ page, browserName }) => {
+                    test.skip(browserName === 'firefox', 'Disabled in Firefox, due to inconsistencies of color-parsing');
+
                     const PICK_COLOR = '#CD000089';
 
                     await overwriteAlohaConfigWith(page, `
@@ -1152,6 +1156,7 @@ test.describe('Page Editing', () => {
         test.describe('Tables', () => {
             const SLOT_CELL_STYLE = 'tableCellStyle';
             const SLOT_CREATE_TABLE = 'createTable';
+            const SLOT_TABLE_CAPTION = 'tableCaption';
             const ROW_COUNT = 3;
             const COLUMN_COUNT = 3;
 
@@ -1177,7 +1182,7 @@ test.describe('Page Editing', () => {
             test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1202,7 +1207,7 @@ test.describe('Page Editing', () => {
             test('should be able to style column with config', async ({ page }) => {
                 const STYLE_NAME = 'column-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1230,7 +1235,7 @@ test.describe('Page Editing', () => {
             test('should be able to style row with config', async ({ page }) => {
                 const STYLE_NAME = 'row-style-1';
 
-                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1255,6 +1260,17 @@ test.describe('Page Editing', () => {
                 }
             });
 
+            test('should change scope to tables when adding a caption', async ({ page }) => {
+                await rerouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await editPageAndCreateTable(page);
+
+                await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
+
+                const tableTab = page.locator('gtx-page-editor-tabs button[data-id="table"]');
+
+                await expect(tableTab).toContainClass('active');
+            });
+
             async function editPageAndCreateTable(page) {
                 editingPage = IMPORTER.get(PAGE_ONE);
 
@@ -1276,9 +1292,26 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            // FIXME: The drag-n-drop simply doesn't do anything in the test; Therefore functionality can't be properly tested.
-            // Tried already all kinds of workarounds, but sadly nothing works so far.
-            test.skip('should be able to move a construct between two existing ones', async ({ page }) => {
+            /*
+             * Aloha's block drag is wired via jQuery UI's `.draggable()` (see `ui-draggable-disabled`
+             * check in gcn-block.js and Aloha's `block/dragbehavior` module). jQuery UI Draggable
+             * only reacts to native mouse events (mousedown/mousemove/mouseup) and ignores the
+             * HTML5 drag events that Playwright's `locator.dragTo()` dispatches, which is why the
+             * earlier `dragTo()`-based attempt did literally nothing. We therefore drive the drag
+             * manually via `page.mouse`, with:
+             *  (1) `boundingBox()` for main-viewport coordinates
+             *      (the editable lives inside an iframe — `getBoundingClientRect()` would be iframe-local
+             *      and off by the iframe offset)
+             *  (2) a small initial nudge to clear jQuery UI's distance threshold
+             *  (3) several intermediate `mousemove` steps so the Sortable reorder logic actually runs while
+             *      the pointer travels to the drop target.
+             */
+            test('should be able to move a construct between two existing ones', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19961',
+                }],
+            }, async ({ page }) => {
                 const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
 
                 // Clear the content
@@ -1330,14 +1363,38 @@ test.describe('Page Editing', () => {
                     const targetImage = blocks.first();
 
                     const blockId = await originImage.getAttribute('id');
-                    const targetRect = await targetImage.evaluate((el) => el.getBoundingClientRect());
+                    // Make sure the origin handle is initialized and in view before grabbing it.
+                    await originImage.hover();
+                    const handle = originImage.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    await handle.scrollIntoViewIfNeeded();
 
-                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(targetImage, {
-                        targetPosition: {
-                            x: 10,
-                            y: targetRect.bottom,
-                        },
-                    });
+                    // `boundingBox()` returns coordinates relative to the main-frame viewport,
+                    // which is what `page.mouse` operates in — even though the elements live
+                    // inside the editor iframe.
+                    const handleBox = await handle.boundingBox();
+                    const targetBox = await targetImage.boundingBox();
+                    expect(handleBox).not.toBeNull();
+                    expect(targetBox).not.toBeNull();
+
+                    const startX = handleBox.x + handleBox.width / 2;
+                    const startY = handleBox.y + handleBox.height / 2;
+                    // Aim for the middle of the target block — Aloha decides "insert before/after"
+                    // based on where the pointer sits relative to the block centre. Edges are
+                    // brittle (scroll/overlap).
+                    const endX = targetBox.x + targetBox.width / 2;
+                    const endY = targetBox.y + targetBox.height / 2;
+
+                    await page.mouse.move(startX, startY);
+                    await page.mouse.down();
+                    // Small initial nudge to clear jQuery UI Draggable's distance threshold.
+                    await page.mouse.move(startX + 6, startY + 6, { steps: 5 });
+                    // Travel to the target with enough intermediate mousemove events for
+                    // Sortable's reorder hit-tests to fire along the way.
+                    await page.mouse.move(endX, endY, { steps: 25 });
+                    // Brief pause so Aloha can settle the drop indicator before mouseup.
+                    // eslint-disable-next-line playwright/no-wait-for-timeout
+                    await page.waitForTimeout(150);
+                    await page.mouse.up();
 
                     const idsAfter = await Promise.all((await blocks.all()).map((loc) => loc.getAttribute('id')));
 
@@ -1568,6 +1625,208 @@ test.describe('Page Editing', () => {
 
                 // Check again now
                 await checkKeys(14);
+            });
+
+            test('should insert and handle inline tags correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20135',
+                }],
+            }, async ({ page }) => {
+                await mainEditable.click();
+                await mainEditable.press('Enter');
+                await mainEditable.fill('text beforetextafter');
+                await expect(mainEditable.locator('p')).toHaveCount(1);
+                expect(await selectRangeIn(mainEditable, 11, 11)).toEqual(true);
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Add tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_INLINE_TEXT}"]`).click();
+                });
+
+                const actualMainEditable = mainEditable.first();
+
+                // The placeholder should be a span, since that's what the element is gonna be
+                const placeholder = actualMainEditable.locator('.gcn-tag-insert-placeholder');
+                await expect(placeholder).toBeVisible();
+                expect(await placeholder.evaluate((el) => el.nodeName)).toEqual('SPAN');
+
+                await expect(actualMainEditable.locator('span[contenteditable]')).toBeAttached();
+                // placeholder should be removed once the element has been added
+                await expect(placeholder).not.toBeAttached();
+
+                // It should still only have one paragraph - Just because we added a tag shouldn't split the content
+                await expect(actualMainEditable.locator('p')).toHaveCount(1);
+            });
+        });
+        test.describe('Character Picker', () => {
+            const SLOT_CHARACTER_GRID = 'characterPicker';
+            const CHARACTER_CELL = '.symbol-grid-cell';
+
+            test('should display available characters and character should have a title', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+
+                await expect(characterCells.first()).toBeVisible();
+
+                for (const character of await characterCells.all()) {
+                    await expect(character).toHaveAttribute('title');
+                }
+            });
+
+            test('should be able to select a icon character', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19600',
+                }],
+            }, async ({ page }) => {
+                await editPageAndOpenCharacterGrid(page);
+
+                const characterCells = page.locator(CHARACTER_CELL);
+                // select a 'regular' icon in that case the last in the roster
+                // and check that it does not have an icon tag as a child
+                const lastCharacterCell = characterCells.last();
+                const lastCharacter = lastCharacterCell.locator('.symbol-grid-cell-content');
+                const lastCharacterContent = await lastCharacter.textContent();
+
+                await expect(lastCharacterCell.locator('icon')).not.toBeAttached();
+
+                // select an 'invisible' icon like non-breaking space
+                // and check if it has an icon tag as a child
+
+                const nonBreakingSpaceCell = page.locator(`${CHARACTER_CELL}[title="Non-breaking space"]`);
+                const nonBreakingSpaceCharacter = nonBreakingSpaceCell.locator('icon');
+
+                await expect(nonBreakingSpaceCharacter).toBeVisible();
+
+                // click on the 'regular' icon and check the content of the editor input
+                await lastCharacter.click();
+
+                await expect(mainEditable).toContainText(lastCharacterContent ?? '');
+
+                // click on the non-breaking space symbol and check the content  of the editor input
+                await clearEditable();
+                await openCharacterGrid(page);
+
+                await nonBreakingSpaceCell.click();
+
+                await expect(mainEditable).toContainText(' ');
+            });
+
+            async function editPageAndOpenCharacterGrid(page) {
+                await addTemporaryAlohaPlugin(page, 'common/characterpicker');
+                editingPage = IMPORTER.get(PAGE_ONE);
+
+                await openEditingPageInEditmode(page);
+                await clearEditable();
+
+                await openCharacterGrid(page);
+            }
+
+            async function openCharacterGrid(page) {
+                await selectEditorTab(page, 'insert');
+                await findAlohaComponent(page, { slot: SLOT_CHARACTER_GRID }).click();
+            }
+
+            async function clearEditable() {
+                await mainEditable.click();
+                await mainEditable.clear();
+            }
+        });
+
+        test.describe('Text Color', () => {
+            test.beforeEach(() => {
+                editingPage = IMPORTER.get(PAGE_ONE);
+            });
+
+            test('should be able to select a palette color correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19852',
+                }],
+            }, async ({ page }) => {
+                const FIRST_COLOR = 'blue';
+                const SECOND_COLOR = '#f00';
+
+                await overwriteAlohaConfigWith(page, `
+                    Aloha.settings.plugins ??= {};
+                    Aloha.settings.plugins.textcolor = {
+                        config: {
+                            color: {
+                                enabled: true,
+                                palette: ${JSON.stringify([FIRST_COLOR, SECOND_COLOR])},
+                            }
+                        }
+                    };
+                `);
+                await openEditingPageInEditmode(page);
+
+                // Select the text
+                await test.step('Fill content', async () => {
+                    await mainEditable.click();
+                    await mainEditable.fill('Some text');
+                    await mainEditable.press('ControlOrMeta+a');
+                });
+
+                let textColorButton: Locator;
+                let pickerDropdown: Locator;
+
+                await test.step('Open text-color picker', async () => {
+                    // Open the dropdown
+                    await selectEditorTab(page, 'formatting');
+                    textColorButton = findAlohaComponent(page, { slot: 'textColor', type: 'context-button' });
+                    await textColorButton.click();
+                    pickerDropdown = findDynamicDropdown(page, 'textColor');
+                    await expect(pickerDropdown).toBeVisible();
+                });
+
+                let dropdownConfirm: Locator;
+                let firstColorEntry: Locator;
+                let secondColorEntry: Locator;
+
+                await test.step('Apply the first color', async () => {
+                    const colorPicker = pickerDropdown.locator('gtx-aloha-color-picker-renderer');
+                    // The clear button + the two colors we defined
+                    await expect(colorPicker.locator('.palette-wrapper .palette-entry')).toHaveCount(3);
+                    // The blue color from the config
+                    firstColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#0000ffff"]');
+                    await expect(firstColorEntry).toBeVisible();
+                    secondColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#ff0000ff"]');
+                    await expect(secondColorEntry).toBeVisible();
+
+                    await firstColorEntry.click();
+                    dropdownConfirm = pickerDropdown.locator('.context-menu-header .header-confirm-button');
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(0, 0, 255)');
+                });
+
+                await test.step('Apply the second color', async () => {
+                    await mainEditable.click();
+                    await mainEditable.press('ControlOrMeta+a');
+                    await textColorButton.click();
+
+                    // First one should be marked as active
+                    await expect(firstColorEntry).toContainClass('active');
+
+                    await secondColorEntry.click();
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(255, 0, 0)');
+                });
             });
         });
     });

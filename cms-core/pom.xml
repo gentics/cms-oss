@@ -559,6 +559,14 @@
 					<groupId>org.apache.xmlgraphics</groupId>
 					<artifactId>batik-ext</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.apache.httpcomponents.core5</groupId>
+		    		<artifactId>httpcore5</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.httpcomponents.core5</groupId>
+		    		<artifactId>httpcore5-h2</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -731,6 +739,18 @@
 		    <groupId>jakarta.validation</groupId>
 		    <artifactId>jakarta.validation-api</artifactId>
 		    <scope>test</scope>
+		</dependency>
+
+		<!-- Patch for Antisamy -->
+		<dependency>
+		    <groupId>org.apache.httpcomponents.core5</groupId>
+		    <artifactId>httpcore5</artifactId>
+		    <version>5.4.3</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.httpcomponents.core5</groupId>
+		    <artifactId>httpcore5-h2</artifactId>
+		    <version>5.4.3</version>
 		</dependency>
 	</dependencies>
 

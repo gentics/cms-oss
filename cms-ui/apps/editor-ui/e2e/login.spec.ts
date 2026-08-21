@@ -143,6 +143,28 @@ test.describe('Login', () => {
             await page.reload();
             await expect(page.locator('project-editor')).toBeVisible();
         });
+
+        test('should redirect to login page when logged out', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20099',
+            }],
+        }, async ({ page, context }) => {
+            await navigateToApp(page);
+            await loginWithForm(page, TEST_USER);
+
+            await expect(page.locator('project-editor')).toBeVisible();
+
+            // clear session cookie
+            await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
+
+            // click on a folder
+            await page.locator('[data-item-type="folder"] a').first().click();
+
+            await expect(page).toHaveURL(/login/);
+
+            await expect(page.locator('gtx-dynamic-modal')).toBeVisible();
+        });
     });
 
     test.describe('With Keycloak feature enabled', () => {
@@ -222,9 +244,9 @@ test.describe('Login', () => {
                 return route.fulfill({
                     json: {
                         'auth-server-url': 'invalid-url $$$',
-                        realm: 'example',
-                        resource: 'test',
-                        showSSOButton: false,
+                        "realm": 'example',
+                        "resource": 'test',
+                        "showSSOButton": false,
                     } as KeycloakConfiguration,
                     status: 200,
                 });

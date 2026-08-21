@@ -1,20 +1,18 @@
-import { EntityImporter, TestSize } from '@gentics/e2e-utils';
-import { expect, test } from '@playwright/test';
-
+import { NodeFeature } from '@gentics/cms-models';
+import { clickModalAction, EntityImporter, TestSize } from '@gentics/e2e-utils';
+import { expect, Page, test } from '@playwright/test';
 import { GLOBAL_SCOPE_ID, KNOWN_PLACEHOLDERS } from './common';
 import {
-    autoAcceptNextConfirm,
-    autoDismissNextConfirm,
     clickScopeTab,
     expectCellState,
     fillCell,
     findScopeTab,
     findTableRow,
-    navigateToToolWithSid,
+    navigateToToolWithLogin,
     waitForToolReady,
 } from './helpers';
 
-test.describe('form-translations · Scope Switching', () => {
+test.describe('Scope Switching', () => {
     const IMPORTER = new EntityImporter();
 
     test.beforeAll(async ({ request }) => {
@@ -40,11 +38,13 @@ test.describe('form-translations · Scope Switching', () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.syncPackages(TestSize.MINIMAL);
             await IMPORTER.setupTest(TestSize.MINIMAL);
+            await IMPORTER.setupFeatures(TestSize.MINIMAL, {
+                [NodeFeature.FORMS]: true,
+            });
         });
 
         await test.step('Open tool', async () => {
-            const sid = String(IMPORTER.client?.sid);
-            await navigateToToolWithSid(page, sid);
+            await navigateToToolWithLogin(page);
             await waitForToolReady(page);
         });
     });
@@ -55,26 +55,22 @@ test.describe('form-translations · Scope Switching', () => {
      * the CMS has no form types configured we skip the scope-switching tests
      * that need a second tab.
      */
-    async function getFirstFormTypeScopeId(page): Promise<string | null> {
-        const tabs = page.locator('[data-region="scope-tabs"] [data-action="select-scope"]');
-        const count = await tabs.count();
-        for (let i = 0; i < count; i++) {
-            const id = await tabs.nth(i).getAttribute('data-id');
-            if (id && id !== GLOBAL_SCOPE_ID) return id;
-        }
-        return null;
+    async function getFirstFormTypeScopeId(page: Page): Promise<string | null> {
+        return page.locator(`[data-region="scope-tabs"] [data-action="select-scope"]:not([data-id="${GLOBAL_SCOPE_ID}"])`)
+            .first()
+            .getAttribute('data-id');
     }
 
     test('should switch the active tab when another scope is clicked', async ({ page }) => {
         const otherScopeId = await getFirstFormTypeScopeId(page);
         test.skip(!otherScopeId, 'CMS has no form-type scopes configured');
 
-        await clickScopeTab(page, otherScopeId!);
+        await clickScopeTab(page, otherScopeId);
 
-        await expect(findScopeTab(page, otherScopeId!)).toHaveAttribute('data-active', 'true');
+        await expect(findScopeTab(page, otherScopeId)).toHaveAttribute('data-active', 'true');
         await expect(findScopeTab(page, GLOBAL_SCOPE_ID)).toHaveAttribute('data-active', 'false');
         await expect(page.locator('[data-name="scope-card"]'))
-            .toHaveAttribute('data-scope-id', otherScopeId!);
+            .toHaveAttribute('data-scope-id', otherScopeId);
     });
 
     test('should prompt for confirmation and STAY on the active tab when the user cancels', async ({ page }) => {
@@ -85,8 +81,9 @@ test.describe('form-translations · Scope Switching', () => {
         await fillCell(page, KNOWN_PLACEHOLDERS.LOADING, 'en', 'dirty-value [scope-switch]');
         await expectCellState(page, KNOWN_PLACEHOLDERS.LOADING, 'en', 'dirty');
 
-        autoDismissNextConfirm(page);
-        await findScopeTab(page, otherScopeId!).click();
+        await findScopeTab(page, otherScopeId).click();
+        const modal = page.locator('gtx-modal-dialog');
+        await clickModalAction(modal, 'cancel');
 
         /* Tab did not switch */
         await expect(findScopeTab(page, GLOBAL_SCOPE_ID)).toHaveAttribute('data-active', 'true');
@@ -102,10 +99,11 @@ test.describe('form-translations · Scope Switching', () => {
         await fillCell(page, KNOWN_PLACEHOLDERS.LOADING, 'en', 'dirty-value [scope-switch]');
         await expectCellState(page, KNOWN_PLACEHOLDERS.LOADING, 'en', 'dirty');
 
-        autoAcceptNextConfirm(page);
-        await findScopeTab(page, otherScopeId!).click();
+        await findScopeTab(page, otherScopeId).click();
+        const modal = page.locator('gtx-modal-dialog');
+        await clickModalAction(modal, 'confirm');
 
-        await expect(findScopeTab(page, otherScopeId!)).toHaveAttribute('data-active', 'true');
+        await expect(findScopeTab(page, otherScopeId)).toHaveAttribute('data-active', 'true');
 
         /* Switch back to global and verify the change was discarded. */
         await clickScopeTab(page, GLOBAL_SCOPE_ID);

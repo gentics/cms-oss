@@ -1,0 +1,9 @@
+custom_tools:
+  - id: form-translations
+    key: form_translations
+    toolUrl: /tools/form-translations/?sid=${SID}
+    newtab: false
+    iconUrl: language
+    name:
+      de: Formular-Übersetzungen
+      en: Form Translations

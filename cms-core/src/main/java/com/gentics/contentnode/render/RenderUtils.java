@@ -37,6 +37,7 @@ import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.PublishedNodeTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -112,7 +113,8 @@ public class RenderUtils {
 
 					try (
 						CloseableHttpClient httpClient = getHttpClient(node.isInsecurePreviewUrl());
-						RenderTypeTrx rTrx = new RenderTypeTrx(renderMode, page, false, false, false); MeshPublisher mp = new MeshPublisher(cr, false)
+						RenderTypeTrx rTrx = new RenderTypeTrx(renderMode, page, false, false, false); MeshPublisher mp = new MeshPublisher(cr, false);
+						PublishedNodeTrx pnTrx = new PublishedNodeTrx(node)
 					) {
 						// rendered tagmap entries should not contain aloha settings or script includes and editables shall not (yet) be replaced
 						rTrx.get().setParameter(AlohaRenderer.RENDER_SETTINGS, false);

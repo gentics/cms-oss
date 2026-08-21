@@ -37,13 +37,14 @@
                     class="template-select"
                     [required]="true"
                     [label]="('editor.item_template_label' | gtxI18n) + '*'"
-                    [placeholder]="viewTemplatesAllowed ? null : item?.template?.name"
+                    [placeholder]="item?.template?.name"
                     formControlName="templateId"
                 >
                     @for (template of templates; track template.id) {
                         <gtx-option [value]="template?.id">{{ template?.name }}</gtx-option>
                     }
                 </gtx-select>
+
                 @if (viewTemplatesAllowed && templates.length === 0) {
                     <span
                         class="no-templates"
@@ -52,6 +53,7 @@
                         {{ 'editor.link_templates_no_templates_linked' | gtxI18n }}.
                     </span>
                 }
+
                 @if (linkToTemplatesAllowed) {
                     <a
                         class="link-templates"
@@ -71,9 +73,7 @@
                         formControlName="language"
                     >
                         @for (language of languages; track language.code) {
-                            <gtx-option
-                                [value]="language.code"
-                            >{{ language?.name }}</gtx-option>
+                            <gtx-option [value]="language.code">{{ language?.name }}</gtx-option>
                         }
                     </gtx-select>
                 </div>

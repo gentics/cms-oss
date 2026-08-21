@@ -32,11 +32,12 @@ export function colorToRGBA(inputColor: any): RGBAColor {
     colorCanvasCtx.fillStyle = inputColor;
     if (computed !== colorCanvasCtx.fillStyle) {
         // invalid color
-        colorCache[inputColor] = null;
+        delete colorCache[inputColor];
         return null;
     }
     colorCanvasCtx.fillRect(0, 0, 1, 1);
 
+    // Note: In Firefox, the color data may actually be off by one (usually one lower) for *whatever* reason.
     const outputColor = Array.from(colorCanvasCtx.getImageData(0, 0, 1, 1).data) as RGBAColor;
     colorCache[inputColor] = outputColor;
 
@@ -67,11 +68,12 @@ export function colorToHex(inputColor: any, removeAlpha: boolean = false): strin
     }
 
     return '#' + rgba.map(function (channelValue) {
-        return channelValue < 10 ? '0' + channelValue.toString() : channelValue.toString(16);
+        const str = channelValue.toString(16);
+        return (str.length === 1) ? `0${str}` : str;
     }).join('');
 }
 
-export function constrastColor(color: ColorValue): string {
+export function contrastColor(color: ColorValue): string {
     const rgba = colorToRGBA(color);
     if (!rgba) {
         return null;

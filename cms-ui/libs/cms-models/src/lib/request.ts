@@ -25,7 +25,7 @@ import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
 import { DependencyType } from './package-check';
 import { EditablePageProps, Page, PageStatus } from './page';
-import { AccessControlledType } from './permissions';
+import { AccessControlledType, GcmsPermission } from './permissions';
 import { PrivilegeFlagName } from './privileges';
 import { Role, RoleAssignment, RolePermissions } from './role';
 import { Schedule } from './schedule';
@@ -1831,6 +1831,18 @@ export interface GroupTreeOptions extends BaseListOptionsWithSkipCount {
  * Query parameters for `/group/list`
  */
 export interface GroupListOptions extends BaseListOptionsWithPaging<Group>, EmbedListOptions<'group'> {
+    /** should include permission data? */
+    perms?: boolean;
+
+    /** permission filters */
+    permitted?: GcmsPermission | GcmsPermission[];
+}
+
+/**
+ * Query parameters for `/group/{id}`
+ */
+export interface LoadGroupOptions {
+    /** should include permission data? */
     perms?: boolean;
 }
 
@@ -1979,7 +1991,7 @@ export interface ConstructListOptions extends BaseListOptionsWithSkipCount, Embe
     partTypeId?: number | number[];
     search?: string;
     sortby?: 'category' | 'description' | 'keyword' | 'name';
-};
+}
 
 /**
  * Request used for saving a `TagType`.

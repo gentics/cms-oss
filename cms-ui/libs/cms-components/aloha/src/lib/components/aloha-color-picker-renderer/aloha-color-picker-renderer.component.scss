@@ -7,15 +7,17 @@
     width: 320px;
 
     .palette-wrapper {
-        padding: 0.5rem 0.25rem;
+        padding: 1rem;
         display: block;
         width: 100%;
 
         .palette {
             width: 100%;
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(10, auto);
+            grid-template-rows: 1fr;
+            justify-content: space-between;
+            gap: 0.5rem;
 
             .palette-entry {
                 background: var(--palette-color);
@@ -24,13 +26,13 @@
                 outline: none;
                 width: 20px;
                 height: 20px;
-                margin: 0.5rem;
                 box-shadow: 2px 2px 2px $gtx-color-light-gray,
                     -2px 2px 2px $gtx-color-light-gray,
                     -2px -2px 2px $gtx-color-light-gray,
                     2px -2px 2px $gtx-color-light-gray;
                 transition: 200ms;
 
+                &.active,
                 &:hover,
                 &:focus {
                     box-shadow: 2px 2px 2px $gtx-color-off-black,
@@ -44,26 +46,11 @@
                 }
 
                 &.clear-entry {
-                    background-image:
-                        linear-gradient(45deg, $gtx-color-dark-gray 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, $gtx-color-dark-gray 75%),
-                        linear-gradient(45deg, transparent 75%, $gtx-color-dark-gray 75%),
-                        linear-gradient(45deg, $gtx-color-dark-gray 25%, #fff 25%);
-                    background-size: 10px 10px;
-                    background-position:0 0, 0 0, -5px -5px, 5px 5px;
+                    color: $gtx-color-off-black;
+                    padding: 0;
 
-                    position: relative;
-
-                    &::after {
-                        content: '';
-                        display: block;
-                        width: 134%;
-                        height: 3px;
-                        position: absolute;
-                        background: red;
-                        top: 50%;
-                        left: -25%;
-                        transform: rotateZ(-45deg);
+                    icon {
+                        font-size: 18px;
                     }
                 }
             }

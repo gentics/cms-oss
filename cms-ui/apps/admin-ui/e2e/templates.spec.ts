@@ -1,4 +1,4 @@
-import { Node, Template, TemplateResponse, TemplateSaveRequest } from '@gentics/cms-models';
+import { Node, Template, TemplateResponse, TemplateSaveRequest, NodeUrlMode, NodePageLanguageCode } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -8,7 +8,6 @@ import {
     findTableRowById,
     findTrableRowById,
     loginWithForm,
-    matchRequest,
     navigateToApp,
     NODE_MINIMAL,
     pickSelectValue,
@@ -16,6 +15,11 @@ import {
     selectTrableRow,
     TestSize,
     waitForResponseFrom,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_NODE,
+    LANGUAGE_DE,
+    NodeImportData
 } from '@gentics/e2e-utils';
 import { expect, Locator, Response, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -51,6 +55,16 @@ test.describe('Templates Module', () => {
 
         testTemplate = IMPORTER.get(BASIC_TEMPLATE_ID as any);
         testNode = IMPORTER.get(NODE_MINIMAL);
+
+        // We have to assign the template to the dummy node as well,
+        // as in the tests, we un-assign it from our test node, which is only
+        // permitted, if it's at least linked to another node.
+        // Will be cleaned up anyways so no risk here that it affects other tests.
+        const dummyNode = (await IMPORTER.client.node.get(IMPORTER.dummyNode).send()).node;
+        await IMPORTER.client.template.link(testTemplate.id, {
+            folderIds: [dummyNode.folderId],
+            nodeId: dummyNode.id,
+        }).send();
 
         // Navigate to the app and log in
         await navigateToApp(page);
@@ -105,9 +119,49 @@ test.describe('Templates Module', () => {
         let nodeTable: Locator;
         let nodeRow: Locator;
 
+        // todo
+        const EXAMPLE_NODE_ONE: NodeImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_NODE,
+            [IMPORT_ID]: 'templateExampleNodeOne',
+
+            node: {
+                name: 'Templates Example Node #1',
+                host: 'http://template01.localhost',
+                hostProperty: '',
+                publishDir: '',
+                binaryPublishDir: '',
+                pubDirSegment: true,
+                publishImageVariants: false,
+                publishFs: false,
+                publishFsPages: false,
+                publishFsFiles: false,
+                publishContentMap: false,
+                publishContentMapPages: false,
+                publishContentMapFiles: false,
+                publishContentMapFolders: false,
+                urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+                urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+                omitPageExtension: false,
+                pageLanguageCode: NodePageLanguageCode.FILENAME,
+                meshPreviewUrlProperty: '',
+            },
+            description: 'Test Node',
+            languages: [LANGUAGE_DE],
+            templates: [],
+        };
+
+        await IMPORTER.importData([
+            EXAMPLE_NODE_ONE
+        ]);
+
+        const tmp_node = IMPORTER.get(EXAMPLE_NODE_ONE);
+
+        await IMPORTER.client.node.assignTemplate(tmp_node.id, testTemplate.id)
+            .send();
+        
         await test.step('Unassign from node', async () => {
-            const nodeLoad = page.waitForResponse(matchRequest('GET', '/rest/node'));
-            const tplNodesLoad = page.waitForResponse(matchRequest('GET', `/rest/template/${testTemplate.id}/nodes`));
+            const nodeLoad = waitForResponseFrom(page, 'GET', '/rest/node');
+            const tplNodesLoad = waitForResponseFrom(page, 'GET', `/rest/template/${testTemplate.id}/nodes`);
 
             await findTableAction(tplRow, LINK_TO_NODE_ACTION).click();
             await Promise.all([nodeLoad, tplNodesLoad]);
@@ -119,14 +173,14 @@ test.describe('Templates Module', () => {
             await expect(nodeRow).toContainClass('selected');
             await selectTableRow(nodeRow);
 
-            const unassignReq = page.waitForResponse(matchRequest('DELETE', `/rest/node/${testNode.id}/templates/${testTemplate.id}`));
+            const unassignReq = waitForResponseFrom(page, 'DELETE', `/rest/node/${testNode.id}/templates/${testTemplate.id}`);
             await clickModalAction(modal, 'confirm');
             await unassignReq;
         });
 
         await test.step('Assign to node', async () => {
-            const nodeLoad = page.waitForResponse(matchRequest('GET', '/rest/node'));
-            const tplNodesLoad = page.waitForResponse(matchRequest('GET', `/rest/template/${testTemplate.id}/nodes`));
+            const nodeLoad = waitForResponseFrom(page, 'GET', '/rest/node');
+            const tplNodesLoad = waitForResponseFrom(page, 'GET', `/rest/template/${testTemplate.id}/nodes`);
 
             await findTableAction(tplRow, LINK_TO_NODE_ACTION).click();
             await Promise.all([nodeLoad, tplNodesLoad]);
@@ -134,7 +188,7 @@ test.describe('Templates Module', () => {
             await expect(nodeRow).not.toContainClass('selected');
             await selectTableRow(nodeRow);
 
-            const unassignReq = page.waitForResponse(matchRequest('PUT', `/rest/node/${testNode.id}/templates/${testTemplate.id}`));
+            const unassignReq = waitForResponseFrom(page, 'PUT', `/rest/node/${testNode.id}/templates/${testTemplate.id}`);
             await clickModalAction(modal, 'confirm');
             await unassignReq;
         });
@@ -147,7 +201,7 @@ test.describe('Templates Module', () => {
 
         await test.step('Open Folder assign modal', async () => {
             const tplRow = await findTableRowById(page, testTemplate.id);
-            const folderLoad = page.waitForResponse(matchRequest('GET', `/rest/template/${testTemplate.id}/folders`));
+            const folderLoad = waitForResponseFrom(page, 'GET', `/rest/template/${testTemplate.id}/folders`);
 
             await findTableAction(tplRow, LINK_TO_FOLDER_ACTION).click();
             const modal = page.locator(LINK_TO_FOLDER_MODAL);
@@ -160,13 +214,13 @@ test.describe('Templates Module', () => {
         });
 
         await test.step('Unassign test node', async () => {
-            const unassignReq = page.waitForResponse(matchRequest('POST', `/rest/template/unlink/${testTemplate.id}`));
+            const unassignReq = waitForResponseFrom(page, 'POST', `/rest/template/unlink/${testTemplate.id}`);
             await selectTrableRow(folderRow);
             await unassignReq;
         });
 
         await test.step('Assign test node', async () => {
-            const assignReq = page.waitForResponse(matchRequest('POST', `/rest/template/link/${testTemplate.id}`));
+            const assignReq = waitForResponseFrom(page, 'POST', `/rest/template/link/${testTemplate.id}`);
             await selectTrableRow(folderRow);
             await assignReq;
         });

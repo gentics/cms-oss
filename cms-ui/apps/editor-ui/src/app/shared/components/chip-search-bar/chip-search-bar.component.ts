@@ -283,7 +283,7 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
         this.stopper.stop();
     }
 
-    @HostListener('window:resize', ['$event'])
+    @HostListener('window:resize')
     onResize(): void {
         this.onResizeInternal$.next();
     }
@@ -456,6 +456,11 @@ export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit,
     getChipValue<K extends GtxChipSearchPropertyKeys>(control: AbstractControl): GtxChipValue<K> | null {
         const c = this.getChipValueControl(control);
         return this.getFormControlValue(c);
+    }
+
+    getChipWidth(control: AbstractControl): number {
+        const chipValue = String(this.getChipValue(control));
+        return Math.max(4, (chipValue?.length ?? 0) + 1);
     }
 
     setChipValue<K extends GtxChipSearchPropertyKeys>(control: AbstractControl, newValue: GtxChipValue<K>): void {

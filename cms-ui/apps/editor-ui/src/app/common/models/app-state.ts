@@ -1,4 +1,4 @@
-import { AuthState } from './auth-state';
+import { AuthStateModel } from '@gentics/cms-components/auth';
 import { ContentStagingState } from './content-staging-state';
 import { EditorState } from './editor-state';
 import { EntityState } from './entity-state';
@@ -15,7 +15,7 @@ import { UserState } from './user-state';
 import { WastebinState } from './wastebin-state';
 
 export interface AppState {
-    auth: AuthState;
+    auth: AuthStateModel;
     contentStaging: ContentStagingState;
     editor: EditorState;
     entities: EntityState;

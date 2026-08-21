@@ -17,6 +17,7 @@ import { debounceTime } from 'rxjs/operators';
  * - List
  * - ListOrdered
  * - ListUnordered
+ * @deprecated
  */
 @Component({
     selector: 'list-tag-property-editor',

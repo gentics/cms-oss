@@ -14,7 +14,7 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { ColorThemes, TooltipAlignment, TooltipPosition } from '../../common';
+import type { ColorThemes, TooltipAlignment, TooltipPosition } from '../../common';
 import { TooltipContentDirective } from '../../directives/tooltip-content/tooltip-content.directive';
 import { TooltipTriggerDirective } from '../../directives/tooltip-trigger/tooltip-trigger.directive';
 import { StyleObj } from '../../internal';
@@ -42,7 +42,7 @@ import { TooltipContentWrapperComponent } from '../tooltip-content-wrapper/toolt
     templateUrl: './tooltip.component.html',
     styleUrls: ['./tooltip.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 
@@ -108,12 +108,12 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
 
     ngOnInit(): void {
         this.overlayService.getHostView()
-            .then(view => {
+            .then((view) => {
                 this.overlayHostView = view;
                 this.hostViewInitialzed = true;
                 this.setupContentWrapper();
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error('Could not get an instance of the overlay-host for the tooltip!', err);
             });
     }
@@ -239,12 +239,12 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
         const rect = this.hoverElement.getBoundingClientRect();
 
         return {
-            /* eslint-disable @typescript-eslint/naming-convention */
+
             '--trigger-width': `${rect.width}px`,
             '--trigger-height': `${rect.height}px`,
             '--trigger-x': `${rect.x}px`,
             '--trigger-y': `${rect.y}px`,
-            /* eslint-enable @typescript-eslint/naming-convention */
+
         };
     }
 }

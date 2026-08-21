@@ -77,7 +77,7 @@ public class Operator {
 
 	/**
 	 * Start the executor thread pool with given size
-	 * @param poolsize size of the pool
+	 * @param newPoolsize size of the pool
 	 */
 	public static void start(int newPoolsize) {
 		// if the executor is not shut down and the poolsize did not change, we do nothing
@@ -166,23 +166,25 @@ public class Operator {
 				if (backgroundCallback != null) {
 					backgroundCallback.run();
 				}
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+
+				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
 			}
-		} catch (Exception e) {
-			if (e.getCause() instanceof ReadOnlyException) {
-				return new GenericResponse(new Message(Message.Type.CRITICAL, e.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
+		} catch (Exception exception) {
+			if (exception.getCause() instanceof ReadOnlyException) {
+				return new GenericResponse(new Message(Message.Type.CRITICAL, exception.getCause().getLocalizedMessage()), new ResponseInfo(ResponseCode.FAILURE, ""));
 			} else {
 				// for ExecutionExceptions, we are more interested in the causing exception
-				if (e instanceof ExecutionException && e.getCause() instanceof Exception) {
-					e = (Exception) e.getCause();
+				if (exception instanceof ExecutionException && exception.getCause() instanceof Exception) {
+					exception = (Exception) exception.getCause();
 				}
-			logger.error("Error while " + description, e);
+				logger.error("Error while " + description, exception);
 				if (errorHandler != null) {
-					throw errorHandler.apply(e);
+					throw errorHandler.apply(exception);
 				} else {
 					I18nString message = new CNI18nString("rest.general.error");
 					return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, "Error while "
-							+ description + ": " + e.getLocalizedMessage()));
+							+ description + ": " + exception.getLocalizedMessage()));
 				}
 			}
 		}
@@ -225,7 +227,9 @@ public class Operator {
 				wrapper.sendToBackground();
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+
+				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
 			}
 		} catch (NodeException e) {
 			throw e;
@@ -282,7 +286,8 @@ public class Operator {
 
 				I18nString msg = new CNI18nString("job_sent_to_background");
 				msg.setParameter("0", description);
-				return new GenericResponse(new Message(Type.INFO, msg.toString()), new ResponseInfo(ResponseCode.OK, msg.toString()));
+				String translatedMsg = msg.toString();
+				return new GenericResponse(new Message(Type.INFO, translatedMsg), new ResponseInfo(ResponseCode.OK, translatedMsg)).setInBackground(true);
 			}
 		} catch (Exception e) {
 			logger.error("Error while " + description, e);

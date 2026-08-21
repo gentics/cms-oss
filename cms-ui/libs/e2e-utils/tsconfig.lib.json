@@ -1,7 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "declaration": true
+        "outDir": "../../dist/out-tsc",
+        "declaration": true,
+        "types": ["node", "jquery", "playwright"]
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts"],
+    "exclude": []
 }

@@ -1,7 +1,11 @@
-import { createOutputSpy, mount, MountResponse } from 'cypress/angular';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+import { NO_ERRORS_SCHEMA, provideZoneChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { randomId } from '@gentics/common';
+import { createOutputSpy, mount } from 'cypress/angular';
 import { CHECKBOX_STATE_INDETERMINATE, TableColumn, TableRow } from '../../common';
-import { randomId } from '../../utils';
+import { GenticsUICoreModule } from '../../ui-core.module';
 import { TableComponent } from './table.component';
 
 interface TestUser {
@@ -115,24 +119,16 @@ function generateRows(length: number): TableRow<TestUser>[] {
     return arr;
 }
 
-function detectChangesAndWait(ref: MountResponse<any>) {
-    return cy.wrap(null, { log: false }).then(() => {
-        ref.fixture.detectChanges();
-
-        return ref.fixture.whenRenderingDone();
-    });
-}
-
 function resetSpy(spyName: string) {
     cy.get<Cypress.Agent<sinon.SinonSpy>>(`@${spyName}`)
-        .then(spy => {
-            (spy as unknown as Cypress.Agent<sinon.SinonSpy>).resetHistory();
+        .then((spy) => {
+            (spy).resetHistory();
         });
 }
 
 function calledOnceWithReset(spyName: string, value: any) {
     cy.get<Cypress.Agent<sinon.SinonSpy>>(`@${spyName}`)
-        .then(spy => {
+        .then((spy) => {
             expect(spy).to.have.been.calledOnceWith(value);
             spy.resetHistory();
         });
@@ -140,6 +136,20 @@ function calledOnceWithReset(spyName: string, value: any) {
 
 describe('TableComponent', () => {
     const ALIAS_PAGE_CHANGE = 'pageChangeSpy';
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            imports: [
+                FormsModule,
+                ReactiveFormsModule,
+                GenticsUICoreModule,
+            ],
+            providers: [
+                provideZoneChangeDetection(),
+            ],
+            schemas: [NO_ERRORS_SCHEMA],
+        });
+    });
 
     it('should display the all rows without pagination', () => {
         const ROWS = generateRows(15);
@@ -150,18 +160,14 @@ describe('TableComponent', () => {
                 columns: DEFAULT_COLUMNS,
                 rows: ROWS,
             },
-            imports: [
-                GenticsUICoreModule.forRoot(),
-            ],
-        }).then(ref => {
-            return ref.fixture.whenRenderingDone()
-                .then(() => ref)
-        }).then(ref => {
-            cy.get('.grid-row.data-row')
-                .should('have.length', ROWS.length);
-            cy.get('.table-pagination')
-                .should('not.exist');
-        });
+        })
+            .detectChanges()
+            .then(() => {
+                cy.get('.grid-row.data-row')
+                    .should('have.length', ROWS.length);
+                cy.get('.table-pagination')
+                    .should('not.exist');
+            });
     });
 
     it('should display the rows with pagination', () => {
@@ -175,26 +181,22 @@ describe('TableComponent', () => {
                 perPage: PER_PAGE,
                 pageChange: createOutputSpy(ALIAS_PAGE_CHANGE),
             },
-            imports: [
-                GenticsUICoreModule.forRoot(),
-            ],
-        }).then(ref => {
-            return ref.fixture.whenRenderingDone()
-                .then(() => ref)
-        }).then(ref => {
-            cy.get('.grid-row.data-row')
-                .should('have.length', PER_PAGE);
-            cy.get('.table-pagination')
-                .should('exist')
-                .find('.pages>.page')
-                .should('have.length', 2);
+        })
+            .detectChanges()
+            .then(() => {
+                cy.get('.grid-row.data-row')
+                    .should('have.length', PER_PAGE);
+                cy.get('.table-pagination')
+                    .should('exist')
+                    .find('.pages>.page')
+                    .should('have.length', 2);
 
-            cy.get('.table-pagination .pages .page.link')
-                .click();
+                cy.get('.table-pagination .pages .page.link')
+                    .click();
 
-            cy.get(`@${ALIAS_PAGE_CHANGE}`)
-                .should('have.been.calledOnceWith', 2);
-        });
+                cy.get(`@${ALIAS_PAGE_CHANGE}`)
+                    .should('have.been.calledOnceWith', 2);
+            });
     });
 
     it('should show the correct selected rows and change the selection correctly', () => {
@@ -218,40 +220,35 @@ describe('TableComponent', () => {
                 rows: ROWS,
                 selected: [ROWS[INITIAL_IDX].id],
             },
-            imports: [
-                GenticsUICoreModule.forRoot(),
-            ],
-        }).then(ref => {
-            return ref.fixture.whenRenderingDone()
-                .then(() => ref)
-        }).then(ref => {
-            const table: TableComponent<TestUser> = ref.fixture.debugElement.childNodes[0].componentInstance;
-            table.selectedChange = createOutputSpy(ALIAS_SELECTED_CHANGE);
+        })
+            .detectChanges()
+            .tap((mounted) => {
+                const table: TableComponent<TestUser> = mounted.fixture.debugElement.childNodes[0].componentInstance;
+                table.selectedChange = createOutputSpy(ALIAS_SELECTED_CHANGE);
 
-            cy.get(`.grid-row.data-row[data-id="${ROWS[INITIAL_IDX].id}"]`)
-                .should('have.class', 'selected');
-            cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
-                .should('not.have.class', 'selected');
+                cy.get(`.grid-row.data-row[data-id="${ROWS[INITIAL_IDX].id}"]`)
+                    .should('have.class', 'selected');
+                cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
+                    .should('not.have.class', 'selected');
 
-            cy.get(`@${ALIAS_SELECTED_CHANGE}`)
-                .should('not.have.been.called');
+                cy.get(`@${ALIAS_SELECTED_CHANGE}`)
+                    .should('not.have.been.called');
 
-            cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"] .selection-checkbox label`)
-                .click();
-            calledOnceWithReset(ALIAS_SELECTED_CHANGE, [ROWS[CHANGE_IDX].id]);
-            cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
-                .should('not.have.class', 'selected');
-
-            cy.wrap(null, { log: false }).then(() => {
-                ref.component.selected = [ROWS[CHANGE_IDX].id];
+                cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"] .selection-checkbox label`)
+                    .click();
+                calledOnceWithReset(ALIAS_SELECTED_CHANGE, [ROWS[CHANGE_IDX].id]);
+                cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
+                    .should('not.have.class', 'selected');
+            })
+            .updateInstance((instance) => {
+                instance.selected = [ROWS[CHANGE_IDX].id];
+            })
+            .tap(() => {
+                cy.get(`.grid-row.data-row[data-id="${ROWS[INITIAL_IDX].id}"]`)
+                    .should('not.have.class', 'selected');
+                cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
+                    .should('have.class', 'selected');
             });
-            detectChangesAndWait(ref);
-
-            cy.get(`.grid-row.data-row[data-id="${ROWS[INITIAL_IDX].id}"]`)
-                .should('not.have.class', 'selected');
-            cy.get(`.grid-row.data-row[data-id="${ROWS[CHANGE_IDX].id}"]`)
-                .should('have.class', 'selected');
-        });
     });
 
     it('should show the correct selected rows and change the selection correctly (useSelectionMap)', () => {
@@ -285,43 +282,38 @@ describe('TableComponent', () => {
                 rows: ROWS,
                 selected: SELECTION_MAP,
             },
-            imports: [
-                GenticsUICoreModule.forRoot(),
-            ],
-        }).then(ref => {
-            return ref.fixture.whenRenderingDone()
-                .then(() => ref)
-        }).then(ref => {
-            const table: TableComponent<TestUser> = ref.fixture.debugElement.childNodes[0].componentInstance;
-            table.selectedChange = createOutputSpy(ALIAS_SELECTED_CHANGE);
+        })
+            .detectChanges()
+            .tap((mounted) => {
+                const table: TableComponent<TestUser> = mounted.fixture.debugElement.childNodes[0].componentInstance;
+                table.selectedChange = createOutputSpy(ALIAS_SELECTED_CHANGE);
 
-            // Validate intial state
-            Object.entries(SELECTION_MAP).forEach(([id, value]) => {
-                cy.get(`.grid-row.data-row[data-id="${id}"] .selection-checkbox input`)
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    .should('have.attr', 'data-state', `${value}`)
+                // Validate initial state
+                Object.entries(SELECTION_MAP).forEach(([id, value]) => {
+                    cy.get(`.grid-row.data-row[data-id="${id}"] .selection-checkbox input`)
+                        .should('have.attr', 'data-state', `${value}`);
+                });
+                cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox input`)
+                    .should('have.attr', 'data-state', 'false');
+                cy.get(`@${ALIAS_SELECTED_CHANGE}`)
+                    .should('not.have.been.called');
+
+                cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox label`)
+                    .click();
+
+                calledOnceWithReset(ALIAS_SELECTED_CHANGE, NEW_SELECTION_MAP);
+            })
+            .updateInstance((instance) => {
+                instance.selected = NEW_SELECTION_MAP;
+            })
+            .tap(() => {
+                Object.entries(SELECTION_MAP).forEach(([id, value]) => {
+                    cy.get(`.grid-row.data-row[data-id="${id}"] .selection-checkbox input`)
+
+                        .should('have.attr', 'data-state', `${value}`);
+                });
+                cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox input`)
+                    .should('have.attr', 'data-state', 'true');
             });
-            cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox input`)
-                .should('have.attr', 'data-state', 'false');
-            cy.get(`@${ALIAS_SELECTED_CHANGE}`)
-                .should('not.have.been.called');
-
-            cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox label`)
-                .click();
-
-            calledOnceWithReset(ALIAS_SELECTED_CHANGE, NEW_SELECTION_MAP);
-            cy.wrap(null, { log: false }).then(() => {
-                ref.component.selected = NEW_SELECTION_MAP;
-            });
-            detectChangesAndWait(ref);
-
-            Object.entries(SELECTION_MAP).forEach(([id, value]) => {
-                cy.get(`.grid-row.data-row[data-id="${id}"] .selection-checkbox input`)
-                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                    .should('have.attr', 'data-state', `${value}`)
-            });
-            cy.get(`.grid-row.data-row[data-id="${ROWS[OTHER_IDX].id}"] .selection-checkbox input`)
-                .should('have.attr', 'data-state', 'true');
-        });
     });
 });

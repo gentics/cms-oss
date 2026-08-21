@@ -1,10 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { matchesMimeType } from '../../utils/matches-mime-type';
+import { matchesMimeType } from '@gentics/common';
 
 @Pipe({
     name: 'gtxMatchesMimeType',
     pure: true,
-    standalone: false
+    standalone: false,
 })
 export class MatchesMimeTypePipe implements PipeTransform {
 
@@ -21,16 +21,16 @@ export class MatchesMimeTypePipe implements PipeTransform {
             return undefined;
         }
 
-        let array = <{ type: string }[]>value;
+        const array = <{ type: string }[]>value;
         if (secondArg === 'all') {
-            return array.every(val => matchesMimeType(val.type, thirdArg));
+            return array.every((val) => matchesMimeType(val.type, thirdArg));
         } else if (secondArg === 'any') {
-            return array.some(val => matchesMimeType(val.type, thirdArg));
+            return array.some((val) => matchesMimeType(val.type, thirdArg));
         }
         if (thirdArg === 'all') {
-            return array.every(val => matchesMimeType(val.type, secondArg));
+            return array.every((val) => matchesMimeType(val.type, secondArg));
         } else if (thirdArg === 'any') {
-            return array.some(val => matchesMimeType(val.type, secondArg));
+            return array.some((val) => matchesMimeType(val.type, secondArg));
         }
 
         return false;

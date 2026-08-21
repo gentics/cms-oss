@@ -492,13 +492,12 @@ public class InstantPublisher {
 					if (delete && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
 							mp.remove(mp.getProject(finalNode), finalNode, objType, finalObject.getId(),
-									MeshPublisher.getMeshUuid(finalObject), null);
+									MeshPublisher.getMeshUuid(finalForm), null,
+									Map.of("formType", finalForm.getFormType()), true);
 						});
 					} else if (offline && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 						meshOperations.add(mp -> {
-							for (String language : finalForm.getLanguages()) {
-								mp.offline(mp.getProject(finalNode), null, objType, MeshPublisher.getMeshUuid(finalObject), language);
-							}
+							mp.offline(mp.getProject(finalNode), null, finalForm, null);
 						});
 					}
 					if (render) {
@@ -545,7 +544,7 @@ public class InstantPublisher {
 					result.set(new Result(ResultStatus.failed, reason));
 				})) {
 					for (MeshPublisher mp : meshPublishController.get()) {
-						if (mp.checkStatus() && mp.checkSchemasAndProjects(false, false)) {
+						if (mp.checkStatus() && mp.schemasAndProjectsOk()) {
 							for (Consumer<MeshPublisher> consumer : meshOperations) {
 								consumer.accept(mp);
 							}

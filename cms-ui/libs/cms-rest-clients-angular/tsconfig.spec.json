@@ -1,16 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "jasmine",
-            "node"
-        ]
+        "moduleResolution": "bundler",
+        "module": "es2015",
+        "target": "es2015",
+        "types": ["jasmine", "node", "jquery"]
     },
-    "files": [
-        "src/test.ts"
-    ],
-    "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
-    ]
+    "include": ["src/**/*.ts"]
 }

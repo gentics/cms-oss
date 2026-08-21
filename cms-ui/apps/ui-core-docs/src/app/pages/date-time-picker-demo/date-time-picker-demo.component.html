@@ -8,7 +8,7 @@
 
 <gtx-demo-block demoTitle="Date And Time">
     <div class="demo-result">
-        <gtx-date-time-picker [(ngModel)]="timestamp" label="Pick a time"></gtx-date-time-picker>
+        <gtx-date-time-picker [(ngModel)]="timestamp" label="Pick a time" placeholder="Click me to pick"></gtx-date-time-picker>
         timestamp: <code>{{ timestamp }}</code>
     </div>
 
@@ -16,6 +16,7 @@
         <gtx-highlighted-code language="HTML" code='
             <gtx-date-time-picker
                 label="Pick a date"
+                placeholder="Click me to pick"
                 [(ngModel)]="timestamp"
             ></gtx-date-time-picker>
             timestamp: <code>(( timestamp ))</code>
@@ -26,8 +27,9 @@
 <gtx-demo-block demoTitle="Date And Time with Clear Option">
     <div class="demo-result">
         <gtx-date-time-picker
-            clearable
+            [clearable]
             label="Pick a time"
+            placeholder="Click me to pick"
             [(ngModel)]="timestamp"
         ></gtx-date-time-picker>
         timestamp: <code>{{ timestamp | json }}</code>
@@ -36,8 +38,9 @@
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
                 <gtx-date-time-picker
-                    clearable
+                    [clearable]
                     label="Pick a date"
+                    placeholder="Click me to pick"
                     [(ngModel)]="timestamp"
                 ></gtx-date-time-picker>
                 timestamp: <code>(( timestamp | json ))</code>
@@ -49,7 +52,8 @@
     <div class="demo-result">
         <gtx-date-time-picker
             label="Pick a date"
-            displayTime="false"
+            placeholder="Click me to pick"
+            [displayTime]="false"
             [(ngModel)]="timestamp"
         ></gtx-date-time-picker>
         timestamp: <code>{{ timestamp }}</code>
@@ -58,7 +62,8 @@
         <gtx-highlighted-code language="HTML" code='
                 <gtx-date-time-picker
                     label="Pick a date"
-                    displayTime="false"
+                    placeholder="Click me to pick"
+                    [displayTime]="false"
                     [(ngModel)]="timestamp"
                 ></gtx-date-time-picker>
                 timestamp: <code>(( timestamp ))</code>
@@ -70,8 +75,9 @@
     <div class="demo-result">
         <gtx-date-time-picker
             label="Pick a date"
-            displayTime="false"
-            selectYear="true"
+            placeholder="Click me to pick"
+            [displayTime]="false"
+            [selectYear]="true"
             [(ngModel)]="timestamp"
         ></gtx-date-time-picker>
         timestamp: <code>{{ timestamp }}</code>
@@ -81,8 +87,9 @@
         <gtx-highlighted-code language="HTML" code='
             <gtx-date-time-picker
                 label="Pick a date"
-                displayTime="false"
-                selectYear="true"
+                placeholder="Click me to pick"
+                [displayTime]="false"
+                [selectYear]="true"
                 [(ngModel)]="timestamp"
             ></gtx-date-time-picker>
         '></gtx-highlighted-code>

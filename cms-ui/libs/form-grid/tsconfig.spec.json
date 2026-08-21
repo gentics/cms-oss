@@ -1,0 +1,38 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
+        "types": [
+            "vitest/globals",
+            "jquery"
+        ],
+        "strict": false,
+        "noImplicitOverride": false,
+        "noPropertyAccessFromIndexSignature": false,
+        "noImplicitReturns": false,
+        "noFallthroughCasesInSwitch": true,
+        "emitDecoratorMetadata": false,
+        "ignoreDeprecations": "6.0"
+    },
+    "angularCompilerOptions": {
+        "enableI18nLegacyMessageIdFormat": false,
+        "strictInjectionParameters": false,
+        "strictInputAccessModifiers": false,
+        "strictTemplates": false
+    },
+    "include": [
+        "src/**/*.ts",
+        "vite.config.ts",
+        "vite.config.mts",
+        "vitest.config.ts",
+        "vitest.config.mts",
+        "src/**/*.test.ts",
+        "src/**/*.d.ts"
+    ],
+    "exclude": [
+        "cypress.config.ci.ts",
+        "cypress.config.ts",
+        "cypress/**/*",
+        "src/**/*.cy.ts"
+    ]
+}

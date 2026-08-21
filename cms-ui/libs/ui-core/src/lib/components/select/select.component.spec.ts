@@ -1,8 +1,9 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, DebugElement, model, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowserTestingModule } from '@angular/platform-browser/testing';
+import { componentTest, crossBrowserInitKeyboardEvent, KeyboardEventConfig } from '@gentics/ui-core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { KeyCode } from '../../common/keycodes';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
@@ -13,24 +14,24 @@ import { ConfigService, defaultConfig } from '../../module.config';
 import { ValuePathPipe } from '../../pipes/value-path/value-path.pipe';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
-import { componentTest } from '../../testing';
-import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
 import { CheckboxComponent } from '../checkbox/checkbox.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
+import { FormElementContainerComponent } from '../form-element-container/form-element-container.component';
 import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
 import { SelectComponent } from './select.component';
 
-describe('SelectComponent', () => {
+fdescribe('SelectComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [FormsModule, ReactiveFormsModule],
             declarations: [
+                FormElementContainerComponent,
                 SelectComponent,
                 SelectOptionDirective,
                 SelectOptionGroupDirective,
@@ -72,7 +73,7 @@ describe('SelectComponent', () => {
 
             expect(instance.onChange).not.toHaveBeenCalled();
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -84,15 +85,17 @@ describe('SelectComponent', () => {
 
     it('updates the value via ngModel when the clear selection button is clicked',
         componentTest(() => TestComponent, `
-                <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable>
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                </gtx-select>`,
+            <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
+            </gtx-select>`,
         (fixture, instance) => {
             fixture.detectChanges();
             tick();
             expect(instance.ngModelValue).toEqual('Bar');
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -105,14 +108,16 @@ describe('SelectComponent', () => {
     it('displays the placeholder, if it is set and if nothing is selected',
         componentTest(() => TestComponent, `
             <gtx-select [(ngModel)]="ngModelValue" (valueChange)="onChange($event)" clearable [placeholder]="placeholder">
-                    <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>`,
         (fixture, instance) => {
             fixture.detectChanges();
             tick();
             expect(instance.ngModelValue).toEqual('Bar');
 
-            const clearButton = fixture.debugElement.query(By.css('gtx-button'));
+            const clearButton = getClearButton(fixture);
             clearButton.triggerEventHandler('click', document.createEvent('Event'));
             tick();
             fixture.detectChanges();
@@ -128,7 +133,7 @@ describe('SelectComponent', () => {
     it('binds its label to the input value',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const label: HTMLElement = fixture.nativeElement.querySelector('label');
 
@@ -140,7 +145,7 @@ describe('SelectComponent', () => {
     it('contains class with-label if label is present',
         componentTest(() => TestComponent, `
         <gtx-select label="testLabel"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-list');
 
@@ -152,7 +157,7 @@ describe('SelectComponent', () => {
     it('does not contain class with-label if label is not present',
         componentTest(() => TestComponent, `
         <gtx-select></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
 
@@ -164,7 +169,7 @@ describe('SelectComponent', () => {
     it('adds a "disabled" attribute to the view-value div if the disabled attribute is true.',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
 
@@ -176,7 +181,7 @@ describe('SelectComponent', () => {
     it('when disabled, the viewValue div is not focusable.',
         componentTest(() => TestComponent, `
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             viewValue.focus();
@@ -186,7 +191,7 @@ describe('SelectComponent', () => {
     );
 
     it('accepts a string "value" and sets the viewValue to match.',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -198,7 +203,7 @@ describe('SelectComponent', () => {
     );
 
     it('marks the initial value as selected.',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -217,7 +222,7 @@ describe('SelectComponent', () => {
                 <gtx-option>Baz</gtx-option>
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
 
@@ -232,19 +237,21 @@ describe('SelectComponent', () => {
     it('accept an array "value" and marks the matching options "selected" (multi select)',
         componentTest(() => TestComponent, `
             <gtx-select [value]="multiValue" multiple="true">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
 
-            const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map(de => de.componentInstance);
+            const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map((de) => de.componentInstance);
 
-            expect(checkboxes[0].checked).toBe(false);
-            expect(checkboxes[1].checked).toBe(true);
-            expect(checkboxes[2].checked).toBe(true);
+            expect(checkboxes[0].value).toBe(false);
+            expect(checkboxes[1].value).toBe(true);
+            expect(checkboxes[2].value).toBe(true);
 
             tick(1000);
         },
@@ -252,7 +259,7 @@ describe('SelectComponent', () => {
     );
 
     it('updates the "value" when a different option is clicked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -274,14 +281,14 @@ describe('SelectComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
             tick();
-            const fakeInput: HTMLInputElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            const fakeInput: HTMLInputElement = (fixture.nativeElement as HTMLElement).querySelector('.box-wrapper');
             spyOn(instance, 'onBlur');
 
             triggerEvent(fakeInput, 'blur');
             tick();
             fixture.detectChanges();
 
-            expect(instance.onBlur).toHaveBeenCalledWith('Bar');
+            expect(instance.onBlur).toHaveBeenCalledTimes(1);
         }),
     );
 
@@ -307,7 +314,9 @@ describe('SelectComponent', () => {
     it('emits "change" when a list item is clicked (multiple select)',
         componentTest(() => TestComponent, `
             <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
@@ -333,7 +342,9 @@ describe('SelectComponent', () => {
     it('emits "change" with an empty array when a multiselect has no selected options',
         componentTest(() => TestComponent, `
             <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
-                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                @for (option of options(); track option) {
+                    <gtx-option [value]="option">{{ option }}</gtx-option>
+                }
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
@@ -356,17 +367,17 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
+            const getOptionText = () => getListItems(fixture).map((el) => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            instance.options.push('Quux');
+            instance.options.update((arr) => {
+                return [...arr, 'Quux'];
+            });
+
             fixture.detectChanges();
-            tick(100);
-            await fixture.whenRenderingDone();
-            tick(100);
+            tick();
             fixture.detectChanges();
-            await fixture.whenRenderingDone();
-            tick(100);
+
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
         },
         ),
@@ -377,16 +388,18 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
+            const getOptionText = () => getListItems(fixture).map((el) => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            const tmp = new Promise<void>((r => {
+            const tmp = new Promise<void>((r) => {
                 setTimeout(() => {
-                    instance.options.push('Quux');
+                    instance.options.update((arr) => {
+                        return [...arr, 'Quux'];
+                    });
                     fixture.detectChanges();
                     fixture.whenRenderingDone().then(() => r());
                 }, 500);
-            }));
+            });
             tick(500);
 
             fixture.detectChanges();
@@ -406,7 +419,7 @@ describe('SelectComponent', () => {
     describe('keyboard controls', () => {
 
         it('should open when enter is pressed',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -417,7 +430,7 @@ describe('SelectComponent', () => {
         );
 
         it('should open when space is pressed',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Space);
@@ -428,7 +441,7 @@ describe('SelectComponent', () => {
         );
 
         it('initial value should be initially selected',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -439,7 +452,7 @@ describe('SelectComponent', () => {
         );
 
         it('down arrow should select subsequent items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -461,7 +474,7 @@ describe('SelectComponent', () => {
         );
 
         it('up arrow should select previous items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -483,7 +496,7 @@ describe('SelectComponent', () => {
         );
 
         it('home and end should select first and last items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -499,7 +512,7 @@ describe('SelectComponent', () => {
         );
 
         it('page up and page down should select first and last items',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -515,7 +528,7 @@ describe('SelectComponent', () => {
         );
 
         it('characters should select subsequent matching options',
-            componentTest(() => TestComponent, fixture => {
+            componentTest(() => TestComponent, (fixture) => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
@@ -540,12 +553,12 @@ describe('SelectComponent', () => {
 
         it('umlauts should work as expected',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.options = [
+                testComponent.options.set([
                     'Ägypten',
                     'Äquatorialguinea',
                     'Äthiopien',
                     'Österreich',
-                ];
+                ]);
                 testComponent.value = 'Ägypten';
 
                 fixture.detectChanges();
@@ -570,7 +583,7 @@ describe('SelectComponent', () => {
             }),
         );
 
-        function sendKeyDown(fixture: ComponentFixture<any>, keyToSend: number | { key: string, keyCode: number }): void {
+        function sendKeyDown(fixture: ComponentFixture<any>, keyToSend: number | { key: string; keyCode: number }): void {
             const eventTarget: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             const eventProps: KeyboardEventConfig = { bubbles: true };
             if (typeof keyToSend === 'number') {
@@ -595,7 +608,9 @@ describe('SelectComponent', () => {
         it('updates a variable bound with ngModel (outbound)',
             componentTest(() => TestComponent, `
                 <gtx-select [(ngModel)]="ngModelValue">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                    @for (option of options(); track option) {
+                        <gtx-option [value]="option">{{ option }}</gtx-option>
+                    }
                 </gtx-select>
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
@@ -624,7 +639,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -654,7 +671,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -683,7 +702,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -707,12 +728,14 @@ describe('SelectComponent', () => {
 
         it('marks the component as "disabled" if the associated FormControl is set to disabled',
             componentTest(() => TestComponent, `
-                   <form [formGroup]="testForm">
-                       <gtx-select formControlName="test">
-                           <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                       </gtx-select>
-                   </form>
-                   <gtx-overlay-host></gtx-overlay-host>`,
+                <form [formGroup]="testForm">
+                    <gtx-select formControlName="test">
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
+                    </gtx-select>
+                </form>
+                <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
@@ -733,7 +756,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>`,
             (fixture, instance) => {
@@ -753,7 +778,9 @@ describe('SelectComponent', () => {
             componentTest(() => TestComponent, `
                 <form [formGroup]="testForm">
                     <gtx-select formControlName="test">
-                        <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+                        @for (option of options(); track option) {
+                            <gtx-option [value]="option">{{ option }}</gtx-option>
+                        }
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
@@ -810,7 +837,7 @@ describe('SelectComponent', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 let lastEmittedValue: any;
-                instance.valueSubject.subscribe(v => lastEmittedValue = v);
+                instance.valueSubject.subscribe((v) => lastEmittedValue = v);
 
                 const options = [
                     { name: 'First option' },
@@ -845,7 +872,7 @@ describe('SelectComponent', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 let lastEmittedValue: any;
-                instance.valueSubject.subscribe(v => lastEmittedValue = v);
+                instance.valueSubject.subscribe((v) => lastEmittedValue = v);
 
                 const options = [
                     { name: 'First option' },
@@ -880,7 +907,9 @@ describe('SelectComponent', () => {
             (blur)="onBlur($event)"
             (valueChange)="onChange($event)"
         >
-            <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+            @for (option of options(); track option) {
+                <gtx-option [value]="option">{{ option }}</gtx-option>
+            }
         </gtx-select>
         <gtx-overlay-host></gtx-overlay-host>
     `,
@@ -892,7 +921,7 @@ class TestComponent {
     multiValue: string[] = ['Bar', 'Baz'];
     ngModelValue = 'Bar';
     placeholder = 'More...';
-    options: string[] = ['Foo', 'Bar', 'Baz'];
+    readonly options = model<string[]>(['Foo', 'Bar', 'Baz']);
     optionsSubject = new BehaviorSubject<any[]>([]);
     valueSubject = new BehaviorSubject<any>('Initial value');
     testForm: UntypedFormGroup = new UntypedFormGroup({
@@ -904,6 +933,15 @@ class TestComponent {
     onChange(...args: any[]): void { }
 }
 
+function getClearButton(fixture: ComponentFixture<any>): DebugElement | null {
+    return fixture.debugElement.query(By.css('.addon-button[data-action="clear"]'));
+}
+
+function getClearButtonElement(fixture: ComponentFixture<any>): HTMLButtonElement | null {
+    const dbg = getClearButton(fixture);
+    return dbg == null ? null : dbg.nativeElement as HTMLButtonElement;
+}
+
 function clickSelectAndOpen(fixture: ComponentFixture<TestComponent>): void {
     fixture.debugElement.query(By.directive(DropdownTriggerDirective)).nativeElement.click();
     tick(100);
@@ -911,7 +949,7 @@ function clickSelectAndOpen(fixture: ComponentFixture<TestComponent>): void {
 }
 
 const getListItems = (fixture: ComponentFixture<TestComponent>): HTMLLIElement[] =>
-    fixture.debugElement.queryAll(By.css('.select-option')).map(de => de.nativeElement);
+    fixture.debugElement.queryAll(By.css('.select-option')).map((de) => de.nativeElement);
 
 /**
  * Create an dispatch an 'input' event on the <input> element

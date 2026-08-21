@@ -5,7 +5,7 @@ import { PagingSortOption, PagingSortOrder, ResponseCode, User } from '@gentics/
 import { BehaviorSubject, NEVER, Observable } from 'rxjs';
 import { ApiError } from '../error/api-error';
 import { FileUploaderFactory } from '../util/file-uploader/file-uploader.factory';
-import { API_BASE_URL, expectOneRequest, respondTo } from '../util/http-test-utils/http-test-utils';
+import { API_BASE_URL, expectOneRequest, respondTo } from '../testing/http-test-utils/http-test-utils';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 import { ApiBase, CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE, HttpRequestOptions } from './api-base.service';
 

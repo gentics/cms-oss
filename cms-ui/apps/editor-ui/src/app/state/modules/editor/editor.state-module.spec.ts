@@ -176,7 +176,9 @@ describe('EditorStateModule', () => {
 
             appState.mockState({
                 auth: {
-                    currentUserId: USERID,
+                    user: {
+                        id: USERID,
+                    } as any,
                 },
                 entities: {
                     folder: {

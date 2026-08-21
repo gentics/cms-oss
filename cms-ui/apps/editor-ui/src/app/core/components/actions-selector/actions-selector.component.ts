@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
-import { KeycloakService, SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components';
+import { I18nService } from '@gentics/cms-components';
+import { SKIP_KEYCLOAK_PARAMETER_NAME } from '@gentics/cms-components/auth';
 import { AccessControlledType, EmbeddedTool, GcmsPermission } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import { Observable, Subscription, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -51,7 +51,6 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
         protected stagingActions: ContentStagingActionsService,
         protected toolsService: EmbeddedToolsService,
         protected i18n: I18nService,
-        protected keycloak: KeycloakService,
     ) { }
 
     ngOnInit(): void {
@@ -139,7 +138,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
 
         const userCanSeePublishQueue$ = this.permissions.viewPublishQueue$;
 
-        const isAdmin$ = this.appState.select((state) => state.auth.isAdmin);
+        const isAdmin$ = this.appState.select((state) => state.ui.isAdmin);
         const productTools = this.appState.select((state) => state.tools.available).pipe(
             map((tools) => tools.filter((tool) => PRODUCT_TOOL_KEYS.includes(tool.key))),
             startWith([]),
@@ -191,7 +190,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
                     id: ADMIN_TOOL_KEY,
                     type: ActionButtonType.TOOL,
                     i18nLabel: 'editor.administration_tool_label',
-                    toolLink: ADMIN_UI_LINK + (this.keycloak.ssoSkipped() ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''),
+                    toolLink: ADMIN_UI_LINK + (this.appState.now.auth.ssoSkipped ? '?' + SKIP_KEYCLOAK_PARAMETER_NAME : ''),
                     newTab: true,
                     iconType: ActionButtonIconType.FONT,
                     icon: 'tune',
@@ -211,6 +210,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             buttons.sort((a, b) => a.label.localeCompare(b.label));
 
             return {
+                id: 'products',
                 i18nLabel: 'editor.product_tools_label',
                 buttons: [buttons],
             };
@@ -236,6 +236,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
                 buttons.sort((a, b) => a.label.localeCompare(b.label));
 
                 return {
+                    id: 'custom-tools',
                     i18nLabel: 'editor.custom_tools_label',
                     buttons: [buttons],
                 };

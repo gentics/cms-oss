@@ -58,15 +58,15 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 
 			// tag part (direct)
 			new Object[] { "cms.page.tags.urls_construct1.parts.page.internal", "true", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.url", "/node/pub/dir/test/Test-Page.de.html", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.target.name", "Test Page", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.url", "/node/pub/dir/test/Target-Page.de.html", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.target.name", "Target Page", null },
 			new Object[] { "cms.page.tags.urls_construct1.parts.page.node.host", "test.node.hostname", null },
 			new Object[] { "cms.page.tags.urls_construct1.parts.extpage.internal", "false", null },
 
 			// tag part (indirect)
 			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').internal", "true", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').url", "/node/pub/dir/test/Test-Page.de.html", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').target.name", "Test Page", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').url", "/node/pub/dir/test/Target-Page.de.html", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').target.name", "Target Page", null },
 			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').node.host", "test.node.hostname", null },
 			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('extpage').internal", "false", null },
 

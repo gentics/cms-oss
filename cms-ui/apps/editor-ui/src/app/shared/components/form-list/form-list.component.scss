@@ -1,0 +1,60 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+$item-list-min-height: 63px;
+
+.paginate-wrapper {
+    display: flex;
+    position: relative;
+
+    paging-controls {
+        display: block;
+        flex: 1 1;
+    }
+}
+
+.content-list {
+    @include item-type-icon-colors;
+    position: relative;
+
+    margin-bottom: 20px;
+
+    &.empty {
+        color: $gtx-color-mid-gray;
+        > .list-header {
+            border-bottom: none;
+        }
+    }
+
+    > .list-header {
+        padding: 10px;
+        border-bottom: 1px dotted $gcms-color-highlight;
+        display: flex;
+
+    }
+
+    .list-body {
+        // commented out because causes strange layout issues on mobile (pages list)
+        //overflow: hidden;
+
+        &.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .load-more gtx-button {
+            margin: auto;
+        }
+    }
+
+    paging-controls {
+        &.hidden {
+            display: none;
+        }
+    }
+}
+
+.sort-mode i {
+    font-size: $gtx-font-size-small;
+}

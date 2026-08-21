@@ -1,13 +1,14 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nNotificationService, TranslatedNotificationOptions } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Subject, Subscription, throwError } from 'rxjs';
 import { take } from 'rxjs/operators';
+import { MockApiBase } from '../../../../testing';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiBase, ApiError, GcmsApi } from '../api';
-import { MockApiBase } from '../api/api-base.mock';
 import { Api } from '../api/api.service';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { MaintenanceModeService } from './maintenance-mode.service';
@@ -25,7 +26,10 @@ describe('MaintenanceModeService', () => {
         const api = new Api(new GcmsApi(apiBase as ApiBase));
 
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: Api, useValue: api },
                 { provide: ApplicationStateService, useClass: TestApplicationState },

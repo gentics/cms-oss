@@ -1,0 +1,2 @@
+Editor User Interface: The modal to create a new form will now show the language specific fields
+when the node has only a single content language.

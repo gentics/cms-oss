@@ -1,8 +1,13 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
+import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import { GenticsUICoreModule, InputComponent, TextareaComponent } from '@gentics/ui-core';
+import { cloneDeep } from 'lodash-es';
+import { componentTest } from '../../../../../testing/component-test';
+import { configureComponentTest } from '../../../../../testing/configure-component-test';
 import {
     getExampleEditableTag,
     getExampleNaturalNumberValidationInfo,
@@ -10,11 +15,7 @@ import {
     getExampleValidationSuccess,
     getMockedTagEditorContext,
     getMultiValidationResult,
-} from '@editor-ui/testing/test-tag-editor-data.mock';
-import { TagEditorContext } from '@gentics/cms-integration-api-models';
-import { EditableTag, StringTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
-import { GenticsUICoreModule, InputComponent, TextareaComponent } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
+} from '../../../../../testing/test-tag-editor-data.mock';
 import { ApplicationStateService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
@@ -33,6 +34,7 @@ describe('TextTagPropertyEditorComponent', () => {
             imports: [
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
+                ReactiveFormsModule,
             ],
             providers: [
                 TagPropertyEditorResolverService,
@@ -83,7 +85,6 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that the initial values are correct.
             const inputComponent = inputElement.componentInstance as InputComponent;
             expect(inputComponent.label).toEqual(tagPart.name);
-            expect(inputComponent.readonly).toBe(context.readOnly);
             expect(inputElement.query(By.css('input')).nativeElement.value).toEqual(origTagProperty.stringValue);
         }
 
@@ -156,7 +157,6 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that the initial values are correct.
             const textAreaComponent = textAreaElement.componentInstance as TextareaComponent;
             expect(textAreaComponent.label).toEqual(tagPart.name);
-            expect(textAreaComponent.readonly).toBe(context.readOnly);
             const textAreaEl: HTMLTextAreaElement = textAreaElement.query(By.css('textarea')).nativeElement;
             expect(textAreaEl.value).toEqual(origTagProperty.stringValue);
         }

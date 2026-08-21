@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import {
     GcmsUiServices,
+    ImageEditorOptions,
     ModalClosingReason,
     RepositoryBrowserOptions,
     TagEditorContext,
@@ -23,11 +25,8 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ApiBase } from '@gentics/cms-rest-clients-angular';
 import { IModalInstance, ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
-import { stripLeadingSlash } from '../../../common/utils/strip';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
@@ -80,7 +79,6 @@ export class TagEditorService {
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: I18nService,
         private modals: ModalService,
-        private apiBase: ApiBase,
         private client: GCMSRestClientService,
     ) {}
 
@@ -88,7 +86,6 @@ export class TagEditorService {
      * Opens a tag editor for the specified tag.
      * Based on the configuration of the TagType, either the GenticsTagEditor or
      * a custom tag editor is used.
-     *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param tagType The tagtype of the tag
      * @param page The page in which the tag is being edited.
@@ -165,7 +162,6 @@ export class TagEditorService {
      * This method is used by `openTagEditor()` and needs to be called manually
      * only if the aforementioned method is not used to open the TagEditor,
      * e.g., if the TagEditor needs to be opened for editing an object property.
-     *
      * @param editTagInfo The information needed to create the TagEditorContext.
      */
     createTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
@@ -176,9 +172,12 @@ export class TagEditorService {
 
         const gcmsUiServices: GcmsUiServices = {
             openRepositoryBrowser: (options: RepositoryBrowserOptions) =>
-                this.repositoryBrowserClient.openRepositoryBrowser(options),
-            openImageEditor: (options: { nodeId: number, imageId: number }) =>
-                this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId }),
+                this.repositoryBrowserClient.openRepositoryBrowser(options as any) as any,
+            openTagEditor: (tag, tagType, page, options) => {
+                return this.openTagEditor(tag, tagType, page, options);
+            },
+            openImageEditor: (options: ImageEditorOptions) =>
+                this.editorOverlayService.editImage(options),
             openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
                 return this.modals.fromComponent(
                     UploadWithPropertiesModalComponent,
@@ -188,15 +187,9 @@ export class TagEditorService {
                         allowFolderSelection: allowFolderSelection ?? true,
                         destinationFolder,
                     },
-                ).then(dialog => dialog.open());
+                ).then((dialog) => dialog.open());
             },
             restClient: this.client.getClient(),
-            restRequestGET: (endpoint: string, params: any): Promise<object> =>
-                this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise(),
-            restRequestPOST: (endpoint: string, data: object, params?: object): Promise<object> =>
-                this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise(),
-            restRequestDELETE: (endpoint: string, params?: object): Promise<void | object> =>
-                this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise(),
         };
 
         let tagOwner = editTagInfo.tagOwner;
@@ -206,7 +199,7 @@ export class TagEditorService {
         const rawTagOwner = this.entityResolver.denormalizeEntity(tagOwner.type, tagOwner);
         const rawNode = this.entityResolver.denormalizeEntity('node', editTagInfo.node);
 
-        const variableContext$: Observable<VariableTagEditorContext> = this.appState.select(state => ({
+        const variableContext$: Observable<VariableTagEditorContext> = this.appState.select((state) => ({
             uiLanguage: state.ui.language,
         }));
         const sid = this.appState.now.auth.sid;

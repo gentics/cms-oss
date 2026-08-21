@@ -36,6 +36,7 @@ import {
     CONSTRUCT_CATEGORY_TESTS,
     ConstructCategoryImportData,
     CORE_CONSTRUCTS,
+    CORE_OBJECT_PROPERTIES,
     EntityMap,
     FileImportData,
     FixtureFile,
@@ -112,15 +113,13 @@ export class EntityImporter {
     public entityMap: EntityMap = {};
     /**
      * Map of id -> BufferedFixtureFile, which to import.
-     * Use the {@link setupBinaryFiles} function to populate this map.
+     * Use the {@link EntityImporter.setupBinaryFiles} function to populate this map.
      */
     private binaryMap: BinaryMap = {};
     /** The ID of the dummy-node, if present/checked. */
     public dummyNode: number | null = null;
     /** Mapping of language-code to language-id. */
     public languages: Record<string, number> = {};
-    /** Mapping of template global-id to template instance. */
-    public templates: Record<string, Template> = {};
     /** Mapping of schedule-task command to task instance. Only contains internal commands. */
     public tasks: Record<string, ScheduleTask> = {};
     /** The top most group that can be accessed from the admin account. */
@@ -178,7 +177,6 @@ export class EntityImporter {
 
         await this.syncTestPackages(size);
 
-        this.templates = await this.getTemplateMapping();
         this.languages = await this.getLanguageMapping();
         this.dummyNode = await this.setupDummyNode();
         // Make sure root groups are present
@@ -211,6 +209,8 @@ export class EntityImporter {
      */
     public async setupTest(size: TestSize): Promise<EntityMap> {
         await this.setupClient();
+
+        await this.syncTestPackages(size);
 
         const map = await this.setupContent(size);
 
@@ -280,23 +280,53 @@ export class EntityImporter {
         await this.cleanupEntities();
 
         // Reset the entity-map
-        this.entityMap = {
-            ...this.templates,
-        };
+        this.entityMap = {};
 
         const nodes = (await this.client.node.list().send()).items || [];
+        let deleteQueue = nodes.slice();
+        let oldDeleteLen = -1;
 
-        for (const node of nodes) {
-            if (node.name === emptyNode.node.name) {
-                // Skip the node if it's a simple cleanup
-                if (!completeClean) {
-                    continue;
+        while (oldDeleteLen !== deleteQueue.length) {
+            if (deleteQueue.length === 0) {
+                break;
+            }
+
+            oldDeleteLen = deleteQueue.length;
+            const backlog: Node[] = [];
+
+            for (const node of deleteQueue) {
+                if (node.name === emptyNode.node.name) {
+                    // Skip the node if it's a simple cleanup
+                    if (!completeClean) {
+                        continue;
+                    }
+                }
+
+                await this.clearEmptyNodeForDeletion(node);
+                try {
+                    await this.client.node.delete(node.id).send();
+                } catch (err) {
+                    if (err instanceof GCMSRestClientRequestError) {
+                        // If we try to delete a master node, which still has channels,
+                        // then we get an error. Therefore queue it up again and try later.
+                        if (err.responseCode === 409) {
+                            backlog.push(node);
+                        }
+                    }
                 }
             }
 
-            await this.clearEmptyNodeForDeletion(node);
-            await this.client.node.delete(node.id).send();
+            deleteQueue = backlog;
         }
+
+        if (deleteQueue.length > 0) {
+            throw new Error(`Could not clean up all nodes: ${deleteQueue.map((node) => node.id).join(', ')}`);
+        }
+
+        // Templates have to be cleaned up after all nodes have been deleted,
+        // as are usually referenced in pages from the node before, and we would
+        // not be able to delete them (as they are still in use).
+        await this.cleanupTemplates();
     }
 
     /** Apply global features to the CMS */
@@ -418,7 +448,7 @@ export class EntityImporter {
             if (this.options?.logImports) {
                 console.log(`Importing binary fixture ${fixture.fixturePath}`);
             }
-            return readFile(fixture.fixturePath).then(buffer => {
+            return readFile(fixture.fixturePath).then((buffer) => {
                 this.binaryMap[key] = {
                     ...fixture,
                     buffer,
@@ -440,9 +470,17 @@ export class EntityImporter {
         if (!this.entityMap) {
             return;
         }
+
+        // Load all synced elements (we care about) and populate the entityMap
+
         const constructs = (await this.client.construct.list().send()).items;
         for (const con of constructs) {
             this.entityMap[con.globalId] = con;
+        }
+
+        const templates = (await this.client.template.list({ reduce: true }).send()).items || [];
+        for (const tpl of templates) {
+            this.entityMap[tpl.globalId] = tpl;
         }
     }
 
@@ -759,6 +797,7 @@ export class EntityImporter {
         };
 
         const created = (await this.client.form.create(body).send()).item;
+        await this.client.form.unlock(created.id).send();
         return created;
     }
 
@@ -934,17 +973,6 @@ export class EntityImporter {
         return mapping;
     }
 
-    private async getTemplateMapping(): Promise<Record<string, Template>> {
-        const templates = (await this.client.template.list({ reduce: true }).send()).templates || [];
-        const mapping: Record<string, Template> = {};
-
-        for (const tpl of templates) {
-            mapping[tpl.globalId] = tpl;
-        }
-
-        return mapping;
-    }
-
     private async importEntity(
         pkgName: TestSize,
         type: string,
@@ -1030,9 +1058,21 @@ export class EntityImporter {
         await this.cleanupSchedules();
         await this.cleanupContentRepositories();
         await this.cleanupConstructCategories();
+        await this.cleanupObjectProperties();
         await this.cleanupPackages();
         await this.cleanupUsers();
         await this.cleanupGroups();
+    }
+
+    private async cleanupObjectProperties(): Promise<void> {
+        const objectProperties = (await this.client.objectProperty.list().send()).items || [];
+        for (const op of objectProperties) {
+            if (CORE_OBJECT_PROPERTIES.includes(op.globalId)) {
+                continue;
+            }
+
+            await this.client.objectProperty.delete(op.id).send();
+        }
     }
 
     private async cleanupScheduleTasks(): Promise<void> {
@@ -1129,6 +1169,21 @@ export class EntityImporter {
                 await this.client.group.delete(group.id).send();
             } catch (err) {
                 // Ignore deletion notices of groups which have already been deleted
+                if (err instanceof GCMSRestClientRequestError && err.responseCode === 404) {
+                    continue;
+                }
+                throw err;
+            }
+        }
+    }
+
+    private async cleanupTemplates(): Promise<void> {
+        const templates = (await this.client.template.list().send()).items || [];
+        for (const tpl of templates) {
+            try {
+                await this.client.template.delete(tpl.id).send();
+            } catch (err) {
+                // Ignore deletion notices of templates which have already been deleted
                 if (err instanceof GCMSRestClientRequestError && err.responseCode === 404) {
                     continue;
                 }

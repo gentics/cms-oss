@@ -1,22 +1,18 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "declaration": true,
         "declarationMap": true,
         "inlineSources": true,
-        "types": [],
-        "moduleResolution": "bundler"
+        "types": ["jasmine"]
     },
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "testing/src/**/*.ts", " cypress/src/**/*.ts"],
     "exclude": [
-        "src/test.ts",
-        "src/**/*.spec.ts",
-        "src/lib/testing",
-        "cypress/**/*",
+        "cypress/fixtures/**/*",
+        "cypress/support/**/*",
         "cypress.config.ts",
-        "**/*.cy.ts",
-        "**/*.cy.js",
-        "**/*.cy.tsx",
-        "**/*.cy.jsx"
+        "**/*.spec.ts",
+        "**/*.cy.ts"
     ]
 }

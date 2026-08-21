@@ -6,17 +6,15 @@
         "isolatedModules": true,
         "emitDecoratorMetadata": false,
         "module": "preserve",
-        "types": ["node", "jquery"]
+        "types": ["node", "jquery"],
+        "ignoreDeprecations": "6.0"
     },
     "files": [],
     "include": [],
     "angularCompilerOptions": {
         "annotateForClosureCompiler": true,
-        "skipTemplateCodegen": false,
-        "strictMetadataEmit": true,
         "strictTemplates": false,
-        "strictInjectionParameters": true,
-        "enableResourceInlining": false
+        "strictInjectionParameters": true
     },
     "references": [
         {
@@ -24,6 +22,9 @@
         },
         {
             "path": "./tsconfig.spec.json"
+        },
+        {
+            "path": "./tsconfig.e2e.json"
         },
         {
             "path": "./cypress/tsconfig.json"

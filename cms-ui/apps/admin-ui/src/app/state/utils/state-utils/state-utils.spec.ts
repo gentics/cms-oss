@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Action, ActionDef, NgxsModule, StateContext, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
-import { AuthStateModel, INITIAL_AUTH_STATE } from '../../auth/auth.state';
 import {
     ActionDeclaration,
     ActionDefinition,
@@ -18,21 +17,21 @@ interface TestStateModel {
 }
 
 class TestAction {
-    static readonly type = '[auth] TestAction';
+    static readonly type = '[test] TestAction';
     constructor(public userId: number) { }
 }
 
-@ActionDeclaration('auth')
+@ActionDeclaration('test' as any)
 class DecoratedTestAction1 {
     constructor(public sid: number) { }
 }
 
-@ActionDeclaration('auth')
+@ActionDeclaration('test' as any)
 class DecoratedTestAction2 {
     constructor(public lastError: string) { }
 }
 
-@ActionDeclaration('auth')
+@ActionDeclaration('test' as any)
 class DecoratedTestActionWithCustomType {
     static readonly type = 'my custom type';
 }
@@ -43,41 +42,46 @@ class NoAction {
 
 function isObservable<T>(value: any): value is Observable<T> {
     return value != null
-        && typeof value === 'object'
-        && typeof value.subscribe === 'function';
+      && typeof value === 'object'
+      && typeof value.subscribe === 'function';
 }
 
-let authStateModuleInstance: TestAuthStateModule;
+let testModule: TestStateModule;
 
-@AppStateBranch<AuthStateModel>({
-    name: 'auth',
-    defaults: INITIAL_AUTH_STATE,
+const TEST_STATE_DEFAULTS: TestStateModel = {
+    aNumber: 123,
+    aString: 'foobar',
+} as const;
+
+@AppStateBranch<TestStateModel>({
+    name: 'test' as any,
+    defaults: TEST_STATE_DEFAULTS,
 })
 @Injectable()
-class TestAuthStateModule {
+class TestStateModule {
 
     constructor() {
-        authStateModuleInstance = this;
+        testModule = this;
     }
 
     @Action(TestAction)
-    runTestAction(ctx: StateContext<AuthStateModel>, action: TestAction): void {
+    runTestAction(ctx: StateContext<TestStateModel>, action: TestAction): void {
         ctx.patchState({
-            currentUserId: action.userId,
+            aNumber: action.userId,
         });
     }
 
     @ActionDefinition(DecoratedTestAction1)
-    runDecoratedTestAction1(ctx: StateContext<AuthStateModel>, action: DecoratedTestAction1): void {
+    runDecoratedTestAction1(ctx: StateContext<TestStateModel>, action: DecoratedTestAction1): void {
         ctx.patchState({
-            sid: action.sid,
+            aNumber: action.sid,
         });
     }
 
     @ActionDefinition(DecoratedTestAction2)
-    runDecoratedTestAction2(ctx: StateContext<AuthStateModel>, action: DecoratedTestAction2): void {
+    runDecoratedTestAction2(ctx: StateContext<TestStateModel>, action: DecoratedTestAction2): void {
         ctx.patchState({
-            lastError: action.lastError,
+            aString: action.lastError,
         });
     }
 
@@ -86,8 +90,8 @@ class TestAuthStateModule {
 @Injectable()
 class TestService {
 
-    @SelectState(state => state.auth)
-    authState$: Observable<AuthStateModel>;
+    @SelectState((state: any) => state.test)
+    state$: Observable<TestStateModel>;
 
 }
 
@@ -107,29 +111,29 @@ describe('StateUtils', () => {
 
         beforeEach(() => {
             TestBed.configureTestingModule({
-                imports: [ NgxsModule.forRoot([ TestAuthStateModule ]) ],
+                imports: [NgxsModule.forRoot([TestStateModule])],
                 providers: [TestService],
             }).compileComponents();
             store = TestBed.inject(Store);
         });
 
         afterEach(() => {
-            authStateModuleInstance = null;
+            testModule = null;
         });
 
         it('@AppStateBranch adds a branch to the Store', () => {
-            expect(authStateModuleInstance).toBeTruthy();
-            expect(authStateModuleInstance instanceof TestAuthStateModule).toBeTruthy();
+            expect(testModule).toBeTruthy();
+            expect(testModule instanceof TestStateModule).toBeTruthy();
             expect(store.snapshot()).toEqual({
-                auth: INITIAL_AUTH_STATE,
+                test: TEST_STATE_DEFAULTS,
             });
         });
 
         it('@AppStateBranch registers actions properly', () => {
             const action = new TestAction(4711);
-            const runTestActionSpy = spyOn(authStateModuleInstance, 'runTestAction').and.callThrough();
-            const runDecoratedTestAction1Spy = spyOn(authStateModuleInstance, 'runDecoratedTestAction1').and.callThrough();
-            const runDecoratedTestAction2Spy = spyOn(authStateModuleInstance, 'runDecoratedTestAction2').and.callThrough();
+            const runTestActionSpy = spyOn(testModule, 'runTestAction').and.callThrough();
+            const runDecoratedTestAction1Spy = spyOn(testModule, 'runDecoratedTestAction1').and.callThrough();
+            const runDecoratedTestAction2Spy = spyOn(testModule, 'runDecoratedTestAction2').and.callThrough();
 
             store.dispatch(action);
             expect(runTestActionSpy).toHaveBeenCalledTimes(1);
@@ -140,24 +144,24 @@ describe('StateUtils', () => {
         });
 
         it('@SelectState works', () => {
-            const testService = TestBed.inject(TestService) as TestService;
-            expect(isObservable(testService.authState$)).toBeTruthy();
+            const testService = TestBed.inject(TestService);
+            expect(isObservable(testService.state$)).toBeTruthy();
 
             let emissionCount = 0;
-            let latestValue: AuthStateModel;
-            const sub = testService.authState$.subscribe(authState => {
+            let latestValue: TestStateModel;
+            const sub = testService.state$.subscribe((data) => {
                 ++emissionCount;
-                latestValue = authState;
+                latestValue = data;
             });
 
             expect(emissionCount).toBe(1);
-            expect(latestValue).toEqual(INITIAL_AUTH_STATE);
+            expect(latestValue).toEqual(TEST_STATE_DEFAULTS);
 
             store.dispatch(new TestAction(4711));
             expect(emissionCount).toBe(2);
             expect(latestValue).toEqual({
-                ...INITIAL_AUTH_STATE,
-                currentUserId: 4711,
+                ...TEST_STATE_DEFAULTS,
+                aNumber: 4711,
             });
 
             sub.unsubscribe();
@@ -168,9 +172,9 @@ describe('StateUtils', () => {
             const decoratedAction1: ActionDef<any, any> = DecoratedTestAction1 as any;
             const decoratedAction2: ActionDef<any, any> = DecoratedTestAction2 as any;
 
-            expect(manualAction.type).toEqual('[auth] TestAction');
-            expect(decoratedAction1.type).toEqual('[auth] DecoratedTestAction1');
-            expect(decoratedAction2.type).toEqual('[auth] DecoratedTestAction2');
+            expect(manualAction.type).toEqual('[test] TestAction');
+            expect(decoratedAction1.type).toEqual('[test] DecoratedTestAction1');
+            expect(decoratedAction2.type).toEqual('[test] DecoratedTestAction2');
         });
 
         it('@ActionDeclaration does not overwrite an existing type property', () => {
@@ -178,9 +182,9 @@ describe('StateUtils', () => {
         });
 
         it('@ActionDeclaration and @ActionDefinition register actions properly', () => {
-            const runTestActionSpy = spyOn(authStateModuleInstance, 'runTestAction').and.callThrough();
-            const runDecoratedTestAction1Spy = spyOn(authStateModuleInstance, 'runDecoratedTestAction1').and.callThrough();
-            const runDecoratedTestAction2Spy = spyOn(authStateModuleInstance, 'runDecoratedTestAction2').and.callThrough();
+            const runTestActionSpy = spyOn(testModule, 'runTestAction').and.callThrough();
+            const runDecoratedTestAction1Spy = spyOn(testModule, 'runDecoratedTestAction1').and.callThrough();
+            const runDecoratedTestAction2Spy = spyOn(testModule, 'runDecoratedTestAction2').and.callThrough();
 
             const action1 = new DecoratedTestAction1(4711);
             store.dispatch(action1);
@@ -188,9 +192,9 @@ describe('StateUtils', () => {
             expect(runDecoratedTestAction1Spy).toHaveBeenCalledTimes(1);
             expect(runDecoratedTestAction1Spy.calls.argsFor(0)[1]).toBe(action1);
             expect(store.snapshot()).toEqual({
-                auth: {
-                    ...INITIAL_AUTH_STATE,
-                    sid: 4711,
+                test: {
+                    ...TEST_STATE_DEFAULTS,
+                    aNumber: 4711,
                 },
             });
             // Make sure that the other handler methods have not been called.
@@ -204,10 +208,10 @@ describe('StateUtils', () => {
             expect(runDecoratedTestAction2Spy).toHaveBeenCalledTimes(1);
             expect(runDecoratedTestAction2Spy.calls.argsFor(0)[1]).toBe(action2);
             expect(store.snapshot()).toEqual({
-                auth: {
-                    ...INITIAL_AUTH_STATE,
-                    sid: 4711,
-                    lastError: 'test',
+                test: {
+                    ...TEST_STATE_DEFAULTS,
+                    aNumber: 4711,
+                    aString: 'test',
                 },
             });
             // Make sure that the other handler methods have not been called.

@@ -19,6 +19,7 @@ import { map } from 'rxjs/operators';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
 import { WastebinModal } from '../../../core/components/wastebin-modal/wastebin-modal.component';
+import { FormListLoaderService } from '../../../core/providers';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MessageService } from '../../../core/providers/message/message.service';
@@ -61,6 +62,7 @@ export class ExposedUIAPI implements ExposedGCMSUIAPI {
         private notification: NotificationService,
         private repoBrowserClient: RepositoryBrowserClient,
         private state: ApplicationStateService,
+        private formListLoader: FormListLoaderService,
     ) { }
 
     navigateToFolder(folderId: number, nodeId?: number): Promise<boolean> {
@@ -70,7 +72,12 @@ export class ExposedUIAPI implements ExposedGCMSUIAPI {
 
     refreshCurrentFolder(itemType?: 'folder' | 'form' | 'page' | 'file' | 'image'): Promise<boolean> {
         if (itemType) {
-            return this.folderActions.refreshList(itemType).then(() => true);
+            if (itemType === 'form') {
+                this.formListLoader.reload();
+                return Promise.resolve(true);
+            } else {
+                return this.folderActions.refreshList(itemType).then(() => true);
+            }
         }
 
         this.folderActions.refreshList('folder');
@@ -78,7 +85,8 @@ export class ExposedUIAPI implements ExposedGCMSUIAPI {
         this.folderActions.refreshList('file');
         this.folderActions.refreshList('image');
         if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
-            return this.folderActions.refreshList('form').then(() => true);
+            this.formListLoader.reload();
+            return Promise.resolve(true);
         }
 
         return Promise.resolve(false);

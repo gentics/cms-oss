@@ -8,8 +8,9 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
+import { cancelEvent, randomId } from '@gentics/common';
 import { TableRow, TableSelectAllType, TableSelection } from '../../common';
-import { cancelEvent, randomId, toSelectionArray } from '../../utils';
+import { toSelectionArray } from '../../utils';
 import { BaseTableComponent } from '../base-table/base-table.component';
 
 /**
@@ -82,7 +83,7 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
         }
     }
 
-    public toggleAllSelections(event: MouseEvent): void {
+    public toggleAllSelections(event?: MouseEvent): void {
         cancelEvent(event);
 
         if (this.selectAllType == null || this.selectAllType === TableSelectAllType.NONE) {
@@ -121,5 +122,11 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
         }
 
         this.allSelected = (this.rows || []).every((row) => this.selected[row.id] === true);
+    }
+
+    public get selectedCount(): number {
+        return Array.isArray(this.selected)
+            ? this.selected.length
+            : Object.values(this.selected).filter(Boolean).length;
     }
 }

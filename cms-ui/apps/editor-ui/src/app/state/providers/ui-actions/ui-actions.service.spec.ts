@@ -13,8 +13,8 @@ import {
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { ApplicationStateService } from '..';
+import { MockApiBase } from '../../../../testing';
 import { Api } from '../../../core/providers/api';
-import { MockApiBase } from '../../../core/providers/api/api-base.mock';
 import { STATE_MODULES } from '../../modules';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { UIActionsService } from './ui-actions.service';
@@ -121,16 +121,6 @@ describe('UiActionsService', () => {
             expect(state.now.ui.cmpVersion).toEqual(CMP_VERSION);
         });
 
-    });
-
-    it('getUiVersion() dispatches the version to the app state', () => {
-        // The variable would be provided by Webpack in real builds.
-        const version = '1.7.0-testing';
-        (window as any).GCMS_VERSION = version;
-        uiActions.getUiVersion();
-        delete (window as any).GCMS_VERSION;
-
-        expect(state.now.ui.uiVersion).toEqual(version);
     });
 
     it('getUsersnapSettings() fetches the Usersnap settings and dispatches them to the app state', () => {

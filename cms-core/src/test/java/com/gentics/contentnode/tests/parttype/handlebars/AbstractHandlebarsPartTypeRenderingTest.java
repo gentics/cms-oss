@@ -108,6 +108,8 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 
 	static Template template;
 
+	static Page targetPage;
+
 	static Page testPage;
 
 	static Page englishPage;
@@ -566,6 +568,16 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			p.setLanguage(german);
 		}).at(creationTimestamp).as(creator).unlock().build();
 
+		targetPage = create(Page.class, p -> {
+			p.setFolder(node, subFolder);
+			p.setTemplateId(template.getId());
+			p.setName("Target Page");
+			p.setPriority(47);
+			p.setLanguage(german);
+
+			getPartType(HandlebarsPartType.class, p.getContentTag(HBS_TAGNAME), "hb").setText("{{ cms.page.name }}");
+		}).at(creationTimestamp).as(creator).publish().unlock().build();
+
 		testPage = update(testPage, p -> {
 			p.setDescription("This is the test page");
 
@@ -616,7 +628,7 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			// add urls tag
 			ContentTag urlsTag = p.getContent().addContentTag(urlsConstruct.getId());
 			urlsTag.setName("urls_construct1");
-			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(testPage);
+			getPartType(PageURLPartType.class, urlsTag, "page").setTargetPage(targetPage);
 			getPartType(PageURLPartType.class, urlsTag, "page").setNode(node);
 			getPartType(PageURLPartType.class, urlsTag, "extpage").setExternalTarget("https://www.gentics.com/");
 			getPartType(FolderURLPartType.class, urlsTag, "folder").setTargetFolder(homeFolder);

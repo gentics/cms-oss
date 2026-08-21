@@ -1,7 +1,7 @@
-import { FileOrImage, Folder, Form, ItemInNode, Page, Raw } from '@gentics/cms-models';
+import { FileOrImage, Folder, FormInNode, ItemInNode, Page, Raw } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 /**
  * Helper class for managing a selected item in a TagPropertyEditor or FormPropertiesForm,
@@ -10,7 +10,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
  * the item and then publishes it on the `selectedItem$` observable and in the
  * latter case it just publishes the item.
  */
-export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | Form<Raw> | FileOrImage<Raw>>> {
+export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | FileOrImage<Raw>> | FormInNode> {
 
     /** Observable for the currently selected item. */
     readonly selectedItem$: Observable<T>;

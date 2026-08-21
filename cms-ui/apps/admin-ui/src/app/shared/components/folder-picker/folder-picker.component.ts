@@ -4,6 +4,9 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@a
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 
+/**
+ * @deprecated Use the BrowseBoxComponent instead
+ */
 @Component({
     selector: 'gtx-folder-picker',
     templateUrl: './folder-picker.component.html',

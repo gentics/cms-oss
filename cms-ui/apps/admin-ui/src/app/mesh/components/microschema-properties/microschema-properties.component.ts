@@ -1,9 +1,8 @@
-import { createBlacklistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableMicroschemaProperties } from '@gentics/mesh-models';
-import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { createBlacklistValidator } from '../../../common';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
 export enum MicroschemaPropertiesMode {
@@ -20,9 +19,9 @@ export enum MicroschemaPropertiesMode {
         generateFormProvider(MicroschemaPropertiesComponent),
         generateValidatorProvider(MicroschemaPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class MicroschemaPropertiesComponent extends BasePropertiesComponent<EditableMicroschemaProperties> {
+export class MicroschemaPropertiesComponent extends BaseFormPropertiesComponent<EditableMicroschemaProperties> {
 
     public readonly MicroschemaPropertiesMode = MicroschemaPropertiesMode;
     public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
@@ -44,11 +43,11 @@ export class MicroschemaPropertiesComponent extends BasePropertiesComponent<Edit
             name: new FormControl(this.safeValue('name') || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
-                createBlacklistValidator(() => this.microschemaNames.filter(name => name !== this.form?.value?.name)),
+                createBlacklistValidator(() => this.microschemaNames.filter((name) => name !== this.form?.value?.name)),
             ]),
             noIndex: new FormControl(this.safeValue('noIndex') ?? false),
             description: new FormControl(this.safeValue('description') || ''),
-            elasticsearch: new FormControl(this.safeValue('elasticsearch'), createJsonValidator()),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch')),
             fields: new FormControl(this.safeValue('fields') || []),
         });
     }

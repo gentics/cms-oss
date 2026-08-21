@@ -13,6 +13,7 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessa
 import java.awt.image.renderable.ParameterBlock;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +30,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.operator.TransposeDescriptor;
@@ -113,6 +113,7 @@ import com.gentics.contentnode.staging.StagingUtil;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.image.CropFilter;
+import com.gentics.lib.image.ImageUtils;
 import com.gentics.lib.image.ResizeFilter;
 import com.gentics.lib.image.SmarterResizeFilter;
 import com.gentics.lib.log.NodeLogger;
@@ -366,10 +367,14 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			}
 
 			// prepare image to be resized
-			PlanarImage image = null;
-			try (InputStream originalBinaryStream = file.getFileStream()) {
-				image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-			}
+			final File finalFile = file;
+			PlanarImage image = ImageUtils.read(() -> {
+				try {
+					return finalFile.getFileStream();
+				} catch (NodeException e) {
+					throw new IOException(e);
+				}
+			});
 
 			// rotate, if requested
 			if (imageResizeRequest.getRotate() != null) {
@@ -421,13 +426,14 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			ByteArrayOutputStream boas = new ByteArrayOutputStream();
 			String targetFormat = imageResizeRequest.getTargetFormat();
 
-			String validTargetFormat = RESIZE_DEFAULT_TARGET_FORMAT;
+			String validTargetFormat = NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION,
+					file.getOwningNode()) ? "webp" : RESIZE_DEFAULT_TARGET_FORMAT;
 
 			if (targetFormat != null && !"null".equalsIgnoreCase(targetFormat)) {
 				validTargetFormat = imageResizeRequest.getTargetFormat();
 			}
 
-			boolean writerState = ImageIO.write(image.getAsBufferedImage(), validTargetFormat, boas);
+			boolean writerState = ImageUtils.write(image, validTargetFormat, boas);
 
 			if (!writerState) {
 				throw new Exception("Image could not be encoded. No appropriate writer found.");
@@ -497,10 +503,14 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			}
 
 			// prepare image to be rotated
-			PlanarImage image = null;
-			try (InputStream originalBinaryStream = file.getFileStream()) {
-				image = PlanarImage.wrapRenderedImage(ImageIO.read(originalBinaryStream));
-			}
+			final File finalFile = file;
+			PlanarImage image = ImageUtils.read(() -> {
+				try {
+					return finalFile.getFileStream();
+				} catch (NodeException e) {
+					throw new IOException(e);
+				}
+			});
 
 			// rotate
 			if (request.getRotate() != null) {
@@ -520,13 +530,14 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			ByteArrayOutputStream boas = new ByteArrayOutputStream();
 			String targetFormat = request.getTargetFormat();
 
-			String validTargetFormat = RESIZE_DEFAULT_TARGET_FORMAT;
+			String validTargetFormat = NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION,
+					file.getOwningNode()) ? "webp" : RESIZE_DEFAULT_TARGET_FORMAT;
 
 			if (targetFormat != null && !"null".equalsIgnoreCase(targetFormat)) {
 				validTargetFormat = request.getTargetFormat();
 			}
 
-			boolean writerState = ImageIO.write(image.getAsBufferedImage(), validTargetFormat, boas);
+			boolean writerState = ImageUtils.write(image, validTargetFormat, boas);
 
 			if (!writerState) {
 				throw new Exception("Image could not be encoded. No appropriate writer found.");

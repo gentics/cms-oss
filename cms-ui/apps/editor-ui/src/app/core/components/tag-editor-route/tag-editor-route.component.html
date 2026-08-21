@@ -8,9 +8,9 @@
       <div class="activate-obj-prop">
         <gtx-checkbox
           [label]="'editor.obj_prop_active_label' | gtxI18n"
-          [checked]="editedTag?.active"
+          [value]="editedTag?.active"
           [disabled]="!(itemPermissions.edit) || (editedTag?.readOnly)"
-          (change)="toggleDisplayContent()"
+          (valueChange)="toggleDisplayContent()"
         ></gtx-checkbox>
       </div>
     }

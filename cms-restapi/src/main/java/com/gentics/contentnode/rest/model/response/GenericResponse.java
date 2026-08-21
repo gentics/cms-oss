@@ -33,6 +33,11 @@ public class GenericResponse implements Serializable {
 	private ResponseInfo responseInfo;
 
 	/**
+	 * Flag to mark responses for jobs that are continued in the background
+	 */
+	private boolean inBackground;
+
+	/**
 	 * Constructor used by JAXB
 	 */
 	public GenericResponse() {}
@@ -78,5 +83,24 @@ public class GenericResponse implements Serializable {
 
 	public void setResponseInfo(ResponseInfo responseInfo) {
 		this.responseInfo = responseInfo;
+	}
+
+	/**
+	 * Whether the job was pushed into the background.
+	 * @return Whether the job was pushed into the background.
+	 */
+	public boolean isInBackground() {
+		return inBackground;
+	}
+
+	/**
+	 * Set whether the job was pushed into the background.
+	 * @param inBackground Whether the job was pushed into the background.
+	 * @return Fluent API
+	 */
+	public GenericResponse setInBackground(boolean inBackground) {
+		this.inBackground = inBackground;
+
+		return this;
 	}
 }

@@ -1,9 +1,8 @@
-import { createBlacklistValidator, createWhitelistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableSchemaProperties, FieldType } from '@gentics/mesh-models';
-import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { createBlacklistValidator, createWhitelistValidator } from '../../../common';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
 export enum SchemaPropertiesMode {
@@ -20,9 +19,9 @@ export enum SchemaPropertiesMode {
         generateFormProvider(SchemaPropertiesComponent),
         generateValidatorProvider(SchemaPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> {
+export class SchemaPropertiesComponent extends BaseFormPropertiesComponent<EditableSchemaProperties> {
 
     public readonly SchemaPropertiesMode = SchemaPropertiesMode;
     public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
@@ -49,7 +48,7 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
             name: new FormControl(this.safeValue('name') || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
-                createBlacklistValidator(() => this.schemaNames.filter(name => name !== this.form?.value?.name)),
+                createBlacklistValidator(() => this.schemaNames.filter((name) => name !== this.form?.value?.name)),
             ]),
             description: new FormControl(this.safeValue('description') || ''),
             autoPurge: new FormControl(this.safeValue('autoPurge') ?? false),
@@ -58,18 +57,18 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
             displayField: new FormControl(this.safeValue('displayField'), createWhitelistValidator(() => this.fieldNames)),
             segmentField: new FormControl(this.safeValue('segmentField'), createWhitelistValidator(() => this.fieldNames)),
             urlFields: new FormControl(this.safeValue('urlFields') || [], createWhitelistValidator(() => this.urlFieldNames)),
-            elasticsearch: new FormControl(this.safeValue('elasticsearch'), createJsonValidator()),
+            elasticsearch: new FormControl(this.safeValue('elasticsearch')),
             fields: new FormControl(this.safeValue('fields') || []),
         });
     }
 
     protected configureForm(value: EditableSchemaProperties, _loud?: boolean): void {
         this.fieldNames = (value?.fields || [])
-            .filter(field => field.type === FieldType.STRING || field.type === FieldType.BINARY)
-            .map(field => field.name);
+            .filter((field) => field.type === FieldType.STRING || field.type === FieldType.BINARY)
+            .map((field) => field.name);
         this.urlFieldNames = (value?.fields || [])
-            .filter(field => field.type === FieldType.STRING)
-            .map(field => field.name);
+            .filter((field) => field.type === FieldType.STRING)
+            .map((field) => field.name);
     }
 
     protected assembleValue(value: EditableSchemaProperties): EditableSchemaProperties {

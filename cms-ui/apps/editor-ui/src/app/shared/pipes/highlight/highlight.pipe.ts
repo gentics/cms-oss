@@ -1,6 +1,6 @@
-import {Pipe, PipeTransform} from '@angular/core';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import * as DOMPurify from 'dompurify';
+import { Pipe, PipeTransform } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import DOMPurify from 'dompurify';
 
 /**
  * Adds highlighting markup to a string based on matching against a provided term, and
@@ -14,10 +14,10 @@ export class HighlightPipe implements PipeTransform {
 
     constructor(private sanitizer: DomSanitizer) {}
 
-    transform(value: string, term: string = ''): SafeHtml {
+    transform(value: string, term: string = ''): SafeHtml | null {
         // abort if value is not set
         if (!value) {
-            return;
+            return null;
         }
         if (typeof term !== 'string' || term === '') {
             value = DOMPurify.sanitize(value);

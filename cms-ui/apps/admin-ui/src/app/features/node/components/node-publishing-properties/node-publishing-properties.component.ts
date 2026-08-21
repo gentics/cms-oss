@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ContentRepository, ContentRepositoryType, Node, NodePageLanguageCode, NodeUrlMode, Raw } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 /**
  * Defines the data editable by the `NodePublishingPropertiesComponent`.
  */
-export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'publishFs' | 'publishFsPages' | 'publishDir' |
-'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles' |
-'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
+export type NodePublishingPropertiesFormData = Pick<Node, 'disablePublish' | 'publishFs' | 'publishFsPages' | 'publishDir'
+  | 'publishFsFiles' | 'binaryPublishDir' | 'contentRepositoryId' | 'publishContentMap' | 'publishContentMapPages' | 'publishContentMapFiles'
+  | 'publishContentMapFolders' | 'urlRenderWayPages' | 'urlRenderWayFiles' | 'omitPageExtension' | 'pageLanguageCode'>;
 
 const FS_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
     'publishFsPages',
@@ -39,9 +38,9 @@ const PUBLISH_MAP_CONTROLS: (keyof NodePublishingPropertiesFormData)[] = [
         generateFormProvider(NodePublishingPropertiesComponent),
         generateValidatorProvider(NodePublishingPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class NodePublishingPropertiesComponent extends BasePropertiesComponent<NodePublishingPropertiesFormData> implements OnInit {
+export class NodePublishingPropertiesComponent extends BaseFormPropertiesComponent<NodePublishingPropertiesFormData> implements OnInit {
 
     public readonly NodePageLanguageCode = NodePageLanguageCode;
 
@@ -70,7 +69,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.client.contentRepository.list().subscribe(res => {
+        this.subscriptions.push(this.client.contentRepository.list().subscribe((res) => {
             this.contentRepositories = res.items;
             if (this.form) {
                 this.configureForm(this.form.value as any, false);
@@ -123,7 +122,7 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
 
         let cr: ContentRepository | null = null;
         if (this.form.value.contentRepositoryId > 0) {
-            cr = this.contentRepositories.find(cr => cr.id === this.form.value.contentRepositoryId);
+            cr = this.contentRepositories.find((cr) => cr.id === this.form.value.contentRepositoryId);
         }
         const isMeshCr = cr?.crType === ContentRepositoryType.MESH;
         const isProjectPerNode = cr?.projectPerNode;
@@ -142,10 +141,10 @@ export class NodePublishingPropertiesComponent extends BasePropertiesComponent<N
         // When the `publishContentMap` changes to `true`, check if all other `publishXXX` fields are `false`.
         // If so, then set these to `true`, to enable them by default.
         if (tmpValue?.publishContentMap
-            && !this.previousPublishCr
-            && !tmpValue?.publishContentMapFiles
-            && !tmpValue?.publishContentMapFolders
-            && !tmpValue?.publishContentMapPages
+          && !this.previousPublishCr
+          && !tmpValue?.publishContentMapFiles
+          && !tmpValue?.publishContentMapFolders
+          && !tmpValue?.publishContentMapPages
         ) {
             this.form.patchValue({
                 publishContentMapFiles: true,

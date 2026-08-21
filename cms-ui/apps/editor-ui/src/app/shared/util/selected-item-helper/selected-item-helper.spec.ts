@@ -1,6 +1,6 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { ItemInNode, Page, PageResponse, Raw } from '@gentics/cms-models';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing';
 import { cloneDeep } from 'lodash-es';
 import { Observable, Subscription, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';

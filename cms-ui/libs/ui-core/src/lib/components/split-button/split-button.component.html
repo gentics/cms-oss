@@ -5,8 +5,8 @@
     [autofocus]="autofocus"
     [size]="size"
     [type]="type"
-    [flat]="isFlat"
-    [disabled]="isDisabled"
+    [flat]="flat"
+    [disabled]="disabled"
     [class.has-secondary-actions]="secondaryActions.length > 0"
     (click)="onPrimaryButtonClick($event)"
     >
@@ -15,15 +15,15 @@
 
   @if (secondaryActions.length > 0) {
     <div class="spacer-line"></div>
-    <gtx-dropdown-list align="right" belowTrigger="true">
+    <gtx-dropdown-list align="right" [belowTrigger]="true">
       <gtx-dropdown-trigger>
         <gtx-button
           class="more-trigger"
           data-action="open-context"
           [size]="size"
           [type]="type"
-          [flat]="isFlat"
-          [disabled]="isDisabled"
+          [flat]="flat"
+          [disabled]="disabled"
           >
           <icon>arrow_drop_down</icon>
         </gtx-button>

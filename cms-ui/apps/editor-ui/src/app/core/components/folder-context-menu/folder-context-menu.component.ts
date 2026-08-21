@@ -117,9 +117,10 @@ export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy 
     }
 
     private determineVisibleButtons(): { [key: string]: boolean } {
-        if (!this.permissions) {
+        if (!this.permissions || !this.folder) {
             return {};
         }
+
         const inherited = this.folder ? this.folder.inherited : false;
         const isMaster = this.folder ? this.folder.isMaster : false;
         const isLocalized = !isMaster && !inherited && !this.isBaseFolder;

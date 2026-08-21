@@ -1,5 +1,13 @@
-import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
+    AccessControlledType,
+    GcmsPermission,
+    ObjectPropertiesObjectType,
+    ObjectProperty,
+    ObjectPropertyCreateRequest,
+} from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
+import {
+    CONSTRUCT_BOOLEAN,
     EntityImporter,
     FOLDER_A,
     GroupImportData,
@@ -12,14 +20,15 @@ import {
     loginWithForm,
     navigateToApp,
     NODE_MINIMAL,
+    OBJECT_PROPERTY_CATEGORY_TESTS,
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
     editorAction,
+    ensureObjectPropertyGroupExpanded,
     findItem,
     findList,
     itemAction,
@@ -105,6 +114,43 @@ test.describe('Folder Management', () => {
         });
     }
 
+    async function createAndAssignFolderObjectProperties(): Promise<{ categoryId: number | string; created: ObjectProperty[] }> {
+        const construct = (await IMPORTER.client.construct.get(CONSTRUCT_BOOLEAN).send()).construct;
+        const category = (await IMPORTER.client.objectPropertyCategory.get(OBJECT_PROPERTY_CATEGORY_TESTS).send()).objectPropertyCategory;
+
+        const node = IMPORTER.get(NODE_MINIMAL);
+        const created: ObjectProperty[] = [];
+
+        for (let i = 1; i <= 20; i++) {
+            const keyword = `zz_e2e_scroll_${String(i).padStart(2, '0')}`;
+
+            const payload: ObjectPropertyCreateRequest = {
+                nameI18n: {
+                    en: longWrappedName(i),
+                    de: longWrappedName(i),
+                },
+                descriptionI18n: null,
+                keyword,
+                type: ObjectPropertiesObjectType.FOLDER,
+                constructId: construct.id,
+                categoryId: category.id,
+                required: false,
+                inheritable: false,
+                syncContentset: false,
+                syncChannelset: false,
+                syncVariants: false,
+                restricted: false,
+            };
+
+            const res = await IMPORTER.client.objectProperty.create(payload).send();
+            created.push(res.objectProperty);
+
+            await IMPORTER.client.node.assignObjectProperty(node.id, res.objectProperty.id).send();
+        }
+
+        return { categoryId: category.id, created };
+    }
+
     test('should be possible to create a new folder', async ({ page }) => {
         await setupWithPermissions(page, [
             {
@@ -171,6 +217,33 @@ test.describe('Folder Management', () => {
         await expect(item.locator('.item-name .item-name-only')).toHaveText(CHANGE_FOLDER_NAME);
     });
 
+    test('should not be possible to edit the folder properties without permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19638',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL)!.folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                ],
+            }
+        ]);
+
+        const folder = IMPORTER.get(FOLDER_A)!;
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const item = findItem(list, folder.id);
+        await itemAction(item, 'properties');
+
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-folder-properties');
+        await expect(form.locator('[formcontrolname="name"] input')).toBeDisabled();
+        await expect(form.locator('[formcontrolname="description"] input')).toBeDisabled();
+    });
+
     test('should be possible to edit the folder object-properties', async ({ page }) => {
         await setupWithPermissions(page, [
             {
@@ -215,7 +288,12 @@ test.describe('Folder Management', () => {
         await expect(page.locator('gentics-tag-editor select-tag-property-editor gtx-select gtx-dropdown-trigger .view-value')).toHaveAttribute('data-value', `${COLOR_ID}`);
     });
 
-    test('should not be possible to edit the folder object-properties, if no permissions set', async ({ page }) => {
+    test('should not be possible to edit the folder object-properties, if no permissions set', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19186',
+        }],
+    }, async ({ page }) => {
         await setupWithPermissions(page, [
             {
                 type: AccessControlledType.NODE,
@@ -257,4 +335,77 @@ test.describe('Folder Management', () => {
                 .toHaveAttribute('disabled');
         });
     });
+
+    test('should keep long wrapped object-property list scrollable (100% zoom)', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19578',
+        }],
+    }, async ({ page }) => {
+        const { created, categoryId } = await test.step('Create & assign many long folder object-properties', async () => {
+            return createAndAssignFolderObjectProperties();
+        });
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+            {
+                type: AccessControlledType.OBJECT_PROPERTY_TYPE,
+                instanceId: `${ObjectPropertiesObjectType.FOLDER}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                ],
+            },
+        ]);
+
+        await test.step('Open folder properties', async () => {
+            const folder = IMPORTER.get(FOLDER_A);
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, folder.id);
+
+            await itemAction(item, 'properties');
+        });
+
+        const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
+        await group.waitFor();
+
+        await test.step('Expand object-property category group', async () => {
+            await ensureObjectPropertyGroupExpanded(group);
+        });
+
+        const lastKeywordRaw = created[created.length - 1].keyword;
+        const lastKeyword = normalizeObjectPropertyKeyword(lastKeywordRaw);
+        const lastTab = group.locator(`.tab-link[data-id="object.${lastKeyword}"]`);
+
+        await test.step('Scroll to last entry and assert it is visible', async () => {
+            await lastTab.waitFor();
+            await lastTab.scrollIntoViewIfNeeded();
+
+            await expect(lastTab).toBeVisible();
+            // Has to be visible for at least 95%
+            await expect(lastTab).toBeInViewport({ ratio: 0.95 });
+        });
+    });
 });
+
+function longWrappedName(index: number): string {
+    const padded = String(index).padStart(2, '0');
+    return `ZZZ ${padded} Dies ist ein sehr langer Objekteigenschaftsname mit vielen Worten damit er im linken Tab-Menü umbrechen muss`;
+}
+
+function normalizeObjectPropertyKeyword(keyword: string): string {
+    if (keyword.startsWith('object.')) {
+        return keyword.substring('object.'.length);
+    }
+    return keyword;
+}

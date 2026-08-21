@@ -347,6 +347,7 @@ public class TagModelTest {
 		targetFolder = supply(() -> createFolder(node.getFolder(), "Folder"));
 		targetForm = supply(() -> create(Form.class, f -> {
 			f.setName("Testform");
+			f.setFormType("generic");
 			f.setFolderId(node.getFolder().getId());
 		}));
 	}

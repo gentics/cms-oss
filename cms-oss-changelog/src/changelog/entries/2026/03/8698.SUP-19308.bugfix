@@ -1,0 +1,1 @@
+Fixes an issue after reloading the configuration where existing servlet filters where only restarted if they were currently running (which might not be the case due to configuration problems).

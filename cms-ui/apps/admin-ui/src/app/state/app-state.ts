@@ -1,4 +1,4 @@
-import { AuthStateModel } from './auth/auth.state';
+import { AuthStateModel } from '@gentics/cms-components/auth';
 import { EntityStateModel } from './entity/entity.state';
 import { FeaturesStateModel } from './features/features.state';
 import { LoadingStateModel } from './loading/loading.state';

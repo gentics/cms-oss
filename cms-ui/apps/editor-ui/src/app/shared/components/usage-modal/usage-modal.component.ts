@@ -30,9 +30,6 @@ export class UsageModalComponent extends BaseModal<boolean> implements OnInit, O
     @Input()
     public nodeId: number;
 
-    @Input()
-    public currentLanguageId: number;
-
     public usageCountMap: Record<UsageType, number> = {
         file: 0,
         folder: 0,

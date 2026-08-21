@@ -286,13 +286,6 @@ export class SetDisplayAllLanguagesAction {
 }
 
 @ActionDeclaration(FOLDER_STATE_KEY)
-export class SetDisplayStatusIconsAction {
-    constructor(
-        public displayIcons: boolean,
-    ) {}
-}
-
-@ActionDeclaration(FOLDER_STATE_KEY)
 export class SetDisplayDeletedAction {
     constructor(
         public displayDeleted: boolean,

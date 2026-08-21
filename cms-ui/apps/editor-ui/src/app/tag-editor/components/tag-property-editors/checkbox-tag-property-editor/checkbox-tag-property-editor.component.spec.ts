@@ -2,14 +2,15 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import {
     MockTagPropertyInfo,
     getExampleValidationSuccess,
     getMockedTagEditorContext,
     getMultiValidationResult,
     mockEditableTag,
-} from '@editor-ui/testing/test-tag-editor-data.mock';
+} from '../../../../../testing/test-tag-editor-data.mock';
+import { componentTest } from '../../../../../testing/component-test';
+import { configureComponentTest } from '../../../../../testing/configure-component-test';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     BooleanTagPartProperty,
@@ -151,14 +152,14 @@ describe('CheckboxTagPropertyEditorComponent', () => {
             tick();
 
             // Get the actual input element.
-            const checkboxElement = editorElement.query(By.css('input')).nativeElement;
+            const labelEl: HTMLLabelElement = editorElement.query(By.css('input + label')).nativeElement;
 
             // Simulate a user click.
             const changedProperty = cloneDeep(tagProperty);
             changedProperty.booleanValue = !initialValue;
             const expectedChanges: Partial<TagPropertyMap> = { };
             expectedChanges[tagPart.keyword] = changedProperty;
-            checkboxElement.click();
+            labelEl.click();
             fixture.detectChanges();
             tick();
             expect(onChangeSpy.calls.count()).toBe(1);
@@ -167,7 +168,7 @@ describe('CheckboxTagPropertyEditorComponent', () => {
 
             // Simulate another user click.
             changedProperty.booleanValue = !!initialValue;
-            checkboxElement.click();
+            labelEl.click();
             fixture.detectChanges();
             tick();
             expect(onChangeSpy.calls.count()).toBe(1);

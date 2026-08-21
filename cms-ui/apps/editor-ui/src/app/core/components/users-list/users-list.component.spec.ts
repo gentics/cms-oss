@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
@@ -23,26 +23,26 @@ describe('UsersList', () => {
         fixture.detectChanges();
 
         const checkboxes = getUserCheckboxes(fixture);
-        const checked = checkboxes.filter(checkbox => checkbox.checked);
+        const checked = checkboxes.filter((checkbox) => checkbox.value);
         expect(checked.length).toBe(0);
     }));
 
     it('checks those with selected ids', componentTest(() => TestComponent, (fixture, instance) => {
-        instance.selected = [1, 3];
+        instance.selected.set([1, 3]);
         fixture.detectChanges();
 
         const checkboxes = getUserCheckboxes(fixture);
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([true, false, true, false]);
+        expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([true, false, true, false]);
 
-        instance.selected = [];
+        instance.selected.set([]);
         fixture.detectChanges();
 
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([false, false, false, false]);
+        expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([false, false, false, false]);
 
-        instance.selected = [1, 2, 3, 4];
+        instance.selected.set([1, 2, 3, 4]);
         fixture.detectChanges();
 
-        expect(checkboxes.map(checkbox => checkbox.checked)).toEqual([true, true, true, true]);
+        expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([true, true, true, true]);
     }));
 
     it('emits selectedChange with new selection', componentTest(() => TestComponent, (fixture, instance) => {
@@ -86,11 +86,11 @@ describe('UsersList', () => {
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(checkboxes[0].checked).toBe(true);
+        expect(checkboxes[0].value).toBe(true);
 
         clickCheckbox(fixture, 1);
         fixture.detectChanges();
-        expect(checkboxes[0].checked).toBe(false);
+        expect(checkboxes[0].value).toBe(false);
     }));
 });
 
@@ -99,39 +99,40 @@ describe('UsersList', () => {
  */
 const getUserCheckboxes = (fixture: ComponentFixture<TestComponent>): CheckboxComponent[] => fixture.debugElement.queryAll(By.css('gtx-checkbox'))
     .slice(1)
-    .map(del => del.componentInstance);
+    .map((del) => del.componentInstance);
 
 function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number): void {
-    fixture.debugElement.queryAll(By.css('gtx-checkbox input'))[index].nativeElement.click();
+    fixture.debugElement.queryAll(By.css('gtx-checkbox label'))[index].nativeElement.click();
     tick();
 }
-
 
 @Component({
     selector: 'test-component',
     template: `
         <users-list
-            [users]="users"
-            [selected]="selected"
+            [users]="users()"
+            [selected]="selected()"
             (selectedChange)="selectedChange($event)"
         ></users-list>`,
     standalone: false,
 })
 class TestComponent {
-    users: any[] = [];
-    selected: number[] = [];
+    readonly users = model<any[]>([]);
+    readonly selected = model<number[]>([]);
 
     constructor() {
         for (let i = 1; i < 5; i++) {
-            this.users.push({
-                id: i,
-                firstName: `firstName_${i}`,
-                lastName: `lastName_${i}`,
+            this.users.update((arr) => {
+                return [...arr, {
+                    id: i,
+                    firstName: `firstName_${i}`,
+                    lastName: `lastName_${i}`,
+                }];
             });
         }
     }
 
     selectedChange(newSelection: number[]): void {
-        this.selected = newSelection;
+        this.selected.set(newSelection);
     }
 }

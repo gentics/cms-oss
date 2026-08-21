@@ -1,0 +1,32 @@
+{
+    "tool": {
+        "app_title": "Form Translations",
+        "app_subtitle": "Maintain the language strings for the Form Engine",
+        "global_translations_title": "Global translations",
+        "global_translations_desc": "These translations apply to <strong>all form types</strong> and can be overridden per type.",
+        "scope_translations_title": "Form type: {{name}}",
+        "scope_translations_desc": "Translations specific to the form type <strong>“{{name}}”</strong>. Overrides global values.",
+        "search_placeholder": "Search placeholder…",
+        "filter_type_all": "All",
+        "filter_type_incomplete": "Incomplete",
+        "placeholder_display_count": "{{shown}} of {{total}} placeholders",
+        "legend_saved": "saved",
+        "legend_dirty": "changed",
+        "legend_empty": "empty",
+        "table_column_placeholder": "Placeholder",
+        "table_no_matches_title": "No matching placeholders",
+        "table_no_matches_desc": "Adjust the search term or filter.",
+        "unsaved_count": "{{count}} unsaved change(s)",
+        "confirm_discard_title": "Discard all changes?",
+        "confirm_scope_switch_desc": "Discard unsaved changes in the current scope?",
+        "translation_load_error": "Failed to load the initial data.",
+        "languages_load_error": "Failed to load languages.",
+        "form_type_load_error": "Failed to load form types.",
+        "scope_translations_load_error": "Failed to load translations for “{{scope}}”.",
+        "save_success": "{{count}} translation(s) saved.",
+        "save_error": "Save failed.",
+        "discard_success": "Changes discarded.",
+        "missing_session_title": "No valid session",
+        "missing_session_desc": "Please open this tool from within Gentics CMS."
+    }
+}

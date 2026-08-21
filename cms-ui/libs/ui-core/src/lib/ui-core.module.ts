@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
@@ -22,6 +21,7 @@ import {
     DropdownListComponent,
     DynamicModal,
     FilePickerComponent,
+    FormElementContainerComponent,
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
@@ -30,6 +30,7 @@ import {
     ModalDialogComponent,
     OverlayHostComponent,
     PaginationComponent,
+    PickListComponent,
     ProgressBarComponent,
     RadioButtonComponent,
     RangeComponent,
@@ -110,6 +111,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     DropdownItemComponent,
     DynamicModal,
     FilePickerComponent,
+    FormElementContainerComponent,
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
@@ -142,6 +144,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     TooltipContentWrapperComponent,
     TopBarComponent,
     TrableComponent,
+    PickListComponent,
 ];
 
 export const UI_CORE_DIRECTIVES: Type<any>[] = [
@@ -194,7 +197,6 @@ export const routerModuleForChild: ModuleWithProviders<GenticsUICoreModule> = Ro
 @NgModule({
     imports: [
         CommonModule,
-        HammerModule,
         FormsModule,
         ReactiveFormsModule,
         routerModuleForChild,

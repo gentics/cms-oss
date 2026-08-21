@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
-import { ChangesOf, TableActionClickEvent, TableRow, coerceToBoolean } from '@gentics/ui-core';
+import { coerceToBoolean } from '@gentics/common';
+import { ChangesOf, TableActionClickEvent, TableRow } from '@gentics/ui-core';
 import {
     BO_ID, BO_NEW_SORT_ORDER,
     MOVE_DOWN_ACTION,

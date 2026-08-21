@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { Page } from '@gentics/cms-models';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';

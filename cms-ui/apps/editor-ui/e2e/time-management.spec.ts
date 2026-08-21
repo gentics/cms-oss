@@ -14,11 +14,10 @@ import {
     NODE_MINIMAL,
     PAGE_ONE,
     pickDate,
-    pickSelectValue,
     TestSize,
-    UserImportData,
+    UserImportData
 } from '@gentics/e2e-utils';
-import {expect, Locator, test} from '@playwright/test';
+import { expect, Locator, test } from '@playwright/test';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe('Time Management', () => {
@@ -140,7 +139,7 @@ test.describe('Time Management', () => {
 
         await test.step('Clear page publish', async () => {
             await itemAction(item, 'time-management');
-            await publishAt.locator('.clear-button button').click();
+            await publishAt.locator('.addon-button[data-action="clear"]').click();
 
             const clearReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${PAGE_TO_EDIT.id}`));
             await clickModalAction(modal, 'confirm');

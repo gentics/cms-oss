@@ -15,7 +15,7 @@ export class PageIsLockedPipe implements PipeTransform {
     constructor(private state: ApplicationStateService) { }
 
     transform(page: Page): boolean {
-        const currentUserId = this.state.now.auth.currentUserId;
+        const currentUserId = this.state.now.auth.user?.id;
         if (page && page.type === 'page') {
             if (page.locked) {
                 const lockedById = typeof page.lockedBy === 'object' ? page.lockedBy.id : page.lockedBy;

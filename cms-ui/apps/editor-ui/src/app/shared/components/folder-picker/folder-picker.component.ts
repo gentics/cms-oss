@@ -5,6 +5,9 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
 import { Subscription } from 'rxjs';
 import { RepositoryBrowserClient } from '../../providers';
 
+/**
+ * @deprecated Use the BrowseBoxComponent instead
+ */
 @Component({
     selector: 'gtx-folder-picker',
     templateUrl: './folder-picker.component.html',

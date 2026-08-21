@@ -7,5 +7,14 @@
 .password-row {
     border: 1px solid $gtx-color-light-gray;
     border-radius: 1px;
+    margin-top: 1.5rem;
     margin-bottom: 1rem;
+
+    .password-confirm {
+        padding-bottom: 1rem;
+
+        &:ng-deep .password-confirm-content {
+            gap: 2rem;
+        }
+    }
 }

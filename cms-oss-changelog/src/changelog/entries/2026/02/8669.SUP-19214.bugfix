@@ -1,0 +1,3 @@
+Editor User Interface: When localizing an object takes too long (longer than 5 seconds)
+the User Interface will now show a message that the process is continued in the background instead
+of a misleading success message.

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ColorThemes } from '../../common';
 
 /**
@@ -9,6 +9,7 @@ import { ColorThemes } from '../../common';
     selector: 'gtx-toast',
     templateUrl: './toast.component.html',
     styleUrls: ['./toast.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
 export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -38,10 +39,7 @@ export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
     // TODO: Positionining should be done via a container, instead of this hack.
     // Would also allow to easily change positons of notifications (for example top center, or bottom left).
     @Input()
-    public position = {
-        top: 10,
-        right: 10,
-    };
+    public position = 10;
 
     // TODO: Turn into an output
     @Input()
@@ -54,7 +52,10 @@ export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
 
     private hammerManager: HammerManager;
 
-    constructor(private elementRef: ElementRef) { }
+    constructor(
+        public changeDetector: ChangeDetectorRef,
+        private elementRef: ElementRef,
+    ) { }
 
     ngOnInit(): void {
         this.messageLines = (this.message || '').split('\n');
@@ -79,17 +80,6 @@ export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     /**
-     * Returns a CSS transform string for positioning
-     */
-    getTransform(): string {
-        if (this.dismissing) {
-            return `translate3d(100%, ${this.position.top}px, 0)`;
-        } else {
-            return `translate3d(0, ${this.position.top}px, 0)`;
-        }
-    }
-
-    /**
      * Begin the dismiss animation
      */
     startDismiss(): void {
@@ -104,7 +94,6 @@ export class ToastComponent implements OnInit, AfterViewInit, OnDestroy {
             this.actionOnClick();
         }
     }
-
 
     /**
      * Manual dismiss which is invoked when the toast is clicked.

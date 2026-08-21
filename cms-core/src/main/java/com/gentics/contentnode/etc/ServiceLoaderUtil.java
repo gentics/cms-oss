@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.function.Predicate;
 
 import com.gentics.api.lib.exception.NodeException;
 
@@ -53,6 +54,46 @@ public class ServiceLoaderUtil<S> implements Iterable<S> {
 			return Optional.empty();
 		} else {
 			return Optional.of(function.apply(services.get(0)));
+		}
+	}
+
+	/**
+	 * Execute the given function for the first found service implementation, which matches
+	 * @param <R> type of the result
+	 * @param function function to be executed
+	 * @return optional result (empty optional, if not service implementation is found)
+	 * @throws NodeException
+	 */
+	public <R> Optional<R> execForFirstMatching(Predicate<? super S> predicate, Function<S, R> function) throws NodeException {
+		Optional<S> optionalMatch = services.stream().filter(predicate).findFirst();
+		if (optionalMatch.isPresent()) {
+			return Optional.ofNullable(function.apply(optionalMatch.get()));
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Call the given consumer for all service implementations
+	 * @param consumer consumer
+	 * @throws NodeException
+	 */
+	public void call(Consumer<S> consumer) throws NodeException {
+		for (S service : services) {
+			consumer.accept(service);
+		}
+	}
+
+	/**
+	 * Call the given consumer for the first found service implementation, which matches
+	 * @param <R> type of the result
+	 * @param consumer consumer to be called
+	 * @throws NodeException
+	 */
+	public void callForFirstMatching(Predicate<? super S> predicate, Consumer<S> consumer) throws NodeException {
+		Optional<S> optionalMatch = services.stream().filter(predicate).findFirst();
+		if (optionalMatch.isPresent()) {
+			consumer.accept(optionalMatch.get());
 		}
 	}
 

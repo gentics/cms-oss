@@ -6,18 +6,20 @@ import { ModalClosingReason } from '@gentics/cms-integration-api-models';
 export interface IDialogConfig {
     title: string;
     body?: string;
-    buttons: {
-        id?: string;
-        label: string;
-        type?: 'default' | 'secondary' | 'success'| 'warning' | 'alert';
-        flat?: boolean;
-        // If specified, will be returned as the
-        // value of the resolved promise (or the reason if rejected).
-        returnValue?: any;
-        // If true, clicking the button will cause
-        // the promise to reject rather than resolve
-        shouldReject?: boolean;
-    }[];
+    buttons: Array<DialogButton>;
+}
+
+export interface DialogButton {
+    id?: string;
+    label: string;
+    type?: 'default' | 'secondary' | 'success'| 'warning' | 'alert';
+    flat?: boolean;
+    // If specified, will be returned as the
+    // value of the resolved promise (or the reason if rejected).
+    returnValue?: any;
+    // If true, clicking the button will cause
+    // the promise to reject rather than resolve
+    shouldReject?: boolean;
 }
 
 /**

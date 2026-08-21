@@ -4,21 +4,21 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { I18nNotificationService, TypePermissions, UniformTypePermissions, WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, ResponseCode } from '@gentics/cms-models';
+import { AccessControlledType, FormTypeConfigurationListResponse, PermissionResponse, ResponseCode } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable, Subject, of, throwError } from 'rxjs';
+import { componentTest } from '../../../../testing/component-test';
+import { configureComponentTest } from '../../../../testing/configure-component-test';
 import { EditorPermissions, ItemsInfo, getNoPermissions } from '../../../common/models';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
@@ -38,6 +38,7 @@ import {
     IconCheckbox,
     ImageThumbnailComponent,
     ItemBreadcrumbsComponent,
+    ItemListHeaderComponent,
     ItemListRowComponent,
     ItemStatusLabelComponent,
     LanguageContextSelectorComponent,
@@ -50,7 +51,12 @@ import {
 import { MasonryItemDirective } from '../../../shared/directives/masonry-item/masonry-item.directive';
 import {
     AllItemsSelectedPipe,
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
     FileSizePipe,
+    FilterItemsPipe,
     GetInheritancePipe,
     HighlightPipe,
     ImageDimensionsPipe,
@@ -78,15 +84,9 @@ import {
     WastebinActionsService,
 } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
-import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
-import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
-import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
-import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ListService } from '../../providers/list/list.service';
 import { FolderContentsComponent } from '../folder-contents/folder-contents.component';
 import { GridItemComponent } from '../grid-item/grid-item.component';
-import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from '../item-list/item-list.component';
 
 const PERMISSIONS = {
@@ -223,6 +223,18 @@ class MockPermissionPipe implements PipeTransform {
     }
 }
 
+@Pipe({
+    name: 'gtxMapPermissions',
+    standalone: false,
+})
+class MockMapPermissionsPipe implements PipeTransform {
+    transform(): EditorPermissions {
+        return {
+            ...getNoPermissions(),
+        };
+    }
+}
+
 class MockResourceUrlBuilder { }
 
 class MockUploadConflictService { }
@@ -237,10 +249,11 @@ class MockContextMenuOperationsService {
     copyItems(): void { }
 }
 
-class MockPermissionService {
+class MockPermissionService implements Partial<PermissionService> {
     forFolder(): Observable<EditorPermissions> {
         return of(PERMISSIONS);
     }
+
     all$: Observable<EditorPermissions> = of(PERMISSIONS);
     getTypePermissions(type: AccessControlledType): Observable<TypePermissions> {
         return of(new UniformTypePermissions(type, false));
@@ -258,7 +271,7 @@ class MockItemContextMenu {
 }
 
 class MockListSearchService {
-    searchEvent$ = new EventEmitter<{ term: string, nodeId?: number }>(null);
+    searchEvent$ = new EventEmitter<{ term: string; nodeId?: number }>(null);
 }
 
 class MockWastebinActionsService {
@@ -280,22 +293,30 @@ class MockSplitViewContainer {
     }
 }
 
-class MockClient {
+class MockClient implements Partial<GCMSRestClientService> {
     page = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['page']> as any;
 
     file = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['file']> as any;
 
     image = {
         get: () => throwError('not mocked'),
-    };
+    } as Partial<GCMSRestClientService['image']> as any;
 
     form = {
         get: () => throwError('not mocked'),
-    };
+        listConfigurations: () => of({
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+            },
+            hasMoreItems: false,
+            items: [],
+            numItems: 0,
+        } as FormTypeConfigurationListResponse),
+    } as Partial<GCMSRestClientService['form']> as any;
 
     folder = {
         get: () => throwError('not mocked'),
@@ -356,7 +377,19 @@ class MockClient {
                 responseMessage: 'Successfully loaded breadcrumb',
             },
         }),
-    };
+    } as Partial<GCMSRestClientService['folder']> as any;
+
+    permission = {
+        getInstance: () => of({
+            responseInfo: {
+                responseCode: ResponseCode.OK,
+                responseMessage: 'Successfully loaded breadcrumb',
+            },
+            messages: [],
+            privilegeMap: {},
+            permissionsMap: {},
+        } as PermissionResponse),
+    } as Partial<GCMSRestClientService['permission']> as any;
 }
 
 class MockLocalStorage implements Partial<LocalStorage> {
@@ -497,6 +530,7 @@ describe('FolderContentsComponent', () => {
                 MasonryItemDirective,
                 MockItemContextMenu,
                 MockPermissionPipe,
+                MockMapPermissionsPipe,
                 PageIsLockedPipe,
                 PageLanguageIndicatorComponent,
                 PagingControls,
@@ -515,7 +549,9 @@ describe('FolderContentsComponent', () => {
         expect(state instanceof ApplicationStateService).toBeTruthy();
         state.mockState({
             auth: {
-                currentUserId: 1,
+                user: {
+                    id: 1,
+                } as any,
                 sid: 1,
                 loggingIn: false,
                 isLoggedIn: true,
@@ -544,8 +580,8 @@ describe('FolderContentsComponent', () => {
                     10: { ...getExampleFolderDataNormalized({ id: 10 }) },
                 },
                 page: {
-                    1: { ...getExamplePageDataNormalized({ id: 1 }), ...{ languageVariants: [ 1, 2 ], deleted: { at: 0, by: null } } },
-                    2: { ...getExamplePageDataNormalized({ id: 2 }), ...{ language: 'de', languageVariants: [ 1, 2 ], deleted: { at: 0, by: null } } },
+                    1: { ...getExamplePageDataNormalized({ id: 1 }), ...{ languageVariants: [1, 2], deleted: { at: 0, by: null } } },
+                    2: { ...getExamplePageDataNormalized({ id: 2 }), ...{ language: 'de', languageVariants: [1, 2], deleted: { at: 0, by: null } } },
                     3: { ...getExamplePageDataNormalized({ id: 3 }) },
                     4: { ...getExamplePageDataNormalized({ id: 4 }) },
                 },
@@ -738,7 +774,7 @@ describe('FolderContentsComponent', () => {
             expect(state.now.folder.folders.total).toBe(26);
 
             const folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
-            folderContentsComponent.pageChange( 'folder', 2 );
+            folderContentsComponent.pageChange('folder', 2);
 
             fixture.detectChanges();
             tick();
@@ -748,7 +784,7 @@ describe('FolderContentsComponent', () => {
             expect(state.now.folder.folders.list.length).toBe(10);
             expect(state.now.folder.folders.total).toBe(26);
 
-            expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 10, search: '', recursive: false, skipCount: 10 } );
+            expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 10, search: '', recursive: false, skipCount: 10 });
             expect(folderActions.getItems).toHaveBeenCalledTimes(1);
 
             tick(10_000);
@@ -769,14 +805,14 @@ describe('FolderContentsComponent', () => {
             expect(state.now.folder.folders.total).toBe(26);
 
             const folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
-            folderContentsComponent.itemsPerPageChange( 'folder', 25 );
+            folderContentsComponent.itemsPerPageChange('folder', 25);
 
             fixture.detectChanges();
             tick();
 
             expect(state.now.folder.folders.itemsPerPage).toBe(25);
 
-            expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 25, search: '', recursive: false, skipCount: 0 } );
+            expect(folderActions.getItems).toHaveBeenCalledWith(1, 'folder', false, { maxItems: 25, search: '', recursive: false, skipCount: 0 });
             expect(folderActions.getItems).toHaveBeenCalledTimes(1);
 
             tick(10_000);

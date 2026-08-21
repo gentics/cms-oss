@@ -5,12 +5,10 @@ import {
     GCMSRestClient,
     GCMSRestClientConfig,
     GCMSRestClientRequest,
-} from '@gentics/cms-rest-client';
-import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
-    AbstractConstrctCategoryAPI,
+    AbstractConstructCategoryAPI,
     AbstractConstructAPI,
     AbstractContentRepositoryAPI,
     AbstractContentRepositoryFragmentAPI,
@@ -26,6 +24,7 @@ import {
     AbstractI18nAPI,
     AbstractImageAPI,
     AbstractInfoAPI,
+    AbstractKeycloakAPI,
     AbstractLanguageAPI,
     AbstractLicenseAPI,
     AbstractLinkCheckerAPI,
@@ -49,13 +48,13 @@ import {
     AbstractUserAPI,
     AbstractUsersnapAPI,
     AbstractValidationAPI,
-} from '@gentics/cms-rest-client/abstracts';
+} from '@gentics/cms-rest-client';
 import { Observable } from 'rxjs';
 import { AngularGCMSClientDriver } from './angular-cms-client-driver';
 import { NGGCMSRestClientRequest } from './models';
 
 type Callable<P extends Array<any>, R> = (...args: P) => R;
-type BasicAPI = { [key: string]: (...args) => any };
+type BasicAPI = { [key: string]: (...args: any) => any };
 
 type OriginalAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
@@ -67,11 +66,11 @@ type AngularAPI<T extends BasicAPI> = {
     [K in Exclude<string, keyof T>]: never;
 } & {
     [FN in keyof T]: Callable<Parameters<T[FN]>, Observable<ReturnType<T[FN]>>>;
-}
+};
 
 type FullAngularAPI = {
     [K in keyof AbstractRootAPI]: AngularAPI<AbstractRootAPI[K]>;
-}
+};
 
 interface APIDefinition extends FullAngularAPI {
 
@@ -93,15 +92,14 @@ interface APIDefinition extends FullAngularAPI {
  * ```javascript
  * client.info.getMaintenanceMode().subscribe(status => console.log(status));
  * ```
- *
  * @param api The API to map
  * @returns An "Angular" API, which simply delegates the call and returns the Observable.
  */
 function asAngularAPI<T extends BasicAPI>(api: OriginalAPI<T>): AngularAPI<T> {
     return Object.entries(api).reduce((acc, [name, fn]: [string, Callable<any[], any>]) => {
-        acc[name] = (...args) => (fn(...args) as NGGCMSRestClientRequest<any>).rx();
+        acc[name] = (...args: any) => (fn(...args) as NGGCMSRestClientRequest<any>).rx();
         return acc;
-    }, {}) as any;
+    }, {} as Record<string, any>) as any;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -116,18 +114,15 @@ export class GCMSRestClientService implements APIDefinition {
         http: HttpClient,
     ) {
         this.driver = new AngularGCMSClientDriver(http);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.client = new GCMSRestClient(this.driver);
-        this.initializeAPIs();
-    }
 
-    private initializeAPIs(): void {
+        this.client = new GCMSRestClient(this.driver);
+
         this.apis = {
             admin: asAngularAPI<AbstractAdminAPI>(this.client.admin),
             auth: asAngularAPI<AbstractAuthenticationAPI>(this.client.auth),
             cluster: asAngularAPI<AbstractClusterAPI>(this.client.cluster),
             construct: asAngularAPI<AbstractConstructAPI>(this.client.construct),
-            constructCategory: asAngularAPI<AbstractConstrctCategoryAPI>(this.client.constructCategory),
+            constructCategory: asAngularAPI<AbstractConstructCategoryAPI>(this.client.constructCategory),
             contentRepository: asAngularAPI<AbstractContentRepositoryAPI>(this.client.contentRepository),
             contentRepositoryFragment: asAngularAPI<AbstractContentRepositoryFragmentAPI>(this.client.contentRepositoryFragment),
             contentStaging: asAngularAPI<AbstractContentStagingAPI>(this.client.contentStaging),
@@ -164,12 +159,14 @@ export class GCMSRestClientService implements APIDefinition {
             usersnap: asAngularAPI<AbstractUsersnapAPI>(this.client.usersnap),
             validation: asAngularAPI<AbstractValidationAPI>(this.client.validation),
             license: asAngularAPI<AbstractLicenseAPI>(this.client.license),
+            keycloak: asAngularAPI<AbstractKeycloakAPI>(this.client.keycloak),
         };
     }
 
     init(config: GCMSRestClientConfig, sid?: string): void {
         this.client.config = config;
-        this.client.sid = sid;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        this.client.sid = sid as any;
     }
 
     configure(config: GCMSRestClientConfig): void {
@@ -197,7 +194,7 @@ export class GCMSRestClientService implements APIDefinition {
     }
 
     get auth(): AngularAPI<AbstractAuthenticationAPI> {
-        return this.apis.auth
+        return this.apis.auth;
     }
 
     get cluster(): AngularAPI<AbstractClusterAPI> {
@@ -208,7 +205,7 @@ export class GCMSRestClientService implements APIDefinition {
         return this.apis.construct;
     }
 
-    get constructCategory(): AngularAPI<AbstractConstrctCategoryAPI> {
+    get constructCategory(): AngularAPI<AbstractConstructCategoryAPI> {
         return this.apis.constructCategory;
     }
 
@@ -354,5 +351,9 @@ export class GCMSRestClientService implements APIDefinition {
 
     get license(): AngularAPI<AbstractLicenseAPI> {
         return this.apis.license;
+    }
+
+    get keycloak(): AngularAPI<AbstractKeycloakAPI> {
+        return this.apis.keycloak;
     }
 }

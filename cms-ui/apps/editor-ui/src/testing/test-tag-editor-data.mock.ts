@@ -17,7 +17,7 @@ import {
     TagPropertyType,
     TagType,
 } from '@gentics/cms-models';
-import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { TagEditorContextImpl } from '../app/tag-editor/common/impl/tag-editor-context-impl';
 
@@ -279,9 +279,7 @@ export function getMockedTagEditorContext(
                 'executeRawRequest',
                 'executeBlobRequest',
             ]),
-            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
-            restRequestGET: jasmine.createSpy('restRequestGET'),
-            restRequestPOST: jasmine.createSpy('restRequestPOST'),
+            openTagEditor: jasmine.createSpy('openTagEditor'),
         };
     }
 

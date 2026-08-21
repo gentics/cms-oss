@@ -6,6 +6,7 @@
 package com.gentics.contentnode.object;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -38,6 +39,11 @@ public class DummyObject extends AbstractContentObject implements LocalizableNod
 	 * Language of the dummy object in Mesh CR
 	 */
 	protected String meshLanguage;
+
+	/**
+	 * Additional data
+	 */
+	protected Map<String, String> additionalData = new HashMap<>();
 
 	/**
 	 * Create an instance of the dummy object
@@ -204,5 +210,13 @@ public class DummyObject extends AbstractContentObject implements LocalizableNod
 	 */
 	public void setMeshLanguage(String meshLanguage) {
 		this.meshLanguage = meshLanguage;
+	}
+
+	/**
+	 * Get the map of additional data
+	 * @return additional data map
+	 */
+	public Map<String, String> getAdditionalData() {
+		return additionalData;
 	}
 }

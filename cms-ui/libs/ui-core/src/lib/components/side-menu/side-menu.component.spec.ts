@@ -2,9 +2,9 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { componentTest } from '@gentics/ui-core/testing';
 import { SideMenuToggleDirective } from '../../directives/side-menu-toggle/side-menu-toggle.directive';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
-import { componentTest } from '../../testing';
 import { SideMenuComponent } from './side-menu.component';
 
 describe('SideMenuComponent', () => {

@@ -1,5 +1,4 @@
-import { AfterViewInit, Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { AfterViewInit, booleanAttribute, Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 
 /**
  * Handles autofocus for all ui-core form elements.
@@ -15,11 +14,11 @@ import { coerceToBoolean } from '../../utils';
         gtx-search-bar[autofocus],
         gtx-select[autofocus],
         gtx-textarea[autofocus]`,
-    standalone: false
+    standalone: false,
 })
 export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
 
-    @Input()
+    @Input({ transform: booleanAttribute })
     public autofocus = false;
 
     private inputElement: HTMLButtonElement | HTMLInputElement | HTMLDivElement | HTMLTextAreaElement;
@@ -42,7 +41,6 @@ export class AutofocusDirective implements AfterViewInit, OnChanges, OnDestroy {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.autofocus) {
-            this.autofocus = coerceToBoolean(this.autofocus);
             if (this.inputElement != null && !(this.inputElement instanceof HTMLDivElement)) {
                 this.inputElement.autofocus = this.autofocus;
             }

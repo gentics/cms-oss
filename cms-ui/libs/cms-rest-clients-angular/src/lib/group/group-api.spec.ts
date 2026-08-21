@@ -1,7 +1,6 @@
 import {
     AccessControlledType,
     GcmsPermission,
-    Group,
     GroupCreateRequest,
     GroupListOptions,
     GroupPermissionsListOptions,
@@ -10,9 +9,9 @@ import {
     GroupUserCreateRequest,
     PagingSortOrder,
 } from '@gentics/cms-models';
-import { MockApiBase } from '../util/api-base.mock';
-import { GroupApi } from './group-api';
+import { MockApiBase } from '../testing';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
+import { GroupApi } from './group-api';
 
 const GROUP_ID = 2;
 const PARENT_GROUP_ID = 3;
@@ -22,8 +21,8 @@ const TYPE = AccessControlledType.ADMIN;
 const INSTANCE_ID = 1234;
 
 const MOCK_SET_PERM_REQ: GroupSetPermissionsRequest = {
-    perms: [ { type: GcmsPermission.CREATE, value: true } ],
-    roles: [ { id: 2, value: true } ],
+    perms: [{ type: GcmsPermission.CREATE, value: true }],
+    roles: [{ id: 2, value: true }],
     subGroups: false,
     subObjects: true,
 };

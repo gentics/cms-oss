@@ -15,6 +15,7 @@
 <div class="modal-footer">
   <gtx-button
     type="primary"
+    data-action="confirm"
     [disabled]="!form || form.disabled || form.invalid || form.pristine || loading"
     (click)="buttonCreateEntityClicked()"
     >
@@ -24,6 +25,7 @@
   <gtx-button
     type="secondary"
     flat
+    data-action="cancel"
     (click)="cancelFn()"
     >
     {{ 'common.cancel_button' | gtxI18n }}

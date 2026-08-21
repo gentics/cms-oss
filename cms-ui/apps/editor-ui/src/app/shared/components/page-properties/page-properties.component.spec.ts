@@ -2,7 +2,7 @@ import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/c
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { CoreModule } from '@gentics/cms-components';
+import { CmsComponentsModule } from '@gentics/cms-components';
 import {
     EditablePageProps,
     Feature,
@@ -17,11 +17,10 @@ import {
     getExamplePageData,
     getExampleTemplateData,
     getExampleTemplateDataNormalized,
-} from '@gentics/cms-models/testing/test-data.mock';
+} from '@gentics/cms-models/testing';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
-import { mockPipes } from '@gentics/ui-core/testing';
 import { Observable, of } from 'rxjs';
 import { componentTest } from '../../../../testing/component-test';
 import { configureComponentTest } from '../../../../testing/configure-component-test';
@@ -101,7 +100,7 @@ describe('PagePropertiesComponent', () => {
                 GenticsUICoreModule.forRoot(),
                 FormsModule,
                 ReactiveFormsModule,
-                CoreModule,
+                CmsComponentsModule,
                 GCMSRestClientModule,
             ],
             providers: [
@@ -129,126 +128,6 @@ describe('PagePropertiesComponent', () => {
         spyOn(client.node, 'listTemplates').and.callFake(() => of(templateListResponse([testDataTemplateRaw])));
 
         state.mockState(getMockState());
-    });
-
-    describe('sanitization', () => {
-        it('file name suggestion works well for some pageName for english version if no file name has been entered manually',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                const pageNameValue = 'Außenwirtschaft Oberösterreich';
-                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.en.html';
-                const expectedChanges = {
-                    ...instance.properties,
-                    name: pageNameValue,
-                    fileName: suggestedFileName,
-                };
-                delete expectedChanges.niceUrl;
-                delete expectedChanges.alternateUrls;
-
-                fixture.detectChanges();
-                tick();
-
-                (client.page.suggestFileName as jasmine.Spy).and.callFake(() => of(suggestNameResponse(suggestedFileName)));
-
-                instance.propertiesForm.form.controls.fileName.markAsPristine();
-                instance.propertiesForm.form.controls.name.setValue(pageNameValue, { emitEvent: true, onlySelf: false });
-
-                // instance.onChange.calls.reset();
-
-                fixture.detectChanges();
-                tick(600); // Wait at least 400ms for the request to be triggered
-                fixture.detectChanges();
-
-                expect(client.page.suggestFileName).toHaveBeenCalledWith({
-                    folderId: instance.folderId,
-                    nodeId: instance.nodeId,
-                    templateId: instance.properties.templateId,
-                    language: 'en',
-                    pageName: pageNameValue,
-                    fileName: '',
-                });
-
-                expect(instance.onChange).toHaveBeenCalledWith(expectedChanges);
-            }),
-        );
-
-        it('file name suggestion works well for some pageName for german version if no file name has been entered manually',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                const pageNameValue = 'Außenwirtschaft Oberösterreich';
-                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.de.html';
-                const expectedChanges = {
-                    ...instance.properties,
-                    language: 'de',
-                    name: pageNameValue,
-                    fileName: suggestedFileName,
-                };
-                delete expectedChanges.niceUrl;
-                delete expectedChanges.alternateUrls;
-
-                fixture.detectChanges();
-                tick();
-
-                (client.page.suggestFileName as jasmine.Spy).and.returnValue(of(suggestNameResponse(suggestedFileName)));
-
-                instance.propertiesForm.form.controls.fileName.markAsPristine();
-                instance.propertiesForm.form.controls.language.setValue('de');
-                instance.propertiesForm.form.controls.name.setValue(pageNameValue);
-
-                instance.onChange.calls.reset();
-
-                fixture.detectChanges();
-                tick(600); // Wait at least 400ms for the request to be triggered
-                fixture.detectChanges();
-
-                expect(client.page.suggestFileName).toHaveBeenCalledWith({
-                    folderId: instance.folderId,
-                    nodeId: instance.nodeId,
-                    templateId: instance.properties.templateId,
-                    language: 'de',
-                    pageName: pageNameValue,
-                    fileName: '',
-                });
-
-                expect(instance.onChange).toHaveBeenCalledWith(expectedChanges);
-            }),
-        );
-
-        it('sanitizing works well for some fileName for english version',
-            componentTest(() => TestComponent, (fixture, instance) => {
-                const fileNameValue = 'Außenwirtschaft Oberösterreich';
-                const suggestedFileName = 'Aussenwirtschaft_Oberoesterreich.en.html';
-                const expectedChanges = {
-                    ...instance.properties,
-                    fileName: suggestedFileName,
-                };
-                delete expectedChanges.niceUrl;
-                delete expectedChanges.alternateUrls;
-
-                fixture.detectChanges();
-                tick();
-
-                (client.page.suggestFileName as jasmine.Spy).and.callFake(() => of(suggestNameResponse(suggestedFileName)));
-
-                instance.propertiesForm.form.controls.fileName.markAsPristine();
-                instance.propertiesForm.form.patchValue({ fileName: fileNameValue });
-
-                instance.onChange.calls.reset();
-
-                fixture.detectChanges();
-                tick(600);
-                fixture.detectChanges();
-
-                expect(client.page.suggestFileName).toHaveBeenCalledWith({
-                    folderId: instance.folderId,
-                    nodeId: instance.nodeId,
-                    templateId: instance.properties.templateId,
-                    language: 'en',
-                    pageName: instance.properties.name,
-                    fileName: '',
-                });
-
-                expect(instance.onChange).toHaveBeenCalledWith(expectedChanges);
-            }),
-        );
     });
 
     describe('niceUrl field', () => {
@@ -430,7 +309,6 @@ describe('PagePropertiesComponent', () => {
         <gtx-page-properties
             #propertiesForm
             [page]="page"
-            [enableFileNameSuggestion]="true"
             [folderId]="folderId"
             [nodeId]="nodeId"
             [value]="properties"

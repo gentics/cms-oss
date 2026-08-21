@@ -1,0 +1,2 @@
+The uniqueness checks for filenames and URLs have been improved to
+better detect collisions between filenames and publish directory segments.

@@ -1,8 +1,8 @@
 import { Component, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { componentTest } from '@gentics/ui-core/testing';
 import { BehaviorSubject } from 'rxjs';
-import { componentTest } from '../../testing';
 import { ButtonComponent } from '../button/button.component';
 import { InputComponent } from '../input/input.component';
 import { SearchBarComponent } from './search-bar.component';

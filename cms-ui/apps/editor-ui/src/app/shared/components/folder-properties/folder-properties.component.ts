@@ -6,21 +6,25 @@ import {
     OnChanges,
     OnDestroy,
     OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import {
     FormControl,
     FormGroup,
     Validators,
 } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableFolderProps, Feature, Folder, GtxI18nProperty, Language } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    BaseFormPropertiesComponent,
+    ChangesOf,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { BehaviorSubject, forkJoin, of, Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
-import { PermissionService } from '../../../core/providers/permissions/permission.service';
+import { BehaviorSubject, forkJoin, of, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 
 export enum FolderPropertiesMode {
@@ -33,11 +37,11 @@ const ERROR_DIRECTORY_DUPLICATE = 'folderDirectoryIsDuplicate';
 const ERROR_DIRECTORY_PATTERN = 'pattern';
 
 /** Allowed characters for input `directory` if "pub_dir_segment" is disabled */
-const CHARS_ALLOWED_DEFAULT = [ '/', '_', '.', '-', '~' ];
+const CHARS_ALLOWED_DEFAULT = ['/', '_', '.', '-', '~'];
 /** Allowed characters for input `directory` if "pub_dir_segment" is enabled */
-const CHARS_ALLOWED_PUB_DIR_SEGMENT = [ '_', '.', '-', '~' ];
+const CHARS_ALLOWED_PUB_DIR_SEGMENT = ['_', '.', '-', '~'];
 /** Characters for the other CHARS constants which need escaping when placed into a regexp. */
-const CHARS_REQUIRE_ESCAPE = new Set([ '\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=' ]);
+const CHARS_REQUIRE_ESCAPE = new Set(['\\', '/', '{', '}', '[', ']', '(', ')', '.', '^', '$', '*', '+', '-', '?', '!', '=']);
 
 const CONTROLS_I18N: (keyof EditableFolderProps)[] = ['nameI18n', 'descriptionI18n', 'publishDirI18n'];
 const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publishDir'];
@@ -54,7 +58,7 @@ const CONTROLS: (keyof EditableFolderProps)[] = ['name', 'description', 'publish
     standalone: false,
 })
 export class FolderPropertiesComponent
-    extends BasePropertiesComponent<EditableFolderProps>
+    extends BaseFormPropertiesComponent<EditableFolderProps>
     implements OnChanges, OnInit, OnDestroy {
 
     public readonly FolderPropertiesMode = FolderPropertiesMode;
@@ -97,16 +101,11 @@ export class FolderPropertiesComponent
 
     private pubDirPattern: RegExp;
     private parentFolderId$ = new BehaviorSubject<number>(null);
-    /** Behaviour to call whenever a new permission check needs to occur */
-    private permissionCheck = new Subject<void>();
 
     private autocompleteSubscription: Subscription;
 
-	private editAllowed = false;
-
     constructor(
         changeDetector: ChangeDetectorRef,
-        private permissions: PermissionService,
         private appState: ApplicationStateService,
         private client: GCMSRestClientService,
     ) {
@@ -122,20 +121,15 @@ export class FolderPropertiesComponent
 
         this.parentFolderId$.next(this.folderId);
         this.subscriptions.push(this.parentFolderId$.asObservable().pipe(
-            switchMap(id => id ? of(id) : this.appState.select(state => state.folder.activeFolder)),
+            switchMap((id) => id ? of(id) : this.appState.select((state) => state.folder.activeFolder)),
             distinctUntilChanged(isEqual),
-            switchMap(id => forkJoin([
+            switchMap((id) => forkJoin([
                 this.client.folder.get(id),
                 this.client.folder.folders(id),
             ])),
         ).subscribe(([loadRes, listRes]) => {
             this.parentFolder = loadRes.folder;
-            // If we have our own ID provided, we have to exclude our own element from the sibling data
-            // Otherwise we mark properties as duplicates, which aren't because we count our current
-            // state as well, which should not be the case.
-            this.sibilingFolders = this.itemId != null
-                ? listRes.folders.filter(folder => folder.id !== this.itemId)
-                : listRes.folders;
+            this.sibilingFolders = listRes.folders;
 
             if (this.form) {
                 this.form.updateValueAndValidity();
@@ -144,54 +138,25 @@ export class FolderPropertiesComponent
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.folder.activeNode).pipe(
-            mergeMap(nodeId => this.appState.select(state => state.entities.node[nodeId])),
-            filter(activeNode => !!activeNode),
-            map(activeNode => !!activeNode.pubDirSegment),
-        ).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNode).pipe(
+            mergeMap((nodeId) => this.appState.select((state) => state.entities.node[nodeId])),
+            filter((activeNode) => !!activeNode),
+            map((activeNode) => !!activeNode.pubDirSegment),
+        ).subscribe((enabled) => {
             this.pubDirSegmentEnabled = enabled;
             this.updateAllowedCharacters();
             this.form.updateValueAndValidity();
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features[Feature.AUTOCOMPLETE_FOLDER_PATH]).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features[Feature.AUTOCOMPLETE_FOLDER_PATH]).subscribe((enabled) => {
             this.folderAutocompleteEnabled = enabled;
             this.autocompletePublishDirectory();
             this.changeDetector.markForCheck();
         }));
-
-        this.subscriptions.push(this.permissionCheck.pipe(
-            filter(() => this.itemId != null && this.nodeId != null),
-		    // Set the control disabled until we know the permissions
-		    tap(() => {
-		        if (this.form) {
-					setControlsEnabled(this.form, CONTROLS, false);
-			        setControlsEnabled(this.form, CONTROLS_I18N, false);
-			        this.changeDetector.markForCheck();
-				}
-		    }),
-		    // Just in case it's getting spammed
-		    debounceTime(50),
-		    switchMap(() => {
-		        return this.permissions.forFolder(this.itemId, this.nodeId).pipe(
-		            map(permission => {
-		                return permission.folder.edit;
-		            }),
-		        );
-		    }),
-		).subscribe(enabled => {
-			this.editAllowed = enabled;
-			if (this.form) {
-				this.configureForm(this.form.value);
-				this.changeDetector.markForCheck();
-			}
-		}));
-
-        this.permissionCheck.next();
     }
 
-    override ngOnChanges(changes: SimpleChanges): void {
+    override ngOnChanges(changes: ChangesOf<this>): void {
         super.ngOnChanges(changes);
 
         if (changes.folderId) {
@@ -208,17 +173,14 @@ export class FolderPropertiesComponent
         this.clearAutocomplete();
     }
 
-	protected override onValueChange() {
-		super.onValueChange();
-        this.permissionCheck.next();
-	}
-
     protected createForm(): FormGroup {
         const form = new FormGroup<FormProperties<EditableFolderProps>>({
             name: new FormControl(this.safeValue('name'), [Validators.required, (ctrl) => {
-                return this.sibilingsHaveEqualProperty('name', ctrl.value) ? {
-                    [ERROR_DIRECTORY_DUPLICATE]: true,
-                } : null;
+                return this.sibilingsHaveEqualProperty('name', ctrl.value)
+                    ? {
+                        [ERROR_DIRECTORY_DUPLICATE]: true,
+                    }
+                    : null;
             }]),
             description: new FormControl(this.safeValue('description')),
             publishDir: new FormControl(this.safeValue('publishDir'), [Validators.required, (ctrl) => {
@@ -251,9 +213,9 @@ export class FolderPropertiesComponent
             this.autocompletePublishDirectory();
         }));
 
-        // Mark this as dirty, as to not suggest file-names automatically
+        // Mark this as touched, as to not suggest file-names automatically
         if (this.value?.publishDir) {
-            form.controls.publishDir.markAsDirty();
+            form.controls.publishDir.markAsTouched();
         }
 
         return form;
@@ -261,8 +223,8 @@ export class FolderPropertiesComponent
 
     protected configureForm(_value: EditableFolderProps, loud?: boolean): void {
         const options = { onlySelf: loud, emitEvent: loud };
-		setControlsEnabled(this.form, CONTROLS, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
-		setControlsEnabled(this.form, CONTROLS_I18N, this.editAllowed || this.mode === FolderPropertiesMode.CREATE, options);
+        setControlsEnabled(this.form, CONTROLS, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
+        setControlsEnabled(this.form, CONTROLS_I18N, !this.disabled || (this.mode === FolderPropertiesMode.CREATE), options);
     }
 
     protected assembleValue(value: EditableFolderProps): EditableFolderProps {
@@ -281,15 +243,30 @@ export class FolderPropertiesComponent
         return value;
     }
 
+    protected override onValueReset(): void {
+        if (this.form) {
+            this.form.updateValueAndValidity();
+        }
+    }
+
     protected sibilingsHaveEqualProperty<T extends keyof Folder>(property: T, value: Folder[T]): boolean {
-        return this.sibilingFolders.some(folder => isEqual(folder[property], value));
+        for (const sibling of this.sibilingFolders) {
+            // Ignore our own folder, as otherwise it might be true all the time
+            if (sibling.id === this.itemId) {
+                continue;
+            }
+            if (isEqual(sibling[property], value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected updateAllowedCharacters(): void {
         const chars = this.pubDirSegmentEnabled ? CHARS_ALLOWED_PUB_DIR_SEGMENT : CHARS_ALLOWED_DEFAULT;
         this.allowedCharacters = chars.join(' ');
         const charsAllowedRegexp = chars
-            .map(c => CHARS_REQUIRE_ESCAPE.has(c) ? `\\${c}` : c)
+            .map((c) => CHARS_REQUIRE_ESCAPE.has(c) ? `\\${c}` : c)
             .join('');
         this.pubDirPattern = new RegExp(`|^[A-Za-z0-9${charsAllowedRegexp}]+$`);
     }
@@ -312,7 +289,7 @@ export class FolderPropertiesComponent
 
         if (
             !this.folderAutocompleteEnabled
-            || ctrl.dirty
+            || ctrl.touched
             || this.mode === FolderPropertiesMode.EDIT
         ) {
             return;
@@ -322,7 +299,7 @@ export class FolderPropertiesComponent
         const dirName = this.form.value.name || '';
 
         if (this.pubDirSegmentEnabled) {
-            publishDirProposal = dirName
+            publishDirProposal = dirName;
         } else if (typeof this.parentFolder?.publishDir === 'string') {
             const parentPubDir = this.parentFolder?.publishDir;
             publishDirProposal = `${parentPubDir.endsWith('/') ? parentPubDir : `${parentPubDir}/`}${dirName}`;
@@ -333,11 +310,12 @@ export class FolderPropertiesComponent
         }
 
         const nodeId = this.nodeId || this.appState.now.folder.activeNode;
-        this.autocompleteSubscription = this.client.folder.sanitizePublshDirectory({
+        this.autocompleteSubscription = this.client.folder.sanitizePublishDirectory({
             nodeId: nodeId,
             publishDir: publishDirProposal,
-        }).subscribe(res => {
-            if (ctrl.pristine) {
+        }).subscribe((res) => {
+            if (!ctrl.touched) {
+                ctrl.markAsDirty();
                 ctrl.setValue(res.publishDir);
                 this.changeDetector.markForCheck();
             }

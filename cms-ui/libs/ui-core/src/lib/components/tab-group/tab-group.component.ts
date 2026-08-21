@@ -1,7 +1,6 @@
-import { Component, ContentChildren, QueryList, Input, TemplateRef, Output, EventEmitter } from '@angular/core';
-import { TabPaneComponent } from '../tab-pane/tab-pane.component';
+import { Component, ContentChildren, EventEmitter, Input, Output, QueryList, TemplateRef, booleanAttribute } from '@angular/core';
 import { TabLabelDirective } from '../../directives/tab-label/tab-label.directive';
-import { coerceToBoolean } from '../../utils';
+import { TabPaneComponent } from '../tab-pane/tab-pane.component';
 
 // Counter for unique group ids.
 let uniqueTabGroupId = 0;
@@ -13,12 +12,12 @@ let uniqueTabGroupId = 0;
     selector: 'gtx-tab-group',
     exportAs: 'gtxTabGroup',
     template: '',
-    standalone: false
+    standalone: false,
 })
 export class TabGroupComponent {
 
     /** Unique id for the tab group. */
-    uniqueId = `gtx-tag-group-${uniqueTabGroupId++}`;
+    UNIQUE_ID = `gtx-tag-group-${uniqueTabGroupId++}`;
 
     /** Expand state for the group */
     public expand = false;
@@ -27,23 +26,21 @@ export class TabGroupComponent {
     @Input('label')
     textLabel = '';
 
-    @Input()
-    set expanded(val: any) {
-        this.expand = coerceToBoolean(val);
-    }
+    @Input({ transform: booleanAttribute })
+    expanded: boolean;
 
     @Input()
     set id(val: string) {
-        this.uniqueId = val;
+        this.UNIQUE_ID = val;
     }
 
-    get id(): string { return this.uniqueId; }
+    get id(): string { return this.UNIQUE_ID; }
 
     /**
      * Fires an event whenever the tab group is toggled. Argument is the id and state of the tab group.
      */
     @Output()
-    tabGroupToggle = new EventEmitter<{ id: string, expand: boolean }>();
+    tabGroupToggle = new EventEmitter<{ id: string; expand: boolean }>();
 
     /** Content for the tab label given by `<ng-template gtx-tab-label>`. */
     @ContentChildren(TabLabelDirective, { read: TemplateRef, descendants: false })
@@ -58,7 +55,7 @@ export class TabGroupComponent {
     }
 
     get hasActiveChild(): boolean {
-        return this.tabs.some(tab => tab.active)
+        return this.tabs.some((tab) => tab.active);
     }
 
     toggle(): void {

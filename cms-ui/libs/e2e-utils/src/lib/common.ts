@@ -4,11 +4,11 @@ import {
     ConstructCategory,
     ConstructCategoryCreateRequest,
     EditableFileProps,
-    EditableFormProps,
     File,
     Folder,
     FolderCreateRequest,
     Form,
+    FormCreateRequest,
     Group,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -90,7 +90,9 @@ export interface ContentFile {
 }
 
 export const LANGUAGE_EN = 'en';
+export const LANGUAGE_ID_EN = 2;
 export const LANGUAGE_DE = 'de';
+export const LANGUAGE_ID_DE = 1;
 
 export const ITEM_TYPE_FOLDER = 'folder';
 export const ITEM_TYPE_PAGE = 'page';
@@ -148,11 +150,19 @@ export const CONSTRUCT_URL_PAGE = 'A547.69527';
 
 // IDs from the devtools
 export const CONSTRUCT_TEST_SELECT_COLOR = '994d.d84f0a55-37ad-11ef-a38e-0242ac110002';
+export const CONSTRUCT_TEST_SELECT_COLOR_INLINE = 'a1f6.d84f0a55-37ad-11ef-a38e-0242ac110002';
+export const CONSTRUCT_TEST_SELECT_COLOR_HIDDEN = 'a1f7.d84f0a55-37ad-11ef-a38e-0242ac110002';
+export const CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE = 'a1f8.d84f0a55-37ad-11ef-a38e-0242ac110002';
 export const CONSTRUCT_TEST_FOOTER = '3821.45da0ed4-3244-11ef-872a-0242ac110002';
 export const CONSTRUCT_TEST_HEADER = '3821.37c733c5-3244-11ef-872a-0242ac110002';
 export const CONSTRUCT_TEST_IMAGE = '994d.5be00ab6-37b8-11ef-a38e-0242ac110002';
 export const CONSTRUCT_TEST_OVERVIEW = 'a1f6.c849b53a-8413-11f0-b405-621fd600b3e6';
 export const CONSTRUCT_TEST_TEXT = '3821.174e1f5c-3244-11ef-872a-0242ac110002';
+
+// "Gentics CMP Default" category
+export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';
+// "Integration Tests" category
+export const CONSTRUCT_CATEGORY_TESTS = '57a5.00407459-3223-11ef-862c-0242ac110002';
 
 export const CORE_CONSTRUCTS = [
     CONSTRUCT_ALOHA_LINK,
@@ -169,10 +179,20 @@ export const CORE_CONSTRUCTS = [
 export const OBJECT_PROPERTY_PAGE_COLOR = '994d.ff379678-37b9-11ef-a38e-0242ac110002';
 export const OBJECT_PROPERTY_FOLDER_COLOR = 'a986.40be20e1-4318-11ef-bf28-0242ac110002';
 
-// "Gentics CMP Default" category
-export const CONSTRUCT_CATEGORY_CORE = '3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5';
-// "Integration Tests" category
-export const CONSTRUCT_CATEGORY_TESTS = '57a5.00407459-3223-11ef-862c-0242ac110002';
+export const OBJECT_PROPERTY_HIDE_IN_NAV = 'A547.75740';
+export const OBJECT_PROPERTY_NAV_SORTING = 'A547.69486';
+export const OBJECT_PROPERTY_STARTPAGE = 'A547.69535';
+export const OBJECT_PROPERTY_COPYRIGHT = 'A547.74284';
+
+export const OBJECT_PROPERTY_CATEGORY_CORE = '3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5';
+export const OBJECT_PROPERTY_CATEGORY_TESTS = '994d.e54046e7-37b9-11ef-a38e-0242ac110002';
+
+export const CORE_OBJECT_PROPERTIES = [
+    OBJECT_PROPERTY_HIDE_IN_NAV,
+    OBJECT_PROPERTY_NAV_SORTING,
+    OBJECT_PROPERTY_STARTPAGE,
+    OBJECT_PROPERTY_COPYRIGHT,
+];
 
 // Internal tasks, which are defined by their internal commands
 export const TASK_CONVERT_IMAGES = 'convertimages';
@@ -322,7 +342,7 @@ export const RENDERABLE_ALOHA_COMPONENTS: Record<string, string> = [
 ].reduce((acc, name) => {
     acc[name] = `gtx-aloha-${name}-renderer`;
     return acc;
-}, {});
+}, {} as Record<string, string>);
 
 export interface FormattedText {
     text: string;
@@ -410,7 +430,7 @@ export interface ImageImportData extends EditableFileProps, ImportData {
     folderId: string;
 }
 
-export interface FormImportData extends EditableFormProps, ImportData {
+export interface FormImportData extends Omit<FormCreateRequest, 'nodeId' | 'folderId' | 'languages'>, ImportData {
     [IMPORT_TYPE]: typeof ITEM_TYPE_FORM;
 
     /** The nodes `IMPORT_ID` value */

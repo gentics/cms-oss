@@ -1,0 +1,27 @@
+@import "../../../styles/variables";
+
+gtx-input.untranslated:not(.ng-invalid.ng-touched) > input {
+    border: 2px dashed $gcms-color-highlight;
+}
+
+.translation-suggestions {
+    position: relative;
+    top: -20px;
+    font-size: 0.8rem;
+    color: #888;
+
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+}
+
+.translation-suggestions__additional-values {
+    position: absolute;
+    display: none;
+    background-color: #fff;
+    z-index: 7;
+}
+
+.translation-suggestions:hover .translation-suggestions__additional-values {
+    display: block;
+}

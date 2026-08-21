@@ -1,4 +1,4 @@
-import { matchesMimeType } from '../../utils/matches-mime-type';
+import { matchesMimeType } from '@gentics/common';
 
 describe('matchesMimeType', () => {
 

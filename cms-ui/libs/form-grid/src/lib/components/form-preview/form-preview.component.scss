@@ -1,0 +1,45 @@
+@import "ui-core/src/styles/variables";
+
+:host {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.preview-container {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    .preview-frame {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .error-container {
+        display: none;
+        width: 100%;
+        height: 100%;
+        color: $gtx-color-alert;
+        justify-content: center;
+        align-items: center;
+    }
+
+    &.loading {
+        .preview-frame {
+            display: none;
+        }
+    }
+
+    &.has-error {
+        .preview-frame {
+            display: none;
+        }
+
+        .error-container {
+            display: flex;
+        }
+    }
+}

@@ -3,6 +3,7 @@ import {
     Component,
     EventEmitter,
     Input,
+    model,
     NO_ERRORS_SCHEMA,
     OnInit,
     Pipe,
@@ -20,10 +21,11 @@ import {
     Folder,
     FolderItemType,
     Image,
+    Language,
     Node as NodeModel,
     Page,
 } from '@gentics/cms-models';
-import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
@@ -39,20 +41,31 @@ import { NavigationService } from '../../../core/providers/navigation/navigation
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
-import { MasonryGridComponent } from '../../../shared/components';
-import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
-import { FavouriteToggleComponent } from '../../../shared/components/favourite-toggle/favourite-toggle.component';
-import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
-import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
-import { ItemBreadcrumbsComponent } from '../../../shared/components/item-breadcrumbs/item-breadcrumbs.component';
-import { ItemListRowComponent } from '../../../shared/components/item-list-row/item-list-row.component';
-import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
-import { LanguageContextSelectorComponent } from '../../../shared/components/language-context-selector/language-context-selector.component';
-import { ListItemDetails } from '../../../shared/components/list-item-details/list-item-details.component';
-import { PageLanguageIndicatorComponent } from '../../../shared/components/page-language-indicator/page-language-indicator.component';
-import { PagingControls } from '../../../shared/components/paging-controls/paging-controls.component';
-import { StartPageIcon } from '../../../shared/components/start-page-icon/start-page-icon.component';
+import {
+    DetailChip,
+    FavouriteToggleComponent,
+    IconCheckbox,
+    ImageThumbnailComponent,
+    ItemBreadcrumbsComponent,
+    ItemListHeaderComponent,
+    ItemListRowComponent,
+    ItemStatusLabelComponent,
+    LanguageContextSelectorComponent,
+    LanguageStateComponent,
+    ListItemDetails,
+    MasonryGridComponent,
+    PageLanguageIndicatorComponent,
+    PagingControls,
+    StartPageIcon,
+} from '../../../shared/components';
 import { MasonryItemDirective } from '../../../shared/directives';
+import {
+    AnyItemDeletedPipe,
+    AnyItemInheritedPipe,
+    AnyItemPublishedPipe,
+    AnyPageUnpublishedPipe,
+    FilterItemsPipe,
+} from '../../../shared/pipes';
 import { AllItemsSelectedPipe } from '../../../shared/pipes/all-items-selected/all-items-selected.pipe';
 import { FileSizePipe } from '../../../shared/pipes/file-size/file-size.pipe';
 import { GetInheritancePipe } from '../../../shared/pipes/get-inheritance/get-inheritance.pipe';
@@ -68,14 +81,8 @@ import { TruncatePathPipe } from '../../../shared/pipes/truncate-path/truncate-p
 import { UserFullNamePipe } from '../../../shared/pipes/user-full-name/user-full-name.pipe';
 import { ApplicationStateService, FolderActionsService, UsageActionsService, WastebinActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
-import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
-import { AnyItemPublishedPipe } from '../../pipes/any-item-published/any-item-published.pipe';
-import { AnyPageUnpublishedPipe } from '../../pipes/any-page-unpublished/any-page-unpublished.pipe';
-import { FilterItemsPipe } from '../../pipes/filter-items/filter-items.pipe';
 import { ListService } from '../../providers/list/list.service';
 import { GridItemComponent } from '../grid-item/grid-item.component';
-import { ItemListHeaderComponent } from '../item-list-header/item-list-header.component';
 import { ItemListComponent } from './item-list.component';
 
 /**
@@ -97,17 +104,18 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
 @Component({
     template: `
         <item-list #itemList
-            [class]="itemType"
-            [itemType]="itemType"
-            [filterTerm]="filterTerm"
-            [items]="items | filterItems:filterTerm"
+            [class]="itemType()"
+            [itemType]="itemType()"
+            [filterTerm]="filterTerm()"
+            [items]="items() | filterItems:filterTerm()"
             [itemsInfo]="itemsInfo$ | async"
             [currentFolderId]="currentFolderId$ | async"
-            [activeNode]="activeNode"
-            [startPageId]="startPageId"
-            [itemInEditor]="itemInEditor"
-            [folderPermissions]="permissions"
-            [linkPaths]="isSearching"
+            [activeNode]="activeNode()"
+            [nodeLanguages]="activeNodeLanguages()"
+            [startPageId]="startPageId()"
+            [activeItemId]="activeItemId()"
+            [folderPermissions]="permissions()"
+            [linkPaths]="isSearching()"
         ></item-list>`,
     standalone: false,
 })
@@ -115,27 +123,32 @@ class TestComponent implements OnInit {
     @ViewChild('itemList', { static: true })
     itemList: ItemListComponent;
 
-    itemType = 'folder';
-    items: Array<Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File>> = [
+    readonly itemType = model<'folder' | 'page' | 'image' | 'file'>('folder');
+    readonly items = model<Array<Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File>>>([
         { id: 1, name: 'item1', path: 'root/item1', type: 'folder' },
         { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
         { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
-    ];
+    ]);
 
-    activeNode: any = {
+    readonly activeNode = model<{ name: string; id: number }>({
         name: '',
         id: 1,
-    };
+    });
 
-    filterTerm = '';
+    readonly filterTerm = model<string>('');
+    readonly selectedItems = model<number[]>([]);
+    readonly startPageId = model<number>(Number.NaN);
+    readonly activeItemId = model<number>();
+    readonly permissions = model(allPermissions());
+    readonly isSearching = model(true);
+    readonly activeNodeLanguages = model<Language[]>([
+        { id: 1, code: 'en', name: 'English' },
+        { id: 2, code: 'de', name: 'Deutsch (German)' },
+    ]);
+
+    itemsInfoPipe$: Observable<boolean>;
     itemsInfo$: Observable<ItemsInfo>;
     currentFolderId$: Observable<number>;
-    selectedItems: number[] = [];
-    startPageId: number = Number.NaN;
-    itemInEditor: any = undefined;
-    permissions = allPermissions();
-    isSearching = true;
-    itemsInfoPipe$: Observable<boolean>;
 
     constructor(public appState: ApplicationStateService) { }
 
@@ -144,13 +157,6 @@ class TestComponent implements OnInit {
         this.currentFolderId$ = this.appState.select((state) => state.folder.activeFolder);
     }
 }
-
-class MockRouter {
-    createUrlTree(): void { }
-    navigateByUrl(): void { }
-}
-class MockActivatedRoute { }
-class MockLocationStrategy { }
 
 class MockNavigationService {
     instruction(): any {
@@ -172,7 +178,6 @@ class MockFolderActions {
     getTemplates(): void { }
     getItemsOfTypeInFolder(): void { }
     setDisplayAllPageLanguages(): void { }
-    setDisplayStatusIcons(): void { }
     setCurrentPage = jasmine.createSpy('setCurrentPage');
 }
 
@@ -195,22 +200,6 @@ class MockFavouritesService {
 class MockI18nService { }
 
 class MockI18nNotification { }
-
-@Pipe({
-    name: 'permissions',
-    standalone: false,
-})
-class MockPermissionPipe implements PipeTransform {
-    transform(item: any): EditorPermissions {
-        const val = {
-            ...getNoPermissions(),
-            // eslint-disable-next-line @typescript-eslint/naming-convention
-            __forItem: item,
-        };
-        val.page.view = true;
-        return val;
-    }
-}
 
 class MockResourceUrlBuilder { }
 
@@ -240,6 +229,18 @@ class MockListSearchService {
 
 class MockWastebinActionsService {
     restoreItemsFromWastebin = jasmine.createSpy('restoreItemsFromWastebin');
+}
+
+@Pipe({
+    name: 'gtxMapPermissions',
+    standalone: false,
+})
+class MockMapPermissionsPipe implements PipeTransform {
+    transform(item: any, ...args: any[]): EditorPermissions {
+        const val = { ...getNoPermissions() };
+        val.page.view = true;
+        return val;
+    }
 }
 
 describe('ItemListComponent', () => {
@@ -289,6 +290,7 @@ describe('ItemListComponent', () => {
                 AnyItemInheritedPipe,
                 AnyItemPublishedPipe,
                 AnyPageUnpublishedPipe,
+                MockMapPermissionsPipe,
                 DetailChip,
                 FavouriteToggleComponent,
                 FileSizePipe,
@@ -309,11 +311,11 @@ describe('ItemListComponent', () => {
                 ItemListRowComponent,
                 ItemPathPipe,
                 LanguageContextSelectorComponent,
+                LanguageStateComponent,
                 ListItemDetails,
                 MasonryGridComponent,
                 MasonryItemDirective,
                 MockItemContextMenu,
-                MockPermissionPipe,
                 PageIsLockedPipe,
                 PageLanguageIndicatorComponent,
                 ItemStatusLabelComponent,
@@ -330,9 +332,12 @@ describe('ItemListComponent', () => {
         state = TestBed.inject(ApplicationStateService) as any;
         folderActions = TestBed.inject(FolderActionsService) as any;
         expect(state instanceof ApplicationStateService).toBeTruthy();
+
         state.mockState({
             auth: {
-                currentUserId: 1,
+                user: {
+                    id: 1,
+                } as any,
                 sid: 1,
             },
             editor: {
@@ -361,6 +366,8 @@ describe('ItemListComponent', () => {
                 activeNodeLanguages: {
                     list: [1, 2],
                 },
+                activeLanguage: 1,
+                activeFormLanguage: 1,
                 folders: {
                     list: [1, 2, 3],
                     selected: [],
@@ -419,16 +426,16 @@ describe('ItemListComponent', () => {
 
     it('calls getTotalUsage correct times with the correct parameters',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
+            instance.itemType.set('page');
             instance.itemsInfo$ = state.select((state) => state.folder.pages);
-            instance.items = [
+            instance.items.set([
                 { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                 { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                 { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
-            ];
+            ]);
             instance.itemList.itemsInfo = { list: [1, 2] } as ItemsInfo;
             instance.itemList.activeNode = { id: 11 } as NodeModel;
-            instance.itemList.itemType = 'page' as FolderItemType;
+            instance.itemList.itemType = 'page';
             const usageActions = TestBed.inject(UsageActionsService);
             spyOn(instance.itemList, 'updateItemHash').and.callFake(function () { });
             spyOn(instance.itemList, 'getTotalUsage').and.callThrough();
@@ -473,11 +480,11 @@ describe('ItemListComponent', () => {
 
     it('checks if getTotalUsage gets called with the correct parameters when usage display field is active and the saving state is false',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.activeNode = {
+            instance.itemType.set('page');
+            instance.activeNode.set({
                 name: '',
                 id: 33,
-            };
+            });
             const usageActions = TestBed.inject(UsageActionsService);
             state.mockState({
                 folder: {
@@ -519,7 +526,7 @@ describe('ItemListComponent', () => {
 
     it('checks if getTotalUsage gets called when usage display field is active',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
+            instance.itemType.set('page');
             const usageActions = TestBed.inject(UsageActionsService);
             state.mockState({
                 ...state.now,
@@ -560,7 +567,7 @@ describe('ItemListComponent', () => {
     it('displays the live URL for images',
         componentTest(() => TestComponent, (fixture, instance) => {
             const testImage: Partial<Image> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'image' };
-            instance.items = [testImage];
+            instance.items.set([testImage]);
             fixture.detectChanges();
             tick();
             const getImageLiveURL = (el: Element) => (el.querySelector('image-thumbnail .liveurl-icon'));
@@ -570,12 +577,12 @@ describe('ItemListComponent', () => {
 
     it('displays the live URL for files',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'file';
-            instance.items = [
+            instance.itemType.set('file');
+            instance.items.set([
                 { type: 'file', name: 'file1', id: 1, path: 'root/file1' },
                 { type: 'file', name: 'file2', id: 2, path: 'root/file2' },
                 { type: 'file', name: 'file3', id: 3, path: 'root/file3' },
-            ];
+            ]);
             fixture.detectChanges();
             tick();
             const getFileLiveURL = (el: Element) => (el.querySelector('.liveurl-icon'));
@@ -585,10 +592,10 @@ describe('ItemListComponent', () => {
 
     it('displays the correct path for pages if showPath is true',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1', publishPath: '/root/page1' },
-            ];
+            ]);
             updateItemsInfoState({
                 showPath: true,
             });
@@ -603,10 +610,10 @@ describe('ItemListComponent', () => {
 
     it('does not display the path for pages if showPath is false',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1' },
-            ];
+            ]);
             updateItemsInfoState({
                 showPath: false,
             });
@@ -622,7 +629,7 @@ describe('ItemListComponent', () => {
 
         it('filters based on filterTerm',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 const listItems: HTMLElement[] = getListItems(fixture);
@@ -635,14 +642,14 @@ describe('ItemListComponent', () => {
             componentTest(() => TestComponent, (fixture, instance) => {
                 let listItems: HTMLElement[];
 
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 listItems = getListItems(fixture);
                 expect(listItems.length).toBe(1);
                 expect(getItemName(listItems[0])).toContain('item2');
 
-                instance.filterTerm = '';
+                instance.filterTerm.set('');
                 fixture.detectChanges();
                 listItems = getListItems(fixture);
                 expect(listItems.length).toBe(3);
@@ -655,13 +662,13 @@ describe('ItemListComponent', () => {
         it('handles unexpected filterTerm values',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const detectChanges = () => fixture.detectChanges();
-                instance.filterTerm = <any>2;
+                instance.filterTerm.set(2 as any); // why?
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = <any>null;
+                instance.filterTerm.set(null);
                 expect(detectChanges).not.toThrow();
 
-                instance.filterTerm = <any>undefined;
+                instance.filterTerm.set(undefined);
                 expect(detectChanges).not.toThrow();
                 tick();
             }),
@@ -669,13 +676,13 @@ describe('ItemListComponent', () => {
 
         it('copies only selected items that match filterTerm',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
+                instance.itemType.set('page');
                 instance.itemsInfo$ = state.select((state) => state.folder.pages);
-                instance.items = [
+                instance.items.set([
                     { id: 1, name: 'item1', path: 'root/item1', type: 'page' },
                     { id: 2, name: 'item2', path: 'root/item2', type: 'page' },
                     { id: 3, name: 'item3', path: 'root/item3', type: 'page' },
-                ];
+                ]);
                 const contextMenuService = TestBed.inject(ContextMenuOperationsService);
                 spyOn(contextMenuService, 'copyItems').and.stub();
 
@@ -685,14 +692,14 @@ describe('ItemListComponent', () => {
                 const listItems: HTMLElement[] = getListItems(fixture);
 
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                ((listItems[0].querySelector('input[type="checkbox"]')) as HTMLElement).click();
+                ((listItems[0].querySelector('input[type="checkbox"] + label')) as HTMLElement).click();
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                ((listItems[1].querySelector('input[type="checkbox"]')) as HTMLElement).click();
+                ((listItems[1].querySelector('input[type="checkbox"] + label')) as HTMLElement).click();
                 tick();
                 fixture.detectChanges();
                 expect(state.now.folder.pages.selected).toEqual([1, 2]);
 
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
                 tick();
                 const copyButton: HTMLElement = fixture.debugElement
@@ -702,7 +709,7 @@ describe('ItemListComponent', () => {
                 fixture.detectChanges();
                 tick();
 
-                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items[1]] as any, state.now.folder.activeNode);
+                expect(contextMenuService.copyItems).toHaveBeenCalledWith('page', [instance.items()[1]] as any, state.now.folder.activeNode);
             }),
         );
 
@@ -718,7 +725,7 @@ describe('ItemListComponent', () => {
             expect(state.now.folder.folders.selected).toEqual([]);
             expect(checkboxes[0].selected).toBe(false);
 
-            const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"]').click();
+            const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"] + label').click();
 
             for (const listItem of listItems) {
                 clickCheckbox(listItem);
@@ -737,7 +744,7 @@ describe('ItemListComponent', () => {
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
-                .querySelector('.list-header input[type="checkbox"]');
+                .querySelector('.list-header input[type="checkbox"] + label');
 
             expect(checkboxes[0].selected).toBe(false);
             expect(checkboxes[1].selected).toBe(false);
@@ -772,7 +779,7 @@ describe('ItemListComponent', () => {
             const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map((checkboxDebugElement) => checkboxDebugElement.componentInstance);
             const toggleAll: HTMLElement = fixture.nativeElement
-                .querySelector('.list-header input[type="checkbox"]');
+                .querySelector('.list-header input[type="checkbox"] + label');
 
             toggleAll.click();
             tick();
@@ -798,7 +805,7 @@ describe('ItemListComponent', () => {
 
     describe('selectionChange', () => {
 
-        const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"]').click();
+        const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"] + label').click();
 
         it('emits when items are checked/unchecked',
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -825,7 +832,7 @@ describe('ItemListComponent', () => {
         it('emits with all items when toggleAll is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -846,9 +853,9 @@ describe('ItemListComponent', () => {
 
         it('emits with all items when toggleAll is clicked and a filterTerm is being applied',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.filterTerm = '2';
+                instance.filterTerm.set('2');
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -873,7 +880,7 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
                 const fullList = [1, 2, 3, 4, 5, 6, 7, 8];
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
 
                 toggleAll.click();
                 tick();
@@ -884,12 +891,6 @@ describe('ItemListComponent', () => {
 
                 updateItemsInfoState({
                     hasMore: false,
-                });
-                tick();
-
-                expect(state.now.folder.folders.selected).toEqual([]);
-
-                updateItemsInfoState({
                     list: fullList,
                     total: fullList.length,
                 });
@@ -902,7 +903,7 @@ describe('ItemListComponent', () => {
         it('emits with all items when a single items is clicked and then toggleAll is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 fixture.detectChanges();
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
                 const listItems = getListItems(fixture);
 
                 clickCheckbox(listItems[0]);
@@ -938,7 +939,7 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
                 const fullList = [1, 2, 3, 4, 5, 6, 7, 8];
-                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"]');
+                const toggleAll: HTMLElement = fixture.nativeElement.querySelector('.list-header input[type="checkbox"] + label');
                 const listItems = getListItems(fixture);
 
                 clickCheckbox(listItems[0]);
@@ -954,12 +955,6 @@ describe('ItemListComponent', () => {
 
                 updateItemsInfoState({
                     hasMore: false,
-                });
-                tick();
-
-                expect(state.now.folder.folders.selected).toEqual([1]);
-
-                updateItemsInfoState({
                     list: fullList,
                     total: fullList.length,
                 });
@@ -975,11 +970,11 @@ describe('ItemListComponent', () => {
 
         it(`focuses the editor when a ${itemType} item is clicked`,
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.items = [
+                instance.items.set([
                     { id: 1, name: 'item1', path: 'root/item1', type: <any>itemType },
                     { id: 2, name: 'item2', path: 'root/item2', type: <any>itemType },
                     { id: 3, name: 'item3', path: 'root/item3', type: <any>itemType },
-                ];
+                ]);
                 // editorIsFocused won't change unless the editor is open
                 state.mockState({
                     editor: {
@@ -1002,11 +997,11 @@ describe('ItemListComponent', () => {
 
     it('does not focus the editor when a folder item is clicked',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.items = [
+            instance.items.set([
                 { id: 1, name: 'item1', path: 'root/item1', type: 'folder' },
                 { id: 2, name: 'item2', path: 'root/item2', type: 'folder' },
                 { id: 3, name: 'item3', path: 'root/item3', type: 'folder' },
-            ];
+            ]);
             fixture.detectChanges();
             tick();
             const listItems = getListItems(fixture);
@@ -1036,8 +1031,8 @@ describe('ItemListComponent', () => {
                 },
             });
 
-            instance.isSearching = true;
-            instance.items = [1, 2, 3].map((id) => state.now.entities.page[id]);
+            instance.isSearching.set(true);
+            instance.items.set([1, 2, 3].map((id) => state.now.entities.page[id]));
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1050,12 +1045,7 @@ describe('ItemListComponent', () => {
                 .queryAll(By.directive(MockItemContextMenu))
                 .map((debugElement) => debugElement.componentInstance);
 
-            // __forItem is added by the MockPermissionPipe
-            // eslint-disable-next-line no-underscore-dangle
-            const permissionItems = contextMenus.map((menu) => (menu.permissions as any).__forItem);
-
             expect(contextMenus.length).toBe(3);
-            expect(permissionItems).toEqual(instance.items);
         }),
     );
 
@@ -1068,8 +1058,8 @@ describe('ItemListComponent', () => {
         function setupTestCase(fixture: ComponentFixture<TestComponent>): void {
             testPage = { type: 'page', id: 1, name: 'page1', path: 'root/page1', globalId: 'pageA' } as Page;
             const instance = (currentFixture = fixture).componentRef.instance;
-            instance.itemType = 'page';
-            instance.items = [testPage];
+            instance.itemType.set('page');
+            instance.items.set([testPage]);
             updateItemsInfoState({
                 list: [1],
                 total: 1,
@@ -1077,7 +1067,7 @@ describe('ItemListComponent', () => {
         }
 
         function mockIsStartPage(startPage: boolean): void {
-            currentFixture.componentRef.instance.startPageId = startPage ? 1 : 99999;
+            currentFixture.componentRef.instance.startPageId.set(startPage ? 1 : 99999);
             currentFixture.detectChanges();
         }
 
@@ -1125,34 +1115,32 @@ describe('ItemListComponent', () => {
 
         it('shows a language indicator for pages with language variants ',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.items = [
-                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 2], deleted: { at: 0, by: null } },
-                ];
+                instance.itemType.set('page');
+                instance.items.set([
+                    { ...getExamplePageData({ id: 1 }), languageVariants: [1, 324423], deleted: { at: 0, by: null } },
+                ]);
                 updateItemsInfoState({
                     list: [66],
                     total: 1,
                 });
                 fixture.detectChanges();
 
-                const icons: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-icon'));
-                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-code'));
-                // amount of icons shown (displayAllLanguages is disabled by default)
+                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(1);
-                // icon of available language
-                expect(icons[0].className).toMatch(new RegExp(/(available)/, 'g'));
-                expect(links[0].textContent).toMatch(new RegExp(/(en)/, 'i'));
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
 
                 tick();
             }),
         );
 
-        it('shows a language indicator for pages with no language variants but an assigned language if displayAllLangauges is enabled',
+        it('shows a language indicator for pages with no language variants but an assigned language if displayAllLanguages is enabled',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.items = [
+                instance.itemType.set('page');
+                instance.items.set([
                     { ...getExamplePageData({ id: 1 }), languageVariants: [1, 2], deleted: { at: 0, by: null } },
-                ];
+                ]);
                 updateItemsInfoState({
                     list: [66],
                     total: 1,
@@ -1161,16 +1149,16 @@ describe('ItemListComponent', () => {
                 state.now.folder.displayAllLanguages = true;
                 fixture.detectChanges();
 
-                const icons: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-icon'));
-                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator .language-code'));
-                // amount of icons shown
+                const links: HTMLElement[] = Array.from(fixture.nativeElement.querySelectorAll('page-language-indicator gtx-language-state'));
                 expect(links.length).toBe(2);
-                // icon of available language
-                expect(links[0].textContent).toMatch(new RegExp(/(en)/, 'i'));
-                expect(icons[0].className).toMatch(new RegExp(/(available)/, 'g'));
-                // icon of unavailable language
-                expect(links[1].textContent).toMatch(new RegExp(/(de)/, 'i'));
-                expect(icons[1].className).not.toMatch(new RegExp(/(available)/, 'g'));
+
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                expect(links[0].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[0].querySelector('.language-code').textContent).toMatch(new RegExp(/(en)/, 'i'));
+
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                expect(links[1].querySelector('.language-button').classList.contains('available')).toBeTrue;
+                expect(links[1].querySelector('.language-code').textContent).toMatch(new RegExp(/(de)/, 'i'));
 
                 tick();
             }),
@@ -1180,12 +1168,12 @@ describe('ItemListComponent', () => {
 
     it('highlights the item currently opened in the editor (folders, pages, files, and images in list view)',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'page';
-            instance.items = [
+            instance.itemType.set('page');
+            instance.items.set([
                 { type: 'page', name: 'page1', id: 1, path: 'root/page1' },
                 { type: 'page', name: 'page2', id: 2, path: 'root/page2' },
                 { type: 'page', name: 'page3', id: 3, path: 'root/page3' },
-            ];
+            ]);
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1198,7 +1186,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.itemInEditor = instance.items[2];
+            instance.activeItemId.set(instance.items()[2].id);
             fixture.detectChanges();
 
             const backgroundColors = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('gtx-contents-list-item'))
@@ -1215,12 +1203,12 @@ describe('ItemListComponent', () => {
 
     it('highlights the item currently opened in the editor (images)',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.itemType = 'image';
-            instance.items = [
+            instance.itemType.set('image');
+            instance.items.set([
                 { type: 'image', name: 'image1', id: 1, path: 'root/image1' },
                 { type: 'image', name: 'image2', id: 2, path: 'root/image2' },
                 { type: 'image', name: 'image3', id: 3, path: 'root/image3' },
-            ];
+            ]);
             updateItemsInfoState({
                 list: [1, 2, 3],
                 total: 3,
@@ -1238,7 +1226,7 @@ describe('ItemListComponent', () => {
                     itemId: 3,
                 },
             });
-            instance.itemInEditor = instance.items[2];
+            instance.activeItemId.set(instance.items()[2].id);
             fixture.detectChanges();
 
             const boxShadows = Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('image-thumbnail'))

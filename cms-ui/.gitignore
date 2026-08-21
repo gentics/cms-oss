@@ -13,6 +13,8 @@
 /apps/ui-core-docs/compile-docs.js
 /apps/ui-core-docs/docs.output.json
 migrations.json
+prepared_dependencies.json
+outdated_dependencies.json
 
 # profiling files
 chrome-profiler-events.json
@@ -26,3 +28,10 @@ report.*.json
 # ai agent configs
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+.claude/worktrees
+
+.angular
+
+test-output
+
+vitest.config.*.timestamp*

@@ -1,4 +1,4 @@
-import { Component, ElementRef, QueryList, ViewChild } from '@angular/core';
+import { Component, ElementRef, model, QueryList, ViewChild } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -7,7 +7,6 @@ import { componentTest, configureComponentTest } from '../../../../testing';
 import { getTestPagePath, getTestPageUrl } from '../../../../testing/iframe-helpers';
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { IFrameWrapperComponent } from './iframe-wrapper.component';
 
 // A longer timeout for Jasmine async tests to allow the IFrame contents to load.
@@ -35,7 +34,6 @@ describe('IFrameWrapperComponent', () => {
             ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: IFrameStylesService, useClass: MockIFrameStylesService },
             ],
             declarations: [
                 IFrameWrapperComponent,
@@ -56,7 +54,7 @@ describe('IFrameWrapperComponent', () => {
         const instance = fixture.componentInstance;
         const iFrameLoadedSpy = spyOn(instance, 'onIFrameLoad').and.stub();
 
-        instance.srcUrl = SRC_URL1;
+        instance.srcUrl.set(SRC_URL1);
         fixture.detectChanges();
 
         const iFrame = fixture.debugElement.query(By.css('iframe'));
@@ -76,7 +74,7 @@ describe('IFrameWrapperComponent', () => {
         const instance = fixture.componentInstance;
         const iFrameLoadedSpy = spyOn(instance, 'onIFrameLoad').and.stub();
 
-        instance.srcUrl = SRC_URL1;
+        instance.srcUrl.set(SRC_URL1);
         fixture.detectChanges();
 
         const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
@@ -91,7 +89,7 @@ describe('IFrameWrapperComponent', () => {
             checkIFrameLoaded(SRC_URL1);
 
             iFrameLoadedSpy.calls.reset();
-            instance.srcUrl = SRC_URL2;
+            instance.srcUrl.set(SRC_URL2);
             fixture.detectChanges();
 
             setTimeout(() => {
@@ -110,7 +108,7 @@ describe('IFrameWrapperComponent', () => {
             const origNgAfterViewInit = instance.iFrameWrapper.ngAfterViewInit.bind(instance.iFrameWrapper);
             spyOn(instance.iFrameWrapper, 'ngAfterViewInit').and.stub();
 
-            instance.srcUrl = getTestPagePath(1);
+            instance.srcUrl.set(getTestPagePath(1));
             fixture.detectChanges();
 
             const mockedQueryList = mockQueryList(instance.iFrameWrapper);
@@ -121,13 +119,13 @@ describe('IFrameWrapperComponent', () => {
             mockedIFrame.contentDocument.readyState = 'complete';
             mockedIFrame.contentWindow.location.href = 'about:blank';
             const addEventListenerSpy = spyOn(mockedIFrame, 'addEventListener');
-            mockedQueryList.nextChange([ createElmentRef(mockedIFrame as any) ]);
+            mockedQueryList.nextChange([createElmentRef(mockedIFrame as any)]);
 
             expect(iFrameLoadedSpy).not.toHaveBeenCalled();
             expect(addEventListenerSpy).toHaveBeenCalled();
 
             // Trigger the load event with the correct page loaded.
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
             const triggerLoadEvent = (addEventListenerSpy.calls.argsFor(0) as any[])[1] as () => void;
             mockedIFrame.contentWindow.location.href = getTestPageUrl(1);
             triggerLoadEvent();
@@ -137,27 +135,16 @@ describe('IFrameWrapperComponent', () => {
         }),
     );
 
-    it('sets the data-gcms-ui-styles attribute correctly on the IFrame',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            const stylesService = TestBed.inject(IFrameStylesService) as IFrameStylesService;
-            instance.srcUrl = SRC_URL1;
-            fixture.detectChanges();
-
-            const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
-            expect(iFrameElem.dataset.gcmsUiStyles).toEqual(stylesService.stylesUrl);
-        }),
-    );
-
     it('changing width works',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.srcUrl = SRC_URL1;
-            instance.iFrameWidth = INITIAL_WIDTH;
+            instance.srcUrl.set(SRC_URL1);
+            instance.iFrameWidth.set(INITIAL_WIDTH);
             fixture.detectChanges();
 
             const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
             expect(iFrameElem.style.width).toEqual(INITIAL_WIDTH);
 
-            instance.iFrameWidth = CHANGED_WIDTH;
+            instance.iFrameWidth.set(CHANGED_WIDTH);
             fixture.detectChanges();
             expect(iFrameElem.style.width).toBe(CHANGED_WIDTH);
         }),
@@ -165,13 +152,13 @@ describe('IFrameWrapperComponent', () => {
 
     it('changing height works',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.srcUrl = SRC_URL1;
+            instance.srcUrl.set(SRC_URL1);
             fixture.detectChanges();
 
             const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
             expect(iFrameElem.style.height).toEqual(INITIAL_HEIGHT);
 
-            instance.iFrameHeight = CHANGED_HEIGHT;
+            instance.iFrameHeight.set(CHANGED_HEIGHT);
             fixture.detectChanges();
             expect(iFrameElem.style.height).toBe(CHANGED_HEIGHT);
         }),
@@ -179,11 +166,11 @@ describe('IFrameWrapperComponent', () => {
 
     it('changing width and height before setting srcUrl works',
         componentTest(() => TestComponent, (fixture, instance) => {
-            instance.iFrameWidth = CHANGED_WIDTH;
-            instance.iFrameHeight = CHANGED_HEIGHT;
+            instance.iFrameWidth.set(CHANGED_WIDTH);
+            instance.iFrameHeight.set(CHANGED_HEIGHT);
             fixture.detectChanges();
 
-            instance.srcUrl = SRC_URL1;
+            instance.srcUrl.set(SRC_URL1);
             fixture.detectChanges();
 
             const iFrameElem: HTMLIFrameElement = fixture.debugElement.query(By.css('iframe')).nativeElement;
@@ -208,9 +195,9 @@ const createElmentRef = (element: HTMLElement): ElementRef => ({
     template: `
         <iframe-wrapper
             #iFrameWrapper
-            [srcUrl]="srcUrl"
-            [width]="iFrameWidth"
-            [height]="iFrameHeight"
+            [srcUrl]="srcUrl()"
+            [width]="iFrameWidth()"
+            [height]="iFrameHeight()"
             (iFrameLoad)="onIFrameLoad($event)">
         </iframe-wrapper>`,
     standalone: false,
@@ -219,15 +206,11 @@ class TestComponent {
     @ViewChild('iFrameWrapper', { static: true })
     iFrameWrapper: IFrameWrapperComponent;
 
-    srcUrl: string;
-    iFrameHeight = INITIAL_HEIGHT;
-    iFrameWidth: string;
+    readonly srcUrl = model<string>();
+    readonly iFrameHeight = model(INITIAL_HEIGHT);
+    readonly iFrameWidth = model<string>();
 
     onIFrameLoad(): void { }
-}
-
-class MockIFrameStylesService {
-    stylesUrl = 'StylesUrlForIFrame';
 }
 
 class MockQueryList<T> {

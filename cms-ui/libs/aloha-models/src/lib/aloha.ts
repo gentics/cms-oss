@@ -18,18 +18,31 @@ export interface AlohaSettings {
     locale: string;
     plugins: {
         block?: BlockPluginSettings;
-        format: FormatPluginSettings;
+        format?: FormatPluginSettings;
+        /** Which plugins are to be loaded */
+        load?: string[];
         [key: string]: any;
     };
     proxyUrl?: string;
     readonly?: boolean;
     sanitizeCharacters?: Record<string, string>;
     toolbar?: any;
+    requireConfig?: {
+        baseUrl?: string;
+        config?: {
+            i18n?: {
+                locale?: string;
+            };
+        };
+        context?: string;
+        map?: Record<string, Record<string, string>>;
+        paths?: Record<string, string>;
+    };
 }
 
-export type  AlohaToolbarSettings = {
+export type AlohaToolbarSettings = {
     [size in ScreenSize]: AlohaToolbarSizeSettings;
-}
+};
 
 export interface AlohaToolbarSizeSettings {
     tabs: AlohaToolbarTabsSettings[];
@@ -90,6 +103,7 @@ export interface BlockPluginSettings {
     config?: BlockPluginEditableConfig;
     editables?: Record<string, BlockPluginEditableConfig>;
     rootTags?: string[];
+    toggleDragdropGlobal?: boolean;
 }
 
 export interface BlockPluginEditableConfig {
@@ -109,7 +123,9 @@ export interface FormatPluginSettings {
 }
 
 export interface AlohaRegistry<T = any> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _entries: Record<string, T>;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _ids: string[];
     register: (id: string, entry: T) => void;
     unregister: (id: string) => void;
@@ -145,6 +161,7 @@ export type AlohaBlockType = any;
 export interface AlohaBlockManager {
     blockTypes: AlohaRegistry<AlohaBlockType>;
     blocks: AlohaRegistry<AlohaAbstractBlock>;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     _activeBlock: AlohaAbstractBlock | null;
 
     getBlock: (idOrElement: string | HTMLElement) => AlohaAbstractBlock;
@@ -223,7 +240,7 @@ export interface ActiveAlohaTable {
     cells: any[];
     clickedColumnId?: number;
     clickedRowId?: number;
-    columnsToSelect?: number[]
+    columnsToSelect?: number[];
     hasFocus: boolean;
     isActive: boolean;
     mouseDownColIdx: boolean;
@@ -292,7 +309,7 @@ export interface AlohaDOM {
      * @param range range which eventually be modified
      * @param preserveContent true if the contents of the removed DOM object shall be preserved, false if not (default: false)
      */
-    removeFromDOM(object: any, range: AlohaRangeObject, preserveContent): void;
+    removeFromDOM(object: any, range: AlohaRangeObject, preserveContent?: boolean): void;
     /**
      * Remove the given markup from the given range. The given rangeObject will be modified if necessary
      * @param rangeObject range from which the markup shall be removed

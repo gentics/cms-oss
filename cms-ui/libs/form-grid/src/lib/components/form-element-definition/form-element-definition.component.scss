@@ -1,0 +1,57 @@
+@import 'ui-core/src/styles/variables';
+
+:host {
+    display: block;
+}
+
+.definition-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+}
+
+.definition-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
+
+    > * {
+        flex: 1 1 50%;
+    }
+}
+
+.definition-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.definition-checkboxes {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
+
+    > * {
+        flex: 1 1 50%;
+    }
+}
+
+.definition-section-title {
+    display: block;
+    font-weight: bold;
+}
+
+.definition-validation,
+.definition-readonly-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.schema-settings.has-settings {
+    padding-top: 1rem;
+    border-top: 1px solid $gtx-color-light-gray;
+}

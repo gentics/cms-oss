@@ -1,0 +1,59 @@
+@if (form) {
+  <form
+    class="gtx-form row small-12 medium-12"
+    [formGroup]="form"
+    (submit)="triggerSubmit()"
+    >
+    <div class="input-container small-12 columns">
+      @if (enterDisplayText) {
+        <gtx-input
+          data-control="displayText"
+          [label]="('rich_content.display_text' | gtxI18n) + '*'"
+          formControlName="displayText"
+        ></gtx-input>
+      }
+      <gtx-select
+        [label]="('rich_content.link_type' | gtxI18n) + '*'"
+        data-control="linkType"
+        formControlName="linkType"
+        >
+        @for (type of RichContentLinkType | gtxValues; track type) {
+          <gtx-option
+            [value]="type"
+          >{{ ('rich_content.link_type_' + type) | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      <gtx-select
+        [label]="'rich_content.link_target' | gtxI18n"
+        data-control="target"
+        formControlName="target"
+        >
+        @for (target of AVAILABLE_TARGETS; track target.value) {
+          <gtx-option
+            [value]="target.value"
+          >{{ target.label | gtxI18n }}</gtx-option>
+        }
+      </gtx-select>
+      @if (form.controls.itemId.enabled) {
+        <gtx-browse-box
+            class="item-browser"
+            data-control="item"
+            [label]="(('rich_content.link_item') + (form.value?.linkType ? '_' + form.value.linkType : '') | gtxI18n) + '*'"
+            [disabled]="disabled"
+            [clearable]="false"
+            [allowedSelection]="linkItemType"
+            [multiple]="false"
+            [value]="pickedItemRef"
+            (valueChange)="setPickedItem($event)"
+        ></gtx-browse-box>
+      }
+      @if (form.controls.url.enabled) {
+        <gtx-input
+          data-control="url"
+          [label]="('rich_content.link_url' | gtxI18n) + '*'"
+          formControlName="url"
+        ></gtx-input>
+      }
+    </div>
+  </form>
+}

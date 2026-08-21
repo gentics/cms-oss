@@ -40,12 +40,13 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderableResolvable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The AbstractContentObject defines some generic methods and properties for all
@@ -88,6 +89,32 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable, R
 		resolvableProperties.put("globalId", new Property(null) {
 			public Object get(AbstractContentObject object, String key) {
 				return Optional.ofNullable(object.getGlobalId()).map(GlobalId::toString).orElse(null);
+			}
+		});
+		resolvableProperties.put("meshUuid", new Property(null) {
+			public Object get(AbstractContentObject object, String key) {
+				try {
+					if (object != null) {
+						return MeshPublisher.getMeshUuid(object);
+					} else {
+						return null;
+					}
+				} catch (NodeException e) {
+					return null;
+				}
+			}
+		});
+		resolvableProperties.put("meshLanguage", new Property(null) {
+			public Object get(AbstractContentObject object, String key) {
+				try {
+					if (object != null) {
+						return MeshPublisher.getMeshLanguage(object);
+					} else {
+						return null;
+					}
+				} catch (NodeException e) {
+					return null;
+				}
 			}
 		});
 		resolvableProperties.put("ttype", new Property(null) {

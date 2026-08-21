@@ -13,16 +13,18 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
+import { cancelEvent, getValueByPath } from '@gentics/common';
 import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
-import { generateFormProvider, getValueByPath } from '../../utils';
+import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
 
 export interface NormalizedOptionGroup {
+    id: string;
     options: SelectOptionDirective[];
     label: string;
     disabled: boolean;
@@ -113,17 +115,8 @@ export class SelectComponent
     @Input()
     public disableUnknownValues = false;
 
-    /**
-     * Blur event.
-     */
     @Output()
-    public blur = new EventEmitter<any>();
-
-    /**
-     * Focus event.
-     */
-    @Output()
-    public focus = new EventEmitter<any>();
+    public override valueChange = new EventEmitter<number>();
 
     @ViewChild(DropdownListComponent, { static: true })
     private dropdownList: DropdownListComponent;
@@ -131,7 +124,7 @@ export class SelectComponent
     @ViewChild(DropdownContentComponent, { static: true })
     private dropdownContent: DropdownContentComponent;
 
-    // TODO: Rework the options (and groups), to be simply inputs. Provding the options as
+    // TODO: Rework the options (and groups), to be simply inputs. Providing the options as
     // children is messy and just causes unnecessary back and forth mapping, for no benefit.
     @ContentChildren(SelectOptionDirective, { descendants: false })
     private selectOptions: QueryList<SelectOptionDirective>;
@@ -287,12 +280,6 @@ export class SelectComponent
         this.updateViewValue();
     }
 
-    inputBlur(e: Event): void {
-        e.stopPropagation();
-        this.triggerTouch();
-        this.blur.emit(this.value);
-    }
-
     /**
      * Select the initial value when the dropdown is opened.
      */
@@ -375,7 +362,8 @@ export class SelectComponent
     }
 
     /** Clears the selected value and emits `null` with the `change` event. */
-    clearSelection(): void {
+    clearSelection(event?: Event): void {
+        cancelEvent(event);
         if (this.disabled) {
             return;
         }
@@ -383,7 +371,8 @@ export class SelectComponent
         this.triggerChange(this.multiple ? [] : null);
     }
 
-    selectAllOptions(): void {
+    selectAllOptions(event?: Event): void {
+        cancelEvent(event);
         this.triggerChange(this.selectOptions.map((option) => option.value));
     }
 
@@ -419,6 +408,7 @@ export class SelectComponent
     private buildOptionGroups(): NormalizedOptionGroup[] {
         const groups = this.selectOptionGroups.map((g) => {
             return {
+                get id(): string { return g.id; },
                 get options(): SelectOptionDirective[] { return g.options; },
                 get label(): string { return g.label; },
                 get disabled(): boolean { return g.disabled; },
@@ -428,6 +418,7 @@ export class SelectComponent
 
         if (this.selectOptions.length) {
             groups.unshift({
+                id: '_default_',
                 options: this.selectOptions.toArray(),
                 label: '',
                 isDefaultGroup: true,

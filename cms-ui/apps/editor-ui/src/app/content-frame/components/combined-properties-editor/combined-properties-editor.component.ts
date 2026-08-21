@@ -20,16 +20,16 @@ import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
+    EditableFormProperties,
     EditableImageProps,
     EditableObjectTag,
     EditablePageProps,
     EditableTag,
     Feature,
     Folder,
-    FolderItemOrTemplateType,
     FolderSaveRequestOptions,
     Form,
+    FormTypeConfiguration,
     ItemPermissions,
     ItemType,
     ItemWithContentTags,
@@ -37,6 +37,7 @@ import {
     Language,
     LocalizationType,
     Node,
+    ObjectProperty,
     ObjectTag,
     Page,
     Tag,
@@ -67,6 +68,7 @@ import {
     of,
 } from 'rxjs';
 import {
+    debounceTime,
     delay,
     distinctUntilChanged,
     filter,
@@ -102,7 +104,6 @@ import {
     RemoveExpandedTabGroupAction,
     SaveErrorAction,
     SaveSuccessAction,
-    StartSavingAction,
 } from '../../../state';
 import {
     TagEditorHostComponent,
@@ -204,6 +205,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     @Input()
     nodeId: number;
+
+    @Input()
+    public formConfiguration: FormTypeConfiguration;
 
     @Output()
     itemCleanChange = new EventEmitter<boolean>();
@@ -323,6 +327,31 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             distinctUntilChanged(isEqual),
         );
 
+        this.subscriptions.push(combineLatest([
+            this.item$.pipe(
+                filter((item) => item != null),
+                distinctUntilChanged(isEqual, (item) => ({ id: item.id, type: item.type, lang: (item as any).language })),
+            ),
+            currNodeId$,
+        ]).pipe(
+            debounceTime(100),
+            switchMap(([item, nodeId]) => {
+                let itemId = item.id;
+                let itemType = item.type;
+
+                if (itemType === 'node' || itemType === 'channel') {
+                    itemId = (item as Node).folderId;
+                    itemType = 'folder';
+                }
+                return typeof (item as any).language === 'string'
+                    ? this.permissionService.forItemInLanguage(itemType, itemId, nodeId, (item as any).language)
+                    : this.permissionService.forItem(itemId, itemType, nodeId);
+            }),
+        ).subscribe((perms) => {
+            this.itemPermissions = perms;
+            this.changeDetector.markForCheck();
+        }));
+
         this.itemWithObjectProperties$ = this.item$.pipe(
             switchMap((item) => this.loadFolderWithTags(item)),
             map((changedItem) => ({ changedItem, objProperties: this.generateObjectPropertiesList(changedItem) })),
@@ -406,11 +435,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             distinctUntilChanged(isEqual),
             switchMap((item) => this.loadItemFolder(item)),
             switchMap((itemAndFolder) => this.loadLanguagesAndTemplates(itemAndFolder.item, itemAndFolder.folder)),
-            startWith({
-                item: null,
-                languages: [],
-                templates: [],
-            }),
             publishReplay(1),
             refCount(),
         );
@@ -445,10 +469,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             filter((objProp) => !!objProp && !!objProp.tag.tagType),
             switchMap((objProp) => combineLatest([
                 of(objProp),
-                this.loadItemPermissions(objProp.item),
                 tagEditorHost$,
             ])),
-            filter(([,,host]) => host != null),
+            filter(([,host]) => host != null),
             tap(() => {
                 // Workaround: Trigger AfterContentInit Life-cycle hook to initialize active state of the tabs
                 if (this.propertiesTabs) {
@@ -457,9 +480,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             }),
         );
 
-        const editObjPropSub = objPropAndTagEditor$.subscribe(([objProp, itemPermissions, tagEditorHost]) => {
+        const editObjPropSub = objPropAndTagEditor$.subscribe(([objProp, tagEditorHost]) => {
             // Update item permissions
-            this.itemPermissions = itemPermissions;
             this.editObjectProperty(objProp.tag, objProp.item, tagEditorHost);
             this.changeDetector.markForCheck();
         });
@@ -860,6 +882,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         return of(editableTags);
     }
 
+    trackCategory(index: number, category: ObjectPropertiesCategory): string {
+        return category.id;
+    }
+
+    trackObjectProperty(index: number, objProp: ObjectProperty): string {
+        return objProp.name;
+    }
+
     public saveItemProperties(
         postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
     ): Promise<ItemWithObjectTags | Form | Node | void> {
@@ -875,7 +905,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 updatePromise = this.folderActions.updateFolderProperties(itemId, formValue as EditableFolderProps, postUpdateBehavior);
                 break;
             case 'form':{
-                const props = formValue as EditableFormProps;
+                const props = formValue as EditableFormProperties;
                 /*
                  * A bit ugly to do so here, but other places don't work that well for this case.
                  * When the selection for a internal page is not enabled (can only choose either),
@@ -886,14 +916,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                  */
                 updatePromise = this.folderActions.updateFormProperties(itemId, {
                     ...props,
-                    successNodeId: props.successNodeId ?? 0,
-                    successPageId: props.successPageId ?? 0,
                     data: {
                         ...props.data,
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
-                        mailsource_nodeid: props.data?.mailsource_nodeid ?? 0,
-                        // eslint-disable-next-line @typescript-eslint/naming-convention
-                        mailsource_pageid: props.data?.mailsource_pageid ?? 0,
+                        // References must either be a valid ID or 0 to clear them
+                        successNodeId: props.data.successNodeId ?? 0,
+                        successPageId: props.data.successPageId ?? 0,
+                        adminEmailPageId: props.data.adminEmailPageId ?? 0,
+                        adminEmailNodeId: props.data.adminEmailNodeId ?? 0,
+                        // Don't send null, always an empty object to clear it properly
+                        successUrlI18n: props.data.successUrlI18n ?? {},
+                        adminEmailSubject: props.data.adminEmailSubject ?? {},
                     },
                 }, postUpdateBehavior);
                 break;
@@ -958,7 +990,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                     this.itemChange.emit(this.item);
                     this.changeDetector.markForCheck();
                 })
-                .catch(error => {
+                .catch((error) => {
                     this.appState.dispatch(new SaveErrorAction(error.message));
                     this.errorHandler.catch(error, { notification: true });
                     throw error;
@@ -1052,11 +1084,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         if (node.id === folderState.activeNode && !folderState.activeNodeLanguages.fetching && folderState.activeNodeLanguages.total) {
             const languageIds = folderState.activeNodeLanguages.list;
             const languages = languageIds.map((id) => this.entityResolver.getLanguage(id));
-            return of(languages);
+            if (languageIds.length === languages.length) {
+                return of(languages);
+            }
         }
 
         return this.client.node.listLanguages(node.id).pipe(
-            map((response) => response.languages),
+            map((response) => response.items),
         );
     }
 
@@ -1077,13 +1111,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         return this.client.folder.templates(folder.id, options).pipe(
             map((response) => response.templates),
         );
-    }
-
-    private loadItemPermissions(item: ItemWithObjectTags | Node): Observable<ItemPermissions> {
-        const isNode = item.type === 'node' || item.type === 'channel';
-        const itemId = isNode ? (item).folderId : item.id;
-        const itemType = isNode ? 'folder' : item.type as FolderItemOrTemplateType;
-        return this.permissionService.forItem(itemId, itemType, this.currentNode.id);
     }
 
     private editObjectProperty(objProp: EditableObjectTag, item: ItemWithObjectTags, tagEditorHost: TagEditorHostComponent): void {

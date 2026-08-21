@@ -11,6 +11,7 @@ import {
     SyncObjectsRequest,
     SyncObjectsResponse,
 } from '@gentics/cms-models';
+import { toValidNumber } from '@gentics/common';
 import { IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
@@ -166,7 +167,7 @@ export class ChannelDependenciesModal implements OnInit, IModalDialog {
             for (const dependencyType of this.allDependencyTypes) {
                 const transientDependencies = itemDependencies[item.id][dependencyType];
                 if (transientDependencies) {
-                    for (const itemId of Object.keys(transientDependencies).map(Number)) {
+                    for (const itemId of Object.keys(transientDependencies).map(toValidNumber)) {
                         const typePlural = dependencyType + 's' as DependencyItemTypePlural;
                         this.addItemsGroupedByChannelAndType(typePlural, transientDependencies[itemId], itemId);
                     }

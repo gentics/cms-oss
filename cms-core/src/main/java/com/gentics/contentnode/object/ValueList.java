@@ -9,7 +9,7 @@ import java.util.Collection;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 
 /**
  * The valuelist is a special list which holds values. The values can be retrieved by

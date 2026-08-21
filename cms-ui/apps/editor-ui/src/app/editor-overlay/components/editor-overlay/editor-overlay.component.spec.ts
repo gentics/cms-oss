@@ -13,6 +13,7 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { EditorOverlayService } from '../../providers/editor-overlay.service';
 import { ImageEditorModalComponent } from '../image-editor-modal/image-editor-modal.component';
 import { EditorOverlay } from './editor-overlay.component';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 @Component({
     template: `
@@ -45,6 +46,7 @@ describe('EditorOverlayComponent', () => {
                 NgxsModule.forRoot(STATE_MODULES),
                 GenticsUICoreModule.forRoot(),
                 GenticsUIImageEditorModule,
+                AuthenticationModule.forRoot(),
             ],
             declarations: [
                 EditorOverlay,
@@ -98,7 +100,9 @@ function editImageState(fixture: ComponentFixture<any>): void {
     appState.mockState({
         auth: {
             changingPassword: false,
-            currentUserId: 1,
+            user: {
+                id: 1,
+            } as any,
             isLoggedIn: true,
             lastError: '',
             loggingIn: false,

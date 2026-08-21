@@ -130,20 +130,15 @@ $gtx-chip-height: 26px;
 }
 
 .gtx-chip-input-value-inner-date {
-    height: 26px;
 
-    &::ng-deep {
-        gtx-input {
-            input {
-                border: none !important;
-                margin: 0 !important;
-                height: 26px !important;
-                border-radius: 0 !important;
-            }
+    &::ng-deep .box-wrapper  {
+        border-radius: 0;
+        border: none;
 
-            label {
-                display: none;
-            }
+        .box-content {
+            height: 26px;
+            min-height: unset;
+            min-width: 6rem;
         }
     }
 }

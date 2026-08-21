@@ -1,16 +1,21 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "outDir": "../../dist/out-tsc",
         "types": [
-            "jasmine",
-            "node"
+            "vitest/globals"
         ]
     },
-    "files": [
-        "src/test.ts"
-    ],
+    "angularCompilerOptions": {
+        "compilationMode": "full"
+    },
     "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
+        "src/**/*.ts",
+        "vite.config.ts",
+        "vite.config.mts",
+        "vitest.config.ts",
+        "vitest.config.mts",
+        "src/**/*.test.ts",
+        "src/**/*.d.ts"
     ]
 }

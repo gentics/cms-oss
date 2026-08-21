@@ -3,37 +3,5 @@
     "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "libs/cms-integration-api-models/src",
     "projectType": "library",
-    "tags": [
-        "lib",
-        "models",
-        "publish"
-    ],
-    "targets": {
-        "build": {
-            "executor": "@nx/rollup:rollup",
-            "outputs": [
-                "{options.outputPath}"
-            ],
-            "defaultConfiguration": "production",
-            "options": {
-                "main": "{projectRoot}/src/public-api.ts",
-                "outputPath": "dist/{projectRoot}",
-                "tsConfig": "{projectRoot}/tsconfig.lib.json",
-                "project": "{projectRoot}/package.json",
-                "generateExportsField": true,
-                "format": [
-                    "esm",
-                    "cjs"
-                ]
-            },
-            "configurations": {
-                "development": {},
-                "production": {},
-                "ci": {}
-            }
-        },
-        "test": {
-            "executor": "nx:noop"
-        }
-    }
+    "tags": ["lib", "models", "publish"]
 }

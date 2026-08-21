@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "src/**/*.ts",
+        "e2e/**/*.ts"
+    ],
+    "exclude": [
+        "cypress/**/*",
+        "cypress.*.ts",
+        "src/**/*.cy.ts"
+    ]
+}

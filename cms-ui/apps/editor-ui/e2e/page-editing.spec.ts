@@ -5,12 +5,23 @@ import {
     clickModalAction,
     CONSTRUCT_CATEGORY_TESTS,
     CONSTRUCT_TEST_IMAGE,
+    CONSTRUCT_TEST_SELECT_COLOR,
+    CONSTRUCT_TEST_SELECT_COLOR_HIDDEN,
+    CONSTRUCT_TEST_SELECT_COLOR_INLINE,
+    CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE,
+    copyText,
     EntityImporter,
-    FIXTURE_IMAGE_ONE,
+    findNotification,
+    FIXTURE_IMAGE_JPEG1,
+    hexToRGB,
     IMAGE_ONE,
     IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_PAGE_TRANSLATION,
     ITEM_TYPE_IMAGE,
     ITEM_TYPE_PAGE,
+    LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
     matchesUrl,
     matchRequest,
@@ -19,12 +30,12 @@ import {
     onRequest,
     openContext,
     PAGE_ONE,
+    PageImportData,
+    PageTranslationImportData,
     pickSelectValue,
     TestSize,
     wait,
     waitForResponseFrom,
-    findNotification,
-    matchesPath,
 } from '@gentics/e2e-utils';
 import { expect, Frame, Locator, Page, test } from '@playwright/test';
 import {
@@ -38,7 +49,6 @@ import {
 import {
     createExternalLink,
     createInternalLink,
-    upsertLink,
     editorAction,
     findAlohaComponent,
     findDynamicDropdown,
@@ -49,21 +59,42 @@ import {
     getAlohaIFrame,
     itemAction,
     openPageForEditing,
-    overrideAlohaConfig,
+    overwriteAlohaConfigWith,
+    pickPaletteColor,
+    rereouteAlohaConfig,
     selectEditorTab,
     selectNode,
     selectRangeIn,
     selectTextIn,
     setupHelperWindowFunctions,
+    upsertLink,
 } from './helpers';
 
 const CLASS_ACTIVE = 'active';
 
 test.describe('Page Editing', () => {
-    // Mark this suite as slow - Because it is
-    // test.slow();
 
     const IMPORTER = new EntityImporter();
+
+    const MULTILANG_PAGE: PageImportData = {
+        [IMPORT_TYPE]: ITEM_TYPE_PAGE,
+        [IMPORT_ID]: 'page_editing_links_multilang',
+
+        folderId: NODE_MINIMAL[IMPORT_ID],
+        nodeId: NODE_MINIMAL[IMPORT_ID],
+
+        pageName: 'Multilang Page Example',
+        templateId: BASIC_TEMPLATE_ID,
+        language: LANGUAGE_EN,
+    };
+    const MULTILANG_PAGE_DE: PageTranslationImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+        [IMPORT_ID]: 'page_editing_links_multilang_de',
+
+        pageId: MULTILANG_PAGE[IMPORT_ID],
+        pageName: 'Multilang Seite Beispiel',
+        language: LANGUAGE_DE,
+    };
 
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
@@ -87,13 +118,17 @@ test.describe('Page Editing', () => {
         await test.step('Common Test Setup', async () => {
             await IMPORTER.cleanupTest();
             await IMPORTER.setupBinaryFiles({
-                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_ONE,
+                [IMAGE_ONE[IMPORT_ID]]: FIXTURE_IMAGE_JPEG1,
             });
             await IMPORTER.setupTest(TestSize.MINIMAL);
         });
 
         await test.step('Specialized Test Setup', async () => {
             await IMPORTER.syncTag(BASIC_TEMPLATE_ID, 'content');
+            await IMPORTER.importData([
+                MULTILANG_PAGE,
+                MULTILANG_PAGE_DE,
+            ]);
             await setupHelperWindowFunctions(page);
         });
 
@@ -121,6 +156,8 @@ test.describe('Page Editing', () => {
         }
 
         test.describe('Basic Editing', () => {
+            const RATIO_THRESHOLD = 20;
+
             test.beforeEach(async ({ page }) => {
                 editingPage = IMPORTER.get(PAGE_ONE);
                 await openEditingPageInEditmode(page);
@@ -162,6 +199,29 @@ test.describe('Page Editing', () => {
                 expect(res.ok()).toBe(true);
             });
 
+            test('should be possible to paste plain text', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19262',
+                }],
+            }, async ({ page, context }) => {
+                const TEST_TEXT = 'Hello from Playwright!';
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                // Firefox doesn't have these permission, and would fail the test
+                // eslint-disable-next-line playwright/no-conditional-in-test
+                if (context.browser().browserType().name() !== 'firefox') {
+                    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+                }
+
+                await copyText(page, TEST_TEXT);
+
+                await mainEditable.focus();
+                await mainEditable.press('ControlOrMeta+v');
+                await expect(mainEditable).toHaveText(TEST_TEXT);
+            });
+
             test.describe('Mobile view', () => {
                 test.use({ viewport: { width: 450, height: 812 } });
 
@@ -190,7 +250,20 @@ test.describe('Page Editing', () => {
                     await editorAction(page, 'close');
 
                     await page.locator('content-frame').waitFor({ state: 'detached' });
-                    await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 1.0 });
+                    const contents = page.locator('folder-contents');
+                    const { contentsHeight } = await contents.evaluate((el) => ({
+                        contentsHeight: el.getBoundingClientRect().height,
+                    }));
+                    const { parentHeight } = await page.locator('gtx-split-view-container > .slideable > .left-panel').evaluate((el) => ({
+                        parentHeight: el.getBoundingClientRect().height,
+                    }));
+
+                    // eslint-disable-next-line playwright/no-conditional-in-test
+                    const ratio = (contentsHeight <= parentHeight)
+                        ? 1.0
+                        : ((100 / contentsHeight) * (parentHeight - RATIO_THRESHOLD)) / 100;
+
+                    await expect(contents).toBeInViewport({ ratio });
                 });
             });
 
@@ -219,9 +292,19 @@ test.describe('Page Editing', () => {
                 await editorAction(page, 'close');
 
                 await page.locator('content-frame').waitFor({ state: 'detached' });
-                // Ratio is "rather low", as the content may overflow/cause scrolling, and that
-                // also counts towards viewport visibilty.
-                await expect(page.locator('folder-contents')).toBeInViewport({ ratio: 0.8 });
+                const contents = page.locator('folder-contents');
+                const { contentsHeight } = await contents.evaluate((el) => ({
+                    contentsHeight: el.getBoundingClientRect().height,
+                }));
+                const { parentHeight } = await page.locator('gtx-split-view-container > .slideable > .left-panel').evaluate((el) => ({
+                    parentHeight: el.getBoundingClientRect().height,
+                }));
+
+                // eslint-disable-next-line playwright/no-conditional-in-test
+                const ratio = (contentsHeight <= parentHeight)
+                    ? 1.0
+                    : ((100 / contentsHeight) * (parentHeight - RATIO_THRESHOLD)) / 100;
+                await expect(contents).toBeInViewport({ ratio });
             });
         });
 
@@ -278,7 +361,7 @@ test.describe('Page Editing', () => {
                 }],
             }, async ({ page }) => {
                 const WORDS = ['Sample', 'text', 'to', 'test', 'out', 'different', 'formattings'];
-                await overrideAlohaConfig(page, 'aloha-config-interchangable-names.js');
+                await rereouteAlohaConfig(page, 'aloha-config-interchangable-names.js');
                 await openEditingPageInEditmode(page);
 
                 await mainEditable.click();
@@ -324,6 +407,229 @@ test.describe('Page Editing', () => {
                     await expect(italicButton).toContainClass(CLASS_ACTIVE);
                 });
             });
+
+            const COLOR_SETTINGS = [
+                {
+                    label: 'text color',
+                    slot: 'textColor',
+                    alohaSetting: 'color',
+                    cssProperty: 'color',
+                },
+                {
+                    label: 'text background',
+                    slot: 'textBackground',
+                    alohaSetting: 'background-color',
+                    cssProperty: 'background-color',
+                },
+            ];
+
+            for (const colorSettings of COLOR_SETTINGS) {
+                test(`format ${colorSettings.label}`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }],
+                }, async ({ page }) => {
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    const pickedHexColor = await pickPaletteColor(page, colorSettings.slot, 3);
+
+                    // Convert colors, as each browser does color styling applying differently
+                    const rgbaValue = hexToRGB(pickedHexColor);
+                    // eslint-disable-next-line playwright/no-conditional-in-test
+                    if (rgbaValue.length !== 4) {
+                        rgbaValue.push(255);
+                    }
+                    const rgbString = `rgb(${rgbaValue.slice(0, 3).join(', ')})`;
+                    const rgbaString = `rgba(${rgbaValue.join(', ')})`;
+
+                    // Validate
+                    const textEl = mainEditable.locator('span');
+                    await expect(textEl).toBeAttached();
+                    const elColor = await textEl.evaluate((el, settings) => el.style.getPropertyValue(settings.cssProperty), colorSettings);
+                    expect([pickedHexColor, rgbString, rgbaString]).toContainEqual(elColor);
+                });
+
+                test(`format ${colorSettings.label} with custom palette`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }],
+                }, async ({ page }) => {
+                    const PICK_COLOR = '#CD000089';
+
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                enabled: true,
+                                palette: ['${PICK_COLOR}', 'aquamarine', 'rgb(23, 162, 32)'],
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    const pickedHexColor = await pickPaletteColor(page, colorSettings.slot, PICK_COLOR);
+
+                    // Convert colors, as each browser does color styling applying differently
+                    const rgbaValue = hexToRGB(pickedHexColor);
+                    // eslint-disable-next-line playwright/no-conditional-in-test
+                    if (rgbaValue.length !== 4) {
+                        rgbaValue.push(255);
+                    }
+                    const rgbString = `rgb(${rgbaValue.slice(0, 3).join(', ')})`;
+                    const alpha = rgbaValue[3] / 255;
+                    // eslint-disable-next-line playwright/no-conditional-in-test
+                    const rgbaString = `rgba(${rgbaValue.slice(0, 3).join(', ')}, ${(alpha === 1 || alpha === 0) ? alpha : alpha.toFixed(2)})`;
+
+                    // Validate
+                    const textEl = mainEditable.locator('span');
+                    await expect(textEl).toBeAttached();
+                    const elColor = await textEl.evaluate((el, settings) => el.style.getPropertyValue(settings.cssProperty), colorSettings);
+                    expect([pickedHexColor, rgbString, rgbaString]).toContainEqual(elColor);
+                });
+
+                // One should be able to define an empty list/palette, to disable palettes
+                test(`format ${colorSettings.label} with empty palette`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }],
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                enabled: true,
+                                palette: [],
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    // Verify
+                    const dropdown = findDynamicDropdown(page, colorSettings.slot);
+                    const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+                    const paletteEntries = colorPicker.locator('.palette-wrapper .palette-entry:not(.clear-entry)');
+                    await expect(paletteEntries).not.toBeAttached();
+                });
+
+                test(`format ${colorSettings.label} without clear`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }],
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                enabled: true,
+                                allowClear: false
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await test.step('Open text-color dropdown', async () => {
+                        await selectEditorTab(page, 'formatting');
+                        const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                        await button.click();
+                    });
+
+                    // Verify
+                    const dropdown = findDynamicDropdown(page, colorSettings.slot);
+                    const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+                    const clearButton = colorPicker.locator('.palette-wrapper .clear-entry');
+                    await expect(clearButton).not.toBeAttached();
+                });
+
+                test(`format ${colorSettings.label} with color disabled`, {
+                    annotation: [{
+                        type: 'ticket',
+                        description: 'SUP-19597',
+                    }],
+                }, async ({ page }) => {
+                    await overwriteAlohaConfigWith(page, `
+                        if (Aloha.settings.plugins.textcolor == null) {
+                            Aloha.settings.plugins.textcolor = {};
+                        }
+
+                        Aloha.settings.plugins.textcolor.config = {
+                            "${colorSettings.alohaSetting}": {
+                                enabled: false,
+                            },
+                        };
+                    `);
+                    await openEditingPageInEditmode(page);
+
+                    await test.step('Prepare editable content', async () => {
+                        await mainEditable.click();
+                        await mainEditable.clear();
+                        await mainEditable.fill('text123');
+                        await mainEditable.press('ControlOrMeta+a');
+                    });
+
+                    await selectEditorTab(page, 'formatting');
+                    const button = findAlohaComponent(page, { slot: colorSettings.slot });
+                    await expect(button).not.toBeAttached();
+                });
+            }
 
             test.describe('toggle formats with keybinds', {
                 annotation: [{
@@ -575,12 +881,12 @@ test.describe('Page Editing', () => {
             test('should be able to select an internal page as link', async ({ page }) => {
                 const TEXT_CONTENT = 'Hello ';
                 const LINK_TEXT = 'World';
-                const LINK_ITEM = IMPORTER.get(PAGE_ONE);
+                const LINK_ITEM = IMPORTER.get(MULTILANG_PAGE);
                 const ITEM_NODE = IMPORTER.get(NODE_MINIMAL);
                 const LINK_TITLE = 'My Link Title';
                 const LINK_TARGET = '_blank';
                 const LINK_ANCHOR = 'test-anchor';
-                const LINK_LANGUAGE = 'en';
+                const LINK_LANGUAGE = LANGUAGE_EN;
 
                 // Type content and select text for link
                 await mainEditable.click();
@@ -592,6 +898,10 @@ test.describe('Page Editing', () => {
                 await createInternalLink(page, async (repoBrowser) => {
                     await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${LINK_ITEM.id}"] .item-checkbox label`).click();
                 }, async (form) => {
+                    // Validate that the picker already shows the correct language
+                    const picker = form.locator('[data-slot="url"] .target-input.internal');
+                    await expect(picker.locator('.page-language')).toHaveText(LINK_LANGUAGE);
+
                     await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
                     await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
                     await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
@@ -607,6 +917,56 @@ test.describe('Page Editing', () => {
                 await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
                 await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_ITEM.name);
                 await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_ITEM.id}`);
+                await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveText(LINK_TEXT);
+            });
+
+            test('should be able to select an internal page in a different language as link', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19559',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_ITEM = IMPORTER.get(MULTILANG_PAGE);
+                const LINK_TARGET_ITEM = IMPORTER.get(MULTILANG_PAGE_DE);
+                const ITEM_NODE = IMPORTER.get(NODE_MINIMAL);
+                const LINK_TITLE = 'My Link Title';
+                const LINK_TARGET = '_blank';
+                const LINK_ANCHOR = 'test-anchor';
+                const LINK_LANGUAGE = LANGUAGE_DE;
+
+                // Type content and select text for link
+                await mainEditable.click();
+                await mainEditable.clear();
+                await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                // Select text to make into link
+                expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+                await createInternalLink(page, async (repoBrowser) => {
+                    const repoPageList = repoBrowser.locator('repository-browser-list[data-type="page"]');
+                    await repoPageList.locator(`[data-id="${LINK_ITEM.id}"] [data-action="page-language"][data-id="${LINK_LANGUAGE}"]`).click();
+                }, async (form) => {
+                    // Validate that the picker already shows the correct language
+                    const picker = form.locator('[data-slot="url"] .target-input.internal');
+                    await expect(picker.locator('.page-language')).toHaveText(LINK_LANGUAGE);
+
+                    await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                    await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                    await pickSelectValue(form.locator('[data-slot="target"]'), LINK_TARGET);
+                    await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+                });
+
+                // Verify link was created
+                const linkElement = mainEditable.locator('a');
+                await expect(linkElement).toHaveAttribute('href', `/alohapage?real=newview&realid=${LINK_TARGET_ITEM.id}&nodeid=${ITEM_NODE.id}`);
+                await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
+                await expect(linkElement).toHaveAttribute('target', LINK_TARGET);
+                await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-repository', 'com.gentics.aloha.GCN.Page');
+                await expect(linkElement).toHaveAttribute('data-gcn-target-label', LINK_TARGET_ITEM.name);
+                await expect(linkElement).toHaveAttribute('data-gentics-aloha-object-id', `10007.${LINK_TARGET_ITEM.id}`);
                 await expect(linkElement).toHaveAttribute('data-gcn-channelid', `${ITEM_NODE.id}`);
                 await expect(linkElement).toHaveText(LINK_TEXT);
             });
@@ -734,6 +1094,7 @@ test.describe('Page Editing', () => {
                 });
             }
 
+            // eslint-disable-next-line playwright/expect-expect
             test('should be possible to copy an internal link', {
                 annotation: [{
                     type: 'ticket',
@@ -750,6 +1111,7 @@ test.describe('Page Editing', () => {
                 });
             });
 
+            // eslint-disable-next-line playwright/expect-expect
             test('should be possible to copy an external link', {
                 annotation: [{
                     type: 'ticket',
@@ -762,21 +1124,6 @@ test.describe('Page Editing', () => {
                         await form.locator('[data-slot="title"] input').fill('A very interesting site');
                     });
                 });
-            });
-
-            test('should be possible to paste plain text', {
-                annotation: [{
-                    type: 'ticket',
-                    description: 'SUP-19262',
-                }],
-            }, async ({ page, context }) => {
-                await mainEditable.click();
-                await mainEditable.clear();
-
-                await context.grantPermissions(['clipboard-write']);
-                await page.evaluate(() => navigator.clipboard.writeText('Hello from Playwright!'));
-                await mainEditable.press('ControlOrMeta+v');
-                await expect(mainEditable).toHaveText('Hello from Playwright!');
             });
 
             // FIXME: Ticket created, SUP-19576
@@ -830,7 +1177,7 @@ test.describe('Page Editing', () => {
             test('should be able to style table with config', async ({ page }) => {
                 const STYLE_NAME = 'table-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -855,7 +1202,7 @@ test.describe('Page Editing', () => {
             test('should be able to style column with config', async ({ page }) => {
                 const STYLE_NAME = 'column-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -883,7 +1230,7 @@ test.describe('Page Editing', () => {
             test('should be able to style row with config', async ({ page }) => {
                 const STYLE_NAME = 'row-style-1';
 
-                await overrideAlohaConfig(page, 'aloha-config-table-test.js');
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
                 await editPageAndCreateTable(page);
 
                 const table = mainEditable.locator('table');
@@ -1023,6 +1370,205 @@ test.describe('Page Editing', () => {
                 const postedEditableContent = (renderBody.tags['content'].properties.text as StringTagPartProperty).stringValue;
                 expect(postedEditableContent).toContain(`<node ${tagName}>`);
             });
+
+            async function testEditButton(page: Page, tagId: string, showButton: boolean): Promise<void> {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                const renderUrl = '/rest/page/renderTag/*';
+                const createReq = waitForResponseFrom(page, 'POST', `/rest/page/newtag/${editingPage.id}`);
+                const renderReq = waitForResponseFrom(page, 'POST', renderUrl);
+                const dropdown = await openContext(category);
+                await dropdown.locator(`[data-global-id="${tagId}"]`).click();
+                const createResponse = await createReq;
+                const createResponseBody = await createResponse.json();
+                const tagName = createResponseBody.tag.name;
+                await renderReq;
+
+                const editButton = mainEditable.locator(`.aloha-block[data-gcn-tagname="${tagName}"] .aloha-block-handle .gcn-construct-button-edit`);
+                if (showButton) {
+                    await editButton.waitFor();
+                    await expect(editButton).toBeVisible();
+                } else {
+                    await expect(editButton).not.toBeAttached();
+                }
+            }
+
+            // eslint-disable-next-line playwright/expect-expect
+            test('should render an editable tag with edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR, true);
+            });
+
+            // eslint-disable-next-line playwright/expect-expect
+            test('should render a hidden tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_HIDDEN, false);
+            });
+
+            // eslint-disable-next-line playwright/expect-expect
+            test('should render an inline tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_INLINE, false);
+            });
+
+            // eslint-disable-next-line playwright/expect-expect
+            test('should render a non-editable tag with no edit button', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19578',
+                }],
+            }, async ({ page }) => {
+                await testEditButton(page, CONSTRUCT_TEST_SELECT_COLOR_UNEDITABLE, false);
+            });
+
+            test('should render the drag-handle correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19984',
+                }],
+            }, async ({ page }) => {
+                // Clear the content
+                await mainEditable.click();
+                await mainEditable.clear();
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Insert new tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                    const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                    await expect(alohaBlock).toHaveClass(/ui-draggable/);
+                    const dragHandle = alohaBlock.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    // After inserting a tag, the drag-handle should be displayed
+                    await expect(dragHandle).toBeVisible();
+                });
+
+                await test.step('Save, and re-open the page', async () => {
+                    // Save the page, close it, open it again
+                    await editorAction(page, 'save');
+                    await editorAction(page, 'close');
+                    await openEditingPageInEditmode(page);
+
+                    // We can't reuse the locator from the other step, as it's a new iframe
+                    const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                    await expect(alohaBlock).toHaveClass(/ui-draggable/);
+                    const dragHandle = alohaBlock.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    // After inserting a tag, the drag-handle should be displayed
+                    await expect(dragHandle).toBeVisible();
+                });
+            });
+
+            test('should show delete dialogs correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19595',
+                }],
+            }, async ({ page }) => {
+                // Mark as slow, since we have a lot of timeouts/waits since we hold down a key for prolonged time.
+                test.slow();
+
+                await mainEditable.click();
+                await mainEditable.fill('text before');
+                expect(await selectRangeIn(mainEditable, 11, 11)).toEqual(true);
+
+                await selectEditorTab(page, 'gtx.constructs');
+                const toolbar = page.locator('content-frame gtx-editor-toolbar');
+                const controls = toolbar.locator('gtx-construct-controls');
+                const category = controls.locator(`.construct-category[data-global-id="${CONSTRUCT_CATEGORY_TESTS}"]`);
+
+                await test.step('Add first tag', async () => {
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                });
+
+                const alohaBlock = mainEditable.locator('.aloha-block[data-gcn-tagname]');
+                // Wait for the attribute to be there
+                await expect(alohaBlock).toHaveAttribute('data-aloha-block-id');
+                const alohaBlockName = await alohaBlock.getAttribute('data-gcn-tagname');
+                // Check the value. We also need it later on
+                // eslint-disable-next-line playwright/prefer-web-first-assertions
+                expect(alohaBlockName).toBeTruthy();
+
+                // Enter text after the tag
+                await mainEditable.pressSequentially('text after');
+
+                const dialog = page.locator('gtx-modal-dialog');
+                const pressableKeys = ['Space', 'Enter', 'a', 'Delete'];
+
+                async function checkKeys(end: number | null): Promise<void> {
+                    for (const key of pressableKeys) {
+                        await test.step(`Key "${key}" should only open one dialog`, async () => {
+                            // Select all of the content
+                            await mainEditable.click();
+                            expect(await selectRangeIn(mainEditable, 0, end)).toEqual(true);
+                            // Single press
+                            await mainEditable.press(key);
+
+                            // Check the dialog
+                            await expect(dialog).toBeVisible();
+                            await expect(dialog).toHaveCount(1);
+                            await expect(dialog.locator('.modal-content')).toContainText(alohaBlockName);
+
+                            // Dismiss the dialog
+                            await dialog.locator('.modal-footer gtx-button').first().click();
+                            await expect(dialog).not.toBeAttached();
+
+                            // Select again, since it lost focus due to dismissing
+                            await mainEditable.click();
+                            expect(await selectRangeIn(mainEditable, 0, end)).toEqual(true);
+
+                            // Holding down the key for 2sec
+                            await page.keyboard.down(key);
+                            // eslint-disable-next-line playwright/no-wait-for-timeout
+                            await page.waitForTimeout(2_000);
+                            await page.keyboard.up(key);
+
+                            // Check the dialog
+                            await expect(dialog).toBeVisible();
+                            await expect(dialog).toHaveCount(1);
+                            await expect(dialog.locator('.modal-content')).toContainText(alohaBlockName);
+
+                            // Dismiss the dialog
+                            await dialog.locator('.modal-footer gtx-button').first().click();
+                            await expect(dialog).not.toBeAttached();
+                        });
+                    }
+                }
+
+                await checkKeys(null);
+
+                await test.step('Add another tag', async () => {
+                    // Any large number will do, to get to the end
+                    expect(await selectRangeIn(mainEditable, 10_000, 10_000)).toEqual(true);
+                    const dropdown = await openContext(category);
+                    await dropdown.locator(`[data-global-id="${CONSTRUCT_TEST_IMAGE}"]`).click();
+                });
+
+                // Check again now
+                await checkKeys(14);
+            });
         });
     });
 
@@ -1099,11 +1645,11 @@ test.describe('Page Editing', () => {
         await constructLoadRequest;
         expect(adminEndpointCalled).toBe(false);
 
-        // Switch to constructs tab
-        await selectEditorTab(page, TAB_ID_CONSTRUCTS);
-
         // Click in editor to activate constructs
         await editor.click();
+
+        // Switch to constructs tab
+        await selectEditorTab(page, TAB_ID_CONSTRUCTS);
 
         // Verify constructs are loaded
         const controls = page.locator('content-frame gtx-page-editor-controls');

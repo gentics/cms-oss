@@ -129,6 +129,8 @@
     display: flex;
     width: auto;
     border-right: 1px solid $gtx-color-light-gray;
+    align-items: center;
+    justify-content: center;
 }
 
 .grid-table .grid-cell.data-column {
@@ -143,19 +145,7 @@
 }
 
 .grid-table .selection-checkbox {
-    margin: auto;
     display: block;
-    width: 20px;
-    height: 20px;
-
-    &::ng-deep {
-        label {
-            width: 20px;
-            height: 20px;
-            line-height: 20px;
-            padding-left: 20px;
-        }
-    }
 }
 
 .grid-table .grid-cell.action-column {

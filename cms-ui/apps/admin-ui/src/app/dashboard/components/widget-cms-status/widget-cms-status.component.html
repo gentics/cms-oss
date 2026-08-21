@@ -1,4 +1,4 @@
-<gtx-sidebar-item [title]="title">
+<gtx-sidebar-item [title]="(title || ('widget.cms_status_title' | gtxI18n))">
   <div class="row">
     <div class="title">{{ 'widget.cms_status_version_information' | gtxI18n }}</div>
     {{ (uiState$ | async).cmpVersion?.version }} {{ (uiState$ | async).cmpVersion?.variant }}

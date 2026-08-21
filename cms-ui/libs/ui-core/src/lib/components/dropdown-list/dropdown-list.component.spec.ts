@@ -2,13 +2,12 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { BrowserTestingModule } from '@angular/platform-browser/testing';
+import { componentTest, crossBrowserInitKeyboardEvent, KeyboardEventConfig } from '@gentics/ui-core/testing';
 import { KeyCode } from '../../common/keycodes';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
-import { componentTest } from '../../testing';
-import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
@@ -47,7 +46,7 @@ describe('DropdownListComponent', () => {
     });
 
     it('does not add content to the DOM before it is opened',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             const contentWrapper: HTMLElement = fixture.nativeElement.querySelector('.dropdown-content-wrapper');
             expect(contentWrapper).toBeNull();
@@ -55,7 +54,7 @@ describe('DropdownListComponent', () => {
     );
 
     it('attaches its content next to the overlay host when the dropdown trigger is clicked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             getTrigger(fixture, 0).click();
@@ -68,7 +67,7 @@ describe('DropdownListComponent', () => {
     );
 
     it('attaches a scroll mask next to the overlay host when the dropdown trigger is clicked',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             getTrigger(fixture, 0).click();
@@ -223,7 +222,7 @@ describe('DropdownListComponent', () => {
     );
 
     it('clicking the scroll mask closes the dropdown',
-        componentTest(() => TestComponent, fixture => {
+        componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
             getTrigger(fixture, 0).click();
@@ -266,7 +265,7 @@ describe('DropdownListComponent', () => {
                     </ul>
                 </gtx-dropdown-content>
             </gtx-dropdown-list>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
             getTrigger(fixture, 0).click();
@@ -297,7 +296,7 @@ describe('DropdownListComponent', () => {
                     </ul>
                 </gtx-dropdown-content>
             </gtx-dropdown-list>`,
-        fixture => {
+        (fixture) => {
             fixture.detectChanges();
             tick();
             getTrigger(fixture, 0).click();
@@ -437,7 +436,6 @@ describe('DropdownListComponent', () => {
     });
 
 });
-
 
 @Component({
     template: `

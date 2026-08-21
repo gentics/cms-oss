@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { BrowserTestingModule } from '@angular/platform-browser/testing';
+import { componentTest } from '@gentics/ui-core/testing';
 import { OverlayHostComponent } from '../../components/overlay-host/overlay-host.component';
 import { ToastComponent } from '../../components/toast/toast.component';
 import { IconDirective } from '../../directives/icon/icon.directive';
-import { componentTest } from '../../testing';
 import { OverlayHostService } from '../overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import { NotificationService } from './notification.service';

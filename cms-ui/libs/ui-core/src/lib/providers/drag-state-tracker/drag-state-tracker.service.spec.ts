@@ -1,14 +1,13 @@
-import {Observable} from 'rxjs';
-
-import {SpyEventTarget, subscribeSpyObserver, triggerFakeDragEvent} from '../../testing';
-import {DragStateTrackerFactoryService, FileDragState} from './drag-state-tracker.service';
+import { SpyEventTarget, subscribeSpyObserver, triggerFakeDragEvent } from '@gentics/ui-core/testing';
+import { Observable } from 'rxjs';
+import { DragStateTrackerFactoryService, FileDragState } from './drag-state-tracker.service';
 
 describe('DragStateTrackerFactory', () => {
     describe('trackElement()', () => {
         it('returns an Observable', () => {
-            let fakeEventTarget = new SpyEventTarget();
-            let factory = new DragStateTrackerFactoryService();
-            let result = factory.trackElement(fakeEventTarget);
+            const fakeEventTarget = new SpyEventTarget();
+            const factory = new DragStateTrackerFactoryService();
+            const result = factory.trackElement(fakeEventTarget);
             expect(result).toBeDefined();
             expect(typeof result.subscribe).toBe('function');
         });
@@ -22,7 +21,7 @@ describe('DragStateTracker', () => {
 
     beforeEach(() => {
         eventTarget = new SpyEventTarget();
-        let factory = new DragStateTrackerFactoryService();
+        const factory = new DragStateTrackerFactoryService();
         tracker = factory.trackElement(eventTarget);
     });
 
@@ -39,7 +38,7 @@ describe('DragStateTracker', () => {
     });
 
     it('removes all event listeners it added when unsubscribed', () => {
-        let sub = tracker.subscribe(() => {});
+        const sub = tracker.subscribe(() => {});
         try {
             expect(eventTarget.addEventListener).toHaveBeenCalled();
             expect(eventTarget.listeners.length).toBeGreaterThan(0);
@@ -53,15 +52,15 @@ describe('DragStateTracker', () => {
 
     it('does not add event listeners on every subscription', () => {
         subscribeSpyObserver(tracker);
-        let listenersAfterFirstSubscribe = eventTarget.listeners.length;
+        const listenersAfterFirstSubscribe = eventTarget.listeners.length;
         expect(listenersAfterFirstSubscribe).toBeGreaterThan(0);
         subscribeSpyObserver(tracker);
         expect(eventTarget.listeners.length).toBe(listenersAfterFirstSubscribe);
     });
 
     it('only removes the event listeners after the last subscription was unsubscribed', () => {
-        let subA = tracker.subscribe(() => {});
-        let subB = tracker.subscribe(() => {});
+        const subA = tracker.subscribe(() => {});
+        const subB = tracker.subscribe(() => {});
         try {
             subA.unsubscribe();
             expect(eventTarget.removeEventListener).not.toHaveBeenCalled();
@@ -76,14 +75,14 @@ describe('DragStateTracker', () => {
     });
 
     it('emits no value before an event happens', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
         expect(observer.next).not.toHaveBeenCalled();
         expect(observer.complete).not.toHaveBeenCalled();
         expect(observer.error).not.toHaveBeenCalled();
     });
 
     it('emits a list of file types on "dragenter"', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
 
         triggerFakeDragEvent(eventTarget, 'dragenter', ['image/jpeg']);
         expect(observer.next).toHaveBeenCalledTimes(1);
@@ -93,9 +92,9 @@ describe('DragStateTracker', () => {
     });
 
     it('does not emit anything on a not-a-file "dragenter"', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
 
-        let NO_FILES = <any[]> [];
+        const NO_FILES = <any[]> [];
         triggerFakeDragEvent(eventTarget, 'dragenter', NO_FILES);
 
         expect(observer.next).not.toHaveBeenCalled();
@@ -104,7 +103,7 @@ describe('DragStateTracker', () => {
     });
 
     it('emits an empty array on "dragleave"', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
         triggerFakeDragEvent(eventTarget, 'dragenter', ['image/jpeg']);
         observer.next.calls.reset();
 
@@ -116,7 +115,7 @@ describe('DragStateTracker', () => {
     });
 
     it('emits an empty array on "drop"', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
         triggerFakeDragEvent(eventTarget, 'dragenter', ['image/jpeg']);
         observer.next.calls.reset();
 
@@ -128,14 +127,14 @@ describe('DragStateTracker', () => {
     });
 
     it('emits an empty array if the mouse enters with no "dragleave"/"drop" before', () => {
-        let observer = subscribeSpyObserver(tracker);
+        const observer = subscribeSpyObserver(tracker);
         triggerFakeDragEvent(eventTarget, 'dragenter', ['image/jpeg']);
         observer.next.calls.reset();
 
         eventTarget.triggerListeners('mouseenter', {
             type: 'mouseenter',
             button: 0,
-            buttons: 0
+            buttons: 0,
         });
         expect(observer.next).toHaveBeenCalledTimes(1);
         expect(observer.next).toHaveBeenCalledWith([]);

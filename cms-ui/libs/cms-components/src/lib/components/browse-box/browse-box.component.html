@@ -1,0 +1,82 @@
+<gtx-form-element-container [disabled]="disabled">
+    @if (label) {
+        <label>{{ label }}</label>
+    }
+
+    <div
+        class="display-value"
+        [class.placeholder]="!displayValue"
+        [attr.data-value]="selectedItemHashes"
+    >{{ displayValue || placeholder }}</div>
+
+    <button
+        class="addon-button"
+        data-action="browse"
+        [title]="!!browseTooltip || browseTooltip === '' ? browseTooltip : 'tag_editor.browse' | gtxI18n"
+        [disabled]="disabled"
+        (focus)="handleFocus($event)"
+        (blur)="handleBlur($event)"
+        (click)="browseItems($event)"
+    >
+        <icon>folder_open</icon>
+    </button>
+
+    @if (canUpload) {
+        <button
+            class="addon-button icon-success"
+            data-action="upload"
+            [title]="!!uploadTooltip || uploadTooltip === '' ? uploadTooltip : 'tag_editor.upload' | gtxI18n"
+            [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
+            (click)="uploadItems($event)"
+        >
+            <icon>cloud_upload</icon>
+        </button>
+    }
+
+    @if (canEditImage && !multiple && $any(value)?.type === 'image') {
+        <button
+            class="addon-button icon-secondary"
+            data-action="edit-image"
+            [title]="!!editImageTooltip || editImageTooltip === '' ? editImageTooltip : 'tag_editor.image_manipulation' | gtxI18n"
+            [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
+            (click)="editImage()"
+        >
+            <icon>edit</icon>
+        </button>
+    }
+
+    @if (clearable == null ? !required : clearable) {
+        <button
+            class="addon-button icon-alert"
+            data-action="clear"
+            [title]="!!clearTooltip || clearTooltip === '' ? clearTooltip : 'tag_editor.clear_selection' | gtxI18n"
+            [disabled]="disabled"
+            (focus)="handleFocus($event)"
+            (blur)="handleBlur($event)"
+            (click)="clearItems($event)"
+        >
+            <icon>clear</icon>
+        </button>
+    }
+</gtx-form-element-container>
+
+@if ((showBreadcrumb == null ? !multiple && breadcrumbTitle : showBreadcrumb) && breadcrumbs?.length > 0) {
+    <div class="breadcrumbs">
+        @if (breadcrumbTitle) {
+            <div class="breadcrumb-title">{{ breadcrumbTitle }}</div>
+        }
+        @if (breadcrumbs.length > 1) {
+            <ul class="breadcrumb-list">
+                @for (crumb of breadcrumbs; track crumb) {
+                    <li class="breadcrumb-item">{{ crumb }}</li>
+                }
+            </ul>
+        } @else {
+            <div class="breadcrumb-path">{{ breadcrumbs[0] }}</div>
+        }
+    </div>
+}

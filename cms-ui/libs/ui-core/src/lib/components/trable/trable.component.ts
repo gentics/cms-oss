@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { cancelEvent } from '@gentics/common';
 import { TrableRow, TrableRowExpandEvent } from '../../common';
-import { cancelEvent } from '../../utils';
 import { BaseTableComponent } from '../base-table/base-table.component';
 
 function createRowId(row: TrableRow<any>): string {
@@ -88,5 +88,9 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
         id += `:${row.loaded ? '0' : '1'}:${row.loading ? '0' : '1'}:${row.expanded ? '0' : '1'}`;
 
         return id;
+    }
+
+    public cancel(event?: MouseEvent) {
+        cancelEvent(event);
     }
 }

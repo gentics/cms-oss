@@ -29,7 +29,6 @@ import {
 } from '../../providers/ui-overrides/ui-overrides.model';
 import { UIOverridesService } from '../../providers/ui-overrides/ui-overrides.service';
 
-
 /**
  * Directive that makes certain UI elements hide or change behavior
  * based on a customer configuration, e.g. to redirect internal behavior to an
@@ -37,7 +36,7 @@ import { UIOverridesService } from '../../providers/ui-overrides/ui-overrides.se
  */
 @Directive({
     selector: '[overrideSlot]',
-    standalone: false
+    standalone: false,
 })
 export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestroy {
 
@@ -88,10 +87,10 @@ export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestro
 
     private followOverridesState(): void {
         let alreadyIntialized = false;
-        const sub = this.state.select(state => state.ui).pipe(
-            filter(ui => ui.overridesReceived),
+        const sub = this.state.select((state) => state.ui).pipe(
+            filter((ui) => ui.overridesReceived),
             take(1),
-        ).subscribe(ui => {
+        ).subscribe((ui) => {
             if (!ui.overrides.hasOwnProperty(this.overrideSlot)) {
                 // Most customers don't use overrides, which means we can disable all logic
                 return this.subscriptions.unsubscribe();
@@ -112,7 +111,9 @@ export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestro
 
     private interceptNativeClickEvents(): void {
         const hostElement: HTMLElement = this.elementRef && this.elementRef.nativeElement;
-        if (!hostElement) { return; }
+        if (!hostElement) {
+            return;
+        }
 
         if (this.button) {
             const eventWrapper = hostElement.querySelector('.button-event-wrapper');
@@ -145,13 +146,15 @@ export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestro
     }
 
     private applyOverride(): void {
-        if (!this.override) { return; }
-
-        if ('hide' in this.override) {
-            this.shouldHide = (this.override ).hide;
+        if (!this.override) {
+            return;
         }
 
-        if ('disable' in this.override && (this.override ).disable) {
+        if ('hide' in this.override) {
+            this.shouldHide = (this.override).hide;
+        }
+
+        if ('disable' in this.override && (this.override).disable) {
             this.shouldDisable = true;
 
             if (this.button) {
@@ -174,7 +177,7 @@ export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestro
     private disableShouldBeReapplied(): boolean {
         if (!this.shouldDisable) {
             return false;
-        } else if (this.button && !this.button.isDisabled) {
+        } else if (this.button && !this.button.disabled) {
             return true;
         } else if (this.filePicker && !this.filePicker.disabled) {
             return true;

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor, ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -9,9 +10,8 @@ import {
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash-es';
-import { BehaviorSubject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
+import { createRegexValidator } from '@gentics/ui-core';
+import { distinctUntilChanged, Subscription } from 'rxjs';
 
 /**
  * Used to edit Text TagParts.
@@ -21,72 +21,84 @@ import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
+export class TextTagPropertyEditor implements TagPropertyEditor, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
     tagPart: TagPart;
 
-    /** The TagProperty that we are editing. */
-    tagProperty: StringTagPartProperty;
-
     /** Used to determine if we need to show a one line input or a multiline text area. */
     isTextShort: boolean;
 
-    /** Whether the tag is opened in read-only mode. */
-    readOnly: boolean;
+    control: FormControl<string>;
 
     /** Used for displaying a validation error to the user. */
-    displayedValidationResult: ValidationResult;
+    validationResult: ValidationResult;
 
     /** Used to debounce the input/textarea changes. */
-    private inputChange = new BehaviorSubject<string>('');
-    private blur = new BehaviorSubject<void>(null);
+    private controlSub: Subscription;
     private subscriptions: Subscription[] = [];
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
-    private lastValidationResult: ValidationResult;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
     ) { }
 
-    ngOnInit(): void {
-        const tmp$ = new BehaviorSubject<void>(null);
-
-        this.subscriptions.push(this.inputChange.asObservable().pipe(
-            skip(1),
-            distinctUntilChanged(isEqual),
-        ).subscribe(newValue => {
-            this.tagProperty.stringValue = newValue;
-            tmp$.next();
-        }));
-
-        this.subscriptions.push(this.blur.asObservable().pipe(
-            skip(1),
-        ).subscribe(() => {
-            tmp$.next();
-        }));
-
-        this.subscriptions.push(tmp$.asObservable().pipe(
-            skip(1),
-            debounceTime(100),
-        ).subscribe(() => {
-            this.processChange();
-        }));
-    }
-
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
         this.tagPart = tagPart;
         this.isTextShort = tagPart.typeId === TagPartType.TextShort;
-        this.readOnly = context.readOnly;
-        this.updateTagProperty(tagProperty);
+
+        if (this.controlSub != null) {
+            this.controlSub.unsubscribe();
+        }
+
+        if (tagProperty.type !== TagPropertyType.STRING && tagProperty.type !== TagPropertyType.RICHTEXT) {
+            throw new TagEditorError(`TagPropertyType ${tagProperty.type} not supported by TextTagPropertyEditor.`);
+        }
+
+        this.control = new FormControl({
+            value: tagProperty?.stringValue || '',
+            disabled: context.readOnly,
+        }, () => {
+            if (this.validationResult != null && this.validationResult.isSet && !this.validationResult.success) {
+                return { tagEditorValidation: this.validationResult.errorMessage };
+            }
+            return null;
+        });
+        if (tagPart.mandatory) {
+            this.control.addValidators(Validators.required);
+        }
+        if (tagPart.regex?.expression) {
+            this.control.addValidators(createRegexValidator(tagPart.regex.expression, [
+                tagPart.regex.description,
+            ]));
+        }
+        this.controlSub = this.control.valueChanges.pipe(
+            distinctUntilChanged(),
+        ).subscribe(() => {
+            if (this.onChangeFn) {
+                // Signal only the changed tag properties.
+                const changes: Partial<TagPropertyMap> = {};
+                changes[this.tagPart.keyword] = {
+                    ...tagProperty,
+                    stringValue: this.control.value,
+                };
+                const validationResults = this.onChangeFn(changes) || {};
+                this.validationResult = validationResults[this.tagPart.keyword];
+                this.control.updateValueAndValidity();
+            }
+
+            this.changeDetector.markForCheck();
+        });
+        this.subscriptions.push(this.controlSub);
+        this.control.updateValueAndValidity();
     }
 
     registerOnChange(fn: TagPropertiesChangedFn): void {
@@ -97,49 +109,7 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
         // We only care about changes to the TagProperty that this control is responsible for.
         const tagProp = values[this.tagPart.keyword];
         if (tagProp) {
-            this.updateTagProperty(tagProp);
+            this.control.setValue((tagProp as StringTagPartProperty).stringValue, { emitEvent: false });
         }
     }
-
-    onChange(newValue: string): void {
-        if (typeof newValue === 'string') {
-            this.inputChange.next(newValue);
-        }
-    }
-
-    onBlur(): void {
-        this.blur.next();
-        this.displayedValidationResult = this.lastValidationResult;
-    }
-
-    /**
-     * Used to update the currently edited TagProperty with external changes.
-     */
-    private updateTagProperty(newValue: TagPartProperty): void {
-        if (newValue.type !== TagPropertyType.STRING && newValue.type !== TagPropertyType.RICHTEXT) {
-            throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by TextTagPropertyEditor.`);
-        }
-        this.tagProperty = newValue ;
-        this.changeDetector.markForCheck();
-    }
-
-    /**
-     * Signals the change to the TagEditor and also validates the change if the
-     * last validation was unsuccessful.
-     */
-    private processChange(): void {
-        if (this.onChangeFn) {
-            // Signal only the changed tag properties.
-            const changes: Partial<TagPropertyMap> = {};
-            changes[this.tagPart.keyword] = this.tagProperty;
-            const validationResults = this.onChangeFn(changes);
-            this.lastValidationResult = validationResults[this.tagPart.keyword];
-        }
-
-        if (this.displayedValidationResult && !this.displayedValidationResult.success && this.lastValidationResult.success) {
-            this.displayedValidationResult = this.lastValidationResult;
-            this.changeDetector.markForCheck();
-        }
-    }
-
 }

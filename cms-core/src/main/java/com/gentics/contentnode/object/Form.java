@@ -50,6 +50,40 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
+	 * Get the external ID (may be null)
+	 * @return external ID
+	 */
+	@FieldGetter("external_id")
+	String getExternalId();
+
+	/**
+	 * Set the external ID
+	 * @param externalId external ID
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("external_id")
+	default void setExternalId(String externalId) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
+	 * Get the external hash, which is a hash generated over the data when the form is store with external ID
+	 * @return external hash
+	 */
+	@FieldGetter("external_hash")
+	String getExternalHash();
+
+	/**
+	 * Set the external hash
+	 * @param externalHash external hash
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("external_hash")
+	default void setExternalHash(String externalHash) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get the name
 	 * @return name
 	 */
@@ -63,6 +97,23 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	 */
 	@FieldSetter("name")
 	default void setName(String name) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
+	 * Get the form type
+	 * @return form type
+	 */
+	@FieldGetter("formtype")
+	String getFormType();
+
+	/**
+	 * Set the form type
+	 * @param formType form type
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("formtype")
+	default void setFormType(String formType) throws ReadOnlyException {
 		throw new ObjectReadOnlyException(this);
 	}
 
@@ -88,38 +139,6 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 		throw new ObjectReadOnlyException(this);
 	}
 
-	/**
-	 * Gets the success page ID of a object.
-	 * @return The success page ID of the object.
-	 * @throws NodeException
-	 */
-	int getSuccessPageId() throws NodeException;
-
-	/**
-	 * Set the success page id of the object
-	 * @param successPageId success page id
-	 * @throws NodeException
-	 */
-	default void setSuccessPageId(int successPageId) throws NodeException, ReadOnlyException {
-		throw new ObjectReadOnlyException(this);
-	}
-
-	/**
-	 * Gets the success page node ID of a object.
-	 * @return The success page node ID of the object.
-	 * @throws NodeException
-	 */
-	int getSuccessNodeId() throws NodeException;
-
-	/**
-	 * Set the success page node id of the object
-	 * @param successNodeId success page node id
-	 * @throws NodeException
-	 */
-	default void setSuccessNodeId(int successNodeId) throws NodeException, ReadOnlyException {
-		throw new ObjectReadOnlyException(this);
-	}
-
 	@FieldGetter("languages")
 	List<String> getLanguages();
 
@@ -137,12 +156,13 @@ public interface Form extends StageableVersionedNodeObject, PublishableNodeObjec
 	}
 
 	/**
-	 * Get language specific form data
-	 * @param language language
-	 * @return language specific form data
-	 * @throws NodeException 
+	 * Update the form data with the given object. This allows partial updates (on the first level)
+	 * @param data new data
+	 * @throws ReadOnlyException
 	 */
-	JsonNode getData(String language) throws NodeException;
+	default void updateData(JsonNode data) throws ReadOnlyException {
+		throw new ObjectReadOnlyException(this);
+	}
 
 	/**
 	 * Get the indexable content

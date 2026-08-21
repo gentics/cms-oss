@@ -6,28 +6,7 @@
     margin-top: -18px;
 }
 
-.checkbox-input {
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.custom-date-row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-
-    .custom-date-col {
-        flex: 1 1 auto;
-    }
-
-    .custom-date-picker::ng-deep .input-element {
-        margin-bottom: 0px !important;
-    }
-
-    .actual-date {
-        font-size: 0.8rem;
-        color: $gtx-color-dark-gray;
-    }
+.actual-date {
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
 }

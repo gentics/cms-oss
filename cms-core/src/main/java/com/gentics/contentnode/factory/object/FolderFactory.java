@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
@@ -2403,6 +2404,12 @@ public class FolderFactory extends AbstractFactory {
 			if (search == null) {
 				search = FormSearch.create();
 			}
+
+			// shortcut for empty search
+			if (search.getFormTypes() != null && search.getFormTypes().isEmpty()) {
+				return Collections.emptyList();
+			}
+
 			final FormSearch fSearch = search;
 			int userId = TransactionManager.getCurrentTransaction().getUserId();
 
@@ -2418,8 +2425,13 @@ public class FolderFactory extends AbstractFactory {
 			sql.append(StringUtils.repeat("?", folderIds.size(), ","));
 			sql.append(")");
 
+			if (fSearch.getFormTypes() != null) {
+				sql.append(" AND formtype IN (").append(StringUtils.repeat("?", fSearch.getFormTypes().size(), ","))
+						.append(")");
+			}
+
 			if (!StringUtils.isEmpty(fSearch.getSearchString())) {
-				sql.append("AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
+				sql.append(" AND (id = ? OR LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
 			}
 
 			if (search.isCreator()) {
@@ -2495,6 +2507,12 @@ public class FolderFactory extends AbstractFactory {
 				int pCounter = 1;
 				for (Integer fId : folderIds) {
 					st.setObject(pCounter++, fId);
+				}
+
+				if (fSearch.getFormTypes() != null) {
+					for (String formType : fSearch.getFormTypes()) {
+						st.setString(pCounter++, formType);
+					}
 				}
 
 				if (!StringUtils.isEmpty(fSearch.getSearchString())) {
@@ -3389,8 +3407,12 @@ public class FolderFactory extends AbstractFactory {
 						if (folder.getMother() != null) {
 							t.getAttributes().put(OMIT_PUB_DIR_SEGMENT_VERIFY, true);
 							try {
-								folder.setPublishDir(UniquifyHelper.makeUnique(folder, folder.pubDir, PUB_DIR_FUNCTION,
-										objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+								Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(folder.getMother(),
+										channelTreeSegment);
+								Set<String> obstructors = DisinheritUtils.getUsedFilenames(folder,
+										UniquifyHelper.SEGMENT_SEARCH_PATTERN.apply(folder.getPublishDir()), pcf,
+										channelTreeSegment).keySet();
+								folder.setPublishDir(UniquifyHelper.makePathSegmentUnique(folder.getPublishDir(), obstructors));
 
 								// make the translated publish directories unique among each other
 								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.getOwningNode().getLanguages(), folder.publishDirI18n,
@@ -3398,11 +3420,15 @@ public class FolderFactory extends AbstractFactory {
 										Folder.MAX_PUB_DIR_LENGTH));
 
 								// and then make them unique with all other
-								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder, folder.publishDirI18n,
-										PUB_DIR_FUNCTION, objectIds, SeparatorType.underscore, Folder.MAX_PUB_DIR_LENGTH));
+								folder.setPublishDirI18n(UniquifyHelper.makeUnique(folder.publishDirI18n, value -> {
+									Set<String> tmpObstructors = DisinheritUtils.getUsedFilenames(folder,
+											UniquifyHelper.SEGMENT_SEARCH_PATTERN.apply(value), pcf,
+											channelTreeSegment).keySet();
+									return UniquifyHelper.makePathSegmentUnique(value, tmpObstructors);
+								}));
 							} finally {
 								t.getAttributes().remove(OMIT_PUB_DIR_SEGMENT_VERIFY);
-						}
+							}
 						}
 					} else {
 						folder.pubDir = FileUtil.sanitizeFolderPath(folder.pubDir, sanitizeCharacters, replacementChararacter, preservedCharacters);
@@ -4849,6 +4875,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected Integer defaultImageFolderId;
 
+		@DataField("default_form_folder_id")
+		@Updateable
+		protected Integer defaultFormFolderId;
+
 		@DataField("urlrenderway_pages")
 		@Updateable
 		protected int urlRenderWayPages;
@@ -5768,6 +5798,11 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public Folder getDefaultFormFolder() throws NodeException {
+			return TransactionManager.getCurrentTransaction().getObject(Folder.class, defaultFormFolderId);
+		}
+
+		@Override
 		public List<Feature> getFeatures() throws NodeException {
 			final Set<Feature> features = new HashSet<Feature>();
 
@@ -6415,6 +6450,20 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException {
+			Integer folderId = null;
+
+			if (folder != null) {
+				folderId = folder.getMaster().getId();
+			}
+
+			if (ObjectTransformer.getInt(defaultFormFolderId, -1) != ObjectTransformer.getInt(folderId, -1)) {
+				defaultFormFolderId = folderId;
+				modified = true;
+			}
+		}
+
+		@Override
 		public void setUrlRenderWayPages(int way) throws ReadOnlyException {
 			if (this.urlRenderWayPages != way) {
 				this.urlRenderWayPages = way;
@@ -6561,6 +6610,7 @@ public class FolderFactory extends AbstractFactory {
 				// make sure default folder id's are not null
 				defaultFileFolderId = ObjectTransformer.getInteger(defaultFileFolderId, 0);
 				defaultImageFolderId = ObjectTransformer.getInteger(defaultImageFolderId, 0);
+				defaultFormFolderId = ObjectTransformer.getInteger(defaultFormFolderId, 0);
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
 				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");
@@ -7562,22 +7612,16 @@ public class FolderFactory extends AbstractFactory {
 		if (!folder.getNode().isPubDirSegment()) {
 			return null;
 		}
+		Transaction t = TransactionManager.getCurrentTransaction();
 		ChannelTreeSegment objectSegment = new ChannelTreeSegment(folder, false);
 
 		Map<Node, MultiChannellingFallbackList> siblingsFallback = DisinheritUtils.getSiblings(folder, objectSegment);
 		Set<Integer> objectIds = siblingsFallback.values().stream().flatMap(fb -> fb.getObjectIds().stream()).collect(Collectors.toSet());
 
-		Folder conflictingObject = null;
-		conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, folder.getPublishDir(), PUB_DIR_FUNCTION, objectIds);
-		if (conflictingObject != null) {
-			return Pair.of(folder.getPublishDir(), conflictingObject);
-		}
-
-		for (String i18nPubDir : folder.getPublishDirI18n().values()) {
-			conflictingObject = UniquifyHelper.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds);
-			if (conflictingObject != null) {
-				return Pair.of(i18nPubDir, conflictingObject);
-			}
+		Pair<String, NodeObject> conflict = checkPubDirConflict(folder, i18nPubDir -> UniquifyHelper
+				.getObjectUsingProperty(Folder.class, i18nPubDir, PUB_DIR_FUNCTION, objectIds));
+		if (conflict != null) {
+			return conflict;
 		}
 
 		// finally check for uniqueness of the (translated) pubdirs of the folder itself
@@ -7590,6 +7634,49 @@ public class FolderFactory extends AbstractFactory {
 					return Pair.of(i18nPubDir, folder);
 				}
 				checked.add(i18nPubDir);
+			}
+		}
+
+		// check for pages/files having the filename
+		if (folder.getMother() != null) {
+			Function<String, NodeObject> checkPages = pubDir -> {
+				Page dummyPage = t.createObject(Page.class);
+				dummyPage.setFolder(folder.getOwningNode(), folder.getMother());
+				dummyPage.setFilename(pubDir);
+				return DisinheritUtils.getObjectUsingProperty(dummyPage, p -> p.getFilename(), "filename", objectSegment);
+			};
+
+			conflict = checkPubDirConflict(folder, checkPages);
+			if (conflict != null) {
+				return conflict;
+			}
+
+			// check for files having the filename
+			Function<String, NodeObject> checkFiles = pubDir -> {
+				File dummyFile = t.createObject(File.class);
+				dummyFile.setFolder(folder.getOwningNode(), folder.getMother());
+				dummyFile.setName(pubDir);
+				return DisinheritUtils.getObjectUsingProperty(dummyFile, f -> f.getFilename(), "name", objectSegment);
+			};
+
+			conflict = checkPubDirConflict(folder, checkFiles);
+			if (conflict != null) {
+				return conflict;
+			}
+		}
+
+		return null;
+	}
+
+	protected static Pair<String, NodeObject> checkPubDirConflict(Folder folder, Function<String, NodeObject> checker) throws NodeException {
+		List<String> toCheck = new ArrayList<>();
+		toCheck.add(folder.getPublishDir());
+		toCheck.addAll(folder.getPublishDirI18n().values());
+
+		for (String pubDir : toCheck) {
+			NodeObject conflictingObject = checker.apply(pubDir);
+			if (conflictingObject != null) {
+				return Pair.of(pubDir, conflictingObject);
 			}
 		}
 

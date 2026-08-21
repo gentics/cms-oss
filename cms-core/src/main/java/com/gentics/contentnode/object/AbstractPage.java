@@ -48,13 +48,13 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.TemplateRenderer;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 public abstract class AbstractPage extends AbstractContentObject implements Page, ExtensiblePublishableObject<Page> {
 

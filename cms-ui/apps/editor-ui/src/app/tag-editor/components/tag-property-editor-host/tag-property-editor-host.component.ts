@@ -61,10 +61,7 @@ export class TagPropertyEditorHostComponent implements OnDestroy, OnChanges {
     }
 
     private setUpTagPropertyEditor(part: TagPart): void {
-        const componentFactory = this.tagPropertyEditorResolver.resolveTagPropertyEditorFactory(part);
-        if (componentFactory) {
-            this.editorComponent = this.viewContainer.createComponent(componentFactory);
-        }
+        this.editorComponent = this.tagPropertyEditorResolver.createPropertyEditor(this.viewContainer, part);
     }
 
     private disposeEditorComponent(): void {

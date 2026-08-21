@@ -741,7 +741,7 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	 *
 	 * @return connection
 	 */
-	Connection getConnection();
+	Connection getConnection() throws TransactionException;
 
 	/**
 	 * Release the connection, that was fetched using {@link #getConnection()}.

@@ -7,7 +7,7 @@ import { FolderState, ItemsInfo } from '../../common/models';
 export function areItemsLoading(folderState: FolderState): boolean {
     for (let type of ['nodes', 'folders', 'pages', 'files', 'images', 'breadcrumbs']) {
         let info: ItemsInfo = (<any> folderState)[type];
-        if (info && (info.creating || info.fetching || info.saving || info.deleting.length > 0)) {
+        if (info && (info.creating || info.fetching || info.saving || (info.deleting && info.deleting.length > 0))) {
             return true;
         }
     }

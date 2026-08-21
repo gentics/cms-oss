@@ -255,8 +255,6 @@ test.describe('Search', () => {
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, SEARCH_ITEM.id);
 
-            console.log(item);
-
             const publishReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${SEARCH_ITEM.id}`, {
                 skipStatus: true,
             });

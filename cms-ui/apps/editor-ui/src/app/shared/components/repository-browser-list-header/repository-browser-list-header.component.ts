@@ -23,16 +23,16 @@ export class RepositoryBrowserListHeader implements OnInit {
     @Input() filtering: boolean;
     @Input() collapsed: boolean;
     @Input() showImagesGridView: boolean;
+    @Input() activeLanguage: Language;
+    @Input() showStatusIcons = true;
+    @Input() showAllLanguages: boolean;
 
     @Output() collapsedChange = new EventEmitter<boolean>();
     @Output() selectDisplayFields = new EventEmitter<void>();
 
     sort$: Observable<{ field: SortField, order: 'asc' | 'desc' }>;
     sortOptions: { field: SortField, order: 'asc' | 'desc' };
-    activeLanguage$: Observable<Language>;
     nodeLanguages$: Observable<Language[]>;
-    showAllLanguages$: Observable<boolean>;
-    showStatusIcons$: Observable<boolean>;
 
     constructor(
         private appState: ApplicationStateService,
@@ -50,9 +50,6 @@ export class RepositoryBrowserListHeader implements OnInit {
         );
 
         this.nodeLanguages$ = this.dataService.currentAvailableLanguages$;
-        this.activeLanguage$ = this.dataService.currentContentLanguage$;
-        this.showAllLanguages$ = this.appState.select(state => state.folder.displayAllLanguages);
-        this.showStatusIcons$ = this.appState.select(state => state.folder.displayStatusIcons);
     }
 
     selectSortOrder(): void {
@@ -88,17 +85,15 @@ export class RepositoryBrowserListHeader implements OnInit {
      * The language context for the pages has been changed.
      */
     languageChanged(language: Language): void {
-        this.dataService.setContentLanguage(language);
+        if (this.itemType === 'form') {
+            this.dataService.setFormLanguage(language);
+        } else {
+            this.dataService.setContentLanguage(language);
+        }
     }
 
     toggleDisplayAllLanguages(): void {
         const currentVal = this.appState.now.folder.displayAllLanguages;
         this.userSettings.setDisplayAllLanguages(!currentVal);
     }
-
-    toggleDisplayStatusIcons(): void {
-        const currentVal = this.appState.now.folder.displayStatusIcons;
-        this.userSettings.setDisplayStatusIcons(!currentVal);
-    }
-
 }

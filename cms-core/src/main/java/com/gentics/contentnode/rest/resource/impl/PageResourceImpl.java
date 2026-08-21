@@ -1011,13 +1011,15 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 			}
 			if (checkDuplicateFilename) {
-				NodeObject conflictingObject = PageFactory.isFilenameAvailable(page);
+				NodeObject conflictingObject = PageFactory.getFilenameObstructor(page);
 				if (conflictingObject != null) {
-					CNI18nString message = new CNI18nString("a page with this filename already exists");
-					message.addParameter(I18NHelper.getPath(conflictingObject));
-					return new PageLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					String message = I18NHelper.get(
+							"error.filename.exists.%s".formatted(MiscUtils.getTypeDescriptor(conflictingObject)),
+							page.getFilename(), I18NHelper.getPath(conflictingObject));
+
+					return new PageLoadResponse(new Message(Message.Type.CRITICAL, message),
 							new ResponseInfo(ResponseCode.INVALIDDATA,
-									"Error while creating page: " + message.toString(), "fileName"), null);
+									"Error while creating page: " + message, "fileName"), null);
 				}
 			}
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
@@ -1155,10 +1157,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 			}
 			if (checkDuplicateFilename && !deriveFilename) {
-				NodeObject conflictingObject = PageFactory.isFilenameAvailable(page);
+				NodeObject conflictingObject = PageFactory.getFilenameObstructor(page);
 				if (conflictingObject != null) {
-					CNI18nString message = new CNI18nString("a page with this filename already exists");
-					message.addParameter(I18NHelper.getPath(conflictingObject));
+					String message = I18NHelper.get(
+							"error.filename.exists.%s".formatted(MiscUtils.getTypeDescriptor(conflictingObject)),
+							page.getFilename(), I18NHelper.getPath(conflictingObject));
+
 					return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
 							new ResponseInfo(ResponseCode.INVALIDDATA,
 									"Error while saving page " + id + ": " + message.toString(), "fileName"));

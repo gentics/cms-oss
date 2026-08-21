@@ -3,13 +3,6 @@
 
 $gtx-form-report-table-border-color: #ddd;
 
-.wrapper {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: calc( 100% - 3rem );
-}
-
 .download-buttons {
     display: flex;
     flex-direction: row;
@@ -17,6 +10,7 @@ $gtx-form-report-table-border-color: #ddd;
     margin: 1rem 0;
     justify-content: space-between;
     gap: 0.5rem 0.25rem;
+    position: relative;
 
     .download-group {
         display: flex;
@@ -38,6 +32,18 @@ $gtx-form-report-table-border-color: #ddd;
     }
 }
 
+.table-wrapper {
+    position: relative;
+    overflow: auto;
+    width: 100%;
+
+    .reports-table {
+        .grid-row.data-row .grid-cell.data-column {
+            max-width: 320px;
+        }
+    }
+}
+
 .loading-info {
     position: absolute;
     width: 100%;
@@ -49,144 +55,21 @@ $gtx-form-report-table-border-color: #ddd;
     justify-content: center;
 }
 
-.table-wrapper-outer {
-    width: 100%;
-    min-height: 85px;
-    flex: 1 1 auto;
-}
+.form-value {
+    display: inline-block;
 
-.table-wrapper-inner {
-    overflow: auto;
-    width: 100%;
-    max-height: 100%;
-    display: block;
+    &.multi-value {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 0.75rem;
 
-    table {
-        width: fit-content;
-        min-width: 100%;
-        height: initial;
-    }
-}
-
-table.data-table {
-    ::ng-deep icon-checkbox .icon-checkbox-wrapper {
-        height: 24px;
-    }
-
-    thead th {
-        z-index: 3;
-        position: sticky;
-        top: 0;
-        background: #fff;
-        border-bottom: 1px solid $gtx-form-report-table-border-color;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        height: 100%;
-        line-height: 1.4;
-        width: 2.5rem;
-    }
-
-    tbody {
-        th, td {
-            min-width: none !important;
-
-            &,
-            span {
-                line-height: unset !important;
-                white-space: unset !important;
-                word-break: break-all;
-            }
+        .form-value:not(:last-child)::after {
+            display: block;
+            content: '';
+            border-bottom: 1px solid $gtx-color-light-gray;
+            padding-top: 0.25rem;
         }
-
-        th {
-            min-width: 6rem;
-        }
-    }
-
-    tr {
-        border-bottom: none;
-
-        th, td {
-            line-height: 0;
-            padding: 0.3rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            border-right: 1px solid rgba($gtx-form-report-table-border-color, 0.25);
-            border-bottom: 1px solid rgba($gtx-form-report-table-border-color, 0.25);
-            padding: 5px;
-            justify-content: center;
-
-            &.icon-checkbox {
-                width: 4rem;
-
-                icon-checkbox {
-                    display: flex;
-                    justify-content: center;
-                }
-            }
-
-            &.fixed {
-                position: -webkit-sticky;
-                position: sticky;
-                border-bottom: none;
-                padding: 5px;
-                justify-content: center;
-                background-color: white;
-                z-index: 2;
-
-                &.sticky-left {
-                    left: 0;
-                    box-shadow: 1px 0px 11px -3px rgb(0 0 0 / 15%);
-                }
-
-                &.sticky-right {
-                    right: 0;
-                    box-shadow: -1px 0px 11px -3px rgb(0 0 0 / 15%);
-                }
-            }
-        }
-    }
-
-    .delete-icon {
-        i {
-            cursor: pointer;
-
-            &.disabled {
-                cursor: default;
-                color: $gtx-color-secondary;
-                pointer-events: none;
-            }
-        }
-    }
-}
-
-.status-validity {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-}
-
-.valid {
-    color: $gtx-color-success;
-}
-
-.invalid {
-    color: $gtx-color-alert;
-}
-
-.paginate-wrapper {
-    position: relative !important;
-    width: 100%;
-    z-index: 1;
-    bottom: 0;
-    display: flex;
-    flex: 0 1 auto;
-
-    paging-controls {
-        display: block;
-        flex: 1 1;
     }
 }
 

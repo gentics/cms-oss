@@ -7,15 +7,10 @@
             "jquery"
         ]
     },
-    "files": [
-        "src/test.ts",
-        "src/polyfills.ts"
-    ],
-    "include": [
-        "**/*.spec.ts",
-        "**/*.d.ts"
-    ],
+    "include": ["src/**/*.ts"],
     "exclude": [
-        "e2e/**"
+        "cypress/**/*",
+        "cypress.*.ts",
+        "src/**/*.cy.ts"
     ]
 }

@@ -1,6 +1,8 @@
 import {
     AccessControlledType,
+    AlohaResourceInformationResponse,
     AssignEntityToContentPackageOptions,
+    BackgroundJobResponse,
     BaseListOptionsWithPaging,
     BulkLinkUpdateRequest,
     CancelPageEditOptions,
@@ -104,21 +106,29 @@ import {
     FolderResponse,
     FolderSaveRequest,
     FolderStartpageRequest,
+    FolderTemplateListResponse,
     FolderUsageResponse,
     Form,
     FormCreateRequest,
     FormCreateResponse,
     FormDataListOptions,
+    FormDataListResponse,
     FormDownloadInfoResponse,
+    FormExportOptions,
     FormListOptions,
     FormListResponse,
     FormLoadOptions,
     FormPublishRequest,
     FormResponse,
     FormSaveRequest,
+    FormTranslations,
+    FormTranslationsLanguagesResponse,
+    FormTranslationsResponse,
+    FormTypeConfigurationListOptions,
+    FormTypeConfigurationListResponse,
+    FormTypeConfigurationResponse,
     FormUnpublishRequest,
     GcmsPermission,
-    GenericItemResponse,
     Group,
     GroupCreateRequest,
     GroupCreateResponse,
@@ -153,6 +163,7 @@ import {
     ItemListOptions,
     ItemListResponse,
     ItemRequestOptions,
+    KeycloakConfiguration,
     Language,
     LanguageCreateRequest,
     LanguageListOptions,
@@ -190,6 +201,7 @@ import {
     MaintenanceModeResponse,
     MarkupLanguageListOptions,
     MarkupLanguageListResponse,
+    MeRequestOptions,
     MessageListOptions,
     MessageListResponse,
     MessageReadRequest,
@@ -298,14 +310,14 @@ import {
     RoleUpdateRequest,
     RoleUpdateResponse,
     RotateParameters,
-    ScheduleCreateReqeust,
+    ScheduleCreateRequest,
     ScheduleExecutionListOptions,
     ScheduleExecutionListResponse,
     ScheduleExecutionResponse,
     ScheduleListOptions,
     ScheduleListResponse,
     ScheduleResponse,
-    ScheduleSaveReqeust,
+    ScheduleSaveRequest,
     ScheduleTaskCreateRequest,
     ScheduleTaskListOptions,
     ScheduleTaskListResponse,
@@ -362,7 +374,6 @@ import {
     UserGroupsResponse,
     UserListOptions,
     UserListResponse,
-    UserRequestOptions,
     UserResponse,
     UserUpdateRequest,
     UserUpdateResponse,
@@ -371,8 +382,14 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
+    ApiTokenCreateRequest,
+    ApiTokenResponse,
+    ApiTokenCreateResponse,
 } from '@gentics/cms-models';
-import { LoginResponse as MeshLoginResponse } from '@gentics/mesh-models';
+import {
+    LoginResponse as MeshLoginResponse,
+    NodeResponse as MeshNodeResponse,
+} from '@gentics/mesh-models';
 import { BasicAPI } from './common';
 
 type SearchableType = 'page' | 'image' | 'file' | 'folder' | 'form';
@@ -400,6 +417,10 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     getPublishQueue: () => PublishQueue;
     modifyPublishQueue: (body: ContentMaintenanceActionRequest) => Response;
+
+    getApiTokens: (pageSize?: number, page?: number, sort?: string) => ListResponse<ApiTokenResponse>;
+    addApiTokens: (body: ApiTokenCreateRequest) => ApiTokenCreateResponse;
+    deleteApiTokens: (id: string) => void;
 }
 
 export interface AbstractAuthenticationAPI extends BasicAPI {
@@ -429,7 +450,9 @@ export interface AbstractConstructAPI extends BasicAPI {
     unlinkFromNode: (body: ConstructNodeLinkRequest) => ConstructNodeLinkResponse;
 }
 
-export interface AbstractConstrctCategoryAPI extends BasicAPI {
+/** @deprecated Use {AbstractConstructCategoryAPI}; Only here to not break it instantly. */
+export type AbstractConstrctCategoryAPI = AbstractConstructCategoryAPI;
+export interface AbstractConstructCategoryAPI extends BasicAPI {
     list: (options?: ConstructCategoryListOptions) => ConstructCategoryListResponse;
     create: (body: ConstructCategoryCreateRequest) => ConstructCategoryCreateResponse;
     get: (id: number | string) => ConstructCategoryLoadResponse;
@@ -604,7 +627,7 @@ export interface AbstractFileAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -641,10 +664,10 @@ export interface AbstractFolderAPI extends BasicAPI {
     images: (id: number | string, options?: FolderListOptions) => FileListResponse;
     items: (id: number | string, options?: ItemListOptions) => ItemListResponse;
     pages: (id: number | string, options?: FolderListOptions) => PageListResponse;
-    templates: (id: number | string, options?: FolderListOptions) => TemplateListResponse;
+    templates: (id: number | string, options?: FolderListOptions) => FolderTemplateListResponse;
 
     setStartpage: (id: number | string, body: FolderStartpageRequest) => Response;
-    sanitizePublshDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
+    sanitizePublishDirectory: (body: FolderPublishDirSanitizeRequest) => FolderPublishDirSanitizeResponse;
 
     inheritanceStatus: (id: number | string, options?: InheritanceStatusOptions) => InheritanceResponse;
     multipleInheritanceStatus: (options: MultiInheritanceStatusOptions) => MultipleInheritanceResponse;
@@ -656,7 +679,7 @@ export interface AbstractFolderAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -684,25 +707,55 @@ export interface AbstractFormAPI extends BasicAPI {
     removeScheduledPublish: (id: number | string) => FormResponse;
     removeScheduledUnpublish: (id: number | string) => FormResponse;
 
+    listConfigurations: (options?: FormTypeConfigurationListOptions) => FormTypeConfigurationListResponse;
+    getConfiguration: (type: string) => FormTypeConfigurationResponse;
+    assignConfiguration: (type: string, nodeId: number | string) => Response;
+    unassignConfiguration: (type: string, nodeId: number | string) => Response;
+
+    /**
+     * Languages available for form-engine placeholder translations.
+     * The list is global — there is no per-form-type variant.
+     */
+    listTranslationLanguages: () => FormTranslationsLanguagesResponse;
+
+    /** Load the global form-engine placeholder translations. */
+    listTranslations: () => FormTranslationsResponse;
+
+    /**
+     * Persist a partial form-translations diff. Only the keys/languages
+     * contained in `body` are written; everything else is left untouched.
+     */
+    updateTranslations: (body: FormTranslations) => FormTranslationsResponse;
+
+    /** Load the placeholder translations specific to a form type. */
+    listTypeTranslations: (type: string) => FormTranslationsResponse;
+
+    /** Persist a partial form-translations diff for a specific form type. */
+    updateTypeTranslations: (type: string, body: FormTranslations) => FormTranslationsResponse;
+
     exportStatus: (id: number | string) => FormDownloadInfoResponse;
-    createExport: (id: number | string) => FormDownloadInfoResponse;
+    createExport: (id: number | string, options?: FormExportOptions) => FormDownloadInfoResponse;
     binariesStatus: (id: number | string) => FormDownloadInfoResponse;
     createBinaries: (id: number | string) => FormDownloadInfoResponse;
     downloadData: (id: number | string, downloadUuid: string) => Blob;
 
     previewSaved: (id: number | string, language: string) => string;
-    previewModel: (id: number | string, language: string, body: Form<Raw>) => string;
+    previewModel: (id: number | string, language: string, body: Form) => string;
 
     listVersions: (id: number | string) => FormListResponse;
     getVersion: (id: number | string, version: string) => FormResponse;
 
-    listData: (id: number | string, options?: FormDataListOptions) => NodeListResponse;
-    getData: (id: number | string, dataUuid: string) => NodeResponse;
+    listData: (id: number | string, options?: FormDataListOptions) => FormDataListResponse;
+    getData: (id: number | string, dataUuid: string) => MeshNodeResponse;
     deleteData: (id: number | string, dataUuid: string) => void;
     getDataBinary: (id: number | string, dataUuid: string, binaryField: string) => Blob;
 
     restoreFromWastebin: (id: number | string, options?: WastebinRestoreOptions) => Response;
     deleteFromWastebin: (id: number | string, options?: WastebinDeleteOptions) => Response;
+
+    usageInPages: (options?: UsageInPagesOptions) => PageUsageResponse;
+    usageInTemplates: (options?: UsageInTemplatesOptions) => TemplateUsageResponse;
+    usageInTotal: (options?: UsageInTotalOptions) => TotalUsageResponse;
 }
 
 export interface AbstractGroupAPI extends BasicAPI {
@@ -771,7 +824,7 @@ export interface AbstractImageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: LocalizeRequest) => Response;
+    localize: (id: number | string, body: LocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -791,6 +844,7 @@ export interface AbstractImageAPI extends BasicAPI {
 
 export interface AbstractInfoAPI extends BasicAPI {
     getMaintenanceMode: () => MaintenanceModeResponse;
+    getAlohaResources: () => AlohaResourceInformationResponse;
 }
 
 export interface AbstractLanguageAPI extends BasicAPI {
@@ -931,7 +985,7 @@ export interface AbstractPageAPI extends BasicAPI {
     localizationInfo: (id: number | string, options?: LocalizationInfoOptions) => LocalizationInfoResponse;
     multipleLocalizationInfos: (options: MultiLocalizationInfoOptions) => LocalizationInfoResponse;
     listLocalizations: (id: number | string) => LocalizationsResponse;
-    localize: (id: number | string, body: PageLocalizeRequest) => Response;
+    localize: (id: number | string, body: PageLocalizeRequest) => BackgroundJobResponse;
     unlocalize: (id: number | string, body: UnlocalizeRequest) => Response;
     unlocalizeMultiple: (body: MultiUnlocalizeRequest) => Response;
 
@@ -986,9 +1040,9 @@ export interface AbstractRoleAPI extends BasicAPI {
 
 export interface AbstractSchedulerAPI extends BasicAPI {
     list: (options?: ScheduleListOptions) => ScheduleListResponse;
-    create: (body: ScheduleCreateReqeust) => ScheduleResponse;
+    create: (body: ScheduleCreateRequest) => ScheduleResponse;
     get: (id: number | string) => ScheduleResponse;
-    update: (id: number | string, body: ScheduleSaveReqeust) => ScheduleResponse;
+    update: (id: number | string, body: ScheduleSaveRequest) => ScheduleResponse;
     delete: (id: number | string) => Response;
 
     status: () => SchedulerStatusResponse;
@@ -1053,7 +1107,7 @@ export interface AbstractUserAPI extends BasicAPI {
     update: (id: number | string, body: UserUpdateRequest) => UserUpdateResponse;
     delete: (id: number | string) => void;
 
-    me: (options?: UserRequestOptions) => UserResponse;
+    me: (options?: MeRequestOptions) => UserResponse;
     getFullUserData: () => UserDataResponse;
     getUserData: (key: string) => UserDataResponse;
     setUserData: (key: string, body: any) => Response;
@@ -1078,7 +1132,7 @@ export interface AbstractValidationAPI extends BasicAPI {
 
 export interface AbstractTranslationAPI extends BasicAPI {
     translateText: (data: TranslationTextRequest) => TranslationResponse;
-    translatePage: (pageId: number, params: TranslationRequestOptions) => GenericItemResponse<PageResponse>;
+    translatePage: (pageId: number, params: TranslationRequestOptions) => PageResponse;
 }
 
 export interface AbstractPublishProtocolAPI extends BasicAPI {
@@ -1093,12 +1147,16 @@ export interface AbstractLicenseAPI extends BasicAPI {
     push: (data: PushLicenseRequest) => Response;
 }
 
+export interface AbstractKeycloakAPI extends BasicAPI {
+    configuration: () => KeycloakConfiguration;
+}
+
 export interface AbstractRootAPI {
     admin: AbstractAdminAPI;
     auth: AbstractAuthenticationAPI;
     cluster: AbstractClusterAPI;
     construct: AbstractConstructAPI;
-    constructCategory: AbstractConstrctCategoryAPI;
+    constructCategory: AbstractConstructCategoryAPI;
     contentRepository: AbstractContentRepositoryAPI;
     contentRepositoryFragment: AbstractContentRepositoryFragmentAPI;
     contentStaging: AbstractContentStagingAPI;
@@ -1135,4 +1193,5 @@ export interface AbstractRootAPI {
     usersnap: AbstractUsersnapAPI;
     validation: AbstractValidationAPI;
     license: AbstractLicenseAPI;
+    keycloak: AbstractKeycloakAPI;
 }

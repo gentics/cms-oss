@@ -367,9 +367,7 @@ public class TemplateResourceImpl implements TemplateResource {
 						templateNames.addAll(folder.getTemplates().stream().map(Template::getName).collect(Collectors.toSet()));
 					}
 
-					String uniqueName = UniquifyHelper.makeUnique(() -> template.getName(), name -> !templateNames.contains(name), (name, number) -> {
-						return String.format("%s %d", name, number);
-					}, null);
+					String uniqueName = UniquifyHelper.makeNameUnique(template.getName(), templateNames);
 					template.setName(uniqueName);
 				}
 
@@ -760,10 +758,7 @@ public class TemplateResourceImpl implements TemplateResource {
 			// get names of templates linked to the folder (for making the template name unique)
 			Set<String> templateNames = folder.getTemplates().stream().map(Template::getName).collect(Collectors.toSet());
 
-			String uniqueName = UniquifyHelper.makeUnique(() -> I18NHelper.get("copy_of", "", template.getName()), name -> !templateNames.contains(name),
-					(name, number) -> {
-						return I18NHelper.get("copy_of", " " + Integer.toString(number), template.getName());
-					}, null);
+			String uniqueName = UniquifyHelper.makeCopyOfNameUnique(template.getName(), templateNames);
 
 			Template templateCopy = (Template) template.copy();
 			if (request.getNodeId() != null) {

@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { SharedModule } from '../shared/shared.module';
 import { LoginComponent } from './components/login/login.component';
 import { SingleSignOnComponent } from './components/single-sign-on/single-sign-on.component';
@@ -15,9 +15,10 @@ const COMPONENTS = [
     imports: [
         SharedModule,
         RouterModule.forChild(LOGIN_ROUTES),
+        AuthenticationModule,
     ],
     exports: [],
     declarations: COMPONENTS,
-    providers: [KeycloakService],
+    providers: [],
 })
 export class LoginModule { }

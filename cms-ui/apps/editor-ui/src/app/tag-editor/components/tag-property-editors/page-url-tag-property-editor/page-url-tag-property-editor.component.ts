@@ -13,12 +13,10 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
-import { Observable, Subject, Subscription, merge, of } from 'rxjs';
+import { Subject, Subscription, merge, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
-import { RepositoryBrowserClient } from '../../../../shared/providers';
 import { SelectedItemHelper } from '../../../../shared/util/selected-item-helper/selected-item-helper';
 
 /**
@@ -44,12 +42,6 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     /** The TagProperty that we are editing. */
     tagProperty: PageTagPartProperty;
 
-    /** The breadcrumbs path of the selected page. */
-    selectedInternalPagePath: string;
-
-    /** The string that should be displayed in the input field for an internal page. */
-    internalPageDisplayValue$: Observable<string>;
-
     /** Dermines whether the page is interal or external. */
     isInternalPage = true;
 
@@ -72,7 +64,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     private onChangeFn: TagPropertiesChangedFn;
 
     /** The helper for managing and loading the selected internal page. */
-    private selectedInternalPage: SelectedItemHelper<ItemInNode<Page<Raw>>>;
+    public selectedInternalPage: SelectedItemHelper<ItemInNode<Page<Raw>>>;
 
     private subscriptions = new Subscription();
 
@@ -81,8 +73,6 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     constructor(
         private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
-        private repositoryBrowserClient: RepositoryBrowserClient,
-        private i18n: I18nService,
     ) { }
 
     ngOnInit(): void {
@@ -102,46 +92,6 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
         this.selectedInternalPage = new SelectedItemHelper('page', context.node.id, this.client);
-
-        this.internalPageDisplayValue$ = merge(
-            this.selectedInternalPage.selectedItem$.pipe(
-                map((selectedItem: Page<Raw>) => {
-                    this.selectedInternalPagePath = this.generateBreadcrumbsPath(selectedItem);
-                    if (selectedItem) {
-                        return selectedItem.name;
-                    } else {
-                        /**
-                         * null is emitted, when nothing is selected.
-                         * Also, null is emitted in case a referenced page got deleted and the tag property data was refetched.
-                         * (Since the pageId in tagProperty gets removed).
-                         */
-                        return this.i18n.instant('editor.page_no_selection');
-                    }
-                }),
-            ),
-            this.selectedInternalPage.loadingError$.pipe(
-                map((error: { error: any; item: { itemId: number; nodeId?: number } }) => {
-                    /**
-                     * When a page that is referenced gets deleted, the pageId is kept in tagProperty.
-                     * When we try to fetch the page information we get an error message.
-                     * In that case we want to inform the user that the page got deleted
-                     * (and thus avoid suggesting that a valid page is still selected).
-                     */
-                    if (this.tagProperty && this.tagProperty.pageId) {
-                        /**
-                         * additional check, in case the loadingError$ Subject is changed to a BehaviorSubject in the future.
-                         * This could trigger an emission before this.tagProperty is set in updateTagProperty
-                         */
-                        return this.i18n.instant('editor.page_not_found', { id: this.tagProperty.pageId });
-                    } else {
-                        return '';
-                    }
-                }),
-            ),
-        ).pipe(
-            tap(() => this.changeDetector.markForCheck()),
-        );
-
         this.tagPart = tagPart;
         this.readOnly = context.readOnly;
         this.page = context.page;
@@ -212,8 +162,8 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
      *
      * c) unsetting / clearing the input
      *   tagProperty.pageId should be set to 0
-     *   * tagProperty.nodeId should be set to 0
-     *   * stringValue should be an empty string
+     *   tagProperty.nodeId should be set to 0
+     *   stringValue should be an empty string
      */
     changeSelectedPage(newSelectedPage: ItemInNode<Page<Raw>> | string): void {
         let selectedInternalPage: ItemInNode<Page<Raw>> = null;
@@ -261,22 +211,6 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.externalUrl = externalUrl;
         // select item using helper service
         this.selectedInternalPage.setSelectedItem(selectedInternalPage);
-    }
-
-    /**
-     * Opens the repository browser to allow the user to select an internal page.
-     */
-    browseForPage(): void {
-        let contentLanguage: string;
-        if (this.page) {
-            contentLanguage = this.page.language;
-        }
-        this.repositoryBrowserClient.openRepositoryBrowser({
-            allowedSelection: 'page',
-            selectMultiple: false,
-            contentLanguage,
-            startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
-        }).then((selectedPage) => this.changeSelectedPage(selectedPage));
     }
 
     onRadioButtonsChange(): void {

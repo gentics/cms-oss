@@ -15,9 +15,9 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ObservableStopper } from '@gentics/cms-components';
 import { EditMode } from '@gentics/cms-integration-api-models';
 import { Folder, Page } from '@gentics/cms-models';
+import { ObservableStopper } from '@gentics/common/rxjs';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import {
@@ -67,44 +67,25 @@ export class SearchSuggestionBarComponent implements OnInit, OnChanges, OnDestro
     @Input() suggestionVisible = false;
     @Output() suggestionVisibleChange = new EventEmitter<boolean>()
     @Input() filterTerm = '';
-    @Input() searchBarKeyup: Observable<KeyboardEvent>;
+    @Input() searchBarKeyup!: Observable<KeyboardEvent>;
 
     @Output() close = new EventEmitter<void>();
 
     filterTerm$ = new BehaviorSubject<string>(this.filterTerm);
 
-    matchingRecentItems$: Observable<RecentItem[]> = combineLatest([
-        this.state.select(state => state.folder.recentItems).pipe(
-            map(items => this.determineRecentItemsToDisplay(items)),
-            delay(0), // This is necessary to avoid an Angular "expression changed after it was checked" error.
-        ),
-        this.filterTerm$,
-    ]).pipe(
-        distinctUntilChanged(arraysAreEqual),
-        map(([items, filter]) => {
-            return items.filter(item => this.recentItemMatchesFilter(item, filter))
-        }),
-    );
-    matchingSuggestionItems$: Observable<SuggestionItem[]> = this.filterTerm$.pipe(
-        map((searchTerm) => +searchTerm),
-        debounceTime(200),
-        distinctUntilChanged(isEqual),
-        switchMap((searchTerm) => {
-            return this.suggestionSearchService.searchInState(searchTerm);
-        }),
-        tap((suggestions: RecentItem[]) => {
-            this.setSuggestionVisible(suggestions.length > 0);
-        }),
-    );
+    public matchingRecentItems$!: Observable<RecentItem[]>;
+
+    matchingSuggestionItems$!: Observable<SuggestionItem[]>;
+
     maxRecentItems = 15;
 
-    recentFeatureEnabled$: Observable<boolean>;
+    recentFeatureEnabled$!: Observable<boolean>;
 
     @ViewChildren(SearchSuggestionComponent)
-    suggestions: QueryList<SearchSuggestionComponent>;
+    suggestions!: QueryList<SearchSuggestionComponent>;
 
     hasSuggestions = false;
-    selectedSuggestion: SearchSuggestionComponent;
+    selectedSuggestion!: SearchSuggestionComponent;
 
     private subscription = new Subscription();
     private stopper = new ObservableStopper();
@@ -121,6 +102,31 @@ export class SearchSuggestionBarComponent implements OnInit, OnChanges, OnDestro
 
 
     ngOnInit(): void {
+        this.matchingRecentItems$ = combineLatest([
+            this.state.select(state => state.folder.recentItems).pipe(
+                map(items => this.determineRecentItemsToDisplay(items)),
+                delay(0), // This is necessary to avoid an Angular "expression changed after it was checked" error.
+            ),
+            this.filterTerm$,
+        ]).pipe(
+            distinctUntilChanged(arraysAreEqual),
+            map(([items, filter]) => {
+                return items.filter(item => this.recentItemMatchesFilter(item, filter))
+            }),
+        );
+
+        this.matchingSuggestionItems$ = this.filterTerm$.pipe(
+            map((searchTerm) => +searchTerm),
+            debounceTime(200),
+            distinctUntilChanged(isEqual),
+            switchMap((searchTerm) => {
+                return this.suggestionSearchService.searchInState(searchTerm);
+            }),
+            tap((suggestions: RecentItem[]) => {
+                this.setSuggestionVisible(suggestions.length > 0);
+            }),
+        );
+
         this.recentFeatureEnabled$ = this.state
             .select(state => state.features.recent_items).pipe(
                 tap(() => this.changeDetector.markForCheck()),

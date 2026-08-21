@@ -12,22 +12,26 @@
 </div>
 
 <div class="modal-footer">
-  @if (!activePackage && !hadPackage) {
-    <gtx-button
-      type="secondary"
-      flat
-      (click)="closeFn()"
-    >{{ 'modal.close' | gtxI18n }}</gtx-button>
-  } @else {
-    <gtx-button
-      type="secondary"
-      flat
-      (click)="closeFn()"
-    >{{ 'modal.cancel' | gtxI18n }}</gtx-button>
-    <gtx-button
-      type="primary"
-      (click)="updatePackageInState()"
-    >{{ (activePackage ? 'modal.confirm_content_package_select' : 'modal.leave_content_staging_mode') | gtxI18n }}</gtx-button>
-  }
+    @if (!activePackage && !hadPackage) {
+        <gtx-button
+            type="secondary"
+            flat
+            data-action="close"
+            (click)="closeFn()"
+        >{{ 'modal.close' | gtxI18n }}</gtx-button>
+    } @else {
+        <gtx-button
+            type="secondary"
+            flat
+            data-action="cancel"
+            (click)="closeFn()"
+        >{{ 'modal.cancel' | gtxI18n }}</gtx-button>
+
+        <gtx-button
+            type="primary"
+            data-action="confirm"
+            (click)="updatePackageInState()"
+        >{{ (activePackage ? 'modal.confirm_content_package_select' : 'modal.leave_content_staging_mode') | gtxI18n }}</gtx-button>
+    }
 
 </div>

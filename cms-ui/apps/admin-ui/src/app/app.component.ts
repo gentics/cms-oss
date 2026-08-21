@@ -1,4 +1,4 @@
-import { ObservableStopper } from '@admin-ui/common/utils/observable-stopper/observable-stopper';
+import { ObservableStopper } from './common/utils/observable-stopper/observable-stopper';
 import {
     ActivityManagerService,
     AuthOperations,
@@ -15,38 +15,39 @@ import {
     UserSettingsService,
     UsersnapService,
 } from '@admin-ui/core';
-import { ChangePasswordModalComponent } from '@admin-ui/core/components/change-password-modal/change-password-modal.component';
-import { ConfirmReloadModalComponent } from '@admin-ui/core/components/confirm-reload-modal/confirm-reload-modal.component';
-import { LogoutCleanupService } from '@admin-ui/core/providers/logout-cleanup/logout-cleanup.service';
-import { MaintenanceModeService } from '@admin-ui/core/providers/maintenance-mode/maintenance-mode.service';
-import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
+import { ChangePasswordModalComponent } from './core/components/change-password-modal/change-password-modal.component';
+import { ConfirmReloadModalComponent } from './core/components/confirm-reload-modal/confirm-reload-modal.component';
+import { LogoutCleanupService } from './core/providers/logout-cleanup/logout-cleanup.service';
+import { MaintenanceModeService } from './core/providers/maintenance-mode/maintenance-mode.service';
+import { AdminOperations } from './core/providers/operations/admin/admin.operations';
 import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
-import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
+import { AppStateService } from './state/providers/app-state/app-state.service';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { KeycloakService } from '@gentics/cms-components';
+import { KeycloakService } from '@gentics/cms-components/auth';
 import { GcmsUiLanguage } from '@gentics/cms-integration-api-models';
-import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, User, Version } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, I18nLanguage, Node, Normalized, Raw, User, Version } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { AdminUIModuleRoutes } from './common';
 import { SetBackendLanguage } from './state/ui/ui.actions';
+import { ApiTokensModalComponent } from '@gentics/cms-components';
 
 @Component({
     selector: 'gtx-app-root',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class AppComponent implements OnDestroy, OnInit {
 
     breadcrumbs$: Observable<IBreadcrumbRouterLink[]>;
 
-    @SelectState(state => state.auth.isLoggedIn)
+    @SelectState((state) => state.auth.isLoggedIn)
     isLoggedIn$: Observable<boolean>;
 
-    @SelectState(state => state.messages.unread.length)
+    @SelectState((state) => state.messages.unread.length)
     unreadMessageCount$: Observable<number>;
 
     activitiesCount$: Observable<number>;
@@ -58,7 +59,7 @@ export class AppComponent implements OnDestroy, OnInit {
     currentLanguage$: Observable<GcmsUiLanguage>;
     supportedLanguages$: Observable<I18nLanguage[]>;
 
-    currentUser$: Observable<User<Normalized>>;
+    currentUser$: Observable<User<Raw>>;
 
     userMenuTabIdMessages = 'messages';
     userMenuTabIdActivities = 'activities';
@@ -112,11 +113,11 @@ export class AppComponent implements OnDestroy, OnInit {
 
         this.entityManager.init();
 
-        this.showLoginSpinner$ = this.appState.select(state => state.auth).pipe(
-            map(auth => auth.loggingIn || auth.loggingOut),
+        this.showLoginSpinner$ = this.appState.select((state) => state.auth).pipe(
+            map((auth) => auth.loggingIn || auth.loggingOut),
         );
 
-        this.keycloakSignOut$ = this.appState.select(state => state.features.global[Feature.KEYCLOAK_SIGNOUT]);
+        this.keycloakSignOut$ = this.appState.select((state) => state.features.global[Feature.KEYCLOAK_SIGNOUT]);
 
         this.authOps.validateSessionFromLocalStorage();
 
@@ -134,7 +135,7 @@ export class AppComponent implements OnDestroy, OnInit {
         });
         this.message.poll();
 
-        this.currentLanguage$ = this.appState.select(state => state.ui.language);
+        this.currentLanguage$ = this.appState.select((state) => state.ui.language);
 
         selectLoginEventOrIsLoggedIn(this.appState).pipe(
             takeUntil(this.stopper.stopper$),
@@ -146,31 +147,27 @@ export class AppComponent implements OnDestroy, OnInit {
         this.usersnapService.init();
 
         this.activitiesCount$ = this.activityManager.activities$.pipe(
-            map(tasks => tasks.length),
+            map((tasks) => tasks.length),
         );
 
         this.activitiesPending$ = this.activityManager.activities$.pipe(
-            map(tasks => tasks.some(task => task.inProgress)),
+            map((tasks) => tasks.some((task) => task.inProgress)),
         );
 
-        this.currentUser$ = this.appState.select(state => state.auth).pipe(
-            filter(auth => auth.isLoggedIn),
-            switchMap(auth =>
-                this.appState.select(state => state.entity.user[auth.currentUserId]).pipe(
-                    filter(user => user != null),
-                    first(),
-                ),
-            ),
+        this.currentUser$ = this.appState.select((state) => state.auth).pipe(
+            filter((auth) => auth.isLoggedIn),
+            map((auth) => auth.user),
+            first(),
         );
 
-        this.cmpVersion$ = this.appState.select(state => state.ui.cmpVersion);
-        this.uiVersion$ = this.appState.select(state => state.ui.uiVersion);
-        this.featureHideManual$ = this.appState.select(state => state.features.global[Feature.HIDE_MANUAL] || false);
+        this.cmpVersion$ = this.appState.select((state) => state.ui.cmpVersion);
+        this.uiVersion$ = this.appState.select((state) => state.ui.uiVersion);
+        this.featureHideManual$ = this.appState.select((state) => state.features.global[Feature.HIDE_MANUAL] || false);
 
         this.isLoggedIn$.pipe(
-            filter(loggedIn => loggedIn),
+            filter((loggedIn) => loggedIn),
             switchMap(() => this.nodeOperations.getAll()),
-        ).subscribe(nodes => {
+        ).subscribe((nodes) => {
             this.loadedNodes = nodes;
             this.changeDetector.markForCheck();
         });
@@ -181,7 +178,7 @@ export class AppComponent implements OnDestroy, OnInit {
     }
 
     onLogoutClick(): void {
-        this.keycloakSignOut$.pipe(first()).subscribe(singleSignOut => {
+        this.keycloakSignOut$.pipe(first()).subscribe((singleSignOut) => {
             this.authOps.logout(this.appState.now.auth.sid)
                 .then(() => {
                     if (singleSignOut) {
@@ -199,8 +196,8 @@ export class AppComponent implements OnDestroy, OnInit {
 
     setLanguageConfirmation(language: GcmsUiLanguage): void {
         this.modalService.fromComponent(ConfirmReloadModalComponent, { closeOnOverlayClick: false })
-            .then(modal => modal.open())
-            .then(value => {
+            .then((modal) => modal.open())
+            .then((value) => {
                 if (value) {
                     this.languageHandler.setActiveUiLanguage(language).subscribe(() => {
                         this.appState.dispatch(new SetBackendLanguage(language));
@@ -222,7 +219,7 @@ export class AppComponent implements OnDestroy, OnInit {
 
     onShowPasswordModal(): void {
         this.modalService.fromComponent(ChangePasswordModalComponent)
-            .then(modal => modal.open())
+            .then((modal) => modal.open())
             .catch(this.errorHandler.catch);
     }
 
@@ -239,9 +236,9 @@ export class AppComponent implements OnDestroy, OnInit {
                 type: AccessControlledType.AUTO_UPDATE,
                 permissions: GcmsPermission.READ,
             }).pipe(
-                switchMap(perm => perm ?
-                    this.adminOps.getCmsUpdates(true) :
-                    of(null),
+                switchMap((perm) => perm
+                    ? this.adminOps.getCmsUpdates(true)
+                    : of(null),
                 ),
             ),
 

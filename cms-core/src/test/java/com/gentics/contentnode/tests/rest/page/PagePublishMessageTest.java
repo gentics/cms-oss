@@ -45,6 +45,7 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
 import com.gentics.contentnode.rest.model.request.PageOfflineRequest;
@@ -611,6 +612,8 @@ public class PagePublishMessageTest {
 		tagmapEntry.setMultivalue(false);
 
 		assertResponseOK(crResource.addEntry(Integer.toString(crId), tagmapEntry));
+
+		MeshPublisher.clearCachedData();
 
 		// take test page offline
 		GenericResponse response = execute(p -> {

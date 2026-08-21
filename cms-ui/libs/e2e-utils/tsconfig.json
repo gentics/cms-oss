@@ -5,15 +5,11 @@
         "forceConsistentCasingInFileNames": true,
         "strict": false,
         "importHelpers": true,
-        "noImplicitOverride": true,
-        "noImplicitReturns": true,
+        "noImplicitOverride": false,
+        "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "types": [
-            "node",
-            "jquery",
-            "playwright"
-        ]
+        "noPropertyAccessFromIndexSignature": false,
+        "ignoreDeprecations": "6.0"
     },
     "files": [],
     "include": [],

@@ -23,16 +23,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ConfigurationService;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyNodeConfig;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.i18n.CNDictionary;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.InstantCRPublishing;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.server.ServletContextHandlerService;
 import com.gentics.lib.log.NodeLogger;
 
@@ -65,6 +69,11 @@ public class NodeConfigRuntimeConfiguration {
 	 * Loader for the {@link ServletContextHandlerService}s
 	 */
 	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
+
+	/**
+	 * Service loader for implementations of {@link ConfigurationService}
+	 */
+	protected final static ServiceLoaderUtil<ConfigurationService> configurationServiceLoader = ServiceLoaderUtil.load(ConfigurationService.class);
 
 	/**
 	 * Configuration instance
@@ -104,9 +113,11 @@ public class NodeConfigRuntimeConfiguration {
 
 	/**
 	 * Load the configuration and initialize
+	 * @return list of messages
 	 * @throws NodeException
 	 */
-	protected final void initConfigurationProperties() throws NodeException {
+	protected final List<Message> initConfigurationProperties() throws NodeException {
+		final List<Message> messages = new ArrayList<>();
 		try {
 			// load data
 			Map<String, Object> data = loadConfiguration();
@@ -119,17 +130,27 @@ public class NodeConfigRuntimeConfiguration {
 			}
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
 
+			// call all ConfigurationServices
+			configurationServiceLoader.forEach(configurationService -> {
+				messages.addAll(configurationService.init(nodePreferences));
+			});
+
 			// check features
 			for (Feature feature : Feature.values()) {
 				if (feature.activatedButNotAvailable()) {
-					logger.error(String.format(
-							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
-							feature.getName()));
+					String msg = I18NHelper.get("init.feature.unavailable", feature.getName()).toString();
+					messages.add(new Message(Type.CRITICAL, msg));
+					logger.error(msg);
 					nodePreferences.setFeature(feature, false);
 				}
 			}
 
 			nodeConfig.init();
+
+			// call all ConfigurationServices to check the configuration
+			configurationServiceLoader.forEach(configurationService -> {
+				messages.addAll(configurationService.check());
+			});
 
 			// TODO move this to PopertyNodeConfig.init
 			// set configuration for the instant cr publishing disabler
@@ -143,6 +164,7 @@ public class NodeConfigRuntimeConfiguration {
 		} catch (Exception e) {
 			throw new NodeException("Error while loading Gentics Content.Node configuration", e);
 		}
+		return messages;
 	}
 
 	/**
@@ -198,13 +220,15 @@ public class NodeConfigRuntimeConfiguration {
 
 	/**
 	 * Reload the configuration
+	 * @return list of messages
 	 * @throws NodeException
 	 */
-	public void reloadConfiguration() throws NodeException {
-		initConfigurationProperties();
+	public List<Message> reloadConfiguration() throws NodeException {
+		List<Message> messages = initConfigurationProperties();
 		operate(() -> CNDictionary.ensureConsistency());
 		Optional.ofNullable(servletContextHandlerServiceLoader)
 				.ifPresent(loader -> loader.forEach(ServletContextHandlerService::onReloadConfiguration));
+		return messages;
 	}
 
 	/**

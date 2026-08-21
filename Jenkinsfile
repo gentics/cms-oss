@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: docker.gentics.com/cms-oss/build-container:6.4
+      image: docker.gentics.com/cms-oss/build-container:6.6
       resources:
         requests:
           cpu: '0'
@@ -104,8 +104,6 @@ spec:
 
     options {
         withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
-        gitLabConnection('git.gentics.com')
-        gitlabBuilds(builds: ['Jenkins build'])
         timestamps()
         timeout(time: 4, unit: 'HOURS')
         ansiColor('xterm')
@@ -131,19 +129,88 @@ spec:
 			}
 		}
 
+        // Build the UI in preparation to be used in the CMS
+        stage("Build UI") {
+            when {
+				expression {
+					return env.BUILD_SKIPPED != "true"
+				}
+			}
+
+            environment {
+                // Disable colors/special characters, if projects do properly check it
+                TERM="dumb"
+                // Disable node based color libraries
+                FORCE_COLOR="0"
+            }
+
+            steps {
+                script {
+                    dir(path: 'cms-ui') {
+                        // Get the correct version
+                        version = params.forceVersion
+
+                        if (
+                            // If the version isn't semver, we can't set it, as NX just explodes
+                            !(version ==~ /[\d]+\.[\d]+\.[\d]+(?:\.[a-zA-Z0-9-]+)?/)
+                            // Or for release-builds, we can't override it
+                            || (!version && params.runReleaseBuild)
+                        ) {
+                            version = MavenHelper.getVersion()
+                        }
+
+                        // Install the dependencies
+                        sh "npm ci --no-audit --no-fund"
+
+                        if (version && (version ==~ /[\d]+\.[\d]+\.[\d]+(?:\.[a-zA-Z0-9-]+)?/)) {
+                            // Setup the packages to use the correct version for publishing
+                            sh "npm run nx -- release version $version"
+                        }
+
+                        // Build everything
+                        sh "npm run many -- --target=build --configuration=ci --output-style=static"
+
+                        // Run the tests
+                        if (params.runTests) {
+                            sh "npm run many -- --targets=test,component-test --configuration=ci --output-style=static"
+                        }
+
+                        // Create the report-files
+                        sh "mkdir target"
+                        sh "npm run report:list"
+                        sh "npm run report:outdated"
+                    }
+                }
+            }
+
+            post {
+                always {
+                    script {
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+
+                        if (params.runTests) {
+                            junit testResults: "cms-ui/.reports/**/VITEST-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
+                            junit testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
+                        }
+                    }
+                }
+            }
+        }
+
         stage("Build, Deploy") {
             when {
 				expression {
 					return env.BUILD_SKIPPED != "true"
 				}
 			}
-            steps {
-                updateGitlabCommitStatus name: 'Jenkins build', state: "running"
 
+            steps {
                 script {
                     def mvnGoal       = "package"
                     def mvnProjects   = ""
-                    def mvnArguments  = "-Dnodejs.npm.bin=/opt/node/bin/npm "
+                    def mvnArguments  = " "
 
                     version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()
@@ -196,35 +263,16 @@ spec:
                         if (params.singleTest) {
                             mvnGoal = "test"
                             mvnProjects = " -am -pl 'cms-core,cms-oss-server'"
-                            mvnArguments += " -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
-                        }
-
-                        // Check if triggered by a Gitlab merge request
-                        if (env.gitlabTargetBranch) {
-                            runJUnitTests = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch,(String[])[
-                                "base-api/",
-                                "base-lib/",
-                                "cms-api/",
-                                "cms-cache/",
-                                "cms-cache/",
-                                "cms-core/",
-                                "cms-oss-server/",
-                                "cms-restapi/"
-                            ])
-
-                            if (!runJUnitTests) {
-                                mvnArguments += " -Dskip.unit.tests"
-                            }
+                            mvnArguments += "  -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest
                         }
                     } else {
-                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests=true -Dui.skip.test=true"
+                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests=true"
                         runJUnitTests = false
                     }
 
                     // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
                         mvnProjects = " -am -pl '!cms-oss-changelog,!cms-oss-doc'"
-                        mvnArguments += " -Dui.skip.publish"
                     }
 
                     // Update chrome to the latest version
@@ -265,7 +313,7 @@ spec:
                             // Install
                             mvnGoal = "install"
                             mvnProjects = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server,cms-ui'"
-                            mvnArguments = " -DskipTests=true -Dskip.unit.tests -Dui.skip.test=true -Dnodejs.npm.bin=/opt/node/bin/npm -Dui.skip.publish"
+                            mvnArguments = " -DskipTests=true -Dskip.unit.tests "
                         }
                     }
 
@@ -273,12 +321,6 @@ spec:
                         // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
                         // See: https://www.jfrog.com/jira/browse/RTFACT-17932
                         sh "find . -maxdepth 3 -type f -name 'pom.xml' -print0 | xargs -0 sed -i -r 's/<\\?m2e[[:blank:]]+[[:alnum:]]+[[:blank:]]*\\?>//g'"
-                    }
-
-                    // Add private repository credentials and scopes
-                    sh "echo @gentics:registry=https://repo.gentics.com/repository/npm-products/> ~/.npmrc"
-                    withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
-                        sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
                     }
 
                     // Set custom mesh version (if configured)
@@ -297,7 +339,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
-                        sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
+                        sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }
 
@@ -333,10 +375,6 @@ spec:
                                 junit testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
-
-                            junit testResults: "cms-ui/.reports/**/JEST-report.xml", allowEmptyResults: allowEmptyResults
-                            junit testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
-                            junit testResults: "cms-ui/.reports/**/CYPRESS-component-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -348,7 +386,7 @@ spec:
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
 					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+						(qaDeployBranchList.contains(branchName))
 				}
 			}
 
@@ -382,7 +420,7 @@ spec:
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
 					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+						(qaDeployBranchList.contains(branchName))
 				}
 			}
 
@@ -489,10 +527,22 @@ spec:
                 }
             }
 
+            environment {
+                // Disable colors/special characters, if projects do properly check it
+                TERM="dumb"
+                // Disable node based color libraries
+                FORCE_COLOR="0"
+            }
+
             steps {
                 script {
                     dir(path: 'cms-ui') {
-                        // Publish the pacakges to npm repository
+                        // Add private repository credentials and scopes
+                        withCredentials([string(credentialsId: 'nexus-npm', variable: 'NPM_TOKEN')]) {
+                            sh "echo //repo.gentics.com/repository/npm-products/:_auth=${env.NPM_TOKEN} >> ~/.npmrc"
+                        }
+
+                        // Publish the packages to npm repository
                         sh "npm run nx -- release publish --output-style=static"
                     }
                 }

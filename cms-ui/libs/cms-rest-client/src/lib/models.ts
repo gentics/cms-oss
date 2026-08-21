@@ -2,7 +2,7 @@ import {
     AbstractAdminAPI,
     AbstractAuthenticationAPI,
     AbstractClusterAPI,
-    AbstractConstrctCategoryAPI,
+    AbstractConstructCategoryAPI,
     AbstractConstructAPI,
     AbstractContentRepositoryAPI,
     AbstractContentRepositoryFragmentAPI,
@@ -41,6 +41,7 @@ import {
     AbstractPublishProtocolAPI,
     AbstractTranslationAPI,
     AbstractLicenseAPI,
+    AbstractKeycloakAPI,
 } from './abstracts';
 import { BasicAPI, Callable } from './common';
 
@@ -78,12 +79,12 @@ export type GCMSRestClientInterceptor = (data: GCMSRestClientInterceptorData) =>
 
 export interface GCMSRestClientInterceptorData {
     method: RequestMethod;
-    protocol?: 'http' | 'https';
-    host: string;
-    port?: number;
+    protocol?: 'http' | 'https' | null;
+    host?: string | null;
+    port?: number | null;
     path: string;
-    params: Record<string, string>;
-    headers: Record<string, string>;
+    params?: Record<string, string>;
+    headers?: Record<string, string>;
 }
 
 export interface GCMSRestClientRequestData {
@@ -172,7 +173,9 @@ export type GCMSAdminAPI = MappedAPI<AbstractAdminAPI>;
 export type GCMSAuthenticationAPI = MappedAPI<AbstractAuthenticationAPI>;
 export type GCMSClusterAPI = MappedAPI<AbstractClusterAPI>;
 export type GCMSConstructAPI = MappedAPI<AbstractConstructAPI>;
-export type GCMSConstrctCategoryAPI = MappedAPI<AbstractConstrctCategoryAPI>;
+/** @deprecated Use {GCMSConstructCategoryAPI}; Only here to not break it instantly. */
+export type GCMSConstrctCategoryAPI = GCMSConstructCategoryAPI;
+export type GCMSConstructCategoryAPI = MappedAPI<AbstractConstructCategoryAPI>;
 export type GCMSContentRepositoryFragmentAPI = MappedAPI<AbstractContentRepositoryFragmentAPI>;
 export type GCMSContentRepositoryAPI = MappedAPI<AbstractContentRepositoryAPI>;
 export type GCMSContentStagingAPI = MappedAPI<AbstractContentStagingAPI>;
@@ -209,6 +212,7 @@ export type GCMSValidationAPI = MappedAPI<AbstractValidationAPI>;
 export type GCMSPublishProtocolAPI = MappedAPI<AbstractPublishProtocolAPI>;
 export type GCMSTranslationAPI = MappedAPI<AbstractTranslationAPI>;
 export type GCMSLicenseAPI = MappedAPI<AbstractLicenseAPI>;
+export type GCMSKeycloakAPI = MappedAPI<AbstractKeycloakAPI>;
 
 export type GCMSRootAPI = {
     [K in keyof AbstractRootAPI]: MappedAPI<AbstractRootAPI[K]>;

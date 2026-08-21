@@ -24,10 +24,12 @@ import {
     SetUIVersionAction,
     SetUsersnapSettingsAction,
     UI_STATE_KEY,
+    UpdateIsAdminAction,
 } from './ui.actions';
 
 const INITIAL_UI_STATE: UIState = {
     mode: UIMode.EDIT,
+    isAdmin: false,
     alerts: {},
     contentFrameBreadcrumbsExpanded: false,
     itemListBreadcrumbsExpanded: false,
@@ -55,6 +57,13 @@ const INITIAL_UI_STATE: UIState = {
 })
 @Injectable()
 export class UIStateModule {
+
+    @ActionDefinition(UpdateIsAdminAction)
+    handleUpdateIsAdminAction(ctx: StateContext<UIState>, action: UpdateIsAdminAction): void {
+        ctx.patchState({
+            isAdmin: action.isAdmin,
+        });
+    }
 
     @ActionDefinition(SetBreadcrumbExpandedAction)
     handleSetBreadcrumbExpandedAction(ctx: StateContext<UIState>, action: SetBreadcrumbExpandedAction): void {

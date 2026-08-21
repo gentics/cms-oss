@@ -90,14 +90,15 @@ export class UIStateModule {
 
     private patchUserSettings(ctx: StateContext<UIStateModel>, diff: Partial<UIStateSettings>): StateOperator<UIUserStateSettings> {
         const auth = this.appState.now.auth;
+        const id = auth.user?.id;
         const state = ctx.getState();
 
-        return iif<UIUserStateSettings>(auth.isLoggedIn, iif(state.settings?.[auth.currentUserId] != null,
+        return iif<UIUserStateSettings>(auth.isLoggedIn && !!id, iif(state.settings?.[id] != null,
             patch({
-                [auth.currentUserId]: patch(diff),
+                [id]: patch(diff),
             }),
             {
-                [auth.currentUserId]: diff,
+                [id]: diff,
             },
         ));
     }
@@ -223,13 +224,13 @@ export class UIStateModule {
     handleSetUserSettingAction<T extends keyof UIStateSettings>(ctx: StateContext<UIStateModel>, action: SetUserSettingAction<T>): void {
         const auth = this.appState.now.auth;
 
-        if (!auth.isLoggedIn || !auth.currentUserId) {
+        if (!auth.isLoggedIn || !auth.user) {
             return;
         }
 
         ctx.setState(patch({
             settings: patch<UIUserStateSettings>({
-                [auth.currentUserId]: patch({
+                [auth.user.id]: patch({
                     [action.setting]: action.value,
                 }),
             }),

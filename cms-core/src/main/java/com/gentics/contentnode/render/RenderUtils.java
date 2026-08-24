@@ -407,9 +407,9 @@ public class RenderUtils {
 	 * not hostname verification.
 	 *
 	 * @return An HTTP client which ignores insecure SSL connections
-	 * @throws NodeException The The custom SSL context can not be created
+	 * @throws NodeException The custom SSL context can not be created
 	 */
-	private static CloseableHttpClient getHttpClient(boolean ignoreSslProblems) throws NodeException {
+	public static CloseableHttpClient getHttpClient(boolean ignoreSslProblems) throws NodeException {
 		HttpClientBuilder clientBuilder = HttpClients.custom();
 
 		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
@@ -448,7 +448,7 @@ public class RenderUtils {
 	 * @return The URI created from {@code previewUrl} with the necessary query parameters
 	 * @throws NodeException When the resulting URI would be invalid
 	 */
-	private static URI getPreviewUrl(String previewUrl, String renderMode, Node node) throws NodeException {
+	public static URI getPreviewUrl(String previewUrl, String renderMode, Node node) throws NodeException {
 		try {
 			URIBuilder builder = new URIBuilder(previewUrl);
 

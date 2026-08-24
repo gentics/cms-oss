@@ -105,7 +105,7 @@ public class TemplateChannelSandboxTest extends AbstractMultichannellingSandboxT
 		TemplateListResponse templateListResponse = getFolderResource().getTemplates(
 				folderId,
 				new InFolderParameterBean(),
-				new TemplateListParameterBean().setNodeId(Integer.valueOf(channelId)),
+				new TemplateListParameterBean().setFolderNodeId(Integer.valueOf(channelId)),
 				new LegacyFilterParameterBean(),
 				new LegacySortParameterBean().setSortOrder("desc"),
 				new LegacyPagingParameterBean(),
@@ -197,7 +197,7 @@ public class TemplateChannelSandboxTest extends AbstractMultichannellingSandboxT
 		String folderId = Integer.toString(ObjectTransformer.getInt(testFolder.getId(), -1));
 		TemplateListResponse templateListResponse = getFolderResource().getTemplates(folderId,
 				new InFolderParameterBean(),
-				new TemplateListParameterBean().setNodeId(Integer.valueOf(channelId)),
+				new TemplateListParameterBean().setFolderNodeId(Integer.valueOf(channelId)),
 				new LegacyFilterParameterBean(),
 				new LegacySortParameterBean().setSortOrder("desc"),
 				new LegacyPagingParameterBean(),

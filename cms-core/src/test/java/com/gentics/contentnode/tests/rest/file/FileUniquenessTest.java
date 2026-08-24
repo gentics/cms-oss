@@ -3,6 +3,7 @@ package com.gentics.contentnode.tests.rest.file;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createRestFileUploadMultiPart;
@@ -17,7 +18,9 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -25,12 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-
-import com.gentics.contentnode.rest.model.request.FileCopyRequest;
-import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
-import com.gentics.contentnode.rest.model.request.page.TargetFolder;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.testutils.Creator;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
@@ -38,20 +35,29 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.rest.model.request.FileCopyRequest;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
+import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FileResource;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 
@@ -62,6 +68,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 /**
  * Test cases for upload multiple files in parallel
  */
+@RunWith(Parameterized.class)
 public class FileUniquenessTest {
 	public final static int NUM_THREADS = 10;
 
@@ -417,22 +424,47 @@ public class FileUniquenessTest {
 		assertThat(names).as("Filenames").doesNotHaveDuplicates();
 	}
 
+	/**
+	 * Get the test parameters
+	 * @return collection of test parameter sets
+	 */
+	@Parameters(name = "{index}: sanitizeUnderscore {0}")
+	public static Collection<Object[]> data() {
+		Collection<Object[]> data = new ArrayList<>();
+		for (boolean sanitizeUnderscore : List.of(true, false)) {
+			data.add(new Object[] { sanitizeUnderscore });
+		}
+		return data;
+	}
+
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
 
 		node = supply(() -> createNode());
-		folder = supply(() -> createFolder(node.getFolder(), "Folder"));
 		user = supply(t -> t.getObject(SystemUser.class, 1));
 	}
+
+	@Parameter(0)
+	public boolean sanitizeUnderscore;
 
 	@Before
 	public void setup() throws NodeException {
 		operate(() -> {
-			for (File file : folder.getFilesAndImages()) {
-				file.delete(true);
-			}
+			clear(node);
 		});
+		folder = supply(() -> createFolder(node.getFolder(), "Folder"));
+
+		Map<String, Object> prefsMap = NodeConfigRuntimeConfiguration.getPreferences().toMap();
+		Object sanitizeCharacters = prefsMap.get("sanitize_character");
+
+		if (sanitizeCharacters instanceof Map sanitationMap) {
+			if (sanitizeUnderscore) {
+				sanitationMap.put("_", "-");
+			} else {
+				sanitationMap.remove("_");
+			}
+		}
 	}
 
 	/**

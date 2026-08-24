@@ -1,0 +1,4 @@
+When underscores were replaced with another character in the sanitation configuration,
+uploading files with identical filenames multiple times could lead to duplicate filenames in the CMS,
+subsequently causing publishing errors.
+This has been fixed now.

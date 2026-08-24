@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import {
   BottomSheet as IosBottomSheet,
+  Group,
   Host,
   Text as IosText,
   List as IosList,
@@ -31,8 +32,14 @@ import {
 } from '@expo/ui/swift-ui';
 import {
   font,
+  foregroundColor,
+  listStyle,
   multilineTextAlignment,
   padding,
+  pickerStyle,
+  presentationDetents,
+  tag,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -532,42 +539,48 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
               position: 'absolute', width: width, pointerEvents: 'none'
             }}>
               <IosBottomSheet
-                isOpened={isNativeSheetOpen}
-                onIsOpenedChange={(e) => {
+                isPresented={isNativeSheetOpen}
+                onIsPresentedChange={(e) => {
                   setIsNativeSheetOpen(e);
                 }}
-                presentationDetents={onlyDropdown ? [0.35] : ['large']}
               >
                 {onlyDropdown ? (
-                  <Host style={{ width: width, height: 250 }}>
-                    <VStack>
-                      <HStack modifiers={[padding({ horizontal: 20, top: 20, bottom: 10 })]}>
-                        <Spacer />
-                        <Button color={theme.colors.colorAccent} onPress={() => setIsNativeSheetOpen(false)}>Bestätigen</Button>
-                      </HStack>
-                      <Picker
-                        options={dropdownData?.map((item) => item.displayName) || []}
-                        selectedIndex={pickerSelectedIndex}
-                        onOptionSelected={(event) => {
-                          const index = event.nativeEvent.index;
-                          if (dropdownData && dropdownData.length > 0) {
-                            dropdownOnSelect && dropdownOnSelect(dropdownData[index]);
-                          }
-                        }}
-                        variant="wheel"
-                      />
-                    </VStack>
-                  </Host>
+                  <Group modifiers={[presentationDetents([{ fraction: 0.35 }])]}>
+                    <Host style={{ width: width, height: 250 }}>
+                      <VStack>
+                        <HStack modifiers={[padding({ horizontal: 20, top: 20, bottom: 10 })]}>
+                          <Spacer />
+                          <Button modifiers={[tint(theme.colors.colorAccent)]} label="Bestätigen" onPress={() => setIsNativeSheetOpen(false)} />
+                        </HStack>
+                        <Picker
+                          selection={pickerSelectedIndex}
+                          onSelectionChange={(selection) => {
+                            const index = Number(selection);
+                            if (dropdownData && dropdownData.length > 0) {
+                              dropdownOnSelect && dropdownOnSelect(dropdownData[index]);
+                            }
+                          }}
+                          modifiers={[pickerStyle('wheel')]}
+                        >
+                          {(dropdownData || []).map((item, index) => (
+                            <IosText key={index} modifiers={[tag(index)]}>
+                              {item.displayName}
+                            </IosText>
+                          ))}
+                        </Picker>
+                      </VStack>
+                    </Host>
+                  </Group>
                 ) : (<>
                   <HStack modifiers={[padding({ horizontal: 20, top: 20, bottom: 10 })]}>
                     <IosText modifiers={[font({ weight: 'bold' })]}>{labelText != null && labelText.length && hideDropdownArrow ? labelText : 'Auswahl'}</IosText>
                     <Spacer />
                     {hideDropdownArrow ?
-                      <Button color={theme.colors.colorAccent} onPress={() => setIsNativeSheetOpen(false)}>Bestätigen</Button> :
-                      <Button color={theme.colors.colorDeleteRed} onPress={() => {
+                      <Button modifiers={[tint(theme.colors.colorAccent)]} label="Bestätigen" onPress={() => setIsNativeSheetOpen(false)} /> :
+                      <Button modifiers={[tint(theme.colors.colorDeleteRed)]} label="Cancel" onPress={() => {
                         setIsNativeSheetOpen(false);
                         clearInput && !value && clearInput();
-                      }}>Cancel</Button>
+                      }} />
                     }
                   </HStack>
                   <SafeAreaView style={{ height: height }}>
@@ -598,11 +611,7 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
                               />
                             </View>
                           ) : dropdownData && dropdownData.length > 0 ? (
-                            <IosList
-                              scrollEnabled={true}
-                              editModeEnabled={false}
-                              listStyle='plain'
-                            >
+                            <IosList modifiers={[listStyle('plain')]}>
                               {dropdownData.map((item, index) => {
                                 const handlePress = () => {
                                   dropdownOnSelect && dropdownOnSelect(item);
@@ -623,7 +632,7 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
                                 );
                               })}
                             </IosList>
-                          ) : <IosText color={theme.colors.textMuted} modifiers={[padding({ vertical: 15 }), font({ size: 14 }), multilineTextAlignment('center')]}>Tippe mindestens 5 Zeichen um die Suche zu starten</IosText>}
+                          ) : <IosText modifiers={[foregroundColor(theme.colors.textMuted), padding({ vertical: 15 }), font({ size: 14 }), multilineTextAlignment('center')]}>Tippe mindestens 5 Zeichen um die Suche zu starten</IosText>}
                           <Spacer></Spacer>
                         </VStack>
                       </Host>

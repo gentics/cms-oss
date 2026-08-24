@@ -35,3 +35,6 @@ yarn-error.*
 *.tsbuildinfo
 
 pdf.worker.min.mjs
+
+# generated: copied from packages/feature-formgen/src/mock-files (SoT) via `npm run copy-mock-files`
+public/mock-files/

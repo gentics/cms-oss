@@ -17,16 +17,17 @@
     "start:mock:formgen": "cd apps/andp-ma-formgen && cross-env DEV_MODE=true MOCK_FORM=true expo start -c",
     "start:dev:ma-ms": "cd apps/andp-ma-messages && cross-env DEV_MODE=true expo start -c",
     "start:dev:ma-ts": "cd apps/andp-ma-tasks && cross-env DEV_MODE=true expo start -c",
-    "prestart:formgen": "npm run copy:pdfworker",
-    "prestart:dev:formgen": "npm run copy:pdfworker",
-    "prestart:mock:formgen": "npm run copy:pdfworker",
+    "prestart:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
+    "prestart:dev:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
+    "prestart:mock:formgen": "npm run copy:pdfworker && npm run copy:mockfiles",
     "test": "jest",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "postinstall": "patch-package",
-    "copy:pdfworker": "copyfiles -f ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./apps/andp-ma-formgen/public/"
+    "copy:pdfworker": "copyfiles -f ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./apps/andp-ma-formgen/public/",
+    "copy:mockfiles": "npm run copy-mock-files --workspace=andp-ma-formgen"
   },
   "devDependencies": {
     "@babel/core": "^7.28.4",

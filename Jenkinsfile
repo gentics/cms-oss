@@ -7,9 +7,6 @@ JobContext.set(this)
 
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
-final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
-final def testDbManagerPort    = "8080"
-
 def branchName                 = null
 def version                    = null
 def releaseVersion             = ""
@@ -291,7 +288,7 @@ spec:
                     // Login to docker.gentics.com so that the tests can pull all Mesh images
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
-                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "TESTCONTAINERS_RYUK_DISABLED=true"]) {
+                    withEnv(["TESTCONTAINERS_RYUK_DISABLED=true"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests -Dui.skip.integrationTest=true " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }

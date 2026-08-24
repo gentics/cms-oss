@@ -356,7 +356,7 @@ export class TagRefTagPropertyEditor implements TagPropertyEditor, OnInit, OnDes
             selectMultiple: false,
             contentLanguage,
             startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
-            startNode: this.uploadDestination ? this.uploadDestination.nodeId : undefined,
+            startNode: this.uploadDestination ? (this.uploadDestination.channelId || this.uploadDestination.nodeId) : undefined,
         };
 
         this.repositoryBrowserClient.openRepositoryBrowser(options)

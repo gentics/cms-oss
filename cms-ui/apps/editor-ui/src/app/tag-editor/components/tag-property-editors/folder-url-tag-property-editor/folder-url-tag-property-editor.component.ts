@@ -221,7 +221,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
             selectMultiple: false,
             contentLanguage,
             startFolder: this.uploadDestination ? this.uploadDestination.id : undefined,
-            startNode: this.uploadDestination ? this.uploadDestination.nodeId : undefined,
+            startNode: this.uploadDestination ? (this.uploadDestination.channelId || this.uploadDestination.nodeId) : undefined,
         }).then(selectedItem => this.changeSelectedItem(selectedItem));
     }
 

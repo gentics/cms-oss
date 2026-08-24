@@ -27,6 +27,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.factory.object.FileFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Disinheritable;
@@ -146,7 +147,9 @@ public class UniquifyHelper {
 			extension = FilenameUtils.getExtension(fileName);
 		}
 
-		String searchFilenamePattern = CNStringUtils.escapeRegex(baseName) + ".*(_([0-9]+))?";
+		String separator = CNStringUtils.escapeRegex(FileFactory.sanitizeName("_"));
+
+		String searchFilenamePattern = CNStringUtils.escapeRegex(baseName) + ".*(" + separator + "([0-9]+))?";
 		if (!StringUtils.isEmpty(extension)) {
 			searchFilenamePattern += "\\." + CNStringUtils.escapeRegex(extension) + ".*";
 		}
@@ -158,15 +161,17 @@ public class UniquifyHelper {
 	 * Function to compose the filename for the given pair of base name and extension and a number
 	 */
 	public final static BiFunction<Pair<String, String>, BigInteger, String> FILENAME_COMPOSER = (pair, number) -> {
+		String separator = FileFactory.sanitizeName("_");
+
 		if (StringUtils.isEmpty(pair.getRight())) {
 			String base = pair.getLeft();
 
-			return makeShortenedFilename(base, MAX_FILENAME_LENGTH, b -> "%s_%d".formatted(b, number));
+			return makeShortenedFilename(base, MAX_FILENAME_LENGTH, b -> "%s%s%d".formatted(b, separator, number));
 		} else {
 			String base = pair.getLeft();
 			String extension = pair.getRight();
 
-			return makeShortenedFilename(base, extension, MAX_FILENAME_LENGTH, (b, e) -> "%s_%d.%s".formatted(b, number, e));
+			return makeShortenedFilename(base, extension, MAX_FILENAME_LENGTH, (b, e) -> "%s%s%d.%s".formatted(b, separator, number, e));
 		}
 	};
 
@@ -276,7 +281,10 @@ public class UniquifyHelper {
 		if (matcher.matches()) {
 			segment = matcher.group(1);
 		}
-		String searchSegmentPattern = CNStringUtils.escapeRegex(segment) + "(_([0-9]+))?";
+
+		String separator = CNStringUtils.escapeRegex(FileFactory.sanitizeName("_"));
+
+		String searchSegmentPattern = CNStringUtils.escapeRegex(segment) + "(" + separator + "([0-9]+))?";
 		return searchSegmentPattern;
 	};
 
@@ -284,7 +292,9 @@ public class UniquifyHelper {
 	 * Function to compose the segment for the given base and the number
 	 */
 	public final static BiFunction<String, BigInteger, String> SEGMENT_COMPOSER = (value, number) -> {
-		return "%s_%d".formatted(value, number);
+		String separator = FileFactory.sanitizeName("_");
+
+		return "%s%s%d".formatted(value, separator, number);
 	};
 
 	/**

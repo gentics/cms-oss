@@ -2,6 +2,7 @@ package com.gentics.contentnode.job;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -35,7 +36,7 @@ public class LocalizeJob {
 		// localized or the localized object is a folder or node
 		final boolean disableInstantPublishing = ids.size() > 1 || Node.class.isAssignableFrom(clazz) || Folder.class.isAssignableFrom(clazz);
 
-		QueueBuilder builder = Operator.queue();
+		QueueBuilder<GenericResponse> builder = Operator.queue(Function.identity());
 		Transaction t = TransactionManager.getCurrentTransaction();
 		List<? extends NodeObject> objects = t.getObjects(clazz, ids);
 

@@ -1,7 +1,13 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.db.DBUtils.IDS;
+import static com.gentics.contentnode.db.DBUtils.select;
+import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.rest.util.MiscUtils.doSetPermissions;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -9,11 +15,15 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -55,8 +65,6 @@ import com.gentics.contentnode.rest.model.response.PermBitsResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
@@ -72,6 +80,7 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -80,8 +89,8 @@ import com.gentics.testutils.GenericTestUtils;
  */
 public class FolderSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
 	 * ID of the root folder
@@ -94,6 +103,72 @@ public class FolderSandboxTest {
 	public static int NODE_ID = 14;
 
 	public static int ROOT_FOLDER_ID_2 = 69;
+
+	public final static Set<Integer> TEMPLATE_IDS = new HashSet<>();
+	public final static Set<Integer> NODE_IDS = new HashSet<>();
+	public final static Set<Integer> FOLDER_IDS = new HashSet<>();
+	public final static Set<Integer> PAGE_IDS = new HashSet<>();
+
+	@BeforeClass
+	public final static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+		FOLDER_IDS.addAll(supply(() -> select("SELECT id FROM folder", IDS)));
+		PAGE_IDS.addAll(supply(() -> select("SELECT id FROM page", IDS)));
+		TEMPLATE_IDS.addAll(supply(() -> select("SELECT id FROM template", IDS)));
+		NODE_IDS.addAll(supply(() -> select("SELECT id FROM node", IDS)));
+	}
+
+	@After
+	public void tearDown() throws NodeException {
+		Set<Integer> allPageIds = supply(() -> select("SELECT id FROM page", IDS));
+		for (int pageId : allPageIds) {
+			if (!PAGE_IDS.contains(pageId)) {
+				consume(id -> {
+					Page page = TransactionManager.getCurrentTransaction().getObject(Page.class, id);
+					if (page != null) {
+						page.delete(true);
+					}
+				}, pageId);
+			}
+		}
+
+		Set<Integer> allTemplateIds = supply(() -> select("SELECT id FROM template", IDS));
+		for (int templateId : allTemplateIds) {
+			if (!TEMPLATE_IDS.contains(templateId)) {
+				consume(id -> {
+					Template template = TransactionManager.getCurrentTransaction().getObject(Template.class, id);
+					if (template != null) {
+						template.delete(true);
+					}
+				}, templateId);
+			}
+		}
+
+		Set<Integer> allNodeds = supply(() -> select("SELECT id FROM node", IDS));
+		for (int nodeId : allNodeds) {
+			if (!NODE_IDS.contains(nodeId)) {
+				consume(id -> {
+					Node node = TransactionManager.getCurrentTransaction().getObject(Node.class, id);
+					if (node != null) {
+						node.delete(true);
+					}
+				}, nodeId);
+			}
+		}
+
+		Set<Integer> allFolderIds = supply(() -> select("SELECT id FROM folder", IDS));
+		for (int folderId : allFolderIds) {
+			if (!FOLDER_IDS.contains(folderId)) {
+				consume(id -> {
+					com.gentics.contentnode.object.Folder folder = TransactionManager.getCurrentTransaction()
+							.getObject(com.gentics.contentnode.object.Folder.class, id);
+					if (folder != null) {
+						folder.delete(true);
+					}
+				}, folderId);
+			}
+		}
+	}
 
 	/**
 	 * Test searching for a folder by ID recursively (should only find one folder)
@@ -280,13 +355,15 @@ public class FolderSandboxTest {
 	@Test
 	public void testGetItems() throws Exception {
 		int count = 10;
-		// Prepare some test data
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Folder rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
-		Template template = ContentNodeTestDataUtils.createTemplate(rootFolder, "testTemplate");
-		for (int i = 0; i < count; i++) {
-			ContentNodeTestDataUtils.createPage(rootFolder, template, "test_" + i + ".html");
-		}
+
+		operate(t -> {
+			// Prepare some test data
+			com.gentics.contentnode.object.Folder rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
+			Template template = ContentNodeTestDataUtils.createTemplate(rootFolder, "testTemplate");
+			for (int i = 0; i < count; i++) {
+				ContentNodeTestDataUtils.createPage(rootFolder, template, "test_" + i + ".html");
+			}
+		});
 
 		InFolderParameterBean inFolder = new InFolderParameterBean();
 		LegacyFilterParameterBean filter = new LegacyFilterParameterBean();
@@ -316,12 +393,18 @@ public class FolderSandboxTest {
 	@Test
 	public void testGetPublishablePages() throws Exception {
 		int count = 10;
+		com.gentics.contentnode.object.Folder rootFolder;
+		Template template;
+
 		// Prepare some test data
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Folder rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
-		Template template = ContentNodeTestDataUtils.createTemplate(rootFolder, "testTemplate");
-		for (int i = 0; i < count; i++) {
-			ContentNodeTestDataUtils.createPage(rootFolder, template, "test_" + i + ".html");
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
+			template = ContentNodeTestDataUtils.createTemplate(rootFolder, "testTemplate");
+			for (int i = 0; i < count; i++) {
+				ContentNodeTestDataUtils.createPage(rootFolder, template, "test_" + i + ".html");
+			}
+			trx.success();
 		}
 
 		SystemUser systemUser = null;
@@ -348,7 +431,7 @@ public class FolderSandboxTest {
 		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
 		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 
-		try (Trx tx = new Trx(null, systemUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
 			PageListResponse response = pageResource.list(
 				inFolder,
 				pageListParams,
@@ -386,7 +469,7 @@ public class FolderSandboxTest {
 		}
 
 		// Assert that also the pages of the subfolders will be found
-		try (Trx tx = new Trx(null, systemUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
 			PageListResponse response = pageResource.list(
 				inFolder.clone().setRecursive(true),
 				pageListParams,
@@ -413,7 +496,7 @@ public class FolderSandboxTest {
 
 		// Assert that the result does not change even if we filter for
 		// publishable pages
-		try (Trx tx = new Trx(null, systemUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
 			PageListResponse response = pageResource.list(
 				inFolder.clone().setRecursive(true),
 				pageListParams.clone().setPermission(Arrays.asList(com.gentics.contentnode.rest.model.request.Permission.publish)),
@@ -442,14 +525,14 @@ public class FolderSandboxTest {
 		}
 
 		// Revoke the permission on the subfolder
-		try (Trx tx = new Trx(null, 1)) {
+		try (Trx tx = new Trx()) {
 			PermHandler.setPermissions(com.gentics.contentnode.object.Folder.TYPE_FOLDER, subFolder.getId(), Arrays.asList(userGroup),
 					new Permission(PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_VIEW).toString());
 			tx.success();
 		}
 
 		// Assert that only the pages from the root folder were retrieved
-		try (Trx tx = new Trx(null, systemUser.getId())) {
+		try (DBSessionClosure ses = new DBSessionClosure(systemUser.getId())) {
 			PageListResponse response = pageResource.list(
 				inFolder.clone().setRecursive(true),
 				pageListParams.clone().setPermission(Arrays.asList(com.gentics.contentnode.rest.model.request.Permission.publish)),
@@ -766,27 +849,24 @@ public class FolderSandboxTest {
 	@Test
 	public void testgetSelectiveFolderTreeWithDeleted() throws Exception {
 		String id = Trx.supply(() -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 				// first create a new folder in the node
 				FolderCreateRequest request = new FolderCreateRequest();
 
 				request.setMotherId(Integer.toString(ROOT_FOLDER_ID));
 				request.setName("Delete Me");
-				FolderLoadResponse loadResponse = folderResource.create(request);
+				FolderLoadResponse loadResponse = getFolderResource().create(request);
 
 				assertEquals("Check response code", ResponseCode.OK, loadResponse.getResponseInfo().getResponseCode());
 
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, getFolderResource().delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});
 
 		Trx.consume(deletedFolderId -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 				InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(ROOT_FOLDER_ID)).setRecursive(true);
 				FolderListParameterBean folderListParams = new FolderListParameterBean().setTree(true).setRecursiveIds(Arrays.asList("57", "58", deletedFolderId));
 				LegacyFilterParameterBean filter = new LegacyFilterParameterBean();
@@ -795,7 +875,7 @@ public class FolderSandboxTest {
 				EditableParameterBean editable = new EditableParameterBean();
 				WastebinParameterBean wastebin = new WastebinParameterBean();
 
-				FolderListResponse response = folderResource.list(
+				FolderListResponse response = getFolderResource().list(
 					inFolder,
 					folderListParams,
 					filter.toFilterParameterBean(),
@@ -812,7 +892,7 @@ public class FolderSandboxTest {
 				assertEquals("Check number of deleted folder IDs", 1, deleted.size());
 
 				// Check again with legacy endpoints.
-				LegacyFolderListResponse legacyResponse = folderResource.getFolders(
+				LegacyFolderListResponse legacyResponse = getFolderResource().getFolders(
 					inFolder.folderId,
 					folderListParams.recursiveIds,
 					folderListParams.addPrivileges,
@@ -842,27 +922,24 @@ public class FolderSandboxTest {
 	@Test
 	public void testgetSelectiveFolderTreeWithNodeIdWithDeleted() throws Exception {
 		String id = Trx.supply(() -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 				// first create a new folder in the node
 				FolderCreateRequest request = new FolderCreateRequest();
 
 				request.setMotherId(Integer.toString(ROOT_FOLDER_ID));
 				request.setName("Delete Me");
-				FolderLoadResponse loadResponse = folderResource.create(request);
+				FolderLoadResponse loadResponse = getFolderResource().create(request);
 
 				assertEquals("Check response code", ResponseCode.OK, loadResponse.getResponseInfo().getResponseCode());
 
 				String deletedFolderId = Integer.toString(loadResponse.getFolder().getId());
 
 				// delete the folder
-				assertEquals("Check response code", ResponseCode.OK, folderResource.delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
+				assertEquals("Check response code", ResponseCode.OK, getFolderResource().delete(deletedFolderId, 0, null).getResponseInfo().getResponseCode());
 
 				return deletedFolderId;
 			});
 
 		Trx.consume(deletedFolderId -> {
-				FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
 				InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(ROOT_FOLDER_ID)).setRecursive(true);
 				FolderListParameterBean folderListParams = new FolderListParameterBean().setRecursiveIds(Arrays.asList(NODE_ID + "/57", NODE_ID + "/58", NODE_ID + "/" + deletedFolderId));
 				LegacyFilterParameterBean filter = new LegacyFilterParameterBean();
@@ -871,7 +948,7 @@ public class FolderSandboxTest {
 				EditableParameterBean editable = new EditableParameterBean();
 				WastebinParameterBean wastebin = new WastebinParameterBean();
 
-				FolderListResponse response = folderResource.list(
+				FolderListResponse response = getFolderResource().list(
 					inFolder,
 					folderListParams,
 					filter.toFilterParameterBean(),
@@ -888,7 +965,7 @@ public class FolderSandboxTest {
 				assertEquals("Check number of deleted folder IDs", 1, deleted.size());
 
 				// Check again with legacy endpoints.
-				LegacyFolderListResponse legacyResponse = folderResource.getFolders(
+				LegacyFolderListResponse legacyResponse = getFolderResource().getFolders(
 					inFolder.folderId,
 					folderListParams.recursiveIds,
 					folderListParams.addPrivileges,
@@ -920,219 +997,219 @@ public class FolderSandboxTest {
 	 */
 	@Test
 	public void testPermissionGetImagesFromFolder() throws Exception {
-		Transaction t = testContext.startSystemUserTransaction();
+		int testFolderId;
+		SystemUser testUser;
+		UserGroup testGroup;
 
-		com.gentics.contentnode.object.Folder rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
-		com.gentics.contentnode.object.Folder permissionTestFolder = Creator.createFolder(rootFolder, "permissionTestFolder", "/somedir");
-		t.commit(false);
-		com.gentics.contentnode.object.Folder subFolder = Creator.createFolder(permissionTestFolder, "SubFolder", "/somedir/some");
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Folder rootFolder = t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID);
+			com.gentics.contentnode.object.Folder permissionTestFolder = Creator.createFolder(rootFolder, "permissionTestFolder", "/somedir");
+			t.commit(false);
+			com.gentics.contentnode.object.Folder subFolder = Creator.createFolder(permissionTestFolder, "SubFolder", "/somedir/some");
+			t.commit(false);
 
-		// create folder and subfolder
-		int testFolderId = ObjectTransformer.getInt(permissionTestFolder.getId(), -1);
-		int subFolderId = ObjectTransformer.getInt(subFolder.getId(), -1);
+			// create folder and subfolder
+			testFolderId = ObjectTransformer.getInt(permissionTestFolder.getId(), -1);
+			int subFolderId = ObjectTransformer.getInt(subFolder.getId(), -1);
 
-		// put a testimage in each folder
-		ImageFile image1 = t.createObject(ImageFile.class);
-		image1.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
-		image1.setName("blume1.jpg");
-		image1.setFolderId(testFolderId);
-		image1.setForceOnline(true);
-		image1.save();
-		t.commit(false);
+			// put a testimage in each folder
+			ImageFile image1 = t.createObject(ImageFile.class);
+			image1.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
+			image1.setName("blume1.jpg");
+			image1.setFolderId(testFolderId);
+			image1.setForceOnline(true);
+			image1.save();
+			t.commit(false);
 
-		ImageFile image2 = t.createObject(ImageFile.class);
-		image2.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
-		image2.setName("blume2.jpg");
-		image2.setFolderId(subFolderId);
-		image2.setForceOnline(true);
-		image2.save();
-		t.commit(false);
+			ImageFile image2 = t.createObject(ImageFile.class);
+			image2.setFileStream(GenericTestUtils.getPictureResource("blume.jpg"));
+			image2.setName("blume2.jpg");
+			image2.setFolderId(subFolderId);
+			image2.setForceOnline(true);
+			image2.save();
+			t.commit(false);
 
-		UserGroup parentGroup = t.getObject(UserGroup.class, 2);
-		UserGroup testGroup = Creator.createUsergroup("testgroup", "", parentGroup);
-		t.commit(false);
+			UserGroup parentGroup = t.getObject(UserGroup.class, 2);
+			testGroup = Creator.createUsergroup("testgroup", "", parentGroup);
+			t.commit(false);
 
-		// Allow the testgroup to view pages in the testfolder and its subfolder
-		SetPermsRequest setPermsRequest = new SetPermsRequest();
-		setPermsRequest.setGroupId(ObjectTransformer.getInteger(testGroup.getId(), -1));
-		// Set permissions for viewing the folder and viewing pages/files/images
-		// in the folder
-		setPermsRequest.setPerm(new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString());
-		GenericResponse permResponse = doSetPermissions(TypePerms.folder, testFolderId, setPermsRequest);
-		assertEquals("Check set permission response code for the testfolder", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
-		t.commit(false);
-		permResponse = doSetPermissions(TypePerms.folder, subFolderId, setPermsRequest);
-		assertEquals("Check set permission response code for the subfolder", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
-		t.commit(false);
+			// Allow the testgroup to view pages in the testfolder and its subfolder
+			SetPermsRequest setPermsRequest = new SetPermsRequest();
+			setPermsRequest.setGroupId(ObjectTransformer.getInteger(testGroup.getId(), -1));
+			// Set permissions for viewing the folder and viewing pages/files/images
+			// in the folder
+			setPermsRequest.setPerm(new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString());
+			GenericResponse permResponse = doSetPermissions(TypePerms.folder, testFolderId, setPermsRequest);
+			assertEquals("Check set permission response code for the testfolder", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
+			t.commit(false);
+			permResponse = doSetPermissions(TypePerms.folder, subFolderId, setPermsRequest);
+			assertEquals("Check set permission response code for the subfolder", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
+			t.commit(false);
 
-		Creator.createUser("test", "test", "Rudi", "Mentaer", "test@example.com", Arrays.asList(testGroup));
-		t.commit(false);
+			testUser = Creator.createUser("test", "test", "Rudi", "Mentaer", "test@example.com", Arrays.asList(testGroup));
+			trx.success();
+		}
 
-		testContext.getContext().startTransaction();
-		testContext.getContext().login("test", "test");
-		t = testContext.getContext().getTransaction();
-
-		FolderResourceImpl folderResource = (FolderResourceImpl) ContentNodeRESTUtils.getFolderResource();
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(Integer.toString(testFolderId));
 		FileListParameterBean fileListParams = new FileListParameterBean().setNodeId(NODE_ID);
 		LegacyFilterParameterBean filter = new LegacyFilterParameterBean().setSearch("");
 		LegacySortParameterBean sort = new LegacySortParameterBean().setSortBy("name").setSortOrder("asc");
 		LegacyPagingParameterBean pagingParams = new LegacyPagingParameterBean();
-		ImageResourceImpl imageResource = (ImageResourceImpl) ContentNodeRESTUtils.getImageResource();
 		EditableParameterBean editableParams = new EditableParameterBean();
 		WastebinParameterBean wastebinParams = new WastebinParameterBean();
 
-		// Now list all images and pages in this folder.
-		ImageListResponse imageListResponse = imageResource.list(
-			inFolder,
-			fileListParams,
-			filter.toFilterParameterBean(),
-			sort.toSortParameterBean(),
-			pagingParams.toPagingParameterBean(),
-			editableParams,
-			wastebinParams);
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Now list all images and pages in this folder.
+			ImageListResponse imageListResponse = getImageResource().list(
+					inFolder,
+					fileListParams,
+					filter.toFilterParameterBean(),
+					sort.toSortParameterBean(),
+					pagingParams.toPagingParameterBean(),
+					editableParams,
+					wastebinParams);
 
-		assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results", 1, imageListResponse.getNumItems());
+			assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results", 1, imageListResponse.getNumItems());
 
-		// Check again with legacy endpoint.
-		LegacyFileListResponse legacyFileListResponse = folderResource.getImages(
-			inFolder.folderId,
-			inFolder,
-			fileListParams,
-			filter,
-			sort,
-			pagingParams,
-			editableParams,
-			wastebinParams);
+			// Check again with legacy endpoint.
+			LegacyFileListResponse legacyFileListResponse = getFolderResource().getImages(
+					inFolder.folderId,
+					inFolder,
+					fileListParams,
+					filter,
+					sort,
+					pagingParams,
+					editableParams,
+					wastebinParams);
 
-		assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results", 1, legacyFileListResponse.getNumItems().intValue());
+			assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results", 1, legacyFileListResponse.getNumItems().intValue());
 
-		FolderObjectCountResponse countResponse = folderResource.getObjectCounts(
-			testFolderId,
-			NODE_ID,
-			null,
-			false,
-			inFolder,
-			wastebinParams.clone().setWastebinSearch(WastebinSearch.exclude));
+			FolderObjectCountResponse countResponse = getFolderResource().getObjectCounts(
+					testFolderId,
+					NODE_ID,
+					null,
+					false,
+					inFolder,
+					wastebinParams.clone().setWastebinSearch(WastebinSearch.exclude));
 
-		assertEquals("Compare number of results with imagecount", countResponse.getImages(), imageListResponse.getNumItems());
+			assertEquals("Compare number of results with imagecount", countResponse.getImages(), imageListResponse.getNumItems());
 
-		//list recursively
-		imageListResponse = imageResource.list(
-			inFolder.setRecursive(true),
-			fileListParams,
-			filter.toFilterParameterBean(),
-			sort.toSortParameterBean(),
-			pagingParams.toPagingParameterBean(),
-			editableParams,
-			wastebinParams);
-		assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results for recursive image search", 2, imageListResponse.getNumItems());
+			//list recursively
+			imageListResponse = getImageResource().list(
+					inFolder.setRecursive(true),
+					fileListParams,
+					filter.toFilterParameterBean(),
+					sort.toSortParameterBean(),
+					pagingParams.toPagingParameterBean(),
+					editableParams,
+					wastebinParams);
+			assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results for recursive image search", 2, imageListResponse.getNumItems());
 
-		for (File file : imageListResponse.getItems()){
-			assertEquals("Check mimetype", file.getFileType(), "image/jpeg");
-			assertEquals("Object has to be of type image", file.getTypeId().intValue(), ContentFile.TYPE_IMAGE);
-			assertEquals("Object has to be of type image", file.getType(), ItemType.image);
+			for (File file : imageListResponse.getItems()){
+				assertEquals("Check mimetype", file.getFileType(), "image/jpeg");
+				assertEquals("Object has to be of type image", file.getTypeId().intValue(), ContentFile.TYPE_IMAGE);
+				assertEquals("Object has to be of type image", file.getType(), ItemType.image);
+			}
+
+			// Check again with legacy endpoint
+			legacyFileListResponse = getFolderResource().getImages(
+					inFolder.folderId,
+					inFolder.setRecursive(true),
+					fileListParams,
+					filter,
+					sort,
+					pagingParams,
+					editableParams,
+					wastebinParams);
+			assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results for recursive image search", 2, legacyFileListResponse.getNumItems().intValue());
+
+			for (File file : legacyFileListResponse.getFiles()){
+				assertEquals("Check mimetype", file.getFileType(), "image/jpeg");
+				assertEquals("Object has to be of type image", file.getTypeId().intValue(), ContentFile.TYPE_IMAGE);
+				assertEquals("Object has to be of type image", file.getType(), ItemType.image);
+			}
 		}
 
-		// Check again with legacy endpoint
-		legacyFileListResponse = folderResource.getImages(
-			inFolder.folderId,
-			inFolder.setRecursive(true),
-			fileListParams,
-			filter,
-			sort,
-			pagingParams,
-			editableParams,
-			wastebinParams);
-		assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results for recursive image search", 2, legacyFileListResponse.getNumItems().intValue());
-
-		for (File file : legacyFileListResponse.getFiles()){
-			assertEquals("Check mimetype", file.getFileType(), "image/jpeg");
-			assertEquals("Object has to be of type image", file.getTypeId().intValue(), ContentFile.TYPE_IMAGE);
-			assertEquals("Object has to be of type image", file.getType(), ItemType.image);
-		}
 
 		// Now retract the page/file/image viewing permission for the testgroup
 		// on the testfolder
-		testContext.startSystemUserTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		// Set permissions for viewing the folder and nothing else
-		setPermsRequest.setPerm(new Permission(PermHandler.PERM_VIEW).toString());
-		permResponse = doSetPermissions(TypePerms.folder, testFolderId, setPermsRequest);
-		assertEquals("Check set permission response code", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
-		t.commit(true);
+		try (Trx trx = new Trx()) {
+			// Set permissions for viewing the folder and nothing else
+			SetPermsRequest setPermsRequest = new SetPermsRequest();
+			setPermsRequest.setGroupId(ObjectTransformer.getInteger(testGroup.getId(), -1));
+			setPermsRequest.setPerm(new Permission(PermHandler.PERM_VIEW).toString());
+			GenericResponse permResponse = doSetPermissions(TypePerms.folder, testFolderId, setPermsRequest);
+			assertEquals("Check set permission response code", ResponseCode.OK, permResponse.getResponseInfo().getResponseCode());
+			trx.success();
+		}
 
-		testContext.getContext().startTransaction();
-		testContext.getContext().login("test", "test");
-		t = TransactionManager.getCurrentTransaction();
-		imageResource.setTransaction(t);
-		folderResource.setTransaction(t);
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Now list all images and images in this folder again. The testuser
+			// should not be able to list images in the testfolder.
+			ImageListResponse imageListResponse = getImageResource().list(
+					inFolder.setRecursive(false),
+					fileListParams,
+					filter.toFilterParameterBean(),
+					sort.toSortParameterBean(),
+					pagingParams.toPagingParameterBean(),
+					editableParams,
+					wastebinParams);
+			assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results", 0, imageListResponse.getNumItems());
 
-		// Now list all images and images in this folder again. The testuser
-		// should not be able to list images in the testfolder.
-		imageListResponse = imageResource.list(
-			inFolder.setRecursive(false),
-			fileListParams,
-			filter.toFilterParameterBean(),
-			sort.toSortParameterBean(),
-			pagingParams.toPagingParameterBean(),
-			editableParams,
-			wastebinParams);
-		assertEquals("Check get images response code", ResponseCode.OK, imageListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results", 0, imageListResponse.getNumItems());
+			// Check again with legacy endpoint.
+			LegacyFileListResponse legacyFileListResponse = getFolderResource().getImages(
+					inFolder.folderId,
+					inFolder.setRecursive(false),
+					fileListParams,
+					filter,
+					sort,
+					pagingParams,
+					editableParams,
+					wastebinParams);
+			assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
+			assertEquals("Check number of results", 0, legacyFileListResponse.getNumItems().intValue());
 
-		// Check again with legacy endpoint.
-		legacyFileListResponse = folderResource.getImages(
-			inFolder.folderId,
-			inFolder.setRecursive(false),
-			fileListParams,
-			filter,
-			sort,
-			pagingParams,
-			editableParams,
-			wastebinParams);
-		assertEquals("Check get images response code", ResponseCode.OK, legacyFileListResponse.getResponseInfo().getResponseCode());
-		assertEquals("Check number of results", 0, legacyFileListResponse.getNumItems().intValue());
+			FolderObjectCountResponse countResponse = getFolderResource().getObjectCounts(
+					testFolderId,
+					NODE_ID,
+					null,
+					false,
+					inFolder,
+					wastebinParams.setWastebinSearch(WastebinSearch.exclude));
+			assertEquals("Compare number of results with imagecount", countResponse.getImages(), imageListResponse.getNumItems());
 
-		countResponse = folderResource.getObjectCounts(
-			testFolderId,
-			NODE_ID,
-			null,
-			false,
-			inFolder,
-			wastebinParams.setWastebinSearch(WastebinSearch.exclude));
-		assertEquals("Compare number of results with imagecount", countResponse.getImages(), imageListResponse.getNumItems());
+			//The subfolder still has viewing permissions.
+			//So a recursive listing of the testfolder should return one result.
+			imageListResponse = getImageResource().list(
+					inFolder.setRecursive(true),
+					fileListParams,
+					filter.toFilterParameterBean(),
+					sort.toSortParameterBean(),
+					pagingParams.toPagingParameterBean(),
+					editableParams,
+					wastebinParams);
+			
+			assertEquals("Check number of results for recursive image search", 1, imageListResponse.getNumItems());
 
-		//The subfolder still has viewing permissions.
-		//So a recursive listing of the testfolder should return one result.
-		imageListResponse = imageResource.list(
-			inFolder.setRecursive(true),
-			fileListParams,
-			filter.toFilterParameterBean(),
-			sort.toSortParameterBean(),
-			pagingParams.toPagingParameterBean(),
-			editableParams,
-			wastebinParams);
-
-		assertEquals("Check number of results for recursive image search", 1, imageListResponse.getNumItems());
-
-		// Check again with legacy endpoint.
-		legacyFileListResponse = folderResource.getImages(
-			inFolder.folderId,
-			inFolder.setRecursive(true),
-			fileListParams,
-			filter,
-			sort,
-			pagingParams,
-			editableParams,
-			wastebinParams);
-
-		assertEquals("Check number of results for recursive image search", 1, legacyFileListResponse.getNumItems().intValue());
+			// Check again with legacy endpoint.
+			legacyFileListResponse = getFolderResource().getImages(
+					inFolder.folderId,
+					inFolder.setRecursive(true),
+					fileListParams,
+					filter,
+					sort,
+					pagingParams,
+					editableParams,
+					wastebinParams);
+			
+			assertEquals("Check number of results for recursive image search", 1, legacyFileListResponse.getNumItems().intValue());
+		}
 	}
 
 	/**
@@ -1199,48 +1276,56 @@ public class FolderSandboxTest {
 	 */
 	@Test
 	public void testRolesInheritance() throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		// Create node with language klingon assigned
-		ContentLanguage klingon = Creator.createLanguage("Klingon", "tlh");
-		int klingonId = (Integer) klingon.getId();
-		Node node = Creator.createNode("testnode", "blah", "/", "/", Arrays.asList(new ContentLanguage[] { klingon }));
-		int nodeId = (Integer) node.getId();
-
-		// Create a parent folder
-		com.gentics.contentnode.object.Folder parentFolder = Creator.createFolder(node.getFolder(),"parentFolder", "/");
-		int parentFolderId = (Integer) parentFolder.getId();
-
-		// Create a test group and a test user in the test group
-		UserGroup testGroup = Creator.createUsergroup("testtranslator", "", t.getObject(UserGroup.class, 1));
-		SystemUser testUser = Creator.createUser("testtranslator", "testtranslator", "rudi", "mentaer", "blah@rg.hh", Arrays.asList(new UserGroup[]{testGroup}));
-
-		// Set the permissions for the parent folder:
-		// View permissions, create folder permissions
-		String permissions = new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_FOLDER_CREATE).toString();
-		PermHandler.setPermissions(com.gentics.contentnode.object.Folder.TYPE_FOLDER, parentFolderId, Arrays.asList(new UserGroup[] { testGroup }), permissions);
-		PermHandler.setPermissions(Node.TYPE_NODE, parentFolderId, Arrays.asList(new UserGroup[] { testGroup }), permissions);
-
-		// Set view permissions for klingon for the klingon role on parent folder
-		Map<ContentLanguage,String> languagePermissions = new HashMap<ContentLanguage, String>();
+		int nodeId;
+		int parentFolderId;
+		int klingonId;
+		int childFolderId;
+		SystemUser testUser;
 		Permission viewPerm = new Permission(PermHandler.ROLE_VIEW);
-		languagePermissions.put(klingon, viewPerm.toString());
-		int klingonRoleId = Creator.createRole("testrole", languagePermissions, null, null);
-		int roleUserGroupId = DBUtils.executeInsert("insert into role_usergroup (role_id, usergroup_id) values (?,?)", new Object[] { klingonRoleId, testGroup.getId() }).get(0);
-		DBUtils.executeInsert("insert into role_usergroup_assignment (role_usergroup_id	, obj_type, obj_id) values (?, ?, ?)", new Object[] { roleUserGroupId, com.gentics.contentnode.object.Folder.TYPE_FOLDER, parentFolder.getId() });
-		DBUtils.executeInsert("insert into role_usergroup_assignment (role_usergroup_id	, obj_type, obj_id) values (?, ?, ?)", new Object[] { roleUserGroupId, Node.TYPE_NODE, parentFolder.getId() });
 
-		// Re-synchronize Permission store with database contents changed previously
-		PermissionStore.initialize(true);
+		try (Trx trx = new Trx()) {
+			Transaction t = TransactionManager.getCurrentTransaction();
 
-		// Now create a new child folder, that should inherit the role permissions automatically.
-		com.gentics.contentnode.object.Folder childFolder = Creator.createFolder(parentFolder, "childFolder", "/");
-		int childFolderId = (Integer) childFolder.getId();
+			// Create node with language klingon assigned
+			ContentLanguage klingon = Creator.createLanguage("Klingon", "tlh");
+			klingonId = (Integer) klingon.getId();
+			Node node = Creator.createNode("testnode", "blah", "/", "/", Arrays.asList(new ContentLanguage[] { klingon }));
+			nodeId = (Integer) node.getId();
 
-		// Commit & restart transaction as test user
-		t.commit(false);
+			// Create a parent folder
+			com.gentics.contentnode.object.Folder parentFolder = Creator.createFolder(node.getFolder(),"parentFolder", "/");
+			parentFolderId = (Integer) parentFolder.getId();
 
-		operate(testUser, () -> {
+			// Create a test group and a test user in the test group
+			UserGroup testGroup = Creator.createUsergroup("testtranslator", "", t.getObject(UserGroup.class, 1));
+			testUser = Creator.createUser("testtranslator", "testtranslator", "rudi", "mentaer", "blah@rg.hh", Arrays.asList(new UserGroup[]{testGroup}));
+
+			// Set the permissions for the parent folder:
+			// View permissions, create folder permissions
+			String permissions = new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_FOLDER_CREATE).toString();
+			PermHandler.setPermissions(com.gentics.contentnode.object.Folder.TYPE_FOLDER, parentFolderId, Arrays.asList(new UserGroup[] { testGroup }), permissions);
+			PermHandler.setPermissions(Node.TYPE_NODE, parentFolderId, Arrays.asList(new UserGroup[] { testGroup }), permissions);
+
+			// Set view permissions for klingon for the klingon role on parent folder
+			Map<ContentLanguage,String> languagePermissions = new HashMap<ContentLanguage, String>();
+			languagePermissions.put(klingon, viewPerm.toString());
+			int klingonRoleId = Creator.createRole("testrole", languagePermissions, null, null);
+			int roleUserGroupId = DBUtils.executeInsert("insert into role_usergroup (role_id, usergroup_id) values (?,?)", new Object[] { klingonRoleId, testGroup.getId() }).get(0);
+			DBUtils.executeInsert("insert into role_usergroup_assignment (role_usergroup_id	, obj_type, obj_id) values (?, ?, ?)", new Object[] { roleUserGroupId, com.gentics.contentnode.object.Folder.TYPE_FOLDER, parentFolder.getId() });
+			DBUtils.executeInsert("insert into role_usergroup_assignment (role_usergroup_id	, obj_type, obj_id) values (?, ?, ?)", new Object[] { roleUserGroupId, Node.TYPE_NODE, parentFolder.getId() });
+
+			// Re-synchronize Permission store with database contents changed previously
+			PermissionStore.initialize(true);
+
+			// Now create a new child folder, that should inherit the role permissions automatically.
+			com.gentics.contentnode.object.Folder childFolder = Creator.createFolder(parentFolder, "childFolder", "/");
+			childFolderId = (Integer) childFolder.getId();
+
+			// Commit & restart transaction as test user
+			trx.success();
+		}
+
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
 			// Check role inheritance
 			PermResourceImpl permResourceImpl = new PermResourceImpl();
 			PermBitsResponse parentPermBitResponse = permResourceImpl.getPermissions(TypePerms.folder.name(), parentFolderId, nodeId, Page.TYPE_PAGE, klingonId, false);
@@ -1252,7 +1337,7 @@ public class FolderSandboxTest {
 			String childRolePermBitsString = childPermBitResponse.getRolePerm();
 			Assert.assertNotNull("No permissions for klingon role on child folder, permission inheritance failed.", childRolePermBitsString);
 			assertEquals("Parent and child role permbits differ.", parentRolePermBitsString, childRolePermBitsString);
-		});
+		}
 	}
 
 	/**

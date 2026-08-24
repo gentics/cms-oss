@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -63,7 +64,7 @@ public class OperatorTest {
 	public void testQueueTimeout() throws NodeException {
 		Trx.operate(() -> {
 			GenericResponse response = Operator
-					.queue()
+					.queue(Function.identity())
 					.add("Sleep 1000",
 							() -> {
 								Thread.sleep(1000);
@@ -91,7 +92,7 @@ public class OperatorTest {
 	public void testQueueNoTimeout() throws NodeException {
 		Trx.operate(() -> {
 			GenericResponse response = Operator
-					.queue()
+					.queue(Function.identity())
 					.add("Sleep 1000",
 							() -> {
 								Thread.sleep(1000);
@@ -117,7 +118,7 @@ public class OperatorTest {
 	@Test
 	public void testQueueGeneralErrorInFirst() throws NodeException {
 		Trx.operate(() -> {
-			GenericResponse response = Operator.queue().add("First job", () -> {
+			GenericResponse response = Operator.queue(Function.identity()).add("First job", () -> {
 				throw new NodeException("Failed");
 			}).add("Second Job", () -> {
 				return new GenericResponse(new Message(Message.Type.SUCCESS, "Second Job successful"), new ResponseInfo(ResponseCode.OK, ""));
@@ -135,7 +136,7 @@ public class OperatorTest {
 	@Test
 	public void testQueueGeneralErrorInSecond() throws NodeException {
 		Trx.operate(() -> {
-			GenericResponse response = Operator.queue().add("First job", () -> {
+			GenericResponse response = Operator.queue(Function.identity()).add("First job", () -> {
 				return new GenericResponse(new Message(Message.Type.SUCCESS, "First Job successful"), new ResponseInfo(ResponseCode.OK, ""));
 			}).add("Second Job", () -> {
 				throw new NodeException("Failed");
@@ -153,7 +154,7 @@ public class OperatorTest {
 	@Test
 	public void testQueueNotFoundInFirst() throws NodeException {
 		Trx.operate(() -> {
-			GenericResponse response = Operator.queue().add("First job", () -> {
+			GenericResponse response = Operator.queue(Function.identity()).add("First job", () -> {
 				throw new EntityNotFoundException("Not Found", "rest.page.notfound", "4711");
 			}).add("Second Job", () -> {
 				return new GenericResponse(new Message(Message.Type.SUCCESS, "Second Job successful"), new ResponseInfo(ResponseCode.OK, ""));
@@ -173,7 +174,7 @@ public class OperatorTest {
 	@Test
 	public void testQueueNotFoundInSecond() throws NodeException {
 		Trx.operate(() -> {
-			GenericResponse response = Operator.queue().add("First job", () -> {
+			GenericResponse response = Operator.queue(Function.identity()).add("First job", () -> {
 				return new GenericResponse(new Message(Message.Type.SUCCESS, "First Job successful"), new ResponseInfo(ResponseCode.OK, ""));
 			}).add("Second Job", () -> {
 				throw new EntityNotFoundException("Not Found", "rest.page.notfound", "4711");
@@ -223,7 +224,7 @@ public class OperatorTest {
 	@Test
 	public void testQueue() throws NodeException {
 		Trx.operate(() -> {
-			QueueBuilder builder = Operator.queue().add("", () -> new GenericResponse());
+			QueueBuilder<GenericResponse> builder = Operator.queue(Function.identity()).add("", () -> new GenericResponse());
 			builder.execute("", 0);
 		});
 	}
@@ -235,7 +236,7 @@ public class OperatorTest {
 	@Test(expected=NodeException.class)
 	public void testQueueExecuteTwice() throws NodeException {
 		Trx.operate(() -> {
-			QueueBuilder builder = Operator.queue().add("", () -> new GenericResponse());
+			QueueBuilder<GenericResponse> builder = Operator.queue(Function.identity()).add("", () -> new GenericResponse());
 			builder.execute("", 0);
 			builder.execute("", 0);
 		});
@@ -248,7 +249,7 @@ public class OperatorTest {
 	@Test(expected=NodeException.class)
 	public void testQueueAddToExecuted() throws NodeException {
 		Trx.operate(() -> {
-			QueueBuilder builder = Operator.queue().add("", () -> new GenericResponse());
+			QueueBuilder<GenericResponse> builder = Operator.queue(Function.identity()).add("", () -> new GenericResponse());
 			builder.execute("", 0);
 			builder.add("", () -> new GenericResponse());
 		});
@@ -272,7 +273,7 @@ public class OperatorTest {
 					Thread.sleep(100);
 					latch.countDown();
 					return new GenericResponse(new Message(Type.SUCCESS, "%s succeeded".formatted(jobDescription)), ResponseInfo.ok(""));
-				});
+				}, Function.identity());
 			});
 
 			consume(r -> {

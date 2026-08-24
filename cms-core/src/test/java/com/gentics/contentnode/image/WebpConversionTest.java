@@ -1,33 +1,20 @@
 package com.gentics.contentnode.image;
 
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.factory.FeatureClosure;
-import com.gentics.contentnode.factory.SessionToken;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.ImageFile;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.SystemUser;
-import com.gentics.contentnode.rest.model.File;
-import com.gentics.contentnode.rest.model.request.FileCreateRequest;
-import com.gentics.contentnode.rest.model.response.FileUploadResponse;
-import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
-import com.gentics.contentnode.rest.resource.BinaryOutput;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.contentnode.scheduler.ConvertImagesJob;
-import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
-import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
-import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.contentnode.testutils.GCNFeature;
-import com.gentics.contentnode.testutils.RESTAppContext;
-import com.gentics.lib.util.FileUtil;
-import com.gentics.testutils.GenericTestUtils;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
@@ -45,25 +32,38 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.FeatureClosure;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.ImageFile;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.rest.model.File;
+import com.gentics.contentnode.rest.model.request.FileCreateRequest;
+import com.gentics.contentnode.rest.model.response.FileUploadResponse;
+import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
+import com.gentics.contentnode.rest.resource.BinaryOutput;
+import com.gentics.contentnode.scheduler.ConvertImagesJob;
+import com.gentics.contentnode.tests.rest.file.BinaryDataImageResource;
+import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
+import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.RESTAppContext;
+import com.gentics.lib.util.FileUtil;
+import com.gentics.testutils.GenericTestUtils;
+
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests for WebP image conversion on upload and via the conversion job.
@@ -93,7 +93,9 @@ public class WebpConversionTest {
 		return data;
 	}
 
-	private static DBTestContext testContext = new DBTestContext();
+	private static DBTestContext testContext = new DBTestContext().config(prefs -> {
+		prefs.setProperty("contentnode.maxfilesize", "%d".formatted(5 * 1024 * 1024));
+	});
 	private static RESTAppContext restContext = new RESTAppContext(RESTAppContext.Type.jetty);
 	@ClassRule
 	public static RESTAppContext binarySourceContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BinaryDataImageResource.class).build()));
@@ -124,9 +126,6 @@ public class WebpConversionTest {
 		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode("Master", "Master", ContentNodeTestDataUtils.PublishTarget.NONE, ContentNodeTestDataUtils.getLanguage("de"), ContentNodeTestDataUtils.getLanguage("en")));
 		folder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "testfolder"));
 		targetFolder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "targetfolder"));
-
-		NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences()
-			.setProperty("contentnode.maxfilesize", "%d".formatted(5 * 1024 * 1024));
 
 		Trx.consume(n -> n.activateFeature(Feature.WEBP_CONVERSION), node);
 
@@ -364,8 +363,6 @@ public class WebpConversionTest {
 			multiPart = new MultiPart()
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"folderId\""), folderId.toString()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"nodeId\""), nodeId.toString()))
-				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\""), t.getSessionId()))
-				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\""), t.getSession().getSessionSecret()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"fileName\""), getRequestFilename()))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"description\""), description))
 				.bodyPart(new FormDataBodyPart(new FormDataContentDisposition("form-data; name=\"overwrite\""), (overwrite ? "true" : "false")))

@@ -1,0 +1,313 @@
+package com.gentics.contentnode.factory;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.i18n.Language;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
+import com.gentics.contentnode.i18n.CNDictionary;
+import com.gentics.contentnode.log.ActionLogger;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.UserLanguage;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.scheduler.SimpleScheduler;
+import com.gentics.lib.db.SQLExecutor;
+import com.gentics.lib.log.NodeLogger;
+
+public class DBSession implements Session {
+	/**
+	 * Serial Version UID
+	 */
+	private static final long serialVersionUID = -4588712889085187996L;
+
+	private static ScheduledFuture sessionCleaningFuture;
+
+	private final static HandleSelectResultSet<DBSession> ROW_HANDLER = rs -> {
+		return new DBSession(rs.getInt("id"), rs.getInt("user_id"), rs.getInt("language"), rs.getString("secret"));
+	};
+
+	protected final int sessionId;
+	protected final int userId;
+	protected final int languageId;
+	protected final Language language;
+	protected final String sessionSecret;
+
+	/**
+	 * Initializes a new instance from a database connection.
+	 *
+	 * @param sessionId the primary key into the systemsession table.
+	 * @param t the DB transaction to use.
+	 */
+	public DBSession(int sessionId, Transaction t) throws InvalidSessionIdException, TransactionException {
+		PreparedStatement stmt = null;
+		ResultSet result = null;
+
+		try {
+			stmt = t.prepareStatement("SELECT user_id, language, secret FROM systemsession WHERE id = ?");
+			stmt.setInt(1, sessionId);
+			result = stmt.executeQuery();
+			if (result.first()) {
+				this.userId = result.getInt("user_id");
+				this.languageId = result.getInt("language");
+				try {
+					this.language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;
+				} catch (NodeException e) {
+					throw new TransactionException("Error while checking session", e);
+				}
+				this.sessionSecret = result.getString("secret");
+			} else {
+				throw new InvalidSessionIdException(Integer.toString(sessionId));
+			}
+		} catch (SQLException e) {
+			throw new TransactionException("Error while checking session", e);
+		} finally {
+			t.closeResultSet(result);
+			t.closeStatement(stmt);
+		}
+		this.sessionId = sessionId;
+	}
+
+	/**
+	 * Create a new session for the given user.
+	 * @param user system user
+	 * @param ip IP address of the request
+	 * @param userAgent user agent of the request
+	 * @throws NodeException
+	 */
+	public DBSession(SystemUser user, String ip, String userAgent) throws NodeException {
+		userId = ObjectTransformer.getInt(user.getId(), -1);
+		sessionSecret = createSessionSecret();
+
+		languageId = Session.getUserLanguage(userId).map(UserLanguage::getId).orElse(1);
+		language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		List<Integer> insertIds = DBUtils.executeInsert(
+				"INSERT INTO systemsession (secret, user_id, ip, agent, since, language, val) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				new Object[] { this.sessionSecret, this.userId, ip, userAgent, t.getUnixTimestamp(), this.languageId,
+						"" });
+
+		if (insertIds.size() != 1) {
+			throw new NodeException("Error while generating new session: Could not get sid");
+		}
+		sessionId = insertIds.get(0);
+
+		ActionLogger.logCmd(ActionLogger.LOGIN, SystemUser.TYPE_SYSTEMUSER, userId, t.getUnixTimestamp(), "sid(" + sessionId + ")");
+	}
+
+	public final static Optional<DBSession> load(SessionToken sessionToken) throws NodeException {
+		int sessionAge = ObjectTransformer.getInt(NodeConfigRuntimeConfiguration.getPreferences().getProperty("session_age"), 3600);
+		final int allowedSince = TransactionManager.getCurrentTransaction().getUnixTimestamp() - sessionAge;
+
+		int sessionId = sessionToken.sessionId;
+		String secret = StringUtils.firstNonBlank(sessionToken.sessionSecret);
+
+		if (sessionId <= 0 || StringUtils.isBlank(secret)) {
+			return Optional.empty();
+		}
+
+		return DBUtils.select("SELECT id, user_id, language, secret FROM systemsession WHERE id = ? AND secret = ? AND since >= ?", pst -> {
+			pst.setInt(1, sessionId);
+			pst.setString(2, secret);
+			pst.setInt(3, allowedSince);
+		}, DBUtils.getFirst(ROW_HANDLER));
+	}
+
+	protected DBSession(int sessionId, int userId, int languageId, String sessionSecret) throws NodeException {
+		this.sessionId = sessionId;
+		this.userId = userId;
+		this.languageId = languageId;
+		this.language = languageId > 0 ? new CNDictionary(languageId).asLanguage() : null;
+		this.sessionSecret = sessionSecret;
+	}
+
+	/**
+	 * Do a logout of the current session
+	 * @throws NodeException
+	 */
+	public void logout() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		DBUtils.executeUpdate("UPDATE systemsession SET secret = ? WHERE id = ? AND user_id = ?", new Object[] { "", sessionId, userId });
+
+		// log the logout
+		ActionLogger.logCmd(ActionLogger.LOGOUT, SystemUser.TYPE_SYSTEMUSER, this.userId, t.getUnixTimestamp(), "sid(" + this.sessionId + ")");
+	}
+
+	/**
+	 * Move the given character into the "human readable" area of characters
+	 * This method was migrated from the old (undocumented) PHP code
+	 * @param r character
+	 * @return another character
+	 */
+	protected static char calc(char r) {
+		if (r < 10) {
+			return (char) (r + 48);
+		} else if (r < 36) {
+			return (char) (r + 55);
+		} else {
+			return (char) (r + 61);
+		}
+	}
+
+	/**
+	 * Do some magic calculation and return a string
+	 * This method was migrated from the old (undocumented) PHP code
+	 * @param n a number
+	 * @param base base
+	 * @return a string
+	 */
+	protected static String divide(int n, int base) {
+		int r = 0;
+		StringBuffer sid = new StringBuffer();
+
+		while (n != 0) {
+			r = n % base;
+			sid.append(calc((char) r));
+			n = (int) Math.floor(n / base);
+		}
+		return sid.toString();
+	}
+
+	/**
+	 * Create a new session secret
+	 * @return session secret
+	 */
+	public static String createSessionSecret() {
+		int base = 62;
+		String z = Long.toString(System.currentTimeMillis());
+		StringBuffer a = new StringBuffer();
+		StringBuffer b = new StringBuffer();
+
+		for (int i = 0; i < z.length() - 1; i += 2) {
+			a.append(z.substring(i, i + 1));
+			b.append(z.substring(i + 1, i + 2));
+		}
+		StringBuffer sid = new StringBuffer();
+
+		sid.append(divide(Integer.parseInt(a.toString()), base));
+		sid.append(divide(Integer.parseInt(b.toString()), base));
+		Random random = new Random();
+
+		for (int i = sid.length(); i < 15; i++) {
+			sid.append(calc((char) random.nextInt(base)));
+		}
+
+		return sid.toString();
+	}
+
+	/**
+	 * Schedule cleaning of system sessions (every minute)
+	 * @throws NodeException
+	 */
+	public static void scheduleSessionCleaning() throws NodeException {
+		if (sessionCleaningFuture == null || sessionCleaningFuture.isDone()) {
+			sessionCleaningFuture = SimpleScheduler.getExecutor("session-cleanup").scheduleWithFixedDelay(() -> cleanOldSessions(), 0, 1, TimeUnit.MINUTES);
+		}
+	}
+
+	/**
+	 * Check whether the session cleaning job is running.
+	 *
+	 * @return {@code true} when the session cleaning job is running, and {@code false} otherwise.
+	 */
+	public static boolean sessionCleaningActive() {
+		return sessionCleaningFuture != null && !sessionCleaningFuture.isDone();
+	}
+
+	/**
+	 * Clean old sessions for all users.
+	 * This method will - for all users - remove all systemsessions with a since that is older than the allowed session age,
+	 * only the last of those sessions will be kept
+	 */
+	protected static void cleanOldSessions() {
+		try (Trx trx = new Trx()) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			int sessionAge = ObjectTransformer.getInt(t.getNodeConfig().getDefaultPreferences().getProperty("session_age"), 3600);
+			final int allowedSince = t.getUnixTimestamp() - sessionAge;
+			final Map<Integer, Integer> maxSincePerUser = new HashMap<>();
+
+			// clean old sessions
+			DBUtils.executeStatement(
+					"SELECT user_id, MAX(since) maxsince, COUNT(since) count FROM systemsession WHERE since < ? GROUP BY user_id HAVING count > 1",
+					new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, allowedSince);
+						}
+
+						@Override
+						public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+							while (rs.next()) {
+								maxSincePerUser.put(rs.getInt("user_id"), rs.getInt("maxsince"));
+							}
+						}
+					});
+			for (Map.Entry<Integer, Integer> entry : maxSincePerUser.entrySet()) {
+				DBUtils.deleteWithPK("systemsession", "id", "user_id = ? AND since < ?", new Object[] {entry.getKey(), entry.getValue()});
+			}
+
+			DBUtils.updateWithPK("systemsession", "id", "secret = ?", new Object[] { "" }, "secret != ? AND since < ?",
+					new Object[] { "", allowedSince });
+
+			trx.success();
+		} catch (NodeException e) {
+			NodeLogger.getNodeLogger(Session.class).error("Error while cleaning old sessions", e);
+		}
+	}
+
+	public int getId() {
+		return sessionId;
+	}
+
+	public int getUserId() {
+		return userId;
+	}
+
+	/**
+	 * @return the language id for this session. This will be the id for
+	 * the language which the user selected in the user preferences.
+	 */
+	public int getLanguageId() {
+		return languageId;
+	}
+
+	public String getSessionSecret() {
+		return sessionSecret;
+	}
+
+	/**
+	 * Get the value of the session secret cookie
+	 * @return session secret cookie value
+	 */
+	public String getCookieValue() {
+		return "%d%s".formatted(sessionId, sessionSecret);
+	}
+
+	/**
+	 * Touch the system session by setting the column since to the transaction timestamp
+	 * @throws NodeException
+	 */
+	public void touch() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		DBUtils.executeUpdate("UPDATE systemsession SET since = ? WHERE id = ? AND secret = ?", new Object[] {t.getUnixTimestamp(), sessionId, sessionSecret});
+	}
+
+	@Override
+	public Language getLanguage() {
+		return language;
+	}
+}

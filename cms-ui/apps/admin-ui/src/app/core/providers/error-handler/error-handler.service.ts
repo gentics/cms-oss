@@ -72,7 +72,8 @@ export class ErrorHandler extends ServiceBase {
         }
 
         let returnValue: string;
-        if (!error || (error as any).reason !== 'auth') {
+        let suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
+        if (!suppressConsoleError) {
             console.error('Error details: ', error);
         }
 
@@ -123,12 +124,10 @@ export class ErrorHandler extends ServiceBase {
             case 'invalid_data':
             case 'http':
             case 'permissions': {
-                // Invalid SID always display the login screen, or tries to login with SSO
-                // So it can mislead the user, therefore we not display it.
-                const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+                // when the response code is 401, the session is invalid
+                const isInvalidSession = error.statusCode === 401;
 
-                if (showNotification && !isInvalidSid) {
+                if (showNotification && !isInvalidSession) {
                     this.notification.show({
                         message: error.message || error.toString(),
                         type: 'alert',
@@ -139,7 +138,7 @@ export class ErrorHandler extends ServiceBase {
                 // If the user has been signed out (usually due to activating the maintanance-mode),
                 // but the state still isn't updated yet, then we do this now.
                 // Additionally, send the User back to the Login with the proper return URL.
-                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                if (isInvalidSession && this.appState.now.auth.isLoggedIn) {
                     this.userWasLoggedOut();
                 }
 
@@ -190,14 +189,10 @@ export class ErrorHandler extends ServiceBase {
                 break;
 
             default: {
-                // All other codes have the message simply in them
-                // Invalid SID always display the login screen, or tries to login with SSO
-                // So it can mislead the user, therefore we not display it.
+                // when the response code is 401, the session is invalid
+                const isInvalidSession = error.responseCode === 401;
 
-                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
-
-                if (showNotification && !isInvalidSid) {
+                if (showNotification && !isInvalidSession) {
                     (error.data?.messages || [])
                         .forEach((msg) => this.catch(new Error(msg.message), { notification: true }));
                 }
@@ -205,7 +200,7 @@ export class ErrorHandler extends ServiceBase {
                 // If the user has been signed out (usually due to activating the maintanance-mode),
                 // but the state still isn't updated yet, then we do this now.
                 // Additionally, send the User back to the Login with the proper return URL.
-                if (isInvalidSid && this.appState.now.auth.isLoggedIn) {
+                if (isInvalidSession && this.appState.now.auth.isLoggedIn) {
                     this.userWasLoggedOut();
                 }
 

@@ -12,11 +12,7 @@ import { ApplicationStateService } from '../../../state/providers/application-st
 @Injectable()
 export class ResourceUrlBuilder {
 
-    private sid: number;
-
     constructor(appState: ApplicationStateService) {
-        appState.select(state => state.auth.sid)
-            .subscribe(sid => this.sid = sid);
     }
 
     /**
@@ -200,7 +196,6 @@ export class ResourceUrlBuilder {
 
     private createParamsString(data: Record<string, any>): string {
         const params = new URLSearchParams();
-        params.set('sid', `${this.sid}`);
         if (data) {
             Object.entries(data).forEach(([key, value]) => {
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

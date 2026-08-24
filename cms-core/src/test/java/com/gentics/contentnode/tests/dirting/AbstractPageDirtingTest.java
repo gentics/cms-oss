@@ -38,7 +38,7 @@ import com.gentics.contentnode.testutils.LoaderHelperSource;
 import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.db.SQLExecutor;
 
-public class AbstractPageDirtingTest {
+public abstract class AbstractPageDirtingTest {
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();

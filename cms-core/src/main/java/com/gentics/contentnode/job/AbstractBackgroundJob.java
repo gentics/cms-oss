@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -91,7 +92,7 @@ public abstract class AbstractBackgroundJob implements Callable<GenericResponse>
 			foregroundTimeMs = unit.toMillis(requestedForegroundTime);
 		}
 
-		return Operator.executeLocked(getJobDescription(), foregroundTimeMs, null, this, null, backgroundCallback);
+		return Operator.executeLocked(getJobDescription(), foregroundTimeMs, null, this, null, backgroundCallback, Function.identity());
 	}
 
 	@Override

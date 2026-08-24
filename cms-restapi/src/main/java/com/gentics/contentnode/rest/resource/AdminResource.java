@@ -28,6 +28,9 @@ import com.gentics.contentnode.rest.model.response.log.ActionLogEntryList;
 import com.gentics.contentnode.rest.model.response.log.ActionLogTypeList;
 import com.gentics.contentnode.rest.model.response.log.ActionModelList;
 import com.gentics.contentnode.rest.model.response.log.ErrorLogEntryList;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationRequest;
+import com.gentics.contentnode.rest.model.token.ApiTokenCreationResponse;
+import com.gentics.contentnode.rest.model.token.ApiTokenListResponse;
 import com.gentics.contentnode.rest.resource.parameter.ActionLogParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.DirtQueueParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -315,4 +318,45 @@ public interface AdminResource {
 	@POST
 	@Path("/maintenance")
 	MaintenanceResponse setMaintenanceMode(MaintenanceModeRequest request) throws Exception;
+
+	/**
+	 * Create a new API Token for the current user
+	 * 
+	 * @param request request
+	 * @return response
+	 * @throws Exception
+	 * @HTTP 200 The token was successfully created
+	 * @HTTP 400 The token could not be created due to insufficient data or other
+	 *       circumstances
+	 */
+	@POST
+	@Path("/token")
+	ApiTokenCreationResponse createAPIToken(ApiTokenCreationRequest request) throws Exception;
+
+	/**
+	 * Get the list of API Tokens for the current user
+	 * 
+	 * @param filter filter parameters
+	 * @param sorting sorting parameters
+	 * @param paging paging parameters
+	 * @return response
+	 * @throws Exception
+	 * @HTTP 200 The list of tokens is returned
+	 */
+	@GET
+	@Path("/token")
+	ApiTokenListResponse listAPITokens(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Delete an API Token for the current user
+	 * @param tokenId token ID
+	 * @return response
+	 * @throws Exception
+	 * @HTTP 200 When the token was deleted
+	 * @HTTP 404 When the token was not found for the current user
+	 */
+	@DELETE
+	@Path("/token/{id}")
+	GenericResponse deleteAPIToken(@PathParam("id") int tokenId) throws Exception;
 }

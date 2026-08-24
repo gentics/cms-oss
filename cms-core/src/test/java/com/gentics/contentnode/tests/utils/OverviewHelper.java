@@ -1,5 +1,9 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -8,6 +12,8 @@ import java.util.Map;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -34,12 +40,6 @@ import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 /**
  * This class implements logic, frequently used by all overview related tests.
@@ -49,7 +49,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 public final class OverviewHelper {
 
 	private OverviewHelper() {}
-	
+
 	/**
 	 * Test the rendering with specified ordering options in master node and in channel node.
 	 * The method makes the necessary assertions.
@@ -64,12 +64,12 @@ public final class OverviewHelper {
 	public static void renderingTest(com.gentics.contentnode.rest.model.Page page, int channelId, Overview overview, 
 			OrderBy orderBy, OrderDirection orderDirection,
 			String expectedOutputMain, String expectedOutputChannel) throws Exception {
-		
+
 		// change the ordering
 		overview.setOrderBy(orderBy);
 		overview.setOrderDirection(orderDirection);
 		OverviewHelper.savePage(page);
-		
+
 		// now render the page and check the result
 		String renderedPage = OverviewHelper.renderPage(page.getId());
 
@@ -91,7 +91,7 @@ public final class OverviewHelper {
 	 */
 	public static com.gentics.contentnode.rest.model.Page localizeAndPublishOverviewPage(int channelId, int pageId, boolean publish) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		Page testPage = t.getObject(Page.class, pageId);
 		Page localCopy = (com.gentics.contentnode.object.Page) testPage.copy();
 
@@ -101,21 +101,18 @@ public final class OverviewHelper {
 		if (publish) {
 			localCopy.publish();
 		}
+		localCopy.unlock();
 		t.commit(false);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-
 		String localCopyPageId = Integer.toString(ObjectTransformer.getInteger(localCopy.getId(), -1));
-		PageLoadResponse pageLoadResponse = pageResource.load(localCopyPageId, false, false, false, false, false, false, false, false, false, false, null, null);
+		PageLoadResponse pageLoadResponse = getPageResource().load(localCopyPageId, false, false, false, false, false, false, false, false, false, false, null, null);
 
 		assertEquals("Check the response code", ResponseCode.OK, pageLoadResponse.getResponseInfo().getResponseCode());
 		assertNotNull("Check if the page exists", pageLoadResponse.getPage());
 
 		return pageLoadResponse.getPage();
 	}
-	
+
 	/**
 	 * Localize image.
 	 * 
@@ -126,20 +123,20 @@ public final class OverviewHelper {
 	 */
 	public static ImageFile localizeImage(int channelId, int imageId) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		com.gentics.contentnode.object.ImageFile image = t.getObject(com.gentics.contentnode.object.ImageFile.class, imageId);
 		com.gentics.contentnode.object.ImageFile localCopyImage = (com.gentics.contentnode.object.ImageFile) image.copy();
-        
+
 		String words[] = localCopyImage.getName().split("\\.");
 
 		localCopyImage.setName(words[0] + "-localized." + words[1]);
 		localCopyImage.setChannelInfo(channelId, image.getChannelSetId());
 		localCopyImage.save();
 		t.commit(false);
-        
+
 		return localCopyImage;
 	}
-	
+
 	/**
 	 * Save image.
 	 * 
@@ -147,20 +144,14 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveImage(com.gentics.contentnode.rest.model.Image image) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		ImageResourceImpl imageResource = new ImageResourceImpl();
-
-		imageResource.setTransaction(t);
-        
 		ImageSaveRequest saveRequest = new ImageSaveRequest();
 
 		saveRequest.setImage(image);
-		GenericResponse saveResponse = imageResource.save(image.getId(), saveRequest);
+		GenericResponse saveResponse = getImageResource().save(image.getId(), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
-	
+
 	/**
 	 * Localize file.
 	 * 
@@ -171,7 +162,7 @@ public final class OverviewHelper {
 	 */
 	public static File localizeFile(int channelId, int fileId) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		com.gentics.contentnode.object.File testFile = t.getObject(com.gentics.contentnode.object.File.class, fileId);
 		com.gentics.contentnode.object.File localTestFile = (com.gentics.contentnode.object.File) testFile.copy();
 
@@ -179,10 +170,10 @@ public final class OverviewHelper {
 		localTestFile.setChannelInfo(channelId, testFile.getChannelSetId());
 		localTestFile.save();
 		t.commit(false);
-        
+
 		return localTestFile;
 	}
-	
+
 	/**
 	 * Save file.
 	 * 
@@ -190,20 +181,14 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveFile(com.gentics.contentnode.rest.model.File file) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		FileResourceImpl fileResource = new FileResourceImpl();
-
-		fileResource.setTransaction(t);
-        
 		FileSaveRequest saveRequest = new FileSaveRequest();
 
 		saveRequest.setFile(file);
-		GenericResponse saveResponse = fileResource.save(file.getId(), saveRequest);
+		GenericResponse saveResponse = getFileResource().save(file.getId(), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
-	
+
 	/**
 	 * Localize folder.
 	 * 
@@ -214,7 +199,7 @@ public final class OverviewHelper {
 	 */
 	public static Folder localizeFolder(int channelId, int folderId) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		com.gentics.contentnode.object.Folder testFolder = t.getObject(com.gentics.contentnode.object.Folder.class, folderId);
 		com.gentics.contentnode.object.Folder localTestFolder = (com.gentics.contentnode.object.Folder) testFolder.copy();
 
@@ -222,10 +207,10 @@ public final class OverviewHelper {
 		localTestFolder.setChannelInfo(channelId, testFolder.getChannelSetId());
 		localTestFolder.save();
 		t.commit(false);
-        
+
 		return localTestFolder;
 	}
-	
+
 	/**
 	 * Save folder.
 	 * 
@@ -233,20 +218,14 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void saveFolder(com.gentics.contentnode.rest.model.Folder folder) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		 
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(t);
-        
 		FolderSaveRequest saveRequest = new FolderSaveRequest();
 
 		saveRequest.setFolder(folder);
-		GenericResponse saveResponse = folderResource.save(Integer.toString(folder.getId()), saveRequest);
+		GenericResponse saveResponse = getFolderResource().save(Integer.toString(folder.getId()), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
 	}
-	
+
 	/**
 	 * Localize and publish page.
 	 * 
@@ -257,7 +236,7 @@ public final class OverviewHelper {
 	 */
 	public static Page localizeAndPublishPage(int channelId, int pageId) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
 		com.gentics.contentnode.object.Page localCopyPage = (com.gentics.contentnode.object.Page) page.copy();
 
@@ -266,10 +245,10 @@ public final class OverviewHelper {
 		localCopyPage.save();
 		localCopyPage.publish();
 		t.commit(false);
-        
+
 		return localCopyPage;
 	}
-	
+
 	/**
 	 * Create new {@link com.gentics.contentnode.rest.model.Page}.
 	 * 
@@ -279,26 +258,25 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static com.gentics.contentnode.rest.model.Page createPage(int folderId, int templateId) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageCreateRequest createPageRequest = new PageCreateRequest();
 
 		createPageRequest.setFolderId(Integer.toString(folderId));
 		createPageRequest.setTemplateId(templateId);
-		PageLoadResponse createPageResponse = pageResource.create(createPageRequest);
+		PageLoadResponse createPageResponse = getPageResource().create(createPageRequest);
 
 		assertEquals("Check the reponse code", ResponseCode.OK, createPageResponse.getResponseInfo().getResponseCode());
 
 		// get the test page
 		com.gentics.contentnode.rest.model.Page testPage = createPageResponse.getPage();
-        
+
+		// unlock the page
+		PageSaveRequest saveRequest = new PageSaveRequest(testPage);
+		saveRequest.setUnlock(true);
+		getPageResource().save(String.valueOf(testPage.getId()), saveRequest);
+
 		return testPage;
 	}
-	
+
 	/**
 	 * Save {@link com.gentics.contentnode.rest.model.Page}.
 	 * 
@@ -306,21 +284,18 @@ public final class OverviewHelper {
 	 * @throws Exception if something goes wrong.
 	 */
 	public static void savePage(com.gentics.contentnode.rest.model.Page page) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-        
 		PageSaveRequest saveRequest = new PageSaveRequest();
 
 		saveRequest.setPage(page);
 		saveRequest.setUnlock(true);
-		GenericResponse saveResponse = pageResource.save(Integer.toString(page.getId()), saveRequest);
+		GenericResponse saveResponse = getPageResource().save(Integer.toString(page.getId()), saveRequest);
 
 		assertEquals("Check the response code", ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
+
+		// we need to commit the current transaction, so that it will see the changes
+		TransactionManager.getCurrentTransaction().commit(false);
 	}
-	
+
 	/**
 	 * Render page for the master node.
 	 * 
@@ -331,7 +306,7 @@ public final class OverviewHelper {
 	public static String renderPage(int pageId) throws Exception {
 		return renderPage(pageId, -1);
 	}
-	
+
 	/**
 	 * Render page for the specified channel.
 	 * 
@@ -342,23 +317,23 @@ public final class OverviewHelper {
 	 */
 	public static String renderPage(int pageId, int channelId) throws Exception {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		
+
 		Page page = t.getObject(Page.class, pageId);
-		
+
 		if (channelId > 0) {
 			t.setChannelId(channelId);
 		}
-		
+
 		RenderResult renderResult = new RenderResult();
 		String renderedPage = page.render(renderResult);
-        
+
 		if (channelId > 0) {
 			t.resetChannel();
 		}
-        
+
 		return renderedPage;
 	}
-	
+
 	/**
 	 * Create and configure {@link Overview} instance with specified config parameters.
 	 * 
@@ -374,7 +349,7 @@ public final class OverviewHelper {
 			ListType listType, SelectType selectType, String renderingTemplate, List<Integer> selectedItemsIds) {
 		return getConfiguredOverviewFromPage(page, listType, selectType, renderingTemplate, selectedItemsIds, false);
 	}
-	
+
 	/**
 	 * Create and configure {@link Overview} instance with specified config parameters.
 	 * 
@@ -399,10 +374,10 @@ public final class OverviewHelper {
 		}
 		overview.setSource(renderingTemplate);
 		overview.setRecursive(recursive);
-        
+
 		return overview;
 	}
-	
+
 	/**
 	 * Create new {@link Overview} instance from a page.
 	 * 
@@ -465,7 +440,7 @@ public final class OverviewHelper {
 		assertNotNull("Overview not found in contenttag: " + contentTagName, overview);
 		return overview;
 	}
-	
+
 	/**
 	 * This method adds {@link OverviewEntry}'s from a list of selected items to
 	 * the given {@link com.gentics.contentnode.object.Overview}
@@ -512,7 +487,7 @@ public final class OverviewHelper {
 		}
 		return builder.toString();
 	}
-	
+
 	/**
 	 * This class holds the an item informaction for use in expected string generation.
 	 * 
@@ -521,7 +496,7 @@ public final class OverviewHelper {
 	public final static class ExpectedObject {
 		String name;
 		int id;
-		
+
 		public ExpectedObject(String name, int id) {
 			this.name = name;
 			this.id = id;

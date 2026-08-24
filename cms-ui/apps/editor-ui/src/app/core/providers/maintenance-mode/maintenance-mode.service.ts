@@ -144,7 +144,7 @@ export class MaintenanceModeService {
         return this.appState.select(state => state.maintenanceMode.active).pipe(
             filter(active => active && this.appState.now.auth.isLoggedIn),
             switchMap(() =>
-                this.api.auth.validate(this.appState.now.auth.sid).pipe(
+                this.api.auth.validate().pipe(
                     catchError((err, observable) => {
                         // The error handler is currently responsible for detecting that the user
                         // was logged out by the server and moving them to the login form.

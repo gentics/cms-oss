@@ -106,8 +106,7 @@
 					return;
 				}
 				var url = GCN.settings.BACKEND_PATH
-						+ '/rest/file/createSimple?sid=' + GCN.sid
-						+ '&folderId=' + folder.id()
+						+ '/rest/file/createSimple?folderId=' + folder.id()
 						+ '&qqfile=' + path.basename(file)
 						+ GCN._getChannelParameter(folder, '&');
 

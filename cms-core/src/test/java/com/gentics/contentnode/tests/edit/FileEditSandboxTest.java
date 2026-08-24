@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.convertStreamToString;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.generateDataFile;
 import static org.junit.Assert.assertEquals;
@@ -1115,15 +1116,12 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 			FileUploadResponse fileUploadResponse = null;
 
 			try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-
 				try {
 					Random rand = new Random();
 					String filename = "abcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyz.txt";
 					multiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart(
 							filename, folder.getId(), folder.getNode().getId(), "", false, "testcontent");
-					fileUploadResponse = fileResource.create(multiPart);
+					fileUploadResponse = getFileResource().create(multiPart);
 					ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 				} finally {
 					if (multiPart != null) {

@@ -37,6 +37,7 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
+import com.gentics.contentnode.testutils.DBSessionClosure;
 import com.gentics.lib.i18n.CNI18nString;
 
 /**
@@ -1202,23 +1203,23 @@ public class PageCopyTest extends AbstractPageCopyTest {
 				new Permission(PermHandler.EMPTY_PERM).toString());
 		PermissionStore.initialize(true);
 		t.commit(false);
-		testContext.getContext().startTransaction(getInteger(testUser.getId(), -1));
 
-		// Prepare copy request
-		PageCopyRequest copyRequest = new PageCopyRequest();
-		copyRequest.setCreateCopy(ENABLED);
-		addTargetFolder(copyRequest, targetFolder);
-		copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(), -1));
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Prepare copy request
+			PageCopyRequest copyRequest = new PageCopyRequest();
+			copyRequest.setCreateCopy(ENABLED);
+			addTargetFolder(copyRequest, targetFolder);
+			copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(), -1));
 
-		// Invoke copy call
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageCopyResponse response = pageResource.copy(copyRequest, 0);
-		assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
-		// "Error while copying pages: No view permission to load source page {"
-		// + sourcePage + "} in folder {"+ nodeA.getFolder() + "}"
-		assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
-				.getResponseMessage());
-
+			// Invoke copy call
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			PageCopyResponse response = pageResource.copy(copyRequest, 0);
+			assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
+			// "Error while copying pages: No view permission to load source page {"
+			// + sourcePage + "} in folder {"+ nodeA.getFolder() + "}"
+			assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
+					.getResponseMessage());
+		}
 	}
 
 	/**
@@ -1249,25 +1250,25 @@ public class PageCopyTest extends AbstractPageCopyTest {
 		PermHandler.setPermissions(Folder.TYPE_FOLDER, getInteger(targetFolder.getId(), -1), testGroups, ONLY_VIEW_PERM);
 		PermissionStore.initialize(true);
 		t.commit(false);
-		testContext.getContext().startTransaction(getInteger(testUser.getId(), -1));
 
-		// Prepare copy request
-		PageCopyRequest copyRequest = new PageCopyRequest();
-		copyRequest.setCreateCopy(ENABLED);
-		addTargetFolder(copyRequest, targetFolder);
-		copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(), -1));
+		try (DBSessionClosure ses = new DBSessionClosure(testUser.getId())) {
+			// Prepare copy request
+			PageCopyRequest copyRequest = new PageCopyRequest();
+			copyRequest.setCreateCopy(ENABLED);
+			addTargetFolder(copyRequest, targetFolder);
+			copyRequest.getSourcePageIds().add(getInteger(sourcePage.getId(), -1));
 
-		// Invoke copy call
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageCopyResponse response = pageResource.copy(copyRequest, 0);
-		assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
-		assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
-				.getResponseMessage());
-		assertEquals("The response should only contain the expected amount of messages.", 1, response.getMessages().size());
+			// Invoke copy call
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			PageCopyResponse response = pageResource.copy(copyRequest, 0);
+			assertEquals("Check response code (" + response.getResponseInfo().getResponseMessage() + ")", ResponseCode.FAILURE, response.getResponseInfo().getResponseCode());
+			assertEquals("Reponse did not contain the expected error message.", "Error during copy process. Please check the messages.", response.getResponseInfo()
+					.getResponseMessage());
+			assertEquals("The response should only contain the expected amount of messages.", 1, response.getMessages().size());
 
-		CNI18nString i18nString = new CNI18nString("page_copy.missing_create_perms_for_target");
-		i18nString.addParameter(I18NHelper.getLocation(targetFolder));
-		assertMessage(response, i18nString);
-
+			CNI18nString i18nString = new CNI18nString("page_copy.missing_create_perms_for_target");
+			i18nString.addParameter(I18NHelper.getLocation(targetFolder));
+			assertMessage(response, i18nString);
+		}
 	}
 }

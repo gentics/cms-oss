@@ -4,6 +4,7 @@ import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectTagDefinition;
@@ -11,6 +12,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.fillOverview;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,9 +50,7 @@ import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.TagCreateResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.model.response.page.PageCopyResponse;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
-import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -189,11 +189,10 @@ public class TagCopyTest {
 
 		TagCreateResponse response = null;
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
 			ContentTagCreateRequest request = new ContentTagCreateRequest();
 			request.setCopyPageId(page.getId().toString());
 			request.setCopyTagname(outerTag.getName());
-			response = pageResource.createTag(page.getId().toString(), 0, null, request);
+			response = getPageResource().createTag(page.getId().toString(), 0, null, request);
 			trx.success();
 		}
 
@@ -346,13 +345,12 @@ public class TagCopyTest {
 	protected Page copyPage(Page source) throws NodeException {
 		AtomicInteger pageCopyId = new AtomicInteger();
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
 			PageCopyRequest request = new PageCopyRequest();
 			request.setCreateCopy(true);
 			request.setSourcePageIds(Arrays.asList(source.getId()));
 			request.setTargetFolders(Arrays.asList(new TargetFolder(node.getFolder().getId(), 0)));
 
-			PageCopyResponse response = pageResource.copy(request, 0);
+			PageCopyResponse response = getPageResource().copy(request, 0);
 			assertResponseOK(response);
 			assertThat(response.getPages()).as("Copied pages").hasSize(1);
 			pageCopyId.set(response.getPages().get(0).getId());

@@ -1,5 +1,8 @@
 package com.gentics.contentnode.tests.wastebin;
 
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -9,20 +12,19 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.AutoCommit;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.object.Folder;
@@ -34,13 +36,18 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.etc.StringUtils;
 
 /**
@@ -49,28 +56,34 @@ import com.gentics.lib.etc.StringUtils;
  *
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = Feature.WASTEBIN)
 public class WastebinActionsTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	private static Node node;
 
 	private static Template template;
 
-	private TestedType type;
+	private static Auth permUserAuth;
 
-	private boolean wastebinPermission;
+	private static Auth noPermUserAuth;
 
 	/**
 	 * Get the test parameters
 	 * @return collection of test parameter sets
 	 */
-	@Parameters(name = "{index}: test: {0}, permission: {1}")
+	@Parameters(name = "{index}: test: {0}, permission: {1}, auth: {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
 		for (TestedType type : TestedType.values()) {
-			for (boolean wastebinPermission : Arrays.asList(true, false)) {
-				data.add(new Object[] {type, wastebinPermission});
+			for (boolean wastebinPermission : List.of(true, false)) {
+				for (AuthType authType : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+					data.add(new Object[] {type, wastebinPermission, authType});
+				}
 			}
 		}
 		return data;
@@ -82,47 +95,42 @@ public class WastebinActionsTest {
 	 */
 	@BeforeClass
 	public static void setupOnce() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-		prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), true);
-		node = ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.NONE);
-		t.commit(false);
+		testContext.getContext().getTransaction().commit();
+
+		node = supply(() -> ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.NONE));
 
 		// create two groups with users
-		UserGroup nodeGroup = t.getObject(UserGroup.class, 2);
-		UserGroup groupWithPermission = Creator.createUsergroup("With Wastebin Permission", "", nodeGroup);
-		Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission));
-		UserGroup groupWithoutPermission = Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup);
-		Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission));
+		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, 2));
+		UserGroup groupWithPermission = supply(() -> Creator.createUsergroup("With Wastebin Permission", "", nodeGroup));
+		permUserAuth = new Auth(supply(() -> Creator.createUser("perm", "perm", "perm", "perm", "", Arrays.asList(groupWithPermission))));
+		UserGroup groupWithoutPermission = supply(() -> Creator.createUsergroup("Without Wastebin Permission", "", nodeGroup));
+		noPermUserAuth = new Auth(supply(() -> Creator.createUser("noperm", "noperm", "noperm", "noperm", "", Arrays.asList(groupWithoutPermission))));
 
 		// set permissions
-		PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithPermission), new Permission(PermHandler.PERM_VIEW,
-				PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_PAGE_DELETE, PermHandler.PERM_FOLDER_DELETE, PermHandler.PERM_NODE_WASTEBIN).toString());
-		PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithoutPermission), new Permission(PermHandler.PERM_VIEW,
-				PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_PAGE_DELETE, PermHandler.PERM_FOLDER_DELETE).toString());
-		t.commit(false);
+		operate(() -> {
+			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithPermission), new Permission(PermHandler.PERM_VIEW,
+					PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_PAGE_DELETE, PermHandler.PERM_FOLDER_DELETE, PermHandler.PERM_NODE_WASTEBIN).toString());
+			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(groupWithoutPermission), new Permission(PermHandler.PERM_VIEW,
+					PermHandler.PERM_PAGE_VIEW, PermHandler.PERM_PAGE_DELETE, PermHandler.PERM_FOLDER_DELETE).toString());
+		});
 
-		template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "", "Template");
-		t.commit(false);
+		template = supply(() -> ContentNodeTestDataUtils.createTemplate(node.getFolder(), "", "Template"));
 	}
+
+	@Parameter(0)
+	public TestedType type;
+
+	@Parameter(1)
+	public boolean wastebinPermission;
+
+	@Parameter(2)
+	public AuthType authType;
+
+	protected Auth authentication;
 
 	@Before
-	public void setup() throws Exception {
-		if (wastebinPermission) {
-			testContext.getContext().login("perm", "perm");
-		} else {
-			testContext.getContext().login("noperm", "noperm");
-		}
-	}
-
-	/**
-	 * Create a test instance
-	 * @param type tested type
-	 * @param wastebinPermission true for wastebin permission
-	 */
-	public WastebinActionsTest(TestedType type, boolean wastebinPermission) {
-		this.type = type;
-		this.wastebinPermission = wastebinPermission;
+	public void setup() {
+		authentication = wastebinPermission ? permUserAuth : noPermUserAuth;
 	}
 
 	/**
@@ -131,39 +139,41 @@ public class WastebinActionsTest {
 	 */
 	@Test
 	public void testRemove() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// create the object
-		LocalizableNodeObject<?> object = type.create(node.getFolder(), template);
+		LocalizableNodeObject<?> object = supply(() -> type.create(node.getFolder(), template));
 
 		// delete the object (putting it into the wastebin
-		object.delete();
-		t.commit(false);
+		consume(NodeObject::delete, object);
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			assertTrue("Object must be in wastebin now", object.isDeleted());
-		}
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				LocalizableNodeObject<?> reloaded = t.getObject(object);
+				assertNotNull("Object must still exist", reloaded);
+				assertTrue("Object must be in wastebin now", reloaded.isDeleted());
+			}
+		});
 
 		// try to remove the object from the wastebin
-		try (AutoCommit trx = new AutoCommit()) {
+		if (!wastebinPermission) {
+			exceptionChecker.expect(InsufficientPrivilegesException.class);
+		}
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.deleteFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-
-		// check whether removing worked
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			if (wastebinPermission) {
-				assertNull("Object must be removed now", object);
-			} else {
-				assertNotNull("Object must still exist", object);
-				assertTrue("Object must still be in wastebin now", object.isDeleted());
+		operate(t -> {
+			// check whether removing worked
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				LocalizableNodeObject<?> reloaded = t.getObject(object);
+				if (wastebinPermission) {
+					assertNull("Object must be removed now", reloaded);
+				} else {
+					assertNotNull("Object must still exist", reloaded);
+					assertTrue("Object must still be in wastebin now", reloaded.isDeleted());
+				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -172,47 +182,50 @@ public class WastebinActionsTest {
 	 */
 	@Test
 	public void testRemoveRecursive() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Folder folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
+		Folder folder = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder"));
 
 		// create the tested object
-		NodeObject object = type.create(folder, template);
+		NodeObject object = supply(() -> type.create(folder, template));
 
 		// delete the folder (putting it and the tested object into the wastebin)
-		folder.delete();
-		t.commit(false);
+		consume(NodeObject::delete, folder);
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			folder = t.getObject(folder);
-			assertNotNull("Folder must still exist", folder);
-			assertTrue("Folder must be in wastebin now", folder.isDeleted());
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				Folder reloaded = t.getObject(folder);
+				assertNotNull("Folder must still exist", reloaded);
+				assertTrue("Folder must be in wastebin now", reloaded.isDeleted());
 
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			assertTrue("Object must be in wastebin now", object.isDeleted());
-		}
+				NodeObject reloadedObject = t.getObject(object);
+				assertNotNull("Object must still exist", reloadedObject);
+				assertTrue("Object must be in wastebin now", reloadedObject.isDeleted());
+			}
+		});
 
 		// try removing the folder from wastebin
-		try (AutoCommit trx = new AutoCommit()) {
+		if (!wastebinPermission) {
+			exceptionChecker.expect(InsufficientPrivilegesException.class);
+		}
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(TestedType.folder.deleteFromWastebin(folder), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		// check whether removing worked
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			folder = t.getObject(folder);
-			object = t.getObject(object);
-			if (wastebinPermission) {
-				assertNull("Folder must be removed now", folder);
-				assertNull("Object must be removed now", object);
-			} else {
-				assertNotNull("Folder must still exist", folder);
-				assertTrue("Folder must still be in wastebin now", folder.isDeleted());
-				assertNotNull("Object must still exist", object);
-				assertTrue("Object must still be in wastebin now", object.isDeleted());
+		operate(t -> {
+			// check whether removing worked
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				Folder reloaded = t.getObject(folder);
+				NodeObject reloadedObject = t.getObject(object);
+				if (wastebinPermission) {
+					assertNull("Folder must be removed now", reloaded);
+					assertNull("Object must be removed now", reloadedObject);
+				} else {
+					assertNotNull("Folder must still exist", reloaded);
+					assertTrue("Folder must still be in wastebin now", reloaded.isDeleted());
+					assertNotNull("Object must still exist", reloadedObject);
+					assertTrue("Object must still be in wastebin now", reloadedObject.isDeleted());
+				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -221,38 +234,41 @@ public class WastebinActionsTest {
 	 */
 	@Test
 	public void testRestore() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		// create the object
-		NodeObject object = type.create(node.getFolder(), template);
+		NodeObject object = supply(() -> type.create(node.getFolder(), template));
+		consume(NodeObject::unlock, object);
 
 		// delete the object (putting it into the wastebin
-		object.delete();
-		t.commit(false);
+		consume(NodeObject::delete, object);
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			assertTrue("Object must be in wastebin now", object.isDeleted());
-		}
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				NodeObject reloaded = t.getObject(object);
+				assertNotNull("Object must still exist", reloaded);
+				assertTrue("Object must be in wastebin now", reloaded.isDeleted());
+			}
+		});
 
 		// try to restore the object from wastebin now
-		try (AutoCommit trx = new AutoCommit()) {
+		if (!wastebinPermission) {
+			exceptionChecker.expect(InsufficientPrivilegesException.class);
+		}
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		// check whether restoring worked
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			if (wastebinPermission) {
-				assertFalse("Object must be restored from wastebin now", object.isDeleted());
-			} else {
-				assertTrue("Object must still be in wastebin now", object.isDeleted());
+		operate(t -> {
+			// check whether restoring worked
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				NodeObject reloaded = t.getObject(object);
+				assertNotNull("Object must still exist", reloaded);
+				if (wastebinPermission) {
+					assertFalse("Object must be restored from wastebin now", reloaded.isDeleted());
+				} else {
+					assertTrue("Object must still be in wastebin now", reloaded.isDeleted());
+				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -261,28 +277,25 @@ public class WastebinActionsTest {
 	 */
 	@Test
 	public void testRestoreWithConflict() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		// create the object
-		LocalizableNodeObject<?> object = type.create(node.getFolder(), template);
+		LocalizableNodeObject<?> object = supply(() -> type.create(node.getFolder(), template));
+		consume(NodeObject::unlock, object);
 		String name = object.getName();
-		String filename = null;
-		if (object instanceof Page) {
-			filename = ((Page) object).getFilename();
-		}
+		String filename = object instanceof Page ? ((Page) object).getFilename() : null;
 
 		// delete the object (putting it into the wastebin
-		object.delete();
-		t.commit(false);
+		consume(NodeObject::delete, object);
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			assertTrue("Object must be in wastebin now", object.isDeleted());
-		}
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				NodeObject reloaded = t.getObject(object);
+				assertNotNull("Object must still exist", reloaded);
+				assertTrue("Object must be in wastebin now", reloaded.isDeleted());
+			}
+		});
 
 		// create another object with the same name now (should be possible)
-		LocalizableNodeObject<?> conflictingObject = type.create(node.getFolder(), name, template);
+		LocalizableNodeObject<?> conflictingObject = supply(() -> type.create(node.getFolder(), name, template));
 		assertNotNull("Conflicting object must be created", conflictingObject);
 		assertEquals("Check name of conflicting object", name, conflictingObject.getName());
 		if (conflictingObject instanceof Page) {
@@ -290,30 +303,33 @@ public class WastebinActionsTest {
 		}
 
 		// try to restore the object from wastebin now
-		try (AutoCommit trx = new AutoCommit()) {
-			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
+		if (!wastebinPermission) {
+			exceptionChecker.expect(InsufficientPrivilegesException.class);
 		}
+		authentication.withAuth(authType, () -> {
+			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
+		});
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
 		// check whether restoring worked
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			if (wastebinPermission) {
-				assertFalse("Object must be restored from wastebin now", object.isDeleted());
-				assertFalse("Name must be different now.", StringUtils.isEqual(name, object.getName()));
-				if (object instanceof Page) {
-					assertFalse("Filename must be different now.", StringUtils.isEqual(filename, ((Page) object).getFilename()));
-				}
-			} else {
-				assertTrue("Object must still be in wastebin now", object.isDeleted());
-				assertEquals("Name must be unchanged.", name, object.getName());
-				if (object instanceof Page) {
-					assertEquals("Filename must be unchanged", filename, ((Page) object).getFilename());
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				LocalizableNodeObject<?> reloaded = t.getObject(object);
+				assertNotNull("Object must still exist", reloaded);
+				if (wastebinPermission) {
+					assertFalse("Object must be restored from wastebin now", reloaded.isDeleted());
+					assertFalse("Name must be different now.", StringUtils.isEqual(name, reloaded.getName()));
+					if (reloaded instanceof Page) {
+						assertFalse("Filename must be different now.", StringUtils.isEqual(filename, ((Page) reloaded).getFilename()));
+					}
+				} else {
+					assertTrue("Object must still be in wastebin now", reloaded.isDeleted());
+					assertEquals("Name must be unchanged.", name, reloaded.getName());
+					if (reloaded instanceof Page) {
+						assertEquals("Filename must be unchanged", filename, ((Page) reloaded).getFilename());
+					}
 				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -322,48 +338,52 @@ public class WastebinActionsTest {
 	 */
 	@Test
 	public void testRestoreRecursive() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Folder folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
+		Folder folder = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder"));
 
 		// create the object
-		NodeObject object = type.create(folder, template);
+		NodeObject object = supply(() -> type.create(folder, template));
+		consume(NodeObject::unlock, object);
 
 		// delete the folder (putting it and the tested object into the wastebin)
-		folder.delete();
-		t.commit(false);
+		consume(Folder::delete, folder);
 
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			folder = t.getObject(folder);
-			assertNotNull("Folder must still exist", folder);
-			assertTrue("Folder must be in wastebin now", folder.isDeleted());
+		operate(t -> {
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				Folder reloadedFolder = t.getObject(folder);
+				assertNotNull("Folder must still exist", reloadedFolder);
+				assertTrue("Folder must be in wastebin now", reloadedFolder.isDeleted());
 
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
-			assertTrue("Object must be in wastebin now", object.isDeleted());
-		}
+				NodeObject reloadedObject = t.getObject(object);
+				assertNotNull("Object must still exist", reloadedObject);
+				assertTrue("Object must be in wastebin now", reloadedObject.isDeleted());
+			}
+		});
 
 		// try to restore the object now
-		try (AutoCommit trx = new AutoCommit()) {
+		if (!wastebinPermission) {
+			exceptionChecker.expect(InsufficientPrivilegesException.class);
+		}
+		authentication.withAuth(authType, () -> {
 			ContentNodeRESTUtils.assertResponse(type.restoreFromWastebin(object), wastebinPermission ? ResponseCode.OK : ResponseCode.PERMISSION);
-		}
+		});
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		// check whether restoring worked
-		try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-			folder = t.getObject(folder);
-			assertNotNull("Folder must still exist", folder);
+		operate(t -> {
+			// check whether restoring worked
+			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+				Folder reloadedFolder = t.getObject(folder);
+				assertNotNull("Folder must still exist", reloadedFolder);
 
-			object = t.getObject(object);
-			assertNotNull("Object must still exist", object);
+				NodeObject reloadedObject = t.getObject(object);
+				assertNotNull("Object must still exist", reloadedObject);
 
-			if (wastebinPermission) {
-				assertFalse("Folder must be restored from wastebin now", folder.isDeleted());
-				assertFalse("Object must be restored from wastebin now", object.isDeleted());
-			} else {
-				assertTrue("Folder must still be in wastebin now", folder.isDeleted());
-				assertTrue("Object must still be in wastebin now", object.isDeleted());
+				if (wastebinPermission) {
+					assertFalse("Folder must be restored from wastebin now", reloadedFolder.isDeleted());
+					assertFalse("Object must be restored from wastebin now", reloadedObject.isDeleted());
+				} else {
+					assertTrue("Folder must still be in wastebin now", reloadedFolder.isDeleted());
+					assertTrue("Object must still be in wastebin now", reloadedObject.isDeleted());
+				}
 			}
-		}
+		});
 	}
 }

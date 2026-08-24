@@ -315,7 +315,7 @@ public class NodeFactory {
 		if (!ObjectTransformer.getBoolean(System.getProperty("com.gentics.contentnode.testmode"), false)) {
 			try {
 				startDirtQueueWorker();
-				Session.scheduleSessionCleaning();
+				DBSession.scheduleSessionCleaning();
 			} catch (NodeException e) {
 				logger.error("Error while initializing the factory", e);
 			}
@@ -1210,25 +1210,25 @@ public class NodeFactory {
 
 	/**
 	 * Create a new transaction
-	 * @param sessionId sessionId of the user which is associated to the transaction
+	 * @param session session of the user which is associated to the transaction
 	 * @param useConnectionPool flag whether db connections shall be pooled or not
 	 * @return a new, open transaction
 	 * @throws TransactionException
 	 */
-	public Transaction createTransaction(String sessionId, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
-		return TransactionManager.getTransaction(sessionId, new NodeFactoryHandle(), useConnectionPool);
+	public Transaction createTransaction(Session session, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
+		return TransactionManager.getTransaction(session, new NodeFactoryHandle(), useConnectionPool);
 	}
 
 	/**
 	 * Create a new transaction
-	 * @param sessionId sessionId of the user that is specified in the second parameter
+	 * @param session session of the user that is specified in the second parameter
 	 * @param userId userId of the user that should be associated with that transaction
 	 * @param useConnectionPool flag whether db connections shall be pooled or not
 	 * @return a new, open transaction
 	 * @throws TransactionException
 	 */
-	public Transaction createTransaction(String sessionId, Integer userId, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
-		return TransactionManager.getTransaction(sessionId, userId, new NodeFactoryHandle(),
+	public Transaction createTransaction(Session session, Integer userId, boolean useConnectionPool) throws TransactionException, InvalidSessionIdException {
+		return TransactionManager.getTransaction(session, userId, new NodeFactoryHandle(),
 				useConnectionPool);
 	}
 

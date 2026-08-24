@@ -167,4 +167,12 @@ public class ThreadLocalPropertyPreferences implements NodePreferences {
 	public Map<String, Object> toMap() {
 		return wrappedPreferences.toMap();
 	}
+
+	/**
+	 * Get the wrapped preferences
+	 * @return wrapped preferences
+	 */
+	public NodePreferences getWrappedPreferences() {
+		return wrappedPreferences;
+	}
 }

@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -38,6 +39,7 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.perm.RolePermissions;
 import com.gentics.contentnode.perm.TypePerms;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.PageOfflineRequest;
 import com.gentics.contentnode.rest.model.request.PagePublishRequest;
@@ -60,6 +62,7 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 import com.gentics.contentnode.tests.assertj.GCNAssertions;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -152,6 +155,9 @@ public class PageLanguagePermissionTest {
 				.toArray(new Object[3]);
 	}
 
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
+
 	/**
 	 * Get the expected "no permission" message for the given page
 	 * @param page page
@@ -173,7 +179,6 @@ public class PageLanguagePermissionTest {
 	 * @return response
 	 * @throws NodeException
 	 */
-	@SuppressWarnings("deprecation")
 	protected static LegacyPageListResponse getPages(String language, boolean langFallback) throws NodeException {
 		return supply(testUser, () -> {
 			return getFolderResource().getPages(Integer.toString(testFolder.getId()), new InFolderParameterBean(),
@@ -290,6 +295,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testReadFr() throws NodeException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		PageLoadResponse loadResponse = supply(testUser, () -> {
 			return getPageResource().load(frenchPage.getGlobalId().toString(), false, false, false,
 					true, false, false, false, false, false, false, null, null);
@@ -435,6 +441,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testPublishIt() throws NodeException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PagePublishRequest req = new PagePublishRequest();
 			return getPageResource().publish(Integer.toString(italianPage.getId()), null, req);
@@ -448,6 +455,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testPublishFr() throws NodeException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PagePublishRequest req = new PagePublishRequest();
 			return getPageResource().publish(Integer.toString(frenchPage.getId()), null, req);
@@ -507,6 +515,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testPublishItAllLang() throws NodeException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PagePublishRequest req = new PagePublishRequest();
 			req.setAlllang(true);
@@ -521,6 +530,7 @@ public class PageLanguagePermissionTest {
 	 */
 	@Test
 	public void testPublishFrAllLang() throws NodeException {
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PagePublishRequest req = new PagePublishRequest();
 			req.setAlllang(true);
@@ -558,6 +568,7 @@ public class PageLanguagePermissionTest {
 	@Test
 	public void testTakeOfflineIt() throws NodeException {
 		publishAll();
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PageOfflineRequest req = new PageOfflineRequest();
 			return getPageResource().takeOffline(Integer.toString(italianPage.getId()), req);
@@ -568,6 +579,7 @@ public class PageLanguagePermissionTest {
 	@Test
 	public void testTakeOfflineFr() throws NodeException {
 		publishAll();
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PageOfflineRequest req = new PageOfflineRequest();
 			return getPageResource().takeOffline(Integer.toString(frenchPage.getId()), req);
@@ -618,6 +630,7 @@ public class PageLanguagePermissionTest {
 	@Test
 	public void testTakeOfflineItAllLang() throws NodeException {
 		publishAll();
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PageOfflineRequest req = new PageOfflineRequest();
 			req.setAlllang(true);
@@ -629,6 +642,7 @@ public class PageLanguagePermissionTest {
 	@Test
 	public void testTakeOfflineFrAllLang() throws NodeException {
 		publishAll();
+		exceptionChecker.expect(InsufficientPrivilegesException.class, "Sie haben zu wenig Berechtigungen auf die angegebene Seite.");
 		GenericResponse response = supply(testUser, () -> {
 			PageOfflineRequest req = new PageOfflineRequest();
 			req.setAlllang(true);

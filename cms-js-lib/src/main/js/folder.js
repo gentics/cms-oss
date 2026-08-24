@@ -492,8 +492,7 @@
 		'!uploadURL': function () {
 			return (
 				GCN.settings.BACKEND_PATH
-				+ '/rest/file/createSimple.json?sid=' + GCN.sid
-				+ '&folderId=' + this.id()
+				+ '/rest/file/createSimple.json?folderId=' + this.id()
 				+ GCN._getChannelParameter(this, '&')
 			);
 		},
@@ -517,8 +516,7 @@
 		 */
 		'!multipartUploadURL' : function (applyContentWrapperFilter, filterContentType) {
 			var restURL = GCN.settings.BACKEND_PATH
-			            + '/rest/file/create.json?sid='
-						+ GCN.sid;
+			            + '/rest/file/create.json';
 
 			if (typeof applyContentWrapperFilter !== 'undefined') {
 				if (jQuery.type(applyContentWrapperFilter) === 'boolean') {

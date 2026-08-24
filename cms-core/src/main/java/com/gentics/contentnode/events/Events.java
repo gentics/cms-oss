@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Vector;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -14,6 +15,7 @@ import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
@@ -168,9 +170,8 @@ public final class Events {
 	 */
 	public static void trigger(NodeObject object, String[] properties, int eventMask) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
+		String sid = Optional.ofNullable(t.getSession()).map(Session::getId).map(id -> Integer.toString(id)).orElse("");
 		long timestamp = t.getTimestamp();
-
-		String sid = t.getSessionId();
 
 		// when the property array contains just the empty string, we set it
 		// to null

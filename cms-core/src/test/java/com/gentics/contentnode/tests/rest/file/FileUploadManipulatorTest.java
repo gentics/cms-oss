@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.rest.file;
 
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
@@ -9,11 +11,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,6 +32,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
@@ -42,6 +47,7 @@ import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.log.ActionLogger.Log;
 import com.gentics.contentnode.object.Node;
@@ -56,11 +62,13 @@ import com.gentics.contentnode.rest.model.response.FileUploadResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.rest.file.fum.FUMResource;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -83,24 +91,37 @@ public class FileUploadManipulatorTest {
 	@ClassRule
 	public static RESTAppContext bigBinarySourceContext = new RESTAppContext(new ResourceConfig().registerResources(Resource.builder(BigFileResource.class).build()));
 
-	@Parameters(name = "{index}: useMultipart {0}, appUrl {2}")
+	@Parameters(name = "{index}: useMultipart {0}, appUrl {2}, auth {4}")
 	public static Collection<Object[]> data() {
 		return List.of(
-				new Object[] {true, null, null, TESTCONTENT.getBytes(StandardCharsets.UTF_8)},
-				new Object[] {false, binarySourceContext, "binary", BinaryDataResource.CONTENT.getBytes(StandardCharsets.UTF_8)},
-				new Object[] {false, binaryAltSourceContext, "binaryalt", BinaryAltDataResource.CONTENT.getBytes(StandardCharsets.UTF_8)},
-				new Object[] {false, bigBinarySourceContext, "bigbinary", BigFileResource.get()}
+				new Object[] {true, null, null, TESTCONTENT.getBytes(StandardCharsets.UTF_8), AuthType.LOGIN},
+				new Object[] {true, null, null, TESTCONTENT.getBytes(StandardCharsets.UTF_8), AuthType.TOKEN},
+				new Object[] {false, binarySourceContext, "binary", BinaryDataResource.CONTENT.getBytes(StandardCharsets.UTF_8), AuthType.LOGIN},
+				new Object[] {false, binarySourceContext, "binary", BinaryDataResource.CONTENT.getBytes(StandardCharsets.UTF_8), AuthType.TOKEN},
+				new Object[] {false, binaryAltSourceContext, "binaryalt", BinaryAltDataResource.CONTENT.getBytes(StandardCharsets.UTF_8), AuthType.LOGIN},
+				new Object[] {false, binaryAltSourceContext, "binaryalt", BinaryAltDataResource.CONTENT.getBytes(StandardCharsets.UTF_8), AuthType.TOKEN},
+				new Object[] {false, bigBinarySourceContext, "bigbinary", BigFileResource.get(), AuthType.LOGIN},
+				new Object[] {false, bigBinarySourceContext, "bigbinary", BigFileResource.get(), AuthType.TOKEN}
 			);
 	}
 
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
+
 	@Parameter(0)
 	public boolean useMultipart;
+
 	@Parameter(1)
 	public RESTAppContext appContext;
+
 	@Parameter(2)
 	public String appUrl;
+
 	@Parameter(3)
 	public byte[] expected;
+
+	@Parameter(4)
+	public AuthType authType;
 
 	/**
 	 * Test context
@@ -122,15 +143,20 @@ public class FileUploadManipulatorTest {
 
 	private static SystemUser testUser;
 
+	private static Auth testUserAuth;
+
 	/**
 	 * Setup test data
 	 * @throws NodeException
 	 */
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+
 		UserGroup nodeAdminGroup = Trx.supply(() -> TransactionManager.getCurrentTransaction().getObject(UserGroup.class, 2));
 		testUser = Trx.supply(() -> update(Creator.createUser("login", "password", "Tester", "Tester", "tester@gentics.com", Arrays.asList(nodeAdminGroup)),
 				u -> u.setDescription("This is the test User")));
+		testUserAuth = new Auth(testUser);
 
 		try (Trx trx = new Trx(createSession(testUser.getLogin()), true)) {
 			node = createNode();
@@ -151,6 +177,10 @@ public class FileUploadManipulatorTest {
 	 */
 	@Test
 	public void testInvalid() throws NodeException, ParseException, IOException {
+		if (!useMultipart) {
+			String msg = supply(() -> I18NHelper.get("rest.file.upload.fum_failure"));
+			exceptionChecker.expect(NodeException.class, msg);
+		}
 		doUploadTest("invalid", uploadResponse -> {
 			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.FAILURE,
 					null,
@@ -257,7 +287,10 @@ public class FileUploadManipulatorTest {
 	@Test
 	public void testAcceptMsg() throws NodeException, ParseException, IOException {
 		doUploadTest("accept/msg", uploadResponse -> {
-			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.OK, String.format("saved file with id: %d", uploadResponse.getFile().getId()),
+			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.OK,
+					String.format("saved file with id: %d",
+							Optional.ofNullable(uploadResponse.getFile())
+									.map(com.gentics.contentnode.rest.model.File::getId).orElse(0)),
 					new Message(Type.SUCCESS, FUMResource.ACCEPT_MSG));
 		});
 	}
@@ -270,6 +303,9 @@ public class FileUploadManipulatorTest {
 	 */
 	@Test
 	public void testDeny() throws NodeException, ParseException, IOException {
+		if (!useMultipart) {
+			exceptionChecker.expect(NodeException.class, FUMResource.DENY_MSG);
+		}
 		doUploadTest("deny", uploadResponse -> {
 			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.FAILURE,
 					FUMResource.DENY_MSG,
@@ -487,47 +523,60 @@ public class FileUploadManipulatorTest {
 			doUploadTestRequest(url, asserter);
 		}
 	}
-	protected void doUploadTestMultipart(String url, Consumer<FileUploadResponse> asserter) throws NodeException, ParseException, IOException {
-		MultiPart uploadMultiPart = null;
-		try (Trx trx = new Trx(createSession(testUser.getLogin()), true);
-				PropertyTrx pTrx = new FileUploadManipulatorURL(url);
-				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort())) {
-			uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt", node.getFolder().getId(), node.getId(), "", true, new String(expected, StandardCharsets.UTF_8));
-			FileResource resource = ContentNodeRESTUtils.getFileResource();
-			FileUploadResponse uploadResponse = resource.create(uploadMultiPart);
-			if (uploadResponse.getFile() != null) {
-				assertThat(uploadResponse.getFile().getFileSize()).isEqualTo(expected.length);
-				assertThat(uploadResponse.getFile().getFileSize().longValue()).isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin").length());
+
+	protected void doUploadTestMultipart(String url, Consumer<FileUploadResponse> asserter) throws NodeException {
+		int rootFolderId = supply(() -> node.getFolder().getId());
+		testUserAuth.withAuth(authType, () -> {
+			try (PropertyTrx pTrx = new FileUploadManipulatorURL(url);
+					PropertyTrx localServer = new PropertyTrx("cn_local_server",
+							"http://localhost:" + restContext.getPort(), true);
+					MultiPart uploadMultiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart("blah.txt",
+							rootFolderId, node.getId(), "", true, new String(expected, StandardCharsets.UTF_8))) {
+				FileUploadResponse uploadResponse = getFileResource().create(uploadMultiPart);
+				if (uploadResponse.getFile() != null) {
+					assertThat(uploadResponse.getFile().getFileSize()).isEqualTo(expected.length);
+					assertThat(uploadResponse.getFile().getFileSize().longValue())
+							.isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(),
+									uploadResponse.getFile().getId() + ".bin").length());
+				}
+				asserter.accept(uploadResponse);
+			} catch (IOException | ParseException e) {
+				throw new NodeException(e);
 			}
-			asserter.accept(uploadResponse);
-		} finally {
-			if (uploadMultiPart != null) {
-				uploadMultiPart.close();
-			}
-		}
+		});
 	}
 
-	protected void doUploadTestRequest(String url, Consumer<FileUploadResponse> asserter) throws NodeException, ParseException, IOException {
-		FileCreateRequest fileUploadRequest = new FileCreateRequest();
-		try (Trx trx = new Trx(createSession(testUser.getLogin()), true);
-				PropertyTrx pTrx = new FileUploadManipulatorURL(url);
-				PropertyTrx localServer = new PropertyTrx("cn_local_server", "http://localhost:" + restContext.getPort())) {
-			fileUploadRequest.setName("blah.txt");
-			fileUploadRequest.setNodeId(node.getId());
-			fileUploadRequest.setFolderId(node.getFolder().getId());
-			fileUploadRequest.setOverwriteExisting(true);
-			fileUploadRequest.setDescription("");
-			fileUploadRequest.setSourceURL(appContext.getBaseUri() + appUrl);
-			FileResource resource = ContentNodeRESTUtils.getFileResource();
-			FileUploadResponse uploadResponse = resource.create(fileUploadRequest);
-			if (uploadResponse.getFile() != null) {
-				assertThat(uploadResponse.getFile().getFileSize().intValue()).isEqualTo(expected.length);
-				assertThat(uploadResponse.getFile().getFileSize().longValue()).isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin").length());
-				assertThat(IOUtils.toByteArray(new FileInputStream(new java.io.File(ConfigurationValue.DBFILES_PATH.get(), uploadResponse.getFile().getId() + ".bin"))))
-					.as("Binary data").usingEquals(Arrays::equals).isEqualTo(expected);
+	protected void doUploadTestRequest(String url, Consumer<FileUploadResponse> asserter) throws NodeException {
+		int rootFolderId = supply(() -> node.getFolder().getId());
+		testUserAuth.withAuth(authType, () -> {
+			FileCreateRequest fileUploadRequest = new FileCreateRequest();
+			try (
+					PropertyTrx pTrx = new FileUploadManipulatorURL(url);
+					PropertyTrx localServer = new PropertyTrx("cn_local_server",
+							"http://localhost:" + restContext.getPort(), true)) {
+				fileUploadRequest.setName("blah.txt");
+				fileUploadRequest.setNodeId(node.getId());
+				fileUploadRequest.setFolderId(rootFolderId);
+				fileUploadRequest.setOverwriteExisting(true);
+				fileUploadRequest.setDescription("");
+				fileUploadRequest.setSourceURL(appContext.getBaseUri() + appUrl);
+				FileUploadResponse uploadResponse = getFileResource().create(fileUploadRequest);
+				if (uploadResponse.getFile() != null) {
+					assertThat(uploadResponse.getFile().getFileSize().intValue()).isEqualTo(expected.length);
+					assertThat(uploadResponse.getFile().getFileSize().longValue())
+							.isEqualTo(new java.io.File(ConfigurationValue.DBFILES_PATH.get(),
+									uploadResponse.getFile().getId() + ".bin").length());
+					try (InputStream in = new FileInputStream(new java.io.File(ConfigurationValue.DBFILES_PATH.get(),
+							uploadResponse.getFile().getId() + ".bin"))) {
+						assertThat(IOUtils.toByteArray(in)).as("Binary data").usingEquals(Arrays::equals)
+								.isEqualTo(expected);
+					}
+				}
+				asserter.accept(uploadResponse);
+			} catch (IOException e) {
+				throw new NodeException(e);
 			}
-			asserter.accept(uploadResponse);
-		}
+		});
 	}
 
 	/**
@@ -545,7 +594,7 @@ public class FileUploadManipulatorTest {
 	 */
 	public static class FileUploadManipulatorURL extends PropertyTrx {
 		public FileUploadManipulatorURL(String url) throws NodeException {
-			super("fileupload_manipulator_url", String.format("%sfum/%s", fumContext.getBaseUri(), url));
+			super("fileupload_manipulator_url", String.format("%sfum/%s", fumContext.getBaseUri(), url), true);
 		}
 	}
 }

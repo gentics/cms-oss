@@ -204,7 +204,7 @@ spec:
                     if (params.runTests) {
                         mvnArguments += (params.singleTest ? " -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
                         if (!params.runReleaseBuild && !params.deploy && !params.deployTesting) {
-                            mvnProjects = " -am -pl cms-server"
+                            mvnProjects = " -am -pl cms-server,cms-velocity"
                         }
                     } else {
                         mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
@@ -213,7 +213,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnProjects = " -am -pl cms-server,formgen"
+                        mvnProjects = " -am -pl cms-server,formgen,cms-velocity"
                     }
 
                     // Update chrome to the latest version
@@ -316,6 +316,7 @@ spec:
                                 junit  testResults: "cms-multichannelling/cms-multichannelling-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit  testResults: "cms-license/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                                 junit  testResults: "cms-translation/cms-translation-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit  testResults: "cms-velocity/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
                         }
                     }
@@ -343,24 +344,35 @@ spec:
                     }
                     def imageName = "${imageHost}/${imageRepo}/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
+                    def vtlImageNameWithTag = "${imageName}:${branchName}-vtl"
 
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
 
                     sh "docker --version"
-                    sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
+                    sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} . ; cd .."
+                    // special vtl image
+                    sh "cd cms-velocity ; docker build --network=host -t ${vtlImageNameWithTag} --build-arg CMS_BASE_IMAGE=${imageNameWithTag} . ; cd .."
 
                     if (!params.omitScan) {
                         scanImage image: imageNameWithTag, exitCode: 1
                     }
                     // Push released image
                     if (tagName != null) {
+                        // normal image
                         String dockerImageVersionTag = imageName + ":" + tagName
                         sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
                         sh "docker push " + dockerImageVersionTag
+
+                        // special vtl image
+                        String dockerVtlImageVersionTag = imageName + ":" + tagName + "-vtl"
+                        sh "docker tag " + vtlImageNameWithTag + " " + dockerVtlImageVersionTag
+                        sh "docker push " + dockerVtlImageVersionTag
                     } else if (params.deploy || params.deployTesting) {
                         // push snapshot build image
                         sh "docker push ${imageNameWithTag}"
+                        // special vtl image
+                        sh "docker push ${vtlImageNameWithTag}"
                     }
                 }
             }

@@ -22,13 +22,15 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
-import com.gentics.contentnode.tests.utils.CountDirective;
+import com.gentics.contentnode.tests.utils.CountHelperSource;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.content.GenticsContentAttribute;
 
 /**
@@ -37,9 +39,9 @@ import com.gentics.lib.content.GenticsContentAttribute;
 @GCNFeature(set={Feature.ATTRIBUTE_DIRTING, Feature.MULTICHANNELLING, Feature.MCCR, Feature.CR_FILESYSTEM_ATTRIBUTES})
 public class AttributePublishTest {
 	/**
-	 * Template for the vtl construct that counts, how often it is rendered
+	 * Template for the hbs construct that counts, how often it is rendered
 	 */
-	public final static String VTL = "value of $cms.tag.name: [#gtx_test_count($cms.tag.name)]";
+	public final static String HBS = "value of {{gtx_render cms.tag.name}}: [{{gtx_test_count cms.tag.name}}]";
 
 	/**
 	 * Test file contents
@@ -56,10 +58,13 @@ public class AttributePublishTest {
 	 */
 	public final static String TEMPLATE = "Template of page <node page.name>";
 
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(CountHelperSource.class);
+	}
+
 	@Rule
-	public DBTestContext testContext = new DBTestContext().config(prefs -> {
-		prefs.set("contentnode.velocity.userdirective", CountDirective.class.getName());
-	});
+	public DBTestContext testContext = new DBTestContext();
 
 
 	@Test
@@ -143,10 +148,11 @@ public class AttributePublishTest {
 					"attr2", null, false, false, false, 0, null, null);
 
 			// construct that counts when rendered
-			construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-			construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+			construct = trx.getTransaction().getObject(Construct.class, hbsConstructId, true);
+			construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 				try {
-					part.getDefaultValue().setValueText(VTL);
+					part.getDefaultValue().setValueText(HBS);
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail("Setup of construct failed");
@@ -169,15 +175,15 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
 		// every attribute must be rendered for node and channel
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
 
 		// get the dependencies
 		List<Dependency> expectedDependencies = null;
@@ -193,14 +199,14 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
 
 		// assert that dependencies did not change
 		List<Dependency> actualDependencies = null;
@@ -242,10 +248,11 @@ public class AttributePublishTest {
 					"attr2", null, false, false, false, 0, null, null);
 
 			// construct that counts when rendered
-			construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-			construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+			construct = trx.getTransaction().getObject(Construct.class, hbsConstructId, true);
+			construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 				try {
-					part.getDefaultValue().setValueText(VTL);
+					part.getDefaultValue().setValueText(HBS);
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail("Setup of construct failed");
@@ -268,15 +275,15 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
 		// every attribute must be rendered for node and channel
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
 
 		// get the dependencies
 		List<Dependency> expectedDependencies = null;
@@ -292,14 +299,14 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
 
 		// assert that dependencies did not change
 		List<Dependency> actualDependencies = null;
@@ -341,10 +348,11 @@ public class AttributePublishTest {
 					"attr2", null, false, false, false, 0, null, null);
 
 			// construct that counts when rendered
-			construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-			construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+			construct = trx.getTransaction().getObject(Construct.class, hbsConstructId, true);
+			construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 				try {
-					part.getDefaultValue().setValueText(VTL);
+					part.getDefaultValue().setValueText(HBS);
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail("Setup of construct failed");
@@ -372,15 +380,15 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
 		// every attribute must be rendered for node and channel
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(2);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(2);
 
 		// get the dependencies
 		List<Dependency> expectedDependencies = null;
@@ -396,14 +404,14 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
+		CountHelperSource.reset();
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
-		assertThat(CountDirective.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
-		assertThat(CountDirective.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
+		assertThat(CountHelperSource.get("object.attr1")).as("Count for object.attr1").isEqualTo(1);
+		assertThat(CountHelperSource.get("object.attr2")).as("Count for object.attr2").isEqualTo(0);
 
 		// assert that dependencies did not change
 		List<Dependency> actualDependencies = null;
@@ -453,10 +461,11 @@ public class AttributePublishTest {
 			channel = ContentNodeTestDataUtils.createChannel(node, "Testchannel", "testchannel", "/", PublishTarget.CONTENTREPOSITORY);
 
 			// construct that counts when rendered
-			construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-			construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+			construct = trx.getTransaction().getObject(Construct.class, hbsConstructId, true);
+			construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 				try {
-					part.getDefaultValue().setValueText(VTL);
+					part.getDefaultValue().setValueText(HBS);
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail("Setup of construct failed");
@@ -483,7 +492,7 @@ public class AttributePublishTest {
 
 		// publish into cr (creating the dependencies)
 		// every attribute must be rendered for node and channel
-		try (Trx trx = new Trx(); AutoCloseable asserter = CountDirective.asserter(tagName, 2)) {
+		try (Trx trx = new Trx(); AutoCloseable asserter = CountHelperSource.asserter(tagName, 2)) {
 			testContext.publish(false);
 			trx.success();
 		}
@@ -502,7 +511,7 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr
-		try (Trx trx = new Trx(); AutoCloseable asserter = CountDirective.asserter(tagName, feature ? 0 : 1)) {
+		try (Trx trx = new Trx(); AutoCloseable asserter = CountHelperSource.asserter(tagName, feature ? 0 : 1)) {
 			testContext.publish(false);
 			trx.success();
 		}
@@ -538,10 +547,11 @@ public class AttributePublishTest {
 			channel = ContentNodeTestDataUtils.createChannel(node, "Testchannel", "testchannel", "/", PublishTarget.CONTENTREPOSITORY);
 
 			// construct that counts when rendered
-			construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-			construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+			construct = trx.getTransaction().getObject(Construct.class, hbsConstructId, true);
+			construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 				try {
-					part.getDefaultValue().setValueText(VTL);
+					part.getDefaultValue().setValueText(HBS);
 				} catch (Exception e) {
 					e.printStackTrace();
 					fail("Setup of construct failed");
@@ -567,8 +577,8 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr (creating the dependencies)
-		CountDirective.reset();
-		CountDirective.render("first published content");
+		CountHelperSource.reset();
+		CountHelperSource.render("first published content");
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
@@ -587,15 +597,15 @@ public class AttributePublishTest {
 		}
 
 		// publish into cr
-		CountDirective.reset();
-		CountDirective.render("second published content");
+		CountHelperSource.reset();
+		CountHelperSource.render("second published content");
 		try (Trx trx = new Trx()) {
 			testContext.publish(false);
 			trx.success();
 		}
 
 		// assert
-		assertThat(CountDirective.get(tagName)).as("Count for " + tagName).isEqualTo(1);
+		assertThat(CountHelperSource.get(tagName)).as("Count for " + tagName).isEqualTo(1);
 
 		// assert correct rendering
 		assertThat(node.getContentMap()).contains(page).withAttribute("content", "value of tag: [second published content]")

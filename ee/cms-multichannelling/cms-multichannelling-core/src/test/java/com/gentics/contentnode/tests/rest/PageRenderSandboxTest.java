@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -50,6 +51,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -87,6 +89,8 @@ import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 
@@ -100,11 +104,6 @@ public class PageRenderSandboxTest {
 	public DBTestContext testContext = new DBTestContext();
 
 	/**
-	 * ID of the "Velocity" Construct
-	 */
-	public final static int VELOCITY_CONSTRUCT_ID = 2;
-
-	/**
 	 * ID of the "Text short" Construct
 	 */
 	public final static int TEXT_SHORT_CONSTRUCT_ID = 3;
@@ -113,6 +112,8 @@ public class PageRenderSandboxTest {
 	 * ID of the "Mixed Editable" Construct
 	 */
 	public final static int MIXED_CONSTRUCT_ID = 15;
+
+	public final static int NODE_ID = 5;
 
 	public final static String PAGE_ID = "45";
 
@@ -135,6 +136,8 @@ public class PageRenderSandboxTest {
 	 * Name of the part of the overview construct
 	 */
 	public final static String OVERVIEW_PART_NAME = "ds";
+
+	public final static String HBS_PART_NAME = "hbs";
 
 	private Folder folder;
 
@@ -194,11 +197,21 @@ public class PageRenderSandboxTest {
 
 	private SystemUser user;
 
+	private int hbsConstructId;
+
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
+
 	@Before
 	public void setUp() throws Exception {
 		testContext.getContext().getTransaction().commit();
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));
+		Node node = supply(t -> t.getObject(Node.class, NODE_ID));
+
+		hbsConstructId = supply(() -> createConstruct(node, HandlebarsPartType.class, HBS_PART_NAME, HBS_PART_NAME));
 	}
 	
 	/**
@@ -440,12 +453,12 @@ public class PageRenderSandboxTest {
 	}
 
 	/**
-	 * Test rendering a velocity tag in a page, that fetches a (foreign) folder and renders an object property that resolves the (foreign) folder's name
+	 * Test rendering a handlebars tag in a page, that fetches a (foreign) folder and renders an object property that resolves the (foreign) folder's name
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void testRenderVelocity1() throws Exception {
+	public void testRenderHandlebars1() throws Exception {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 
 		Folder f = Trx.supply(() -> {
@@ -453,24 +466,22 @@ public class PageRenderSandboxTest {
 			Page page = getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage();
 
 			// create a folder next to the page
-			Folder folder = createFolder("Velocity Render Test Folder", page.getFolderId(), "<node folder.name>");
+			Folder folder = createFolder("Handlebars Render Test Folder", page.getFolderId(), "<node folder.name>");
 
-			// create a new velocity Tag
+			// create a new hbs Tag
 			Map<String, String> parts = new HashMap<String, String>();
 
-			parts.put(
-					"template",
-					"#set($folder = $cms.imps.loader.getFolder("
-							+ folder.getId()
-							+ "))##\nfolder.name: $folder.name\nfolder.object.name_de: $folder.object.name_de\nfolder.object.name_de.parts.text: $folder.object.name_de.parts.text");
-			createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource());
+			parts.put(HBS_PART_NAME,
+					"{{#with (gtx_test_folder %d)}}folder.name: {{gtx_render name}}\nfolder.object.name_de: {{gtx_render object.name_de}}\nfolder.object.name_de.parts.text: {{gtx_render object.name_de.parts.text}}{{/with}}"
+							.formatted(folder.getId()));
+			createTag(page, hbsConstructId, "hbs", parts, getPageResource());
 
 			return folder;
 		});
 
 		try (Trx trx = new Trx(user)) {
 			// render the page
-			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
+			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node hbs>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("folder.name: " + f.getName() + "\n" + "folder.object.name_de: " + f.getName() + "\n"
@@ -480,17 +491,17 @@ public class PageRenderSandboxTest {
 	}
 
 	/**
-	 * Test rendering a velocity tag that fetches another page and renders a tag that resolves the other page's folder name
+	 * Test rendering a handlebars tag that fetches another page and renders a tag that resolves the other page's folder name
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void testRenderVelocity2() throws Exception {
+	public void testRenderHandlebars2() throws Exception {
 		// load the page
 		Page page = supply(() -> getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage());
 
 		// create a folder next to the page
-		Folder folder = createFolder("Velocity Render Test Folder", page.getFolderId(), "<node folder.name>");
+		Folder folder = createFolder("Handlebars Render Test Folder", page.getFolderId(), "<node folder.name>");
 
 		// store the page as copy in
 		Page otherPage = createPage(page.getTemplateId(), folder.getId(), null, null, null);
@@ -501,15 +512,16 @@ public class PageRenderSandboxTest {
 		parts.put("text", "<node folder.name>");
 		operate(() -> createTag(otherPage, TEXT_SHORT_CONSTRUCT_ID, "shorty", parts, getPageResource()));
 
-		// create a new velocity Tag
+		// create a new hbs Tag
 		parts.clear();
-		parts.put("template", "#set($page = $cms.imps.loader.getPage(" + otherPage.getId()
-				+ "))##\npage.name: $page.name\npage.tags.shorty: $page.tags.shorty\npage.tags.shorty.parts.text: $page.tags.shorty.parts.text");
-		operate(() -> createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME,
+				"{{#with (gtx_test_page %d)}}page.name: {{gtx_render name}}\npage.tags.shorty: {{gtx_render tags.shorty}}\npage.tags.shorty.parts.text: {{gtx_render tags.shorty.parts.text}}{{/with}}"
+						.formatted(otherPage.getId()));
+		operate(() -> createTag(page, hbsConstructId, "hbs", parts, getPageResource()));
 
 		// render the page
 		try (Trx trx = new Trx(user)) {
-			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
+			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node hbs>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("page.name: " + otherPage.getName() + "\n" + "page.tags.shorty: " + folder.getName() + "\n" + "page.tags.shorty.parts.text: "
@@ -519,12 +531,12 @@ public class PageRenderSandboxTest {
 	}
 
 	/**
-	 * Test rendering a velocity tag which renders parts of another tag which resolve parts of that other tag
+	 * Test rendering a handlebars tag which renders parts of another tag which resolve parts of that other tag
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void testRenderVelocity3() throws Exception {
+	public void testRenderHandlebars3() throws Exception {
 		// load the page
 		Page page = supply(() -> getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage());
 
@@ -535,12 +547,12 @@ public class PageRenderSandboxTest {
 		parts.put("htmllive", "This is the output!");
 		operate(() -> createTag(page, MIXED_CONSTRUCT_ID, "mixed", parts, getPageResource()));
 
-		// create the velocity tag
+		// create the hbs tag
 		parts.clear();
-		parts.put("template", "Node Notation (Tag): <node mixed>\n" + "Node Notation (Part html): <node mixed.parts.html>\n"
-				+ "Node Notation (Part htmllive): <node mixed.parts.htmllive>\n" + "Velocity (Tag): $cms.page.tags.mixed\n"
-				+ "Velocity (Part html): $cms.page.tags.mixed.parts.html\n" + "Velocity (Part htmllive): $cms.page.tags.mixed.parts.htmllive");
-		operate(() -> createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME, "Node Notation (Tag): <node mixed>\n" + "Node Notation (Part html): <node mixed.parts.html>\n"
+				+ "Node Notation (Part htmllive): <node mixed.parts.htmllive>\n" + "Handlebars (Tag): {{{gtx_render cms.page.tags.mixed}}}\n"
+				+ "Handlebars (Part html): {{{gtx_render cms.page.tags.mixed.parts.html}}}\n" + "Handlebars (Part htmllive): {{{gtx_render cms.page.tags.mixed.parts.htmllive}}}");
+		operate(() -> createTag(page, hbsConstructId, "hbs", parts, getPageResource()));
 
 		// render the mixed tag
 		try (Trx trx = new Trx(user)) {
@@ -548,215 +560,24 @@ public class PageRenderSandboxTest {
 			assertContent("<div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n" + "</div>",
 					pageResource.render(PAGE_ID, null, "<node mixed>", false, null, LinksType.backend, false, false, false, 0).getContent());
 
-			// render the vtl tag
+			// render the hbs tag
 			assertContent(
 					"Node Notation (Tag): <div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n"
 							+ "</div>\n" + "Node Notation (Part html): This is the output!\n" + "Node Notation (Part htmllive): This is the output!\n"
-							+ "Velocity (Tag): <div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n"
-							+ "</div>\n" + "Velocity (Part html): This is the output!\n" + "Velocity (Part htmllive): This is the output!",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0).getContent());
+							+ "Handlebars (Tag): <div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n"
+							+ "</div>\n" + "Handlebars (Part html): This is the output!\n" + "Handlebars (Part htmllive): This is the output!",
+							pageResource.render(PAGE_ID, null, "<node hbs>", false, null, LinksType.backend, false, false, false, 0).getContent());
 			trx.success();
 		}
 	}
 
 	/**
-	 * Test fix for RT#55706. Velocity tag parts should only inspect their own tag when looking for their "macros" and "template" tag parts and refrain from inheriting
-	 * any of them from other tags that include them in the rendering process
-	 * 
-	 * @throws NodeException
-	 */
-	@Test
-	public void testVelocityConfigNonInheritance() throws NodeException {
-		com.gentics.contentnode.object.Folder rootFolder = supply(t -> t.getObject(com.gentics.contentnode.object.Folder.class, ROOT_FOLDER_ID));
-		Node node = supply(() -> rootFolder.getNode());
-
-		// Create includer tag
-		Construct includer = supply(t -> {
-			Construct constr = t.createObject(Construct.class);
-
-			constr.setKeyword("includer");
-			constr.setName("includer (de)", 1);
-			constr.setName("includer (en)", 2);
-			constr.getNodes().add(node);
-			{
-				Part vtl = t.createObject(Part.class);
-
-				vtl.setKeyname("vtl");
-				vtl.setHidden(false);
-				vtl.setEditable(0);
-				vtl.setName("Velocity", 1);
-				vtl.setName("Velocity", 2);
-				vtl.setPartTypeId(33);
-
-				Part macros = t.createObject(Part.class);
-
-				macros.setKeyname("macros");
-				macros.setHidden(true);
-				macros.setEditable(0);
-				macros.setName("Macros", 1);
-				macros.setName("Macros", 2);
-				macros.setPartTypeId(21);
-
-				Part template = t.createObject(Part.class);
-
-				template.setKeyname("template");
-				template.setHidden(true);
-				template.setEditable(0);
-				template.setName("Template", 1);
-				template.setName("Template", 2);
-				template.setPartTypeId(21);
-
-				Value mValue = t.createObject(Value.class);
-
-				mValue.setPart(macros);
-				mValue.setValueText("Te");
-				macros.setDefaultValue(mValue);
-
-				Value tValue = t.createObject(Value.class);
-
-				tValue.setPart(template);
-				tValue.setValueText("${cms.page.tags.includee}${cms.page.tags.includee2}");
-				template.setDefaultValue(tValue);
-
-				constr.getParts().add(vtl);
-				constr.getParts().add(macros);
-				constr.getParts().add(template);
-			}
-			constr.save();
-			return constr;
-		});
-
-		// create includee tag without template
-		Construct includee = supply(t -> {
-			Construct constr = t.createObject(Construct.class);
-
-			constr.setKeyword("includee");
-			constr.setName("includee (de)", 1);
-			constr.setName("includee (en)", 2);
-			constr.getNodes().add(node);
-			{
-				Part vtl = t.createObject(Part.class);
-
-				vtl.setKeyname("vtl");
-				vtl.setHidden(false);
-				vtl.setEditable(0);
-				vtl.setName("Velocity", 1);
-				vtl.setName("Velocity", 2);
-				vtl.setPartTypeId(33);
-
-				Part macros = t.createObject(Part.class);
-
-				macros.setKeyname("macros");
-				macros.setHidden(true);
-				macros.setEditable(0);
-				macros.setName("Macros", 1);
-				macros.setName("Macros", 2);
-				macros.setPartTypeId(21);
-
-				Value mValue = t.createObject(Value.class);
-
-				mValue.setPart(macros);
-				mValue.setValueText("e");
-				macros.setDefaultValue(mValue);
-
-				constr.getParts().add(vtl);
-				constr.getParts().add(macros);
-			}
-			constr.save();
-			return constr;
-		});
-
-		// create includee tag without macro
-		Construct includee2 = supply(t -> {
-			Construct constr = t.createObject(Construct.class);
-
-			constr.setKeyword("includee2");
-			constr.setName("includee2 (de)", 1);
-			constr.setName("includee2 (en)", 2);
-			constr.getNodes().add(node);
-			{
-				Part vtl = t.createObject(Part.class);
-
-				vtl.setKeyname("vtl");
-				vtl.setHidden(false);
-				vtl.setEditable(0);
-				vtl.setName("Velocity", 1);
-				vtl.setName("Velocity", 2);
-				vtl.setPartTypeId(33);
-
-				Part template = t.createObject(Part.class);
-
-				template.setKeyname("template");
-				template.setHidden(true);
-				template.setEditable(0);
-				template.setName("Template", 1);
-				template.setName("Template", 2);
-				template.setPartTypeId(21);
-
-				Value tValue = t.createObject(Value.class);
-
-				tValue.setPart(template);
-				tValue.setValueText("${cms.page.tags.includee}st");
-				template.setDefaultValue(tValue);
-
-				constr.getParts().add(vtl);
-				constr.getParts().add(template);
-			}
-			constr.save();
-			return constr;
-		});
-
-		// create template
-		Template pageTemplate = supply(t -> {
-			Template tpl = t.createObject(Template.class);
-
-			tpl.setFolderId(rootFolder.getId());
-			tpl.setMlId(1);
-			tpl.setName("Test template");
-			tpl.setSource("<node includer>");
-			tpl.save();
-			return tpl;
-		});
-
-		// create page
-		com.gentics.contentnode.object.Page page = supply(t -> {
-			com.gentics.contentnode.object.Page p = t.createObject(com.gentics.contentnode.object.Page.class);
-
-			p.setFolderId(rootFolder.getId());
-			p.setTemplateId(pageTemplate.getId());
-			ContentTag tag = p.getContent().addContentTag(ObjectTransformer.getInt(includer.getId(), 0));
-
-			tag.setEnabled(true);
-			tag.setName("includer");
-			ContentTag tag2 = p.getContent().addContentTag(ObjectTransformer.getInt(includee.getId(), 0));
-
-			tag2.setEnabled(true);
-			tag2.setName("includee");
-			ContentTag tag3 = p.getContent().addContentTag(ObjectTransformer.getInt(includee2.getId(), 0));
-
-			tag3.setEnabled(true);
-			tag3.setName("includee2");
-			p.save();
-			return p;
-		});
-
-		// render page
-		try (Trx trx = new Trx(user)) {
-			PageRenderResponse rendered = getPageResource().render(page.getId().toString(), ObjectTransformer.getInt(node.getId(), 0), null, false, "", LinksType.backend,
-					false, false, false, 0);
-
-			assertEquals("Test", rendered.getContent());
-			trx.success();
-		}
-	}
-
-	/**
-	 * Test rendering a velocity tag in a page in edit mode, which is set to enabled=3 (enable after first edit).
+	 * Test rendering a handlebars tag in a page in edit mode, which is set to enabled=3 (enable after first edit).
 	 * 
 	 * @throws Exception
 	 */
 	@Test
-	public void testRenderVelocityTagEnabledOnEditInEditMode() throws Exception {
+	public void testRenderHandlebarsTagEnabledOnEditInEditMode() throws Exception {
 		// load the page
 		com.gentics.contentnode.object.Page page = supply(t -> t.getObject(com.gentics.contentnode.object.Page.class, ObjectTransformer.getInteger(PAGE_ID, 0),
 				true));
@@ -766,11 +587,11 @@ public class PageRenderSandboxTest {
 		fillRefs.add(Reference.CONTENT_TAGS);
 		Page restPage = supply(() -> ModelBuilder.getPage(page, fillRefs));
 
-		// create a new velocity Tag
+		// create a new hbs Tag
 		Map<String, String> parts = new HashMap<String, String>();
 
-		parts.put("template", "");
-		Tag tag = supply(() -> createTag(restPage, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME, "");
+		Tag tag = supply(() -> createTag(restPage, hbsConstructId, "hbs", parts, getPageResource()));
 
 		// Load the tag as contentnode.object
 		ContentTag contentTag = supply(t -> {
@@ -821,44 +642,44 @@ public class PageRenderSandboxTest {
 		// load the page
 		Page page = supply(() -> getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage());
 
-		// create the velocity tag
+		// create the hbs tag
 		Map<String, String> parts = new HashMap<String, String>();
 
-		parts.put("template", "cms.rendermode.publish: $cms.rendermode.publish\n" + "cms.rendermode.live: $cms.rendermode.live\n"
-				+ "cms.rendermode.edit: $cms.rendermode.edit\n" + "cms.rendermode.preview: $cms.rendermode.preview\n"
-				+ "cms.rendermode.real: $cms.rendermode.real\n" + "cms.rendermode.backend: $cms.rendermode.backend\n"
-				+ "cms.rendermode.frontend: $cms.rendermode.frontend\n");
-		Tag tag = supply(() -> createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME, "cms.rendermode.publish: {{gtx_render cms.rendermode.publish}}\n" + "cms.rendermode.live: {{gtx_render cms.rendermode.live}}\n"
+				+ "cms.rendermode.edit: {{gtx_render cms.rendermode.edit}}\n" + "cms.rendermode.preview: {{gtx_render cms.rendermode.preview}}\n"
+				+ "cms.rendermode.real: {{gtx_render cms.rendermode.real}}\n" + "cms.rendermode.backend: {{gtx_render cms.rendermode.backend}}\n"
+				+ "cms.rendermode.frontend: {{gtx_render cms.rendermode.frontend}}\n");
+		Tag tag = supply(() -> createTag(page, hbsConstructId, "hbs", parts, getPageResource()));
 
-		// render the vtl tag (preview in backend mode)
+		// render the hbs tag (preview in backend mode)
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
 			assertContent(
 					"cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n" + "cms.rendermode.preview: true\n"
 							+ "cms.rendermode.real: false\n" + "cms.rendermode.backend: true\n" + "cms.rendermode.frontend: false\n",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0).getContent());
+							pageResource.render(PAGE_ID, null, "<node hbs>", false, null, LinksType.backend, false, false, false, 0).getContent());
 
-			// render the vtl tag (preview in frontend mode)
+			// render the hbs tag (preview in frontend mode)
 			assertContent(
 					"cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n" + "cms.rendermode.preview: true\n"
 							+ "cms.rendermode.real: false\n" + "cms.rendermode.backend: false\n" + "cms.rendermode.frontend: true\n",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.frontend, false, false, false, 0).getContent());
+							pageResource.render(PAGE_ID, null, "<node hbs>", false, null, LinksType.frontend, false, false, false, 0).getContent());
 
-			// render the vtl tag in edit mode (backend)
+			// render the hbs tag in edit mode (backend)
 			assertContent(
-					"<div data-gcn-pageid=\"" + PAGE_ID + "\" data-gcn-tagid=\"" + tag.getId() + "\" data-gcn-tagname=\"vtl\" "
-							+ "data-gcn-i18n-constructname=\"Velocity Code\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
+					"<div data-gcn-pageid=\"" + PAGE_ID + "\" data-gcn-tagid=\"" + tag.getId() + "\" data-gcn-tagname=\"hbs\" "
+							+ "data-gcn-i18n-constructname=\"hbs\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
 							+ tag.getId() + "\">cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: true\n"
 							+ "cms.rendermode.preview: false\n" + "cms.rendermode.real: false\n" + "cms.rendermode.backend: true\n" + "cms.rendermode.frontend: false\n</div>",
-							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false, 0).getContent());
+							pageResource.render(PAGE_ID, null, "<node hbs>", true, null, LinksType.backend, false, false, false, 0).getContent());
 
-			// render the vtl tag in edit mode (backend)
+			// render the hbs tag in edit mode (backend)
 			assertContent(
-					"<div data-gcn-pageid=\"" + PAGE_ID + "\" data-gcn-tagid=\"" + tag.getId() + "\" data-gcn-tagname=\"vtl\" "
-							+ "data-gcn-i18n-constructname=\"Velocity Code\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
+					"<div data-gcn-pageid=\"" + PAGE_ID + "\" data-gcn-tagid=\"" + tag.getId() + "\" data-gcn-tagname=\"hbs\" "
+							+ "data-gcn-i18n-constructname=\"hbs\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
 							+ tag.getId() + "\">cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: true\n"
 							+ "cms.rendermode.preview: false\n" + "cms.rendermode.real: false\n" + "cms.rendermode.backend: false\n" + "cms.rendermode.frontend: true\n</div>",
-							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.frontend, false, false, false, 0).getContent());
+							pageResource.render(PAGE_ID, null, "<node hbs>", true, null, LinksType.frontend, false, false, false, 0).getContent());
 			trx.success();
 		}
 	}
@@ -873,29 +694,29 @@ public class PageRenderSandboxTest {
 		// Load the page for update by the system user
 		Page page = supply(() -> getPageResource().load(PAGE_ID, true, false, false, false, false, false, false, false, false, false, null, null).getPage());
 
-		// create the velocity tag
+		// create the hbs tag
 		Map<String, String> parts = new HashMap<String, String>();
 
-		parts.put("template", "cms.rendermode.publish: $cms.rendermode.publish\n" + "cms.rendermode.live: $cms.rendermode.live\n"
-				+ "cms.rendermode.edit: $cms.rendermode.edit\n" + "cms.rendermode.preview: $cms.rendermode.preview\n"
-				+ "cms.rendermode.real: $cms.rendermode.real\n");
-		operate(() -> createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME, "cms.rendermode.publish: {{gtx_render cms.rendermode.publish}}\n" + "cms.rendermode.live: {{gtx_render cms.rendermode.live}}\n"
+				+ "cms.rendermode.edit: {{gtx_render cms.rendermode.edit}}\n" + "cms.rendermode.preview: {{gtx_render cms.rendermode.preview}}\n"
+				+ "cms.rendermode.real: {{gtx_render cms.rendermode.real}}\n");
+		operate(() -> createTag(page, hbsConstructId, "hbs", parts, getPageResource()));
 
 		// login with another user
 		SystemUser editor = supply(t -> t.getObject(SystemUser.class, USER_EDITOR_ID));
 		try (Trx trx = new Trx(editor)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
+			PageRenderResponse response = pageResource.render(PAGE_ID, null, "<node hbs>", false, null, LinksType.backend, false, false, false, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
-			// render the vtl tag
+			// render the hbs tag
 			assertContent("cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n"
 					+ "cms.rendermode.preview: true\n" + "cms.rendermode.real: false\n", response.getContent());
 
-			response = pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false, 0);
+			response = pageResource.render(PAGE_ID, null, "<node hbs>", true, null, LinksType.backend, false, false, false, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
-			// render the vtl tag in edit mode
+			// render the hbs tag in edit mode
 			assertContent("cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n"
 					+ "cms.rendermode.preview: true\n" + "cms.rendermode.real: false\n", response.getContent());
 			trx.success();
@@ -916,20 +737,20 @@ public class PageRenderSandboxTest {
 		Page page = supply(() -> getPageResource().load(nodePage.getId().toString(), true, false, false,
 				false, false, false, false, false, false, false, null, null).getPage());
 
-		// create the velocity tag
+		// create the hbs tag
 		Map<String, String> parts = new HashMap<String, String>();
 
-		parts.put("template", "cms.rendermode.publish: $cms.rendermode.publish\n" + "cms.rendermode.live: $cms.rendermode.live\n"
-				+ "cms.rendermode.edit: $cms.rendermode.edit\n" + "cms.rendermode.preview: $cms.rendermode.preview\n"
-				+ "cms.rendermode.real: $cms.rendermode.real\n");
-		operate(() -> createTag(page, VELOCITY_CONSTRUCT_ID, "vtl", parts, getPageResource()));
+		parts.put(HBS_PART_NAME, "cms.rendermode.publish: {{gtx_render cms.rendermode.publish}}\n" + "cms.rendermode.live: {{gtx_render cms.rendermode.live}}\n"
+				+ "cms.rendermode.edit: {{gtx_render cms.rendermode.edit}}\n" + "cms.rendermode.preview: {{gtx_render cms.rendermode.preview}}\n"
+				+ "cms.rendermode.real: {{gtx_render cms.rendermode.real}}\n");
+		operate(() -> createTag(page, hbsConstructId, "hbs", parts, getPageResource()));
 
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.render(page.getId().toString(), null, "<node vtl>", false, null, LinksType.frontend, false, false, true, 0);
+			PageRenderResponse response = pageResource.render(page.getId().toString(), null, "<node hbs>", false, null, LinksType.frontend, false, false, true, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
-			// render the vtl tag
+			// render the hbs tag
 			assertContent("cms.rendermode.publish: true\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n"
 					+ "cms.rendermode.preview: false\n" + "cms.rendermode.real: false\n", response.getContent());
 			trx.success();
@@ -1254,11 +1075,11 @@ public class PageRenderSandboxTest {
 
 		try (Trx trx = new Trx(user)) {
 			final Map<String, String> parts = new HashMap<String, String>();
-			parts.put("template",
-					"cms.rendermode.backend:  $cms.rendermode.backend\n"
-							+ "cms.rendermode.frontend: $cms.rendermode.frontend\n"
+			parts.put(HBS_PART_NAME,
+					"cms.rendermode.backend:  {{gtx_render cms.rendermode.backend}}\n"
+							+ "cms.rendermode.frontend: {{gtx_render cms.rendermode.frontend}}\n"
 					);
-			createTag(page, VELOCITY_CONSTRUCT_ID, "test", parts, getPageResource());
+			createTag(page, hbsConstructId, "test", parts, getPageResource());
 			assertContent(
 					"cms.rendermode.backend:  false\n"
 							+ "cms.rendermode.frontend: true\n",
@@ -1706,7 +1527,7 @@ public class PageRenderSandboxTest {
 
 
 	/**
-	 * Creates a simple templates with a "test" tag that renders velocity.
+	 * Creates a simple templates with a "test" tag that renders hbs.
 	 *
 	 * @return The created template
 	 * @throws NodeException
@@ -1718,7 +1539,7 @@ public class PageRenderSandboxTest {
 			template.setMlId(1);
 			template.setSource("<node test>");
 			TemplateTag tag = t.createObject(TemplateTag.class);
-			tag.setConstructId(VELOCITY_CONSTRUCT_ID);
+			tag.setConstructId(hbsConstructId);
 			tag.setEnabled(true);
 			tag.setPublic(true);
 			tag.setName("test");

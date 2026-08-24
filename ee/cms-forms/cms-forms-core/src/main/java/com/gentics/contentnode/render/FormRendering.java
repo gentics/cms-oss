@@ -123,6 +123,7 @@ public class FormRendering {
 
 		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 		if (renderType.getEditMode() == RenderType.EM_PUBLISH) {
+			renderType.addDependency(form, "online");
 			return form.isOnline();
 		} else {
 			return true;

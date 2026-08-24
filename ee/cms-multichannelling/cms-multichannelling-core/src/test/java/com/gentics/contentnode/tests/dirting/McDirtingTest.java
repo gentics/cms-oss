@@ -27,11 +27,12 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Special cases for dirting in MC environments
@@ -45,31 +46,27 @@ public class McDirtingTest {
 
 	private static Node channel;
 
-	private static Construct vtlConstruct;
+	private static Construct hbsConstruct;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+
 		node = Trx.supply(() -> createNode("master", "Master", PublishTarget.FILESYSTEM));
 		channel = Trx.supply(() -> createChannel(node, "Channel", "channel", "/", PublishTarget.FILESYSTEM));
 
-		vtlConstruct = Trx.supply(() -> create(Construct.class, c -> {
+		hbsConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setKeyword("vtl");
+			c.setKeyword("hbs");
 			c.setMlId(1);
-			c.setName("Velocity", 1);
-
-			c.getParts().add(create(Part.class, p -> {
-				p.setEditable(0);
-				p.setHidden(false);
-				p.setKeyname("vtl");
-				p.setPartTypeId(getPartTypeId(VelocityPartType.class));
-			}, false));
+			c.setName("hbs", 1);
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setEditable(1);
-				p.setHidden(true);
-				p.setKeyname("template");
-				p.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+				p.setHidden(false);
+				p.setKeyname("hbs");
+				p.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 			}, false));
 		}));
 	}
@@ -94,14 +91,14 @@ public class McDirtingTest {
 			t.setFolderId(node.getFolder().getId());
 			t.setMlId(1);
 			t.setName("Template");
-			t.setSource("<node vtltag>");
+			t.setSource("<node hbstag>");
 			TemplateTag tTag = create(TemplateTag.class, tag -> {
-				tag.setConstructId(vtlConstruct.getId());
+				tag.setConstructId(hbsConstruct.getId());
 				tag.setEnabled(true);
-				tag.setName("vtltag");
+				tag.setName("hbstag");
 				tag.setPublic(true);
 			}, false);
-			t.getTemplateTags().put("vtltag", tTag);
+			t.getTemplateTags().put("hbstag", tTag);
 		}));
 
 		// create folder in master and localize it in channel
@@ -116,8 +113,8 @@ public class McDirtingTest {
 
 		// create pag in excluded folder, that has dependency on modPage
 		Trx.supply(() -> update(createPage(excludedFolder, template, "Target"), p -> {
-			getPartType(LongHTMLPartType.class, p.getContentTag("vtltag"), "template").getValueObject()
-					.setValueText("$cms.imps.loader.getPage(" + modPage.getId() + ").folder.name");
+			getPartType(HandlebarsPartType.class, p.getContentTag("hbstag"), "hbs").getValueObject()
+					.setValueText("{{#with (gtx_test_page %d)}}{{gtx_render folder.name}}{{/with}}".formatted(modPage.getId()));
 			p.publish();
 		}));
 

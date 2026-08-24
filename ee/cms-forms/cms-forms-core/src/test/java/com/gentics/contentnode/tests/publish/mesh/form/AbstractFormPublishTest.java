@@ -7,13 +7,12 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertObject;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.TEMPLATE_PARTNAME;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createContentRepository;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
@@ -55,8 +54,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -79,6 +77,11 @@ import okhttp3.Response;
 @Category(MeshTest.class)
 @ConfigBy(FormTypeConfigurationModifier.class)
 public abstract class AbstractFormPublishTest {
+	/**
+	 * Name of the HandlebarsPartType Part
+	 */
+	public final static String HBS_PART_NAME = "hbs";
+
 	/**
 	 * Name of the mesh project
 	 */
@@ -152,7 +155,7 @@ public abstract class AbstractFormPublishTest {
 
 	protected static Construct formConstruct;
 
-	protected static Integer vtlConstructId;
+	protected static Integer hbsConstructId;
 
 	protected static Template template;
 
@@ -187,25 +190,16 @@ public abstract class AbstractFormPublishTest {
 			c.setName("form", 1);
 			c.getNodes().add(node);
 
-			// VTL part
+			// HBS Part
 			c.getParts().add(create(Part.class, p -> {
 				p.setEditable(0);
 				p.setHidden(false);
-				p.setKeyname("vtl");
-				p.setName("vtl", 1);
-				p.setPartTypeId(getPartTypeId(VelocityPartType.class));
-			}, false));
-
-			// Template part
-			c.getParts().add(create(Part.class, p -> {
-				p.setEditable(0);
-				p.setHidden(true);
-				p.setKeyname(TEMPLATE_PARTNAME);
-				p.setName(TEMPLATE_PARTNAME, 1);
-				p.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+				p.setKeyname(HBS_PART_NAME);
+				p.setName(HBS_PART_NAME, 1);
+				p.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 				p.setDefaultValue(create(Value.class, v -> {
 					v.setPart(p);
-					v.setValueText("#gtx_form($cms.tag.parts.form, {\"type\": \"java\", \"noForm\": \"No Form\"})");
+					v.setValueText("{{#gtx_form cms.tag.parts.form type=\"java\"}}{{{this}}}{{else}}No Form{{/gtx_form}}");
 				}, false));
 			}, false));
 
@@ -219,7 +213,7 @@ public abstract class AbstractFormPublishTest {
 			}, false));
 		}));
 
-		vtlConstructId = supply(() -> createVelocityConstruct(node, "vtl", "vtl"));
+		hbsConstructId = supply(() -> createConstruct(node, HandlebarsPartType.class, HBS_PART_NAME, HBS_PART_NAME));
 
 		template = supply(() -> update(createTemplate(node.getFolder(), "Template"), tmpl -> {
 			tmpl.setSource("<node form>");
@@ -241,7 +235,7 @@ public abstract class AbstractFormPublishTest {
 			create.addFolder(node.getFolder());
 			create.setMlId(formsTemplateMarkupLanguage.getId());
 			create.getTemplateTags().put("content", create(TemplateTag.class, tt -> {
-				tt.setConstructId(vtlConstructId);
+				tt.setConstructId(hbsConstructId);
 				tt.setEnabled(true);
 				tt.setName("content");
 				tt.setPublic(true);

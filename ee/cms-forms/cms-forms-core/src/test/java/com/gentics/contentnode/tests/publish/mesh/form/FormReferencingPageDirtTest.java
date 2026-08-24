@@ -5,7 +5,6 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.Builder.update;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.TEMPLATE_PARTNAME;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,7 +31,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.formtype.ControlConfig;
 import com.gentics.contentnode.rest.model.formtype.Controls;
@@ -90,14 +89,14 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 		refPageEn = create(Page.class, create -> {
 			create.setFolderId(node.getFolder().getId());
 			create.setTemplateId(eMailTemplate.getId());
-			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			getPartType(HandlebarsPartType.class, create.getContentTag("content"), HBS_PART_NAME).setText("");
 			create.setLanguage(getLanguage("en"));
 		}).at(1).publish().build();
 
 		refPageDe = create(Page.class, create -> {
 			create.setFolderId(node.getFolder().getId());
 			create.setTemplateId(eMailTemplate.getId());
-			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			getPartType(HandlebarsPartType.class, create.getContentTag("content"), HBS_PART_NAME).setText("");
 			create.setLanguage(getLanguage("de"));
 			create.setContentsetId(refPageEn.getContentsetId());
 		}).at(1).publish().build();
@@ -105,14 +104,14 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 		otherRefPageEn = create(Page.class, create -> {
 			create.setFolderId(node.getFolder().getId());
 			create.setTemplateId(eMailTemplate.getId());
-			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			getPartType(HandlebarsPartType.class, create.getContentTag("content"), HBS_PART_NAME).setText("");
 			create.setLanguage(getLanguage("en"));
 		}).at(1).publish().build();
 
 		otherRefPageDe = create(Page.class, create -> {
 			create.setFolderId(node.getFolder().getId());
 			create.setTemplateId(eMailTemplate.getId());
-			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			getPartType(HandlebarsPartType.class, create.getContentTag("content"), HBS_PART_NAME).setText("");
 			create.setLanguage(getLanguage("de"));
 			create.setContentsetId(otherRefPageEn.getContentsetId());
 		}).at(1).publish().build();
@@ -153,7 +152,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 	@Test
 	public void testModifyRefPage() throws NodeException {
 		refPageDe = update(refPageDe, update -> {
-			getPartType(LongHTMLPartType.class, update.getContentTag("content"), TEMPLATE_PARTNAME).setText("modified");
+			getPartType(HandlebarsPartType.class, update.getContentTag("content"), HBS_PART_NAME).setText("modified");
 		}).at(2).publish().build();
 
 		operate(() -> context.waitForDirtqueueWorker());
@@ -167,7 +166,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 	@Test
 	public void testModifyOtherRefPage() throws NodeException {
 		otherRefPageDe = update(otherRefPageDe, update -> {
-			getPartType(LongHTMLPartType.class, update.getContentTag("content"), TEMPLATE_PARTNAME).setText("modified");
+			getPartType(HandlebarsPartType.class, update.getContentTag("content"), HBS_PART_NAME).setText("modified");
 		}).at(2).publish().build();
 
 		operate(() -> context.waitForDirtqueueWorker());
@@ -181,7 +180,7 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest impleme
 	@Test
 	public void testModifyRefPageUnusedLanguage() throws NodeException {
 		refPageEn = update(refPageEn, update -> {
-			getPartType(LongHTMLPartType.class, update.getContentTag("content"), TEMPLATE_PARTNAME).setText("modified");
+			getPartType(HandlebarsPartType.class, update.getContentTag("content"), HBS_PART_NAME).setText("modified");
 		}).at(2).publish().build();
 
 		operate(() -> context.waitForDirtqueueWorker());

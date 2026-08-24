@@ -1643,7 +1643,7 @@ public class FolderResourceImpl implements FolderResource {
 			@BeanParam LegacyPagingParameterBean pagingParams,
 			@BeanParam EditableParameterBean editableParams,
 			@BeanParam WastebinParameterBean wastebinParams) throws NodeException {
-		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(templateListParams.nodeId)) {
+		try (Trx trx = ContentNodeHelper.trx(); ChannelTrx cTrx = new ChannelTrx(templateListParams.folderNodeId)) {
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {

@@ -44,15 +44,6 @@ public interface RestApi {
 	void logout() throws RestException;
 
 	/**
-	 * Authenticate with given sid and session secret
-	 * @param sid SID
-	 * @param sessionSecret session secret
-	 * @return user
-	 * @throws RestException if authentication fails
-	 */
-	User authenticate(String sid, String sessionSecret) throws RestException;
-
-	/**
 	 * Analyzes the response of a finished request and asserts that it was executed without errors;
 	 * if a problem occurred during the request, a specialized RestException is thrown
 	 *
@@ -78,15 +69,10 @@ public interface RestApi {
 	WebTarget base() throws RestException;
 
 	/**
-	 * Get the ID of the active session, as generated during login
-	 * @return session ID
+	 * Set the API Token, that should be used
+	 * @param apiToken api token
 	 */
-	String getSid();
-
-	/**
-	 * Set the ID of the session that should be used.
-	 */
-	void setSid(String sid);
+	void setApiToken(String apiToken);
 
 	/**
 	 * Get the cookies currently stored in the client

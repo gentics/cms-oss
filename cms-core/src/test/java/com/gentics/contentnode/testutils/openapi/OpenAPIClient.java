@@ -45,7 +45,7 @@ public class OpenAPIClient implements RestApi {
 
 	private CookieHandler cookieHandler = new CookieManager();
 	private final DefaultApi client;
-	private String sid;
+	private String apiToken;
 	private WebTarget base;
 
 	public OpenAPIClient(String url) {
@@ -60,6 +60,9 @@ public class OpenAPIClient implements RestApi {
 					requestContext.getHeaders().add(entry.getKey(), value);
 				}
 			}
+			if (apiToken != null) {
+				requestContext.getHeaders().add("Authorization", "Bearer %s".formatted(apiToken));
+			}
 		}).register((ClientResponseFilter) (requestContext, responseContext) -> {
 			cookieHandler.put(requestContext.getUri(), responseContext.getHeaders());
 		});
@@ -72,10 +75,9 @@ public class OpenAPIClient implements RestApi {
 		request.setLogin(username);
 		request.setPassword(password);
 		try {
-			LoginResponse response = client.login(sid, request);
+			LoginResponse response = client.login(request);
 			assertResponseObject(response);
 			assertResponseInfo(response.getResponseInfo());
-			this.sid = response.getSid();
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI login failed", e);
 		}
@@ -86,7 +88,6 @@ public class OpenAPIClient implements RestApi {
 
 		assertResponseObject(response);
 		assertResponseInfo(response.getResponseInfo());
-		sid = response.getSid();
 	}
 
 	@Override
@@ -98,8 +99,6 @@ public class OpenAPIClient implements RestApi {
 				throw new NotFoundRestException("");
 			} else if (response.equals(ResponseCode.FAILURE.toString())) {
 				throw new FailureRestException("");
-			} else {
-				sid = response;
 			}
 		} catch (ApiException e) {
 			throw new RestException("OpenAPI sso login failed", e);
@@ -112,8 +111,6 @@ public class OpenAPIClient implements RestApi {
 			throw new NotFoundRestException("");
 		} else if (response.equals(ResponseCode.FAILURE.toString())) {
 			throw new FailureRestException("");
-		} else {
-			sid = response;
 		}
 	}
 
@@ -131,22 +128,9 @@ public class OpenAPIClient implements RestApi {
 
 		// TODO FIXME We need a fully featured CMS API REST client, in order to perform targeted API calls, 
 		// and not building Jersey context manually
-		response = base.path("auth").path("logout").path(sid).request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
-		sid = null;
+		response = base.path("auth").path("logout").request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
 		assertResponseObject(response);
 		assertResponseInfo(response.getResponseInfo());
-	}
-
-	@Override
-	public User authenticate(String sid, String sessionSecret) throws RestException {
-		try {
-			AuthenticationResponse response = client.validate(sid + sessionSecret);
-			assertResponseObject(response);
-			assertResponseInfo(response.getResponseInfo());
-		} catch (ApiException e) {
-			throw new RestException("OpenAPI authenticate failed", e);
-		}
-		return null;
 	}
 
 	public void assertResponseObject(Object response) throws RestException {
@@ -208,21 +192,15 @@ public class OpenAPIClient implements RestApi {
 
 	@Override
 	public WebTarget base() throws RestException {
-		if (sid != null) {
-			return base.queryParam("sid", sid);
-		} else {
-			throw new AuthRequiredRestException("No valid SID is associated with this client. Log in first!");
-		}
+		return base;
 	}
 
-	@Override
-	public String getSid() {
-		return sid;
-	}
-
-	@Override
-	public void setSid(String sid) {
-		this.sid = sid;
+	/**
+	 * Set the API Token, that should be used
+	 * @param apiToken api token
+	 */
+	public void setApiToken(String apiToken) {
+		this.apiToken = apiToken;
 	}
 
 	@Override

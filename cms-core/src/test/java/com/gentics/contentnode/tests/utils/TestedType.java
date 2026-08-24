@@ -151,9 +151,10 @@ public enum TestedType {
 	 * 
 	 * @param object
 	 * @param request
-	 * @return
+	 * @return response
+	 * @throws NodeException
 	 */
-	public GenericResponse save(LocalizableNodeObject<?> object, Object request) {
+	public GenericResponse save(LocalizableNodeObject<?> object, Object request) throws NodeException {
 		switch(this) {
 		case file:
 			return new FileResourceImpl().save(object.getId(), (FileSaveRequest) request);

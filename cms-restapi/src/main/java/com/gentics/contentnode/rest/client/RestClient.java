@@ -23,9 +23,7 @@ import com.gentics.contentnode.rest.client.exceptions.MaintenanceModeRestExcepti
 import com.gentics.contentnode.rest.client.exceptions.NotFoundRestException;
 import com.gentics.contentnode.rest.client.exceptions.PermissionRestException;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
-import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
-import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -216,7 +214,7 @@ public class RestClient implements RestApi {
 	 */
 	public WebTarget base() {
 		return base;
-		}
+	}
 
 	/**
 	 * Set the API Token, that should be used

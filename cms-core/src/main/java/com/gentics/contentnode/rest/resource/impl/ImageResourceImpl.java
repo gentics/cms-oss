@@ -510,15 +510,7 @@ public class ImageResourceImpl implements ImageResource {
 			throw e;
 		} catch (Exception e) {
 			throw new NodeException(e);
-            }
-			}
-
-	@Override
-	@GET
-	@Path("/content/load/{id}")
-	@Produces("image/*")
-	public Response loadContent(@PathParam("id") Integer id) {
-		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
+		}
 	}
 
 	@Override
@@ -645,14 +637,6 @@ public class ImageResourceImpl implements ImageResource {
 			return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()),
 					new ResponseInfo(ResponseCode.OK, "saved image with id: " + image.getId()));
 		}
-	}
-
-	@Override
-	@POST
-	@Path("/content/save/{id}")
-	@Consumes("image/*")
-	public GenericResponse saveContent(InputStream fileContent) {
-		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
 	}
 
 	@Override

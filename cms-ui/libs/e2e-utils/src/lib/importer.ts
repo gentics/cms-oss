@@ -834,8 +834,11 @@ export class EntityImporter {
 
         if (importedGroup && permissions) {
             for (const perm of permissions) {
+                const allPerms = (perm.perms || []).map((p) => typeof p === 'string'
+                    ? { type: p, value: true }
+                    : p);
                 const body = {
-                    perms: perm.perms,
+                    perms: allPerms,
                     subGroups: perm.subGroups ?? false,
                     subObjects: perm.subObjects ?? false,
                 };

@@ -1,132 +1,133 @@
-<div class="gtx-modal-datagrid-in-tab">
-  <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
-
-  <div class="modal-title">
+<div class="modal-title">
     <h5>{{ 'modal.create_user_title' | gtxI18n }}</h5>
-  </div>
+</div>
 
-  <div class="modal-content row">
+<div class="modal-content row">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
     <gtx-tabs pure [activeId]="currentTab">
-      <gtx-tab id="1" [title]="'shared.title_properties' | gtxI18n">
-        @if (form) {
-          <form autocomplete="off" [formGroup]="form" class="gtx-create-user-modal-tab-content-body-form">
-            <div class="input-container small-12 medium-8 row">
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  type="text"
-                  [required]="true"
-                  maxlength="255"
-                  [label]="('shared.user_name' | gtxI18n) + ' *'"
-                  [placeholder]="'shared.user_name' | gtxI18n"
-                  formControlName="login"
-                ></gtx-input>
-                @if (login?.touched) {
-                  <div class="gtx-validation-hints">
-                    @if (login?.hasError('entityExists')) {
-                      <div>
-                        {{ 'modal.validation_user_already_exists' | gtxI18n }}
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  type="text"
-                  maxlength="255"
-                  [required]="false"
-                  [label]="'shared.email' | gtxI18n"
-                  [placeholder]="'shared.email' | gtxI18n"
-                  formControlName="email"
-                ></gtx-input>
-              </div>
-              <!-- Needed to prevent autocomplete in Firefox -->
-              <input type="text" name="firstName" value="" style="display: none">
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  type="text"
-                  [required]="true"
-                  maxlength="255"
-                  [label]="('shared.first_name' | gtxI18n) + ' *'"
-                  [placeholder]="'shared.first_name' | gtxI18n"
-                  formControlName="firstName"
-                ></gtx-input>
-              </div>
-              <!-- Needed to prevent autocomplete in Firefox -->
-              <input type="text" name="lastName" value="" style="display: none">
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  type="text"
-                  [required]="true"
-                  maxlength="255"
-                  [label]="('shared.last_name' | gtxI18n) + ' *'"
-                  [placeholder]="'shared.last_name' | gtxI18n"
-                  formControlName="lastName"
-                ></gtx-input>
-              </div>
-              <!-- Needed to prevent autocomplete in Firefox -->
-              <input type="password" name="password1" value="" style="display: none">
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  autocomplete="new-password"
-                  [label]="('modal.new_password_label' | gtxI18n) + ' *'"
-                  type="password"
-                  formControlName="password1"
-                ></gtx-input>
-                @if (password1?.touched) {
-                  <div class="gtx-validation-hints">
-                    @if (password1?.hasError('pattern')) {
-                      <div>
-                        {{ 'modal.validation_password_characters' | gtxI18n }}
-                      </div>
-                    }
-                    @if (password1?.hasError('minlength')) {
-                      <div>
-                        {{ 'modal.validation_password_too_short' | gtxI18n }}
-                      </div>
-                    }
-                    @if (password1?.hasError('maxlength')) {
-                      <div>
-                        {{ 'modal.validation_password_too_long' | gtxI18n }}
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-              <!-- Needed to prevent autocomplete in Firefox -->
-              <input type="password" name="password2" value="" style="display: none">
-              <div class="input-container small-12 medium-6 columns">
-                <gtx-input
-                  autocomplete="new-password"
-                  [label]="('modal.confirm_password_label' | gtxI18n) + ' *'"
-                  type="password"
-                  formControlName="password2"
-                ></gtx-input>
-                @if (password2?.dirty) {
-                  <div class="gtx-validation-hints">
-                    @if (form?.hasError('passwordsDontMatch')) {
-                      <div>
-                        {{ 'modal.validation_passwords_must_match' | gtxI18n }}
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
-            <div class="input-container small-12 medium-4 row">
-              <div class="input-container medium-12 columns">
-                <gtx-textarea
-                  [required]="false"
-                  maxlength="255"
-                  [label]="'shared.description' | gtxI18n"
-                  [placeholder]="'shared.description' | gtxI18n"
-                  formControlName="description"
-                  >
-                </gtx-textarea>
-              </div>
-            </div>
-          </form>
-        }
+        <gtx-tab id="1" [title]="'shared.title_properties' | gtxI18n">
+            @if (form) {
+                <form autocomplete="off" [formGroup]="form" class="gtx-create-user-modal-tab-content-body-form">
+                    <div class="input-container small-12 medium-8 row">
+                    <div class="input-container small-12 medium-6 columns">
+                        <gtx-input
+                        type="text"
+                        [required]="true"
+                        maxlength="255"
+                        [label]="('shared.user_name' | gtxI18n) + ' *'"
+                        [placeholder]="'shared.user_name' | gtxI18n"
+                        formControlName="login"
+                        ></gtx-input>
+                        @if (login?.touched) {
+                        <div class="gtx-validation-hints">
+                            @if (login?.hasError('entityExists')) {
+                            <div>
+                                {{ 'modal.validation_user_already_exists' | gtxI18n }}
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <div class="input-container small-12 medium-6 columns">
+                        <gtx-input
+                        type="text"
+                        maxlength="255"
+                        [required]="false"
+                        [label]="'shared.email' | gtxI18n"
+                        [placeholder]="'shared.email' | gtxI18n"
+                        formControlName="email"
+                        ></gtx-input>
+                    </div>
+                    <!-- Needed to prevent autocomplete in Firefox -->
+                    <input type="text" name="firstName" value="" style="display: none">
+                    <div class="input-container small-12 medium-6 columns">
+                        <gtx-input
+                        type="text"
+                        [required]="true"
+                        maxlength="255"
+                        [label]="('shared.first_name' | gtxI18n) + ' *'"
+                        [placeholder]="'shared.first_name' | gtxI18n"
+                        formControlName="firstName"
+                        ></gtx-input>
+                    </div>
+                    <!-- Needed to prevent autocomplete in Firefox -->
+                    <input type="text" name="lastName" value="" style="display: none">
+                    <div class="input-container small-12 medium-6 columns">
+                        <gtx-input
+                        type="text"
+                        [required]="true"
+                        maxlength="255"
+                        [label]="('shared.last_name' | gtxI18n) + ' *'"
+                        [placeholder]="'shared.last_name' | gtxI18n"
+                        formControlName="lastName"
+                        ></gtx-input>
+                    </div>
+                    <!-- Needed to prevent autocomplete in Firefox -->
+                    <input type="password" name="password1" value="" style="display: none">
+                    <div class="input-container small-12 medium-6 columns">
+                        <gtx-input
+                        autocomplete="new-password"
+                        [label]="('modal.new_password_label' | gtxI18n) + ' *'"
+                        type="password"
+                        formControlName="password1"
+                        ></gtx-input>
+                        @if (password1?.touched) {
+                        <div class="gtx-validation-hints">
+                            @if (password1?.hasError('pattern')) {
+                            <div>
+                                {{ 'modal.validation_password_characters' | gtxI18n }}
+                            </div>
+                            }
+                            @if (password1?.hasError('minlength')) {
+                            <div>
+                                {{ 'modal.validation_password_too_short' | gtxI18n }}
+                            </div>
+                            }
+                            @if (password1?.hasError('maxlength')) {
+                            <div>
+                                {{ 'modal.validation_password_too_long' | gtxI18n }}
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <!-- Needed to prevent autocomplete in Firefox -->
+                    <input type="password" name="password2" value="" style="display: none">
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                autocomplete="new-password"
+                                [label]="('modal.confirm_password_label' | gtxI18n) + ' *'"
+                                type="password"
+                                formControlName="password2"
+                            ></gtx-input>
+
+                            @if (password2?.dirty) {
+                            <div class="gtx-validation-hints">
+                                @if (form?.hasError('passwordsDontMatch')) {
+                                <div>
+                                    {{ 'modal.validation_passwords_must_match' | gtxI18n }}
+                                </div>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="input-container small-12 medium-4 row">
+                        <div class="input-container medium-12 columns">
+                            <gtx-textarea
+                            [required]="false"
+                            maxlength="255"
+                            [label]="'shared.description' | gtxI18n"
+                            [placeholder]="'shared.description' | gtxI18n"
+                            formControlName="description"
+                            >
+                            </gtx-textarea>
+                        </div>
+                    </div>
+                </form>
+            }
       </gtx-tab>
 
       <gtx-tab id="2" [title]="'shared.assign_user_to_groups' | gtxI18n">
@@ -144,6 +145,7 @@
     @if (tabIndexIsActive(2)) {
       <gtx-button
         type="primary"
+        data-action="previous"
         (click)="setActiveTab(1)"
         >
         {{ 'modal.previous_button' | gtxI18n }}
@@ -153,6 +155,7 @@
     @if (tabIndexIsActive(1)) {
       <gtx-button
         type="primary"
+        data-action="next"
         [disabled]="!formIsValid()"
         (click)="setActiveTab(2)"
         >
@@ -164,6 +167,7 @@
       type="primary"
       (click)="buttonCreateUserClicked()"
       [disabled]="!allIsValid() || loading"
+      data-action="confirm"
       gtxActionAllowed="user.createUser"
       >
       {{ 'modal.create_user_button' | gtxI18n }}
@@ -172,9 +176,9 @@
     <gtx-button
       type="secondary"
       flat
+        data-action="cancel"
       (click)="cancelFn()"
       >
       {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
   </div>
-</div>

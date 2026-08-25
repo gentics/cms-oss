@@ -1,0 +1,119 @@
+{
+  "id" : "7e91.3ce60d83-9fcc-11f1-a40e-0ef261d42093",
+  "name" : "Test URL",
+  "excluded" : false,
+  "disinheritDefault" : false,
+  "disinheritedChannelIds" : [ ],
+  "version" : {
+    "versionNumber" : "0.3",
+    "type" : "current",
+    "timestamp" : 1787583551,
+    "publishAt" : 0
+  },
+  "alternateUrls" : [ ],
+  "fileName" : "Test-URL.de.html",
+  "description" : "",
+  "template" : {
+    "id" : "7e91.546eae91-9fcb-11f1-a40e-0ef261d42093",
+    "hash" : "2603c98781423759a4843bed88214dd6"
+  },
+  "priority" : 1,
+  "language" : "de",
+  "contentsetId" : "7e91.3ce60123-9fcc-11f1-a40e-0ef261d42093",
+  "contentId" : "7e91.3ce53f6b-9fcc-11f1-a40e-0ef261d42093",
+  "tags" : {
+    "url" : {
+      "id" : "7e91.3ce5b619-9fcc-11f1-a40e-0ef261d42093",
+      "name" : "url",
+      "construct" : {
+        "id" : "A547.69527",
+        "hash" : "eb7ffd44f933c86a7517d20630ae6d88"
+      },
+      "active" : true,
+      "properties" : {
+        "url" : {
+          "id" : "7e91.3ce5c141-9fcc-11f1-a40e-0ef261d42093",
+          "type" : "PAGE",
+          "partId" : "A547.69533",
+          "stringValue" : ""
+        }
+      },
+      "type" : "CONTENTTAG"
+    }
+  },
+  "objectTags" : {
+    "object.test_color" : {
+      "id" : "7e91.3ce7b45b-9fcc-11f1-a40e-0ef261d42093",
+      "name" : "object.test_color",
+      "construct" : {
+        "id" : "994d.d84f0a55-37ad-11ef-a38e-0242ac110002",
+        "hash" : "8bac1cc142ebabd6fb2004c86c161be9"
+      },
+      "active" : false,
+      "properties" : {
+        "select" : {
+          "id" : "7e91.3ce7c1e7-9fcc-11f1-a40e-0ef261d42093",
+          "type" : "SELECT",
+          "partId" : "994d.4335959a-37b8-11ef-a38e-0242ac110002",
+          "selectedOptions" : [ ],
+          "datasource" : {
+            "id" : "8fb9.230c52b0-37a1-11ef-9fa6-0242ac110002",
+            "hash" : "bd195355346f69c6f8c6d248fe297c91"
+          }
+        }
+      },
+      "type" : "OBJECTTAG",
+      "definition" : {
+        "id" : "994d.ff379678-37b9-11ef-a38e-0242ac110002",
+        "hash" : "6aadee503c67e9649d702c91b7b30d8d"
+      }
+    },
+    "object.test_test2" : {
+      "id" : "7e91.3ce7ec25-9fcc-11f1-a40e-0ef261d42093",
+      "name" : "object.test_test2",
+      "construct" : {
+        "id" : "3821.174e1f5c-3244-11ef-872a-0242ac110002",
+        "hash" : "87968ddcf34c70e68cadf8c5dd7da314"
+      },
+      "active" : false,
+      "properties" : {
+        "content" : {
+          "id" : "7e91.3ce7f95f-9fcc-11f1-a40e-0ef261d42093",
+          "type" : "RICHTEXT",
+          "partId" : "9d1e.2d52d1ec-647c-11ef-87e8-0242ac150003",
+          "stringValue" : ""
+        }
+      },
+      "type" : "OBJECTTAG",
+      "definition" : {
+        "id" : "b067.ea3bcc99-8bca-11ef-bd41-0242ac140002",
+        "hash" : "52505ef7307e96117c1d0b977ac40bab"
+      }
+    },
+    "object.test_text1" : {
+      "id" : "7e91.3ce7d255-9fcc-11f1-a40e-0ef261d42093",
+      "name" : "object.test_text1",
+      "construct" : {
+        "id" : "3821.174e1f5c-3244-11ef-872a-0242ac110002",
+        "hash" : "87968ddcf34c70e68cadf8c5dd7da314"
+      },
+      "active" : false,
+      "properties" : {
+        "content" : {
+          "id" : "7e91.3ce7e091-9fcc-11f1-a40e-0ef261d42093",
+          "type" : "RICHTEXT",
+          "partId" : "9d1e.2d52d1ec-647c-11ef-87e8-0242ac150003",
+          "stringValue" : ""
+        }
+      },
+      "type" : "OBJECTTAG",
+      "definition" : {
+        "id" : "b067.df7c0c55-8bca-11ef-bd41-0242ac140002",
+        "hash" : "a39ddcae8379887fe7bbb7bf7c9eb93f"
+      }
+    }
+  },
+  "customCdate" : 0,
+  "customEdate" : 0,
+  "partiallyLocalized" : false
+}

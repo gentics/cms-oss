@@ -114,6 +114,7 @@
 		<testdb.mariadb.port>33306</testdb.mariadb.port>
 		<testdb.manager.port>38080</testdb.manager.port>
 		<testdb.mariadb.image>mariadb:10.11</testdb.mariadb.image>
+		<testdb.mariadb.maxConnections>500</testdb.mariadb.maxConnections>
 		<testdb.mariadb.user>root</testdb.mariadb.user>
 		<testdb.mariadb.password>testdb</testdb.mariadb.password>
 		<testdb.initdb.script>${maven.multiModuleProjectDirectory}/build/testdb/initdb/01-gcn-testdb-accounts.sql</testdb.initdb.script>
@@ -396,6 +397,7 @@
 											<arg>--binlog-format=ROW</arg>
 											<arg>--log-bin=mysqld-bin</arg>
 											<arg>--max-allowed-packet=67108864</arg>
+											<arg>--max-connections=${testdb.mariadb.maxConnections}</arg>
 										</exec>
 									</cmd>
 									<env>

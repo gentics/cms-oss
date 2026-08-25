@@ -110,11 +110,12 @@
 		<testdb.docker.skip>false</testdb.docker.skip>
 		<testdb.host>localhost</testdb.host>
 		<testdb.pullPolicy>IfNotPresent</testdb.pullPolicy>
-		<testdb.showLogs>testdb-manager</testdb.showLogs>
+		<testdb.showLogs>testdb-mariadb,testdb-manager</testdb.showLogs>
 		<testdb.mariadb.port>33306</testdb.mariadb.port>
 		<testdb.manager.port>38080</testdb.manager.port>
 		<testdb.mariadb.image>mariadb:10.11</testdb.mariadb.image>
 		<testdb.mariadb.user>root</testdb.mariadb.user>
+		<testdb.mariadb.password>testdb</testdb.mariadb.password>
 		<testdb.initdb.script>${maven.multiModuleProjectDirectory}/build/testdb/initdb/01-gcn-testdb-accounts.sql</testdb.initdb.script>
 		<testdb.manager.image>docker.gentics.com/apps/gcn-testdb-manager:master</testdb.manager.image>
 		<testdb.manager.pool.capacity>5</testdb.manager.pool.capacity>
@@ -406,13 +407,8 @@
 										<port>${testdb.manager.port}:${testdb.manager.port}</port>
 									</ports>
 									<wait>
-										<tcp>
-											<mode>mapped</mode>
-											<ports>
-												<port>${testdb.mariadb.port}</port>
-											</ports>
-										</tcp>
-										<time>240000</time>
+										<log>.*port: ${testdb.mariadb.port}  mariadb.org binary distribution.*</log>
+										<time>300000</time>
 									</wait>
 								</run>
 							</image>
@@ -431,13 +427,14 @@
 										<GCN_TESTDB_MANAGER_MYSQL_HOST>${testdb.host}</GCN_TESTDB_MANAGER_MYSQL_HOST>
 										<GCN_TESTDB_MANAGER_MYSQL_PORT>${testdb.mariadb.port}</GCN_TESTDB_MANAGER_MYSQL_PORT>
 										<GCN_TESTDB_MANAGER_MYSQL_USER>${testdb.mariadb.user}</GCN_TESTDB_MANAGER_MYSQL_USER>
+										<GCN_TESTDB_MANAGER_MYSQL_PASSWORD>${testdb.mariadb.password}</GCN_TESTDB_MANAGER_MYSQL_PASSWORD>
 										<GCN_TESTDB_MANAGER_GCNDB_POOL_CAPACITY>${testdb.manager.pool.capacity}</GCN_TESTDB_MANAGER_GCNDB_POOL_CAPACITY>
 										<GCN_TESTDB_MANAGER_GCNDB_LIMIT>${testdb.manager.gcndb.limit}</GCN_TESTDB_MANAGER_GCNDB_LIMIT>
 										<GCN_TESTDB_MANAGER_FILLER_THREADS>${testdb.manager.filler.threads}</GCN_TESTDB_MANAGER_FILLER_THREADS>
 									</env>
 									<wait>
 										<log>.*msg=Listening.*</log>
-										<time>120000</time>
+										<time>180000</time>
 									</wait>
 								</run>
 							</image>

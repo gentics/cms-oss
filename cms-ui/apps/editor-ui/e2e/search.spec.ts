@@ -14,7 +14,7 @@ import {
     navigateToApp,
     NODE_MINIMAL,
     PageImportData,
-    TestSize, waitForResponseFrom,
+    TestSize, wait, waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -163,6 +163,8 @@ test.describe('Search', () => {
             const SEARCH_TERM = 'test';
 
             await searchInput.fill(SEARCH_TERM);
+            // Wait for angular to handle the data in the background
+            await wait(1_000);
 
             const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
                 params: {
@@ -335,6 +337,8 @@ test.describe('Search', () => {
             const SEARCH_TERM = 'test';
 
             await searchInput.fill(SEARCH_TERM);
+            // Wait for angular to handle the data in the background
+            await wait(1_000);
 
             const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 

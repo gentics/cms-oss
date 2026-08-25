@@ -10,6 +10,7 @@ import {
     ENV_E2E_FORCE_REPEATS,
     ENV_E2E_LOCAL_APP,
     ENV_E2E_LOCAL_PLAYWRIGHT,
+    ENV_E2E_TRACE_MODE,
     ENV_SKIP_E2E_LOCAL_APP_LAUNCH,
     isCIEnvironment,
     isEnvBool,
@@ -43,8 +44,6 @@ export function createConfiguration(
      * If we're running it on the CI/Jenkins, we want to test the actual baked in UI from the CMS.
      * Otherwise, we spin up a webserver with the current UI (usually for development or debugging),
      * and run the tests from there.
-     * `hostmachine` is an extra hosts entry in the docker compose setup, which allows the playwright
-     * container/service to access that webserver.
      */
 
     if (!process.env[ENV_E2E_CMS_URL]) {
@@ -60,6 +59,10 @@ export function createConfiguration(
         process.env[ENV_E2E_APP_URL] = (isCI || !useLocalApp)
             ? `${process.env[ENV_E2E_CMS_URL]}${process.env[ENV_E2E_APP_PATH]}`
             : 'http://localhost:4200';
+    }
+
+    if (!process.env[ENV_E2E_TRACE_MODE]) {
+        process.env[ENV_E2E_TRACE_MODE] = isCI ? 'retain-on-first-failure' : 'off';
     }
 
     /**
@@ -79,7 +82,7 @@ export function createConfiguration(
             baseURL: process.env[ENV_E2E_APP_URL],
             /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
             trace: {
-                mode: isCI ? 'retain-on-first-failure' : 'off',
+                mode: process.env[ENV_E2E_TRACE_MODE],
                 attachments: true,
                 screenshots: false,
                 snapshots: true,
@@ -108,7 +111,7 @@ export function createConfiguration(
          * Repeat the tests multiple times to make sure the tests aren't flaky.
          * Also allow retries to see if they are entirely broken or just flaky.
          */
-        retries: 2,
+        retries: forceRepeats ? 0 : 2,
         repeatEach: forceRepeats ? 3 : 0,
         /*
          * Making sure no accidental `only` runs are being run on CI which would skip all
@@ -165,10 +168,10 @@ export function createConfiguration(
                     },
                 },
             },
-            {
-                name: 'firefox',
-                use: { ...devices['Desktop Firefox'] },
-            },
+            // {
+            //     name: 'firefox',
+            //     use: { ...devices['Desktop Firefox'] },
+            // },
         ],
     });
 }

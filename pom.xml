@@ -116,7 +116,7 @@
 		<testdb.mariadb.image>mariadb:10.11</testdb.mariadb.image>
 		<testdb.mariadb.user>root</testdb.mariadb.user>
 		<testdb.initdb.script>${maven.multiModuleProjectDirectory}/build/testdb/initdb/01-gcn-testdb-accounts.sql</testdb.initdb.script>
-		<testdb.manager.image>docker.gentics.com/apps/gcn-testdb-manager:master</testdb.manager.image>>
+		<testdb.manager.image>docker.gentics.com/apps/gcn-testdb-manager:master</testdb.manager.image>
 		<testdb.manager.pool.capacity>5</testdb.manager.pool.capacity>
 		<testdb.manager.gcndb.limit>40</testdb.manager.gcndb.limit>
 		<testdb.manager.filler.threads>4</testdb.manager.filler.threads>

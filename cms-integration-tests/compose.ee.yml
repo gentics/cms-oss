@@ -133,6 +133,3 @@ services:
     extends:
       file: compose.yml
       service: playwright
-
-    extra_hosts:
-      - hostmachine:host-gateway

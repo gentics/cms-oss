@@ -8,6 +8,7 @@ import {
     LocalizationType,
     Node,
     NodeFeature,
+    NodeFeatureResponse,
     NodePageLanguageCode,
     NodeUrlMode,
     PageLocalizeRequest,
@@ -312,15 +313,30 @@ test.describe('Multichannelling', () => {
         let testPage: CMSPage;
 
         test.beforeEach(async ({ page }) => {
-            // Enable the feature
+            // Enable the feature globally
+            await IMPORTER.setupFeatures({
+                [Feature.MULTICHANNELLING]: true,
+                [Feature.PARTIAL_MULTICHANNELLING]: true,
+            });
+            // Enable it in the nodes as well
             await IMPORTER.client.node.activateFeature(IMPORTER.get(NODE_FULL).id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
             await IMPORTER.client.node.activateFeature(channelNode.id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
 
             testPage = IMPORTER.get(PAGE_FOUR);
 
+            const mcCheckReq = waitForResponseFrom(page, 'GET', `/rest/admin/features/${Feature.MULTICHANNELLING}`);
+            const channelFeatReq = waitForResponseFrom(page, 'GET', `/rest/node/features/${channelNode.id}`);
+
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
+
+            await mcCheckReq;
+
             await selectNode(page, channelNode.id);
+
+            const channelFeatRes = await channelFeatReq;
+            const channelFeatures = (await channelFeatRes.json()) as NodeFeatureResponse;
+            expect(channelFeatures.features).toContain(NodeFeature.PARTIAL_MULTICHANNELLING);
         });
 
         test('should be possible to localize a page partially', {
@@ -362,6 +378,7 @@ test.describe('Multichannelling', () => {
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, testPage.id);
+            await expect(item).toBeVisible();
             await itemAction(item, 'localize');
 
             const modal = page.locator('gtx-modal-dialog');

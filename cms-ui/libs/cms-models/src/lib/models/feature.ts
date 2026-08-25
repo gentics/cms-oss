@@ -36,6 +36,7 @@ export enum Feature {
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
     CONTENT_STAGING = 'content_staging',
     MULTICHANNELLING = 'multichannelling',
+    PARTIAL_MULTICHANNELLING = 'partial_multichannelling',
     MESH_CR = 'mesh_contentrepository',
     OBJECT_TAG_SYNC = 'objtag_sync',
     LINK_CHECKER = 'link_checker',

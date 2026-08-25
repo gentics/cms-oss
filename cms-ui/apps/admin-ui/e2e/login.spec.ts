@@ -1,3 +1,4 @@
+/* eslint-disable @stylistic/quote-props */
 import { AccessControlledType, Feature, GcmsPermission, KeycloakConfiguration, Response, ResponseCode, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
@@ -11,9 +12,9 @@ import {
     loginWithForm,
     matchesUrl,
     navigateToApp,
-    NODE_MINIMAL,
     TestSize,
     UserImportData,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, test } from '@playwright/test';
@@ -150,8 +151,15 @@ test.describe('Login', () => {
         });
 
         test('should be able to login with SSO', async ({ page }) => {
+            const ssoLogin = waitForResponseFrom(page, 'GET', '/rest/auth/ssologin');
             await navigateToApp(page, '/', true);
             await loginWithForm(page, KEYCLOAK_LOGIN);
+
+            // The SSO endpoint is fantastic and returns a 200 in plain text with some kind of status.
+            // If it's empty, it usually means it worked, but we check for an error explicitly.
+            const ssoRes = await ssoLogin;
+            expect(await ssoRes.text()).not.toEqual('NOTFOUND');
+
             await expect(page.locator('gtx-dashboard')).toBeVisible();
         });
 
@@ -180,11 +188,17 @@ test.describe('Login', () => {
 
             await navigateToApp(page, '', true);
 
+            const ssoLogin = waitForResponseFrom(page, 'GET', '/rest/auth/ssologin');
             const ssoButton = page.locator('gtx-single-sign-on [data-action="sso-login"]');
             await expect(ssoButton).toBeVisible();
             await ssoButton.click();
 
             await loginWithForm(page, KEYCLOAK_LOGIN);
+
+            // The SSO endpoint is fantastic and returns a 200 in plain text with some kind of status.
+            // If it's empty, it usually means it worked, but we check for an error explicitly.
+            const ssoRes = await ssoLogin;
+            expect(await ssoRes.text()).not.toEqual('NOTFOUND');
             await expect(page.locator('gtx-dashboard')).toBeVisible();
         });
 
@@ -234,30 +248,36 @@ test.describe('Login', () => {
             await expect(err).toHaveAttribute('data-value', 'shared.keycloak_invalid_config');
         });
 
-        test('should handle invalid keycloak realm correctly', async ({ page }) => {
-            await page.route((url) => matchesUrl(url, '/rest/keycloak'), async (route, req) => {
-                if (req.method() !== 'GET') {
-                    return route.continue();
-                }
+        /*
+         * Removed/Disabled, since this can't properly work, as we'd need to be able to ping/reach
+         * the keycloak instance from the browser, but everything is getting blocked by CORS.
+         * Therefore this test can't ever be realistically be tested, as we'd have to change the
+         * Proxy settings to explicitly allow that, which doesn't happen in real scenarios.
+         */
+        // test('should handle invalid keycloak realm correctly', async ({ page }) => {
+        //     await page.route((url) => matchesUrl(url, '/rest/keycloak'), async (route, req) => {
+        //         if (req.method() !== 'GET') {
+        //             return route.continue();
+        //         }
 
-                const original = await route.fetch();
-                const data = await original.json() as KeycloakConfiguration;
+        //         const original = await route.fetch();
+        //         const data = await original.json() as KeycloakConfiguration;
 
-                return route.fulfill({
-                    json: {
-                        ...data,
-                        realm: 'dummy',
-                    },
-                    status: 200,
-                });
-            });
+        //         return route.fulfill({
+        //             json: {
+        //                 ...data,
+        //                 realm: 'dummy',
+        //             },
+        //             status: 200,
+        //         });
+        //     });
 
-            await navigateToApp(page, '', true);
+        //     await navigateToApp(page, '', true);
 
-            const err = page.locator('gtx-login .keycloak-error');
-            await expect(err).toBeVisible();
-            await expect(err).toHaveAttribute('data-value', 'shared.keycloak_not_available');
-        });
+        //     const err = page.locator('gtx-login .keycloak-error');
+        //     await expect(err).toBeVisible();
+        //     await expect(err).toHaveAttribute('data-value', 'shared.keycloak_not_available');
+        // });
 
         test('should handle unreachable keycloak correctly', async ({ page }) => {
             await page.route((url) => matchesUrl(url, '/rest/keycloak'), (route, req) => {

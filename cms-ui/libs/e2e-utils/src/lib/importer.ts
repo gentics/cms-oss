@@ -282,6 +282,13 @@ export class EntityImporter {
         // Reset the entity-map
         this.entityMap = {};
 
+        // Edge-Cases: When multichannelling was used to create a channel, and we reset the config,
+        // the Feature is disabled, and therefore channels aren't listed in the list anymore.
+        // Since we can't delete the channels then, we also can't delete the master nodes, making
+        // the cleanup impossible.
+        // So we enable it here temporarily to solve this.
+        await this.setFeatureEnabled(Feature.MULTICHANNELLING, true);
+
         const nodes = (await this.client.node.list().send()).items || [];
         let deleteQueue = nodes.slice();
         let oldDeleteLen = -1;
@@ -323,10 +330,39 @@ export class EntityImporter {
             throw new Error(`Could not clean up all nodes: ${deleteQueue.map((node) => node.id).join(', ')}`);
         }
 
+        // Reset to initial config
+        await this.client.admin.reloadConfiguration().send();
+
         // Templates have to be cleaned up after all nodes have been deleted,
         // as are usually referenced in pages from the node before, and we would
         // not be able to delete them (as they are still in use).
         await this.cleanupTemplates();
+    }
+
+    private async setFeatureEnabled(feature: Feature, enabled: boolean): Promise<void> {
+        try {
+            // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
+            // Should not be used aside from e2e tests, as these might have weird side-effects.
+            await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/feature/${feature}`, null, {
+                enabled,
+            }).send();
+        } catch (err) {
+            if (
+                err instanceof GCMSRestClientRequestError
+                && (
+                    err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
+                    || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
+                    // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
+                    || (
+                        err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
+                        && !enabled
+                    )
+                )
+            ) {
+                return;
+            }
+            throw err;
+        }
     }
 
     /** Apply global features to the CMS */
@@ -372,28 +408,7 @@ export class EntityImporter {
 
             // If it's a global feature
             if (GLOBAL_FEATURES.includes(feature as any)) {
-                try {
-                    // Undocumented, internal, testing endpoint, to dynamically en-/disable features.
-                    // Should not be used aside from e2e tests, as these might have weird side-effects.
-                    await this.client.executeMappedJsonRequest(RequestMethod.POST, `/admin/feature/${feature}`, null, {
-                        enabled,
-                    }).send();
-                } catch (err) {
-                    if (err instanceof GCMSRestClientRequestError
-                      && (
-                          err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already deactivated`
-                          || err.data?.responseInfo?.responseMessage === `Feature #${feature} has been already activated`
-                          // In case we want to (make sure) to have a feature deactivated, but it isn't licensed, then we can ignore it
-                          || (
-                              err.data?.responseInfo?.responseCode === ResponseCode.NOT_LICENSED
-                              && !enabled
-                          )
-                      )
-                    ) {
-                        return;
-                    }
-                    throw err;
-                }
+                await this.setFeatureEnabled(feature as Feature, enabled);
             }
 
             // If it's a node specific feature

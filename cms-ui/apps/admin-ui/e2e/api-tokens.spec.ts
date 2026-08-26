@@ -135,9 +135,9 @@ test.describe('Api Tokens', () => {
 
         await submitBtn.click();
 
-        await expect(page.locator('gtx-api-copy-token-modal')).toBeVisible();
+        await expect(page.locator('gtx-copy-token-modal')).toBeVisible();
         await expect(findNotification(page, 'api-token-create-success')).toBeVisible();
-        await expect(page.locator('gtx-api-copy-token-modal').locator('.content')).toHaveText(/\S+/);
+        await expect(page.locator('gtx-copy-token-modal').locator('.content')).toHaveText(/\S+/);
     });
 
     test('can delete Api Tokens', async ({ page }) => {
@@ -150,6 +150,8 @@ test.describe('Api Tokens', () => {
 
         const row = table.locator('.data-row').first();
 
+        const rowId = await row.getAttribute('data-id');
+
         const deleteButton = findTableAction(row, 'delete');
 
         await deleteButton.click();
@@ -160,7 +162,7 @@ test.describe('Api Tokens', () => {
 
         await expect(findNotification(page, 'api-token-delete-success')).toBeVisible();
 
-        await expect(row).not.toBeAttached();
+        await expect(table.locator(`.data-row[data-id="${rowId}"]`)).not.toBeAttached();
     });
 
     test('can delete multiple Api Tokens', async ({ page }) => {

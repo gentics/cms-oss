@@ -1,34 +1,16 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AccessControlledType, ContentRepository, GcmsPermission, LoginResponse, Variant } from '@gentics/cms-models';
-import { GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
+import { AccessControlledType, ContentRepository, GcmsPermission, LoginResponse } from '@gentics/cms-models';
 import {
-    clickModalAction,
     clickTableRow,
     CONTENT_REPOSITORY_MESH,
     EntityImporter,
-    expandTrableRow,
     findTableAction,
     findTableRowById,
-    findTableRowByText,
-    findTrableRowById,
-    findTrableRowByText,
-    FOLDER_A,
-    FOLDER_B,
-    isVariant,
     loginWithForm,
     matchRequest,
-    MESH_SCHEMA_PREFIX,
     navigateToApp,
-    NODE_MINIMAL,
-    SCHEDULE_PUBLISHER,
     selectTab,
-    selectTableRow,
     TestSize,
-    MESH_LOGIN,
-    findNotification,
-    createClient,
-    createMeshProxy,
-    PlaywrightMeshDriver,
     GroupImportData,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
@@ -36,19 +18,13 @@ import {
     UserImportData,
     IMPORT_TYPE_USER,
     ImportPermissions,
-    createMeshClient,
 } from '@gentics/e2e-utils';
-import { UserUpdateRequest } from '@gentics/mesh-models';
 import { expect, Locator, Page, test } from '@playwright/test';
-import { AUTH } from './common';
+import { ADMIN } from './common';
 import {
-    findEntityTableActionButton,
-    loginWithCR,
-    logoutMeshManagement,
     navigateToModule,
     setGtxDateFromXpath,
 } from './helpers';
-import { MeshRestClient } from '@gentics/mesh-rest-client';
 import { cloneWithSymbols } from '@gentics/common';
 
 // Selector constants
@@ -59,31 +35,7 @@ const SELECTORS = {
         MANAGEMENT: 'gtx-mesh-management',
         TAGMAP: 'gtx-tag-map-entry-table',
     },
-    // PROJECT: {
-    //     TABLE: 'gtx-mesh-project-table',
-    //     MODAL: 'gtx-mesh-project-modal',
-    //     SCHEMA_PICKER: 'gtx-mesh-schema-picker .select-button',
-    //     SCHEMA_MODAL: 'gtx-mesh-select-schema-modal',
-    //     NAME_INPUT: 'gtx-input[formcontrolname="name"] input[type="text"]',
-    // },
-    // LOGIN_FORM: {
-    //     USERNAME: 'gtx-input[formcontrolname="username"] input',
-    //     PASSWORD: 'gtx-input[formcontrolname="password"] input',
-    //     NEW_PASSWORD: 'gtx-input[formcontrolname="newPassword"] input',
-    //     SUBMIT: 'button[type="submit"]:not([disabled])',
-    // },
-    // FORM: {
-    //     PASSWORD_CHECKBOX: '.password-checkbox label',
-    //     PASSWORD_INPUTS: '[data-control="password"] input',
-    //     FORCE_PASSWORD: '[data-control="forcePasswordChange"] label',
-    // },
-    // TAGMAP: {
-    //     CREATE_BUTTON: 'gtx-button[data-action=create] button',
-    // },
 } as const;
-
-// const CLASS_ACTIVE = /active/;
-// const CLASS_GRANTED = /granted/;
 
 const BASE_GROUP: GroupImportData = {
     [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
@@ -201,7 +153,7 @@ test.describe('Mesh User Api Token', () => {
         const row = await findTableRowById(master, testCr.id);
         const userTokenModal = await openUserTokenModal(page, row);
 
-        await userTokenModal.locator('.button-event-wrapper button[data-action="primary"]').first().click();
+        await userTokenModal.locator('button[data-action="primary"]').first().click();
 
         const createTokenModal = page.locator('gtx-create-mesh-user-token-modal');
 
@@ -229,13 +181,13 @@ test.describe('Mesh User Api Token', () => {
 
         await submitBtn.click();
 
-        await expect(page.locator('gtx-mesh-copy-token-modal')).toBeVisible();
-        await expect(page.locator('gtx-mesh-copy-token-modal gtx-copy-value').locator('.content')).toHaveText(/\S+/);
+        await expect(page.locator('gtx-copy-token-modal')).toBeVisible();
+        await expect(page.locator('gtx-copy-token-modal gtx-copy-value').locator('.content')).toHaveText(/\S+/);
 
-        await page.locator('gtx-mesh-copy-token-modal button[data-action="primary"]').click();
+        await page.locator('gtx-copy-token-modal button[data-action="primary"]').click();
         const table = page.locator('gtx-mesh-user-token-modal').locator('gtx-mesh-user-token-table');
 
-        await expect(table.locator('div[data-id="name"]').filter({ hasText: 'Test' })).toBeVisible();
+        await expect(table.locator('[data-id="name"]').filter({ hasText: 'Test' })).toBeVisible();
     });
 
     test('should be possible to delete mesh tokens from user', {
@@ -261,9 +213,9 @@ test.describe('Mesh User Api Token', () => {
 
         await submitBtn.click();
 
-        await expect(page.locator('gtx-mesh-copy-token-modal')).toBeVisible();
+        await expect(page.locator('gtx-copy-token-modal')).toBeVisible();
 
-        await page.locator('gtx-mesh-copy-token-modal .modal-footer button[data-action="primary"]').first().click();
+        await page.locator('gtx-copy-token-modal .modal-footer button[data-action="primary"]').first().click();
 
         // delete entry
         const table = page.locator('gtx-mesh-user-token-modal').locator('gtx-mesh-user-token-table');
@@ -271,6 +223,8 @@ test.describe('Mesh User Api Token', () => {
         await expect(table).toBeVisible();
 
         const firstRow = table.locator('.data-row').first();
+
+        const rowId = await firstRow.getAttribute('data-id');
 
         const deleteButton = findTableAction(firstRow, 'delete');
 
@@ -280,7 +234,7 @@ test.describe('Mesh User Api Token', () => {
 
         await page.locator('gtx-confirm-delete-modal gtx-button[data-action="confirm"]').click();
 
-        await expect(firstRow).not.toBeAttached();
+        await expect(table.locator(`.data-row[data-id="${rowId}"]`)).not.toBeAttached();
     });
 
     test('should be possible to delete multiple mesh tokens from user', {
@@ -307,20 +261,20 @@ test.describe('Mesh User Api Token', () => {
 
             await submitBtn.click();
 
-            await expect(page.locator('gtx-mesh-copy-token-modal')).toBeVisible();
+            await expect(page.locator('gtx-copy-token-modal')).toBeVisible();
 
-            await page.locator('gtx-mesh-copy-token-modal .modal-footer button[data-action="primary"]').first().click();
+            await page.locator('gtx-copy-token-modal .modal-footer button[data-action="primary"]').first().click();
         }
 
         const table = page.locator('gtx-mesh-user-token-modal').locator('gtx-mesh-user-token-table');
 
         await expect(table).toBeVisible();
 
-        const firstRow = table.locator('.header-row');
+        const headerRow = table.locator('.header-row');
 
-        await firstRow.locator('gtx-checkbox').click();
+        await headerRow.locator('gtx-checkbox').click();
 
-        await findTableAction(firstRow, 'delete').click();
+        await findTableAction(headerRow, 'delete').click();
 
         await expect(page.locator('gtx-confirm-delete-modal')).toBeVisible();
 
@@ -340,9 +294,8 @@ async function openUserTokenModal(page: Page, row: Locator) {
     const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
     await management.waitFor({ state: 'visible' });
 
-    await management.locator('gtx-mesh-login-gate .login button[data-action="primary"]').last().click();
-    await management.locator('gtx-mesh-login-gate form input[type="text"]').fill('admin');
-    await management.locator('gtx-mesh-login-gate form input[type="password"]').fill('admin');
+    await management.locator('gtx-mesh-login-gate form input[type="text"]').fill(ADMIN.username);
+    await management.locator('gtx-mesh-login-gate form input[type="password"]').fill(ADMIN.password);
     await management.locator('gtx-mesh-login-gate form gtx-button.form-login-button').click();
 
     const managementTabs = management.locator('gtx-grouped-tabs');

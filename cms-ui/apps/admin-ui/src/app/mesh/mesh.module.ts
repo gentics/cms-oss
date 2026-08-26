@@ -4,7 +4,6 @@ import { NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
-    CopyTokenModal,
     CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,
@@ -78,7 +77,6 @@ import {
 } from './providers';
 
 const COMPONENTS: Type<any>[] = [
-    CopyTokenModal,
     CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,

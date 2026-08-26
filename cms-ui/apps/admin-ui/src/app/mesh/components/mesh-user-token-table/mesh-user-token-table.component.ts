@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, signal } from '@angular/core';
-import { I18nService } from '@gentics/cms-components';
+import { CopyTokenModal, I18nService } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { User } from '@gentics/mesh-models';
+import { User, UserTokenData } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableColumn, TableRow } from '@gentics/ui-core';
 import { map, Observable } from 'rxjs';
 import { BaseEntityTableComponent } from '../../../shared';
@@ -12,17 +12,8 @@ import {
     MeshUserTokenTableLoaderOptions,
     MeshUserTokenTableLoaderService,
 } from '../../providers/mesh-user-token-table-loader/mesh-user-token-table-loader.service';
-import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 import { CreateMeshUserTokenModal } from '../create-mesh-user-token-modal/create-mesh-user-token-modal.component';
-
-interface MeshUserTokenData {
-    uuid: string;
-    name: string;
-    issued: string;
-    lastUsed: string;
-    expires: string;
-    valid: boolean;
-}
+import { getUserDisplayName } from '../../utils/naming';
 
 @Component({
     selector: 'gtx-mesh-user-token-table',
@@ -31,7 +22,7 @@ interface MeshUserTokenData {
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class MeshUserTokenTableComponent extends BaseEntityTableComponent<MeshUserTokenData, MeshUserTokenBO, MeshUserTokenTableLoaderOptions> {
+export class MeshUserTokenTableComponent extends BaseEntityTableComponent<UserTokenData, MeshUserTokenBO, MeshUserTokenTableLoaderOptions> {
     @Input({ required: true })
     public user: User;
 
@@ -123,8 +114,12 @@ export class MeshUserTokenTableComponent extends BaseEntityTableComponent<MeshUs
             closeOnEscape: false,
             closeOnOverlayClick: false,
         }, {
-            user: this.user,
+            title: this.i18n.instant('mesh.api_token_from', {
+                user: getUserDisplayName(this.user),
+            }),
             token: result.token,
+            successMessage: this.i18n.instant('mesh.copy_token_success'),
+            errorMessage: this.i18n.instant('mesh.copy_token_error'),
         });
 
         await copyModal.open();

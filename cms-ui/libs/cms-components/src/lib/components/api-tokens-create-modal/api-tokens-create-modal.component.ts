@@ -13,9 +13,10 @@ import { I18nNotificationService } from '../../providers';
     standalone: false,
 })
 export class ApiTokensCreateModalComponent extends BaseModal<ApiTokenCreateResponse> {
+
     public readonly loading = signal<boolean>(false);
-    public formvalid = false;
     public apiTokenNames: Array<string>;
+
     public control: FormControl<EditableApiToken> = new FormControl({
         name: '',
         expires: null,
@@ -33,16 +34,12 @@ export class ApiTokensCreateModalComponent extends BaseModal<ApiTokenCreateRespo
         this.addApiToken();
     }
 
-    public isFormVaid(valid: boolean): void {
-        this.formvalid = valid;
-    }
-
     private addApiToken(): void {
-        const { name, expires } = this.control.getRawValue();
+        const { name, expires } = this.control.value;
 
         const submitData = {
             name,
-            ...(expires !== null ? { expires: expires } : {}),
+            ...(expires != null ? { expires: expires } : {}),
         };
 
         this.loading.set(true);

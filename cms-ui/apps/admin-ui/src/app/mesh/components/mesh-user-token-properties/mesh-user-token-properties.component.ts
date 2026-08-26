@@ -19,6 +19,9 @@ export interface MeshUserTokenFormData extends Omit<EditableUserTokenData, 'expi
     standalone: false,
 })
 export class MeshUserTokenPropertiesComponent extends BaseFormPropertiesComponent<MeshUserTokenFormData> {
+
+    public readonly NOW = new Date();
+
     protected createForm(): FormGroup<FormProperties<MeshUserTokenFormData>> {
         return new FormGroup<FormProperties<MeshUserTokenFormData>>({
             name: new FormControl(this.safeValue('name'), Validators.required),

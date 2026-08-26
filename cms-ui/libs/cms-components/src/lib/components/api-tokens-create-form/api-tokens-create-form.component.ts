@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { EditableApiToken } from '@gentics/cms-models';
 import { BaseFormPropertiesComponent, FormProperties, futureDateValidator, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
@@ -15,35 +15,16 @@ import { BaseFormPropertiesComponent, FormProperties, futureDateValidator, gener
     standalone: false,
 })
 export class ApiTokensCreateFormComponent extends BaseFormPropertiesComponent<EditableApiToken> {
-    @Input()
-    control: FormControl<EditableApiToken>;
+
+    public readonly NOW = new Date();
 
     @Input()
     readonly apiTokenNames: Array<string>;
-
-    @Output()
-    validChange = new EventEmitter<boolean>();
 
     constructor(
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-    }
-
-    override ngOnInit(): void {
-        super.ngOnInit();
-
-        this.subscriptions.push(
-            this.form.statusChanges.subscribe(() => {
-                this.validChange.emit(this.form.valid);
-            }),
-        );
-
-        this.form.valueChanges.subscribe((value) => {
-            this.control.setValue(value as EditableApiToken, {
-                emitEvent: false,
-            });
-        });
     }
 
     protected override createForm(): FormGroup<FormProperties<EditableApiToken>> {

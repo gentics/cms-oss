@@ -1,25 +1,28 @@
-<gtx-api-token-properties [formControl]="control" />
 <div class="modal-content">
     <h2>{{ 'api_token.new' | gtxI18n }}</h2>
+
     <gtx-api-tokens-create-form
-      [apiTokenNames]="apiTokenNames"
-      [control]="control"
-      (validChange)="isFormVaid($event)"
+        [apiTokenNames]="apiTokenNames"
+        [formControl]="control"
     ></gtx-api-tokens-create-form>
 </div>
+
 <div class="modal-footer">
     <gtx-button
-      type="primary"
-      [disabled]="!formvalid || loading()"
-      (click)="saveForm()"
-      data-action="confirm"
-      >
-      {{ 'modal.create_button' | gtxI18n }}
-    </gtx-button>
-  <gtx-button
-    type="secondary" flat
-    (click)="cancelFn()"
+        type="primary"
+        [disabled]="!control.valid || loading()"
+        data-action="confirm"
+        (click)="saveForm()"
     >
-      {{ 'common.cancel_button'  | gtxI18n }}
-  </gtx-button>
+        {{ 'modal.create_button' | gtxI18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button'  | gtxI18n }}
+    </gtx-button>
 </div>

@@ -1,0 +1,32 @@
+<div class="modal-title">
+    <h5>{{ 'mesh.create_user_token_title' | gtxI18n: { user: user | gtxMeshUsername } }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-progress-bar [active]="loading" />
+
+    <gtx-mesh-user-token-properties
+        [formControl]="control"
+    />
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        flat
+        data-action="confirm"
+        [disabled]="!control.valid"
+        (click)="createToken()"
+    >
+        {{ 'modal.create_button' | gtxI18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | gtxI18n }}
+    </gtx-button>
+</div>

@@ -4,6 +4,7 @@ import { forkJoin, map } from 'rxjs';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { I18nNotificationService, I18nService } from '../../providers';
 import { ApiTokensCreateModalComponent } from '../api-tokens-create-modal/api-tokens-create-modal.component';
+import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 
 interface ApiTokenBo {
     tmpId: string;
@@ -136,16 +137,24 @@ export class ApiTokensTableComponent implements OnInit {
         this.onShowApiTokenDeleteModal(tokenIds);
     }
 
-    private onShowApiTokenCreateModal(): void {
-        this.modalService.fromComponent(ApiTokensCreateModalComponent, {
-            onClose: () => {
-                this.refreshData();
-            },
-        }, {
+    private async onShowApiTokenCreateModal(): Promise<void> {
+        const modal = await this.modalService.fromComponent(ApiTokensCreateModalComponent, {}, {
             apiTokenNames: this.rows().map((e) => e.item.name),
-        })
-            .then((modal) => modal.open())
-            .catch((error) => console.log(error));
+        });
+
+        const response = await modal.open();
+
+        if (!response) {
+            return;
+        }
+
+        this.refreshData();
+
+        const copyModal = await this.modalService.fromComponent(CopyTokenModal, {}, {
+            token: response.token,
+        });
+
+        await copyModal.open();
     }
 
     private async onShowApiTokenDeleteModal(ids: Array<string>): Promise<void> {

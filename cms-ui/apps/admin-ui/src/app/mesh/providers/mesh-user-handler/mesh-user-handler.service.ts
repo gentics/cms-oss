@@ -1,6 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
-import { ErrorHandler } from '@admin-ui/core';
+import { Injectable } from '@angular/core';
+import { I18nNotificationService } from '@gentics/cms-components';
+import {
+    EditableUserTokenData,
+    ListResponse,
+    PagingOptions,
+    UserCreateRequest,
+    UserListOptions,
+    UserListResponse,
+    UserLoadOptions,
+    UserResponse,
+    UserTokenResponse,
+    UserUpdateRequest,
+} from '@gentics/mesh-models';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '../../../common';
+import { ErrorHandler } from '../../../core';
+import { getUserDisplayName, toPermissionArray } from '../../../mesh/utils';
 import {
     EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
@@ -9,21 +25,8 @@ import {
     MBO_TYPE,
     MeshType,
     MeshUserBO,
-} from '@admin-ui/mesh/common';
-import { getUserDisplayName, toPermissionArray } from '@admin-ui/mesh/utils';
-import { Injectable } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
-import {
-    ListResponse,
-    UserAPITokenResponse,
-    UserCreateRequest,
-    UserListOptions,
-    UserListResponse,
-    UserLoadOptions,
-    UserResponse,
-    UserUpdateRequest,
-} from '@gentics/mesh-models';
-import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+    MeshUserTokenBO,
+} from '../../common';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
 
 @Injectable()
@@ -150,10 +153,38 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
         });
     }
 
-    public async createAPIToken(uuid: string): Promise<UserAPITokenResponse> {
+    public async listTokens(uuid: string, options?: PagingOptions): Promise<ListResponse<MeshUserTokenBO>> {
         try {
-            const res = await this.mesh.users.createAPIToken(uuid).send();
+            const res = await this.mesh.users.listTokens(uuid, options).send();
+            const mapped: MeshUserTokenBO[] = res.data.map((token) => ({
+                [BO_DISPLAY_NAME]: token.name,
+                [BO_ID]: token.uuid,
+                [BO_PERMISSIONS]: [],
+                ...token,
+            }));
+
+            return {
+                // eslint-disable-next-line @typescript-eslint/naming-convention, no-underscore-dangle
+                _metainfo: res._metainfo,
+                data: mapped,
+            };
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async createToken(uuid: string, data: EditableUserTokenData): Promise<UserTokenResponse> {
+        try {
+            const res = await this.mesh.users.createToken(uuid, data).send();
             return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async deleteToken(uuid: string, tokenUuid: string): Promise<void> {
+        try {
+            await this.mesh.users.deleteToken(uuid, tokenUuid).send();
         } catch (err) {
             this.handleError(err);
         }

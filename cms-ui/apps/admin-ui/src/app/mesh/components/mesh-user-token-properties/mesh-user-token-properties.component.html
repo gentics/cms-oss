@@ -1,18 +1,20 @@
-<form [formGroup]="form">
-    <div class="flex-row row">
+@if (form) {
+    <form [formGroup]="form" class="flex-row">
         <gtx-input
             class="columns small-12"
-            [label]="('common.name' | gtxI18n) + ' *'"
-            [required]="true"
             formControlName="name"
-        ></gtx-input>
+            [label]="('common.name' | gtxI18n) + '*'"
+            [required]="true"
+        />
+
         <gtx-date-time-picker
             class="columns small-12"
             formControlName="expires"
-            [label]="'api_token.expires_at' | gtxI18n"
+            [label]="'mesh.token_expires' | gtxI18n"
             [displayTime]="false"
             [selectYear]="true"
             [clearable]="true"
+            [min]="NOW"
         />
-    </div>
-</form>
+    </form>
+}

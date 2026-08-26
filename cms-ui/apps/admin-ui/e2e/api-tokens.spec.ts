@@ -16,9 +16,10 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import { cloneWithSymbols } from '@gentics/common';
 import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import { setGtxDateFromXpath } from './helpers';
 
 const API_MODAL = 'gtx-api-tokens-modal';
 const API_CREATE_MODAL = 'gtx-api-tokens-create-modal';
@@ -120,29 +121,23 @@ test.describe('Api Tokens', () => {
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
-        const dateInput = form.locator('input[type="date"]');
+        const dateInput = form.locator('gtx-date-time-picker');
 
         // fill with date from yesterday
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        await dateInput.fill(yesterday.toISOString().split('T')[0]);
+        await setGtxDateFromXpath(page, dateInput, 'xpath=preceding-sibling::td[1]');
 
         await expect(submitBtn.locator('button')).toBeDisabled();
 
         // fill with date from tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        await dateInput.fill(tomorrow.toISOString().split('T')[0]);
+        await setGtxDateFromXpath(page, dateInput, 'xpath=following-sibling::td[2]');
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
         await submitBtn.click();
 
-        await expect(page.locator('.success-message')).toBeVisible();
+        await expect(page.locator('gtx-api-copy-token-modal')).toBeVisible();
         await expect(findNotification(page, 'api-token-create-success')).toBeVisible();
-        await expect(page.locator('.success-message').locator('.content')).toHaveText(/\S+/);
+        await expect(page.locator('gtx-api-copy-token-modal').locator('.content')).toHaveText(/\S+/);
     });
 
     test('can delete Api Tokens', async ({ page }) => {

@@ -51,7 +51,7 @@ export class ApiTokensCreateFormComponent extends BaseFormPropertiesComponent<Ed
             name: new FormControl(this.safeValue('name'), {
                 validators: [Validators.required, this.uniqueNameValidator],
             }),
-            expires: new FormControl<string | null>(null, {
+            expires: new FormControl(this.safeValue('expires'), {
                 validators: [futureDateValidator],
             }),
         });

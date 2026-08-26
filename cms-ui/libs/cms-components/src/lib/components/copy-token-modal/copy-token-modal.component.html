@@ -1,0 +1,21 @@
+<div class="modal-title">
+    <h5>{{ 'api_token.token_created' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-copy-value
+        [label]="'mesh.api_token' | gtxI18n"
+        [value]="token"
+        (valueCopy)="handleCopy($event)"
+    ></gtx-copy-value>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn()"
+    >
+        {{ 'common.close_button' | gtxI18n }}
+    </gtx-button>
+</div>

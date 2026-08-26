@@ -1,35 +1,23 @@
-import { MeshUserBO } from '../../common/mesh-business-objects';
-import { getUserDisplayName } from '../../utils/naming';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
-import { User, UserReference } from '@gentics/mesh-models';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { I18nNotificationService } from '../../providers';
 
 @Component({
-    selector: 'gtx-mesh-copy-token-modal',
+    selector: 'gtx-api-copy-token-modal',
     templateUrl: './copy-token-modal.component.html',
     styleUrls: ['./copy-token-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class CopyTokenModal extends BaseModal<void> implements OnInit {
+export class CopyTokenModal extends BaseModal<void> {
 
     @Input()
     public token: string;
-
-    @Input()
-    public user: UserReference | User | MeshUserBO;
-
-    public displayName: string;
 
     constructor(
         protected notification: I18nNotificationService,
     ) {
         super();
-    }
-
-    ngOnInit(): void {
-        this.displayName = getUserDisplayName(this.user);
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -39,7 +27,6 @@ export class CopyTokenModal extends BaseModal<void> implements OnInit {
                 type: 'alert',
                 message: 'mesh.copy_token_error',
             });
-            console.error(error);
             return;
         }
 

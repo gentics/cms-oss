@@ -212,11 +212,7 @@ export function futureDateValidator(control: AbstractControl): ValidationErrors 
         return null;
     }
 
-    const selected = new Date(control.value);
-    selected.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return selected > today ? null : { futureDate: true };
+    return new Date(control.value * 1000) > new Date()
+        ? null
+        : { futureDate: true };
 };

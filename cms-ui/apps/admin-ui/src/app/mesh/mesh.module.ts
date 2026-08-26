@@ -1,10 +1,11 @@
-import { SharedModule } from '@admin-ui/shared/shared.module';
+import { SharedModule } from '../shared/shared.module';
 import { CommonModule } from '@angular/common';
 import { NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import {
     CopyTokenModal,
+    CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,
@@ -21,6 +22,9 @@ import {
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenModal,
+    MeshUserTokenPropertiesComponent,
+    MeshUserTokenTableComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
@@ -49,7 +53,7 @@ import {
     TagPropertiesComponent,
     TagTableComponent,
 } from './components';
-import { MeshIconPipe } from './pipes';
+import { MeshIconPipe, MeshUsernamePipe } from './pipes';
 import {
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
@@ -60,6 +64,7 @@ import {
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    MeshUserTokenTableLoaderService,
     MicroschemaHandlerService,
     MicroschemaTableLoaderService,
     ProjectHandlerService,
@@ -74,6 +79,7 @@ import {
 
 const COMPONENTS: Type<any>[] = [
     CopyTokenModal,
+    CreateMeshUserTokenModal,
     LoginGateComponent,
     ManageTagFamiliesModal,
     ManagementComponent,
@@ -90,6 +96,9 @@ const COMPONENTS: Type<any>[] = [
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    MeshUserTokenModal,
+    MeshUserTokenTableComponent,
+    MeshUserTokenPropertiesComponent,
     MicroschemaModal,
     MicroschemaPropertiesComponent,
     MicroschemaTableComponent,
@@ -121,6 +130,7 @@ const COMPONENTS: Type<any>[] = [
 
 const PIPES: Type<any>[] = [
     MeshIconPipe,
+    MeshUsernamePipe,
 ];
 
 const DECLARATIONS = [
@@ -138,6 +148,7 @@ const SERVICES: Provider[] = [
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    MeshUserTokenTableLoaderService,
     MicroschemaHandlerService,
     MicroschemaTableLoaderService,
     ProjectHandlerService,

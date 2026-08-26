@@ -21,7 +21,7 @@ export async function navigateToModule(page: Page, moduleId: string): Promise<Lo
  * Logs out from the mesh management interface
  */
 export async function logoutMeshManagement(page: Page): Promise<void> {
-    const req = page.waitForResponse(response =>
+    const req = page.waitForResponse((response) =>
         response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/logout'),
     );
     await page.locator('.management-container .logout-button').click();
@@ -41,4 +41,10 @@ export async function loginWithCR(page: Page, shouldBeLoggedIn: boolean = true):
 
 export function findEntityTableActionButton(source: Page | Locator, action: string): Locator {
     return source.locator(`.entity-table-actions-bar .table-action-button[data-action="${action}"] button`);
+}
+
+export async function setGtxDateFromXpath(page: Page, dateInput: Locator, xPath: string): Promise<void> {
+    await dateInput.click();
+    await page.locator('gtx-date-time-picker-modal').locator('td.rd-day-selected').locator(xPath).click();
+    await page.locator('gtx-date-time-picker-modal').locator('[data-action="confirm"] button').click();
 }

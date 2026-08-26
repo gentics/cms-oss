@@ -5,3 +5,8 @@ export const AUTH = {
         password: 'cms_integrationTest#node',
     },
 };
+
+export const ADMIN = {
+    username: 'admin',
+    password: 'admin',
+};

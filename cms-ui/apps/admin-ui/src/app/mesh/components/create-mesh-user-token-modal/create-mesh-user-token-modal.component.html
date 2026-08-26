@@ -1,18 +1,22 @@
-<div class="modal-content">
-    <h2>{{ 'api_token.new' | gtxI18n }}</h2>
+<div class="modal-title">
+    <h5>{{ 'mesh.create_user_token_title' | gtxI18n: { user: user | gtxMeshUsername } }}</h5>
+</div>
 
-    <gtx-api-tokens-create-form
-        [apiTokenNames]="apiTokenNames"
+<div class="modal-content">
+    <gtx-progress-bar [active]="loading" />
+
+    <gtx-mesh-user-token-properties
         [formControl]="control"
-    ></gtx-api-tokens-create-form>
+    />
 </div>
 
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!control.valid || loading()"
+        flat
         data-action="confirm"
-        (click)="saveForm()"
+        [disabled]="!control.valid"
+        (click)="createToken()"
     >
         {{ 'modal.create_button' | gtxI18n }}
     </gtx-button>
@@ -23,6 +27,6 @@
         data-action="cancel"
         (click)="cancelFn()"
     >
-        {{ 'common.cancel_button'  | gtxI18n }}
+        {{ 'common.cancel_button' | gtxI18n }}
     </gtx-button>
 </div>

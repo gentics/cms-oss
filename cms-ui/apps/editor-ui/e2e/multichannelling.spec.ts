@@ -17,6 +17,7 @@ import {
 } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    URL_TEMPLATE_ID,
     clickModalAction,
     EntityImporter,
     findTableAction,
@@ -27,6 +28,7 @@ import {
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
     IMPORT_TYPE_USER,
+    ITEM_TYPE_FOLDER,
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
@@ -44,6 +46,7 @@ import {
     pickSelectValue,
     TestSize,
     UserImportData,
+    FolderImportData,
     wait,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
@@ -175,6 +178,64 @@ test.describe('Multichannelling', () => {
             const iframe = await getAlohaIFrame(page);
             editor = iframe.locator('main .GENTICS_tagname_content[contenteditable="true"]');
             await editor.waitFor({ timeout: 60_000 });
+        });
+
+        test('should handle cross channel page links correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19935',
+            }],
+        }, async ({ page }) => {
+            await page.locator('.toolbar-actions .close-button').click();
+            await selectNode(page, IMPORTER.get(CHANNEL_IMPORT_DATA).id);
+            const id = 'AAA-SUP-19935';
+            await page.locator('item-list [data-item-type="folder"] item-list-header gtx-button[data-action="create-new-item"] button').click();
+            const newFolderModal = page.locator('create-folder-modal');
+            await newFolderModal.waitFor();
+            await newFolderModal.locator('gtx-input[formcontrolname="name"] input').fill(id);
+            await newFolderModal.locator('gtx-input[formcontrolname="publishDir"] input').fill(id);
+            await newFolderModal.locator('gtx-button[data-action="confirm"] button').click();
+            await page.locator('item-list [data-item-type="folder"] item-list-row a').getByText(id).click();
+            await expect(page.locator('folder-contents div.title-name')).toHaveText(id);
+
+            await page.locator('item-list [data-item-type="page"] item-list-header gtx-button[data-action="create-new-item"] button').click();
+            const newPageModal = page.locator('create-page-modal');
+            await newPageModal.locator('gtx-input[formcontrolname="name"] input').fill(id);
+            await newPageModal.locator('gtx-select[formcontrolname="templateId"] gtx-dropdown-trigger').click();
+            await page.locator('gtx-dropdown-content .select-options .select-option span').getByText('[Test] URL').click();
+            await newPageModal.locator('gtx-button[data-action="confirm"] button').click();
+
+            const iframe = await getAlohaIFrame(page);
+            editor = iframe.locator('main div[data-gcn-tagname="url"] span.aloha-construct-buttons-container button.gcn-construct-button-edit');
+            await editor.waitFor({ timeout: 60_000 });
+            await editor.click();
+
+            let tagEditor = page.locator('gentics-tag-editor');
+            await tagEditor.waitFor();
+            await tagEditor.locator('browse-box gtx-button[data-action="browse"]').click();
+            let repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            // Bug #1
+            await expect(repoBrowser.locator('gtx-contents-list-item')).toBeVisible();
+
+            await repoBrowser.locator('node-selector gtx-button[data-action="select-node"] button').click();
+            await page.locator('node-selector-tree gtx-dropdown-item a[title="full test"]').click();
+            const firstPage = repoBrowser
+                .locator('.modal-content repository-browser-list[data-type="page"] gtx-contents-list-item');
+            await firstPage.waitFor();
+            const itemName = await firstPage.locator('.item-name-only').first().innerText();
+            await firstPage.locator('.item-name-only').first().click();
+            await repoBrowser.locator('gtx-button[data-action="confirm"] button').click();
+            await expect(tagEditor.locator('browse-box gtx-input.value-display input[type="text"]')).toHaveValue(itemName);
+            await tagEditor.locator('gtx-button[data-action="confirm"] button').click();
+            await editor.click();
+            tagEditor = page.locator('gentics-tag-editor');
+            await tagEditor.waitFor();
+            await tagEditor.locator('browse-box gtx-button[data-action="browse"]').click();
+            repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            // Bug #2
+            await expect(repoBrowser.locator('gtx-contents-list-item').first()).toBeVisible();
         });
 
         test('should handle node IDs for overview items using sticky channels', {

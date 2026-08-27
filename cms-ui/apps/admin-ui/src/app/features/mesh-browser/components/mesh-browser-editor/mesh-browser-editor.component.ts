@@ -137,6 +137,10 @@ export class MeshBrowserEditorComponent implements OnChanges {
                     value = this.getImagePath(field.name);
                     break;
                 }
+                case FieldType.JSON: {
+                    value = JSON.stringify(value);
+                    break;
+                }
             }
 
             return {

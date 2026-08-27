@@ -67,6 +67,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.ReturnValueExecutable;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -1248,6 +1249,9 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		} catch (ReadOnlyException e) {
 			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
 					new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (ObjectModificationException e) {
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
 		} catch (NodeException e) {
 			try {
 				t.rollback(false);

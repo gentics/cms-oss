@@ -149,6 +149,7 @@ export class TagMapEntryPropertiesComponent extends BaseFormPropertiesComponent<
             noIndex: new FormControl(this.safeValue('noIndex') ?? false),
             elasticsearch: new FormControl(this.safeValue('elasticsearch') ?? null),
             micronodeFilter: new FormControl(this.safeValue('micronodeFilter')),
+            jsonSchemaFilter: new FormControl(this.safeValue('jsonSchemaFilter') ?? null),
             // SQL CR
             filesystem: new FormControl(this.safeValue('filesystem') ?? false),
             optimized: new FormControl(this.safeValue('optimized') ?? false),
@@ -164,6 +165,7 @@ export class TagMapEntryPropertiesComponent extends BaseFormPropertiesComponent<
             'noIndex',
             'elasticsearch',
             'micronodeFilter',
+            'jsonSchemaFilter',
             'filesystem',
             'optimized',
             'targetType',
@@ -190,6 +192,10 @@ export class TagMapEntryPropertiesComponent extends BaseFormPropertiesComponent<
                 case MeshTagmapEntryAttributeTypes.DATE:
                 case MeshTagmapEntryAttributeTypes.INTEGER:
                 case MeshTagmapEntryAttributeTypes.TEXT:
+                    break;
+
+                case MeshTagmapEntryAttributeTypes.JSON:
+                    enableControls.push('jsonSchemaFilter');
                     break;
 
                 case MeshTagmapEntryAttributeTypes.MICRONODE:

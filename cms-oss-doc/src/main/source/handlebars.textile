@@ -33,9 +33,9 @@ The context of a rendered Handlebars part will always contain the base object +c
 INFO: To find out all possible attributes that can be resolved from the base object "cms", you can use something like +{{#each cms}}{{ @key }}:{{ this }}<br>{{/each}}+.
 This obviously does not only work for "cms", but for every object in the context.
 
-WARNING: Unlike the Velocity Part Type, the Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
+WARNING: The Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
 it is not allowed to omit the "parts" keyword in handlebars: +{{ cms.tag.parts.html }}+ will resolve to the part "html" in the current tag, whereas +{{ cms.tag.html }}+ will *not* work. 
-Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, the Velocity's definition +{{cms.tag.parts.img.object.copyright}}+ turns into longer variants for the Handlebars: 
+Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, it is possible to use
 either +{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+ with +target+ image dereferencing, or 
 +{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where in addition +parts+ property listing, and +text+ part type now have to be explicitly mentioned, if one wants to avoid using +gtx_render+ (which is  discouraged).
 
@@ -98,7 +98,7 @@ The helper can also be used in combination with other helpers (conditional helpe
 
 NOTE: Since gtx_render will always output a String, the comparison must also be done with the String ("1") and not with the Integer (1).
 
-WARNING: Unlike Velocity, the Handlebars Part Type will *only* render objects if the gtx_render helper is used. Simply referencing like +{{{ cms.page.tags.othertag }}}+ will not render the other tag, but will output some information about the referenced object.
+WARNING: The Handlebars Part Type will *only* render objects if the gtx_render helper is used. Simply referencing like +{{{ cms.page.tags.othertag }}}+ will not render the other tag, but will output some information about the referenced object.
 
 h5. gtx_edit
 
@@ -353,7 +353,7 @@ NOTE: Partials will not be synchonized into the CMS, so changes in a partial fil
 
 h3. Differences to Velocity
 
-This section will cover some differences between the Velocity PartType and the Handlebars PartType (apart from the obvious difference in templating language syntax), which hopefully will help with migration of implementations.
+This section will cover some differences between the old Velocity PartType and the Handlebars PartType (apart from the obvious difference in templating language syntax), which hopefully will help with migration of implementations.
 
 |_. |_. Velocity |_. Handlebars |
 | Construct setup | The Velocity PartType needs another PartType with keyword +template+ which contains the template to render. | The Handlebars PartType will use its own content as template. |
@@ -362,4 +362,4 @@ This section will cover some differences between the Velocity PartType and the H
 | Reusable templates | The Velocity PartType supports both locally defined and globally configured macros | The Handlebars PartType supports "partials":#partials, which must be defined in devtool packages. |
 | Programmatic logic | Velocity supports programmatic logic like defining variables, calling various methods of objects and even instantiation of new objects. | Handlebars is logic-less but supports programmatic logic via "helpers":#helpers (built-in or "custom":#custom-helpers) which guarantees a clean separation between business logic and presentation. |
 | HTML Escaping | Velocity does not escape HTML by default, so for instance the EscapeTool must be used for that purpose. | Handlebars does HTML Escaping when two curly braces are used and omits HTML Escaping upon three curly braces. |
-| Resolving of context variables | In Velocity, it is possible to add variables to the context and resolve them via the velocity part (as described "here":feature_mesh_contentrepository.html#velocity-expression). | In Handlebars it is not possible to access the context via resolving. |
+| Resolving of context variables | In Velocity, it is possible to add variables to the context and resolve them via the velocity part. | In Handlebars it is not possible to access the context via resolving. |

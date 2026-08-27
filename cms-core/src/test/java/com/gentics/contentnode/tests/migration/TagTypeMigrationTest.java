@@ -46,7 +46,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.MigrationPostProcessor;
@@ -843,8 +843,8 @@ public class TagTypeMigrationTest {
 		Node node = ContentNodeTestDataUtils.createNode("Migration Node", "mignode", "/", null, false, false);
 
 		// create source and target constructs
-		int sourceConstructId = createVelocityConstruct(node, "migrationsource", "source template $cms.parts.text");
-		int targetConstructId = createVelocityConstruct(node, "migrationtarget", "target template $cms.parts.text");
+		int sourceConstructId = createHandlebarsConstruct(node, "migrationsource", "source template {{gtx_render cms.tag.parts.text}}");
+		int targetConstructId = createHandlebarsConstruct(node, "migrationtarget", "target template {{gtx_render cms.tag.parts.text}}");
 
 		Construct sourceConstruct = t.getObject(Construct.class, sourceConstructId);
 		Construct targetConstruct = t.getObject(Construct.class, targetConstructId);
@@ -890,8 +890,8 @@ public class TagTypeMigrationTest {
 
 		// migrate source part "template" to target part "template"
 		partMapping = new MigrationPartMapping();
-		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "template").getId(), 0));
-		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "template").getId(), 0));
+		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "hbs").getId(), 0));
+		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "hbs").getId(), 0));
 		partMappings.add(partMapping);
 
 		// Create list of objects to apply mappings to
@@ -926,14 +926,14 @@ public class TagTypeMigrationTest {
 		sourceConstruct = t.getObject(Construct.class, sourceConstruct.getId());
 		targetConstruct = t.getObject(Construct.class, targetConstruct.getId());
 		for (Part part : sourceConstruct.getParts()) {
-			if ("template".equals(part.getKeyname())) {
-				assertEquals("Check part template on source construct after migration", "source template $cms.parts.text", part.getDefaultValue()
+			if ("hbs".equals(part.getKeyname())) {
+				assertEquals("Check part template on source construct after migration", "source template {{gtx_render cms.tag.parts.text}}", part.getDefaultValue()
 						.getValueText());
 			}
 		}
 		for (Part part : targetConstruct.getParts()) {
-			if ("template".equals(part.getKeyname())) {
-				assertEquals("Check part template on target construct after migration", "target template $cms.parts.text", part.getDefaultValue()
+			if ("hbs".equals(part.getKeyname())) {
+				assertEquals("Check part template on target construct after migration", "target template {{gtx_render cms.tag.parts.text}}", part.getDefaultValue()
 						.getValueText());
 			}
 		}
@@ -949,8 +949,8 @@ public class TagTypeMigrationTest {
 		Node node = ContentNodeTestDataUtils.createNode("Migration Node", "mignode", "/", null, false, false);
 
 		// create source and target constructs
-		Integer sourceConstructId = createVelocityConstruct(node, "migrationsource", "source template $cms.parts.text");
-		Integer targetConstructId = createVelocityConstruct(node, "migrationtarget", "target template $cms.parts.text");
+		Integer sourceConstructId = createHandlebarsConstruct(node, "migrationsource", "source template {{gtx_render cms.tag.parts.text}}");
+		Integer targetConstructId = createHandlebarsConstruct(node, "migrationtarget", "target template {{gtx_render cms.tag.parts.text}}");
 
 		Construct sourceConstruct = t.getObject(Construct.class, sourceConstructId);
 		Construct targetConstruct = t.getObject(Construct.class, targetConstructId);
@@ -987,8 +987,8 @@ public class TagTypeMigrationTest {
 
 		// migrate source part "template" to target part "template"
 		partMapping = new MigrationPartMapping();
-		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "template").getId(), 0));
-		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "template").getId(), 0));
+		partMapping.setFromPartId(ObjectTransformer.getInt(getPartByKeyname(sourceConstruct, "hbs").getId(), 0));
+		partMapping.setToPartId(ObjectTransformer.getInt(getPartByKeyname(targetConstruct, "hbs").getId(), 0));
 		partMappings.add(partMapping);
 
 		// Create list of objects to apply mappings to
@@ -1058,8 +1058,8 @@ public class TagTypeMigrationTest {
 		Node migrationNode2 = ContentNodeTestDataUtils.createNode("migration2", "Migration Node 2", PublishTarget.NONE);
 
 		// create source and target constructs
-		Integer sourceConstructId = createVelocityConstruct(migrationNode1, "migrationsource", "source template $cms.parts.text");
-		Integer targetConstructId = createVelocityConstruct(migrationNode1, "migrationtarget", "target template $cms.parts.text");
+		Integer sourceConstructId = createHandlebarsConstruct(migrationNode1, "migrationsource", "source template {{gtx_render cms.tag.parts.text}}");
+		Integer targetConstructId = createHandlebarsConstruct(migrationNode1, "migrationtarget", "target template {{gtx_render cms.tag.parts.text}}");
 
 		Construct sourceConstruct = t.getObject(Construct.class, sourceConstructId);
 		Construct targetConstruct = t.getObject(Construct.class, targetConstructId);
@@ -1101,8 +1101,8 @@ public class TagTypeMigrationTest {
 
 		// migrate source part "template" to target part "template"
 		partMapping = new MigrationPartMapping();
-		partMapping.setFromPartId(getPartByKeyname(sourceConstruct, "template").getId());
-		partMapping.setToPartId(getPartByKeyname(targetConstruct, "template").getId());
+		partMapping.setFromPartId(getPartByKeyname(sourceConstruct, "hbs").getId());
+		partMapping.setToPartId(getPartByKeyname(targetConstruct, "hbs").getId());
 		partMappings.add(partMapping);
 
 		// Create list of objects to apply mappings to
@@ -1200,7 +1200,7 @@ public class TagTypeMigrationTest {
 	}
 
 	/**
-	 * Create a velocity construct
+	 * Create a handlebars construct
 	 * 
 	 * @param node
 	 *            node to which the construct shall be assigned
@@ -1211,7 +1211,7 @@ public class TagTypeMigrationTest {
 	 * @return id of the construct
 	 * @throws NodeException
 	 */
-	private int createVelocityConstruct(Node node, String keyword, String template) throws NodeException {
+	private int createHandlebarsConstruct(Node node, String keyword, String template) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		Construct construct = t.createObject(Construct.class);
@@ -1220,13 +1220,15 @@ public class TagTypeMigrationTest {
 		construct.setName(keyword, 1);
 		construct.getNodes().add(node);
 
-		// create velocity part
+		// create handlebars part
 		Part part = t.createObject(Part.class);
 		part.setEditable(0);
 		part.setHidden(false);
-		part.setKeyname("vtl");
-		part.setName("vtl", 1);
-		part.setPartTypeId(getPartTypeId(VelocityPartType.class));
+		part.setKeyname("hbs");
+		part.setName("hbs", 1);
+		part.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
+		part.setDefaultValue(t.createObject(Value.class));
+		part.getDefaultValue().setValueText(template);
 		construct.getParts().add(part);
 
 		// create editable part
@@ -1237,17 +1239,6 @@ public class TagTypeMigrationTest {
 		part.setName("text", 1);
 		part.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
 		part.setDefaultValue(t.createObject(Value.class));
-		construct.getParts().add(part);
-
-		// create template part
-		part = t.createObject(Part.class);
-		part.setEditable(0);
-		part.setHidden(true);
-		part.setKeyname("template");
-		part.setName("template", 1);
-		part.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-		part.setDefaultValue(t.createObject(Value.class));
-		part.getDefaultValue().setValueText(template);
 		construct.getParts().add(part);
 
 		construct.save();

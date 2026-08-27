@@ -3,15 +3,14 @@ package com.gentics.contentnode.tests.overview;
 import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.TEMPLATE_PARTNAME;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -30,8 +29,8 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.testutils.DBTestContext;
 
@@ -40,6 +39,8 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class OverviewSettingsRenderTest {
 	public final static String TAG_NAME = "tag";
+
+	public final static String HBS_PARTNAME = "hbs";
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext(true);
@@ -53,7 +54,7 @@ public class OverviewSettingsRenderTest {
 
 		node = supply(() -> createNode());
 
-		final Integer constructId = supply(() -> createVelocityConstruct(node, "vtl", "vtl"));
+		final Integer constructId = supply(() -> createConstruct(node, HandlebarsPartType.class, HBS_PARTNAME, HBS_PARTNAME));
 
 		Trx.consume(id -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -87,8 +88,8 @@ public class OverviewSettingsRenderTest {
 		}));
 
 		page = supply(() -> update(createPage(node.getFolder(), template, "Page"), upd -> {
-			getPartType(LongHTMLPartType.class, upd.getTag(TAG_NAME), TEMPLATE_PARTNAME).setText(
-					"listType: $cms.tag.parts.ds.listType, selectType: $cms.tag.parts.ds.selectType, orderBy: $cms.tag.parts.ds.orderBy, orderDirection: $cms.tag.parts.ds.orderDirection, maxItems: $cms.tag.parts.ds.maxItems, recursive: $cms.tag.parts.ds.recursive");
+			getPartType(HandlebarsPartType.class, upd.getTag(TAG_NAME), HBS_PARTNAME).setText(
+					"{{#with cms.tag.parts.ds}}listType: {{gtx_render listType}}, selectType: {{gtx_render selectType}}, orderBy: {{gtx_render orderBy}}, orderDirection: {{gtx_render orderDirection}}, maxItems: {{gtx_render maxItems}}, recursive: {{gtx_render recursive}}{{/with}}");
 		}));
 	}
 

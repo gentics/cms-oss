@@ -32,7 +32,7 @@ Once the validation feature is turned on, edit operations performed on tags will
 
 HTML attributes in existing content (templates, tags, tagtypes) must not contain node-tags, with the exception of URL tags (wich have a default part-policy of "any URI")
 all parts of tag-types, and only parts of tag-types, have keywords beginning with "part". Tag-types themselves should not have keywords beginning with "part"
-page-templates and the "template" and "macros" parts, that are used in conjunction with Overview and Velocity parts, are not editable, and Overview parts are not changeable, and any input entered by editors that is processed by XNL tags and Overview and Velocity tags is performed in a safe manner.
+page-templates, that are used in conjunction with Overview parts, are not editable, and Overview parts are not changeable, and any input entered by editors that is processed by XNL tags and Overview tags is performed in a safe manner.
 No errors will be displayed if these requirements aren't fulfilled, but these requirements must be fulfilled in order for the validation to be secure.
 
 h4. Node tags in HTML attributes
@@ -65,21 +65,19 @@ Additionally, it is specified that node-tag keywords may not contain a dot (".")
 
 An alternative to prefixing the keyword of a tag-part with "part" is to leave the keyword empty, which will make it impossible to resolve the part with a node-tag.
 
-h4. Page-Templates, XNL, Velocity and Overviews
+h4. Page-Templates, XNL and Overviews
 
-The third condition concerns page-templates, XNL, and Velocity and Overview parts.
+The third condition concerns page-templates, XNL, and Overview parts.
 
 Page-templates must be able to contain arbitrary HTML, since it must be possible to define script dependencies and the HTML structure for the page.
 
 XNL functinos and conditions may perform arbitrary operations.
 
-Velocity and Overview parts, both, use the "template" and "macros" parts, which may contain arbitray Velocity.
+Authoring page-templates or calling XNL functions or writing XNL conditions are inherently trusted operations. It is not feasible to validate these operations to prevent XSS attacks.
 
-Authoring page-templates or Velocity code, or calling XNL functions or writing XNL conditions are inherently trusted operations. It is not feasible to validate these operations to prevent XSS attacks.
+For this reason, editors must not have the possibility to edit page-templates or use XNL functions or XNL conditions, and Overview parts must not be editable (checkbox in the part-properties dialog) and Overview templates must not be changeable (there is a checkbox below the template when filling-in the tag-type defaults).
 
-For this reason, editors must not have the possibility to edit page-templates or use XNL functions or XNL conditions, and Overview and Velocity parts must not be editable (checkbox in the part-properties dialog) and Overview templates must not be changeable (there is a checkbox below the template when filling-in the tag-type defaults).
-
-If XNL structures are encountered in the markup, they will by default cause a validation error. However, the impelementer is still responsible for ensuring that user-supplied parameters to XNL functions or XNL conditions can't be exploited to formulate an XSS attack. The same applies to page-templates and Overview/Velocity parts except that these must be explicitly disabled for editors. The same also applies for parts of tag-types, for which the implementer chose a more permissive policy than the default policy. Such tag-types must not be editable by a user, and the implementer must ensure that user-supplied content is processed in a safe manner.
+If XNL structures are encountered in the markup, they will by default cause a validation error. However, the impelementer is still responsible for ensuring that user-supplied parameters to XNL functions or XNL conditions can't be exploited to formulate an XSS attack. The same applies to page-templates and Overview parts except that these must be explicitly disabled for editors. The same also applies for parts of tag-types, for which the implementer chose a more permissive policy than the default policy. Such tag-types must not be editable by a user, and the implementer must ensure that user-supplied content is processed in a safe manner.
 
 For example, consider the following scenario: the implementer writes the following HTML fragment into the source of a page-template, or into a part with a permissive policy:
 
@@ -89,11 +87,11 @@ var userVariable = '<node user-supplied-content>';
 </script>
 </html>
 
-If the tag "user-supplied-content" has the default XSS-safe policy, an editor will be able to write arbitrary text into the tag. In this scenario, however, arbitrary text means that the user is able to write arbitrary javascript, since it is straightforward to escape the single quotes from within the user supplied content. It is not possible to combine Javascript and node-tags in a safe manner. This is because node-tags are not treated as Javascript objects - once the page is rendered, the node tags will be inserted into the Javascript element as an arbitrary chunk of text. It is possible, however, to use Velocity to access contents of node tags in a safe manner. Velocity can access the contents of node-tags in the form of Java Strings. These Java Strings do not escape the Velocity contex. If the Java String is to be rendered in the page, however, the same Problem as above applies. With Velocity, however, it is possible to perform custom validation or escaping on the string before rendering it into the page, since Velocity is executed during the rendering process of the page.
+If the tag "user-supplied-content" has the default XSS-safe policy, an editor will be able to write arbitrary text into the tag. In this scenario, however, arbitrary text means that the user is able to write arbitrary javascript, since it is straightforward to escape the single quotes from within the user supplied content. It is not possible to combine Javascript and node-tags in a safe manner. This is because node-tags are not treated as Javascript objects - once the page is rendered, the node tags will be inserted into the Javascript element as an arbitrary chunk of text.
 
 h3. Working with secure tag-types
 
-Implementers will have the requirement to be able to insert arbitrary HTML, including arbitrary scripts, into parts that are not accessible by editors. Once the implementer has made certain, that a part is not editable, he may choose a more permissive validation policy for this part. For example, the "any Content" policy will allow any input to be entered, which is necessitated by e.g. the "template" part of Velocity tag-types.
+Implementers will have the requirement to be able to insert arbitrary HTML, including arbitrary scripts, into parts that are not accessible by editors. Once the implementer has made certain, that a part is not editable, he may choose a more permissive validation policy for this part. For example, the "any Content" policy will allow any input to be entered.
 
 h3. Configuring a custom AntiSamy policy
 

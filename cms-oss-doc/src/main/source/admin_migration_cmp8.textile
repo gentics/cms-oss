@@ -108,14 +108,11 @@ h6. Exceptions
 There are two exception to the naming rule above:
 
 # Settings in `$PUBLISH_LOAD_BALANCING` must be put under `config.loadbalancing`.
-# Settings in `$VELOCITY_PROPERTIES` must be put under `velocity`.
 
 PHP-style:
 
 <javascript filename="/Node/etc/conf.d/*.conf">
 $PUBLISH_LOAD_BALANCING["threadlimit"] = 2;
-
-$VELOCITY_PROPERTIES["resource.loader"] = "string,file";
 </javascript>
 
 New format:
@@ -124,9 +121,6 @@ New format:
 config
   loadbalancing:
     threadlimit: 2
-
-velocity:
-  resource.loader: "string,file"
 </shell>
 
 h4. Configuration changes
@@ -514,7 +508,7 @@ h3. Removed Features
 
 h4. XNL
 
-Rendering XNL has been removed. All existing XNL Implementations must be replaced with Velocity Implementations.
+Rendering XNL has been removed. All existing XNL Implementations must be replaced with Handlebars Implementations.
 
 h4. Import/Export
 

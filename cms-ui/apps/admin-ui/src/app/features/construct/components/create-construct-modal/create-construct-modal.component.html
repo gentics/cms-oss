@@ -16,6 +16,7 @@
     <gtx-button
         type="primary"
         [disabled]="form.invalid || form.disabled"
+        data-action="confirm"
         (click)="buttonCreateEntityClicked()"
     >
         {{ 'modal.create_button' | gtxI18n }}
@@ -24,6 +25,7 @@
     <gtx-button
         type="secondary"
         flat
+        data-action="cancel"
         (click)="cancelFn()"
     >
         {{ 'common.cancel_button' | gtxI18n }}

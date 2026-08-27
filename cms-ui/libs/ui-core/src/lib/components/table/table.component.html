@@ -182,6 +182,10 @@
     #p="paginationApi"
     class="table-pagination"
     pagination-template
+    [attr.data-current]="p.getCurrent()"
+    [attr.data-last]="p.getLastPage()"
+    [attr.data-has-previous]="p.getCurrent() > 1"
+    [attr.data-has-next]="p.getCurrent() < p.getLastPage()"
     [id]="UNIQUE_ID"
     [maxSize]="5"
     (pageChange)="handlePageChange($event)"

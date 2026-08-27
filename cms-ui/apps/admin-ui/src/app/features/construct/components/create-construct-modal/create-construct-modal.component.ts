@@ -50,10 +50,11 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
         }
 
         this.loading = true;
+        const { nodeIds, ...value } = this.form.value;
+
         this.form.disable();
         this.changeDetector.markForCheck();
 
-        const { nodeIds, ...value } = this.form.value;
         this.subscription.add(this.handler.create(value, { nodeId: nodeIds }).subscribe({
             complete: () => {
                 this.closeFn(true);

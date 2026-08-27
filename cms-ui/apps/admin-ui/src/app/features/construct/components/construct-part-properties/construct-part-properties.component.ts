@@ -96,6 +96,7 @@ export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.SelectMultiple,
     TagPartType.Velocity,
     TagPartType.Handlebars,
+    TagPartType.Groovy,
 ];
 
 export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [

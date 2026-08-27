@@ -190,6 +190,16 @@ public abstract class PackageSynchronizer {
 			// clean the cached handlebars helpers
 			handlebarsHelpers = null;
 		});
+		// add a handler for changes in the scripts directory
+		pathHandlers.put(new File(packagePath.toFile(), SCRIPTS_DIR).toPath(), changedPath -> {
+			try {
+				for (Node node : getNodes()) {
+					Synchronizer.invalidateGroovyClassLoader(node);
+				}
+			} catch (NodeException e) {
+				Synchronizer.invalidateGroovyClassLoader();
+			}
+		});
 		if (registerWatchers) {
 			try {
 				Synchronizer.registerAll(packagePath);

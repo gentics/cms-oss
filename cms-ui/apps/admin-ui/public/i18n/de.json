@@ -1441,6 +1441,7 @@
         "tagPartType_41": "Formular Liste",
         "tagPartType_42": "Formular",
         "tagPartType_43": "Handlebars",
+        "tagPartType_45": "Groovy",
         "validator_name_number_natural": "Zahl (natürlich)",
         "validator_name_email_address": "E-Mail Adresse",
         "validator_name_must_not_be_emty": "Nicht leer",

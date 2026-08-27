@@ -824,4 +824,4 @@
 2026-03-27  CH-1741 NOP SQL ALTER TABLE node ADD COLUMN default_form_folder_id INT NOT NULL default 0;
 2026-05-08  CH-1745 NOP SQL ALTER TABLE form ADD external_hash VARCHAR(255) after external_id; ## add column for external hash
 2026-05-21  CH-1747 NOP SQL CREATE TABLE form_translations (formtype VARCHAR(255) NOT NULL, translations MEDIUMTEXT NOT NULL, PRIMARY KEY (formtype)); ## Add table for form translations
-2026-08-06	CH-1750	NOP	SQL	INSERT INTO type (id, name, description, auto, javaclass) VALUES (44, 'Groovy', 'Execute Groovy Scripts', 0, 'com.gentics.contentnode.object.parttype.groovy.GroovyPartType'); ## Add new part type for executing Groovy scripts
+2026-08-06	CH-1750	NOP	SQL	INSERT INTO type (id, name, description, auto, javaclass) VALUES (45, 'Groovy', 'Execute Groovy Scripts', 0, 'com.gentics.contentnode.object.parttype.groovy.GroovyPartType'); ## Add new part type for executing Groovy scripts

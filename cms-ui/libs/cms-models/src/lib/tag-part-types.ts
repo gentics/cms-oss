@@ -175,6 +175,11 @@ export enum TagPartType {
     CmsForm = 42,
 
     Handlebars = 43,
+
+    /**
+     * Groovy Part Type for adding groovy scripts
+     */
+    Groovy = 45,
 }
 
 /** Pairs must be set correctly. */
@@ -210,6 +215,7 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.Form]: TagPropertyType.FORM,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
     [TagPartType.Handlebars]: TagPropertyType.RICHTEXT,
+    [TagPartType.Groovy]: TagPropertyType.RICHTEXT,
 } as const;
 
 /**

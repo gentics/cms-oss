@@ -18,9 +18,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
-import org.codehaus.groovy.tools.GroovyClass;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -1530,21 +1527,8 @@ public class RenderType implements RenderInfo {
 		if (!compilationUnitsPerNode.containsKey(node)) {
 			CompilerConfiguration config = new CompilerConfiguration();
 
-			GroovyClassLoader gcl = new GroovyClassLoader(RenderType.class.getClassLoader(), config);
-
+			GroovyClassLoader gcl = new GroovyClassLoader(Synchronizer.getGroovyClassLoader(node), config);
 			CompilationUnit unit = new CompilationUnit(config, null, gcl);
-			if (Synchronizer.getStatus() == Status.UP) {
-				for (String packageName : Synchronizer.getPackages(node)) {
-					MainPackageSynchronizer mainPack = Synchronizer.getPackage(packageName);
-					unit.addSources(mainPack.getScriptFiles());
-				}
-			}
-			unit.compile(Phases.CLASS_GENERATION);
-
-			for (GroovyClass groovyClass : unit.getClasses()) {
-				unit.getClassLoader().defineClass(groovyClass.getName(), groovyClass.getBytes());
-			}
-
 			compilationUnitsPerNode.put(node, unit);
 		}
 

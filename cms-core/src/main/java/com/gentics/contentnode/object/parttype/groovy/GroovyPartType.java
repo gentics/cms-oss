@@ -22,6 +22,7 @@ import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.TextPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableGetter;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.contentnode.rest.util.MiscUtils;
@@ -75,17 +76,23 @@ public class GroovyPartType extends TextPartType {
 			String scriptClassName = "%s_%s_%d".formatted(constructKeyword, partKeyword, valueId);
 			String scriptName = "%s.groovy".formatted(scriptClassName);
 
-			unit.addSource(scriptName, code);
-			unit.compile(Phases.CLASS_GENERATION);
+			// check whether the unit already contains the class
+			GroovyClass groovyClass = findGroovyClass(unit, scriptClassName);
 
-			for (GroovyClass groovyClass : unit.getClasses()) {
-				if (Strings.CI.equals(groovyClass.getName(), scriptClassName)) {
+			// class does not exist, so add it to the compilation unit and compile
+			if (groovyClass == null) {
+				unit.addSource(scriptName, code);
+				unit.compile(Phases.CLASS_GENERATION);
+
+				// when compiled, add it to the class path
+				groovyClass = findGroovyClass(unit, scriptClassName);
+				if (groovyClass != null) {
 					unit.getClassLoader().defineClass(groovyClass.getName(), groovyClass.getBytes());
 				}
 			}
 
 			return GroovyUtils.call(unit.getClassLoader(), scriptClassName, script -> {
-				script.setProperty("cms", cmsResolver);
+				script.setProperty("cms", new ResolvableMapWrapper(cmsResolver));
 			});
 		} catch (CompilationFailedException e) {
 			throw new NodeException(e);
@@ -99,4 +106,12 @@ public class GroovyPartType extends TextPartType {
 		return Property.Type.RICHTEXT;
 	}
 
+	protected GroovyClass findGroovyClass(CompilationUnit unit, String scriptClassName) {
+		for (GroovyClass groovyClass : unit.getClasses()) {
+			if (Strings.CI.equals(groovyClass.getName(), scriptClassName)) {
+				return groovyClass;
+			}
+		}
+		return null;
+	}
 }

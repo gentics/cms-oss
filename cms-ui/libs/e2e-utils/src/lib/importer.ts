@@ -1060,6 +1060,7 @@ export class EntityImporter {
         await this.cleanupConstructCategories();
         await this.cleanupObjectProperties();
         await this.cleanupPackages();
+        await this.cleanupConstructs();
         await this.cleanupUsers();
         await this.cleanupGroups();
     }
@@ -1130,6 +1131,19 @@ export class EntityImporter {
         const schemas = (await mesh.schemas.list().send()).data;
         for (const schema of schemas) {
             await mesh.schemas.delete(schema.uuid).send();
+        }
+    }
+
+    private async cleanupConstructs(): Promise<void> {
+        const constructs = (await this.client.construct.list({ embed: 'category' }).send()).items;
+        for (const con of constructs) {
+            if (
+                con.category?.globalId === CONSTRUCT_CATEGORY_CORE
+                || con.category?.globalId === CONSTRUCT_CATEGORY_TESTS
+            ) {
+                continue;
+            }
+            await this.client.construct.delete(con.id).send();
         }
     }
 

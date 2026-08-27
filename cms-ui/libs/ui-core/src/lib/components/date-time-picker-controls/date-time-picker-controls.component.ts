@@ -298,28 +298,19 @@ export class DateTimePickerControlsComponent
     }
 
     protected updateYears(): void {
-        // Default min/max with proper values
-        const minSet = this.min != null;
-        const maxSet = this.max != null;
+        // /*
+        //  * We don't want a date select which is stupidly long when no
+        //  * ranges are provided. Therefore limit it to 200 years +- from now
+        //  * depending on the given min and max
+        //  */
 
-        const min = this.min || new Date(-MAX_DATE_MILLISECONDS);
-        const max = this.max || new Date(MAX_DATE_MILLISECONDS);
+        const minYear = this.min
+            ? this.min.getFullYear()
+            : new Date().getFullYear() - MAX_YEAR_RANGE / 2;
 
-        let minYear = min.getFullYear();
-        let maxYear = max.getFullYear();
-
-        /*
-         * We don't want a date select which is stupidly long when no
-         * ranges are provided. Therefore limit it to 200 years +- from now.
-         */
-        if (!minSet && !maxSet) {
-            const thisYear = new Date().getFullYear();
-
-            if (MAX_YEAR_RANGE < maxYear - minYear) {
-                minYear = thisYear - Math.floor(MAX_YEAR_RANGE / 2);
-                maxYear = thisYear + Math.floor(MAX_YEAR_RANGE / 2);
-            }
-        }
+        const maxYear = this.max
+            ? this.max.getFullYear()
+            : new Date().getFullYear() + MAX_YEAR_RANGE / 2;
 
         this.years = [];
         for (let year = minYear; year <= maxYear; year++) {

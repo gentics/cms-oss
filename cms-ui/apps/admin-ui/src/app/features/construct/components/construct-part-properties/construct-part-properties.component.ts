@@ -2,7 +2,9 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    computed,
     EventEmitter,
+    input,
     Input,
     OnChanges,
     Output,
@@ -12,117 +14,41 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { I18nService } from '@gentics/cms-components';
 import {
     DataSource,
-    I18nString,
     Language,
     MarkupLanguage,
-    OverviewSetting,
+    MarkupLanguageType,
+    PartType,
     Raw,
     RegexValidationInfo,
-    SelectSetting,
-    TagPartProperty,
+    TagPart,
     TagPartType,
     TagPartTypePropertyType,
     TagPartValidatorConfigs,
     TagPartValidatorId,
-    TagPropertyType,
-    MarkupLanguageType,
 } from '@gentics/cms-models';
-import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import {
+    BaseFormPropertiesComponent,
+    FormProperties,
+    generateFormProvider,
+    generateValidatorProvider,
+    setControlsEnabled,
+} from '@gentics/ui-core';
 import {
     createBlacklistValidator,
     createI18nRequiredValidator,
     JSON_VALIDATOR,
 } from '../../../../common';
 
-export interface TagPartPropertiesFormData {
-    globalId?: string;
-    id?: string;
-    name?: string;
-    type?: TagPropertyType;
-
-    /** Part keyword */
-    keyword: string;
-    /** Name in the current language */
-    nameI18n?: I18nString;
-
-    /** Order index of part (legacy/ portentially to be deprecated) */
-    partOrder: number;
-    /** Part type ID */
-    typeId: TagPartType;
-    /** Markup languag edientifier */
-    markupLanguageId: number;
-
-    /** True if the part is editable */
-    editable: boolean;
-    /** True if the part is mandatory */
-    mandatory: boolean;
-    /** True if the part is hidden */
-    hidden: boolean;
-    /** True if the part is live (inline) editable */
-    liveEditable: boolean;
-    /** Flag for hiding the part in the Tag Editor */
-    hideInEditor: boolean;
-
-    /** External editor URL */
-    externalEditorUrl: string;
-
+export interface TagPartPropertiesFormData extends Omit<TagPart, 'id' | 'type' | 'regex'>, Pick<Partial<TagPart>, 'globalId' | 'id' | 'type'> {
+    // Regexes are handled a bit more special in this component
     /** Regular expression definition for validation of text parttypes */
     regex?: TagPartValidatorId;
-    /** Overview settings (if type is OVERVIEW) */
-    overviewSettings?: OverviewSetting;
-    /** Selection settings (if type is SELECT or MULTISELECT) */
-    selectSettings?: SelectSetting;
-
-    /** FROM TAG EDITOR */
-    defaultProperty: TagPartProperty;
-
-    /** JSON schema */
-    jsonSchema: string;
 }
 
 export enum ConstructPartPropertiesMode {
     CREATE = 'create',
     UPDATE = 'update',
 }
-
-export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
-    TagPartType.Text,
-    TagPartType.HtmlLong,
-    TagPartType.Checkbox,
-    TagPartType.UrlFolder,
-    TagPartType.UrlPage,
-    TagPartType.UrlImage,
-    TagPartType.UrlFile,
-    TagPartType.Node,
-    TagPartType.CmsForm,
-    TagPartType.DataSource,
-    TagPartType.Overview,
-    TagPartType.SelectSingle,
-    TagPartType.SelectMultiple,
-    TagPartType.Velocity,
-    TagPartType.Handlebars,
-    TagPartType.Json,
-    TagPartType.Groovy,
-];
-
-export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
-    TagPartType.TextShort,
-    TagPartType.TextHtml,
-    TagPartType.TextHtmlLong,
-    TagPartType.Html,
-    TagPartType.TagPage,
-    TagPartType.List,
-    TagPartType.ListUnordered,
-    TagPartType.ListOrdered,
-    TagPartType.TagTemplate,
-    TagPartType.Breadcrumb,
-    TagPartType.Navigation,
-    TagPartType.HTMLCustomForm,
-    TagPartType.TextCustomForm,
-    TagPartType.FileUpload,
-    TagPartType.FolderUpload,
-    TagPartType.Form,
-];
 
 /** Using a symbol so the tag-part can be safely converted to JSON without extra handling. */
 const TRANSLATED_NAME_PROP = Symbol('translated-name');
@@ -148,13 +74,13 @@ export class ConstructPartPropertiesComponent
     extends BaseFormPropertiesComponent<TagPartPropertiesFormData>
     implements OnChanges {
 
-    public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
-    public readonly REMOVED_CONSTRUCT_PART_TYPES = REMOVED_CONSTRUCT_PART_TYPES;
     public readonly TRANSLATED_NAME_PROP = TRANSLATED_NAME_PROP;
     public readonly TagPartTypePropertyType = TagPartTypePropertyType;
     public readonly ConstructPartPropertiesMode = ConstructPartPropertiesMode;
 
     public readonly SORTED_VALIDATOR_CONFIGS: (RegexValidationInfo & { [TRANSLATED_NAME_PROP]: string })[];
+
+    public readonly partTypes = input.required<PartType[]>();
 
     @Input()
     public mode: ConstructPartPropertiesMode;
@@ -179,6 +105,10 @@ export class ConstructPartPropertiesComponent
 
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
+
+    private readonly deprecatedPartTypes = computed<TagPartType[]>(() => {
+        return this.partTypes().filter((part) => part.deprecated).map((part) => part.id);
+    });
 
     protected override delayedSetup = true;
 
@@ -252,7 +182,7 @@ export class ConstructPartPropertiesComponent
                 createBlacklistValidator(() => this.orderBlacklist),
             ]),
             // select
-            typeId: new FormControl(null, [Validators.required, createBlacklistValidator(() => REMOVED_CONSTRUCT_PART_TYPES)]),
+            typeId: new FormControl(null, [Validators.required, createBlacklistValidator(() => this.deprecatedPartTypes())]),
 
             // checkbox
             editable: new FormControl(false),
@@ -373,9 +303,11 @@ export class ConstructPartPropertiesComponent
             output.name = this.value?.name;
             output.type = this.value?.type;
         }
+
         if (formData.typeId === TagPartType.Json) {
             (output as TagPartPropertiesFormData).markupLanguageId = MarkupLanguageType.JSON;
         }
-        return output as TagPartPropertiesFormData;
+
+        return output;
     }
 }

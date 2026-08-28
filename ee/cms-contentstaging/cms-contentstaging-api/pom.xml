@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-contentstaging</artifactId>
-		<version>6.5.3-SNAPSHOT</version>
+		<version>6.5.3</version>
 	</parent>
 
 	<artifactId>cms-contentstaging-api</artifactId>

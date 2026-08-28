@@ -33,6 +33,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
@@ -196,8 +197,18 @@ public class HelperSource {
 			return options.fn();
 		}
 
+		Object cms = options.context.get("cms");
 		try (final ChannelTrx trx = new ChannelTrx(node)) {
+			if (cms != null) {
+				if (cms instanceof ResolvableMapWrapper wrapper) {
+					options.context.combine("cms", new ResolvableMapWrapper(new ChannelCMSResolver((CMSResolver) wrapper.getWrapped(), node)));
+				}
+			}
 			return options.fn();
+		} finally {
+			if (cms != null) {
+				options.context.combine("cms", cms);
+			}
 		}
 	}
 

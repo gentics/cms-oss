@@ -72,67 +72,67 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
-	final static int creationTimestamp = (int) (System.currentTimeMillis() / 1000) - 2 * 86400;
+	protected final static int creationTimestamp = (int) (System.currentTimeMillis() / 1000) - 2 * 86400;
 
-	final static int editTimestamp = (int) (System.currentTimeMillis() / 1000) - 86400;
+	protected final static int editTimestamp = (int) (System.currentTimeMillis() / 1000) - 86400;
 
-	final static int publishTimestamp = (int) (System.currentTimeMillis() / 1000);
+	protected final static int publishTimestamp = (int) (System.currentTimeMillis() / 1000);
 
-	final static String creationdate = new ContentNodeDate(creationTimestamp).toString();
+	protected final static String creationdate = new ContentNodeDate(creationTimestamp).toString();
 
-	final static String editdate = new ContentNodeDate(editTimestamp).toString();
+	protected final static String editdate = new ContentNodeDate(editTimestamp).toString();
 
-	final static String publishdate = new ContentNodeDate(publishTimestamp).toString();
+	protected final static String publishdate = new ContentNodeDate(publishTimestamp).toString();
 
-	static SystemUser creator;
+	protected static SystemUser creator;
 
-	static SystemUser editor;
+	protected static SystemUser editor;
 
-	static SystemUser publisher;
+	protected static SystemUser publisher;
 
-	static Node node;
+	protected static Node node;
 
-	static Folder rootFolder;
+	protected static Folder rootFolder;
 
-	static Folder homeFolder;
+	protected static Folder homeFolder;
 
-	static Folder testFolder;
+	protected static Folder testFolder;
 
-	static Folder subFolder;
+	protected static Folder subFolder;
 
-	static File testFile;
+	protected static File testFile;
 
-	static ImageFile testImage;
+	protected static ImageFile testImage;
 
-	static Construct handlebarsConstruct;
+	protected static Construct handlebarsConstruct;
 
-	static Template template;
+	protected static Template template;
 
-	static Page targetPage;
+	protected static Page targetPage;
 
-	static Page testPage;
+	protected static Page testPage;
 
-	static Page englishPage;
+	protected static Page englishPage;
 
-	static Construct testConstruct;
+	protected static Construct testConstruct;
 
-	static Construct overviewConstruct;
+	protected static Construct overviewConstruct;
 
-	static Construct datasourceConstruct;
+	protected static Construct datasourceConstruct;
 
-	static Datasource datasource;
+	protected static Datasource datasource;
 
-	static Construct singleSelectConstruct;
+	protected static Construct singleSelectConstruct;
 
-	static Construct multiSelectConstruct;
+	protected static Construct multiSelectConstruct;
 
-	static Construct urlsConstruct;
+	protected static Construct urlsConstruct;
 
-	static Construct checkboxConstruct;
+	protected static Construct checkboxConstruct;
 
-	static Construct nodeConstruct;
+	protected static Construct nodeConstruct;
 
-	static Integer shortTextConstruct;
+	protected static Integer shortTextConstruct;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -742,12 +742,23 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 		);
 	}
 
+
 	/**
 	 * Assert that the rendered testPage has the expected dependencies
 	 * @param expectedDependencies expected dependencies
 	 * @throws NodeException
 	 */
 	protected void assertDependencies(List<Pair<String, String>> expectedDependencies) throws NodeException {
+		assertDependencies(expectedDependencies, 0);
+	}
+
+	/**
+	 * Assert that the rendered testPage has the expected dependencies over the given channel
+	 * @param expectedDependencies expected dependencies
+	 * @param channelId
+	 * @throws NodeException
+	 */
+	protected void assertDependencies(List<Pair<String, String>> expectedDependencies, int channelId) throws NodeException {
 		if (CollectionUtils.isNotEmpty(expectedDependencies)) {
 			operate(() -> {
 				for (Pair<String, String> dep : expectedDependencies) {
@@ -758,7 +769,7 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 					try {
 						Field field = AbstractHandlebarsPartTypeRenderingTest.class.getDeclaredField(fieldName);
 						NodeObject nodeObject = ObjectTransformer.get(NodeObject.class, field.get(null));
-						assertThat(testPage).dependsOn(nodeObject, property, 0);
+						assertThat(testPage).dependsOn(nodeObject, property, channelId);
 					} catch (Exception e) {
 						throw new NodeException(e);
 					}

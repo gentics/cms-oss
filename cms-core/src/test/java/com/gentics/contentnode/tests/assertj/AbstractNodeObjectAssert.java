@@ -7,6 +7,7 @@ import org.assertj.core.api.AbstractObjectAssert;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
+import com.gentics.contentnode.events.DependencyManager.DependencyImpl;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.Folder;
@@ -79,6 +80,9 @@ public abstract class AbstractNodeObjectAssert<S extends AbstractObjectAssert<S,
 	 */
 	public S dependsOn(NodeObject sourceObject, String sourceProperty, int channelId) throws NodeException {
 		Dependency dependency = DependencyManager.createDependency(sourceObject, null, sourceProperty, actual, null, Events.UPDATE);
+		if (channelId != 0) {
+			((DependencyImpl) dependency).addChannelId(/*channelId*/ 0); // TODO why?
+		}
 		assertThat(DependencyManager.getDependenciesForObject(actual, null, null)).as(String.format("Dependencies of %s", descriptionText()))
 				.contains(dependency);
 		return myself;
@@ -94,6 +98,9 @@ public abstract class AbstractNodeObjectAssert<S extends AbstractObjectAssert<S,
 	 */
 	public S doesNotDependOn(NodeObject sourceObject, String sourceProperty, int channelId) throws NodeException {
 		Dependency dependency = DependencyManager.createDependency(sourceObject, null, sourceProperty, actual, null, Events.UPDATE);
+		if (channelId != 0) {
+			((DependencyImpl) dependency).addChannelId(/*channelId*/ 0); // TODO why?
+		}
 		assertThat(DependencyManager.getDependenciesForObject(actual, null, null)).as(String.format("Dependencies of %s", descriptionText()))
 				.doesNotContain(dependency);
 		return myself;

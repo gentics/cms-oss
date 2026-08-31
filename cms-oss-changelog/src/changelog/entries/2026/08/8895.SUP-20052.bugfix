@@ -1,0 +1,1 @@
+Handlebars: Now when `gtx_channel` helper is used, the targeted channel data can be accessed via `cms.channel` context item.

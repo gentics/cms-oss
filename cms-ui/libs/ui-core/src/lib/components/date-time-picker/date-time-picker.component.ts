@@ -9,7 +9,7 @@ import {
     Output,
 } from '@angular/core';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { Moment, unix } from '../../common';
+import { toValidNumber } from '@gentics/common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { generateFormProvider } from '../../utils';
@@ -61,14 +61,6 @@ export class DateTimePickerComponent
     @Input()
     public emptyValue: any = null;
 
-    /**
-     * A [moment.js](http://momentjs.com/)-compatible format string which determines how the
-     * date/time will be displayed in the input field.
-     * See [the moment docs](http://momentjs.com/docs/#/displaying/format/) for valid strings.
-     */
-    @Input()
-    public format: string;
-
     /** The minimum date allowed, e.g. `new Date(2015, 2, 12)`. */
     @Input()
     public min: Date;
@@ -101,7 +93,7 @@ export class DateTimePickerComponent
     public displayValue = '';
 
     /** @internal */
-    private momentValue: Moment | null = null;
+    private dateValue: Date | null = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -124,20 +116,20 @@ export class DateTimePickerComponent
     }
 
     protected onValueChange(): void {
-        if (this.value == null) {
-            this.momentValue = null;
+        const timestamp = toValidNumber(this.value);
+
+        if (timestamp == null) {
+            this.dateValue = null;
             this.updateDisplayValue();
             return;
         }
 
-        const timestamp = Number(this.value);
-
         // No actual change
-        if (this.momentValue && this.getUnixTimestamp() === timestamp) {
+        if (this.dateValue != null && this.dateValue.getTime() === timestamp) {
             return;
         }
 
-        this.momentValue = unix(timestamp);
+        this.dateValue = new Date(timestamp);
         this.updateDisplayValue();
     }
 
@@ -158,7 +150,9 @@ export class DateTimePickerComponent
             const dialog = await this.modalService.fromComponent(DateTimePickerModal, {
                 padding: false,
             }, {
-                timestamp: this.getUnixTimestamp(),
+                timestamp: this.dateValue == null || this.dateValue.getTime() === 0
+                    ? Date.now() / 1000
+                    : this.dateValue.getTime(),
                 formatProvider: (this.formatProvider || this.defaultFormatProvider),
                 displayTime: this.displayTime,
                 displaySeconds: this.displaySeconds,
@@ -177,18 +171,12 @@ export class DateTimePickerComponent
         }
     }
 
-    getUnixTimestamp(): number {
-        return this.momentValue ? this.momentValue.unix() : 0;
-    }
-
     /** Format date to a human-readable string for displaying in the component's input field. */
     updateDisplayValue(): void {
-        if (!this.value || !this.momentValue) {
+        if (!this.value || !this.dateValue) {
             this.displayValue = '';
-        } else if (this.format) {
-            this.displayValue = this.momentValue.format(this.format);
         } else {
-            this.displayValue = (this.formatProvider || this.defaultFormatProvider).format(this.momentValue, this.displayTime, this.displaySeconds);
+            this.displayValue = (this.formatProvider || this.defaultFormatProvider).format(this.dateValue, this.displayTime, this.displaySeconds);
         }
 
         this.changeDetector.markForCheck();
@@ -196,7 +184,7 @@ export class DateTimePickerComponent
 
     /** Clear input value of DateTimePicker and emit `emptyValue` as value. */
     clearDateTime(): void {
-        if (this.disabled || !this.momentValue) {
+        if (this.disabled || !this.dateValue) {
             return;
         }
 

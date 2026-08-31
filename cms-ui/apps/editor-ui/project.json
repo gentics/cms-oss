@@ -58,15 +58,12 @@
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
-                    "@bevacqua/rome",
                     "base64-js",
                     "cropperjs",
                     "dompurify",
                     "ev-emitter",
                     "js-sha256",
-                    "masonry-layout",
-                    "moment",
-                    "moment-timezone"
+                    "masonry-layout"
                 ],
                 "fileReplacements": [
                     {

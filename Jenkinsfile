@@ -7,8 +7,6 @@ JobContext.set(this)
 
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
-final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
-final def testDbManagerPort    = "8080"
 final def helmRepositoryProd   = 'https://repo.gentics.com/repository/helm/';
 final def helmRepositoryTest   = 'https://repo.gentics.com/repository/helm-snapshots/';
 
@@ -277,7 +275,7 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                     // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                    withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${mesh_enterprise_licensekey_2}", "KEYS_PATH=target/keys"]) {
+                    withEnv(["NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${mesh_enterprise_licensekey_2}", "KEYS_PATH=target/keys"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }

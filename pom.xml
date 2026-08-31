@@ -113,7 +113,7 @@
 		<testdb.showLogs>testdb-mariadb,testdb-manager</testdb.showLogs>
 		<testdb.mariadb.port>33306</testdb.mariadb.port>
 		<testdb.manager.port>38080</testdb.manager.port>
-		<testdb.mariadb.image>mariadb:10.11</testdb.mariadb.image>
+		<testdb.mariadb.image>mariadb:12.3</testdb.mariadb.image>
 		<testdb.mariadb.maxConnections>3000</testdb.mariadb.maxConnections>
 		<testdb.mariadb.user>root</testdb.mariadb.user>
 		<testdb.mariadb.password>testdb</testdb.mariadb.password>

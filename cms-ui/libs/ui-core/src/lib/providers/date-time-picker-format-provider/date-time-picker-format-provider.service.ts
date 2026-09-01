@@ -2,50 +2,18 @@ import { Injectable } from '@angular/core';
 import { NEVER, Observable } from 'rxjs';
 import { DateTimePickerStrings, DEFAULT_DATE_TIME_PICKER_STRINGS } from '../../common';
 
-/**
- * A simplified subset of the Moment interface which we expose via the first arg of the
- * DateTimePickerFormatProvider.format() method.
- */
-export interface MomentLike {
-    format(format?: string): string;
-
-    year(): number;
-    quarter(): number;
-    month(): number;
-    day(): number;
-    date(): number;
-    hour(): number;
-    hours(): number;
-    minute(): number;
-    minutes(): number;
-    second(): number;
-    seconds(): number;
-    millisecond(): number;
-    milliseconds(): number;
-    weekday(): number;
-    isoWeekday(): number;
-    weekYear(): number;
-    isoWeekYear(): number;
-    week(): number;
-    weeks(): number;
-    isoWeek(): number;
-    isoWeeks(): number;
-    weeksInYear(): number;
-    isoWeeksInYear(): number;
-    dayOfYear(): number;
-
-    toArray(): number[];
-    toDate(): Date;
-    toISOString(): string;
-    toJSON(): string;
-    unix(): number;
-
-    isLeapYear(): boolean;
-    zone(): number;
-    utcOffset(): number;
-    daysInMonth(): number;
-    isDST(): boolean;
-}
+const SIMPLE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'long',
+});
+const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'long',
+    timeStyle: 'short',
+});
+const SECONDS_FORMATTER = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'long',
+    timeStyle: 'medium',
+});
+const LOCALE = new Intl.Locale(navigator.language.split('-')[0]);
 
 /**
  * Format provider to localize the DateTimePicker component.
@@ -54,14 +22,32 @@ export interface MomentLike {
 export class DateTimePickerFormatProvider {
 
     /** Texts uses by the DateTimePicker modal. */
-    strings: DateTimePickerStrings = DEFAULT_DATE_TIME_PICKER_STRINGS;
+    strings: DateTimePickerStrings = {
+        ...DEFAULT_DATE_TIME_PICKER_STRINGS,
+        // Cast to any as we don't have the types for it yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        weekStart: (LOCALE as any).getWeekInfo().firstDay % 7,
+    };
 
     /** May emit a value when the translations or the date format changed. */
     changed$: Observable<any> = NEVER;
 
+    getDateOrder(): 'dmy' | 'ymd' | 'mdy' {
+        const parts = SIMPLE_FORMATTER.formatToParts(new Date());
+        return parts
+            .filter((part) => part.type === 'day' || part.type === 'month' || part.type === 'year')
+            .map((part) => part.type[0])
+            .join('') as any;
+    }
+
     /** Formats a human-readable string to be displayed in the control input field. */
-    format(date: MomentLike, displayTime: boolean, displaySeconds: boolean): string {
-        const formatString = displayTime ? (displaySeconds ? 'L, LTS' : 'L, LT') : 'L';
-        return date.format(formatString);
+    format(date: Date, displayTime: boolean, displaySeconds: boolean): string {
+        if (displayTime && displaySeconds) {
+            return SECONDS_FORMATTER.format(date);
+        } else if (displayTime) {
+            return TIME_FORMATTER.format(date);
+        } else {
+            return SIMPLE_FORMATTER.format(date);
+        }
     }
 }

@@ -107,6 +107,24 @@
 		<hsqldb.version>2.7.2</hsqldb.version>
 		<swagger.version>2.2.4</swagger.version>
 
+		<docker.maven.plugin.version>0.49.0</docker.maven.plugin.version>
+		<testdb.docker.skip>false</testdb.docker.skip>
+		<testdb.host>localhost</testdb.host>
+		<testdb.pullPolicy>IfNotPresent</testdb.pullPolicy>
+		<testdb.docker.images>testdb-mariadb,testdb-manager</testdb.docker.images>
+		<testdb.showLogs>testdb-mariadb,testdb-manager</testdb.showLogs>
+		<testdb.mariadb.port>33306</testdb.mariadb.port>
+		<testdb.manager.port>38080</testdb.manager.port>
+		<testdb.mariadb.image>mariadb:12.3</testdb.mariadb.image>
+		<testdb.mariadb.maxConnections>3000</testdb.mariadb.maxConnections>
+		<testdb.mariadb.user>root</testdb.mariadb.user>
+		<testdb.mariadb.password>testdb</testdb.mariadb.password>
+		<testdb.initdb.script>${maven.multiModuleProjectDirectory}/build/testdb/initdb/01-gcn-testdb-accounts.sql</testdb.initdb.script>
+		<testdb.manager.image>docker.gentics.com/apps/gcn-testdb-manager:master</testdb.manager.image>
+		<testdb.manager.pool.capacity>5</testdb.manager.pool.capacity>
+		<testdb.manager.gcndb.limit>40</testdb.manager.gcndb.limit>
+		<testdb.manager.filler.threads>4</testdb.manager.filler.threads>
+
 		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
@@ -347,6 +365,88 @@
 					</configuration>
 				</plugin>
 				<plugin>
+					<groupId>io.fabric8</groupId>
+					<artifactId>docker-maven-plugin</artifactId>
+					<version>${docker.maven.plugin.version}</version>
+					<configuration>
+						<skip>${testdb.docker.skip}</skip>
+						<filter>${testdb.docker.images}</filter>
+						<showLogs>${testdb.showLogs}</showLogs>
+						<removeVolumes>true</removeVolumes>
+						<images>
+							<image>
+								<alias>testdb-mariadb</alias>
+								<name>gentics/cms-oss-testdb-mariadb:local</name>
+								<build>
+									<from>${testdb.mariadb.image}</from>
+									<assembly>
+										<targetDir>/docker-entrypoint-initdb.d</targetDir>
+										<inline>
+											<id>initdb</id>
+											<files>
+												<file>
+													<source>${testdb.initdb.script}</source>
+													<outputDirectory>.</outputDirectory>
+												</file>
+											</files>
+										</inline>
+									</assembly>
+								</build>
+								<run>
+									<cmd>
+										<exec>
+											<arg>--port=${testdb.mariadb.port}</arg>
+											<arg>--transaction-isolation=READ-COMMITTED</arg>
+											<arg>--binlog-format=ROW</arg>
+											<arg>--log-bin=mysqld-bin</arg>
+											<arg>--max-allowed-packet=67108864</arg>
+											<arg>--max-connections=${testdb.mariadb.maxConnections}</arg>
+										</exec>
+									</cmd>
+									<env>
+										<TZ>Europe/Vienna</TZ>
+										<MARIADB_ROOT_PASSWORD>${testdb.mariadb.password}</MARIADB_ROOT_PASSWORD>
+									</env>
+									<ports>
+										<port>${testdb.mariadb.port}:${testdb.mariadb.port}</port>
+										<port>${testdb.manager.port}:${testdb.manager.port}</port>
+									</ports>
+									<wait>
+										<log>.*port: ${testdb.mariadb.port}  mariadb.org binary distribution.*</log>
+										<time>300000</time>
+									</wait>
+								</run>
+							</image>
+							<image>
+								<alias>testdb-manager</alias>
+								<name>${testdb.manager.image}</name>
+								<run>
+									<imagePullPolicy>${testdb.pullPolicy}</imagePullPolicy>
+									<network>
+										<mode>container</mode>
+										<name>testdb-mariadb</name>
+									</network>
+									<env>
+										<TZ>Europe/Vienna</TZ>
+										<GCN_TESTDB_MANAGER_PORT>${testdb.manager.port}</GCN_TESTDB_MANAGER_PORT>
+										<GCN_TESTDB_MANAGER_MYSQL_HOST>${testdb.host}</GCN_TESTDB_MANAGER_MYSQL_HOST>
+										<GCN_TESTDB_MANAGER_MYSQL_PORT>${testdb.mariadb.port}</GCN_TESTDB_MANAGER_MYSQL_PORT>
+										<GCN_TESTDB_MANAGER_MYSQL_USER>${testdb.mariadb.user}</GCN_TESTDB_MANAGER_MYSQL_USER>
+										<GCN_TESTDB_MANAGER_MYSQL_PASSWORD>${testdb.mariadb.password}</GCN_TESTDB_MANAGER_MYSQL_PASSWORD>
+										<GCN_TESTDB_MANAGER_GCNDB_POOL_CAPACITY>${testdb.manager.pool.capacity}</GCN_TESTDB_MANAGER_GCNDB_POOL_CAPACITY>
+										<GCN_TESTDB_MANAGER_GCNDB_LIMIT>${testdb.manager.gcndb.limit}</GCN_TESTDB_MANAGER_GCNDB_LIMIT>
+										<GCN_TESTDB_MANAGER_FILLER_THREADS>${testdb.manager.filler.threads}</GCN_TESTDB_MANAGER_FILLER_THREADS>
+									</env>
+									<wait>
+										<log>.*msg=Listening.*</log>
+										<time>180000</time>
+									</wait>
+								</run>
+							</image>
+						</images>
+					</configuration>
+				</plugin>
+				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>jslint-maven-plugin</artifactId>
 					<version>1.0.1</version>
@@ -435,6 +535,130 @@
 			<url>http://repo2.maven.org/maven2</url>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<profiles>
+		<!-- Starts the test databases for every module that has tests. Surefire is declared
+			 first on purpose: a module that declares it as well keeps this position, so within
+			 the test phase the containers are stopped after the tests ran. -->
+		<profile>
+			<id>testdb-containers</id>
+			<activation>
+				<file>
+					<exists>src/test/java</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<?m2e ignore?>
+								<id>testdb-start</id>
+								<phase>generate-test-resources</phase>
+								<goals>
+									<goal>build</goal>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<?m2e ignore?>
+								<id>testdb-stop</id>
+								<phase>test</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!-- Points the tests at the test databases that this build spawns itself.
+			 Active unless -Dtestdb.docker.skip is given, in which case the tests fall
+			 back to whatever TESTMANAGER_HOSTNAME / TESTMANAGER_PORT and testdb_*
+			 environment variables are set outside of the build.
+			 See build/testdb/README.md -->
+		<profile>
+			<id>local-testdb</id>
+			<activation>
+				<property>
+					<name>!testdb.docker.skip</name>
+				</property>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-surefire-plugin</artifactId>
+							<configuration>
+								<environmentVariables>
+									<!-- Read by com.gentics.testutils.sandbox.GCNSandboxHelper -->
+									<TESTMANAGER_HOSTNAME>${testdb.host}</TESTMANAGER_HOSTNAME>
+									<TESTMANAGER_PORT>${testdb.manager.port}</TESTMANAGER_PORT>
+									<!-- Read by com.gentics.testutils.database.pool.TestDatabaseRepository,
+										 used for the databases that the tests create themselves
+										 (contentrepositories, base-lib datasource tests) -->
+									<testdb_mysql_host>${testdb.host}</testdb_mysql_host>
+									<testdb_mysql_port>${testdb.mariadb.port}</testdb_mysql_port>
+									<testdb_mysql_username>${testdb.mariadb.user}</testdb_mysql_username>
+									<testdb_mysql_passwd>${testdb.mariadb.password}</testdb_mysql_passwd>
+									<testdb_mariadb_host>${testdb.host}</testdb_mariadb_host>
+									<testdb_mariadb_port>${testdb.mariadb.port}</testdb_mariadb_port>
+									<testdb_mariadb_username>${testdb.mariadb.user}</testdb_mariadb_username>
+									<testdb_mariadb_passwd>${testdb.mariadb.password}</testdb_mariadb_passwd>
+								</environmentVariables>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+
+		<!-- Do not spawn test database containers when no tests are executed anyway -->
+		<profile>
+			<id>no-testdb-for-skipped-tests</id>
+			<activation>
+				<property>
+					<name>skipTests</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<properties>
+				<testdb.docker.skip>true</testdb.docker.skip>
+			</properties>
+		</profile>
+		<profile>
+			<id>no-testdb-for-skipped-unit-tests</id>
+			<activation>
+				<property>
+					<name>skip.unit.tests</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<properties>
+				<testdb.docker.skip>true</testdb.docker.skip>
+			</properties>
+		</profile>
+		<profile>
+			<id>no-testdb-for-skipped-test-compile</id>
+			<activation>
+				<property>
+					<name>maven.test.skip</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<properties>
+				<testdb.docker.skip>true</testdb.docker.skip>
+			</properties>
+		</profile>
+	</profiles>
 
 	<repositories>
 		<repository>

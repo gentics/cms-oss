@@ -13,8 +13,9 @@ h4. MariaDB
 Gentics CMS supports the Long Term Support (LTS) versions of MariaDB.
 
 |_.Major Version |_.Minor Versions |_.Supported |_.Notes                   |
+| 12             | 12.3            | Yes[1]     |                          |
 | 11             | 11.4            | Yes        |                          |
-| 10             | 10.6, 10.11     | Yes[1]     | Since Gentics CMS 6.0.0  |
+| 10             | 10.6, 10.11     | Yes        | Since Gentics CMS 6.0.0  |
 
 NOTE: For MariaDB versions 11.6 and up, the setting @innodb_snapshot_isolation@ must be disabled in the configuration.
 

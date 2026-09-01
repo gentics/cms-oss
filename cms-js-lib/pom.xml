@@ -19,6 +19,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+		<!-- These tests do not use a database -->
+		<testdb.docker.skip>true</testdb.docker.skip>
 	</properties>
 
 	<dependencyManagement>

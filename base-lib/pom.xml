@@ -22,6 +22,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<surefire.baselib.excludedGroups></surefire.baselib.excludedGroups>
+		<!-- These tests create their own databases, no test DB manager needed -->
+		<testdb.docker.images>testdb-mariadb</testdb.docker.images>
 		<test.forkcount>8</test.forkcount>
 	</properties>
 
@@ -57,39 +59,6 @@
 				</executions>
 			</plugin>
 
-			<plugin>
-				<!-- Test database for this module. The datasource tests create their own
-					 databases on the server, so no gcn-testdb-manager is needed here.
-					 Declared after surefire on purpose: within the test phase the plugins run
-					 in declaration order, so the container is stopped after the tests ran. -->
-				<groupId>io.fabric8</groupId>
-				<artifactId>docker-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<?m2e ignore?>
-						<id>testdb-mariadb-start</id>
-						<phase>generate-test-resources</phase>
-						<goals>
-							<goal>build</goal>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<filter>testdb-mariadb</filter>
-						</configuration>
-					</execution>
-					<execution>
-						<?m2e ignore?>
-						<id>testdb-stop</id>
-						<phase>test</phase>
-						<goals>
-							<goal>stop</goal>
-						</goals>
-						<configuration>
-							<filter>testdb-mariadb</filter>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>

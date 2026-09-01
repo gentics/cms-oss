@@ -110,6 +110,7 @@
 		<testdb.docker.skip>false</testdb.docker.skip>
 		<testdb.host>localhost</testdb.host>
 		<testdb.pullPolicy>IfNotPresent</testdb.pullPolicy>
+		<testdb.docker.images>testdb-mariadb,testdb-manager</testdb.docker.images>
 		<testdb.showLogs>testdb-mariadb,testdb-manager</testdb.showLogs>
 		<testdb.mariadb.port>33306</testdb.mariadb.port>
 		<testdb.manager.port>38080</testdb.manager.port>
@@ -368,6 +369,7 @@
 					<version>${docker.maven.plugin.version}</version>
 					<configuration>
 						<skip>${testdb.docker.skip}</skip>
+						<filter>${testdb.docker.images}</filter>
 						<showLogs>${testdb.showLogs}</showLogs>
 						<removeVolumes>true</removeVolumes>
 						<images>
@@ -534,6 +536,48 @@
 	</pluginRepositories>
 
 	<profiles>
+		<!-- Starts the test databases for every module that has tests. Surefire is declared
+			 first on purpose: a module that declares it as well keeps this position, so within
+			 the test phase the containers are stopped after the tests ran. -->
+		<profile>
+			<id>testdb-containers</id>
+			<activation>
+				<file>
+					<exists>src/test/java</exists>
+				</file>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>io.fabric8</groupId>
+						<artifactId>docker-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<?m2e ignore?>
+								<id>testdb-start</id>
+								<phase>generate-test-resources</phase>
+								<goals>
+									<goal>build</goal>
+									<goal>start</goal>
+								</goals>
+							</execution>
+							<execution>
+								<?m2e ignore?>
+								<id>testdb-stop</id>
+								<phase>test</phase>
+								<goals>
+									<goal>stop</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<!-- Points the tests at the test databases that this build spawns itself.
 			 Active unless -Dtestdb.docker.skip is given, in which case the tests fall
 			 back to whatever TESTMANAGER_HOSTNAME / TESTMANAGER_PORT and testdb_*

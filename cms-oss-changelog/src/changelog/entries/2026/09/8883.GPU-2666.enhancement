@@ -1,0 +1,3 @@
+The CMS now provides an "MCP":https://modelcontextprotocol.io/ (Model Context Protocol) server, which is served over the streamable HTTP transport at <code>/mcp</code>.
+
+The endpoint can be configured with the environment variables @MCP_ENABLED@ (default @true@) and @MCP_PATH@ (default @/mcp@), with the system properties @com.gentics.contentnode.mcp.enabled@ and @com.gentics.contentnode.mcp.path@, or with the configuration properties @mcp.enabled@ and @mcp.path@.

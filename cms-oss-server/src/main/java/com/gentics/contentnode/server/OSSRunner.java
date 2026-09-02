@@ -48,6 +48,7 @@ import com.gentics.contentnode.config.AutoScanFeature;
 import com.gentics.contentnode.config.PackageRewriteRule;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
+import com.gentics.contentnode.mcp.MCPServer;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -166,6 +167,9 @@ public class OSSRunner {
 		context.addServlet(servletHolder, "/rest/*");
 		context.addServlet(JmxServlet.class, "/jmx");
 
+		// add MCP Servlet
+		addMcpServlet(context);
+
 		// add servlets for alohaeditor
 		addAlohaEditor(context);
 
@@ -256,8 +260,31 @@ public class OSSRunner {
 			} catch (Exception ignored) {
 			}
 		} finally {
+			MCPServer.shutdown();
 			Initializer.get().shutdown();
 		}
+	}
+
+	/**
+	 * Add the servlet for the MCP endpoint (if enabled).
+	 *
+	 * The servlet implementation of the MCP Java SDK handles the requests asynchronously,
+	 * so the servlet holder needs to support that.
+	 *
+	 * @param context context
+	 */
+	private static void addMcpServlet(ServletContextHandler context) {
+		if (!MCPServer.isEnabled()) {
+			NodeConfigRuntimeConfiguration.runtimeLog.info("MCP endpoint is disabled");
+			return;
+		}
+
+		String path = MCPServer.getPath();
+		ServletHolder mcpServletHolder = new ServletHolder(MCPServer.getServlet());
+		mcpServletHolder.setAsyncSupported(true);
+		context.addServlet(mcpServletHolder, path);
+
+		NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Serving MCP endpoint at %s", path));
 	}
 
 	private static void addStaticFilesToContext(ServletContextHandler context) {

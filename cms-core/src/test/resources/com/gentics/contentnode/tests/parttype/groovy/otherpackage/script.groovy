@@ -1,0 +1,3 @@
+package otherpackage
+
+return "bla"

@@ -433,6 +433,18 @@
 				<version>${handlebars.version}</version>
 			</dependency>
 
+			<!-- Groovy -->
+			<dependency>
+				<groupId>org.apache.groovy</groupId>
+				<artifactId>groovy</artifactId>
+				<version>${groovy.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.groovy</groupId>
+				<artifactId>groovy-json</artifactId>
+				<version>${groovy.version}</version>
+			</dependency>
+
 			<!--Test dependencies -->
 			<dependency>
 				<groupId>junit</groupId>

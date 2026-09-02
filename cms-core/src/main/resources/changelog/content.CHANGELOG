@@ -828,3 +828,4 @@
 2026-04-21  CH-1742 SP	SQL INSERT INTO type (id, name, description, auto, javaclass) VALUES (44, 'JSON', 'JSON content', 0, 'com.gentics.contentnode.object.parttype.JSONPartType'); ## New JSON part type
 2026-04-28	CH-1743	SP	SQL	ALTER TABLE tagmap ADD COLUMN json_schema_filter MEDIUMTEXT AFTER micronode_filter;
 2026-04-28	CH-1744	SP	SQL	ALTER TABLE cr_fragment_entry ADD COLUMN json_schema_filter MEDIUMTEXT AFTER micronode_filter;
+2026-08-06	CH-1750	NOP	SQL	INSERT INTO type (id, name, description, auto, javaclass) VALUES (45, 'Groovy', 'Execute Groovy Scripts', 0, 'com.gentics.contentnode.object.parttype.groovy.GroovyPartType'); ## Add new part type for executing Groovy scripts

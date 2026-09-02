@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -559,8 +560,10 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 	 */
 	protected String getProposedFilename(Part part) {
 		// special case for HandlebarsPartType
-		if (part.getPartTypeId() == 43) {
+		if (part.getPartTypeId() == Part.HANDLEBARS) {
 			return "part." + part.getKeyname() + ".hbs";
+		} else if (part.getPartoptionId() == Part.GROOVY) {
+			return "part." + part.getKeyname() + ".groovy";
 		}
 		switch (Property.Type.get(part.getPartTypeId())) {
 		case STRING:
@@ -593,7 +596,7 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 	 * @return true iff the filename belongs to a part value
 	 */
 	protected boolean isPartFilename(String filename) {
-		return filename.startsWith("part.") && (filename.endsWith(".txt") || filename.endsWith(".html") || filename.endsWith(".json") || filename.endsWith(".hbs"));
+		return Strings.CI.startsWith(filename, "part.") && Strings.CI.endsWithAny(filename, ".txt", ".html", ".json", ".hbs", ".groovy");
 	}
 
 	/**

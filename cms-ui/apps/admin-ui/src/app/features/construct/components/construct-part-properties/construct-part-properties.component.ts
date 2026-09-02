@@ -101,6 +101,7 @@ export const VIABLE_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.Velocity,
     TagPartType.Handlebars,
     TagPartType.Json,
+    TagPartType.Groovy,
 ];
 
 export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [

@@ -19,7 +19,7 @@ import {
 import { expect, Locator, Page, test } from '@playwright/test';
 import { cloneWithSymbols } from '@gentics/common';
 import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
-import { setGtxDateFromXpath } from './helpers';
+import { dateShouldBeDisabled, setGtxDateFromXpath } from './helpers';
 
 const API_MODAL = 'gtx-api-tokens-modal';
 const API_CREATE_MODAL = 'gtx-api-tokens-create-modal';
@@ -123,13 +123,11 @@ test.describe('Api Tokens', () => {
 
         const dateInput = form.locator('gtx-date-time-picker');
 
-        // fill with date from yesterday
-        await setGtxDateFromXpath(page, dateInput, 'xpath=preceding-sibling::td[1]');
-
-        await expect(submitBtn.locator('button')).toBeDisabled();
+        // date from yesterday should be disabled
+        await dateShouldBeDisabled(page, form, 'xpath=preceding-sibling::button[1]');
 
         // fill with date from tomorrow
-        await setGtxDateFromXpath(page, dateInput, 'xpath=following-sibling::td[2]');
+        await setGtxDateFromXpath(page, dateInput, 'xpath=following-sibling::button[1]');
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 

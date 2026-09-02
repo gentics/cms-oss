@@ -43,6 +43,7 @@ export class DateTimePickerModal extends BaseModal<number> {
     }
 
     okayClicked(): void {
-        this.closeFn(this.timestamp);
+        // use seconds insetad of milliseconds
+        this.closeFn(Math.floor(this.timestamp / 1000));
     }
 }

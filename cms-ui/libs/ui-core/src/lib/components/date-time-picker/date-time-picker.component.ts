@@ -129,7 +129,9 @@ export class DateTimePickerComponent
             return;
         }
 
-        this.dateValue = new Date(timestamp);
+        // to milliseconds for the correct date
+        this.dateValue = new Date(timestamp * 1000);
+
         this.updateDisplayValue();
     }
 

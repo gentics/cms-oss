@@ -22,6 +22,7 @@ import {
 import { expect, Locator, Page, test } from '@playwright/test';
 import { ADMIN } from './common';
 import {
+    dateShouldBeDisabled,
     navigateToModule,
     setGtxDateFromXpath,
 } from './helpers';
@@ -169,13 +170,11 @@ test.describe('Mesh User Api Token', () => {
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
-        // select date from yesterday
-        await fillNewTokenFormEntry(page, createTokenModal, 'Test', 'xpath=preceding-sibling::td[1]');
-
-        await expect(submitBtn.locator('button')).toBeDisabled();
+        // date from yesterday should be disabled
+        await dateShouldBeDisabled(page, form, 'xpath=preceding-sibling::button[1]');
 
         // select date from tomorrow
-        await fillNewTokenFormEntry(page, createTokenModal, 'Test', 'xpath=following-sibling::td[2]');
+        await fillNewTokenFormEntry(page, createTokenModal, 'Test', 'xpath=following-sibling::button[1]');
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
@@ -209,7 +208,7 @@ test.describe('Mesh User Api Token', () => {
         const submitBtn = createTokenModal.locator('.modal-footer').locator('[data-action="confirm"]');
 
         // create entry
-        await fillNewTokenFormEntry(page, createTokenModal, 'Test 1', 'xpath=following-sibling::td[1]');
+        await fillNewTokenFormEntry(page, createTokenModal, 'Test 1', 'xpath=following-sibling::button[1]');
 
         await submitBtn.click();
 
@@ -257,7 +256,7 @@ test.describe('Mesh User Api Token', () => {
 
             const submitBtn = createTokenModal.locator('.modal-footer').locator('[data-action="confirm"]');
 
-            await fillNewTokenFormEntry(page, createTokenModal, `Test ${i}`, 'xpath=following-sibling::td[1]');
+            await fillNewTokenFormEntry(page, createTokenModal, `Test ${i}`, 'xpath=following-sibling::button[1]');
 
             await submitBtn.click();
 

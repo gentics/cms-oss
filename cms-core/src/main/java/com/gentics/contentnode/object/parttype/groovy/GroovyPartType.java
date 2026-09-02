@@ -9,20 +9,16 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.tools.GroovyClass;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
-import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
-import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.TextPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableGetter;
-import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.contentnode.rest.util.MiscUtils;
@@ -62,9 +58,7 @@ public class GroovyPartType extends TextPartType {
 
 		renderType.createCMSResolver();
 		try {
-			CMSResolver cmsResolver = renderType.getCMSResolver();
-			Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
-			CompilationUnit unit = renderType.getCompilationUnit(node);
+			CompilationUnit unit = GroovyUtils.getCurrentCompilationUnit();
 
 			Value value = getValueObject();
 			String constructKeyword = Optional.ofNullable(value).map(v -> MiscUtils.execOrNull(Value::getContainer, v))
@@ -92,7 +86,7 @@ public class GroovyPartType extends TextPartType {
 			}
 
 			return GroovyUtils.call(unit.getClassLoader(), scriptClassName, script -> {
-				script.setProperty("cms", new ResolvableMapWrapper(cmsResolver));
+				GroovyUtils.injectCmsResolver(script);
 			});
 		} catch (CompilationFailedException e) {
 			throw new NodeException(e);

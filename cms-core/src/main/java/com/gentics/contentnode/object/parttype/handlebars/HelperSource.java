@@ -29,7 +29,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Tag;
-import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.render.GisRendering;
@@ -243,14 +242,10 @@ public class HelperSource {
 	 */
 	@HelperFunction("gtx_script")
 	public static Object callScript(String name, Options options) throws NodeException {
-		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
-		CMSResolver cmsResolver = renderType.getCMSResolver();
-		Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
-
-		CompilationUnit unit = renderType.getCompilationUnit(node);
+		CompilationUnit unit = GroovyUtils.getCurrentCompilationUnit();
 
 		return GroovyUtils.call(unit.getClassLoader(), name, script -> {
-			script.setProperty("cms", cmsResolver);
+			GroovyUtils.injectCmsResolver(script);
 
 			for (String key : options.hash.keySet()) {
 				script.setProperty(key, options.hash.get(key));

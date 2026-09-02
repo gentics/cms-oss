@@ -37,7 +37,7 @@ import com.gentics.contentnode.tests.devtools.PackageSynchronizerContext;
  */
 @RunWith(value = Parameterized.class)
 public class GroovyRenderingTest extends AbstractGroovyTest {
-	protected final static List<String> TESTPACKAGE_SCRIPTS = List.of("class1.groovy", "class2.groovy", "script.groovy");
+	protected final static List<String> TESTPACKAGE_SCRIPTS = List.of("class1.groovy", "class2.groovy", "script.groovy", "foldername.groovy");
 
 	protected final static List<String> OTHERPACKAGE_SCRIPTS = List.of("class1.groovy", "class2.groovy", "script.groovy");
 
@@ -58,11 +58,11 @@ public class GroovyRenderingTest extends AbstractGroovyTest {
 		prepareScripts(Synchronizer.getPackage(OTHERPACKAGE_NAME), OTHERPACKAGE_SCRIPTS);
 	}
 
-	@Parameters(name = "{index}: script {0}")
+	@Parameters(name = "{index}: {0}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (String script : List.of("simple", "foldername", "import_class1", "import_class2", "direct_script",
-				"direct_script_with_param", "load_page_script", "load_page_class")) {
+				"direct_script_with_param", "load_page_script", "load_page_class", "foldername_script")) {
 			data.add(new Object[] { script });
 		}
 		return data;

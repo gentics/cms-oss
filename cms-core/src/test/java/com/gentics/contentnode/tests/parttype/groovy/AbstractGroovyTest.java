@@ -47,6 +47,9 @@ import com.gentics.contentnode.testutils.DBTestContext;
 
 import groovy.lang.GroovyClassLoader;
 
+/**
+ * Abstract base class for groovy tests
+ */
 public abstract class AbstractGroovyTest {
 	protected final static String TESTPACKAGE_NAME = "testpackage";
 

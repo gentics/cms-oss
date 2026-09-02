@@ -1,8 +1,15 @@
 package com.gentics.contentnode.utils;
 
-import java.util.function.Consumer;
+import org.codehaus.groovy.control.CompilationUnit;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Consumer;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.parttype.CMSResolver;
+import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.Script;
@@ -46,5 +53,29 @@ public final class GroovyUtils {
 		} catch (Exception e) {
 			throw new NodeException(e);
 		}
+	}
+
+	/**
+	 * Get the current compilation unit from the {@link RenderType}
+	 * @return current compilation unit
+	 * @throws NodeException
+	 */
+	public static CompilationUnit getCurrentCompilationUnit() throws NodeException {
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+		CMSResolver cmsResolver = renderType.getCMSResolver();
+		Node node = ObjectTransformer.get(Node.class, cmsResolver.get("node")).getMaster();
+
+		return renderType.getCompilationUnit(node);
+	}
+
+	/**
+	 * Inject the current {@link CMSResolver} (wrapped into a {@link ResolvableMapWrapper}) into the script (as "cms")
+	 * @param script script to get the CMSResolver injected
+	 * @throws NodeException
+	 */
+	public static void injectCmsResolver(Script script) throws NodeException {
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+		CMSResolver cmsResolver = renderType.getCMSResolver();
+		script.setProperty("cms", new ResolvableMapWrapper(cmsResolver));
 	}
 }

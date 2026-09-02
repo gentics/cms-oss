@@ -205,7 +205,18 @@ public enum ConfigurationValue {
 	/**
 	 * Path to the built formgen path to serve instead of the bundled/prebuilt formgen.
 	 */ 
-	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path")
+	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path"),
+
+	/**
+	 * Whether the MCP (Model Context Protocol) endpoint shall be available
+	 */
+	MCP_ENABLED("MCP_ENABLED", "com.gentics.contentnode.mcp.enabled", "mcp.enabled", () -> "true"),
+
+	/**
+	 * Path of the MCP (Model Context Protocol) endpoint
+	 */
+	MCP_PATH("MCP_PATH", "com.gentics.contentnode.mcp.path", "mcp.path", () -> "/mcp",
+			path -> StringUtils.removeEnd(StringUtils.prependIfMissing(path, "/"), "/"))
 
 	;
 

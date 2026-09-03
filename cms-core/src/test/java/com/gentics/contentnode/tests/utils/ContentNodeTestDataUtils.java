@@ -2317,6 +2317,19 @@ public class ContentNodeTestDataUtils {
 	}
 
 	/**
+	 * Create a MultiPart object with a single "file" body part, for endpoints that only need the raw uploaded
+	 * content (e.g. PackageResource.saveFile).
+	 * You must call the cleanup() method on the returned object yourself.
+	 * @param content file content
+	 * @return a multi part object with a single "file" body part
+	 * @throws ParseException
+	 */
+	public static MultiPart createPackageFileUploadMultiPart(String content) throws ParseException {
+		return new MultiPart().bodyPart(createformDataBodyPart("form-data; name=\"file\"; filename=\"file\"", content,
+				MediaType.APPLICATION_OCTET_STREAM_TYPE));
+	}
+
+	/**
 	 * Unlock the given object
 	 * @param object object to unlock
 	 * @return unlocked object

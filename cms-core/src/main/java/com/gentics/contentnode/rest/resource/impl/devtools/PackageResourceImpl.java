@@ -3,8 +3,13 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,8 +21,10 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -31,7 +38,11 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.SseFeature;
 
@@ -58,6 +69,7 @@ import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.distributed.TrxCallable;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
@@ -85,6 +97,7 @@ import com.gentics.contentnode.rest.filters.RequiredPerm;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.devtools.AutocompleteItem;
 import com.gentics.contentnode.rest.model.devtools.Package;
+import com.gentics.contentnode.rest.model.devtools.PackageFile;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
 import com.gentics.contentnode.rest.model.devtools.SyncInfo;
 import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
@@ -101,6 +114,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
+import com.gentics.contentnode.rest.model.response.devtools.PackageFileListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedConstructInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryFragmentInPackageListResponse;
 import com.gentics.contentnode.rest.model.response.devtools.PagedContentRepositoryInPackageListResponse;
@@ -359,6 +373,210 @@ public class PackageResourceImpl implements PackageResource {
 				return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 			}, e -> new WebApplicationException(e.getLocalizedMessage()), Function.identity());
 		}
+	}
+
+	@Override
+	@GET
+	@Path("/packages/{name}/files-internal")
+	public PackageFileListResponse listFiles(@PathParam("name") String name, @QueryParam("path") @DefaultValue("") String path) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer packageSynchronizer = getPackage(name);
+			java.nio.file.Path base = getFilesInternalRoot(packageSynchronizer);
+			java.nio.file.Path dir = resolveFilesInternalPath(base, path);
+
+			PackageFileListResponse response = new PackageFileListResponse();
+
+			if (!Files.exists(dir)) {
+				// A package that has no files-internal content yet is a normal state, not an error.
+				if (dir.equals(base)) {
+					response.setItems(new ArrayList<>());
+					response.setNumItems(0);
+					return response;
+				}
+				throw new EntityNotFoundException(I18NHelper.get("package.files.notfound", path, name));
+			}
+			if (!Files.isDirectory(dir)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.not_a_directory", path));
+			}
+
+			try (Stream<java.nio.file.Path> entries = Files.list(dir)) {
+				List<PackageFile> files = entries.map(entry -> toPackageFile(base, entry))
+						.sorted(Comparator.comparing(PackageFile::isDirectory).reversed().thenComparing(PackageFile::getName))
+						.collect(Collectors.toList());
+				response.setItems(files);
+				response.setNumItems(files.size());
+			} catch (java.io.UncheckedIOException e) {
+				throw new NodeException(e.getCause());
+			}
+
+			return response;
+		} catch (IOException e) {
+			throw new NodeException(e);
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/packages/{name}/files-internal/content")
+	public Response getFile(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer packageSynchronizer = getPackage(name);
+			java.nio.file.Path base = getFilesInternalRoot(packageSynchronizer);
+			java.nio.file.Path target = resolveFilesInternalPath(base, path);
+
+			if (!Files.isRegularFile(target)) {
+				throw new EntityNotFoundException(I18NHelper.get("package.files.notfound", path, name));
+			}
+
+			MediaType mediaType;
+			try {
+				String contentType = Files.probeContentType(target);
+				mediaType = contentType != null ? MediaType.valueOf(contentType) : MediaType.APPLICATION_OCTET_STREAM_TYPE;
+			} catch (IOException | IllegalArgumentException e) {
+				mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+			}
+
+			return Response.ok()
+					.entity(target.toFile())
+					.type(mediaType)
+					.header("Content-Disposition", String.format("attachment; filename=\"%s\"", target.getFileName()))
+					.build();
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/packages/{name}/files-internal/content")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response saveFile(@PathParam("name") String name, @QueryParam("path") String path, MultiPart multiPart) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer packageSynchronizer = getPackage(name);
+			java.nio.file.Path base = getFilesInternalRoot(packageSynchronizer);
+			java.nio.file.Path target = resolveFilesInternalPath(base, path);
+
+			if (StringUtils.isBlank(path) || Files.isDirectory(target)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.not_a_file", path));
+			}
+
+			try (InputStream inputStream = extractUploadedInputStream(multiPart)) {
+				Files.createDirectories(target.getParent());
+				Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			} finally {
+				multiPart.cleanup();
+			}
+
+			trx.success();
+			return Response.created(null).build();
+		}
+	}
+
+	@Override
+	@DELETE
+	@Path("/packages/{name}/files-internal/content")
+	public Response deleteFile(@PathParam("name") String name, @QueryParam("path") String path) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer packageSynchronizer = getPackage(name);
+			java.nio.file.Path base = getFilesInternalRoot(packageSynchronizer);
+			java.nio.file.Path target = resolveFilesInternalPath(base, path);
+
+			if (!Files.exists(target)) {
+				throw new EntityNotFoundException(I18NHelper.get("package.files.notfound", path, name));
+			}
+			if (Files.isDirectory(target)) {
+				throw new InvalidRequestException(I18NHelper.get("package.files.not_a_file", path));
+			}
+
+			try {
+				Files.delete(target);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+
+			trx.success();
+			return Response.noContent().build();
+		}
+	}
+
+	/**
+	 * Get the root directory of the package's files-internal storage (may not exist on disk yet)
+	 * @param packageSynchronizer package synchronizer
+	 * @return files-internal root directory
+	 */
+	private java.nio.file.Path getFilesInternalRoot(MainPackageSynchronizer packageSynchronizer) {
+		return packageSynchronizer.getPackagePath().resolve(PackageSynchronizer.FILES_INTERNAL_DIR).normalize();
+	}
+
+	/**
+	 * Resolve the given client-supplied relative path against the files-internal root, rejecting any path that
+	 * would escape the root (e.g. via "../" segments)
+	 * @param base files-internal root directory, as returned by {@link #getFilesInternalRoot(MainPackageSynchronizer)}
+	 * @param relativePath client-supplied relative path
+	 * @return resolved, normalized path, guaranteed to be equal to or contained in base
+	 * @throws NodeException if the resolved path is not contained in base
+	 */
+	private java.nio.file.Path resolveFilesInternalPath(java.nio.file.Path base, String relativePath) throws NodeException {
+		String safeRelative = StringUtils.stripStart(ObjectTransformer.getString(relativePath, ""), "/");
+		java.nio.file.Path target = base.resolve(safeRelative).normalize();
+
+		if (!target.equals(base) && !target.startsWith(base)) {
+			throw new InvalidRequestException(I18NHelper.get("package.files.invalid_path", relativePath));
+		}
+		return target;
+	}
+
+	/**
+	 * Transform a filesystem entry into its REST model, relative to the given base directory
+	 * @param base files-internal root directory
+	 * @param entry filesystem entry to transform
+	 * @return REST model
+	 */
+	private PackageFile toPackageFile(java.nio.file.Path base, java.nio.file.Path entry) {
+		try {
+			PackageFile file = new PackageFile();
+			file.setPath(FilenameUtils.separatorsToUnix(base.relativize(entry).toString()));
+			file.setName(entry.getFileName().toString());
+			boolean directory = Files.isDirectory(entry);
+			file.setDirectory(directory);
+			file.setSize(directory ? 0 : Files.size(entry));
+			file.setLastModified((int) (Files.getLastModifiedTime(entry).toMillis() / 1000L));
+			return file;
+		} catch (IOException e) {
+			throw new java.io.UncheckedIOException(e);
+		}
+	}
+
+	/**
+	 * Extract the uploaded file content from the given multipart request. The request is expected to contain a
+	 * single relevant body part, named "file" if there is more than one body part.
+	 * @param multiPart multipart request
+	 * @return input stream with the uploaded content
+	 * @throws NodeException if no file data could be found in the request
+	 */
+	private InputStream extractUploadedInputStream(MultiPart multiPart) throws NodeException {
+		List<BodyPart> bodyParts = multiPart.getBodyParts();
+		BodyPart filePart = bodyParts.stream()
+				.filter(part -> part.getContentDisposition() != null
+						&& "file".equals(part.getContentDisposition().getParameters().get("name")))
+				.findFirst()
+				.orElse(bodyParts.size() == 1 ? bodyParts.get(0) : null);
+
+		// When the request was actually parsed from a real HTTP multipart body, the entity is a BodyPartEntity.
+		// When the MultiPart was constructed directly in memory (e.g. in tests), the entity may just be the
+		// raw value that was passed in, matching the same fallback used in FileResourceImpl.
+		Object entity = filePart != null ? filePart.getEntity() : null;
+		if (entity instanceof BodyPartEntity) {
+			try {
+				return ((BodyPartEntity) entity).getInputStream();
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		} else if (entity instanceof String) {
+			return new ByteArrayInputStream(((String) entity).getBytes(StandardCharsets.UTF_8));
+		}
+
+		throw new InvalidRequestException(I18NHelper.get("package.files.no_data"));
 	}
 
 	@Override

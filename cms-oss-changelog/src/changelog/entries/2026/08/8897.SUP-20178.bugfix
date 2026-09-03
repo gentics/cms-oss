@@ -1,0 +1,1 @@
+Admin-UI: The Elasticsearch field of Mesh schemas now opens with multiple lines and scrolls instead of clipping large JSON values.

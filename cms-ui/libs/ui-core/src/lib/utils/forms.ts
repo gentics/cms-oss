@@ -1,4 +1,4 @@
-import type { AbstractControl, Validators } from '@angular/forms';
+import type { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 import { FormGroup, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import {
     FormChangePropagation,
@@ -206,3 +206,17 @@ function asRegExp(pattern: string | RegExp): null | { str: string; regex: RegExp
 
     return { str, regex };
 }
+
+export function futureDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+        return null;
+    }
+
+    const selected = new Date(control.value);
+    selected.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return selected > today ? null : { futureDate: true };
+};

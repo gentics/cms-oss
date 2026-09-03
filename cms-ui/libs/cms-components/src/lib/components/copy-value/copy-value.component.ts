@@ -10,11 +10,11 @@ import { cancelEvent } from '@gentics/common';
 import { BaseComponent } from '@gentics/ui-core';
 
 @Component({
-    selector: 'gtx-mesh-copy-value',
+    selector: 'gtx-copy-value',
     templateUrl: './copy-value.component.html',
     styleUrls: ['./copy-value.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class CopyValueComponent extends BaseComponent implements OnDestroy {
 

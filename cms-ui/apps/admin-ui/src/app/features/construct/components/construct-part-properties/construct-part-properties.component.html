@@ -25,10 +25,12 @@
                     formControlName="typeId"
                 >
                     @for (part of partTypes(); track part.id) {
-                        <gtx-option
-                            [value]="part.id"
-                            [disabled]="part.deprecated"
-                        >{{ ('construct.tagPartType_' + part.id) | gtxI18n }}</gtx-option>
+                        @if (!part.deprecated || form.value.typeId === part.id) {
+                            <gtx-option
+                                [value]="part.id"
+                                [disabled]="part.deprecated"
+                            >{{ ('construct.part_type_' + part.id) | gtxI18n }}</gtx-option>
+                        }
                     }
                 </gtx-select>
 

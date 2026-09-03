@@ -333,7 +333,9 @@
         "schema_singular": "Schema",
         "schema_plural": "Schemas",
         "microschema_singular": "Mikroschema",
-        "microschema_plural": "Mikroschemas"
+        "microschema_plural": "Mikroschemas",
+        "mesh_user_token_singular": "API Token",
+        "mesh_user_token_plural": "API Token"
     },
     "dashboard": {
         "archive_message_title": "Nachricht archivieren",
@@ -1092,7 +1094,7 @@
         "create_api_token": "Neuen API Token erstellen",
         "create_api_token_warning": "Sind Sie sicher, dass Sie einen neuen API Token für den Benuzter „{{ user }}“ erstellen möchten?<br/><b>Der zuvor erstelle Token wird somit invalide, und nur der neue Token kann dann benutzt werden.</b><br/>Möchten Sie fortfahren?",
         "api_token": "API Token",
-        "api_token_from": "API Token von „{{ user }}“",
+        "api_token_from": "API Token von \"{{ user }}\"",
         "copy_token": "Token kopieren",
         "copy_token_success": "Token wurde in die Zwischenablage kopiert",
         "copy_token_error": "Der Token konnte nicht kopiert werden",
@@ -1245,7 +1247,15 @@
         "published_state_draft": "Entwurf",
         "published_state_updated": "Geändert",
         "published_state_changed": "Geändert am: {{ date }}",
-        "download_binary_content": "Binärdaten herunterladen"
+        "download_binary_content": "Binärdaten herunterladen",
+        "info_selected_user_tokens": "{{amountSelected}} von {{amountTotal}} API Tokens ausgewählt",
+        "manage_api_tokens_button": "API-Tokens verwalten",
+        "create_user_token": "User Token erstellen",
+        "create_user_token_title": "User Token erstellen für \"{{ user }}\"",
+        "manage_user_token_title": "API Token von \"{{ user }}\"",
+        "token_expires": "Ablaufdatum",
+        "token_issued": "Erstelldatum",
+        "token_valid": "Valide"
     },
     "object_property": {
         "objectProperty_plural": "Objekteigenschaften",

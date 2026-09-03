@@ -12,6 +12,7 @@ import {
     ApiTokensTableComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
+    CopyTokenModal,
     CopyValueComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
@@ -70,6 +71,7 @@ const COMPONENTS: any[] = [
     ApiTokensCreateModalComponent,
     ApiTokensCreateFormComponent,
     CopyValueComponent,
+    CopyTokenModal,
 ];
 
 const DIRECTIVES: Type<any>[] = [

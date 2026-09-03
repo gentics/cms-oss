@@ -1,0 +1,96 @@
+@if (showSearch) {
+  <gtx-search-bar
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | gtxI18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+  ></gtx-search-bar>
+}
+
+@if (!hideActions) {
+  <div class="entity-table-actions-bar">
+    <gtx-button
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled"
+      (click)="handleCreateButton()"
+      >
+      <icon left>add</icon> {{ 'mesh.create_user_token' | gtxI18n }}
+    </gtx-button>
+    <gtx-button
+      class="table-action-button reload-button"
+      flat
+      size="small"
+      type="primary"
+      [disabled]="disabled || loading"
+      (click)="reload()"
+      >
+      <icon left>refresh</icon> {{ 'common.reload_table_button' | gtxI18n }}
+    </gtx-button>
+  </div>
+}
+
+@if (selectable) {
+  <div class="entity-table-selection">
+    {{ 'mesh.info_selected_user_tokens' | gtxI18n:{ amountSelected: selectedCount, amountTotal: totalCount } }}
+  </div>
+}
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+  class="entity-table"
+
+  [selectAllType]="TableSelectAllType.PAGE"
+  [selectable]="selectable"
+  [multiple]="multiple"
+  [hideActions]="hideActions"
+  [disabled]="disabled"
+
+  [columns]="columns"
+  [rows]="rows"
+  [actions]="actions"
+  [selected]="selected"
+  [active]="activeEntity"
+  [totalCount]="totalCount"
+
+  [page]="page"
+  [perPage]="perPage"
+  [sortBy]="sortBy"
+  [sortOrder]="sortOrder"
+
+  [renderers]="{
+    'expires': dateRenderer,
+    'issued': dateRenderer,
+    'valid': boolIconRenderer
+  }"
+
+  (pageChange)="changePageTo($event)"
+  (sortByChange)="updateSortBy($event)"
+  (sortOrderChange)="updateSortOrder($event)"
+  (selectedChange)="updateSelection($event)"
+  (rowClick)="handleRowClick($event)"
+  (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #boolIconRenderer let-value="value">
+  <icon
+    class="gtx-table-cell-boolean"
+    [ngClass]="'gtx-table-cell-boolean-' + value"
+  >{{ value ? 'check' : 'close' }}</icon>
+</ng-template>
+
+<ng-template #dateRenderer let-value="value">
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDate:'date' }}
+  </span>
+</ng-template>
+
+@if (hasError) {
+    <div class="table-error">
+        <div class="table-error-message">{{ 'common.loading_error' | gtxI18n }}</div>
+    </div>
+}

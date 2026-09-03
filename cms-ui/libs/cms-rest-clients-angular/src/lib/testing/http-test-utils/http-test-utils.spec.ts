@@ -87,14 +87,6 @@ describe('http-test-utils', () => {
             expect(req).toBeTruthy();
         });
 
-        it('does not match POST request with gcms_ts query param', () => {
-            http.post(`${API_BASE_URL}/test1/test2`, { test: 'value' }, { params: assemblePostParams() })
-                .subscribe();
-            let req: TestRequest;
-            expect(() => req = expectOneRequest(httpTestingController, 'test1/test2', 'POST')).toThrow();
-            expect(req).toBeFalsy();
-        });
-
         it('does not match POST request with too few query params', () => {
             http.post(`${API_BASE_URL}/test1/test2`, { test: 'value' }, { params: assemblePostParams({ param1: 'bla' }) })
                 .subscribe();

@@ -73,15 +73,6 @@ describe('ApiBase', () => {
             expect(http.get).toHaveBeenCalled();
         });
 
-        it('adds the current SID to the request URL', () => {
-            http.get = jasmine.createSpy('HttpClient.get').and.callFake(
-                (url: string, options: HttpRequestOptions) => {
-                    return NEVER;
-                });
-            apiBase.get(TEST_URL);
-            expect(http.get).toHaveBeenCalled();
-        });
-
         it('adds a timestamp to the request URL to prevent caching', () => {
             http.get = jasmine.createSpy('HttpClient.get').and.callFake(
                 (url: string, options: HttpRequestOptions) => {

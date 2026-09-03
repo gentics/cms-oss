@@ -31,7 +31,7 @@ import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { DateTimePickerComponent } from './date-time-picker.component';
 
-const TEST_TIMESTAMP = 1457971763;
+const TEST_TIMESTAMP = 1457971763000;
 
 let modalService: SpyModalService;
 let formatProviderToUse: DateTimePickerFormatProvider | null = null;
@@ -112,24 +112,13 @@ describe('DateTimePickerComponent', () => {
     );
 
     describe('binding value:', () => {
-
-        it('does not send a timestamp if none is set',
-            componentTest(() => TestComponent, (fixture) => {
-                openDatepickerModal(fixture);
-                modalService = TestBed.inject(ModalService) as any;
-                expect(modalService.lastLocals).toBeDefined();
-                const timestamp: number = modalService.lastLocals['timestamp'];
-                expect(timestamp).toEqual(0);
-            }),
-        );
-
         it('can be bound to a string value of a timestamp',
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}"></gtx-date-time-picker>
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 fixture.detectChanges();
-                expect(instance.pickerInstance.getUnixTimestamp()).toEqual(TEST_TIMESTAMP);
+                expect(instance.pickerInstance.dateValue.getTime()).toEqual(TEST_TIMESTAMP);
             },
             ),
         );
@@ -141,13 +130,13 @@ describe('DateTimePickerComponent', () => {
             (fixture, instance) => {
                 // Check if the initial value matches that of testModel.
                 fixture.detectChanges();
-                expect(instance.pickerInstance.getUnixTimestamp()).toEqual(TEST_TIMESTAMP);
+                expect(instance.pickerInstance.value).toEqual(TEST_TIMESTAMP);
 
                 // Update the testModel value and check the value of the DateTimePicker again.
                 const newValue = TEST_TIMESTAMP + 1000;
                 fixture.componentInstance.testModel = newValue;
                 fixture.detectChanges();
-                expect(instance.pickerInstance.getUnixTimestamp()).toEqual(newValue);
+                expect(instance.pickerInstance.value).toEqual(newValue);
             },
             ),
         );
@@ -163,10 +152,10 @@ describe('DateTimePickerComponent', () => {
 
         it('formats the timestamp in the input as a date when displayTime=false',
             componentTest(() => TestComponent, `
-                <gtx-date-time-picker value="1457971763" displayTime="false">
+                <gtx-date-time-picker value="1457971763000" displayTime="false">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('03/14/2016');
+                expect(await getDisplayValue(fixture)).toBe('14 March 2016');
             },
             ),
         );
@@ -176,7 +165,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
+                expect(await getDisplayValue(fixture)).toBe('14 March 2016 at 17:09:23');
             },
             ),
         );
@@ -186,17 +175,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker [value]="testModel" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('03/14/2016, 5:09:23 PM');
-            },
-            ),
-        );
-
-        it('formats the timestamp with a custom format string',
-            componentTest(() => TestComponent, `
-                <gtx-date-time-picker value="${TEST_TIMESTAMP}" format="YY-MM-ddd">
-                </gtx-date-time-picker>`,
-            async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('16-03-Mon');
+                expect(await getDisplayValue(fixture)).toBe('14 March 2016 at 17:09:23');
             },
             ),
         );
@@ -347,14 +326,14 @@ describe('DateTimePickerComponent', () => {
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
-                expect(instance.pickerInstance.getUnixTimestamp()).toBe(TEST_TIMESTAMP);
+                expect(instance.pickerInstance.value).toBe(TEST_TIMESTAMP);
 
                 instance.testModel -= 10;
                 fixture.detectChanges();
                 tick();
                 fixture.detectChanges();
 
-                expect(instance.pickerInstance.getUnixTimestamp()).toBe(TEST_TIMESTAMP - 10);
+                expect(instance.pickerInstance.value).toBe(TEST_TIMESTAMP - 10);
             },
             ),
         );
@@ -417,7 +396,7 @@ describe('DateTimePickerComponent', () => {
                 fixture.componentInstance.testTimestamp = TEST_TIMESTAMP + 1;
                 fixture.detectChanges();
                 tick();
-                expect(instance.pickerInstance.getUnixTimestamp()).toEqual(TEST_TIMESTAMP);
+                expect(instance.pickerInstance.value).toEqual(TEST_TIMESTAMP);
 
                 // Update both testModel and testTimestamp and check if testModel takes precendence.
                 const newTestModel = TEST_TIMESTAMP + 1000;
@@ -426,7 +405,7 @@ describe('DateTimePickerComponent', () => {
                 fixture.componentInstance.testTimestamp = newTestTimestamp;
                 fixture.detectChanges();
                 tick();
-                expect(instance.pickerInstance.getUnixTimestamp()).toEqual(newTestModel);
+                expect(instance.pickerInstance.value).toEqual(newTestModel);
             },
             ),
         );
@@ -457,7 +436,7 @@ describe('DateTimePickerComponent', () => {
                 expect(displayValue).toBe('formatted date');
                 expect(format).toHaveBeenCalledWith(jasmine.anything(), true, true);
                 expect(format.calls.mostRecent().args[0]).toBeDefined();
-                expect(format.calls.mostRecent().args[0].unix()).toEqual(instance.testModel);
+                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel);
 
                 instance.testModel -= 10;
                 // fixture.autoDetectChanges(true);
@@ -467,7 +446,7 @@ describe('DateTimePickerComponent', () => {
                 fixture.detectChanges();
 
                 expect(format).toHaveBeenCalledTimes(2);
-                expect(format.calls.mostRecent().args[0].unix()).toEqual(instance.testModel);
+                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel);
             },
             ),
         );

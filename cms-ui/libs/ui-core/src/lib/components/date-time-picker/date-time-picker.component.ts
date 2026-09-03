@@ -92,8 +92,12 @@ export class DateTimePickerComponent
     /** The formatted date string which is displayed in the input to the user. */
     public displayValue = '';
 
-    /** @internal */
-    private dateValue: Date | null = null;
+    /**
+     * Parsed {@link value} as Date.
+     * Only used internally and in tests - Should not be accessed!
+     * @internal
+     */
+    public dateValue: Date | null = null;
 
     constructor(
         changeDetector: ChangeDetectorRef,

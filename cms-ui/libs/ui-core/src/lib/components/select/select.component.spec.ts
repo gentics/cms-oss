@@ -25,7 +25,7 @@ import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
 import { SelectComponent } from './select.component';
 
-fdescribe('SelectComponent', () => {
+describe('SelectComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({

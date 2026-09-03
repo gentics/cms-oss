@@ -215,7 +215,7 @@ export class ApiBase implements OnDestroy {
             url: `${this.apiBaseUrl}/${url}`,
             fileField: options.fileField,
             fileNameField: options.fileNameField,
-            parameters: Object.assign(options.params),
+            parameters: Object.assign(options.params || {}),
         });
 
         files.forEach(file => uploader.upload(file, {}, fileName));

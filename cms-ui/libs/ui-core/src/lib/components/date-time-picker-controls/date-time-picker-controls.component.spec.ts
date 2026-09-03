@@ -253,44 +253,44 @@ xdescribe('DateTimePickerControlsComponent', () => {
     describe('time increments:', () => {
 
         it('incrementTime("seconds") increments the time by one second',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.incrementTime('seconds');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP + 1);
+                expect(picker.value).toBe(TEST_TIMESTAMP + 1);
             }),
         );
 
         it('incrementTime("minutes") increments the time by one minute',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.incrementTime('minutes');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP + 60);
+                expect(picker.value).toBe(TEST_TIMESTAMP + 60);
             }),
         );
 
         it('incrementTime("hours") increments the time by one hour',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.incrementTime('hours');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP + (60 * 60));
+                expect(picker.value).toBe(TEST_TIMESTAMP + (60 * 60));
             }),
         );
 
         it('decrementTime("seconds") decrement the time by one second',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.decrementTime('seconds');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP - 1);
+                expect(picker.value).toBe(TEST_TIMESTAMP - 1);
             }),
         );
 
         it('decrementTime("minutes") decrements the time by one minute',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.decrementTime('minutes');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP - 60);
+                expect(picker.value).toBe(TEST_TIMESTAMP - 60);
             }),
         );
 
         it('decrementTime("hours") decrements the time by one hour',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 picker.decrementTime('hours');
-                expect(picker.getUnixTimestamp()).toBe(TEST_TIMESTAMP - (60 * 60));
+                expect(picker.value).toBe(TEST_TIMESTAMP - (60 * 60));
             }),
         );
     });
@@ -298,7 +298,7 @@ xdescribe('DateTimePickerControlsComponent', () => {
     describe('l10n/i18n - No Provider override:', () => {
 
         it('should default to normal strings',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 const provider = picker.formatProvider;
                 expect(provider).toBeDefined;
                 expect(provider.strings).toEqual(DEFAULT_DATE_TIME_PICKER_STRINGS);
@@ -309,7 +309,7 @@ xdescribe('DateTimePickerControlsComponent', () => {
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker-controls [formatProvider]="provider">
                 </gtx-date-time-picker-controls>`,
-            fixture => {
+            (fixture) => {
                 const picker = fixture.debugElement.query(By.directive(DateTimePickerControlsComponent)).componentInstance;
                 fixture.detectChanges();
                 tick();
@@ -329,7 +329,7 @@ xdescribe('DateTimePickerControlsComponent', () => {
         });
 
         it('should use the provider-override strings',
-            pickerTest(picker => {
+            pickerTest((picker) => {
                 const provider = picker.formatProvider;
                 expect(provider).toBeDefined;
                 expect(provider.strings).toEqual(timePickerTestStrings);
@@ -344,7 +344,7 @@ function pickerTest(testFn: (picker: DateTimePickerControlsComponent) => void): 
             value="${TEST_TIMESTAMP}"
             (valueChange)="onChange($event)"
         ></gtx-date-time-picker-controls>`,
-        fixture => {
+        (fixture) => {
             const picker = fixture.debugElement.query(By.directive(DateTimePickerControlsComponent)).componentInstance;
             fixture.detectChanges();
             tick();

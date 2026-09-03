@@ -52,6 +52,7 @@ import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.parser.tag.struct.ParseStructRenderer;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -322,6 +323,21 @@ public class RenderUtils {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Wrap the object for returning
+	 * @param object object to wrap
+	 * @return wrapped object
+	 */
+	public static Resolvable wrap(NodeObject object) {
+		if (object instanceof ResolvableMapWrappable wrappable) {
+			return new ResolvableMapWrapper(wrappable);
+		} else if (object != null) {
+			return new RenderableResolvable(object);
+		} else {
+			return null;
+		}
 	}
 
 	/**

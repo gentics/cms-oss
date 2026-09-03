@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -27,7 +26,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.tautua.markdownpapers.Markdown;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -96,6 +95,11 @@ public abstract class PackageSynchronizer {
 	 * Name of the subdirectory containing handlebars helpers and partials
 	 */
 	public final static String HANDLEBARS_DIR = "handlebars";
+
+	/**
+	 * Name of the subdirectory containing (groovy) scripts
+	 */
+	public final static String SCRIPTS_DIR = "scripts";
 
 	/**
 	 * Directory map for object class
@@ -185,6 +189,16 @@ public abstract class PackageSynchronizer {
 		pathHandlers.put(new File(packagePath.toFile(), HANDLEBARS_DIR).toPath(), changedPath -> {
 			// clean the cached handlebars helpers
 			handlebarsHelpers = null;
+		});
+		// add a handler for changes in the scripts directory
+		pathHandlers.put(new File(packagePath.toFile(), SCRIPTS_DIR).toPath(), changedPath -> {
+			try {
+				for (Node node : getNodes()) {
+					Synchronizer.invalidateGroovyClassLoader(node);
+				}
+			} catch (NodeException e) {
+				Synchronizer.invalidateGroovyClassLoader();
+			}
 		});
 		if (registerWatchers) {
 			try {
@@ -516,11 +530,11 @@ public abstract class PackageSynchronizer {
 
 			if (helpersDirectory.isDirectory()) {
 				StringBuilder registerHelpers = new StringBuilder();
-				File[] files = helpersDirectory.listFiles((dir, name) -> StringUtils.endsWith(name, ".js"));
+				File[] files = helpersDirectory.listFiles((dir, name) -> Strings.CI.endsWith(name, ".js"));
 
 				if (files != null) {
 					for (File helperFile : files) {
-						String helperNameShort = StringUtils.removeEnd(helperFile.getName(), ".js");
+						String helperNameShort = Strings.CI.removeEnd(helperFile.getName(), ".js");
 						String helperName = String.format("%s.%s", packageName, helperNameShort);
 						String helperFileContents = FileUtils.readFileToString(helperFile, StandardCharsets.UTF_8);
 						String register = String.format("Handlebars.registerHelper('%s', %s)", helperName, helperFileContents);
@@ -545,6 +559,20 @@ public abstract class PackageSynchronizer {
 	public File getHandlebarsPartialsDirectory() {
 		File handlebarsDirectory = new File(this.packagePath.toFile(), HANDLEBARS_DIR);
 		return new File(handlebarsDirectory, "partials");
+	}
+
+	/**
+	 * Get the script files of the package
+	 * @return script files
+	 */
+	public File[] getScriptFiles() {
+		File scriptsDirectory = new File(this.packagePath.toFile(), SCRIPTS_DIR);
+
+		if (scriptsDirectory.isDirectory()) {
+			return scriptsDirectory.listFiles((dir, name) -> Strings.CI.endsWith(name, ".groovy"));
+		}
+
+		return new File[0];
 	}
 
 	/**

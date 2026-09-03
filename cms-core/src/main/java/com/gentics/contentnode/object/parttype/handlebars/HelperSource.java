@@ -13,6 +13,8 @@ import java.util.Optional;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.codehaus.groovy.control.CompilationUnit;
 
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -42,12 +44,11 @@ import com.gentics.contentnode.render.RenderableResolvable.Scope;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
+import com.gentics.contentnode.utils.GroovyUtils;
 import com.gentics.lib.render.Renderable;
 import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.github.jknack.handlebars.Options;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ParseContext;
-import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.github.jknack.handlebars.helper.HelperFunction;
 
 /**
  * Source for helpers used when rendering a {@link HandlebarsPartType}
@@ -192,7 +193,7 @@ public class HelperSource {
 		}
 
 		int iSortOrder = Datasource.SORTORDER_ASC;
-		if (StringUtils.equalsIgnoreCase(sortOrder, "desc")) {
+		if (Strings.CI.equals(sortOrder, "desc")) {
 			iSortOrder = Datasource.SORTORDER_DESC;
 		}
 
@@ -266,5 +267,25 @@ public class HelperSource {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Script helper for calling groovy scripts (from devtool packages)
+	 * @param name script name
+	 * @param options additional options
+	 * @return return value of the script
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_script")
+	public static Object callScript(String name, Options options) throws NodeException {
+		CompilationUnit unit = GroovyUtils.getCurrentCompilationUnit();
+
+		return GroovyUtils.call(unit.getClassLoader(), name, script -> {
+			GroovyUtils.injectCmsResolver(script);
+
+			for (String key : options.hash.keySet()) {
+				script.setProperty(key, options.hash.get(key));
+			}
+		});
 	}
 }

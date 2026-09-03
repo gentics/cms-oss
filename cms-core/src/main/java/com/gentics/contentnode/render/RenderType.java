@@ -2,7 +2,6 @@ package com.gentics.contentnode.render;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -15,10 +14,10 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.Vector;
 
-import com.gentics.contentnode.utils.ResourcePath;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -51,6 +50,7 @@ import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType.Pac
 import com.gentics.contentnode.object.parttype.handlebars.HelperSource;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.contentnode.resolving.StackResolver;
+import com.gentics.contentnode.utils.ResourcePath;
 import com.gentics.lib.genericexceptions.NotYetImplementedException;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
@@ -60,6 +60,8 @@ import com.github.jknack.handlebars.cache.ConcurrentMapTemplateCache;
 import com.github.jknack.handlebars.helper.ConditionalHelpers;
 import com.github.jknack.handlebars.helper.StringHelpers;
 import com.github.jknack.handlebars.io.TemplateLoader;
+
+import groovy.lang.GroovyClassLoader;
 
 /**
  * RenderType provides informations and settings about how code should be rendered.
@@ -178,6 +180,11 @@ public class RenderType implements RenderInfo {
 	 * Stored handlebars instances per node
 	 */
 	private Map<Node, Handlebars> handlebarsPerNode = new HashMap<>();
+
+	/**
+	 * Groovy Compilation Units per Node
+	 */
+	private Map<Node, CompilationUnit> compilationUnitsPerNode = new HashMap<>();
 
 	/**
 	 * A public constructor, which provides the renderType with all required informations.
@@ -1505,6 +1512,27 @@ public class RenderType implements RenderInfo {
 			handlebarsPerNode.put(node, handlebars);
 		}
 		return handlebarsPerNode.get(node);
+	}
+
+	/**
+	 * Get the {@link CompilationUnit} instance for the given node. The unit will
+	 * already have the scripts contained in all devtool packages, which are
+	 * assigned to the node compiled and defined in its classloader
+	 * 
+	 * @param node node
+	 * @return unit
+	 * @throws NodeException
+	 */
+	public CompilationUnit getCompilationUnit(Node node) throws NodeException {
+		if (!compilationUnitsPerNode.containsKey(node)) {
+			CompilerConfiguration config = new CompilerConfiguration();
+
+			GroovyClassLoader gcl = new GroovyClassLoader(Synchronizer.getGroovyClassLoader(node), config);
+			CompilationUnit unit = new CompilationUnit(config, null, gcl);
+			compilationUnitsPerNode.put(node, unit);
+		}
+
+		return compilationUnitsPerNode.get(node);
 	}
 
 	/**

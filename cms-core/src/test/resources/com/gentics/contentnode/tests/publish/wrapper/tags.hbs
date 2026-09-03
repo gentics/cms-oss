@@ -1,0 +1,12 @@
+{{#each cms.page.tags}}
+id:{{id}}
+	tag.id:{{tag.id}}
+	name:{{name}}
+	visible:{{visible}}
+	empty:{{empty}}
+	istag:{{istag}}
+	parts:
+{{#each parts}}
+		{{gtx_render this}}
+{{/each}}
+{{/each}}

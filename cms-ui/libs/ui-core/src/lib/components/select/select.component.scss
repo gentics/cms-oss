@@ -9,7 +9,7 @@ label {
     display: flex;
     position: relative;
 
-    .placeholder {
+    .placeholder:not(.unknown-values) {
         color: #d6d6d6;
     }
 

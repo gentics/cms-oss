@@ -1152,6 +1152,7 @@ test.describe('Page Editing', () => {
         test.describe('Tables', () => {
             const SLOT_CELL_STYLE = 'tableCellStyle';
             const SLOT_CREATE_TABLE = 'createTable';
+            const SLOT_TABLE_CAPTION = 'tableCaption';
             const ROW_COUNT = 3;
             const COLUMN_COUNT = 3;
 
@@ -1255,6 +1256,17 @@ test.describe('Page Editing', () => {
                 }
             });
 
+            test('should change scope to tables when adding a caption', async ({ page }) => {
+                await rereouteAlohaConfig(page, 'aloha-config-table-test.js');
+                await editPageAndCreateTable(page);
+
+                await findAlohaComponent(page, { slot: SLOT_TABLE_CAPTION }).click();
+
+                const tableTab = page.locator(`gtx-page-editor-tabs button[data-id="table"]`);
+
+                await expect(tableTab).toContainClass("active");
+            });
+
             async function editPageAndCreateTable(page) {
                 editingPage = IMPORTER.get(PAGE_ONE);
 
@@ -1276,9 +1288,26 @@ test.describe('Page Editing', () => {
                 await openEditingPageInEditmode(page);
             });
 
-            // FIXME: The drag-n-drop simply doesn't do anything in the test; Therefore functionality can't be properly tested.
-            // Tried already all kinds of workarounds, but sadly nothing works so far.
-            test.skip('should be able to move a construct between two existing ones', async ({ page }) => {
+            /*
+             * Aloha's block drag is wired via jQuery UI's `.draggable()` (see `ui-draggable-disabled`
+             * check in gcn-block.js and Aloha's `block/dragbehavior` module). jQuery UI Draggable
+             * only reacts to native mouse events (mousedown/mousemove/mouseup) and ignores the
+             * HTML5 drag events that Playwright's `locator.dragTo()` dispatches, which is why the
+             * earlier `dragTo()`-based attempt did literally nothing. We therefore drive the drag
+             * manually via `page.mouse`, with:
+             *  (1) `boundingBox()` for main-viewport coordinates
+             *      (the editable lives inside an iframe — `getBoundingClientRect()` would be iframe-local
+             *      and off by the iframe offset)
+             *  (2) a small initial nudge to clear jQuery UI's distance threshold
+             *  (3) several intermediate `mousemove` steps so the Sortable reorder logic actually runs while
+             *      the pointer travels to the drop target.
+             */
+            test('should be able to move a construct between two existing ones', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19961',
+                }],
+            }, async ({ page }) => {
                 const TEST_IMAGE = IMPORTER.get(IMAGE_ONE);
 
                 // Clear the content
@@ -1330,14 +1359,38 @@ test.describe('Page Editing', () => {
                     const targetImage = blocks.first();
 
                     const blockId = await originImage.getAttribute('id');
-                    const targetRect = await targetImage.evaluate((el) => el.getBoundingClientRect());
+                    // Make sure the origin handle is initialized and in view before grabbing it.
+                    await originImage.hover();
+                    const handle = originImage.locator('.aloha-block-handle .gcn-construct-drag-handle');
+                    await handle.scrollIntoViewIfNeeded();
 
-                    await originImage.locator('.aloha-block-handle .gcn-construct-drag-handle').dragTo(targetImage, {
-                        targetPosition: {
-                            x: 10,
-                            y: targetRect.bottom,
-                        },
-                    });
+                    // `boundingBox()` returns coordinates relative to the main-frame viewport,
+                    // which is what `page.mouse` operates in — even though the elements live
+                    // inside the editor iframe.
+                    const handleBox = await handle.boundingBox();
+                    const targetBox = await targetImage.boundingBox();
+                    expect(handleBox).not.toBeNull();
+                    expect(targetBox).not.toBeNull();
+
+                    const startX = handleBox.x + handleBox.width / 2;
+                    const startY = handleBox.y + handleBox.height / 2;
+                    // Aim for the middle of the target block — Aloha decides "insert before/after"
+                    // based on where the pointer sits relative to the block centre. Edges are
+                    // brittle (scroll/overlap).
+                    const endX = targetBox.x + targetBox.width / 2;
+                    const endY = targetBox.y + targetBox.height / 2;
+
+                    await page.mouse.move(startX, startY);
+                    await page.mouse.down();
+                    // Small initial nudge to clear jQuery UI Draggable's distance threshold.
+                    await page.mouse.move(startX + 6, startY + 6, { steps: 5 });
+                    // Travel to the target with enough intermediate mousemove events for
+                    // Sortable's reorder hit-tests to fire along the way.
+                    await page.mouse.move(endX, endY, { steps: 25 });
+                    // Brief pause so Aloha can settle the drop indicator before mouseup.
+                    // eslint-disable-next-line playwright/no-wait-for-timeout
+                    await page.waitForTimeout(150);
+                    await page.mouse.up();
 
                     const idsAfter = await Promise.all((await blocks.all()).map((loc) => loc.getAttribute('id')));
 
@@ -1568,6 +1621,91 @@ test.describe('Page Editing', () => {
 
                 // Check again now
                 await checkKeys(14);
+            });
+        });
+
+        test.describe('Text Color', () => {
+            test.beforeEach(() => {
+                editingPage = IMPORTER.get(PAGE_ONE);
+            });
+
+            test('should be able to select a palette color correctly', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19852',
+                }],
+            }, async ({ page }) => {
+                const FIRST_COLOR = 'blue';
+                const SECOND_COLOR = '#f00';
+
+                await overwriteAlohaConfigWith(page, `
+                    Aloha.settings.plugins ??= {};
+                    Aloha.settings.plugins.textcolor = {
+                        config: {
+                            color: {
+                                enabled: true,
+                                palette: ${JSON.stringify([FIRST_COLOR, SECOND_COLOR])},
+                            }
+                        }
+                    };
+                `);
+                await openEditingPageInEditmode(page);
+
+                // Select the text
+                await test.step('Fill content', async () => {
+                    await mainEditable.click();
+                    await mainEditable.fill('Some text');
+                    await mainEditable.press('ControlOrMeta+a');
+                });
+
+                let textColorButton: Locator;
+                let pickerDropdown: Locator;
+
+                await test.step('Open text-color picker', async () => {
+                    // Open the dropdown
+                    await selectEditorTab(page, 'formatting');
+                    textColorButton = findAlohaComponent(page, { slot: 'textColor', type: 'context-button' });
+                    await textColorButton.click();
+                    pickerDropdown = findDynamicDropdown(page, 'textColor');
+                    await expect(pickerDropdown).toBeVisible();
+                });
+
+                let dropdownConfirm: Locator;
+                let firstColorEntry: Locator;
+                let secondColorEntry: Locator;
+
+                await test.step('Apply the first color', async () => {
+                    const colorPicker = pickerDropdown.locator('gtx-aloha-color-picker-renderer');
+                    // The clear button + the two colors we defined
+                    await expect(colorPicker.locator('.palette-wrapper .palette-entry')).toHaveCount(3);
+                    // The blue color from the config
+                    firstColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#0000ffff"]');
+                    await expect(firstColorEntry).toBeVisible();
+                    secondColorEntry = colorPicker.locator('.palette-wrapper .palette-entry[data-value="#ff0000ff"]');
+                    await expect(secondColorEntry).toBeVisible();
+
+                    await firstColorEntry.click();
+                    dropdownConfirm = pickerDropdown.locator('.context-menu-header .header-confirm-button');
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(0, 0, 255)');
+                });
+
+                await test.step('Apply the second color', async () => {
+                    await mainEditable.click();
+                    await mainEditable.press('ControlOrMeta+a');
+                    await textColorButton.click();
+
+                    // First one should be marked as active
+                    await expect(firstColorEntry).toContainClass('active');
+
+                    await secondColorEntry.click();
+                    await dropdownConfirm.click();
+
+                    // Verify it has applied the color correctly
+                    await expect(mainEditable.locator('span')).toHaveCSS('color', 'rgb(255, 0, 0)');
+                });
             });
         });
     });

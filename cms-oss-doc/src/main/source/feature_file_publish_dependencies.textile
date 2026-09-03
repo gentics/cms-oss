@@ -40,7 +40,7 @@ h4. Examples of objects using files
 
 * A page contains a link to the file
 * A page displays properties of the file by rendering an overview that contains the file
-* A page displays properties of the file by rendering velocity code
+* A page displays properties of the file by rendering Handlebars templates
 
 NOTE: Dependencies are only calculated when rendering objects during the publish process. If e.g. a page uses a file only in edit or preview mode, but not in publish mode, the dependency does not count.
 When the dependency is created in an object property, it only counts, if the object property is either rendered in the page content or published into the contentrepository.

@@ -18,7 +18,7 @@ import com.gentics.contentnode.testutils.RESTAppContext;
  * Test cases for the "portal preview" of a Mesh portal
  */
 @GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.PUB_DIR_SEGMENT })
-public class MeshPortalPreviewSslTest extends MeshPortalPreviewTestBase {
+public class MeshPortalPreviewSslTest extends AbstractMeshPortalPreviewTestCases {
 
 	@BeforeClass
 	public static void setupOnce() throws Exception {

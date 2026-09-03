@@ -28,14 +28,14 @@ import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
-import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -65,9 +65,14 @@ public class DatasourcePartTypeTest {
 	private static final String TEMPLATETAG_NAME = "datasource";
 
 	/**
-	 * Name of the velocity templatetag
+	 * Name of the handlebars templatetag
 	 */
-	private static final String VELOCITY_NAME = "velocity";
+	private static final String HANDLEBARS_NAME = "handlebars";
+
+	/**
+	 * Name of the handlebars part
+	 */
+	private static final String HANDLEBARS_PARTNAME = "hbs";
 
 	/**
 	 * Keyword of the construct
@@ -93,9 +98,9 @@ public class DatasourcePartTypeTest {
 	protected static Construct datasourceConstruct;
 
 	/**
-	 * Velocity construct
+	 * Handlebars construct
 	 */
-	protected static Construct velocityConstruct;
+	protected static Construct handlebarsConstruct;
 
 	/**
 	 * Object Property Definition
@@ -112,9 +117,9 @@ public class DatasourcePartTypeTest {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		node = ContentNodeTestDataUtils.createNode("testnode", "Test Node", PublishTarget.NONE);
 
-		// create a velocity construct
-		int velocityConstructId = ContentNodeTestDataUtils.createVelocityConstruct(node, "Velocity", "vtl");
-		velocityConstruct = t.getObject(Construct.class, velocityConstructId);
+		// create a handlebars construct
+		int handlebarsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, HANDLEBARS_NAME, HANDLEBARS_PARTNAME);
+		handlebarsConstruct = t.getObject(Construct.class, handlebarsConstructId);
 
 		// create a datasource construct
 		int datasourceConstructId = ContentNodeTestDataUtils.createConstruct(node, DatasourcePartType.class, CONSTRUCT_KEYWORD, PART_KEYWORD);
@@ -144,7 +149,7 @@ public class DatasourcePartTypeTest {
 		template = t.createObject(Template.class);
 		template.setMlId(1);
 		template.setName("Template");
-		template.setSource("<node " + VELOCITY_NAME + ">");
+		template.setSource("<node " + HANDLEBARS_NAME + ">");
 		template.addFolder(node.getFolder());
 
 		TemplateTag templateTag = t.createObject(TemplateTag.class);
@@ -155,11 +160,11 @@ public class DatasourcePartTypeTest {
 		template.getTemplateTags().put(templateTag.getName(), templateTag);
 
 		templateTag = t.createObject(TemplateTag.class);
-		templateTag.setConstructId(velocityConstruct.getId());
+		templateTag.setConstructId(handlebarsConstruct.getId());
 		templateTag.setEnabled(true);
-		templateTag.setName(VELOCITY_NAME);
+		templateTag.setName(HANDLEBARS_NAME);
 		templateTag.setPublic(true);
-		ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, templateTag, "template").getValueObject().setValueText("$!{cms.page.tags." + TEMPLATETAG_NAME + "}");
+		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, templateTag, HANDLEBARS_PARTNAME).getValueObject().setValueText("{{gtx_render cms.page.tags." + TEMPLATETAG_NAME + "}}");
 		template.getTemplateTags().put(templateTag.getName(), templateTag);
 
 		template.save();
@@ -517,8 +522,8 @@ public class DatasourcePartTypeTest {
 		Page targetPage = t.createObject(Page.class);
 		targetPage.setFolderId(node.getFolder().getId());
 		targetPage.setTemplateId(template.getId());
-		ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, targetPage.getContentTag(VELOCITY_NAME), "template").getValueObject()
-				.setValueText("#foreach($page in $cms.folder.pages)$page.tags." + TEMPLATETAG_NAME + "#end");
+		ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, targetPage.getContentTag(HANDLEBARS_NAME), HANDLEBARS_PARTNAME).getValueObject()
+				.setValueText("{{#each cms.folder.pages}}{{gtx_render tags." + TEMPLATETAG_NAME + "}}{{/each}}");
 		targetPage.save();
 		targetPage.publish();
 		t.commit(false);

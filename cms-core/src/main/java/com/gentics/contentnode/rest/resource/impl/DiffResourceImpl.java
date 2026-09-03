@@ -2,8 +2,19 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Pattern;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.contentnode.rest.model.request.DaisyDiffRequest;
+import com.gentics.contentnode.rest.model.request.DiffRequest;
+import com.gentics.contentnode.rest.model.response.DiffResponse;
+import com.gentics.contentnode.rest.resource.DiffResource;
+import com.gentics.contentnode.string.CNStringUtils;
+import com.gentics.lib.etc.StringUtils;
+import com.github.jknack.handlebars.Context;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Template;
+import com.github.jknack.handlebars.io.StringTemplateSource;
 
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -12,23 +23,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
-
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
-import org.apache.velocity.runtime.resource.util.StringResourceRepository;
-
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.RestrictiveDiffUberspector;
-import com.gentics.contentnode.rest.model.request.DaisyDiffRequest;
-import com.gentics.contentnode.rest.model.request.DiffRequest;
-import com.gentics.contentnode.rest.model.response.DiffResponse;
-import com.gentics.contentnode.rest.resource.DiffResource;
-import com.gentics.contentnode.string.CNStringUtils;
-import com.gentics.lib.etc.StringUtils;
 
 /**
  * This resource implements the diff tool in the REST API, which can be used to
@@ -39,32 +33,11 @@ import com.gentics.lib.etc.StringUtils;
 public class DiffResourceImpl implements DiffResource {
 
 	/**
-	 * Shared instance of the VelocityEngine used in calls to
+	 * Shared instance of Handlebars used in calls to
 	 * {@link DiffResourceImpl#diffHTML(DiffRequest)} and
 	 * {@link DiffResourceImpl#diffSource(DiffRequest)}.
 	 */
-	protected static VelocityEngine diffEngine;
-
-	/**
-	 * Get the shared instance of the VelocityEngine.
-	 * @return VelocityEngine
-	 * @throws Exception
-	 */
-	protected static synchronized VelocityEngine getDiffEngine() throws Exception {
-		if (diffEngine == null) {
-			// initialize a new VelocityEngine, that has a very restrictive Uberspector and uses the StringResourceLoader
-			Properties vtlProps = new Properties();
-
-			vtlProps.setProperty("runtime.introspector.uberspect", RestrictiveDiffUberspector.class.getName());
-			vtlProps.setProperty("resource.loader", "string");
-			vtlProps.setProperty("string.resource.loader.description", "Velocity StringResource loader");
-			vtlProps.setProperty("string.resource.loader.class", "org.apache.velocity.runtime.resource.loader.StringResourceLoader");
-			vtlProps.setProperty("string.resource.loader.repository.class", "org.apache.velocity.runtime.resource.loader.StringResourceRepositoryImpl");
-
-			diffEngine = new VelocityEngine(vtlProps);
-		}
-		return diffEngine;
-	}
+	protected static Handlebars diffEngine = new Handlebars();
 
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.api.DiffResource#daisyDiff(com.gentics.contentnode.rest.model.request.DaisyDiffRequest)
@@ -133,10 +106,8 @@ public class DiffResourceImpl implements DiffResource {
 	 *            html
 	 * @return rendered diff
 	 * @throws Exception
-	 * @throws ParseErrorException
-	 * @throws ResourceNotFoundException
 	 */
-	protected String renderDiff(DiffRequest request, boolean diffSource) throws ResourceNotFoundException, ParseErrorException, Exception {
+	protected String renderDiff(DiffRequest request, boolean diffSource) throws Exception {
 		// first generate the diff
 		List diff = StringUtils.diffHTMLStrings(request.getContent1(), request.getContent2(), diffSource, request.getIgnoreRegex());
 
@@ -144,9 +115,12 @@ public class DiffResourceImpl implements DiffResource {
 		StringWriter diffWriter = new StringWriter();
 
 		// initialize the templates
-		Template changeTemplate = parseTemplate(ObjectTransformer.getString(request.getChangeTemplate(), DiffRequest.DEFAULT_CHANGE_TEMPLATE));
-		Template insertTemplate = parseTemplate(ObjectTransformer.getString(request.getInsertTemplate(), DiffRequest.DEFAULT_INSERT_TEMPLATE));
-		Template removeTemplate = parseTemplate(ObjectTransformer.getString(request.getRemoveTemplate(), DiffRequest.DEFAULT_REMOVE_TEMPALTE));
+		Template changeTemplate = diffEngine.compile(new StringTemplateSource("change",
+				ObjectTransformer.getString(request.getChangeTemplate(), DiffRequest.DEFAULT_CHANGE_TEMPLATE)));
+		Template insertTemplate = diffEngine.compile(new StringTemplateSource("insert",
+				ObjectTransformer.getString(request.getInsertTemplate(), DiffRequest.DEFAULT_INSERT_TEMPLATE)));
+		Template removeTemplate = diffEngine.compile(new StringTemplateSource("remove",
+				ObjectTransformer.getString(request.getRemoveTemplate(), DiffRequest.DEFAULT_REMOVE_TEMPALTE)));
 		int wordsBefore = ObjectTransformer.getInt(request.getWordsBefore(), DiffRequest.DEFAULT_WORDS_BEFORE);
 		int wordsAfter = ObjectTransformer.getInt(request.getWordsAfter(), DiffRequest.DEFAULT_WORDS_AFTER);
 
@@ -173,24 +147,24 @@ public class DiffResourceImpl implements DiffResource {
 				String after = getWords(diff, i + 1, i + 1 + wordsAfter);
 
 				// populate the context
-				VelocityContext ctx = new VelocityContext();
-
-				ctx.put("insert", insert);
-				ctx.put("remove", remove);
-				ctx.put("before", before);
-				ctx.put("after", after);
+				Context ctx = Context.newBuilder(null)
+					.combine("insert", insert)
+					.combine("remove", remove)
+					.combine("before", before)
+					.combine("after", after)
+					.build();
 
 				switch (diffPart.getDiffType()) {
 				case StringUtils.DiffPart.TYPE_CHANGE:
-					changeTemplate.merge(ctx, diffWriter);
+					changeTemplate.apply(ctx, diffWriter);
 					break;
 
 				case StringUtils.DiffPart.TYPE_INSERT:
-					insertTemplate.merge(ctx, diffWriter);
+					insertTemplate.apply(ctx, diffWriter);
 					break;
 
 				case StringUtils.DiffPart.TYPE_REMOVE:
-					removeTemplate.merge(ctx, diffWriter);
+					removeTemplate.apply(ctx, diffWriter);
 					break;
 
 				default:
@@ -229,27 +203,5 @@ public class DiffResourceImpl implements DiffResource {
 		}
 
 		return out.toString();
-	}
-
-	/**
-	 * Parse the given source into a template
-	 * 
-	 * @param source
-	 *            source to parse into a template
-	 * @return Template
-	 * @throws ResourceNotFoundException
-	 * @throws ParseErrorException
-	 * @throws Exception
-	 */
-	protected Template parseTemplate(String source) throws ResourceNotFoundException, ParseErrorException, Exception {
-		VelocityEngine diffEngine = getDiffEngine();
-		String templateName = "DiffResource-" + Thread.currentThread().getName();
-		StringResourceRepository srr = StringResourceLoader.getRepository();
-
-		srr.putStringResource(templateName, source);
-		Template template = diffEngine.getTemplate(templateName);
-
-		srr.removeStringResource(templateName);
-		return template;
 	}
 }

@@ -60,7 +60,7 @@ describe('GroupApi', () => {
 
     it('getGroup() sends the correct GET request', () => {
         groupApi.getGroup(GROUP_ID);
-        expect(apiBase.get).toHaveBeenCalledWith(`group/${GROUP_ID}`);
+        expect(apiBase.get).toHaveBeenCalledWith(`group/${GROUP_ID}`, undefined);
     });
 
     it('getSubgroups() sends the correct GET request', () => {

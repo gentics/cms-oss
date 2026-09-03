@@ -1,17 +1,18 @@
 package com.gentics.contentnode.rest.util;
 
-import com.gentics.api.lib.exception.TranslationException;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.collections.CollectionUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.messaging.Message;
 import com.gentics.contentnode.messaging.MessageSender;
@@ -66,14 +67,14 @@ public class RestCallable implements Callable<GenericResponse> {
 	protected Integer userId;
 
 	/**
-	 * Flag to mark, whether the job was sent to the background
-	 */
-	protected boolean background = false;
-
-	/**
 	 * Language ID
 	 */
 	protected int languageId;
+
+	/**
+	 * Transaction timestamp
+	 */
+	protected long trxTimestamp;
 
 	/**
 	 * Wrapped callable
@@ -133,6 +134,7 @@ public class RestCallable implements Callable<GenericResponse> {
 		sessionId = t.getSessionId();
 		userId = t.getUserId();
 		languageId = ContentNodeHelper.getLanguageId();
+		trxTimestamp = t.getTimestamp();
 	}
 
 	/**
@@ -141,14 +143,6 @@ public class RestCallable implements Callable<GenericResponse> {
 	 */
 	public void setThrowNodeException(boolean throwNodeException) {
 		this.throwNodeException = throwNodeException;
-	}
-
-	/**
-	 * Send this job to the background. Once the job is finished, instant
-	 * messages will be sent to the user
-	 */
-	public void sendToBackground() {
-		background = true;
 	}
 
 	/**
@@ -203,55 +197,31 @@ public class RestCallable implements Callable<GenericResponse> {
 				Operator.jobIsStarting(this);
 				GenericResponse result = wrapped.call();
 				trx.success();
-				return handleResponse(result);
+				return handleInQueue(result);
 			} catch (EntityNotFoundException e) {
-				if (throwNodeException && !background) {
+				if (throwNodeException) {
 					throw e;
 				}
-				return handleResponse(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
 						new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage())));
 			} catch (InsufficientPrivilegesException e) {
 				InsufficientPrivilegesMapper.log(e);
-				if (throwNodeException && !background) {
+				if (throwNodeException) {
 					throw e;
 				}
-				return handleResponse(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
 						new ResponseInfo(ResponseCode.PERMISSION, e.getMessage())));
 			} catch (ReadOnlyException e) {
-				if (throwNodeException && !background) {
+				if (throwNodeException) {
 					throw e;
 				}
-				return handleResponse(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
+				return handleInQueue(new GenericResponse(new com.gentics.contentnode.rest.model.response.Message(Type.CRITICAL, e.getLocalizedMessage()),
 						new ResponseInfo(ResponseCode.FAILURE, e.getMessage())));
 			} catch (RestMappedException e) {
-				if (throwNodeException && !background) {
+				if (throwNodeException) {
 					throw e;
 				}
-				return handleResponse(e.getRestResponse());
-			} catch (Exception e) {
-				Operator.logger.error("Error while '" + description + "'", e);
-				if (background && userId != null) {
-					TransactionManager.execute(new Executable() {
-						@Override
-						public void execute() throws NodeException {
-							Transaction t = TransactionManager.getCurrentTransaction();
-							MessageSender messageSender = new MessageSender();
-							t.addTransactional(messageSender);
-
-							CNI18nString messageText = new CNI18nString("backgroundjob_finished_with_errors");
-							messageText.addParameter(description);
-							var message = messageText.toString();
-
-							if (e instanceof TranslationException) {
-								message = e.getMessage();
-							}
-
-							messageSender.sendMessage(new Message(1, userId, message, INSTANT_TIME));
-						}
-					});
-				}
-
-				throw e;
+				return handleInQueue(e.getRestResponse());
 			} finally {
 				Operator.jobFinished(this);
 			}
@@ -259,43 +229,79 @@ public class RestCallable implements Callable<GenericResponse> {
 	}
 
 	/**
-	 * Handle the given response. If the job was sent to the background, send
-	 * instant messages
-	 * 
-	 * @param response
-	 *            response to handle
+	 * Optionally handle the response in the queue (if any)
+	 * @param response response
 	 * @return response
 	 * @throws NodeException
 	 */
-	protected GenericResponse handleResponse(final GenericResponse response) throws NodeException {
+	protected GenericResponse handleInQueue(final GenericResponse response) throws NodeException {
 		if (queueResult != null) {
 			queueResult.handleResponse(response);
-		} else if (background && userId != null) {
+		}
+		return response;
+	}
+
+	/**
+	 * Handle the given response in the background by sending instance messages
+	 * 
+	 * @param response
+	 *            response to handle
+	 * @throws NodeException
+	 */
+	protected void handleInBackground(final GenericResponse response) throws NodeException {
+		if (queueResult != null) {
+			queueResult.handleResponse(response);
+		} else if (userId != null) {
+			try (Trx trx = new Trx(sessionId, userId)) {
+				Transaction t = trx.getTransaction();
+				t.setTimestamp(trxTimestamp);
+
+				MessageSender messageSender = new MessageSender();
+				t.addTransactional(messageSender);
+				if (response.getResponseInfo().getResponseCode() == ResponseCode.OK && CollectionUtils.isEmpty(response.getMessages())) {
+					Message message = new Message(1, userId, I18NHelper.get("backgroundjob_finished_successfully", description), INSTANT_TIME);
+					messageSender.sendMessage(message);
+				}
+
+				if (!CollectionUtils.isEmpty(response.getMessages())) {
+					for (com.gentics.contentnode.rest.model.response.Message restMessage : response.getMessages()) {
+						User sender = restMessage.getSender();
+						int senderId = sender != null ? sender.getId() : 1;
+						messageSender.sendMessage(new Message(senderId, userId, restMessage.getMessage(), INSTANT_TIME));
+					}
+				}
+
+				trx.success();
+			}
+		}
+	}
+
+	/**
+	 * Handle the error in background
+	 * @param e exception
+	 * @throws NodeException
+	 */
+	protected void handleInBackground(final Throwable e) throws NodeException {
+		Operator.logger.error("Error while '" + description + "'", e);
+		if (userId != null) {
 			TransactionManager.execute(new Executable() {
 				@Override
 				public void execute() throws NodeException {
 					Transaction t = TransactionManager.getCurrentTransaction();
 					MessageSender messageSender = new MessageSender();
 					t.addTransactional(messageSender);
-					if (response.getResponseInfo().getResponseCode() == ResponseCode.OK && CollectionUtils.isEmpty(response.getMessages())) {
-						CNI18nString messageText = new CNI18nString("backgroundjob_finished_successfully");
 
-						messageText.addParameter(description);
-						Message message = new Message(1, userId, messageText.toString(), INSTANT_TIME);
-						messageSender.sendMessage(message);
+					CNI18nString messageText = new CNI18nString("backgroundjob_finished_with_errors");
+					messageText.addParameter(description);
+					var message = messageText.toString();
+
+					if (e instanceof TranslationException) {
+						message = e.getMessage();
 					}
 
-					if (!CollectionUtils.isEmpty(response.getMessages())) {
-						for (com.gentics.contentnode.rest.model.response.Message restMessage : response.getMessages()) {
-							User sender = restMessage.getSender();
-							int senderId = sender != null ? sender.getId() : 1;
-							messageSender.sendMessage(new Message(senderId, userId, restMessage.getMessage(), INSTANT_TIME));
-						}
-					}
+					messageSender.sendMessage(new Message(1, userId, message, INSTANT_TIME));
 				}
 			});
 		}
-
-		return response;
 	}
 }

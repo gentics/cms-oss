@@ -28,14 +28,15 @@
                 [class.has-disabled-unknowns]="disableUnknownValues && unknownValues.length > 0"
                 data-context-trigger
             >
-                @if (selectedOptions.length > 0 || (disableUnknownValues && unknownValues.length > 0)) {
+                @if (selectedOptions.length > 0) {
                     <div class="view-value-item">{{ viewValue }}</div>
-                }
-                @if (placeholder && selectedOptions.length === 0) {
-                    <div class="placeholder">{{ placeholder }}</div>
-                }
-                @if (!placeholder && selectedOptions.length === 0) {
-                    <div></div>
+                } @else if (placeholder) {
+                    <div
+                        class="placeholder"
+                        [class.unknown-values]="unknownValues.length > 0 && unknownValues.length === valueArray.length"
+                    >{{ placeholder }}</div>
+                } @else {
+                    <div><!-- empty el to push the icon --></div>
                 }
                 <icon>arrow_drop_down</icon>
             </div>

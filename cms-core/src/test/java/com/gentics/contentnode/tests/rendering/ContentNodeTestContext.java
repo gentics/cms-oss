@@ -166,9 +166,6 @@ public class ContentNodeTestContext {
 			NodeConfig nodeConfig = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig();
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
 
-			// initialize velocity
-			NodeConfigRuntimeConfiguration.initVelocity();
-
 			factory = ContentNodeFactory.getInstance();
 
 			// initialize the permission store

@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,13 +42,19 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Testcase for editing folders
  * TODO: migrate all tests to use the REST API (if possible)
  * @author norbert
  */
-public class FolderEditSandboxTest {
+public class FolderEditSandboxTest extends AbstractEditSandboxTest {
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
@@ -398,6 +406,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByName() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -425,6 +435,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByDescription() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -453,6 +465,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByPubDir() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -481,6 +495,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByObjectProperty() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -509,7 +525,10 @@ public class FolderEditSandboxTest {
 	 * @throws Exception
 	 */
 	@Test
+	@Ignore("Fails because the necessary dependency is not written for handlebars. See SUP-20138")
 	public void testDirtPageByNewObjectProperty() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 

@@ -334,6 +334,7 @@ export interface GroupUsersResponse extends ListResponse<User<Raw>> { }
  */
 export interface GroupResponse extends Response {
     group: Group<Raw>;
+    perms?: GcmsPermission[];
 }
 
 /**

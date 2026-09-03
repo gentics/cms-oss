@@ -1,0 +1,1 @@
+Administration User Interface: Now the group manipulation windows are aware of the assignment permissions of the group, allowing no assignment modifications if necessary. 

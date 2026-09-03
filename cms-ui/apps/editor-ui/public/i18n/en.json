@@ -95,7 +95,8 @@
         "link_checker_edit": "Edit",
         "link_checker_delete": "Remove",
         "link_checker_no_content": "No broken Links detected",
-        "constructs_empty": "No Constructs insertable/available"
+        "constructs_empty": "No Constructs insertable/available",
+        "clear_color": "Remove color"
     },
     "editor": {
         "alert_center_title": "Alert Center",

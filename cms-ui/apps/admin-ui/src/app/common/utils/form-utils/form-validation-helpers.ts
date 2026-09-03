@@ -1,7 +1,33 @@
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+
+export const JSON_VALIDATOR: ValidatorFn = (control) => {
+    const value = control.value;
+    control.hasError('errorIsInvalidJson');
+    const validationError = { errorIsInvalidJson: true };
+
+    // if input is empty, there is no error
+    if (!value) {
+        return null;
+    }
+
+    if (typeof value === 'string') {
+        let parsed: object;
+        try {
+            parsed = JSON.parse(value);
+            if (parsed != null && typeof parsed === 'object') {
+                return null;
+            }
+        } catch (error) {
+            return validationError;
+        }
+    }
+
+    // if in doubt, return error
+    return validationError;
+};
 
 /**
  * @returns An observable that emits the validity status of the specified `AbstractControl`.
@@ -78,7 +104,7 @@ export function createBlacklistValidator(blacklist: any[] | (() => any[])): Vali
                 };
             }
         }
-    }
+    };
 }
 
 type CompareFn = (a: any, b: any) => boolean;
@@ -112,7 +138,7 @@ export function createWhitelistValidator(whitelist: any[] | (() => any[]), compa
         }
 
         return null;
-    }
+    };
 }
 
 type InvalidLanguagesCallback = (invalidLanguages: string[]) => any;
@@ -170,7 +196,7 @@ export function createI18nRequiredValidator(requiredLanguages: string[] | (() =>
         }
 
         return hasError ? err : null;
-    }
+    };
 }
 
 export function createNotNullValidator(): ValidatorFn {
@@ -180,5 +206,5 @@ export function createNotNullValidator(): ValidatorFn {
         }
 
         return { null: true };
-    }
+    };
 }

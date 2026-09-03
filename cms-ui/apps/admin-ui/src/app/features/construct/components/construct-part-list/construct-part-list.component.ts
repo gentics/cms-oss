@@ -1,5 +1,3 @@
-import { DataSourceHandlerService } from '@admin-ui/core';
-import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
     ChangeDetectionStrategy,
@@ -14,11 +12,14 @@ import {
 import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
 import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
-import { DataSource, Language, MarkupLanguage, Raw, TagPart } from '@gentics/cms-models';
+import { DataSource, Language, MarkupLanguage, PartType, Raw, TagPart } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService, generateFormProvider } from '@gentics/ui-core';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
+import { DataSourceHandlerService } from '../../../../core';
+import { MarkupLanguageDataService } from '../../../../shared';
 import { ConstructPartPropertiesMode } from '../construct-part-properties/construct-part-properties.component';
 import { CreateConstructPartModalComponent } from '../create-construct-part-modal/create-construct-part-modal.component';
 
@@ -40,8 +41,8 @@ interface DisplayItem {
     animations: [
         trigger('slideAnim', [
             state('in', style({
-                opacity: 1,
-                height: '*',
+                "opacity": 1,
+                "height": '*',
                 'padding-top': '*',
                 'padding-bottom': '*',
                 'margin-top': '*',
@@ -49,8 +50,8 @@ interface DisplayItem {
             })),
             transition(':enter', [
                 style({
-                    opacity: 0,
-                    height: '0rem',
+                    "opacity": 0,
+                    "height": '0rem',
                     'padding-top': '0',
                     'padding-bottom': '0',
                     'margin-top': '0',
@@ -59,8 +60,8 @@ interface DisplayItem {
                 animate(100),
             ]),
             transition(':leave', animate(100, style({
-                opacity: 0,
-                height: '0rem',
+                "opacity": 0,
+                "height": '0rem',
                 'padding-top': '0',
                 'padding-bottom': '0',
                 'margin-top': '0',
@@ -68,7 +69,7 @@ interface DisplayItem {
             }))),
         ]),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ConstructPartListComponent implements OnInit, OnDestroy, ControlValueAccessor {
 
@@ -92,6 +93,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
 
     public markupLanguages: MarkupLanguage<Raw>[];
     public dataSources: DataSource<Raw>[];
+    public partTypes: PartType[] = [];
 
     protected internalParts: TagPart[] = [];
     protected clonedParts: TagPart[] = [];
@@ -108,15 +110,20 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
         private modals: ModalService,
         private dataSourceHandler: DataSourceHandlerService,
         private markupLanguageData: MarkupLanguageDataService,
+        private client: GCMSRestClientService,
     ) { }
 
     ngOnInit(): void {
-        this.otherSubscriptions.push(this.markupLanguageData.watchAllEntities().subscribe(languages => {
+        this.otherSubscriptions.push(this.markupLanguageData.watchAllEntities().subscribe((languages) => {
             this.markupLanguages = languages;
             this.changeDetector.markForCheck();
         }));
-        this.otherSubscriptions.push(this.dataSourceHandler.listMapped().subscribe(res => {
+        this.otherSubscriptions.push(this.dataSourceHandler.listMapped().subscribe((res) => {
             this.dataSources = res.items;
+            this.changeDetector.markForCheck();
+        }));
+        this.otherSubscriptions.push(this.client.partType.list().subscribe((res) => {
+            this.partTypes = res.items;
             this.changeDetector.markForCheck();
         }));
 
@@ -153,7 +160,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             }),
             distinctUntilChanged(isEqual),
             debounceTime(100),
-        ).subscribe(value => {
+        ).subscribe((value) => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
             if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.clonedParts, value))) {
@@ -170,10 +177,10 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.subscription.unsubscribe();
         }
         if (this.partSubscriptions) {
-            this.partSubscriptions.forEach(s => s.unsubscribe());
+            this.partSubscriptions.forEach((s) => s.unsubscribe());
             this.partSubscriptions = [];
         }
-        this.otherSubscriptions.forEach(s => s.unsubscribe());
+        this.otherSubscriptions.forEach((s) => s.unsubscribe());
     }
 
     writeValue(parts: any): void {
@@ -187,7 +194,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
         if (parts.length !== this.internalParts.length) {
             // Unsubscribe from all controls, as they will be removed
             if (this.partSubscriptions) {
-                this.partSubscriptions.forEach(s => s.unsubscribe());
+                this.partSubscriptions.forEach((s) => s.unsubscribe());
                 this.partSubscriptions = [];
             }
 
@@ -281,12 +288,12 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     }
 
     async createNewPart(): Promise<void> {
-        const usedOrders = this.internalParts.map(part => part.partOrder);
+        const usedOrders = this.internalParts.map((part) => part.partOrder);
         const highestOrder = Math.max(...usedOrders);
 
         const modalInput: any = {
             supportedLanguages: this.supportedLanguages,
-            keywordBlacklist: this.internalParts.map(part => part.keyword),
+            keywordBlacklist: this.internalParts.map((part) => part.keyword),
             orderBlacklist: usedOrders,
             dataSources: this.dataSources,
         };
@@ -344,7 +351,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     }
 
     private observeSingleTag(control: AbstractControl, index: number): void {
-        this.partSubscriptions.push(control.valueChanges.subscribe(newValue => {
+        this.partSubscriptions.push(control.valueChanges.subscribe((newValue) => {
             if (newValue !== CONTROL_INVALID_VALUE) {
                 this.internalParts[index] = newValue || this.internalParts[index];
                 this.changeDetector.markForCheck();
@@ -359,7 +366,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             event.stopPropagation();
         }
 
-        this.partSubscriptions.forEach(sub => sub.unsubscribe());
+        this.partSubscriptions.forEach((sub) => sub.unsubscribe());
         this.partSubscriptions = [];
 
         // Instead of splice, using slice and creating a new array,
@@ -387,7 +394,6 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
 
     /**
      * Collapses or expands node data row.
-     *
      * @param index the index of the item
      */
     toggleRow(index: number): void {
@@ -401,7 +407,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.allCollapsed = !this.allCollapsed;
         }
 
-        this.displayItems.forEach(item => {
+        this.displayItems.forEach((item) => {
             item.state.collapsed = allCollapsed;
         });
 

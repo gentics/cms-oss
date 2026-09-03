@@ -29,6 +29,7 @@ gtx-contents-list-item {
 
     ::ng-deep .item-name {
         align-items: baseline;
+        display: flex;
     }
 
     &.deleted {

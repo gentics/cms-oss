@@ -19,7 +19,7 @@ h3. Overview
 | 31        | Checkbox                | Part type for input of boolean value. |
 | 32        | Datasource              | With this part type, the user can define individual datasources in the tag. |
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
-| 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
+| 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. |
 | 43        | Handlebars              | The Handlebars part type renders its content with the Handlebars rendering engine. See "Rendering with Handlebars":handlebars.html for details. |
 | 44        | JSON                    | The JSON part type offers storing, validation and navigation/resolving over structured data in the "JavaScript Object Notation":https://www.json.org/json-en.html content. | 
 

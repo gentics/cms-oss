@@ -177,7 +177,6 @@ export enum TagPartType {
     Handlebars = 43,
     /** JSON content part type */
     Json = 44,
-
     /**
      * Groovy Part Type for adding groovy scripts
      */

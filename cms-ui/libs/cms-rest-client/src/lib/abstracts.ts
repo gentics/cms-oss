@@ -282,8 +282,8 @@ import {
     PageVariantCreateRequest,
     PagedConstructListRequestOptions,
     PagedConstructListResponse,
-    PartType,
     PartTypeListOptions,
+    PartTypeListResponse,
     PermissionListResponse,
     PermissionResponse,
     PermissionsOptions,
@@ -1008,7 +1008,7 @@ export interface AbstractPageAPI extends BasicAPI {
 }
 
 export interface AbstractPartTypeAPI extends BasicAPI {
-    list: (options?: PartTypeListOptions) => PartType[];
+    list: (options?: PartTypeListOptions) => PartTypeListResponse;
 }
 
 export interface AbstractPermissionAPI extends BasicAPI {

@@ -27,6 +27,7 @@ Devtools will handle the following object types:
 * Internal static files (used only be the CMS, but not in the frontend)
 * Handlebars helpers (as JavaScript files)
 * Handlebars partials
+* Groovy scripts/classes
 
 The _datasources_, _tagtypes_, _object properties_ and _templates_ are still managed by the CMS and can be created, updated, deleted and used as always.
 Additionally, with the Devtools it is possible to synchronize selected objects into the filesystem of the CMS, where the objects can be edited and the
@@ -422,6 +423,10 @@ Every +.js+ file located in the directory @/cms/packages/[package]/handlebars/he
 h4. Handlebars Partials
 
 Every +.hbs+ file located in the directory @/cms/packages/[package]/handlebars/helpers/@ is interpreted as a handlebars partial. See "Handlebars Partials":handlebars.html#partials for details.
+
+h4. Groovy Scripts
+
+Every +.groovy+ file located in the directory @/cms/packages/[package]/scripts/@ is interpreted as groovy script or groovy class. See "Groovy Scripts in Devtool Packages":groovy.html#groovy-scripts-in-devtool-packages for details.
 
 h4. Restrictions
 

@@ -22,6 +22,7 @@ h3. Overview
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
 | 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
 | 43        | Handlebars              | The Handlebars part type renders its content with the Handlebars rendering engine. See "Rendering with Handlebars":handlebars.html for details. |
+| 45        | Groovy                  | The Groovy part type allows to execute Groovy Scripts for preparation of data to be rendered. See "Implementation of Groovy Scripts":groovy.html for details. |
 
 NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type @HTML@.
 

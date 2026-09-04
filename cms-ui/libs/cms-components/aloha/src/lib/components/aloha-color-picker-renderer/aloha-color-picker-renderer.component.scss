@@ -1,0 +1,80 @@
+@import 'cms-components/src/styles/variables';
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 320px;
+
+    .palette-wrapper {
+        padding: 1rem;
+        display: block;
+        width: 100%;
+
+        .palette {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(10, auto);
+            grid-template-rows: 1fr;
+            justify-content: space-between;
+            gap: 0.5rem;
+
+            .palette-entry {
+                background: var(--palette-color);
+                border-radius: 3px;
+                border: 1px solid transparent;
+                outline: none;
+                width: 20px;
+                height: 20px;
+                box-shadow: 2px 2px 2px $gtx-color-light-gray,
+                    -2px 2px 2px $gtx-color-light-gray,
+                    -2px -2px 2px $gtx-color-light-gray,
+                    2px -2px 2px $gtx-color-light-gray;
+                transition: 200ms;
+
+                &.active,
+                &:hover,
+                &:focus {
+                    box-shadow: 2px 2px 2px $gtx-color-off-black,
+                        -2px 2px 2px $gtx-color-off-black,
+                        -2px -2px 2px $gtx-color-off-black,
+                        2px -2px 2px $gtx-color-off-black;
+                }
+
+                &.active {
+                    outline: var(--palette-contrast) solid 1px;
+                }
+
+                &.clear-entry {
+                    color: $gtx-color-off-black;
+                    padding: 0;
+
+                    icon {
+                        font-size: 18px;
+                    }
+                }
+            }
+        }
+    }
+
+    color-slider {
+        padding: 0 1rem 1rem;
+        flex: 1 1 auto;
+    }
+
+    .alpha-wrapper {
+        padding: 0 1rem 1rem;
+        flex: 1 1 auto;
+        display: flex;
+
+        color-alpha-picker {
+            flex: 1 1 auto;
+            width: 100%;
+
+            &::ng-deep .alpha-picker {
+                width: 100% !important;
+                height: 14px !important;
+            }
+        }
+    }
+}

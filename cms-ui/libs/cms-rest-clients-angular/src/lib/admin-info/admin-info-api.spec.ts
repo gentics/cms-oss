@@ -1,4 +1,4 @@
-import { MockApiBase } from '../util/api-base.mock';
+import { MockApiBase } from '../testing';
 import { AdminInfoApi } from './admin-info-api';
 
 describe('AdminInfoApi', () => {
@@ -13,17 +13,17 @@ describe('AdminInfoApi', () => {
 
     it('getPublishInfo() sends the correct GET request', () => {
         adminInfoApi.getPublishInfo();
-        expect(apiBase.get).toHaveBeenCalledWith(`admin/publishInfo`);
+        expect(apiBase.get).toHaveBeenCalledWith('admin/publishInfo');
     });
 
     it('getUpdates() sends the correct GET request', () => {
         adminInfoApi.getUpdates();
-        expect(apiBase.get).toHaveBeenCalledWith(`admin/updates`);
+        expect(apiBase.get).toHaveBeenCalledWith('admin/updates');
     });
 
     it('getVersion() sends the correct GET request', () => {
         adminInfoApi.getVersion();
-        expect(apiBase.get).toHaveBeenCalledWith(`admin/version`);
+        expect(apiBase.get).toHaveBeenCalledWith('admin/version');
     });
 
     it('getFeatureInfo() sends the correct GET request', () => {

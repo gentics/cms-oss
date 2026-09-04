@@ -143,7 +143,8 @@ export class NotificationService {
     private positionOpenToasts(): void {
         setTimeout(() => {
             this.openToasts.forEach((o: IOpenToast) => {
-                o.toast.position.top = this.getToastTop(o.toast);
+                o.toast.position = this.getToastTop(o.toast);
+                o.toast.changeDetector.markForCheck();
             });
         });
     }

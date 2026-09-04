@@ -11,12 +11,12 @@ import {
     Self,
     ViewChild,
 } from '@angular/core';
+import { coerceToBoolean, coerceToTruelean, matchesMimeType } from '@gentics/common';
 import { merge } from 'rxjs';
 import { ChangesOf, IFileDropAreaOptions } from '../../common';
 import { FileDropAreaDirective } from '../../directives/file-drop-area/file-drop-area.directive';
-import { coerceToBoolean, coerceToTruelean, generateFormProvider } from '../../utils';
-import { matchesMimeType } from '../../utils/matches-mime-type';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
+import { generateFormProvider } from '../../utils';
 
 /**
  * A file picker component.
@@ -30,7 +30,7 @@ import { BaseFormElementComponent } from '../base-form-element/base-form-element
     templateUrl: './file-picker.component.html',
     styleUrls: ['./file-picker.component.scss'],
     providers: [generateFormProvider(FilePickerComponent)],
-    standalone: false
+    standalone: false,
 })
 export class FilePickerComponent extends BaseFormElementComponent<File[]> implements OnInit, OnChanges {
 
@@ -164,7 +164,7 @@ export class FilePickerComponent extends BaseFormElementComponent<File[]> implem
             const accepted: File[] = [];
             const rejected: File[] = [];
 
-            Array.from(files).forEach(file => {
+            Array.from(files).forEach((file) => {
                 if (matchesMimeType(file.type, this.accept)) {
                     accepted.push(file);
                 } else {

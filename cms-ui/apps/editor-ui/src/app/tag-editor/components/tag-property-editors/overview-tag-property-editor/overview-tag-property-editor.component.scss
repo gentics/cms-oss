@@ -10,6 +10,7 @@
     .overview-item {
         display: flex;
         flex-direction: row;
+        gap: 0.5rem;
     }
 }
 
@@ -77,7 +78,7 @@
     .item-icon {
         cursor: default;
         position: relative;
-        top: 5px;
+        height: 24px;
     }
 
     sortable-array-list::ng-deep {

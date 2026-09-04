@@ -1,20 +1,25 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "allowJs": true,
-    "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "types": ["cypress", "node", "jasmine"],
-    "sourceMap": false
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.js",
-    "../cypress.config.ts",
-    "../**/*.cy.ts",
-    "../**/*.cy.tsx",
-    "../**/*.cy.js",
-    "../**/*.cy.jsx",
-    "../**/*.d.ts"
-  ]
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "moduleResolution": "node16",
+        "allowJs": true,
+        "outDir": "../../dist/out-tsc",
+        "module": "commonjs",
+        "types": ["cypress", "node"],
+        "sourceMap": false
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.js",
+        "../cypress.config.ts",
+        "../src/**/*.cy.ts",
+        "../src/**/*.cy.js",
+        "../src/**/*.d.ts"
+    ],
+    "exclude": [
+        "**/*.spec.ts",
+        "../src/test.ts",
+        "../testing/**/*",
+        "../build/**/*"
+    ]
 }

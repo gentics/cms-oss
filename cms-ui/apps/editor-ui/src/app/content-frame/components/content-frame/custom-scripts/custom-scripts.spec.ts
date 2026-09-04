@@ -2,19 +2,20 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-underscore-dangle */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
-import { EditMode, GcmsUiBridge } from '@gentics/cms-integration-api-models';
-import { Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
-import { Subscription } from 'rxjs';
-import { SpyEventTarget } from '../../../../../testing/spy-event-target';
 import {
     AlohaGlobal,
     CNIFrameDocument,
     CNWindow,
+    EditMode,
+    GcmsUiBridge,
     GCNJSLib,
     GCNJsLibRequestOptions,
     GCNRestRequestArgs,
-} from '../../../models/content-frame';
+} from '@gentics/cms-integration-api-models';
+import { Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing';
+import { Subscription } from 'rxjs';
+import { SpyEventTarget } from '../../../../../testing/spy-event-target';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';
@@ -286,7 +287,6 @@ class CustomScriptsTestFixture {
     runPreLoadScript(): void {
         const script = new PreLoadScript(
             this.window as any as CNWindow,
-            this.document as any as CNIFrameDocument,
         );
         script.run();
     }

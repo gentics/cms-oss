@@ -1,10 +1,12 @@
 {
   "name": "@gentics/e2e-utils",
-  "version": "6.4.0",
+  "version": "6.4.4",
   "private": true,
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
   "dependencies": {
-    "tslib": "^2.3.0"
+    "@gentics/aloha-models": "^6.4.4",
+    "@gentics/cms-models": "^6.4.4",
+    "@gentics/mesh-models": "^3.2.9",
+    "@gentics/cms-rest-client": "^6.4.4",
+    "@playwright/test": "^1.36.0"
   }
 }

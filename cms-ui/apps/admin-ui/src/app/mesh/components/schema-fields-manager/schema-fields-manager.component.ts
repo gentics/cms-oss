@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { BasePropertiesListComponent } from '@gentics/cms-components';
 import { SchemaField } from '@gentics/mesh-models';
-import { ISortableEvent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormListComponent, ISortableEvent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
 @Component({
@@ -14,21 +13,18 @@ import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-fie
         generateFormProvider(SchemaFieldsManagerComponent),
         generateValidatorProvider(SchemaFieldsManagerComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<SchemaField> {
+export class SchemaFieldsManagerComponent extends BaseFormListComponent<SchemaField> {
 
     @Input({ required: true })
     public type: SchemaFieldPropertiesType;
 
     @Input()
-    public label: string;
-
-    @Input()
     public ownName: string;
 
     @Input()
-    public schemaNames: string[]
+    public schemaNames: string[];
 
     @Input()
     public microschemaNames: string[];

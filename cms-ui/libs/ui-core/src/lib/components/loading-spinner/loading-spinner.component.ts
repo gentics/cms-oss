@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
+import { booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 
 /**
  * Use this overlay displaying a centered loading animation to indicate your component is loading.
@@ -11,12 +10,12 @@ import { coerceToBoolean } from '../../utils';
     templateUrl: './loading-spinner.component.html',
     styleUrls: ['./loading-spinner.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class LoadingSpinnerComponent implements OnChanges, OnDestroy {
 
     /** If it should be visible */
-    @Input({ transform: coerceToBoolean })
+    @Input({ transform: booleanAttribute })
     public visible = false;
 
     /** Message for the user */

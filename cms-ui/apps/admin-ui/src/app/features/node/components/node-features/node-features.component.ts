@@ -4,9 +4,8 @@ import {
     Input,
 } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
 
@@ -23,9 +22,9 @@ export type NodeFeaturesFormData = Partial<Record<NodeFeature, boolean>>;
         generateFormProvider(NodeFeaturesComponent),
         generateValidatorProvider(NodeFeaturesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class NodeFeaturesComponent extends BasePropertiesComponent<NodeFeaturesFormData> {
+export class NodeFeaturesComponent extends BaseFormPropertiesComponent<NodeFeaturesFormData> {
 
     public readonly NodeFeature = NodeFeature;
 
@@ -35,7 +34,7 @@ export class NodeFeaturesComponent extends BasePropertiesComponent<NodeFeaturesF
 
     protected createForm(): FormGroup<FormProperties<NodeFeaturesFormData>> {
         const controls: FormProperties<NodeFeaturesFormData> = {};
-        this.availableFeatures.forEach(feat => {
+        this.availableFeatures.forEach((feat) => {
             controls[feat.id] = new FormControl(this.value?.[feat.id]);
         });
 

@@ -1,6 +1,7 @@
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
@@ -27,7 +28,7 @@ import { ModalService } from '@gentics/ui-core';
 import { isEqual as _isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ItemsInfo } from '../../../common/models';
+import { FolderPermissionData, ItemsInfo } from '../../../common/models';
 import { ApplicationStateService } from '../../../state';
 import { RepositoryBrowserDataService } from '../../providers';
 import { DisplayFieldSelectorModal } from '../display-field-selector/display-field-selector.component';
@@ -41,7 +42,7 @@ import { MasonryGridComponent } from '../masonry-grid/masonry-grid.component';
     templateUrl: './repository-browser-list.tpl.html',
     styleUrls: ['./repository-browser-list.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 
@@ -58,19 +59,24 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     @Input() displayNodeName = false;
     @Input() itemsPerPage = 10;
     @Input() pageShowPath = true;
+    @Input() folderPermissions: FolderPermissionData;
 
     @Output() select = new EventEmitter<Item>();
     @Output() deselect = new EventEmitter<Item>();
     @Output() itemClick = new EventEmitter<Item>();
     @Output() updateDisplayFields = new EventEmitter<string[]>();
     /** Emits if an lang icon of `item row` > `item-status-indicator` is clicked */
-    @Output() pageLanguageIconClick = new EventEmitter<{ page: Page<Raw> | Page<Normalized>; language: Language; }>();
+    @Output() pageLanguageIconClick = new EventEmitter<{ page: Page<Raw> | Page<Normalized>; language: Language }>();
     /** Emits if a form language icon is clicked */
-    @Output() formLanguageIconClick = new EventEmitter<{ form: Form<Raw> | Form<Normalized>; language: Language; }>();
+    @Output() formLanguageIconClick = new EventEmitter<{ form: Form; language: Language }>();
 
     currentPage = 1;
     isCollapsed = false;
     showImagesGridView$: Observable<boolean>;
+
+    public activeLanguage: Language;
+    public showStatusIcons = true;
+    public showAllLanguages: boolean;
 
     filterTerm$: Observable<string>;
 
@@ -82,17 +88,35 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     languages$: Observable<Language[]>;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private modalService: ModalService,
         private dataService: RepositoryBrowserDataService,
     ) { }
 
     ngOnInit(): void {
-        this.showImagesGridView$ = this.appState.select(state => state.folder.displayImagesGridView);
+        this.showImagesGridView$ = this.appState.select((state) => state.folder.displayImagesGridView);
 
-        this.filterTerm$ = this.appState.select(state => state.folder.filterTerm);
+        this.filterTerm$ = this.appState.select((state) => state.folder.filterTerm);
 
         this.languages$ = this.dataService.currentAvailableLanguages$;
+
+        if (this.itemType === 'form') {
+            this.dataService.currentFormLanguage$.subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            });
+        } else {
+            this.dataService.currentContentLanguage$.subscribe((lang) => {
+                this.activeLanguage = lang;
+                this.changeDetector.markForCheck();
+            });
+        }
+
+        this.appState.select(state => state.folder.displayAllLanguages).subscribe((show) => {
+            this.showAllLanguages = show;
+            this.changeDetector.markForCheck();
+        });
     }
 
     ngOnChanges(changes: { [K in keyof RepositoryBrowserList]?: any }): void {
@@ -105,7 +129,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
              * It should only run once per changeset to avoid infinite loop on cases when an item does not have usage count property at all.
              */
             if (!_isEqual(changes.contents.previousValue, changes.contents.currentValue)
-                && !changes.contents.currentValue.every((item: Item) => !!item.usage)) {
+              && !changes.contents.currentValue.every((item: Item) => !!item.usage)) {
                 this.getTotalUsage();
             }
             this.currentPage = 1;
@@ -122,9 +146,9 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     }
 
     isSelected(item: Item): boolean {
-        return item && this.selected && this.selected.some(sel =>
-            sel.id === item.id &&
-            sel.type === item.type && (this.currentNode && this.currentNode.id > 0
+        return item && this.selected && this.selected.some((sel) =>
+            sel.id === item.id
+            && sel.type === item.type && (this.currentNode && this.currentNode.id > 0
                 ? (sel.nodeId === this.currentNode.id)
                 // eslint-disable-next-line no-underscore-dangle
                 : ((item as any).__favourite__ && (sel.nodeId === (item as any).__favourite__.nodeId))
@@ -162,8 +186,8 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     openDisplayFieldsModal(): void {
         const locals = { type: this.itemType as ItemType, fields: this.displayFields, showPath: this.pageShowPath };
         this.modalService.fromComponent(DisplayFieldSelectorModal, {}, locals)
-            .then(modal => modal.open())
-            .then((output: { selection: string[], showPath: boolean; }) => this.updateDisplayFields.emit(output.selection));
+            .then((modal) => modal.open())
+            .then((output: { selection: string[]; showPath: boolean }) => this.updateDisplayFields.emit(output.selection));
     }
 
     forceMasonryGridToLayoutAfterTimeout(): void {
@@ -182,16 +206,16 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
      * fetches items info, however based upon state and not folder shown in repository browser
      */
     getItemsInfo(type: FolderItemType): Observable<ItemsInfo> {
-        return this.appState.select(state => state.folder).pipe(
-            map(folderState => folderState[`${type}s` as FolderItemTypePlural]),
+        return this.appState.select((state) => state.folder).pipe(
+            map((folderState) => folderState[`${type}s` as FolderItemTypePlural]),
         );
     }
 
-    onPageLanguageIconClicked(data: { page: Page<Raw>; language: Language; }): void {
+    onPageLanguageIconClicked(data: { page: Page<Raw>; language: Language }): void {
         this.pageLanguageIconClick.emit(data);
     }
 
-    onFormLanguageIconClicked(data: { form: Form<Raw>; language: Language; }): void {
+    onFormLanguageIconClicked(data: { form: Form; language: Language }): void {
         this.formLanguageIconClick.emit(data);
     }
 
@@ -205,7 +229,7 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     }
 
     private typeCanFetchTotalUsage(type: ItemType | 'contenttag' | 'templatetag'): type is 'file' | 'form' | 'image' | 'page' {
-        return ['file', 'form', 'image', 'page'].includes(type)
+        return ['file', 'form', 'image', 'page'].includes(type);
     }
 
 }

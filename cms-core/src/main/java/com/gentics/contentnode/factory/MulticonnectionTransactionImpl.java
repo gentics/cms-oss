@@ -10,6 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 
@@ -44,15 +47,15 @@ import com.gentics.lib.log.NodeLogger;
  * prepared statements are closed by calling {@link #closeStatement(PreparedStatement)}.
  */
 public class MulticonnectionTransactionImpl extends TransactionImpl implements MulticonnectionTransaction {
-    
+
 	/**
 	 * The transaction will use 10 parallel connections for reading.
 	 */
 	// TODO: some performance tests to see how many connections are optimal and/or make this configurable
 	private static final int CONNECTION_COUNT = 10;
-    
+
 	private NodeConfig config;
-    
+
 	private NodeLogger logger = NodeLogger.getNodeLogger(MulticonnectionTransactionImpl.class);
 
 	/**
@@ -75,7 +78,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	/**
 	 * Pool for the connections
 	 */
-	private GenericObjectPool connectionPool;
+	private GenericObjectPool<Connection> connectionPool;
 
 	/**
 	 * Connection that is assigned to the current thread
@@ -138,24 +141,24 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 
 		// open the connections
 		startMulticonnection();
-        
+
 		// create new connection pool
 		// The apache pooling library lacks some features we would need. You  cannot initiate the pool
 		// with a fixed set of objects in it. The objects are created dynamically every time a client requests
 		// a new object from the pool until WHEN_EXHAUSTED_BLOCK. 
 		// (This happens in PoolableConnectionFactory.makeObject()).
-        
+
 		// However in this case we cannot create the objects dynamically - all connections have to be started
 		// at once. In startMulticonnection() we open the connections to the DB and store the objects
 		// in the "List connections". 
-        
+
 		// At the begining the pool is empty. When some requests a connection PoolableConnectionFactory.makeObject()
 		// is called. Then we take (and remove) a connection from the connections list.
-		connectionPool = new GenericObjectPool(new PoolableConnectionFactory());
+		connectionPool = new GenericObjectPool<Connection>(new PoolableConnectionFactory());
 		connectionPool.setMaxActive(CONNECTION_COUNT);
 		connectionPool.setWhenExhaustedAction(GenericObjectPool.WHEN_EXHAUSTED_BLOCK);
 		connectionPool.setMaxIdle(-1);
-		connectionPool.setMaxWait(-1);
+		connectionPool.setMaxWait(Duration.of(10, ChronoUnit.MINUTES).toMillis());
 		// we want to test idle connections. Testing will be done every TransactionManager.KEEPALIVE_INTERVAL ms (1 hour)
 		// and will call the validate() method of the PoolableConnectionFactory, which will issue a dummy statement to keep the connection alive
 		connectionPool.setTestWhileIdle(true);
@@ -167,7 +170,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		// now we get all connections from the pool and return them. this will
 		// ensure that all the connections really exist in the pool and will be
 		// kept alive by the object evictor (which will prevent connection timeouts)
-		List<Object> borrowedObjects = new ArrayList<Object>(CONNECTION_COUNT);
+		List<Connection> borrowedObjects = new ArrayList<Connection>(CONNECTION_COUNT);
 		for (int i = 0; i < CONNECTION_COUNT; i++) {
 			try {
 				borrowedObjects.add(connectionPool.borrowObject());
@@ -176,7 +179,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			}
 		}
 		// return all the connections to the pool
-		for (Object borrowed : borrowedObjects) {
+		for (Connection borrowed : borrowedObjects) {
 			try {
 				connectionPool.returnObject(borrowed);
 			} catch (Exception e) { // ignored
@@ -222,7 +225,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			if (logger.isDebugEnabled()) {
 				logger.debug("Getting writable connection.");
 			}
-            
+
 		} catch (SQLException e) {
 			throw new TransactionException("Could not start new multiconnection transaction.", e);
 		} catch (NodeException e) {
@@ -278,7 +281,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		}
 
 		asynchronousWorker.join();
-        
+
 		// deregister the connector from the DB
 		if (dbHandle != null) {
 			DB.closeConnector(dbHandle);
@@ -321,7 +324,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		if (logger.isInfoEnabled()) {
 			logger.info("Rolling back multiconnection transaction.");
 		}
-        
+
 		// check whether the transaction is running
 		if (!isOpen()) {
 			throw new TransactionException("Error while rolling back " + this + ": transaction is not open");
@@ -338,7 +341,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			stopTransaction(true);
 		}
 	}
-       
+
 	/**
 	 * Gets a connection for the current thread for the current thread.
 	 * If a connection is already assigned to this thread, this connection will be returned, and the threadlocal counter
@@ -356,10 +359,10 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		// later requests another one (before returning the first one) it should
 		// get the same object as in the first request. The object won't be
 		// returned to the pool until all requests are returned.
-        
+
 		// Example: you request 4 objects from the pool, get 4 times the same object
 		// and then have to return it 4 times.
-        
+
 		// E.g. you request a connection, make a statement and while processing
 		// the result you want to make another statement. It is perfectly ok
 		// to reuse the same connection. However you cannot return it to the pool
@@ -370,12 +373,12 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 		if (logger.isDebugEnabled()) {
 			logger.debug("Thread {" + threadName + "} wants a connection, current stack is: {" + assignedConnection.get() + "}");
 		}
-        
+
 		// this thread has already a connection so we can reuse it
 		// just increase the stackcount
 		if (assignedConnection.get() != null) {
 			Connection c = assignedConnection.get();
-            
+
 			// we use a threadlocal to store how many times the current thread has requested the connection.
 			Integer i = assignmentStack.get();
 
@@ -389,7 +392,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 
 			try {
 				// this will block if the pool is empty
-				c = (Connection) connectionPool.borrowObject();
+				c = connectionPool.borrowObject();
 			} catch (Exception e) {
 				String msg = "Worker thread {" + threadName + "} could not get a connection from multiconnection pool.";
 
@@ -406,7 +409,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			}
 
 			assignedConnection.set(c);
-			assignmentStack.set(new Integer(1));
+			assignmentStack.set(1);
 			return c;
 		}
 	}
@@ -415,10 +418,17 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	 * Get a connection that can be used for reading and writing.
 	 * @return A connection to the DB the that can be used for writing (and
 	 *         reading). This connection will be commited.
-	 * @throws SQLException
+	 * @throws TransactionException
 	 */
-	private Connection getWriteConnection() {
+	private Connection getWriteConnection() throws TransactionException {
 		long startWait = System.currentTimeMillis();
+		try {
+			if (connection.isClosed()) {
+				throw new TransactionException("Writable connection has been closed");
+			}
+		} catch (SQLException e) {
+			throw new TransactionException("Error while checking connection", e);
+		}
 
 		waitForConnection();
 		getPublishThreadInfo().increaseTimeWaitingDB((System.currentTimeMillis() - startWait));
@@ -506,7 +516,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			logger.warn("Trying to pop connection stack that is null.", e1);
 		}
 		i--;
-        
+
 		// if i>0 we have not reached the stack bottom yet, just store the decreased stackcount
 		if (i > 0) {
 			assignmentStack.set(i);
@@ -529,7 +539,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	 * @see com.gentics.lib.base.factory.TransactionManager.TransactionImpl#closeStatement(java.sql.Statement)
 	 */
 	public void closeStatement(Statement statement) {
-        
+
 		if (statement != null) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Thread {" + Thread.currentThread().getName() + "} is closing statement {" + statement.toString() + "}.");
@@ -542,12 +552,14 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 						statement.close();
 						return;
 					}
+				} else {
+					logger.warn("Thread {%s} returned statement without connection".formatted(Thread.currentThread().getName()));
 				}
 			} catch (SQLException e1) {
 				logger.warn("Error while closing writing statement.", e1);
 				return;
 			}
-            
+
 			try {
 				statement.close();
 			} catch (SQLException e) {
@@ -585,55 +597,43 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	 * An instance of this class will be used by the connection pool to "generate" the connections
 	 * which actually are generated 
 	 */
-	private class PoolableConnectionFactory implements PoolableObjectFactory {
+	private class PoolableConnectionFactory implements PoolableObjectFactory<Connection> {
 
 		/**
 		 * Time for every connection, when it was kept alive the last time
 		 */
 		protected Map<Connection, Long> keepAliveTimes = new HashMap<Connection, Long>();
 
-		/* (non-Javadoc)
-		 * @see org.apache.commons.pool.PoolableObjectFactory#activateObject(java.lang.Object)
-		 */
-		public void activateObject(Object arg0) throws Exception {}
+		@Override
+		public void activateObject(Connection c) throws Exception {}
 
-		/* (non-Javadoc)
-		 * @see org.apache.commons.pool.PoolableObjectFactory#destroyObject(java.lang.Object)
-		 */
-		public void destroyObject(Object arg0) throws Exception {}
+		@Override
+		public void destroyObject(Connection c) throws Exception {}
 
-		/* (non-Javadoc)
-		 * @see org.apache.commons.pool.PoolableObjectFactory#passivateObject(java.lang.Object)
-		 */
-		public void passivateObject(Object o) throws Exception {
-			if (o == null) {
+		@Override
+		public void passivateObject(Connection c) throws Exception {
+			if (c == null) {
 				logger.warn("A null connection was passed for returning to the pool");
-			} else if (o instanceof Connection) {
-				Connection c = (Connection) o;
-
+			} else {
 				if (c.isClosed()) {
 					logger.warn("A closed connection was passed for returning to the pool.");
 				}
-			} else {
-				logger.warn("Unexpected object passed for returning to the pool: " + o);
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see org.apache.commons.pool.PoolableObjectFactory#validateObject(java.lang.Object)
-		 */
-		public boolean validateObject(Object arg0) {
-			if (arg0 == null) {
+		@Override
+		public boolean validateObject(Connection c) {
+			if (c == null) {
 				return false;
 			}
 			try {
-				boolean isOk = !((Connection) arg0).isClosed();
+				boolean isOk = !c.isClosed();
 
 				if (!isOk) {
 					logger.warn("An already closed connection got into the pool.");
 				} else {
 					// keep the connection alive by issuing a dummy statement
-					keepAliveCheck((Connection) arg0);
+					keepAliveCheck(c);
 				}
 				return isOk;
 			} catch (SQLException e) {
@@ -642,15 +642,16 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see org.apache.commons.pool.PoolableObjectFactory#makeObject()
-		 */
-		public Object makeObject() throws Exception {
+		@Override
+		public Connection makeObject() throws Exception {
 			// In startMulticonnection() we have opened CONNECTION_COUNT connections and stored them in the list.
 			// The connection pool is configured to use max. CONNECTION_COUNT active objects.
 			// That means that this function gets called max. CONNECTION_COUNT times
 
 			// we return one of the connections and remove it from the list
+			if (CollectionUtils.isEmpty(connections)) {
+				throw new TransactionException("Could not get connection from the pool, since none are left.");
+			}
 			return connections.remove(0);
 		}
 
@@ -704,7 +705,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			}
 		}
 	}
-    
+
 	/**
 	 * We have only one writable connection and only one thread can have it at a time. 
 	 * There is no pool so we have to make our own block&wait.
@@ -746,16 +747,16 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			Integer i = writableConnectionAssignmentStack.get();
 
 			if (i == null) {
-				i = new Integer(1);
+				i = 1;
 				writableConnectionAssignmentStack.set(i);
 			} else {
 				int iint = i.intValue();
 
-				writableConnectionAssignmentStack.set(new Integer(iint + 1));
+				writableConnectionAssignmentStack.set(iint + 1);
 			}
 		}
 	}
-    
+
 	/**
 	 * A thread can request a writable connection over and over. When all statements on it are closed
 	 * then the writable connection free and another thread can use it (if there is another thread
@@ -774,8 +775,8 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 			if (logger.isDebugEnabled()) {
 				logger.debug("Thread {" + Thread.currentThread().getName() + "} released writable connection. New stack: " + iint);
 			}
-			writableConnectionAssignmentStack.set(new Integer(iint));
-            
+			writableConnectionAssignmentStack.set(iint);
+
 			// if counter == 0 then the last statement on this connection was closed
 			// the connection is now available to other threads.
 			if (iint == 0) {
@@ -785,7 +786,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 				if (logger.isDebugEnabled()) {
 					logger.debug("Thread {" + Thread.currentThread().getName() + "} released writable connection. Waking up next waiting thread (if any there).");
 				}
-                
+
 				// wake up the next waiting thread (which is blocked in waitForConnection())
 				Iterator<Thread> threadIterator = waitingThreads.iterator();
 
@@ -847,7 +848,7 @@ public class MulticonnectionTransactionImpl extends TransactionImpl implements M
 	}
 
 	@Override
-	public Connection getConnection() {
+	public Connection getConnection() throws TransactionException {
 		return getWriteConnection();
 	}
 

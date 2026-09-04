@@ -5,6 +5,9 @@ export const CLASS_OVERFLOW_STABLE = 'stable';
 export const CLASS_OVERFLOW_OVERFLOWING = 'overflowing';
 export const CLASS_OVERFLOW_ELEMENT_OVERFLOWING = 'is-overflowing-element';
 
+/** Amount of pixels which determine if an element is overflowing */
+const OVERFLOW_THRESHOLD = 3;
+
 export class OverflowManager {
 
     protected target: Element | null = null;
@@ -68,7 +71,7 @@ export class OverflowManager {
             }
 
             // Handle overflowing items
-            if (itemRight + targetWidth > furthestRight) {
+            if ((itemRight + targetWidth) > (furthestRight + OVERFLOW_THRESHOLD)) {
                 overflowingChildren.push(item);
                 continue;
             }
@@ -78,7 +81,8 @@ export class OverflowManager {
 
         // Edge case: when only one item would overflow, but it's only doing so because of the
         // overflow target, then we check if it would fit without it. If it does, then we're all good.
-        if (overflowingChildren.length === 1
+        if (
+            overflowingChildren.length === 1
             && (Math.ceil(overflowingChildren[0].getBoundingClientRect().right) - targetWidth <= furthestRight)
         ) {
             this.ref.classList.add(CLASS_OVERFLOW_STABLE);
@@ -94,7 +98,10 @@ export class OverflowManager {
 
         // Another edge case: The calculations for the last item overflow aren't working as expected sometimes,
         // as it doesn't properly add the size of the target for some reason.
-        if (this.ref.scrollWidth > Math.ceil(this.ref.getBoundingClientRect().width) && lastVisibleElement != null) {
+        if (
+            this.ref.scrollWidth > (Math.ceil(this.ref.getBoundingClientRect().width) + OVERFLOW_THRESHOLD)
+            && lastVisibleElement != null
+        ) {
             lastVisibleElement.classList.add(CLASS_OVERFLOW_ELEMENT_OVERFLOWING);
             doesOverflow = true;
         }

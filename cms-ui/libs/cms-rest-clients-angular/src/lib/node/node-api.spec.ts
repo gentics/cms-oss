@@ -12,7 +12,7 @@ import {
     TemplateListRequest,
 } from '@gentics/cms-models';
 import { getExampleNodeData } from '@gentics/cms-models/testing';
-import { MockApiBase } from '../util/api-base.mock';
+import { MockApiBase } from '../testing';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 import { NodeApi } from './node-api';
 

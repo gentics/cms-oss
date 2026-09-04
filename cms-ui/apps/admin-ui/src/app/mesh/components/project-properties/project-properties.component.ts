@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input, SimpleChanges, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableProjectProperties, ProjectCreateRequest } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export enum ProjectPropertiesMode {
     CREATE = 'create',
@@ -18,9 +17,9 @@ export enum ProjectPropertiesMode {
         generateFormProvider(ProjectPropertiesComponent),
         generateValidatorProvider(ProjectPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class ProjectPropertiesComponent extends BasePropertiesComponent<EditableProjectProperties | ProjectCreateRequest>
+export class ProjectPropertiesComponent extends BaseFormPropertiesComponent<EditableProjectProperties | ProjectCreateRequest>
     implements OnChanges {
 
     public readonly ProjectPropertiesMode = ProjectPropertiesMode;

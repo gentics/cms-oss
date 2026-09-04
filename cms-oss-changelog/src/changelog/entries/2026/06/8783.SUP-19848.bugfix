@@ -1,0 +1,1 @@
+Core: At some circumstances, when the page is scheduled for the deferred offline, it shows the scheduling user as the publishing one. This has been fixed.

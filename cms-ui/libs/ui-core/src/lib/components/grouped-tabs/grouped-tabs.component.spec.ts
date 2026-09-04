@@ -1,10 +1,10 @@
 import { Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
+import { componentTest } from '@gentics/ui-core/testing';
 import { Subject } from 'rxjs';
 import { IconDirective } from '../../directives/icon/icon.directive';
 import { TabContentDirective } from '../../directives/tab-content/tab-content.directive';
 import { TabLabelDirective } from '../../directives/tab-label/tab-label.directive';
-import { componentTest } from '../../testing';
 import { TabGroupComponent } from '../tab-group/tab-group.component';
 import { TabPaneComponent } from '../tab-pane/tab-pane.component';
 import { GroupedTabsComponent } from './grouped-tabs.component';

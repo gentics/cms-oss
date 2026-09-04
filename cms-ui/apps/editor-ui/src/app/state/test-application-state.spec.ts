@@ -3,6 +3,7 @@ import { NgxsModule } from '@ngxs/store';
 import { STATE_MODULES } from './modules';
 import { ApplicationStateService } from './providers';
 import { TestApplicationState } from './test-application-state.mock';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 describe('TestApplicationState', () => {
 
@@ -10,7 +11,10 @@ describe('TestApplicationState', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
             ],
@@ -37,13 +41,13 @@ describe('TestApplicationState', () => {
 
         it('leaves other state branches intact', () => {
             state.mockState({
-                auth: { currentUserId: 1234 },
+                auth: { user: { id: 1234 } as any },
                 ui: { uiVersion: 'some version' },
             });
-            expect(state.now.auth.currentUserId).toBe(1234);
+            expect(state.now.auth.user.id).toBe(1234);
 
             state.mockState({ ui: { uiVersion: 'some other version' } });
-            expect(state.now.auth.currentUserId).toBe(1234);
+            expect(state.now.auth.user.id).toBe(1234);
         });
 
     });

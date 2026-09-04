@@ -1,4 +1,3 @@
-import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -20,6 +19,7 @@ import { MeshAPIVersion, MeshClientConnection, MeshRestClientRequestError } from
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { ChangesOf, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { AppStateService } from '../../../state';
 
 const NEEDS_NEW_PASSWORD_ERROR = 'auth_login_password_change_required';
 
@@ -172,7 +172,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             if ((
                 err instanceof GCMSRestClientRequestError
                 || err instanceof MeshRestClientRequestError
-            ) && err.data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
+            ) && (err as MeshRestClientRequestError).data?.i18nKey === NEEDS_NEW_PASSWORD_ERROR) {
                 this.form.controls.newPassword.enable();
                 this.notification.show({
                     message: 'mesh.new_password_required_warning',

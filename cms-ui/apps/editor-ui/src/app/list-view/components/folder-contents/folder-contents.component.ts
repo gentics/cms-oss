@@ -1,5 +1,6 @@
 import {
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     ElementRef,
     OnDestroy,
@@ -9,29 +10,33 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { I18nService } from '@gentics/cms-components';
 import {
+    AccessControlledType,
     Folder,
     FolderItemType,
     FolderItemTypePlural,
     Item,
     ItemType,
+    Language,
     Node,
     NodeFeature,
+    PrivilegeMap,
     StagedItemsMap,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { IBreadcrumbRouterLink, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
     Subscription,
     combineLatest,
+    forkJoin,
     of,
 } from 'rxjs';
 import {
     debounceTime,
-    defaultIfEmpty,
     distinctUntilChanged,
     filter,
     first,
@@ -43,24 +48,22 @@ import {
     startWith,
     switchMap,
     take,
-    tap,
     withLatestFrom,
 } from 'rxjs/operators';
 import {
     AppState,
-    EditorPermissions,
+    FolderPermissionData,
     GtxChipSearchPropertyNumber,
     GtxChipSearchSearchFilterMap,
     ItemsInfo,
     UIMode,
-    getNoPermissions,
 } from '../../../common/models';
 import { areItemsLoading } from '../../../common/utils/are-items-loading';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
+import { FormListLoaderService } from '../../../core/providers';
 import { UploadProgressReporter } from '../../../core/providers/api';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
-import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { UploadConflictService } from '../../../core/providers/upload-conflict/upload-conflict.service';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ListService } from '../../../list-view/providers/list/list.service';
@@ -96,6 +99,8 @@ export interface ShowPathStatus {
 })
 export class FolderContentsComponent implements OnInit, OnDestroy {
 
+    public readonly ITEM_TYPES: FolderItemType[] = ['folder', 'page', 'file', 'image'];
+
     /**
      * Available entity identifier string.
      * Default set is `folder`, `page`, `file`, `image`.
@@ -125,6 +130,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     currentFolderDisplayName$: Observable<string>;
 
     activeNodeId: number;
+    activeNodeLanguages: Language[] = [];
     currentFolder$: Observable<Folder>;
     breadcrumbs$: Observable<IBreadcrumbRouterLink[]>;
     /** Rendered current search path breadcrumb string to display the path where Elastic Search queries recursively from. */
@@ -144,13 +150,16 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     searchTerm$: Observable<string>;
     startPageId$: Observable<number>;
     itemInEditor$: Observable<Item>;
-    permissions$: Observable<EditorPermissions>;
+    permissions: FolderPermissionData;
     currentFolderId: number;
     currentFolderPath = '';
     currentFolder: Folder;
     subscriptions: Subscription[] = [];
     fileUploadProgress: UploadProgressReporter;
     imageUploadProgress: UploadProgressReporter;
+
+    activeItemType: string;
+    activeItemId: number;
 
     @ViewChild('fileDropTextOverlay', { static: true })
     fileDropTextOverlay: ElementRef<HTMLElement>;
@@ -160,15 +169,17 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     @ViewChildren(ItemListComponent, { read: ElementRef })
     itemLists: QueryList<ElementRef<HTMLElement>>;
 
-    private currentItemTypes: FolderItemType[] = [];
+    public formsEnabled = false;
+    public hasInternalForms = false;
+    public hasExternalForms = false;
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         public listService: ListService,
         private breadcrumbsService: BreadcrumbsService,
         private appState: ApplicationStateService,
         private navigationService: NavigationService,
         private route: ActivatedRoute,
-        private permissions: PermissionService,
         private entityResolver: EntityResolver,
         private folderActions: FolderActionsService,
         private uploadConflictService: UploadConflictService,
@@ -176,7 +187,15 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         private userSettings: UserSettingsService,
         private modalService: ModalService,
         private i18n: I18nService,
-    ) {
+        private client: GCMSRestClientService,
+        private formList: FormListLoaderService,
+    ) {}
+
+    get isModalOpen(): boolean {
+        return this.modalService.openModals.length === 0;
+    }
+
+    ngOnInit(): void {
         this.currentFolder$ = combineLatest([
             this.appState.select((state) => state.folder.activeFolder),
             this.appState.select((state) => state.entities.folder),
@@ -188,11 +207,16 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             refCount(),
         );
 
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNodeLanguages.list).subscribe((languageIds) => {
+            this.activeNodeLanguages = languageIds.map((id) => this.entityResolver.getLanguage(id));
+            this.changeDetector.markForCheck();
+        }));
+
         // Get multiline state
-        this.multilineExpanded$ = appState.select((state) => state.ui.itemListBreadcrumbsExpanded);
+        this.multilineExpanded$ = this.appState.select((state) => state.ui.itemListBreadcrumbsExpanded);
 
         // Only recreate breadcrumbs when the dependent state changes
-        this.breadcrumbs$ = appState.select((state) => state).pipe(
+        this.breadcrumbs$ = this.appState.select((state) => state).pipe(
             distinctUntilChanged((a, b) => {
                 if (a.folder.activeNode !== b.folder.activeNode) {
                     return false;
@@ -227,8 +251,8 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         );
 
         this.nodes$ = combineLatest([
-            appState.select((state) => state.folder.nodes.list),
-            appState.select((state) => state.entities.node),
+            this.appState.select((state) => state.folder.nodes.list),
+            this.appState.select((state) => state.entities.node),
         ]).pipe(
             map(([nodeIds, loadedNodes]) => nodeIds
                 .map((id) => loadedNodes[id])
@@ -240,33 +264,35 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             ),
         );
 
-        this.uiMode$ = appState.select((state) => state.ui.mode);
+        this.uiMode$ = this.appState.select((state) => state.ui.mode);
         this.inStagingMode$ = this.uiMode$.pipe(
             map((mode) => mode === UIMode.STAGING),
         );
-        this.stagingMap$ = appState.select((state) => state.contentStaging.stagingMap);
-    }
+        this.stagingMap$ = this.appState.select((state) => state.contentStaging.stagingMap);
 
-    get isModalOpen(): boolean {
-        return this.modalService.openModals.length === 0;
-    }
-
-    ngOnInit(): void {
-        this.itemTypes$ = combineLatest([
+        this.subscriptions.push(combineLatest([
             this.appState.select((state) => state.folder.activeNode),
             this.appState.select((state) => state.features.nodeFeatures),
         ]).pipe(
-            map(([activeNodeId, nodeFeatures]) => {
-                const activeNodeFeatures = nodeFeatures[activeNodeId];
-                const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.FORMS);
-                const itemTypes: FolderItemType[] = ['folder', 'page', 'file', 'image'];
-                if (isActiveFeatureForms) {
-                    itemTypes.push('form');
-                }
-                return itemTypes;
-            }),
-            tap((types) => this.currentItemTypes = types),
-        );
+            filter(([nodeId, features]) => Number.isInteger(nodeId) && features != null),
+        ).subscribe(([activeNodeId, nodeFeatures]) => {
+            const activeNodeFeatures = nodeFeatures[activeNodeId];
+            const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.FORMS);
+            this.formsEnabled = isActiveFeatureForms;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select((state) => state.folder.activeNode).pipe(
+            filter((nodeId) => Number.isInteger(nodeId)),
+            mergeMap((nodeId) => forkJoin([
+                this.client.form.listConfigurations({ nodeId: nodeId, external: false, pageSize: 0 }),
+                this.client.form.listConfigurations({ nodeId: nodeId, external: true, pageSize: 0 }),
+            ])),
+        ).subscribe(([internalRes, externalRes]) => {
+            this.hasInternalForms = internalRes.numItems > 0;
+            this.hasExternalForms = externalRes.numItems > 0;
+            this.changeDetector.markForCheck();
+        }));
 
         this.initFolderContents();
         this.listService.init(this.route);
@@ -484,10 +510,36 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             }),
         );
 
-        this.permissions$ = this.permissions.all$.pipe(
-            startWith(getNoPermissions()),
-            defaultIfEmpty(getNoPermissions()),
-        );
+        this.subscriptions.push(combineLatest([
+            this.appState.select((state) => state.editor.itemType),
+            this.appState.select((state) => state.editor.itemId),
+        ]).subscribe(([type, id]) => {
+            this.activeItemType = type;
+            this.activeItemId = id;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
+            this.appState.select((state) => state.folder.activeFolder),
+            this.appState.select((state) => state.folder.activeNode),
+        ]).pipe(
+            distinctUntilChanged(isEqual),
+            debounceTime(50),
+            mergeMap(([folderId, nodeId]) => this.client.permission.getInstance(AccessControlledType.FOLDER, folderId, { map: true, nodeId: nodeId })),
+        ).subscribe((res) => {
+            const normalizedPrivileges: PrivilegeMap = {
+                privileges: res.privilegeMap.privileges,
+                languages: (res.privilegeMap.languages || []).reduce((acc, data) => {
+                    acc[data.language.id] = data.privileges;
+                    return acc;
+                }, {}),
+            };
+            this.permissions = {
+                privileges: normalizedPrivileges,
+                permissions: res.permissionsMap,
+            };
+            this.changeDetector.markForCheck();
+        }));
 
         const notFound$: Observable<[boolean, boolean, boolean]> = combineLatest([
             this.nodeNotFound$,
@@ -546,19 +598,14 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             }),
         );
 
-        this.subscriptions.push(combineLatest([
-            this.appState.select((state) => state.contentStaging.activePackage).pipe(
-                distinctUntilChanged(isEqual),
-            ),
-            this.itemTypes$.pipe(
-                skip(1),
-            ),
-        ]).pipe(
-            filter(([active, ununsed]) => active),
-        ).subscribe(([unused, itemTypes]) => {
-            for (const type of itemTypes) {
+        this.subscriptions.push(this.appState.select((state) => state.contentStaging.activePackage).pipe(
+            distinctUntilChanged(isEqual),
+            skip(1),
+        ).subscribe(() => {
+            for (const type of this.ITEM_TYPES) {
                 this.reloadItemType(type);
             }
+            this.formList.reload();
         }));
     }
 
@@ -633,14 +680,11 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
             case 'image':
                 this.folderActions.getImages(activeFolderId, itemsInfo.fetchAll, searchTerm);
                 break;
-            case 'form':
-                this.folderActions.getForms(activeFolderId, itemsInfo.fetchAll, searchTerm);
-                break;
         }
     }
 
-    async leaveStagingMode(): Promise<void> {
-        const dialog = await this.modalService.dialog({
+    leaveStagingMode(): Promise<void> {
+        return this.modalService.dialog({
             title: this.i18n.instant('modal.leave_content_staging_mode_title'),
             body: this.i18n.instant('modal.leave_content_staging_mode_body'),
             buttons: [
@@ -655,13 +699,14 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
                     returnValue: true,
                 },
             ],
-        });
-        const doLeave = await dialog.open();
-
-        if (doLeave) {
-            this.appState.dispatch(new SetActiveContentPackageAction(null));
-            this.appState.dispatch(new SetUIModeAction(UIMode.EDIT));
-        }
+        })
+            .then((dialog) => dialog.open())
+            .then((doLeave) => {
+                if (doLeave) {
+                    this.appState.dispatch(new SetActiveContentPackageAction(null));
+                    this.appState.dispatch(new SetUIModeAction(UIMode.EDIT));
+                }
+            });
     }
 
     private sortOrderEqual(a: ItemsInfo, b: ItemsInfo): boolean {

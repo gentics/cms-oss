@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FileUtils;
@@ -40,6 +42,8 @@ import com.gentics.contentnode.testutils.GCNFeature;
 public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRenderingTest {
 	public final static String TESTPACKAGE_NAME = "testpackage";
 
+	public final static String DEFAULT_TEMPLATE = "{{testpackage.resolve cms}}";
+
 	@Rule
 	public PackageSynchronizerContext syncContext = new PackageSynchronizerContext();
 
@@ -53,75 +57,83 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 
 	@Parameters(name = "{index}: template {0}")
 	public static Collection<Object[]> data() {
-		return ListUtils.union(getGenericTestCases(), Arrays.asList(
-			new Object[] { loadHelper("folder_children.js"), "English Test Page,Subfolder,Test Page,blume.jpg,testfile.txt", Arrays.asList(Pair.of("testPage", "name"), Pair.of("englishPage", "name"), Pair.of("subFolder", "name"), Pair.of("testFile", "name"), Pair.of("testImage", "name"))},
+		// we need to insert "null" at the second position to the generic test cases, because this test
+		// has an additional parameter "template" (generic test cases will all use the DEFAULT_TEMPLATE)
+		List<Object[]> genericTestCases = getGenericTestCases().stream()
+				.map(testCase -> new Object[] { testCase[0], null, testCase[1], testCase[2] })
+				.collect(Collectors.toList());
+
+		return ListUtils.union(genericTestCases, Arrays.asList(
+			new Object[] { loadHelper("folder_children.js"), null, "English Test Page,Subfolder,Test Page,blume.jpg,testfile.txt", Arrays.asList(Pair.of("testPage", "name"), Pair.of("englishPage", "name"), Pair.of("subFolder", "name"), Pair.of("testFile", "name"), Pair.of("testImage", "name"))},
 
 			// tag part (direct)
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.internal", "true", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.url", "/node/pub/dir/test/Test-Page.de.html", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.target.name", "Test Page", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.page.node.host", "test.node.hostname", null },
-			new Object[] { "cms.page.tags.urls_construct1.parts.extpage.internal", "false", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.internal", null, "true", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.url", null, "/node/pub/dir/test/Target-Page.de.html", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.target.name", null, "Target Page", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.page.node.host", null, "test.node.hostname", null },
+			new Object[] { "cms.page.tags.urls_construct1.parts.extpage.internal", null, "false", null },
 
 			// tag part (indirect)
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').internal", "true", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').url", "/node/pub/dir/test/Test-Page.de.html", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').target.name", "Test Page", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').node.host", "test.node.hostname", null },
-			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('extpage').internal", "false", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').internal", null, "true", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').url", null, "/node/pub/dir/test/Target-Page.de.html", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').target.name", null, "Target Page", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('page').node.host", null, "test.node.hostname", null },
+			new Object[] { "cms.page.tags.get('urls_construct1').parts.get('extpage').internal", null, "false", null },
 
 			// file properties
-			new Object[] { "cms.folder.files[0].name", "testfile.txt", null },
-			new Object[] { "cms.folder.files[0].description", "This is the test file", null },
-			new Object[] { "cms.folder.files[0].size", "8", null },
-			new Object[] { "cms.folder.files[0].sizeb", "8", null },
-			new Object[] { "cms.folder.files[0].sizekb", "0.1", null },
-			new Object[] { "cms.folder.files[0].sizemb", "0.1", null },
-			new Object[] { "cms.folder.files[0].folder.name", "Testfolder", null },
-			new Object[] { "cms.folder.files[0].extension", "txt", null },
-			new Object[] { "cms.folder.files[0].creator.firstname", "Creator-First", null },
-			new Object[] { "cms.folder.files[0].editor.firstname", "Editor-First", null },
-			new Object[] { "cms.folder.files[0].createtimestamp", Integer.toString(creationTimestamp), null },
-			new Object[] { "cms.folder.files[0].createdate", creationdate, null },
-			new Object[] { "cms.folder.files[0].edittimestamp", Integer.toString(editTimestamp), null },
-			new Object[] { "cms.folder.files[0].editdate", editdate, null },
-			new Object[] { "cms.folder.files[0].type", "text/plain", null },
-			new Object[] { "cms.folder.files[0].url", "/node/pub/dir/bin/test/testfile.txt", null },
-			new Object[] { "cms.folder.files[0].isfile", "true", null },
-			new Object[] { "cms.folder.files[0].isimage", "false", null },
-			new Object[] { "cms.folder.files[0].ismaster", "true", null },
-			new Object[] { "cms.folder.files[0].inherited", "false", null },
+			new Object[] { "cms.folder.files[0].name", null, "testfile.txt", null },
+			new Object[] { "cms.folder.files[0].description", null, "This is the test file", null },
+			new Object[] { "cms.folder.files[0].size", null, "8", null },
+			new Object[] { "cms.folder.files[0].sizeb", null, "8", null },
+			new Object[] { "cms.folder.files[0].sizekb", null, "0.1", null },
+			new Object[] { "cms.folder.files[0].sizemb", null, "0.1", null },
+			new Object[] { "cms.folder.files[0].folder.name", null, "Testfolder", null },
+			new Object[] { "cms.folder.files[0].extension", null, "txt", null },
+			new Object[] { "cms.folder.files[0].creator.firstname", null, "Creator-First", null },
+			new Object[] { "cms.folder.files[0].editor.firstname", null, "Editor-First", null },
+			new Object[] { "cms.folder.files[0].createtimestamp", null, Integer.toString(creationTimestamp), null },
+			new Object[] { "cms.folder.files[0].createdate", null, creationdate, null },
+			new Object[] { "cms.folder.files[0].edittimestamp", null, Integer.toString(editTimestamp), null },
+			new Object[] { "cms.folder.files[0].editdate", null, editdate, null },
+			new Object[] { "cms.folder.files[0].type", null, "text/plain", null },
+			new Object[] { "cms.folder.files[0].url", null, "/node/pub/dir/bin/test/testfile.txt", null },
+			new Object[] { "cms.folder.files[0].isfile", null, "true", null },
+			new Object[] { "cms.folder.files[0].isimage", null, "false", null },
+			new Object[] { "cms.folder.files[0].ismaster", null, "true", null },
+			new Object[] { "cms.folder.files[0].inherited", null, "false", null },
 
 			// image properties
-			new Object[] { "cms.folder.images[0].name", "blume.jpg", null },
-			new Object[] { "cms.folder.images[0].description", "This is the test image", null },
-			new Object[] { "cms.folder.images[0].size", "190399", null },
-			new Object[] { "cms.folder.images[0].sizeb", "190399", null },
-			new Object[] { "cms.folder.images[0].sizekb", "186.0", null },
-			new Object[] { "cms.folder.images[0].sizemb", "0.2", null },
-			new Object[] { "cms.folder.images[0].folder.name", "Testfolder", null },
-			new Object[] { "cms.folder.images[0].extension", "jpg", null },
-			new Object[] { "cms.folder.images[0].creator.firstname", "Creator-First", null },
-			new Object[] { "cms.folder.images[0].editor.firstname", "Editor-First", null },
-			new Object[] { "cms.folder.images[0].createtimestamp", Integer.toString(creationTimestamp), null },
-			new Object[] { "cms.folder.images[0].createdate", creationdate, null },
-			new Object[] { "cms.folder.images[0].edittimestamp", Integer.toString(editTimestamp), null },
-			new Object[] { "cms.folder.images[0].editdate", editdate, null },
-			new Object[] { "cms.folder.images[0].type", "image/jpeg", null },
-			new Object[] { "cms.folder.images[0].url", "/node/pub/dir/bin/test/blume.jpg", null },
-			new Object[] { "cms.folder.images[0].width", "1160", null },
-			new Object[] { "cms.folder.images[0].height", "1376", null },
-			new Object[] { "cms.folder.images[0].dpix", "600", null },
-			new Object[] { "cms.folder.images[0].dpiy", "600", null },
-			new Object[] { "cms.folder.images[0].dpi", "600", null },
-			new Object[] { "cms.folder.images[0].fpx", "0.5", null },
-			new Object[] { "cms.folder.images[0].fpy", "0.5", null },
-			new Object[] { "cms.folder.images[0].isfile", "false", null },
-			new Object[] { "cms.folder.images[0].isimage", "true", null },
-			new Object[] { "cms.folder.images[0].ismaster", "true", null },
-			new Object[] { "cms.folder.images[0].inherited", "false", null },
+			new Object[] { "cms.folder.images[0].name", null, "blume.jpg", null },
+			new Object[] { "cms.folder.images[0].description", null, "This is the test image", null },
+			new Object[] { "cms.folder.images[0].size", null, "190399", null },
+			new Object[] { "cms.folder.images[0].sizeb", null, "190399", null },
+			new Object[] { "cms.folder.images[0].sizekb", null, "186.0", null },
+			new Object[] { "cms.folder.images[0].sizemb", null, "0.2", null },
+			new Object[] { "cms.folder.images[0].folder.name", null, "Testfolder", null },
+			new Object[] { "cms.folder.images[0].extension", null, "jpg", null },
+			new Object[] { "cms.folder.images[0].creator.firstname", null, "Creator-First", null },
+			new Object[] { "cms.folder.images[0].editor.firstname", null, "Editor-First", null },
+			new Object[] { "cms.folder.images[0].createtimestamp", null, Integer.toString(creationTimestamp), null },
+			new Object[] { "cms.folder.images[0].createdate", null, creationdate, null },
+			new Object[] { "cms.folder.images[0].edittimestamp", null, Integer.toString(editTimestamp), null },
+			new Object[] { "cms.folder.images[0].editdate", null, editdate, null },
+			new Object[] { "cms.folder.images[0].type", null, "image/jpeg", null },
+			new Object[] { "cms.folder.images[0].url", null, "/node/pub/dir/bin/test/blume.jpg", null },
+			new Object[] { "cms.folder.images[0].width", null, "1160", null },
+			new Object[] { "cms.folder.images[0].height", null, "1376", null },
+			new Object[] { "cms.folder.images[0].dpix", null, "600", null },
+			new Object[] { "cms.folder.images[0].dpiy", null, "600", null },
+			new Object[] { "cms.folder.images[0].dpi", null, "600", null },
+			new Object[] { "cms.folder.images[0].fpx", null, "0.5", null },
+			new Object[] { "cms.folder.images[0].fpy", null, "0.5", null },
+			new Object[] { "cms.folder.images[0].isfile", null, "false", null },
+			new Object[] { "cms.folder.images[0].isimage", null, "true", null },
+			new Object[] { "cms.folder.images[0].ismaster", null, "true", null },
+			new Object[] { "cms.folder.images[0].inherited", null, "false", null },
 
-			new Object[] { "undefined", "undefined", null}
+			new Object[] { "undefined", null, "undefined", null},
+
+			new Object[] {"cms + \"_testHelperValue\"", "{{#with (testpackage.resolve \"outer\") as |outer|}}|{{gtx_render outer}}|{{#with (testpackage.resolve \"inner\") as |inner|}}|{{gtx_render inner}}|{{/with}}{{/with}}", "|outer_testHelperValue||inner_testHelperValue|", null}
 		));
 	}
 
@@ -129,9 +141,12 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 	public String testedHelper;
 
 	@Parameter(1)
-	public String expectedResult;
+	public String template;
 
 	@Parameter(2)
+	public String expectedResult;
+
+	@Parameter(3)
 	public List<Pair<String, String>> expectedDependencies;
 
 	@Before
@@ -153,7 +168,7 @@ public class HandlebarsPartTypeHelperTest extends AbstractHandlebarsPartTypeRend
 		FileUtils.writeStringToFile(helperFile, testedHelper, "UTF-8");
 
 		testPage = update(testPage, p -> {
-			getPartType(HandlebarsPartType.class, p.getContentTag("testtag"), "hb").setText("{{testpackage.resolve cms}}");
+			getPartType(HandlebarsPartType.class, p.getContentTag("testtag"), "hb").setText(Optional.ofNullable(template).orElse(DEFAULT_TEMPLATE));
 		}).at(editTimestamp).as(editor).unlock().build();
 
 		testPage = update(testPage, p -> {

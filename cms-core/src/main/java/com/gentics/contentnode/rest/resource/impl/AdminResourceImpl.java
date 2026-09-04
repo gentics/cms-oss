@@ -88,6 +88,7 @@ import com.gentics.contentnode.rest.model.response.DirtQueueSummaryResponse;
 import com.gentics.contentnode.rest.model.response.FeatureResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.MaintenanceResponse;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PublishQueueCounts;
 import com.gentics.contentnode.rest.model.response.PublishQueueResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -738,9 +739,26 @@ public class AdminResourceImpl implements AdminResource {
 	@RequiredPerm(type = PermHandler.TYPE_CONTENT_MAINTENANCE, bit = PermHandler.PERM_VIEW)
 	public GenericResponse reloadConfiguration() throws Exception {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			DistributionUtil.call(new ReloadConfigurationTask(), false);
+			List<Message> messages = DistributionUtil.call(new ReloadConfigurationTask(), false);
 			trx.success();
-			return new GenericResponse(null, ResponseInfo.ok("Successfully reloaded configuration"));
+
+			boolean containsCriticalError = messages.stream().filter(m -> Message.Type.CRITICAL.equals(m.getType()))
+					.findFirst().isPresent();
+			boolean containsWarning = messages.stream().filter(m -> Message.Type.WARNING.equals(m.getType())).findFirst().isPresent();
+
+			GenericResponse response;
+			if (containsCriticalError) {
+				response = new GenericResponse(null, new ResponseInfo(ResponseCode.FAILURE, "There were errors while reloading the configuration"));
+				messages.add(new Message(Message.Type.CRITICAL, I18NHelper.get("reload.configuration.failed")));
+			} else if (containsWarning) {
+				response = new GenericResponse(null, ResponseInfo.ok("Successfully reloaded configuration with warnings"));
+				messages.add(new Message(Message.Type.SUCCESS, I18NHelper.get("reload.configuration.successful")));
+			} else {
+				response = new GenericResponse(null, ResponseInfo.ok("Successfully reloaded configuration"));
+				messages.add(new Message(Message.Type.SUCCESS, I18NHelper.get("reload.configuration.successful")));
+			}
+			response.setMessages(messages);
+			return response;
 		}
 	}
 

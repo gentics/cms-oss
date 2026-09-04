@@ -1,0 +1,57 @@
+<button
+  class="language-button"
+  [class.current]="activeLanguage != null && activeLanguage.id === language.id"
+  [class.published]="state.published"
+  [class.available]="state.available && !state.deleted"
+  [class.show-indicators]="showIndicators"
+  [class.show-deleted]="showDeleted"
+  [title]="language.name"
+  >
+  <div class="language-code">{{ language.code }}</div>
+
+  @if (state.deleted) {
+    <div
+      class="indicator indicator-deleted"
+    ></div>
+  }
+
+  @if (mode === UIMode.EDIT) {
+    @if (!state.available || state.deleted) {
+      <div
+        class="indicator indicator-icon indicator-untranslated"
+      >add</div>
+    }
+    @if (state.modified) {
+      <div
+        class="indicator indicator-icon indicator-modified"
+      >asterisk</div>
+    }
+    @if (state.queued) {
+      <div
+        class="indicator indicator-icon indicator-in-queue"
+      >cached</div>
+    }
+    @if (state.planned) {
+      <div
+        class="indicator indicator-icon indicator-planned"
+      >schedule</div>
+    }
+    @if (state.inherited) {
+      <div
+        class="indicator indicator-icon indicator-inherited"
+      >input</div>
+    }
+    @if (state.localized) {
+      <div
+        class="indicator indicator-icon indicator-localized"
+      >file_copy</div>
+    }
+  }
+
+  @if (mode === UIMode.STAGING) {
+    <div
+      class="indicator indicator-icon indicator-staging"
+      [ngClass]="state.staged ? 'included' : 'excluded'"
+    >{{ state.staged ? 'check' : 'close' }}</div>
+  }
+</button>

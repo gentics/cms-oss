@@ -7,7 +7,7 @@ import {
     Output,
     TemplateRef,
 } from '@angular/core';
-import { coerceToBoolean } from '@gentics/ui-core';
+import { coerceToBoolean } from '@gentics/common';
 
 /**
  * Defines a single step of a wizard.

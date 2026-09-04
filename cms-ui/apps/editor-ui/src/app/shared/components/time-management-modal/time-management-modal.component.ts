@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { Form, FormRequestOptions, Page, PageRequestOptions, QueuedActionRequestClear, TimeManagement } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FormListLoaderService } from '../../../core/providers';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { getFormattedTimeMgmtValue, pageVersionsGetLatest } from '../../../core/utils/i18n';
@@ -94,6 +95,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         private errorHandler: ErrorHandler,
         private i18n: I18nService,
         private permissions: PermissionService,
+        private formListLoader: FormListLoaderService,
     ) {
         super();
     }
@@ -399,7 +401,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             );
 
             // refresh current folder view
-            this.folderActions.refreshList('form');
+            this.formListLoader.reload();
         }
     }
 
@@ -440,7 +442,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
             );
 
             // refresh current folder view
-            this.folderActions.refreshList('form');
+            this.formListLoader.reload();
         }
     }
 
@@ -454,7 +456,7 @@ export class TimeManagementModal extends BaseModal<TimeManagement> implements On
         if (this.item.type === 'form') {
             await this.folderActions.formTimeManagementClear(this.item.id, payload);
             // refresh current folder view
-            this.folderActions.refreshList('form');
+            this.formListLoader.reload();
         }
     }
 

@@ -1,5 +1,6 @@
 import {
     AfterViewInit,
+    booleanAttribute,
     ChangeDetectorRef,
     Component,
     ElementRef,
@@ -13,7 +14,6 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
-import { coerceToBoolean } from '../../utils';
 
 export type FocusType = 'left' | 'right';
 
@@ -69,7 +69,7 @@ export const CURSOR_STYLE_CLASS = 'gtx-split-view-container-resizing';
     selector: 'gtx-split-view-container',
     templateUrl: './split-view-container.component.html',
     styleUrls: ['./split-view-container.component.scss'],
-    standalone: false
+    standalone: false,
 })
 export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
 
@@ -124,15 +124,8 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
     /**
      * Disable touch swipe gestures when used.
      */
-    @Input()
-    set noswipe(val: any) {
-        this.isSwipeable = !coerceToBoolean(val);
-
-        // Toggle Hammer gesture recognizers
-        if (this.hammerManager) {
-            this.hammerManager.set({ enable: this.isSwipeable });
-        }
-    }
+    @Input({ transform: booleanAttribute })
+    disableSwipe: boolean;
 
     /**
      * Triggers when the right panel is closed.
@@ -195,10 +188,10 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
     @ViewChild('visibleResizer', { static: true })
     visibleResizer: ElementRef;
 
-    /** @internal EventTarget for tracking when the mouse leaves the page. */
+    /** EventTarget for tracking when the mouse leaves the page. */
     globalEventTarget: any = window.document;
 
-    /** @internal The Element to which cursor styles are applied. */
+    /** The Element to which cursor styles are applied. */
     globalCursorStyleTarget: any = window.document && window.document.body;
 
     resizing = false;
@@ -222,8 +215,6 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
      */
     private focusJustChanged = false;
     private focusJustChangedTimeout: any;
-
-    private isSwipeable = true;
 
     private resizeMouseOffset: number;
     private hammerManager: HammerManager;
@@ -289,10 +280,14 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
         if (changes['split']) {
             this.widthHandledExternally = true;
         }
+
+        if (changes['disableSwipe'] && this.hammerManager) {
+            this.hammerManager.set({ enable: !this.disableSwipe });
+        }
     }
 
     ngOnDestroy(): void {
-        this.cleanups.forEach(cleanup => cleanup());
+        this.cleanups.forEach((cleanup) => cleanup());
         this.cleanups = [];
         clearTimeout(this.focusJustChangedTimeout);
         this.destroySwipeHandler();
@@ -328,7 +323,7 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
         if (event.which != 1 || !this.leftPanel.nativeElement) { return; }
         event.preventDefault();
 
-        const resizeHandle = <HTMLElement & { setCapture(): void, releaseCapture(): void }>event.currentTarget;
+        const resizeHandle = <HTMLElement & { setCapture(): void; releaseCapture(): void }>event.currentTarget;
         this.resizeMouseOffset = event.clientX - resizeHandle.getBoundingClientRect().left;
 
         let mouseMoveTarget = this.globalEventTarget;
@@ -350,7 +345,7 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
         );
 
         // Start resizing
-        let resizerXPosition = this.getAdjustedPosition(event.clientX);
+        const resizerXPosition = this.getAdjustedPosition(event.clientX);
         this.resizing = true;
         this.visibleResizer.nativeElement.style.left = resizerXPosition + '%';
         this.changeDetector.markForCheck();
@@ -376,7 +371,7 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
      */
     private initSwipeHandler(): void {
         // set up swipe gesture handler
-        this.hammerManager = new Hammer(this.ownElement.nativeElement, { enable: this.isSwipeable });
+        this.hammerManager = new Hammer(this.ownElement.nativeElement, { enable: !this.disableSwipe });
         this.hammerManager.on('swipe', (e: HammerInput) => {
             if (e.pointerType === 'touch') {
                 // Hammerjs represents directions with an enum,
@@ -396,9 +391,9 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
     }
 
     private moveResizer = (event: MouseEvent) => {
-        let resizerXPosition = this.getAdjustedPosition(event.clientX);
+        const resizerXPosition = this.getAdjustedPosition(event.clientX);
         this.visibleResizer.nativeElement.style.left = resizerXPosition + '%';
-    }
+    };
 
     private endResizing = (event: MouseEvent) => {
         const adjustedWith = this.getAdjustedPosition(event.clientX);
@@ -409,22 +404,21 @@ export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnCha
 
         this.resizing = false;
         this.changeDetector.markForCheck();
-        this.cleanups.forEach(cleanup => cleanup());
+        this.cleanups.forEach((cleanup) => cleanup());
         this.cleanups = [];
         this.splitDragEnd.emit(this.split);
-    }
+    };
 
     /**
      * Helper function to keep the resize functionality
      * within its limits (minPanelSizePixels & minPanelSizePercent).
-     *
-     * @return Returns the adjusted X position in % of the container width.
+     * @returns Returns the adjusted X position in % of the container width.
      */
     private getAdjustedPosition(mouseClientX: number): number {
-        const container: HTMLElement = <HTMLElement>this.resizeContainer.nativeElement;
+        const container: HTMLElement = <HTMLElement> this.resizeContainer.nativeElement;
         const containerOffset: number = container.getBoundingClientRect().left;
         const containerWidth: number = container.clientWidth;
-        const resizerWidth: number = (<HTMLElement>this.resizer.nativeElement).offsetWidth;
+        const resizerWidth: number = (<HTMLElement> this.resizer.nativeElement).offsetWidth;
         const maxXPixels: number = containerWidth - resizerWidth - this.minPanelSizePixels;
         const maxXPercent: number = 100 * (1 - resizerWidth / containerWidth) - this.minPanelSizePercent;
 

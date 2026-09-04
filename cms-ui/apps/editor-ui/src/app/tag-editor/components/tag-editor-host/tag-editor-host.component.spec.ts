@@ -15,7 +15,6 @@ import { ErrorHandler } from '../../../core/providers/error-handler/error-handle
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-context.spec';
-import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
 import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-editor.component';
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
@@ -29,7 +28,6 @@ describe('TagEditorHostComponent', () => {
             imports: [GenticsUICoreModule.forRoot()],
             providers: [
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
-                IFrameStylesService,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: I18nService, useClass: MockI18nService },
             ],

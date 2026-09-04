@@ -1,8 +1,7 @@
-import { Config } from 'jest';
-import { createCIConfig } from '../../jest.preset';
+import { createCIReporters } from '../../jest.preset';
+import config from './jest.config';
 
-const config: Config = {
-    ...createCIConfig('libs', 'cms-rest-client'),
+export default {
+    ...config,
+    ...createCIReporters('libs', 'cms-rest-client'),
 };
-
-export default config;

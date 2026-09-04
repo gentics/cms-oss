@@ -414,7 +414,9 @@ xdescribe('GroupMasterComponent', () => {
     beforeEach(() => {
         appState.mockState({
             auth: {
-                currentUserId: 1,
+                user: {
+                    id: 1,
+                } as any,
             },
             entity: {
                 group: {

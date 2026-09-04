@@ -30,6 +30,11 @@ export interface TagEditorOptions {
     skipInsert?: boolean;
     /** If the tag-fill/user should be able to delete the tag in question. */
     withDelete?: boolean;
+    /**
+     * If the editor should be opened in read-only mode.
+     * If `true`, disables the `withDelete` functionality.
+     */
+    readOnly?: boolean;
 }
 
 export interface TagEditorResult {

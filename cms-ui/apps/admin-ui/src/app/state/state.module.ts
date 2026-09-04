@@ -1,8 +1,6 @@
 import { NgModule } from '@angular/core';
 import { NGXS_DEVTOOLS_OPTIONS, NgxsReduxDevtoolsPluginModule } from '@ngxs/devtools-plugin';
 import { NgxsModule } from '@ngxs/store';
-
-import { AuthStateModule } from './auth/auth.state';
 import { EntityStateModule } from './entity/entity.state';
 import { FeaturesStateModule } from './features/features.state';
 import { LoadingStateModule } from './loading/loading.state';
@@ -15,7 +13,6 @@ import { UIStateModule } from './ui/ui.state';
 
 /** Contains all ngxs state modules. */
 export const STATE_MODULES = [
-    AuthStateModule,
     EntityStateModule,
     FeaturesStateModule,
     LoadingStateModule,

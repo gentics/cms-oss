@@ -19,7 +19,6 @@ feature:
   publish_cache: false
   recent_items: true
   resumable_publish_process: true
-  tagtypemigration: true
   webp_conversion: true
   automatic_translation: true
   upload_image_properties: true

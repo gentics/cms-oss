@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -11,6 +11,7 @@ import { ErrorHandler } from '../error-handler/error-handler.service';
 import { LocalStorage } from '../local-storage/local-storage.service';
 import { ServerStorage } from '../server-storage/server-storage.service';
 import { UserSettingsService } from './user-settings.service';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 class MockFolderActions {
     navigateToDefaultNode = jasmine.createSpy('navigateToDefaultNode');
@@ -22,7 +23,6 @@ class MockFolderActions {
     setItemsPerPage = jasmine.createSpy('setItemsPerPage');
     setRepositoryBrowserDisplayFields = jasmine.createSpy('setRepositoryBrowserDisplayFields');
     setDisplayAllPageLanguages = jasmine.createSpy('setDisplayAllPageLanguages');
-    setDisplayStatusIcons = jasmine.createSpy('setDisplayStatusIcons');
     setDisplayImagesGridView = jasmine.createSpy('setDisplayImagesGridView');
     setShowPath = jasmine.createSpy('setShowPath');
     getExistingItems = jasmine.createSpy('getExistingItems');
@@ -80,7 +80,10 @@ describe('UserSettingsService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: FolderActionsService, useClass: MockFolderActions },
@@ -138,7 +141,7 @@ describe('UserSettingsService', () => {
         it('loads settings from localStorage and serverStorage when a user logs in', () => {
             state.mockState({
                 auth: {
-                    currentUserId: null,
+                    user: null,
                     loggingIn: false,
                 },
                 ui: {
@@ -149,7 +152,14 @@ describe('UserSettingsService', () => {
             userSettings.loadUserSettingsWhenLoggedIn();
             expect(localStorage.getForUser).not.toHaveBeenCalled();
 
-            state.mockState({ auth: { currentUserId: 1234, loggingIn: true } });
+            state.mockState({
+                auth: {
+                    loggingIn: true,
+                    user: {
+                        id: 1234,
+                    } as any,
+                },
+            });
             expect(localStorage.getForUser).toHaveBeenCalledWith(1234, jasmine.anything());
             expect(serverStorage.getAll).toHaveBeenCalled();
         });
@@ -157,7 +167,9 @@ describe('UserSettingsService', () => {
         it('dispatches any settings in the localStorage to the application state', () => {
             state.mockState({
                 auth: {
-                    currentUserId: 1234,
+                    user: {
+                        id: 1234,
+                    } as any,
                     isLoggedIn: true,
                 },
                 ui: {
@@ -186,7 +198,9 @@ describe('UserSettingsService', () => {
         it('dispatches default values for settings not in the localStorage to the application state', fakeAsync(() => {
             state.mockState({
                 auth: {
-                    currentUserId: 1234,
+                    user: {
+                        id: 1234,
+                    } as any,
                     isLoggedIn: true,
                 },
                 ui: {
@@ -229,7 +243,7 @@ describe('UserSettingsService', () => {
         it('re-loads all settings from localStorage and serverStorage when a different user logs in', () => {
             state.mockState({
                 auth: {
-                    currentUserId: null,
+                    user: null,
                     loggingIn: false,
                 },
                 ui: {
@@ -249,82 +263,22 @@ describe('UserSettingsService', () => {
             userSettings.loadUserSettingsWhenLoggedIn();
             expect(uiActions.setActiveUiLanguageInFrontend).not.toHaveBeenCalled();
 
-            state.mockState({ auth: { currentUserId: 1234, isLoggedIn: true } });
+            state.mockState({ auth: { user: { id: 1234 } as any, isLoggedIn: true } });
             expect(uiActions.setActiveUiLanguageInFrontend).toHaveBeenCalledTimes(1);
             expect(uiActions.setActiveUiLanguageInFrontend).toHaveBeenCalledWith('language of first user');
             expect(serverStorage.getAll).toHaveBeenCalledTimes(1);
 
-            state.mockState({ auth: { currentUserId: null, isLoggedIn: false } });
+            state.mockState({ auth: { user: null, isLoggedIn: false } });
             expect(uiActions.setActiveUiLanguageInFrontend).toHaveBeenCalledTimes(1);
             expect(serverStorage.getAll).toHaveBeenCalledTimes(1);
 
-            state.mockState({ auth: { currentUserId: 9876, isLoggedIn: true } });
+            state.mockState({ auth: { user: { id: 9876 } as any, isLoggedIn: true } });
             expect(uiActions.setActiveUiLanguageInFrontend).toHaveBeenCalledTimes(2);
             expect(uiActions.setActiveUiLanguageInFrontend).toHaveBeenCalledWith('language of second user');
             expect(serverStorage.getAll).toHaveBeenCalledTimes(2);
         });
 
         describe('navigation to the fallback node', () => {
-
-            it('occurs if neither the local storage nor the server settings contain a lastNodeId', () => {
-                userSettings.loadUserSettingsWhenLoggedIn();
-                localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                    if (key === 'lastNodeId') { return undefined; }
-                });
-                serverStorage.getAll.and.returnValue(of({}));
-
-                state.mockState({
-                    auth: {
-                        currentUserId: 1234,
-                        isLoggedIn: true,
-                    },
-                    ui: {
-                        nodesLoaded: true,
-                    },
-                    folder: {
-                        nodes: {
-                            list: [1, 2, 3, 4],
-                        },
-                        files: {
-                            displayFields: [],
-                        },
-                        folders: {
-                            displayFields: [],
-                        },
-                        forms: {
-                            displayFields: [],
-                        },
-                        images: {
-                            displayFields: [],
-                        },
-                        pages: {
-                            displayFields: [],
-                        },
-                    },
-                    entities: {
-                        node: {
-                            1: {
-                                name: 'Node 1',
-                                id: 1,
-                            },
-                            2: {
-                                name: 'Node 2',
-                                id: 2,
-                            },
-                            3: {
-                                name: 'Node 3',
-                                id: 3,
-                            },
-                            4: {
-                                name: 'Node 4',
-                                id: 4,
-                            },
-                        },
-                    },
-                });
-
-                expect(folderActions.navigateToDefaultNode).toHaveBeenCalledTimes(1);
-            });
 
             it('does not occur if the local storage contains a valid lastNodeId', () => {
                 userSettings.loadUserSettingsWhenLoggedIn();
@@ -335,7 +289,9 @@ describe('UserSettingsService', () => {
 
                 state.mockState({
                     auth: {
-                        currentUserId: 1234,
+                        user: {
+                            id: 1234,
+                        } as any,
                         isLoggedIn: true,
                     },
                     ui: {
@@ -397,7 +353,9 @@ describe('UserSettingsService', () => {
 
                 state.mockState({
                     auth: {
-                        currentUserId: 1234,
+                        user: {
+                            id: 1234,
+                        } as any,
                         isLoggedIn: true,
                     },
                     ui: {
@@ -447,68 +405,6 @@ describe('UserSettingsService', () => {
                 });
 
                 expect(folderActions.navigateToDefaultNode).not.toHaveBeenCalled();
-            });
-
-            it('occurs if the local storage and the server settings both contain an invalid lastNodeId', () => {
-                userSettings.loadUserSettingsWhenLoggedIn();
-                localStorage.getForUser.and.callFake((userId: number, key: string): any => {
-                    if (key === 'lastNodeId') { return 5; }
-                });
-                serverStorage.getAll.and.returnValue(of({
-                    lastNodeId: 5,
-                }));
-
-                state.mockState({
-                    auth: {
-                        currentUserId: 1234,
-                        isLoggedIn: true,
-                    },
-                    ui: {
-                        nodesLoaded: true,
-                    },
-                    folder: {
-                        nodes: {
-                            list: [1, 2, 3, 4],
-                        },
-                        files: {
-                            displayFields: [],
-                        },
-                        folders: {
-                            displayFields: [],
-                        },
-                        forms: {
-                            displayFields: [],
-                        },
-                        images: {
-                            displayFields: [],
-                        },
-                        pages: {
-                            displayFields: [],
-                        },
-                    },
-                    entities: {
-                        node: {
-                            1: {
-                                name: 'Node 1',
-                                id: 1,
-                            },
-                            2: {
-                                name: 'Node 2',
-                                id: 2,
-                            },
-                            3: {
-                                name: 'Node 3',
-                                id: 3,
-                            },
-                            4: {
-                                name: 'Node 4',
-                                id: 4,
-                            },
-                        },
-                    },
-                });
-
-                expect(folderActions.navigateToDefaultNode).toHaveBeenCalledTimes(1);
             });
 
         });

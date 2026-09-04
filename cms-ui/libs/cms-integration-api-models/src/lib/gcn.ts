@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaPlugin, AlohaRangeObject } from '@gentics/aloha-models';
-import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
+import { ExternalLink, LinkCheckerCheckResponse, Page } from '@gentics/cms-models';
 import { TagEditorOptions } from './tag-editor';
 
 /** Aloha/Edit-Mode Tab-ID to insert/manage constructs in a Page. */
@@ -184,4 +184,54 @@ export interface GCNLinkCheckerAlohaPluigin extends AlohaPlugin {
     editLink: (element: HTMLElement) => Promise<void>;
     /** Deletes the entire tag/link from DOM and from the page. */
     deleteLink: (element: HTMLElement) => Promise<void>;
+}
+
+export interface GCNJSLib {
+    /** JavaScript representation of the page */
+    page: {
+        _data: Page;
+
+        /** Page properties that were updated */
+        _shadow: Partial<Page>;
+
+        /** Sends AJAX requests to the server */
+        _ajax(options: GCNJsLibRequestOptions): void;
+
+        /** Gets called every time the JS lib updates a property of a page. */
+        _update(path: string, value: any, error?: any, force?: boolean): void;
+
+        /** Fetches a tag (if necessary) and calls the callback with it. */
+        tag(tagName: string, callback: (tag: any) => void): void;
+    };
+    performRESTRequest: GCNPerformRESTRequestFunction;
+    savePage(options: {
+        createVersion?: boolean;
+        unlock?: boolean;
+        onsuccess(returnValue: Page): void;
+        onfailure(data: any, error: Error): void;
+    }): void;
+}
+
+/** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
+export interface GCNRestRequestArgs {
+    type?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    timeout?: number;
+    body?: object;
+    url: string;
+    success?: (result: object) => any;
+    error?: (error: object) => any;
+}
+export type GCNPerformRESTRequestFunction = (config: GCNRestRequestArgs) => void;
+
+/** Requests as sent via `Aloha.GCN.savePage()` */
+export interface GCNJsLibRequestOptions {
+    cache?: boolean;
+    contentType: string;
+    data: string;
+    dataType: 'json' | '';
+    type: 'GET' | 'POST' | 'DELETE';
+    url: string;
+    complete(): void;
+    error(error: Error): void;
+    success(data: any): void;
 }

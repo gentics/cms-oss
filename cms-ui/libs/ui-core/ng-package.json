@@ -6,7 +6,7 @@
         "src/assets/**/*"
     ],
     "lib": {
-        "entryFile": "src/public-api.ts",
+        "entryFile": "src/index.ts",
         "styleIncludePaths": [
             "./src/styles",
             "../../node_modules"

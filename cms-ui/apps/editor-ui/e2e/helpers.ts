@@ -1,22 +1,34 @@
 /* eslint-disable import-x/no-nodejs-modules */
 /// <reference lib="dom"/>
-import { Page as CmsPage } from '@gentics/cms-models';
+import { File as CMSFile, Image as CMSImage, Page as CmsPage, FileOrImage } from '@gentics/cms-models';
 import {
     clickButton,
     clickModalAction,
     dismissNotifications,
+    FixtureFile,
+    ITEM_TYPE_FORM,
+    ITEM_TYPE_FOLDER,
     ITEM_TYPE_PAGE,
+    matchRequest,
+    onResponse,
     openContext,
     reroute,
     selectDateInPicker,
+    wait,
     waitForResponseFrom,
+    uploadFileFromInput,
 } from '@gentics/e2e-utils';
-import { expect, Frame, Locator, Page, Response, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
+import { Disposable, expect, Frame, Locator, Page, Response, test } from '@playwright/test';
+import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
+import { readFileSync } from 'node:fs';
 
 export function findList(page: Page, type: string): Locator {
-    return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    if (type === ITEM_TYPE_FORM) {
+        return page.locator('gtx-form-list');
+    } else {
+        return page.locator(`item-list .content-list[data-item-type="${type}"]`);
+    }
 }
 
 export function findRepoBrowserList(repoBrowser: Locator, type: string): Locator {
@@ -38,6 +50,10 @@ export async function selectNode(element: Page | Locator, nodeId: number | strin
         // TODO: In rare cases in jenkins, the click doesn't actually navigate to the node/channel.
         // Therefore add a check here that it actually changed the node
     });
+}
+
+export async function selectItem(item: Locator): Promise<void> {
+    await item.locator('icon-checkbox gtx-checkbox label').click();
 }
 
 export async function itemAction(item: Locator, action: string): Promise<void> {
@@ -65,21 +81,46 @@ export async function findImage(list: Locator, id: string | number): Promise<Loc
     return list.locator(`gtx-contents-list-item[data-id="${id}"]`);
 }
 
-export async function uploadFiles(page: Page, type: 'file' | 'image', files: string[], options?: UploadOptions): Promise<Record<string, any>> {
-    const output: Record<string, any> = {};
+export async function uploadFiles(
+    page: Page,
+    type: 'file' | 'image',
+    files: FixtureFile[],
+    options?: UploadOptions,
+): Promise<Record<string, CMSFile | CMSImage>> {
+    const output: Record<string, CMSFile | CMSImage> = {};
+    const baseNames: Record<string, FixtureFile> = files.reduce((acc, fixture) => {
+        acc[basename(fixture.fixturePath)] = fixture;
+        return acc;
+    }, {});
 
     await test.step(`Uploading ${files.length} ${type[0].toUpperCase()}${type.substring(1)}${files.length !== 1 ? 's' : ''}`, async () => {
-        let uploadReq: Promise<Response>;
+        const uploadReq: Promise<Response[]> = new Promise((resolve) => {
+            const responses: Response[] = [];
+            let done = false;
+
+            onResponse(page, matchRequest('POST', /\/rest\/(file|image)\/create/), (_req, res) => {
+                if (done) {
+                    return;
+                }
+
+                responses.push(res);
+                done = responses.length === files.length;
+                if (done) {
+                    resolve(responses);
+                }
+            });
+        });
 
         if (options?.dragAndDrop) {
             // First we need to load the files, and read the buffer as base64, since we can't directly send
             // the file-contents to the window. Inefficient, but the only way I could find to transfer them correctly.
             const data = files.map((f) => {
-                const buffer = readFileSync(`./fixtures/${f}`).toString('base64');
+                const buffer = readFileSync(f.fixturePath).toString('base64');
+
                 return {
                     bufferData: `data:application/octet-stream;base64,${buffer}`,
-                    name: f,
-                    type: type === 'image' ? 'image/jpeg' : 'text/plain',
+                    name: f.name ?? basename(f.fixturePath),
+                    type: f.type,
                 };
             });
 
@@ -95,34 +136,27 @@ export async function uploadFiles(page: Page, type: 'file' | 'image', files: str
                 return transfer;
             }, data);
 
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
             await page.dispatchEvent('folder-contents > [data-action="file-drop"]', 'drop', { dataTransfer }, { strict: true });
         } else {
-            // Filechooser is a lot simpler, as it can handle native files
-            const fileChooserPromise = page.waitForEvent('filechooser');
             const uploadButton = page.locator(`item-list.${type} .list-header .header-controls [data-action="upload-item"] gtx-button button`);
-            await uploadButton.waitFor({ state: 'visible' });
-            await uploadButton.click();
-            const fileChooser = await fileChooserPromise;
-
-            uploadReq = waitForResponseFrom(page, 'POST', /\/rest\/(file|image)\/create/g);
-            await fileChooser.setFiles(files.map((f) => `./fixtures/${f}`));
+            await uploadFileFromInput(page, uploadButton, files.map((f) => f.fixturePath));
         }
 
         // Wait for upload to complete and return response
-        const response = await uploadReq;
-        const responseData = await response.json();
+        const responses = await uploadReq;
+        for (const fileRes of responses) {
+            const responseData = await fileRes.json();
+            const obj: FileOrImage = responseData.file || responseData.image;
 
-        files.forEach((file) => {
-            output[file] = responseData.file || responseData.image;
-        });
-
+            output[baseNames[obj.name].fixturePath] = responseData.file || responseData.image;
+        }
     });
+
     return output;
 }
 
-export async function openPropertiesTab(page: Page): Promise<void> {
-    await test.step('Open properties-tab', async () => {
+export async function openFilePropertiesTab(page: Page): Promise<void> {
+    await test.step('Open file properties-tab', async () => {
         await page.waitForSelector('content-frame .content-frame-container');
 
         // This is for images and files, which open in the "preview" tab initially
@@ -136,20 +170,31 @@ export async function openPropertiesTab(page: Page): Promise<void> {
     });
 }
 
+export async function ensureObjectPropertyGroupExpanded(group: Locator): Promise<void> {
+    const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
+    if (!isExpanded) {
+        await group.locator('.collapsible-header').click();
+    }
+}
+
+export function getPropertiesTabs(page: Page): Locator {
+    return page.locator('content-frame combined-properties-editor .properties-tabs');
+}
+
 export async function openObjectPropertyEditor(page: Page, categoryId: string | number, name: string): Promise<void> {
-    await openPropertiesTab(page);
+    await openFilePropertiesTab(page);
 
     await test.step('Open properties editor', async () => {
-        const group = page.locator(`content-frame combined-properties-editor .properties-tabs .tab-group[data-id="${categoryId}"]`);
-        const isExpanded = await group.evaluate((el) => el.classList.contains('expanded'));
-
-        if (!isExpanded) {
-            await group.locator('.collapsible-header').click();
-        }
+        const group = getPropertiesTabs(page).locator(`.tab-group[data-id="${categoryId}"]`);
+        await ensureObjectPropertyGroupExpanded(group);
 
         const tab = group.locator(`.tab-link[data-id="object.${name}"]`);
         await tab.click();
     });
+}
+
+export async function openTagList(page: Page): Promise<void> {
+    await getPropertiesTabs(page).locator('.tab-link[data-id="item-tag-list"]').click();
 }
 
 export async function closeObjectPropertyEditor(page: Page, force: boolean = true): Promise<void> {
@@ -269,7 +314,14 @@ export async function createInternalLink(
         await form.locator('[data-slot="url"] .target-wrapper .internal-target-picker').click();
         const repoBrowser = page.locator('repository-browser');
         await repoHandler(repoBrowser);
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+
+        // Wait a bit, as the handler could have closed the repo-browser on it's own
+        await wait(50);
+
+        // If the handler didn't confirm/close the modal, we do it now
+        if (await repoBrowser.isVisible()) {
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+        }
 
         // Fill out rest of the form
         await formHandler(form);
@@ -334,7 +386,16 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
          * @returns The range if it was possible to create, otherwise `null`.
          */
         function createRange(element: HTMLElement, start: number, end: number | null = null): Range | null {
+            if (!element || !element.textContent) {
+                return null;
+            }
+
             const size = element.textContent.length;
+
+            // Clip the start inbounds
+            if (start > size) {
+                start = size;
+            }
 
             // When a positive end is provided, it has to be greater than the start position.
             if (end != null && end > -1 && end < start) {
@@ -466,11 +527,25 @@ export async function setupHelperWindowFunctions(page: Page): Promise<void> {
 }
 
 export async function expectItemOffline(item: Locator): Promise<void> {
-    await expect(item.locator('item-status-label .status-label')).not.toContainClass('published');
+    await expect(item.locator('item-status-label .status-label')).toContainClass('offline');
 }
 
 export async function expectItemPublished(item: Locator): Promise<void> {
     await expect(item.locator('item-status-label .status-label')).toContainClass('published');
+}
+
+export async function expectItemLanguageCode(item: Locator, languageCode: string): Promise<void> {
+    await expect(item.locator('>gtx-language-state .language-code')).toHaveText(languageCode);
+}
+
+export function pageListRowLanguage(item: Locator, lang: string): Locator {
+    return item.locator(`page-language-indicator [data-action="page-language"][data-id="${lang}"]`);
+}
+
+export async function setListLanguage(list: Locator, lang: string): Promise<void> {
+    const langSelector = list.locator('language-context-selector');
+    const dropdown = await openContext(langSelector.locator('gtx-dropdown-list'));
+    await dropdown.locator(`gtx-dropdown-item[data-id="${lang}"]`).click();
 }
 
 export async function openToolOrAction(page: Page, id: string): Promise<void> {
@@ -479,8 +554,33 @@ export async function openToolOrAction(page: Page, id: string): Promise<void> {
     await btn.click();
 }
 
-export function overrideAlohaConfig(page: Page, configFilename: string): Promise<void> {
+export function rerouteAlohaConfig(page: Page, configFilename: string): Promise<Disposable> {
     return page.route('/internal/minimal/files/js/aloha-config.js', reroute('GET', `/internal/minimal/files/js/${configFilename}`));
+}
+
+export function overwriteAlohaConfigWith(page: Page, content: string): Promise<Disposable> {
+    return page.route('/internal/minimal/files/js/aloha-config.js', (route) => {
+        route.fulfill({
+            status: 200,
+            contentType: 'text/javascript',
+            body: `
+"use strict";
+
+(() => {
+    // Only load, when Aloha is actually defined/loaded.
+    if (
+        Aloha == null
+        || typeof Aloha !== "object"
+        || typeof Aloha.settings !== "object"
+        || typeof Aloha.settings.plugins !== "object"
+    ) {
+        return;
+    }
+
+    ${content}
+})();`,
+        });
+    });
 }
 
 export async function addSearchChip(searchBar: Locator, filter: string): Promise<Locator> {
@@ -502,8 +602,209 @@ export async function setStringChipValue(chip: Locator, value: string | number):
 }
 
 export async function setDateChipValue(chip: Locator, value: Date): Promise<void> {
-    await chip.locator('.gtx-chip-input-value-inner-date').click();
+    await chip.locator('.gtx-chip-input-value-inner-date .box-wrapper').click();
     const datePickerModal = chip.page().locator('gtx-date-time-picker-modal');
     await selectDateInPicker(datePickerModal, value);
     await clickModalAction(datePickerModal, 'confirm');
+}
+
+export function findColorPickerPaletteColor(picker: Locator, color: string): Locator {
+    return picker.locator(`.palette .palette-entry[data-value="${color.toLowerCase()}"]`);
+}
+
+export function findNthColorPickerPaletteColor(picker: Locator, index: number): Locator {
+    return picker.locator('.palette .palette-entry').nth(index);
+}
+
+export async function pickPaletteColor(page: Page, slot: string, colorOrIndex: string | number): Promise<string> {
+    return test.step(`Pick palette color ${typeof colorOrIndex === 'number' ? 'on index ' + colorOrIndex : colorOrIndex}`, async () => {
+        const dropdown = findDynamicDropdown(page, slot);
+        const colorPicker = dropdown.locator('.context-menu-content gtx-aloha-color-picker-renderer');
+        const paletteColor = typeof colorOrIndex === 'number'
+            ? findNthColorPickerPaletteColor(colorPicker, colorOrIndex)
+            : findColorPickerPaletteColor(colorPicker, colorOrIndex);
+        const pickedHexColor = await paletteColor.getAttribute('data-value');
+        await paletteColor.click();
+
+        // If the dropdown needs a confirmation, then we have to click the confirm button
+        if (await dropdown.evaluate((el) => el.classList.contains('with-confirm'))) {
+            await dropdown.locator('.context-menu-header .header-confirm-button').click();
+        }
+
+        return pickedHexColor;
+    });
+}
+
+export async function fgFindPaletteItem(grid: Locator, paletteId: string, isControl: boolean): Promise<Locator> {
+    const leftSidePanel = grid.locator('.editor-panel.editor-panel--left');
+
+    // If it isn't expanded, we have to open it, otherwise we can't see the controls
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    if (!leftSidePanel.evaluate((el) => el.classList.contains('expanded'))) {
+        await leftSidePanel.locator('.panel-header .panel-toggle-btn').click();
+    }
+
+    return leftSidePanel.locator(`.palette .palette-item[data-element-type="${paletteId}"][data-is-control="${isControl ? 'true' : 'false'}"]`);
+}
+
+interface FGDropTarget {
+    position?: number;
+    containerId?: string;
+}
+
+interface FGElement {
+    id: string;
+    rect: DOMRect;
+}
+
+const DRAG_THRESHOLD = 2;
+
+export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, target?: FGDropTarget): Promise<Locator> {
+    let containerEl: Locator;
+    if (!target?.containerId) {
+        containerEl = grid.locator('.editor-main .editor-drop-container.editor-drop-container--root');
+    } else {
+        containerEl = grid.locator(`.editor-main .editor-drop-container[data-drop-container-id="${target.containerId}"]`);
+    }
+
+    const containerRect = await containerEl.evaluate((el) => el.getBoundingClientRect());
+    const entries: FGElement[] = await containerEl.evaluate((el) => {
+        return Array.from(el.children).map((child) => {
+            return {
+                id: child.getAttribute('data-element-id'),
+                rect: child.getBoundingClientRect(),
+            };
+        });
+    });
+
+    let targetPosition: { x: number; y: number };
+    // If no position was provided, or it out of bounds, we default to adding it to the end
+    // of the container.
+    if (
+        target?.position == null
+        || (target.position >= entries.length)
+        || entries.length === 0
+    ) {
+        if (entries.length > 0) {
+            const ent = entries[entries.length - 1];
+            targetPosition = {
+                x: (ent.rect.x - containerRect.x) + ent.rect.width + DRAG_THRESHOLD,
+                y: (ent.rect.y - containerRect.x) + ent.rect.height + DRAG_THRESHOLD,
+            };
+        } else {
+            targetPosition = {
+                x: DRAG_THRESHOLD,
+                y: DRAG_THRESHOLD,
+            };
+        }
+    } else {
+        const ent = entries[target.position];
+        targetPosition = {
+            x: (ent.rect.x - containerRect.x) + DRAG_THRESHOLD,
+            y: (ent.rect.y - containerRect.x) + DRAG_THRESHOLD,
+        };
+    }
+
+    await item.dragTo(containerEl, {
+        targetPosition,
+    });
+
+    if (entries.length === 0) {
+        return containerEl.locator('> .form-item');
+    }
+
+    return containerEl.locator('> .form-item')
+        .filter({
+            hasNot: containerEl.locator(entries.map((ent) => `> .form-item[data-element-id="${ent.id}"]`).join(',')),
+        });
+}
+
+export async function fgAddControl(grid: Locator, controlId: string, target?: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, controlId, true);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {
+    const item = await fgFindPaletteItem(grid, blockId, false);
+    if (item == null) {
+        return null;
+    }
+
+    return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+export function fgFindEditSidebar(grid: Locator): Locator {
+    return grid.locator('.editor-panel.editor-panel--right');
+}
+
+export async function fgSelectElementTab(sidebar: Locator, tab: 'definition' | 'settings' | 'translations'): Promise<Locator> {
+    await sidebar.locator(`.element-tabs > .tab-links > .tab-link[data-id="${tab}"]`).click();
+    return sidebar.locator(`.element-tabs .tab-content[data-id="${tab}"]`);
+}
+
+export async function toggleDisplayAllCheckbox(
+    page: Page,
+    elements: Locator,
+    dataAction: 'toggle-wastebin' | 'toggle-language-display',
+    toggled: boolean,
+): Promise<void> {
+    const itemDropdown = elements.locator('item-list-header gtx-dropdown-list').last();
+    const formDropdown = elements.locator('gtx-form-list-header gtx-dropdown-list').last();
+
+    // if the itemsDropdown element doesn't exist, it is a form so the formDropdown element should be used
+    const dropdown = await itemDropdown.count() > 0
+        ? await openContext(itemDropdown)
+        : await openContext(formDropdown);
+
+    await expect(dropdown.locator(`[data-action="${dataAction}"] input[type="checkbox"]`)).toHaveAttribute('data-state', `${toggled}`);
+
+    const [request] = await Promise.all([
+        waitForResponseFrom(page, 'POST', dataAction.indexOf('wastebin') >= 0 ? 'rest/user/me/data/displayDeleted' : 'rest/user/me/data/displayAllLanguages'),
+        dropdown.locator(`[data-action="${dataAction}"]`).click(),
+    ]);
+
+    const body = request.request().postDataJSON();
+
+    expect(body).toBe(!toggled);
+
+    await expect(dropdown).toBeHidden();
+}
+
+/**
+ * Helper function to add a plugin temporarily to the end of the data-aloha-plugins string
+ * @param page - The current page.
+ * @param plugin - The plugin source (example: "common/characterpicker").
+ */
+export function addTemporaryAlohaPlugin(page: Page, plugin: string): Promise<void> {
+    return page.route('**/alohapage**', async (route) => {
+        const response = await route.fetch();
+        let body = await response.text();
+
+        body = body.replace(
+            /data-aloha-plugins\s*=\s*"([^"]*)"/,
+            (_, plugins) =>
+                `data-aloha-plugins="${plugins},${plugin}"`,
+        );
+
+        await route.fulfill({
+            response,
+            body,
+        });
+    });
+}
+
+export async function navigateToFolder(page: Page, folderId: string | number): Promise<void> {
+    await test.step(`Navigating to folder: ${folderId}`, async () => {
+        const list = findList(page, ITEM_TYPE_FOLDER);
+        const folder = findItem(list, folderId);
+        // Use the wildcard here instead, since if we used a globalId for the selector, the breadcrumb would
+        // still be loaded with the local ID, causing this to fail otherwise.
+        const breadcrumbReq = waitForResponseFrom(page, 'GET', '/rest/folder/breadcrumb/*');
+        await folder.locator('.item-primary .item-name-router-link').click();
+        await breadcrumbReq;
+    });
 }

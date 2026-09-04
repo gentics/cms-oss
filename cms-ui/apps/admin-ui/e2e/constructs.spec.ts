@@ -3,11 +3,13 @@ import {
     Construct,
     ConstructCategoryListResponse,
     ConstructCategorySortRequest,
+    ConstructCreateResponse,
     NodeMultiLinkRequest,
     NodePageLanguageCode,
     NodeUrlMode,
 } from '@gentics/cms-models';
 import {
+    clickModalAction,
     CONSTRUCT_TEST_SELECT_COLOR,
     ConstructCategoryImportData,
     EntityImporter,
@@ -18,12 +20,17 @@ import {
     IMPORT_TYPE_NODE,
     LANGUAGE_DE,
     LANGUAGE_EN,
+    LANGUAGE_ID_DE,
+    LANGUAGE_ID_EN,
     loginWithForm,
     matchRequest,
     navigateToApp,
     NodeImportData,
+    pickSelectValue,
     selectTab,
+    setI18nGroupLanguage,
     TestSize,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -122,13 +129,48 @@ test.describe('Constructs Module', () => {
             await navigateToModule(page, 'constructs');
         });
 
+        test.only('should be possible to create a new construct', async ({ page }) => {
+            const nodeOne = IMPORTER.get(EXAMPLE_NODE_ONE);
+            const KEYWORD = 'e2e_test_construct';
+
+            const master = page.locator('gtx-construct-master');
+            const table = master.locator('gtx-construct-table');
+
+            await table.locator('.entity-table-actions-bar [data-action="create"]').click();
+
+            // Get the modal
+            const modal = page.locator('gtx-create-construct-modal');
+            const form = modal.locator('gtx-construct-properties form');
+
+            // Fill out the required fields
+            await form.locator('[formcontrolname="keyword"] input').fill(KEYWORD);
+            await pickSelectValue(form.locator('[formcontrolname="nodeIds"]'), [nodeOne.id]);
+
+            const i18nGroup = form.locator('gtx-i18n-panel-group');
+            await setI18nGroupLanguage(i18nGroup, LANGUAGE_ID_DE);
+            await form.locator('[formcontrolname="nameI18n"] input').fill('E2E Test Construct DE');
+            await setI18nGroupLanguage(i18nGroup, LANGUAGE_ID_EN);
+            await form.locator('[formcontrolname="nameI18n"] input').fill('E2E Test Construct EN');
+
+            // Create the construct by clicking confirm and observe the create request
+            const createReq = waitForResponseFrom(page, 'POST', '/rest/construct');
+            await clickModalAction(modal, 'confirm');
+            const createRes = await createReq;
+            const createdConstruct = ((await createRes.json()) as ConstructCreateResponse).construct;
+
+            // Validate that the element is now in the table
+            const newRow = await findTableRowById(table, createdConstruct.id);
+            await expect(newRow).toBeVisible();
+            await expect(newRow.locator('.data-column', { hasText: KEYWORD })).toBeVisible();
+        });
+
         test('should properly remove and assign the constructs to the node', async ({ page }) => {
             const row = await findTableRowById(page, testConstruct.id);
             await findTableAction(row, 'assignConstructToNodes').click();
 
             // Wait for modal and find the node table
             const modal = page.locator('gtx-assign-constructs-to-nodes-modal');
-            await modal.waitFor();
+            await expect(modal).toBeVisible();
 
             // Select the first node
             const nodeTable = modal.locator('.modal-content gtx-table');
@@ -217,7 +259,12 @@ test.describe('Constructs Module', () => {
             const REORDER_DOWN_TO_INDEX = 15;
             const REORDER_TOP_INDEX = 19;
 
-            const categoryLoad = page.waitForResponse(matchRequest('GET', '/rest/construct/category'));
+            // We want to wait for the modal load, not the general table load
+            const categoryLoad = waitForResponseFrom(page, 'GET', '/rest/construct/category', {
+                params: {
+                    pageSize: '-1',
+                },
+            });
             const master = page.locator('gtx-construct-category-master');
             const masterTable = master.locator('gtx-construct-category-table');
             await masterTable.locator('.entity-table-actions-bar [data-action="reorder"] button').click();

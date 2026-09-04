@@ -1,0 +1,149 @@
+@import "variables";
+
+/* State colours */
+$gcms-color-stateUntranslated: #959595;
+$gcms-color-stateDeleted: #F84340;
+$gcms-color-statePublished: #34AD34;
+$gcms-color-stateUnpublished: #F84340;
+$gcms-color-stateModified: #444;
+$gcms-color-stateInQueue: #ED7b35;
+$gcms-color-stateInherited: $gcms-color-icon-inheritance;
+$gcms-color-stateLocalized: $gcms-color-icon-localized;
+
+/* State icon sizes */
+$gcms-icon-background-size: $gcms-icon-size;
+
+:host {
+    &.selectable .language-button {
+        cursor: pointer;
+
+        &:hover .language-code,
+        &:hover .indicator-icon {
+            background: $gtx-color-off-white;
+        }
+    }
+}
+
+.language-button {
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    position: relative;
+    padding: 2px;
+    color: $gtx-color-mid-gray;
+
+    &.available {
+        color: $gcms-color-highlight;
+    }
+
+    &.published .language-code {
+        border: 1px solid transparentize($gcms-color-statePublished, 0.5);
+    }
+
+    .language-code {
+        border: 1px solid transparent;
+        color: inherit;
+        padding: 2px 6px;
+        text-transform: uppercase;
+        transition: 200ms;
+    }
+}
+
+.indicator {
+    display: none;
+    position: absolute;
+
+    &.indicator-icon {
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
+        -moz-font-feature-settings: 'liga';
+        -moz-osx-font-smoothing: grayscale;
+        font-variation-settings: 'FILL' 1;
+
+        z-index: 1;
+        background-color: white;
+        font-size: $gcms-icon-background-size;
+        width: $gcms-icon-background-size;
+        height: $gcms-icon-background-size;
+        border-radius: 50%;
+        transition: 200ms;
+        z-index: 0;
+    }
+}
+
+.show-indicators .indicator {
+    display: block;
+}
+
+.indicator-deleted {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    top: 50%;
+    left: 0;
+    background-color: $gcms-color-stateUntranslated;
+}
+
+.show-deleted .indicator-deleted {
+    display: block;
+}
+
+.indicator-untranslated {
+    color: $gcms-color-stateUntranslated;
+    right: -0.25rem;
+    bottom: -0.25rem;
+}
+
+.indicator-modified {
+    color: $gcms-color-stateModified;
+    right: -0.25rem;
+    top: -0.25rem;
+}
+
+.indicator-in-queue {
+    color: $gcms-color-stateInQueue;
+    left: -0.25rem;
+    top: -0.25rem;
+}
+
+.indicator-planned {
+    color: $gtx-color-primary;
+    left: -0.25rem;
+    bottom: -0.25rem;
+}
+
+.indicator-inherited {
+    color: $gcms-color-stateInherited;
+    right: -0.25rem;
+    bottom: -0.25rem;
+}
+
+.indicator-localized {
+    color: transparentize($gcms-color-stateLocalized, 0.3);
+    right: -0.25rem;
+    bottom: -0.25rem;
+}
+
+.indicator-staging {
+    right: -0.25rem;
+    top: -0.25rem;
+
+    &.included {
+        color: $gcms-color-statePublished;
+    }
+    &.excluded {
+        color: $gcms-color-stateDeleted;
+    }
+}

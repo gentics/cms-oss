@@ -18,7 +18,7 @@
           <div class="action-button-group-label">
             {{ group.i18nLabel | gtxI18n }}
           </div>
-          @for (btnGroup of group.buttons; track btnGroup) {
+          @for (btnGroup of group.buttons; track btnGroup.id) {
             <div class="action-button-group-content">
               @for (btn of btnGroup; track btn.id) {
                 @if (btn.type === ActionButtonType.TOOL) {

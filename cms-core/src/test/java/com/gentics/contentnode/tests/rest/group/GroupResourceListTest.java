@@ -18,6 +18,7 @@ import com.gentics.contentnode.rest.resource.GroupResource;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PermsFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.tests.rest.AbstractListSortAndFilterTest;
@@ -49,6 +50,6 @@ public class GroupResourceListTest extends AbstractListSortAndFilterTest<Group> 
 
 	@Override
 	protected AbstractListResponse<Group> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging) throws NodeException {
-		return new GroupResourceImpl().list(filter, sort, paging, new PermsParameterBean());
+		return new GroupResourceImpl().list(filter, sort, paging, new PermsParameterBean(), new PermsFilterParameterBean());
 	}
 }

@@ -1,7 +1,5 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, TemplateRef } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, TemplateRef } from '@angular/core';
 import { ChangesOf } from '../../common';
-import { coerceToBoolean } from '../../utils';
 import { BaseComponent } from '../base-component/base.component';
 
 /**
@@ -12,20 +10,7 @@ import { BaseComponent } from '../base-component/base.component';
     templateUrl: './accordion.component.html',
     styleUrls: ['./accordion.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('slide', [
-            state('open', style({
-                maxHeight: '*',
-                marginTop: '1rem',
-            })),
-            state('closed', style({
-                maxHeight: '0px',
-                marginTop: '0px',
-            })),
-            transition('* <=> *', animate('200ms')),
-        ]),
-    ],
-    standalone: false
+    standalone: false,
 })
 export class AccordionComponent extends BaseComponent implements OnChanges {
 
@@ -41,7 +26,7 @@ export class AccordionComponent extends BaseComponent implements OnChanges {
     /**
      * If the accordion is opened/content of the accordion is visible
      */
-    @Input()
+    @Input({ transform: booleanAttribute })
     public open = false;
 
     /**
@@ -91,7 +76,6 @@ export class AccordionComponent extends BaseComponent implements OnChanges {
         super.ngOnChanges(changes);
 
         if (changes.open) {
-            this.open = coerceToBoolean(this.open);
             if (this.open) {
                 this.showContent = true;
             }

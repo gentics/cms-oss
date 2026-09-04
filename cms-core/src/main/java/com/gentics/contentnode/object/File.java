@@ -101,11 +101,18 @@ public interface File extends Resolvable, StageableChanneledNodeObject, Disinher
 	Integer setFolderId(Integer folderId) throws NodeException, ReadOnlyException;
 
 	/**
-	 * get the filesize of this file in bytes.
-	 * @return the size of the file in bytes.
+	 * get the stored filesize of this file in bytes.
+	 * @return the stored size of the file in bytes.
 	 */
 	@FieldGetter("filesize")
 	int getFilesize();
+
+	/**
+	 * get the filesize of this file in bytes, calculated from an actual binary.
+	 * @return the size of the file in bytes.
+	 * @throws NodeException 
+	 */
+	long getFilesizeFromBinary() throws NodeException;
 
 	/**
 	 * Set the filesize of the file

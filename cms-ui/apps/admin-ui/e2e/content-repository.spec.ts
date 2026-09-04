@@ -42,6 +42,7 @@ const SELECTORS = {
     TABS: {
         CONTAINER: '.gtx-entity-detail > gtx-tabs',
         MANAGEMENT: 'gtx-mesh-management',
+        TAGMAP: 'gtx-tag-map-entry-table',
     },
     PROJECT: {
         TABLE: 'gtx-mesh-project-table',
@@ -60,6 +61,9 @@ const SELECTORS = {
         PASSWORD_CHECKBOX: '.password-checkbox label',
         PASSWORD_INPUTS: '[data-control="password"] input',
         FORCE_PASSWORD: '[data-control="forcePasswordChange"] label',
+    },
+    TAGMAP: {
+        CREATE_BUTTON: 'gtx-button[data-action=create] button',
     },
 } as const;
 
@@ -127,6 +131,21 @@ test.describe('Content Repositories Module', () => {
 
         const management = tabs.locator(SELECTORS.TABS.MANAGEMENT);
         await management.waitFor({ state: 'visible' });
+    });
+
+    test('should be able to add tagmap entry', async({ page }) => {
+        const row = await findTableRowById(master, testCr.id);
+        await row.waitFor({ state: 'visible' });
+        await clickTableRow(row);
+
+        const tabs = page.locator(`${SELECTORS.EDITOR} ${SELECTORS.TABS.CONTAINER}`);
+        await selectTab(tabs, 'tagmap');
+
+        const tagmap = tabs.locator(SELECTORS.TABS.TAGMAP);
+        await tagmap.waitFor({ state: 'visible' });
+
+        const createbutton = tagmap.locator(SELECTORS.TAGMAP.CREATE_BUTTON);
+        await expect(createbutton).toBeEnabled();
     });
 
     test.describe('Mesh Management', () => {
@@ -232,7 +251,7 @@ test.describe('Content Repositories Module', () => {
                     await usersLoad;
 
                     // Edit user and force password change
-                    userRow = findTableRowByText(managementContent, MESH_LOGIN.username);
+                    userRow = await findTableRowByText(managementContent, MESH_LOGIN.username);
                     await findTableAction(userRow, 'edit').click();
 
                     const userModal = page.locator('gtx-mesh-user-modal');
@@ -317,7 +336,7 @@ test.describe('Content Repositories Module', () => {
                         .click();
 
                     const schemaSelectModal = page.locator(SELECTORS.PROJECT.SCHEMA_MODAL);
-                    const schemaRow = findTableRowByText(schemaSelectModal, 'example_folder', true);
+                    const schemaRow = await findTableRowByText(schemaSelectModal, 'example_folder', true);
                     await schemaRow.waitFor({ state: 'visible' });
                     await selectTableRow(schemaRow);
                     await clickModalAction(schemaSelectModal, 'confirm');
@@ -326,7 +345,7 @@ test.describe('Content Repositories Module', () => {
                 });
 
                 await test.step('Delete the newly created Project', async () => {
-                    const projectRow = findTableRowByText(managementContent, NEW_PROJECT_NAME);
+                    const projectRow = await findTableRowByText(managementContent, NEW_PROJECT_NAME);
                     await expect(projectRow).toBeVisible();
 
                     await findTableAction(projectRow, 'delete').click();
@@ -348,7 +367,7 @@ test.describe('Content Repositories Module', () => {
             test('should be possible to read and modify role permissions on projects', async ({ page }) => {
                 await selectTab(page, 'roles');
 
-                const anonymousRow = findTableRowByText(page, 'anonymous');
+                const anonymousRow = await findTableRowByText(page, 'anonymous');
                 await findTableAction(anonymousRow, 'managePermissions').click();
 
                 const permModal = page.locator('gtx-mesh-role-permissions-modal');

@@ -8,31 +8,45 @@
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",
+            "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
             "options": {
-                "tsConfig": "libs/image-editor/tsconfig.lib.json",
-                "project": "libs/image-editor/ng-package.json"
+                "project": "libs/image-editor/ng-package.json",
+                "tsConfig": "libs/image-editor/tsconfig.lib.json"
             },
             "configurations": {
-                "production": {},
-                "development": {},
-                "ci": {}
-            }
+                "production": {
+                    "tsConfig": "libs/image-editor/tsconfig.lib.prod.json"
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
         },
         "test": {
-            "executor": "nx:run-commands",
+            "executor": "@angular-devkit/build-angular:karma",
             "options": {
-                "cwd": "./ng-workspace",
-                "command": "node ../node_modules/@angular/cli/bin/ng.js test image-editor --watch=false"
+                "main": "{projectRoot}/src/test.ts",
+                "polyfills": ["zone.js", "zone.js/testing"],
+                "tsConfig": "{projectRoot}/tsconfig.spec.json",
+                "karmaConfig": "{projectRoot}/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": ["{projectRoot}/src/styles"]
+                },
+                "watch": false
             },
             "configurations": {
-                "watch": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test image-editor --watch=true"
-                },
                 "ci": {
-                    "command": "node ../node_modules/@angular/cli/bin/ng.js test image-editor --watch=false --configuration=ci",
-                    "color": false
+                    "codeCoverage": true,
+                    "reporters": ["junit"],
+                    "browsers": "ChromeDocker",
+                    "progress": false
+                },
+                "watch": {
+                    "watch": true
                 }
             }
+        },
+        "lint": {
+            "executor": "@nx/eslint:lint"
         },
         "component-test": {
             "executor": "@nx/cypress:cypress",

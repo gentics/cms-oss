@@ -25,3 +25,16 @@
 .container-validator-errors {
     color: $gtx-color-alert;
 }
+
+/* Hacky workarounds for current form/flex system */
+.gtx-form-section-title {
+    margin-bottom: 0;
+    padding: 0;
+}
+
+.columns {
+    gap: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}

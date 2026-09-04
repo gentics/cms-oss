@@ -139,7 +139,7 @@ export default defineConfig([
                 }, {
                     selector: ['classProperty'],
                     modifiers: ['readonly'],
-                    format: ['UPPER_CASE', 'PascalCase'],
+                    format: ['UPPER_CASE', 'PascalCase', 'camelCase'],
                 }, {
                     selector: ['typeLike'],
                     format: ['PascalCase'],
@@ -367,6 +367,23 @@ export default defineConfig([
         files: ['**/*.module.ts'],
         rules: {
             '@typescript-eslint/no-extraneous-class': 'off',
+        },
+    },
+    {
+        extends: [
+            // Apply the recommended Angular template rules
+            ...ngPlugin.configs.templateRecommended,
+        ],
+        files: ["**/*.html"],
+        rules: {
+            '@angular-eslint/template/interactive-supports-focus': 'off',
+            '@angular-eslint/template/click-events-have-key-events': 'off',
+            "@angular-eslint/template/eqeqeq": [
+                "error",
+                {
+                    "allowNullOrUndefined": true
+                }
+            ]
         },
     },
     {

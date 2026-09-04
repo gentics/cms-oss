@@ -8,8 +8,9 @@ import {
     Output,
     SimpleChanges,
 } from '@angular/core';
+import { cancelEvent, randomId } from '@gentics/common';
 import { TableRow, TableSelectAllType, TableSelection } from '../../common';
-import { cancelEvent, randomId, toSelectionArray } from '../../utils';
+import { toSelectionArray } from '../../utils';
 import { BaseTableComponent } from '../base-table/base-table.component';
 
 /**

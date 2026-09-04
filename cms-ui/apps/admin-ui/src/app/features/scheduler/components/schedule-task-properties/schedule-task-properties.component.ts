@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, ScheduleTask } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ScheduleTaskPropertiesMode {
     UPDATE = 'update',
@@ -20,7 +19,7 @@ export enum ScheduleTaskPropertiesMode {
     ],
     standalone: false
 })
-export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<ScheduleTask> {
+export class ScheduleTaskPropertiesComponent extends BaseFormPropertiesComponent<ScheduleTask> {
 
     public readonly ScheduleTaskPropertiesMode = ScheduleTaskPropertiesMode;
 

@@ -1,8 +1,9 @@
 import { Directive, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
+import { randomId } from '@gentics/common';
 import { ChangesOf } from '../../common';
 import { RadioButtonComponent } from '../../components/radio-button/radio-button.component';
-import { generateFormProvider, randomId } from '../../utils';
+import { generateFormProvider } from '../../utils';
 
 /**
  * RadioGroup groups multiple {@link RadioButtonComponent} elements together.
@@ -11,7 +12,7 @@ import { generateFormProvider, randomId } from '../../utils';
 @Directive({
     selector: 'gtx-radio-group, [gtx-radio-group]',
     providers: [generateFormProvider(RadioGroupDirective)],
-    standalone: false
+    standalone: false,
 })
 export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
 
@@ -48,12 +49,19 @@ export class RadioGroupDirective implements ControlValueAccessor, OnChanges {
         }
     }
 
-    radioSelected(selected?: RadioButtonComponent): void {
+    radioSelected(selected?: RadioButtonComponent, fromInit?: boolean): void {
         for (const radio of this.radioButtons) {
             if (radio !== selected) {
                 radio.writeValue(selected ? selected.value : null);
             }
         }
+
+        // If it's from the radio button initialization, then we don't emit a value,
+        // as nothing has actually changed yet.
+        if (fromInit) {
+            return;
+        }
+
         // setTimeout because this method is invoked from a child component (RadioButton), which is the wrong direction
         // for change propagation (which should normally always be parent -> child). If we synchronously now update the
         // ngModel value, we will cause "changed after checked" errors in dev mode.

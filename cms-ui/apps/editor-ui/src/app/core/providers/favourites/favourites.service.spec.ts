@@ -6,6 +6,7 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { UserSettingsService } from '../user-settings/user-settings.service';
 import { FavouritesService } from './favourites.service';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 
 describe('FavouritesService', () => {
 
@@ -16,7 +17,10 @@ describe('FavouritesService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                AuthenticationModule.forRoot(),
+            ],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: UserSettingsService, useClass: MockUserSettingsService },
@@ -29,7 +33,7 @@ describe('FavouritesService', () => {
         state = TestBed.inject(ApplicationStateService) as any;
         service = TestBed.inject(FavouritesService);
 
-        state.mockState({ auth: { currentUserId: 123 } });
+        state.mockState({ auth: { user: { id: 123 } as any } });
 
         exampleStarrable = { type: 'folder', id: 17, globalId: 'some-folder-id', name: 'Folder 17' };
     });

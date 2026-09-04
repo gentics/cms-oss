@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { AuthStateModel } from '@gentics/cms-components/auth';
 import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
 import { Store } from '@ngxs/store';
 import { cloneDeep, mergeWith } from 'lodash-es';
@@ -6,7 +7,6 @@ import { Observable, defer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import {
     AppState,
-    AuthState,
     ContentStagingState,
     EditorState,
     EntityState,
@@ -26,7 +26,7 @@ import { ApplicationStateService } from './providers/application-state/applicati
 
 /** Only available in testing. A partial type that can be used to mock application state. */
 export type MockAppState = Partial<AppState> | {
-    auth?: Partial<AuthState>;
+    auth?: Partial<AuthStateModel>;
     contentStaging?: Partial<ContentStagingState>;
     editor?: TwoLevelsPartial<EditorState>;
     entities?: PartialEntityState;

@@ -8,26 +8,34 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
-import org.junit.Rule;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.tests.utils.Builder;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 @RunWith(Parameterized.class)
 public class PageFileNameSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
-	
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	private static Node node;
+
+	private static Template template;
+
 	private static class TestParameters {
 		final public List<String> existingFilenames;
 		final public String fileNameToGenerate;
@@ -87,11 +95,29 @@ public class PageFileNameSandboxTest {
 								"MD-450.PAYSIC---Incoming-Customer---Standard-System-.en.html", "MD-451.PAYSIC---Incoming-Customer---Standard-System-.en.html") },
 		});
 	}
-	private TestParameters params;
 
-	public PageFileNameSandboxTest(TestParameters params) {
-		this.params = params;
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+
+		node = Builder.create(Node.class, n -> {
+			n.setHostname("test");
+			n.setPublishDir("test");
+
+			n.setFolder(Builder.create(Folder.class, root -> {
+				root.setName("test");
+				root.setPublishDir("test");
+			}).doNotSave().build());
+		}).build();
+
+		template = Builder.create(Template.class, t -> {
+			t.setFolderId(node.getFolder().getId());
+			t.setSource("hallo");
+		}).build();
 	}
+
+	@Parameter(0)
+	public TestParameters params;
 
 	int pageNameCounter =0;
 	private String createPageName() {
@@ -99,36 +125,31 @@ public class PageFileNameSandboxTest {
 		return "page"+pageNameCounter;
 	}
 
+	@Before
+	public void setup() throws NodeException {
+		Trx.operate(() -> {
+			ContentNodeTestDataUtils.clear(node);
+		});
+	}
+
 	@Test
 	public void testPageFilenameRenaming() throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Node n = t.createObject(Node.class);
-		n.setHostname("test");
-		n.setPublishDir("test");
-		Folder root = t.createObject(Folder.class);
-		root.setName("test");
-		root.setPublishDir("test");
-		n.setFolder(root);
-		n.save();
-		Template template = t.createObject(Template.class);
-		template.setFolderId(root.getId());
-		template.setSource("hallo");
-		template.save();
 		for (String filename : params.existingFilenames) {
-			Page p = t.createObject(Page.class);
-			p.setFilename(filename);
-			p.setTemplateId(template.getId());
-			p.setFolderId(root.getId());
-			p.setName(createPageName());
-			p.save();
+			Builder.create(Page.class, p -> {
+				p.setFilename(filename);
+				p.setTemplateId(template.getId());
+				p.setFolderId(node.getFolder().getId());
+				p.setName(createPageName());
+			}).build();
 		}
-		Page testPage = t.createObject(Page.class);
-		testPage.setFilename(params.fileNameToGenerate);
-		testPage.setTemplateId(template.getId());
-		testPage.setFolderId(root.getId());
-		testPage.setName(createPageName());
 		try {
-			testPage.save();
+			Page testPage = Builder.create(Page.class, p -> {
+				p.setFilename(params.fileNameToGenerate);
+				p.setTemplateId(template.getId());
+				p.setFolderId(node.getFolder().getId());
+				p.setName(createPageName());
+			}).build();
+
 			if (params.exceptionExpected) {
 				fail ("An exception was expected, but filename was generated: " + testPage.getFilename());
 			}

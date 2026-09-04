@@ -1,3 +1,4 @@
+export * from './aloha-window';
 export * from './asset-management';
 export * from './editor-ui';
 export * from './embedded-tools-api';

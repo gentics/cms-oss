@@ -12,7 +12,9 @@ import {
 import { BaseTableLoaderService } from '@admin-ui/core/providers';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { NormalizableEntityType } from '@gentics/cms-models';
+import { cancelEvent } from '@gentics/common';
 import {
     BaseComponent,
     ChangesOf,
@@ -24,11 +26,9 @@ import {
     TableSelectAllType,
     TableSelection,
     TableSortOrder,
-    cancelEvent,
     coerceInstance,
     toSelectionArray,
 } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';

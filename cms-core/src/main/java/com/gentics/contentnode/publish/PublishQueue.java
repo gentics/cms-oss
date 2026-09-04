@@ -35,6 +35,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Folder.FileSearch;
@@ -257,6 +258,14 @@ public class PublishQueue {
 			return objectsToPublishCount;
 		}
 
+		// cleanup, in case there is some left-over from a previous (failed) publish run
+		try {
+			stopRemoverService(true);
+		} catch (InterruptedException e) {
+			throw new NodeException("Error while starting publish process", e);
+		}
+		HandledObject.clear();
+
 		removerService = Executors.newSingleThreadExecutor(removerThreadFactory);
 
 		TransactionManager.execute(new TransactionManager.Executable() {
@@ -338,12 +347,7 @@ public class PublishQueue {
 			// first make sure, all objects, that have been marked before are rmoved
 			HandledObject.markObjectsFinished();
 
-			if (removerService != null) {
-			removerService.shutdown();
-			if (!removerService.awaitTermination(1, TimeUnit.HOURS)) {
-				throw new NodeException("Timeout when waiting for publiqueue entries to be removed");
-			}
-			}
+			stopRemoverService(false);
 
 			TransactionManager.execute(new TransactionManager.Executable() {
 				public void execute() throws NodeException {
@@ -366,7 +370,6 @@ public class PublishQueue {
 	 *		Map are the numeric object codes.
 	 */
 	public static Map<Integer, Integer> handleFailedPublishProcess() {
-		@SuppressWarnings("serial")
 		HashMap<Integer, Integer> notPublishedCount = new HashMap<Integer, Integer>(3) {
 			{
 				put(Folder.TYPE_FOLDER_INTEGER, 0);
@@ -380,15 +383,10 @@ public class PublishQueue {
 			// first make sure, all objects, that have been marked before are rmoved
 			HandledObject.markObjectsFinished();
 
-			if (removerService != null) {
-				removerService.shutdown();
-				try {
-					if (!removerService.awaitTermination(1, TimeUnit.HOURS)) {
-						throw new NodeException("Timeout when waiting for publiqueue entries to be removed");
-					}
-				} catch (InterruptedException e) {
-					logger.debug("Interrupted while waiting for remover service to terminate");
-				}
+			try {
+				stopRemoverService(false);
+			} catch (InterruptedException e) {
+				logger.debug("Interrupted while waiting for remover service to terminate");
 			}
 
 			notPublishedCount.put(
@@ -419,6 +417,26 @@ public class PublishQueue {
 		}
 
 		return notPublishedCount;
+	}
+
+	/**
+	 * If the {@link #removerService} is not null, try to stop it. The {@link #removerService} will be set to null after it has been stopped.
+	 * @param force stop immediately (do not wait for scheduled tasks to finish)
+	 * @throws NodeException
+	 * @throws InterruptedException
+	 */
+	protected static void stopRemoverService(boolean force) throws NodeException, InterruptedException {
+		if (removerService != null) {
+			if (force) {
+				removerService.shutdownNow();
+			} else {
+				removerService.shutdown();
+			}
+			if (!removerService.awaitTermination(1, TimeUnit.HOURS)) {
+				throw new NodeException("Timeout when waiting for publiqueue entries to be removed");
+			}
+			removerService = null;
+		}
 	}
 
 	/**
@@ -994,12 +1012,19 @@ public class PublishQueue {
 			if (attributes.length == 0 && REMOVING_ACTIONS.contains(action)) {
 				// when objects are deleted or taken offline, we need to know, which language the object had, in order to remove the correct language variant from mesh.
 				// exception: when the object was REMOVEd (means: moved to another node), we want to remove all language variants from mesh.
-				if (MeshPublisher.supportsAlternativeLanguages(object) || action == Action.REMOVE) {
-					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object) };
-				} else {
-					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object),
-							"language:" + MeshPublisher.getMeshLanguage(object) };
+				List<String> attrsList = new ArrayList<>();
+				attrsList.add("uuid:%s".formatted(MeshPublisher.getMeshUuid(object)));
+				if (!MeshPublisher.supportsAlternativeLanguages(object) && action != Action.REMOVE) {
+					attrsList.add("language:%s".formatted(MeshPublisher.getMeshLanguage(object)));
 				}
+				if (objType == Form.TYPE_FORM) {
+					if (object instanceof Form form) {
+						attrsList.add("formType:%s".formatted(form.getFormType()));
+					} else if (object instanceof DummyObject dummy) {
+						attrsList.add("formType:%s".formatted(dummy.getAdditionalData().getOrDefault("formType", "")));
+					}
+				}
+				attributes = attrsList.toArray(new String[attrsList.size()]);
 			}
 
 			Entry entry = dirtObject(objType, ObjectTransformer.getInt(object.getId(), 0), action, cId, true, attributes);
@@ -2522,6 +2547,7 @@ public class PublishQueue {
 		 */
 		public static void clear() {
 			objectsMap.clear();
+			done.clear();
 		}
 
 		/**

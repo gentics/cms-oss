@@ -50,7 +50,7 @@ export class ChangePasswordModal extends BaseModal<void> {
     }
 
     changePassword(): void {
-        const userId = this.appState.now.auth.currentUserId;
+        const userId = this.appState.now.auth.user?.id;
         const password = this.form.get('password1').value;
         this.authActions.changePassword(userId, password)
             .then(() => this.closeFn());

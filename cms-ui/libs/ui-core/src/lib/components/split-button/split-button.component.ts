@@ -1,5 +1,6 @@
 import {
     AfterViewInit,
+    booleanAttribute,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -11,7 +12,6 @@ import {
     QueryList,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { coerceToBoolean } from '../../utils';
 import { DropdownItemComponent } from '../dropdown-item/dropdown-item.component';
 import { SplitButtonPrimaryActionComponent } from '../split-button-primary-action/split-button-primary-action.component';
 
@@ -42,7 +42,7 @@ import { SplitButtonPrimaryActionComponent } from '../split-button-primary-actio
     templateUrl: './split-button.component.html',
     styleUrls: ['./split-button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class SplitButtonComponent implements AfterViewInit, OnDestroy {
 
@@ -69,33 +69,20 @@ export class SplitButtonComponent implements AfterViewInit, OnDestroy {
      * Setting the "flat" attribute gives the button a transparent background
      * and only depth on hover.
      */
-    @Input()
-    get flat(): boolean {
-        return this.isFlat;
-    }
-    set flat(value: boolean) {
-        this.isFlat = coerceToBoolean(value);
-    }
+    @Input({ transform: booleanAttribute })
+    flat: boolean;
 
     /**
      * Controls whether the button is disabled.
      */
-    @Input()
-    get disabled(): boolean {
-        return this.isDisabled;
-    }
-    set disabled(value: boolean) {
-        this.isDisabled = coerceToBoolean(value);
-    }
+    @Input({ transform: booleanAttribute })
+    disabled: boolean;
 
     @ContentChild(SplitButtonPrimaryActionComponent, { read: ElementRef, static: true })
     primaryAction: ElementRef<HTMLElement>;
 
     @ContentChildren(DropdownItemComponent)
     secondaryActions: QueryList<DropdownItemComponent>;
-
-    isFlat = false;
-    isDisabled = false;
 
     private queryListSub: Subscription;
 

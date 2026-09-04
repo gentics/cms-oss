@@ -20,7 +20,7 @@ import { AppStateService, FocusEditor, OpenEditor, SetUIFocusEntity } from '@adm
 import { ChangeDetectorRef, Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { toValidNumber } from '@gentics/ui-core';
+import { toValidNumber } from '@gentics/common';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 

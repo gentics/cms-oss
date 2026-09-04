@@ -1,0 +1,137 @@
+:host { display: contents; }
+
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__header {
+  /* Gentics-Blau Verlauf — vom Primary in den Dark-Akzent rechts. */
+  background:
+    linear-gradient(135deg, var(--pm-color-primary) 0%, var(--pm-color-primary-dark) 100%);
+  color: #fff;
+  padding: var(--pm-spacing-md) var(--pm-spacing-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-md);
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+
+  h1 {
+    font-size: var(--pm-font-size-xl);
+    font-weight: 600;
+    margin: 0;
+    color: #fff;
+    letter-spacing: 0.01em;
+  }
+}
+
+.shell__subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--pm-font-size-sm);
+}
+
+.shell__header-spacer { flex: 1; }
+
+.shell__session-badge {
+  font-size: var(--pm-font-size-xs);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.shell__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.shell__content-pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell__scroll-wrapper {
+  flex: 1;
+  min-height: 0;
+  /* Nur vertikal — horizontaler Scroll bleibt in der Tabelle selbst,
+     dadurch bleiben Scope-Card und Toolbar auf engen Viewports sichtbar. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--pm-spacing-lg);
+}
+
+@media (max-width: 600px) {
+  .shell__scroll-wrapper { padding: var(--pm-spacing-md); }
+  .shell__header        { padding: var(--pm-spacing-sm) var(--pm-spacing-md); }
+  .shell__subtitle      { display: none; }
+  .shell__session-badge { display: none; }
+  .shell__scope-card {
+    padding: var(--pm-spacing-sm) var(--pm-spacing-md);
+    svg { display: none; }
+  }
+}
+
+.shell__scope-card {
+  background:
+    linear-gradient(90deg, var(--pm-color-primary-subtle) 0%, var(--pm-color-surface) 60%);
+  border: 1px solid var(--pm-color-primary-light);
+  border-left: 4px solid var(--pm-color-primary);
+  border-radius: var(--pm-radius-md);
+  padding: var(--pm-spacing-md) var(--pm-spacing-lg);
+  margin-bottom: var(--pm-spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-md);
+
+  icon {
+    color: var(--pm-color-primary-dark);
+    font-size: 2rem;
+  }
+
+  h3 {
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--pm-color-primary-dark);
+  }
+
+  p {
+    margin: 0;
+    color: var(--pm-color-text-secondary);
+    font-size: var(--pm-font-size-sm);
+  }
+}
+
+.shell__loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell__loading-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--pm-spacing-sm);
+  color: var(--pm-color-text-secondary);
+  padding: var(--pm-spacing-lg);
+  justify-content: center;
+}
+
+.shell__no-session {
+  height: 100vh;
+  justify-content: center;
+
+  icon {
+    font-size: 4.5rem;
+  }
+}

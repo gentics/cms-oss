@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef } from '@angular/core';
+import { cancelEvent } from '@gentics/common';
 import {
     CHECKBOX_STATE_INDETERMINATE,
     FALLBACK_TABLE_COLUMN_RENDERER,
@@ -9,7 +10,7 @@ import {
     TableSelection,
     TableSortOrder,
 } from '../../common';
-import { cancelEvent, toSelectionArray } from '../../utils';
+import { toSelectionArray } from '../../utils';
 import { BaseComponent } from '../base-component/base.component';
 
 function selectionToMap(selection: string[] | TableSelection): TableSelection {
@@ -28,12 +29,13 @@ function selectionToMap(selection: string[] | TableSelection): TableSelection {
 }
 
 /**
- * INTERNAL BASE CLASS - Usage of this class outside of this project is heavily discouraged.
+ * > ***INTERNAL BASE CLASS***:
+ * Usage of this class outside of this project is heavily discouraged.
  *
  * Base table implementation which is used for the regular table and the trable components.
  * Allows for easier code sharing and normalized usage as they mostly behave the same.
  *
- * This implementation is mostly "pure" - All changes that occur are not directly performed
+ * This implementation is mostly *pure* - All changes that occur are not directly performed
  * by this component, but have to be done by the parent component.
  */
 @Component({

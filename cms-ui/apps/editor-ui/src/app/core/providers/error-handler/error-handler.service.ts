@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18nNotificationService, I18nService } from '@gentics/cms-components';
+import { LogoutSuccess } from '@gentics/cms-components/auth';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { LogoutSuccessAction } from '../../../state/modules/auth/auth.actions';
 import { UpdateSearchFilterAction } from '../../../state/modules/folder/folder.actions';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
@@ -214,7 +214,7 @@ export class ErrorHandler {
     }
 
     private userWasLoggedOut(): void {
-        this.appState.dispatch(new LogoutSuccessAction());
+        this.appState.dispatch(new LogoutSuccess());
         this.appState.dispatch(new UpdateSearchFilterAction({
             changing: false,
             valid: false,

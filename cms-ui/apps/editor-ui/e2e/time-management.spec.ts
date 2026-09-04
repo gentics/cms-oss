@@ -14,11 +14,10 @@ import {
     NODE_MINIMAL,
     PAGE_ONE,
     pickDate,
-    pickSelectValue,
     TestSize,
-    UserImportData,
+    UserImportData
 } from '@gentics/e2e-utils';
-import {expect, Locator, test} from '@playwright/test';
+import { expect, Locator, test } from '@playwright/test';
 import { findItem, findList, itemAction, selectNode } from './helpers';
 
 test.describe('Time Management', () => {
@@ -77,7 +76,7 @@ test.describe('Time Management', () => {
             // We have to assemble the group permissions here, because we
             // need the imported data refs.
             // Create a copy, so we have a clean base object
-            const TEST_GROUP = {...TEST_GROUP_BASE};
+            const TEST_GROUP = { ...TEST_GROUP_BASE };
 
             TEST_GROUP.permissions = [
                 {
@@ -135,12 +134,13 @@ test.describe('Time Management', () => {
             const publishRes = await publishReq;
             const reqBody: PagePublishRequest = publishRes.request().postDataJSON();
             const diff = Math.trunc(futureDate.getTime() / 1_000) - reqBody.at;
-            expect([0, 3_600]).toContain(diff)
+            // Different times due to timezone differences which may occur
+            expect([0, 3_600, 7_200]).toContain(diff);
         });
 
         await test.step('Clear page publish', async () => {
             await itemAction(item, 'time-management');
-            await publishAt.locator('.clear-button button').click();
+            await publishAt.locator('.addon-button[data-action="clear"]').click();
 
             const clearReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${PAGE_TO_EDIT.id}`));
             await clickModalAction(modal, 'confirm');

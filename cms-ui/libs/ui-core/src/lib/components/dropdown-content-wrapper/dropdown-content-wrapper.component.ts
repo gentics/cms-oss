@@ -10,15 +10,15 @@ import {
     OnDestroy,
     TemplateRef,
 } from '@angular/core';
-import { DropdownAlignment, DropdownWidth, KeyCode } from '../../common';
-import { Config, ConfigService } from '../../module.config';
+import { type DropdownAlignment, type DropdownWidth, KeyCode } from '../../common';
+import { type Config, ConfigService } from '../../module.config';
 
 @Component({
     selector: 'gtx-dropdown-content-wrapper',
     templateUrl: './dropdown-content-wrapper.component.html',
     styleUrls: ['./dropdown-content-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy {
 
@@ -28,11 +28,13 @@ export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy
     contentStyles: any = {
         position: 'absolute',
     };
+
     options = {
         alignment: 'left' as DropdownAlignment,
         width: 'contents' as DropdownWidth,
         belowTrigger: false,
     };
+
     trigger: HTMLElement;
     id: string = 'dropdown-' + Math.random().toString(36).substr(2);
     clicked = new EventEmitter<any>();
@@ -125,16 +127,17 @@ export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy
         this.contentStyles.opacity = 0;
         this.contentStyles.maxHeight = 'none';
     }
+
     /**
      * Calculates the position of the dropdown based on the height, width. alignment and screen boundaries.
      */
-    calculatePositionStyles(): { top: string, left: string, maxHeight: string, flowUpwards: boolean; } {
+    calculatePositionStyles(): { top: string; left: string; maxHeight: string; flowUpwards: boolean } {
         const positionStyles: any = {
             flowUpwards: false,
             maxHeight: this.dropDownMaxHeight + 'px',
         };
         const content = this.getDropdownContent();
-        const fullHeightContent: HTMLElement = content && content.querySelector('.scroller') ;
+        const fullHeightContent: HTMLElement = content && content.querySelector('.scroller');
         const contentHeight = this.innerHeight(fullHeightContent) + this.pageMargin;
 
         // Offscreen detection
@@ -290,28 +293,27 @@ export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy
     /**
      * Returns the offset of the element relative to the document.
      */
-    private offset(elem: HTMLElement): { top: number; left: number; } {
-        let box = elem.getBoundingClientRect();
+    private offset(elem: HTMLElement): { top: number; left: number } {
+        const box = elem.getBoundingClientRect();
 
-        let body = document.body;
-        let docEl = document.documentElement;
+        const body = document.body;
+        const docEl = document.documentElement;
 
-        let scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
-        let scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
+        const scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop;
+        const scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft;
 
-        let clientTop = docEl.clientTop || body.clientTop || 0;
-        let clientLeft = docEl.clientLeft || body.clientLeft || 0;
+        const clientTop = docEl.clientTop || body.clientTop || 0;
+        const clientLeft = docEl.clientLeft || body.clientLeft || 0;
 
-        let top = box.top + scrollTop - clientTop;
-        let left = box.left + scrollLeft - clientLeft;
+        const top = box.top + scrollTop - clientTop;
+        const left = box.left + scrollLeft - clientLeft;
 
         return { top: Math.round(top), left: Math.round(left) };
     }
 
-
     private innerWidth(el: HTMLElement): number {
         if (el) {
-            let style = window.getComputedStyle(el, null);
+            const style = window.getComputedStyle(el, null);
             return Number.parseInt(style.getPropertyValue('width')) || el.offsetWidth;
         }
         return 0;
@@ -319,7 +321,7 @@ export class DropdownContentWrapperComponent implements AfterViewInit, OnDestroy
 
     private innerHeight(el: HTMLElement): number {
         if (el) {
-            let style = window.getComputedStyle(el, null);
+            const style = window.getComputedStyle(el, null);
             return Number.parseInt(style.getPropertyValue('height')) || el.offsetHeight;
         }
         return 0;

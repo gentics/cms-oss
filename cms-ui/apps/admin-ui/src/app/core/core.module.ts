@@ -1,7 +1,8 @@
 import { NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { API_BASE_URL, CmsComponentsModule } from '@gentics/cms-components';
+import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
@@ -214,11 +215,12 @@ const PROVIDERS: any[] = [
         GenticsUICoreModule,
         CmsComponentsModule.forRoot(),
         TranslateModule.forRoot({
-            fallbackLang: 'en',
+            fallbackLang: FALLBACK_LANGUAGE,
         }),
         SharedModule,
         StateModule,
         MeshModule,
+        AuthenticationModule.forRoot(),
     ],
     exports: [
         TranslateModule,

@@ -1,0 +1,15 @@
+.schema-source-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1rem;
+
+    .source-target-selector {
+        flex: 1 1 50%;
+    }
+
+    .schema-compare {
+        flex: 1 1 50%;
+    }
+}

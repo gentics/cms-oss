@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, Output } from '@angular/core';
 import { BaseUsageOptions, File, Image, Item, Language, Page, UsageInPagesOptions } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { cancelEvent, ChangesOf } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { ChangesOf } from '@gentics/ui-core';
 import { Observable, of, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { LinkType, UsageType } from '../../../common/models';
@@ -49,9 +50,6 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     @Input()
     public languages: Language[] = [];
 
-    @Input()
-    public currentLanguageId: number;
-
     @Output()
     public pageLoadStart = new EventEmitter<PageLoadStartEvent>();
 
@@ -82,7 +80,7 @@ export class ItemUsageListComponent implements OnChanges, OnDestroy {
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.type || changes.item || changes.nodeId || changes.currentLanguageId) {
+        if (changes.type || changes.item || changes.nodeId) {
             this.loaded = false;
             this.loadPage(0, true);
         }

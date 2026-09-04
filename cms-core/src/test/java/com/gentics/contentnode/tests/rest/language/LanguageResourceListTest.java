@@ -42,7 +42,7 @@ public class LanguageResourceListTest extends AbstractListSortAndFilterTest<Cont
 	}
 
 	@Override
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super ContentLanguage> items) throws NodeException {
 		operate(() ->  {
 			for (com.gentics.contentnode.object.ContentLanguage lang : LanguageFactory.languagesPerCode().values()) {
 				items.add(com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST.apply(lang));

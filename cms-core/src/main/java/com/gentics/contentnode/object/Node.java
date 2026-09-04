@@ -30,10 +30,10 @@ import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderUrl;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
-import com.gentics.lib.resolving.ResolvableMapWrappable;
 
 /**
  * The object for a Node or Domain in content.node.
@@ -754,6 +754,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, 
 	 * @throws NodeException
 	 */
 	void setDefaultImageFolder(Folder folder) throws ReadOnlyException, NodeException;
+
+	/**
+	 * Get the default form folder
+	 * @return default form folder or null if non set
+	 * @throws NodeException
+	 */
+	Folder getDefaultFormFolder() throws NodeException;
+
+	/**
+	 * Set the default form folder (or null to unset)
+	 * @param folder default form folder or null
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	void setDefaultFormFolder(Folder folder) throws ReadOnlyException, NodeException;
 
 	/**
 	 * Get the RenderUrl link way for pages

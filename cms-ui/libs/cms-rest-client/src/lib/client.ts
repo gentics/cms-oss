@@ -1,4 +1,3 @@
-import { BaseListOptionsWithPaging, PublishLogEntry } from '@gentics/cms-models';
 import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_CONTENT_TYPE, POST, PUT, QUERY_PARAM_SID } from './internal';
 import {
     GCMSAdminAPI,
@@ -21,6 +20,7 @@ import {
     GCMSI18nAPI,
     GCMSImageAPI,
     GCMSInfoAPI,
+    GCMSKeycloakAPI,
     GCMSLanguageAPI,
     GCMSLicenseAPI,
     GCMSLinkCheckerAPI,
@@ -64,14 +64,14 @@ export class GCMSRestClient implements GCMSRootAPI {
     constructor(
         public driver: GCMSClientDriver,
         public config: GCMSRestClientConfig = DEFAULT_CONFIG,
-        public sid: null | number | string = null,
+        public sid: undefined | null | number | string = null,
     ) { }
 
     protected prepareRequest(
         requestMethod: RequestMethod,
         path: string,
-        queryParams: Record<string, any>,
-        requestHeaders: Record<string, string>,
+        queryParams?: Record<string, any>,
+        requestHeaders?: Record<string, string>,
     ): GCMSRestClientRequestData {
         let buildPath = '';
 
@@ -102,8 +102,8 @@ export class GCMSRestClient implements GCMSRootAPI {
                 host: this.config.connection.host,
                 port: this.config.connection.port,
                 path: buildPath,
-                params: queryParams,
-                headers: requestHeaders,
+                params: queryParams || {},
+                headers: requestHeaders || {},
             }
             : {
                 method: requestMethod,
@@ -111,8 +111,8 @@ export class GCMSRestClient implements GCMSRootAPI {
                 host: null,
                 port: null,
                 path: buildPath,
-                params: queryParams,
-                headers: requestHeaders,
+                params: queryParams || {},
+                headers: requestHeaders || {},
             };
 
         const { method, protocol, host, port, path: finalPath, params, headers } = this.handleInterceptors(data);
@@ -132,8 +132,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         return {
             method,
             url,
-            params,
-            headers,
+            params: params || {},
+            headers: headers || {},
         };
     }
 
@@ -401,7 +401,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         upload: (file, options, fileName) => {
             const data = new FormData();
             data.append('fileBinaryData', file);
-            data.append('fileName', fileName);
+            data.append('fileName', fileName || '');
             if (options.folderId) {
                 data.append('folderId', options.folderId.toString());
             }
@@ -419,11 +419,13 @@ export class GCMSRestClient implements GCMSRootAPI {
             if (fileName) {
                 data.append('fileName', fileName);
             }
-            if (options.folderId) {
-                data.append('folderId', options.folderId.toString());
-            }
-            if (options.nodeId) {
-                data.append('nodeId', options.nodeId.toString());
+            if (options) {
+                if (options.folderId) {
+                    data.append('folderId', options.folderId.toString());
+                }
+                if (options.nodeId) {
+                    data.append('nodeId', options.nodeId.toString());
+                }
             }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
@@ -482,7 +484,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         templates: (id, options) => this.executeMappedJsonRequest(GET, `/folder/getTemplates/${id}`, null, options),
 
         setStartpage: (id, body) => this.executeMappedJsonRequest(POST, `/folder/startpage/${id}`, body),
-        sanitizePublshDirectory: (body) => this.executeMappedJsonRequest(POST, '/folder/sanitize/publishDir', body),
+        sanitizePublishDirectory: (body) => this.executeMappedJsonRequest(POST, '/folder/sanitize/publishDir', body),
 
         inheritanceStatus: (id, options) => this.executeMappedJsonRequest(GET, `/folder/disinherit/${id}`, null, options),
         multipleInheritanceStatus: (options) => this.executeMappedJsonRequest(GET, '/folder/disinherit', null, options),
@@ -522,8 +524,19 @@ export class GCMSRestClient implements GCMSRootAPI {
         removeScheduledPublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/online`),
         removeScheduledUnpublish: (id) => this.executeMappedJsonRequest(DELETE, `/form/${id}/offline`),
 
+        listConfigurations: (options) => this.executeMappedJsonRequest(GET, '/form/types', null, options),
+        getConfiguration: (type) => this.executeMappedJsonRequest(GET, `/form/types/${type}`),
+        assignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(PUT, `/form/nodes/${nodeId}/types/${type}`),
+        unassignConfiguration: (type, nodeId) => this.executeMappedJsonRequest(DELETE, `/form/nodes/${nodeId}/types/${type}`),
+
+        listTranslationLanguages: () => this.executeMappedJsonRequest(GET, '/form/translations/languages'),
+        listTranslations: () => this.executeMappedJsonRequest(GET, '/form/translations'),
+        updateTranslations: (body) => this.executeMappedJsonRequest(POST, '/form/translations', body),
+        listTypeTranslations: (type) => this.executeMappedJsonRequest(GET, `/form/types/${type}/translations`),
+        updateTypeTranslations: (type, body) => this.executeMappedJsonRequest(POST, `/form/types/${type}/translations`, body),
+
         exportStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/export/status`),
-        createExport: (id) => this.executeMappedJsonRequest(POST, `/form/${id}/export`),
+        createExport: (id, options) => this.executeMappedJsonRequest(POST, `/form/${id}/export`, null, options),
         binariesStatus: (id) => this.executeMappedJsonRequest(GET, `/form/${id}/binaries/status`),
         createBinaries: (id) => this.executeMappedJsonRequest(POST, `/form/${id}/binaries`),
         downloadData: (id, downloadUuid) => this.executeBlobRequest(GET, `/form/${id}/download/${downloadUuid}`),
@@ -541,8 +554,12 @@ export class GCMSRestClient implements GCMSRootAPI {
         deleteData: (id, dataUuid) => this.executeMappedJsonRequest(DELETE, `/form/${id}/data/${dataUuid}`),
         getDataBinary: (id, dataUuid, binaryField) => this.executeMappedJsonRequest(GET, `/form/${id}/data/${dataUuid}/binary/${binaryField}`),
 
-        restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/restore/${id}`, null, options),
-        deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/delete/${id}`, null, options),
+        restoreFromWastebin: (id, options) => this.executeMappedJsonRequest(POST, `/form/wastebin/${id}/restore`, null, options),
+        deleteFromWastebin: (id, options) => this.executeMappedJsonRequest(DELETE, `/form/wastebin/${id}`, null, options),
+
+        usageInPages: (options) => this.executeMappedJsonRequest(GET, '/form/usage/pages', null, options),
+        usageInTemplates: (options) => this.executeMappedJsonRequest(GET, '/form/usage/templates', null, options),
+        usageInTotal: (options) => this.executeMappedJsonRequest(GET, '/form/usage/total', null, options),
     } as const;
 
     public fum: GCMSFileUploadManipulatorAPI = {
@@ -553,7 +570,7 @@ export class GCMSRestClient implements GCMSRootAPI {
     public group: GCMSGroupAPI = {
         list: (options) => this.executeMappedJsonRequest(GET, '/group', null, options),
         create: (id, body) => this.executeMappedJsonRequest(PUT, `/group/${id}/groups`, body),
-        get: (id) => this.executeMappedJsonRequest(GET, `/group/${id}`),
+        get: (id, options) => this.executeMappedJsonRequest(GET, `/group/${id}`, null, options),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/group/${id}`, body),
         delete: (id) => this.executeMappedJsonRequest(DELETE, `/group/${id}`),
 
@@ -585,7 +602,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         get: (id, options) => this.executeMappedJsonRequest(GET, `/image/load/${id}`, null, options),
         getMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/image/save/${id}`, body),
-        delete: (id, options) => this.executeMappedJsonRequest(DELETE, `/image/delete/${id}`, null, options),
+        delete: (id, options) => this.executeMappedJsonRequest(POST, `/image/delete/${id}`, null, options),
 
         move: (id, body) => this.executeMappedJsonRequest(POST, `/image/move/${id}`, body),
         moveMultiple: (body) => this.executeMappedJsonRequest(POST, '/image/move', body),
@@ -623,6 +640,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
     public info: GCMSInfoAPI = {
         getMaintenanceMode: () => this.executeMappedJsonRequest(GET, '/info/maintenance'),
+        getAlohaResources: () => this.executeMappedJsonRequest(GET, '/info/aloha'),
     };
 
     public language: GCMSLanguageAPI = {
@@ -802,8 +820,8 @@ export class GCMSRestClient implements GCMSRootAPI {
     } as const;
 
     public publishProtocol: GCMSPublishProtocolAPI = {
-        get: (type, objId: number) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null, null),
-        list: (options: BaseListOptionsWithPaging<PublishLogEntry>) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
+        get: (type, objId) => this.executeMappedJsonRequest(GET, `/publish/state/${type}/${objId}`, null),
+        list: (options) => this.executeMappedJsonRequest(GET, '/publish/state/', null, options),
     } as const;
 
     public role: GCMSRoleAPI = {
@@ -860,7 +878,7 @@ export class GCMSRestClient implements GCMSRootAPI {
 
         link: (id, body) => this.executeMappedJsonRequest(POST, `/template/link/${id}`, body),
         linkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/link', body),
-        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/${id}/unlink`, body),
+        unlink: (id, body) => this.executeMappedJsonRequest(POST, `/template/unlink/${id}`, body),
         unlinkMultiple: (body) => this.executeMappedJsonRequest(POST, '/template/unlink', body),
 
         listTagStatus: (id, options) => this.executeMappedJsonRequest(GET, `/template/${id}/tagstatus`, null, options),
@@ -919,5 +937,9 @@ export class GCMSRestClient implements GCMSRootAPI {
         update: (body) => this.executeMappedJsonRequest(POST, 'license/update', body),
         contentRepositories: (options) => this.executeMappedJsonRequest(GET, 'license/contentRepositories', null, options),
         push: (body) => this.executeMappedJsonRequest(POST, 'license/push', body),
-    };
+    } as const;
+
+    public keycloak: GCMSKeycloakAPI = {
+        configuration: () => this.executeMappedJsonRequest(GET, 'keycloak'),
+    } as const;
 }

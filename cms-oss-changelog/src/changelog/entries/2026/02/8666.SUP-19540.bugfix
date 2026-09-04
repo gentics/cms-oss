@@ -1,0 +1,1 @@
+Administrator User Interface: Resolved an issue when reloading the UI, that the user was logged out and/or always redirected to the dashboard.

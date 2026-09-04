@@ -1,0 +1,110 @@
+@import 'ui-core/src/styles/variables';
+
+:host {
+    display: block;
+
+    &::ng-deep .sortable-ghost,
+    &::ng-deep .form-item {
+        display: none !important;
+    }
+}
+
+.page-manager {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 16px;
+    align-items: center;
+}
+
+.page-tab {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: $gtx-color-off-white;
+    cursor: pointer;
+    transition: all 200ms;
+    user-select: none;
+    color: $gtx-color-dark-gray;
+
+    gtx-button {
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+
+    &:hover gtx-button,
+    &.active gtx-button {
+        opacity: 1;
+    }
+
+    &.active,
+    &:hover {
+        background: #ffffff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    &:hover {
+        border-color: $gtx-color-mid-gray;
+        color: $gtx-color-off-black;
+    }
+
+    &.active {
+        border-color: $gtx-color-primary;
+        color: $gtx-color-primary;
+        font-weight: 500;
+    }
+
+    &.drop-target-hint {
+        gtx-button {
+            opacity: 0;
+        }
+
+        &.active {
+            background-color: $gtx-color-very-light-gray;
+            color: $gtx-color-dark-gray;
+            border-color: $gtx-color-dark-gray;
+        }
+
+        &:not(.active) {
+            border-color: $gtx-color-primary;
+            background: rgba($gtx-color-primary, 0.05);
+            color: $gtx-color-primary;
+            animation: pulse-border 1s ease-in-out infinite alternate;
+
+            &:hover,
+            &.hovering {
+                background: rgba($gtx-color-primary, 0.08);
+                border-style: dashed;
+            }
+        }
+    }
+
+    .page-tab-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .page-language-select {
+        width: 80px;
+        flex-shrink: 0;
+    }
+
+    .page-name-input {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+.add-page-btn {
+    margin-left: 4px;
+}
+
+@keyframes pulse-border {
+    from { border-color: #1976d2; box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.3); }
+    to   { border-color: #1565c0; box-shadow: 0 0 0 4px rgba(25, 118, 210, 0); }
+}

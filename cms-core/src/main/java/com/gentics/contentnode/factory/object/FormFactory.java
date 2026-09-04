@@ -13,10 +13,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,27 +32,20 @@ import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
-import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
-import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
 import com.gentics.contentnode.factory.NoMcTrx;
-import com.gentics.contentnode.factory.PageLanguageFallbackList;
-import com.gentics.contentnode.factory.PublishCacheTrx;
-import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.ContentLanguage;
@@ -58,14 +54,9 @@ import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.NodeObjectVersion;
-import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
-import com.gentics.contentnode.render.RenderType;
-import com.gentics.contentnode.render.RenderUrl;
-import com.gentics.contentnode.render.RenderUrlFactory;
-import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
@@ -78,6 +69,11 @@ import io.reactivex.Flowable;
  */
 @DBTables({ @DBTable(clazz = Form.class, name = "form") })
 public class FormFactory extends AbstractFactory {
+	/**
+	 * Form type for unmigrated forms
+	 */
+	public final static String UNMIGRATED_FORMS = "unmigrated";
+
 	/**
 	 * SQL Statement to select a single form
 	 */
@@ -129,9 +125,22 @@ public class FormFactory extends AbstractFactory {
 		 */
 		private static final long serialVersionUID = 8321562011986964532L;
 
+		@DataField("external_id")
+		@Unversioned
+		protected String externalId;
+
+		@DataField("external_hash")
+		@Unversioned
+		@Updateable
+		protected String externalHash;
+
 		@DataField("name")
 		@Updateable
 		protected String name;
+
+		@DataField("formtype")
+		@Unversioned
+		protected String formType;
 
 		@DataField("description")
 		@Updateable
@@ -141,14 +150,6 @@ public class FormFactory extends AbstractFactory {
 		@Updateable
 		@Unversioned
 		protected int folderId;
-
-		@DataField("success_page_id")
-		@Updateable
-		protected int successPageId;
-
-		@DataField("success_node_id")
-		@Updateable
-		protected int successNodeId;
 
 		@DataField("languages")
 		@Updateable
@@ -721,23 +722,28 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
-		public int getSuccessPageId() throws NodeException {
-			return successPageId;
-		}
-
-		@Override
-		public int getSuccessNodeId() throws NodeException {
-			return successNodeId;
-		}
-
-		@Override
 		public NodeObject getParentObject() throws NodeException {
 			return getFolder();
 		}
 
 		@Override
+		public String getExternalId() {
+			return externalId;
+		}
+
+		@Override
+		public String getExternalHash() {
+			return externalHash;
+		}
+
+		@Override
 		public String getName() {
 			return name;
+		}
+
+		@Override
+		public String getFormType() {
+			return formType;
 		}
 
 		@Override
@@ -753,72 +759,6 @@ public class FormFactory extends AbstractFactory {
 		@Override
 		public JsonNode getData() {
 			return data;
-		}
-
-		@Override
-		public ObjectNode getData(String language) throws NodeException {
-			Objects.requireNonNull(language, "Form language must not be null");
-
-			ObjectNode copy = data.deepCopy();
-			convertI18n(copy, getI18nCodes(language));
-
-			Transaction t = TransactionManager.getCurrentTransaction();
-			RenderType renderType = t.getRenderType();
-			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
-			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
-
-			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
-					PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
-					PublishCacheTrx pcTrx = new PublishCacheTrx(false);
-					RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
-				// for the StaticUrlFactory, forbid auto detection of the linkway
-				RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
-				if (renderUrlFactory instanceof StaticUrlFactory) {
-					((StaticUrlFactory) renderUrlFactory).setAllowAutoDetection(false);
-				}
-
-				renderReferencedPages(copy, language);
-
-				// take over the collected dependencies
-				if (handleDependencies && storeDependencies) {
-					for (Dependency dep : rTrx.get().getDependencies()) {
-						renderType.addDependency(dep.getSource(), dep.getSourceProperty());
-					}
-				}
-			}
-
-			// if an (existing) success page is set, render the URL (also doing language fallback)
-			if (successPageId > 0) {
-				try (ChannelTrx cTrx = new ChannelTrx(successNodeId)) {
-					Page successPage = t.getObject(Page.class, successPageId);
-					if (successPage != null) {
-						successPage = PageLanguageFallbackList.doFallback(successPage, LanguageFactory.get(language),
-								successPage.getOwningNode());
-					}
-
-					if (successPage != null) {
-						// generate the url factory with a static host link
-						StaticUrlFactory urlFactory = new StaticUrlFactory(RenderUrl.LINK_HOST, RenderUrl.LINK_HOST, null);
-
-						// we don't want the linkway to be changed
-						urlFactory.setAllowAutoDetection(false);
-
-						// disable link management
-						urlFactory.setLinkManagement(LinkManagement.OFF);
-
-						try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, successPage, false, false, false)) {
-							// Render the URL and set it as live URL
-							RenderUrl renderUrl = urlFactory.createRenderUrl(Page.class, successPage.getId());
-
-							copy.put("successurl", renderUrl.toString());
-						}
-					}
-				}
-			}
-			copy.put("language", language);
-			copy.put("name", getName());
-			copy.put("cms_id", getId());
-			return copy;
 		}
 
 		/**
@@ -873,68 +813,6 @@ public class FormFactory extends AbstractFactory {
 			} else if (node.isArray()) {
 				for (JsonNode sub : node) {
 					convertI18n(sub, codes);
-				}
-			}
-		}
-
-		/**
-		 * Recursively transform all _pageid fields into the rendered pages
-		 *
-		 * <p>
-		 *     <strong>IMPORTANT:</strong> Make sure that the properties {@code contentnode.linkway} and
-		 *     {@code contentnode.linkway_file} are set to {@code "host"} and that the publish cache is
-		 *     deactivated:
-		 *     <pre>
-		 *			try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
-		 *				PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
-		 *				PublishCacheTrx pcTrx = new PublishCacheTrx(false)) { ... }
-		 *     </pre>
-		 * </p>
-		 * @param node current node
-		 * @param language language
-		 * @throws NodeException
-		 */
-		protected void renderReferencedPages(JsonNode node, String language) throws NodeException {
-			Transaction t = TransactionManager.getCurrentTransaction();
-
-			if (node.isObject()) {
-				ObjectNode objectNode = (ObjectNode) node;
-				Map<String, String> replace = new HashMap<>();
-				for (Iterator<String> i = objectNode.fieldNames(); i.hasNext();) {
-					String name = i.next();
-					if (name.endsWith(PAGEID_POSTFIX)) {
-						int pageId = objectNode.path(name).asInt();
-						Page page = t.getObject(Page.class, pageId);
-						if (page != null) {
-							page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),
-									page.getOwningNode());
-						}
-
-						if (page != null) {
-							// render the page and put into replace map
-							String renderedPage = page.render();
-							replace.put(name, renderedPage);
-						} else {
-							replace.put(name, "");
-						}
-					} else {
-						// recursion
-						renderReferencedPages(objectNode.get(name), language);
-					}
-				}
-
-				// replace
-				for (Map.Entry<String, String> entry : replace.entrySet()) {
-					String oldName = entry.getKey();
-					String renderedPage = entry.getValue();
-					String newName = oldName.substring(0, oldName.length() - PAGEID_POSTFIX.length());
-
-					objectNode.remove(oldName);
-					objectNode.put(newName, renderedPage);
-				}
-			} else if (node.isArray()) {
-				for (JsonNode sub : node) {
-					renderReferencedPages(sub, language);
 				}
 			}
 		}
@@ -1118,32 +996,75 @@ public class FormFactory extends AbstractFactory {
 
 		@Override
 		public Object get(String key) {
+			Object value = null;
+			String depKey = null;
 			try {
 				switch (key) {
 				case "name":
-					return getName();
+					value = getName();
+					depKey = "name";
+					break;
 				case "description":
-					return getDescription();
+					value = getDescription();
+					depKey = "description";
+					break;
 				case "cdate":
-					return getCDate().getIntTimestamp();
+					value = getCDate().getIntTimestamp();
+					depKey = "cdate";
+					break;
 				case "edate":
-					return getEDate().getIntTimestamp();
+					value = getEDate().getIntTimestamp();
+					depKey = "edate";
+					break;
 				case "pdate":
-					return getPDate().getIntTimestamp();
+					value = getPDate().getIntTimestamp();
+					depKey = "pdate";
+					break;
 				case "creator":
-					return getCreator();
+					value = getCreator();
+					depKey = "creator";
+					break;
 				case "editor":
-					return getEditor();
+					value = getEditor();
+					depKey = "editor";
+					break;
 				case "publisher":
-					return getPublisher();
+					value = getPublisher();
+					depKey = "publisher";
+					break;
 				case "folder":
-					return getFolder();
+					value = getFolder();
+					depKey = "folder_id";
+					break;
+				case "externalId":
+					value = getExternalId();
+					break;
+				case "formType":
+					value = getFormType();
+					break;
+				case "languages":
+					value = getLanguages();
+					depKey = "languages";
+					break;
 				default:
-					return super.get(key);
+					value = super.get(key);
+					break;
 				}
+
+				if (depKey != null) {
+					addDependency(depKey, value);
+				}
+
+				return value;
 			} catch (NodeException e) {
 				return null;
 			}
+		}
+
+		@Override
+		public Set<String> getResolvableKeys() {
+			return SetUtils.union(super.getResolvableKeys(), Set.of("name", "description", "cdate", "edate", "pdate",
+					"creator", "editor", "publisher", "folder", "externalId", "formType", "languages"));
 		}
 
 		@Override
@@ -1323,10 +1244,38 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setExternalId(String externalId) throws ReadOnlyException {
+			if (isNew()) {
+				if (!StringUtils.isEqual(this.externalId, externalId)) {
+					this.externalId = externalId;
+					this.modified = true;
+				}
+			}
+		}
+
+		@Override
+		public void setExternalHash(String externalHash) throws ReadOnlyException {
+			if (!Strings.CI.equals(this.externalHash, externalHash)) {
+				this.externalHash = externalHash;
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public void setName(String name) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.name, name)) {
 				this.modified = true;
 				this.name = name;
+			}
+		}
+
+		@Override
+		public void setFormType(String formType) throws ReadOnlyException {
+			if (isNew()) {
+				if (!StringUtils.isEqual(this.formType, formType)) {
+					this.formType = formType;
+					this.modified = true;
+				}
 			}
 		}
 
@@ -1354,35 +1303,6 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void setSuccessPageId(int successPageId) throws NodeException, ReadOnlyException {
-			if (successPageId > 0) {
-				// always set the page id of the master folder
-				Transaction t = TransactionManager.getCurrentTransaction();
-				try (NoMcTrx nmt = new NoMcTrx()){
-					Page page = t.getObject(Page.class, successPageId);
-					if (page != null) {
-						successPageId = page.getMaster().getId();
-					} else {
-						successPageId = 0;
-					}
-				}
-			}
-
-			if (this.successPageId != successPageId) {
-				this.successPageId = successPageId;
-				modified = true;
-			}
-		}
-
-		@Override
-		public void setSuccessNodeId(int successNodeId) throws NodeException, ReadOnlyException {
-			if (this.successNodeId != successNodeId) {
-				this.successNodeId = successNodeId;
-				modified = true;
-			}
-		}
-
-		@Override
 		public void setLanguages(List<String> languages) throws ReadOnlyException {
 			if (!Objects.equals(this.languages, languages)) {
 				this.modified = true;
@@ -1395,6 +1315,18 @@ public class FormFactory extends AbstractFactory {
 			if (!Objects.equals(this.data, data)) {
 				this.modified = true;
 				this.data = data;
+			}
+		}
+
+		@Override
+		public void updateData(JsonNode data) throws ReadOnlyException {
+			if (data != null) {
+				ObjectNode existingData = Optional.ofNullable(this.data).orElseGet(() -> mapper.createObjectNode())
+						.deepCopy();
+				data.properties().forEach(entry -> {
+					existingData.set(entry.getKey(), entry.getValue());
+				});
+				setData(existingData);
 			}
 		}
 
@@ -1637,12 +1569,111 @@ public class FormFactory extends AbstractFactory {
 	}
 
 	/**
+	 * Get the map of formtype assignments to nodes. Keys are the node IDs, values are sets of assigned formtypes
+	 * @return assignment map
+	 * @throws NodeException
+	 */
+	public static Map<Integer, Set<String>> getFormTypeAssignment() throws NodeException {
+		return DBUtils.select("select node_id, formtype from node_formtype", rs -> {
+			Map<Integer, Set<String>> tmpMap = new HashMap<>();
+			while (rs.next()) {
+				int nodeId = rs.getInt("node_id");
+				String formType = rs.getString("formtype");
+				tmpMap.computeIfAbsent(nodeId, key -> new HashSet<>()).add(formType);
+			}
+			return tmpMap;
+		});
+	}
+
+	/**
+	 * Get the formtypes assigned to a given node
+	 * @param nodeId node ID
+	 * @return set of assigned formtypes
+	 * @throws NodeException
+	 */
+	public static Set<String> getFormTypeAssignment(int nodeId) throws NodeException {
+		return DBUtils.select("SELECT formtype FROM node_formtype WHERE node_id = ?", pst -> {
+			pst.setInt(1, nodeId);
+		}, rs -> {
+			Set<String> tmpSet = new HashSet<>();
+			while (rs.next()) {
+				tmpSet.add(rs.getString("formtype"));
+			}
+			return tmpSet;
+		});
+	}
+
+	/**
+	 * Assign the given formtype to the node. This will not fail, if the formtype is already assigned.
+	 * @param formType formtype
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public static void addFormTypeToNode(String formType, int nodeId) throws NodeException {
+		DBUtils.update("INSERT IGNORE INTO node_formtype (node_id, formtype) VALUES (?, ?)", nodeId, formType);
+	}
+
+	/**
+	 * Remove the formtype from a node
+	 * @param formType formtype
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public static void removeFormTypeFromNode(String formType, int nodeId) throws NodeException {
+		DBUtils.deleteWithPK("node_formtype", "id", "node_id = ? AND formtype = ?", new Object[] {nodeId, formType});
+	}
+
+	/**
+	 * Get the map of actually used formtypes per node. Keys are the node IDs, values are the formtypes
+	 * @return map of used formtypes per node
+	 * @throws NodeException
+	 */
+	public static Map<Integer, Set<String>> getFormTypeUsage() throws NodeException {
+		return DBUtils.select(
+				"SELECT DISTINCT form.formtype, folder.node_id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.deleted = ? AND form.formtype != ?",
+				pst -> {
+					pst.setInt(1, 0);
+					pst.setString(2, UNMIGRATED_FORMS);
+				}, rs -> {
+					Map<Integer, Set<String>> tmpMap = new HashMap<>();
+					while (rs.next()) {
+						int nodeId = rs.getInt("node_id");
+						String formType = rs.getString("formtype");
+
+						tmpMap.computeIfAbsent(nodeId, key -> new HashSet<>()).add(formType);
+					}
+					return tmpMap;
+				});
+	}
+
+	/**
+	 * Get the actually used formtypes for the given node
+	 * @param nodeId node ID
+	 * @return set of used formtypes of the node
+	 * @throws NodeException
+	 */
+	public static Set<String> getFormTypeUsage(int nodeId) throws NodeException {
+		return DBUtils.select(
+				"SELECT DISTINCT form.formtype FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.deleted = ? AND form.formtype != ? AND folder.node_id = ?",
+				pst -> {
+					pst.setInt(1, 0);
+					pst.setString(2, UNMIGRATED_FORMS);
+					pst.setInt(3, nodeId);
+				}, rs -> {
+					Set<String> tmpSet = new HashSet<>();
+					while (rs.next()) {
+						tmpSet.add(rs.getString("formtype"));
+					}
+					return tmpSet;
+				});
+	}
+
+	/**
 	 * Get the table version object for forms
 	 * @return table version object for forms
 	 * @throws NodeException
 	 */
 	private static TableVersion getFormTableVersion() throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		TableVersion formVersion = new TableVersion();
 
 		formVersion.setAutoIncrement(true);
@@ -1732,7 +1763,7 @@ public class FormFactory extends AbstractFactory {
 				// add logcmd
 				ActionLogger.logCmd(ActionLogger.DEL, Form.TYPE_FORM, form.getId(), 0, "Form.delete");
 				Events.trigger(form, new String[] { ObjectTransformer.getString(form.getOwningNode().getId(), ""),
-						MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form) }, Events.DELETE);
+						MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form), form.getFormType() }, Events.DELETE);
 			}
 
 			// delete the forms with their versions

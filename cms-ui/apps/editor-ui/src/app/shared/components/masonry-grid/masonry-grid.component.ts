@@ -11,7 +11,7 @@ import {
     QueryList,
 } from '@angular/core';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
-import * as Masonry from 'masonry-layout';
+import Masonry from 'masonry-layout';
 import { Subscription, merge } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { MasonryItemDirective } from '../../directives/masonry-item/masonry-item.directive';

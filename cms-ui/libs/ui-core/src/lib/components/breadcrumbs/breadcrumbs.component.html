@@ -1,150 +1,137 @@
 <nav [class.disabled]="disabled" [class.multiline]="multiline">
-    <div
-        #navWrapper
-        class="nav-wrapper"
-        [class.is-overflowing]="isOverflowing"
-        [class.multilineExpanded]="multilineExpanded"
-        [class.multiline]="multiline"
-        (window:resize)="onResize($event)"
+  <div
+    #navWrapper
+    class="nav-wrapper"
+    [class.is-overflowing]="isOverflowing"
+    [class.multilineExpanded]="multilineExpanded"
+    [class.multiline]="multiline"
+    (window:resize)="onResize($event)"
     >
-        <div class="inner-wrapper">
+    <div class="inner-wrapper">
+      @if (backLink && backLink.route) {
+        <a
+          class="back-button"
+          [routerLink]="backLink.route"
+          [title]="backLink.text"
+          (click)="onLinkClicked(backLink, $event)"
+        ></a>
+      }
+      @if (backLink && !backLink.route) {
+        <a
+          class="back-button"
+          [attr.href]="disabled ? null : backLink?.href"
+          [title]="backLink.text"
+          (click)="onLinkClicked(backLink, $event)"
+        ></a>
+      }
+
+      <div class="other-content">
+        <ng-content></ng-content>
+      </div>
+
+      @if (links) {
+        @if (!multilineExpanded && links[0]) {
+          @if (links[0].href) {
             <a
-                *ngIf="backLink && backLink.route"
-                class="back-button"
-                [routerLink]="backLink.route"
-                [title]="backLink.text"
-                (click)="onLinkClicked(backLink, $event)"
-            ></a>
-            <a
-                *ngIf="backLink && !backLink.route"
-                class="back-button"
-                [attr.href]="disabled ? null : backLink?.href"
-                [title]="backLink.text"
-                (click)="onLinkClicked(backLink, $event)"
-            ></a>
-
-            <div class="other-content">
-                <ng-content></ng-content>
-            </div>
-
-            <ng-template [ngIf]="links">
-
-                <ng-container *ngIf="!multilineExpanded && links[0]">
-                    <a
-                        *ngIf="links[0].href; else breadcrumbSingleText"
-                        class="breadcrumb link"
-                        [attr.href]="disabled ? null : links[0].href"
-                        (click)="onLinkClicked(links[0], $event)"
-                        [title]="links[0].tooltip || links[0].text"
-                    >{{ links[0].text }}</a>
-
-                    <ng-template #breadcrumbSingleText>
-                        <span
-                            class="breadcrumb text"
-                            (click)="onLinkClicked(links[0], $event)"
-                            [title]="links[0].tooltip || links[0].text"
-                        >{{ links[0].text }}</span>
-                    </ng-template>
-                </ng-container>
-
-                <div
-                    *ngIf="isOverflowing && !multilineExpanded"
-                    class="ellipsis"
-                    [class.multilineExpanded]="multilineExpanded"
-                    (click)="toggleMultilineExpanded()"
-                >...</div>
-
-                <div #lastPart class="lastPart">
-                    <ng-container *ngFor="let link of links; let i = index; let last = last">
-                        <ng-container *ngIf="multilineExpanded || i > 0">
-                            <a
-                                class="breadcrumb link"
-                                [class.last]="last"
-                                [attr.href]="disabled ? null : link?.href"
-                                [title]="link.tooltip || link.text"
-                                (click)="onLinkClicked(link, $event)"
-                            >{{ link.text }}</a>
-
-                            <ng-template #lastBreadcrumbSingleText>
-                                <span
-                                    class="breadcrumb text"
-                                    [class.last]="last"
-                                    [title]="link.tooltip || link.text"
-                                    (click)="onLinkClicked(link, $event)"
-                                >{{ link.text }}</span>
-                            </ng-template>
-                        </ng-container>
-                    </ng-container>
-
-                    <span
-                        *ngIf="multiline && multilineExpanded && !isOverflowing && showArrow"
-                        class="back_arrow"
-                        [class.multilineExpanded]="multilineExpanded"
-                        (click)="toggleMultilineExpanded()"
-                    >
-                        <icon>arrow_back</icon>
-                    </span>
-                </div>
-            </ng-template>
-
-            <ng-template [ngIf]="routerLinks">
-                <ng-container *ngIf="!multilineExpanded && routerLinks[0]">
-                    <a
-                        *ngIf="routerLinks[0].route; else breadcrumbSingleText"
-                        class="breadcrumb link router-link"
-                        [routerLink]="routerLinks[0].route"
-                        (click)="onLinkClicked(routerLinks[0], $event)"
-                        [title]="routerLinks[0].tooltip || routerLinks[0].text"
-                    >{{ routerLinks[0].text }}</a>
-
-                    <ng-template #breadcrumbSingleText>
-                        <span
-                            class="breadcrumb text router-link"
-                            (click)="onLinkClicked(routerLinks[0], $event)"
-                            [title]="routerLinks[0].tooltip || routerLinks[0].text"
-                        >{{ routerLinks[0].text }}</span>
-                    </ng-template>
-                </ng-container>
-
-                <div
-                    *ngIf="isOverflowing && !multilineExpanded"
-                    class="ellipsis"
-                    [class.multilineExpanded]="multilineExpanded"
-                    (click)="toggleMultilineExpanded()"
-                >...</div>
-
-                <div #lastPart class="lastPart">
-                    <ng-container *ngFor="let routerLink of routerLinks; let i = index; let last = last">
-                        <ng-container *ngIf="multilineExpanded || i > 0">
-                            <a
-                                class="breadcrumb link router-link"
-                                [class.last]="last"
-                                [routerLink]="routerLink.route"
-                                [title]="routerLink.tooltip || routerLink.text"
-                                (click)="onLinkClicked(routerLink, $event)"
-                            >{{ routerLink.text }}</a>
-
-                            <ng-template #lastBreadcrumbSingleText>
-                                <span
-                                    class="breadcrumb text router-link"
-                                    [class.last]="last"
-                                    [title]="routerLink.tooltip || routerLink.text"
-                                    (click)="onLinkClicked(routerLink, $event)"
-                                >{{ routerLink.text }}</span>
-                            </ng-template>
-                        </ng-container>
-                    </ng-container>
-
-                    <span
-                        *ngIf="multiline && multilineExpanded && !isOverflowing && showArrow"
-                        class="back_arrow"
-                        [class.multilineExpanded]="multilineExpanded"
-                        (click)="toggleMultilineExpanded()"
-                    >
-                        <icon>arrow_back</icon>
-                    </span>
-                </div>
-            </ng-template>
+              class="breadcrumb link"
+              [attr.href]="disabled ? null : links[0].href"
+              (click)="onLinkClicked(links[0], $event)"
+              [title]="links[0].tooltip || links[0].text"
+            >{{ links[0].text }}</a>
+          } @else {
+            <span
+              class="breadcrumb text"
+              (click)="onLinkClicked(links[0], $event)"
+              [title]="links[0].tooltip || links[0].text"
+            >{{ links[0].text }}</span>
+          }
+        }
+        @if (isOverflowing && !multilineExpanded) {
+          <div
+            class="ellipsis"
+            [class.multilineExpanded]="multilineExpanded"
+            (click)="toggleMultilineExpanded()"
+          >...</div>
+        }
+        <div #lastPart class="lastPart">
+          @for (link of links; track link; let i = $index; let last = $last) {
+            @if (multilineExpanded || i > 0) {
+              <a
+                class="breadcrumb link"
+                [class.last]="last"
+                [attr.href]="disabled ? null : link?.href"
+                [title]="link.tooltip || link.text"
+                (click)="onLinkClicked(link, $event)"
+              >{{ link.text }}</a>
+              <ng-template #lastBreadcrumbSingleText>
+                <span
+                  class="breadcrumb text"
+                  [class.last]="last"
+                  [title]="link.tooltip || link.text"
+                  (click)="onLinkClicked(link, $event)"
+                >{{ link.text }}</span>
+              </ng-template>
+            }
+          }
+          @if (multiline && multilineExpanded && !isOverflowing && showArrow) {
+            <span
+              class="back_arrow"
+              [class.multilineExpanded]="multilineExpanded"
+              (click)="toggleMultilineExpanded()"
+              >
+              <icon>arrow_back</icon>
+            </span>
+          }
         </div>
+      }
+
+      @if (routerLinks) {
+        @if (!multilineExpanded && routerLinks[0]) {
+          @if (routerLinks[0].route) {
+            <a
+              class="breadcrumb link router-link"
+              [routerLink]="routerLinks[0].route"
+              (click)="onLinkClicked(routerLinks[0], $event)"
+              [title]="routerLinks[0].tooltip || routerLinks[0].text"
+            >{{ routerLinks[0].text }}</a>
+          } @else {
+            <span
+              class="breadcrumb text router-link"
+              (click)="onLinkClicked(routerLinks[0], $event)"
+              [title]="routerLinks[0].tooltip || routerLinks[0].text"
+            >{{ routerLinks[0].text }}</span>
+          }
+        }
+        @if (isOverflowing && !multilineExpanded) {
+          <div
+            class="ellipsis"
+            [class.multilineExpanded]="multilineExpanded"
+            (click)="toggleMultilineExpanded()"
+          >...</div>
+        }
+        <div #lastPart class="lastPart">
+          @for (routerLink of routerLinks; track routerLink; let i = $index; let last = $last) {
+            @if (multilineExpanded || i > 0) {
+              <a
+                class="breadcrumb link router-link"
+                [class.last]="last"
+                [routerLink]="routerLink.route"
+                [title]="routerLink.tooltip || routerLink.text"
+                (click)="onLinkClicked(routerLink, $event)"
+              >{{ routerLink.text }}</a>
+            }
+          }
+          @if (multiline && multilineExpanded && !isOverflowing && showArrow) {
+            <span
+              class="back_arrow"
+              [class.multilineExpanded]="multilineExpanded"
+              (click)="toggleMultilineExpanded()"
+              >
+              <icon>arrow_back</icon>
+            </span>
+          }
+        </div>
+      }
     </div>
+  </div>
 </nav>

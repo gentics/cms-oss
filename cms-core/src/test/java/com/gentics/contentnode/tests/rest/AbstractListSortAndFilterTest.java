@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.RandomStringGenerator;
 import org.assertj.core.api.Condition;
@@ -48,6 +49,12 @@ public abstract class AbstractListSortAndFilterTest<T> {
 	 */
 	public final static RandomStringGenerator randomStringGenerator = new RandomStringGenerator.Builder()
 			.withinRange(new char[][] { { 'a', 'z' }, { 'A', 'Z' } }).build();
+
+	/**
+	 * Random lowercase string generator
+	 */
+	public final static RandomStringGenerator randomLowercaseStringGenerator = new RandomStringGenerator.Builder()
+			.withinRange(new char[][] { { 'a', 'z' } }).build();
 
 	/**
 	 * Number of generated items (for tests, that generate items)
@@ -97,8 +104,8 @@ public abstract class AbstractListSortAndFilterTest<T> {
 	 * @return value with leading zeros removed
 	 */
 	protected static String removeLeadingZeros(String value) {
-		while (StringUtils.startsWith(value, "0")) {
-			value = StringUtils.removeStart(value, "0");
+		while (Strings.CS.startsWith(value, "0")) {
+			value = Strings.CS.removeStart(value, "0");
 		}
 		return value;
 	}
@@ -156,7 +163,7 @@ public abstract class AbstractListSortAndFilterTest<T> {
 			T selectedItem = (T) items.get(random.nextInt(items.size()));
 
 			// get the filtered attribute value from the item
-			query = filterAttributes.stream().filter(pair -> StringUtils.equals(pair.getLeft(), filterBy)).findFirst()
+			query = filterAttributes.stream().filter(pair -> Strings.CS.equals(pair.getLeft(), filterBy)).findFirst()
 					.map(pair -> pair.getRight().apply(selectedItem)).orElse(null);
 			// remove leading zeros
 			query = removeLeadingZeros(query);
@@ -243,7 +250,7 @@ public abstract class AbstractListSortAndFilterTest<T> {
 						.map(AbstractListSortAndFilterTest::removeLeadingZeros).collect(Collectors.toList())
 						.toArray(new String[filterAttributes.size()]);
 			})).as(description).isNotEmpty().allMatch(values -> {
-				return Stream.of(values).filter(value -> StringUtils.containsIgnoreCase(value, query)).findAny().isPresent();
+				return Stream.of(values).filter(value -> Strings.CI.contains(value, query)).findAny().isPresent();
 			});
 		}
 	}
@@ -257,7 +264,7 @@ public abstract class AbstractListSortAndFilterTest<T> {
 	 * @param items list of items to be filled
 	 * @throws NodeException
 	 */
-	protected void fillItemsList(List<? super Object> items) throws NodeException {
+	protected void fillItemsList(List<? super T> items) throws NodeException {
 		for (int i = 0; i < NUM_ITEMS; i++) {
 			items.add(createItem());
 		}

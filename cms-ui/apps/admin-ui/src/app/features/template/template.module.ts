@@ -5,7 +5,6 @@ import { SharedModule } from '../../shared/shared.module';
 import {
     AssignTemplatesToFoldersModalComponent,
     AssignTemplatesToNodesModalComponent,
-    CopyTemplateService,
     CreateTemplateModalComponent,
     CreateTemplateTagModalComponent,
     EditTemplateTagModalComponent,
@@ -21,6 +20,7 @@ import {
 } from './components';
 import {
     CanActivateTemplateGuard,
+    CopyTemplateService,
     TemplateTagStatusTableLoaderService,
     TemplateTagTableLoaderService,
 } from './providers';

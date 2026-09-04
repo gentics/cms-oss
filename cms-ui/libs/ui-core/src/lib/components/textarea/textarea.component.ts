@@ -4,11 +4,9 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
-    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
-    Output,
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
@@ -33,7 +31,7 @@ function normalizeValue(value: any): string {
     styleUrls: ['./textarea.component.scss'],
     providers: [generateFormProvider(TextareaComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TextareaComponent extends BaseFormElementComponent<string> implements AfterViewInit, OnChanges, OnDestroy {
 
@@ -73,9 +71,6 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
     @Input()
     public id: string;
 
-    @Output()
-    public blur = new EventEmitter<void>();
-
     @ViewChild(AutosizeDirective, { static: true })
     private autosizeDir: AutosizeDirective;
 
@@ -91,7 +86,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         this.booleanInputs.push('autofocus', 'readonly');
     }
 
-    ngAfterViewInit(): void {
+    public ngAfterViewInit(): void {
         this.observer = new IntersectionObserver((entries) => {
             if (entries.length === 0) {
                 return;
@@ -119,7 +114,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         });
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    public ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.maxlength) {
@@ -130,20 +125,15 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         }
     }
 
-    ngOnDestroy(): void {
+    public ngOnDestroy(): void {
         if (this.observer) {
             this.observer.disconnect();
         }
     }
 
-    public textAreaInputHandler(event: KeyboardEvent) {
+    public textAreaInputHandler(event: KeyboardEvent): void {
         const elementValue = (event.target as HTMLTextAreaElement).value;
         this.triggerChange(elementValue);
-    }
-
-    public blurHandler(): void {
-        this.blur.emit();
-        this.triggerTouch();
     }
 
     protected onValueChange(): void {

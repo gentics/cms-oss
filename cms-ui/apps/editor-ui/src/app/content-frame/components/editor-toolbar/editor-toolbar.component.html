@@ -2,89 +2,111 @@
     <div class="editor-toolbar" [ngClass]="'mode-' + editorState.editMode">
         <div
             class="element-toolbar"
-            [class.regular]="currentItem?.type !== 'page' || (editorState?.editMode !== EditMode.EDIT && editorState?.editMode !== EditMode.EDIT_INHERITANCE)"
+            [class.regular]="(
+                !(currentItem?.type === 'page' && (editorState?.editMode === EditMode.EDIT || editorState?.editMode === EditMode.EDIT_INHERITANCE))
+                && !(currentItem?.type === 'form' && editorState?.editMode === EditMode.EDIT)
+            )"
         >
-            @if (focusMode) {
-                <a
-                    class="gentics-logo"
-                    [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
-                    (click)="logoClick()"
-                >
-                    <img src="assets/images/gentics-logo-60px.png">
-                </a>
-            }
-
-            @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
-                <div class="page-editor-tabs">
-                    <gtx-page-editor-tabs
-                        [brokenLinkCount]="brokenLinkCount"
-                    ></gtx-page-editor-tabs>
-                </div>
-            } @else {
-                <div class="breadcrumb-info">
-                    <gtx-breadcrumbs
-                        [routerLinks]="breadcrumbs"
-                        [multiline]="true"
-                        [multilineExpanded]="multilineExpanded"
-                        [class.is-inherited]="nodeInherited"
-                        [class.not-inherited]="!nodeInherited"
-                        (linkClick)="changeFocus()"
-                        (multilineExpandedChange)="expandedChanged($event)"
+            <div class="toolbar-information">
+                @if (focusMode) {
+                    <a
+                        class="gentics-logo"
+                        [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
+                        (click)="logoClick()"
                     >
-                        @if (nodeInherited) {
-                            <icon class="iconChannel">input</icon>
-                        }
-                    </gtx-breadcrumbs>
+                        <img src="assets/images/gentics-logo-60px.png">
+                    </a>
+                }
 
-                    <div class="item-info">
-                        <div
-                            class="title-name"
-                            [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
-                            [title]="currentItem?.name | replaceEscapedCharacters"
-                        >
-                            @if (currentItem?.type !== 'node') {
-                                <inherited-localized-icon
-                                    [item]="currentItem"
-                                    [editorNodeId]="editorNodeId"
-                                ></inherited-localized-icon>
-                            }
-                            <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
-                        </div>
-
-                        @if ((currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version) {
-                            <div class="item-version">
-                                @if (editorState.oldVersion) {
-                                    <span>
-                                        v{{ editorState.oldVersion.number }}
-                                        <icon class="comparison-icon">compare_arrows</icon>
-                                        v{{ editorState.version?.number }}
-                                    </span>
-                                } @else {
-                                    <span>v{{ editorState.version.number }}</span>
-                                }
-                            </div>
-                        }
-
-                        @if (currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)) {
-                            <div class="item-language">
-                                @if (itemLanguage) {
-                                    <div>{{ itemLanguage?.code | gtxI18n }}</div>
-                                }
-                                @if (editorState.compareWithId) {
-                                    <div>
-                                        <icon class="comparison-icon">compare_arrows</icon>
-                                    </div>
-                                    <div>{{ pageComparisonLanguage?.code | gtxI18n }}</div>
-                                }
-                            </div>
-                        }
-
-                        @if (currentItem && currentItem?.type === 'form') {
-                            <div class="form-type">
-                                {{ 'editor.item_type_label' | gtxI18n }}: {{ 'form_generator.form_type_' + ((currentItem?.data?.type ? currentItem.data.type : CmsFormType.GENERIC) | lowercase) | gtxI18n }}
-                            </div>
-                        }
+                @if (currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT) {
+                    <div class="page-editor-tabs">
+                        <gtx-page-editor-tabs
+                            [brokenLinkCount]="brokenLinkCount"
+                        ></gtx-page-editor-tabs>
                     </div>
+                } @else {
+                    <div class="breadcrumb-info">
+                        <gtx-breadcrumbs
+                            [routerLinks]="breadcrumbs"
+                            [multiline]="true"
+                            [multilineExpanded]="multilineExpanded"
+                            [class.is-inherited]="nodeInherited"
+                            [class.not-inherited]="!nodeInherited"
+                            (linkClick)="changeFocus()"
+                            (multilineExpandedChange)="expandedChanged($event)"
+                        >
+                            @if (nodeInherited) {
+                                <icon class="iconChannel">input</icon>
+                            }
+                        </gtx-breadcrumbs>
+
+                        <div class="item-info">
+                            <div
+                                class="title-name"
+                                [class.is-node]="currentItem?.type === 'node' || currentItem?.type === 'channel'"
+                                [title]="currentItem?.name | replaceEscapedCharacters"
+                            >
+                                @if (currentItem?.type !== 'node') {
+                                    <inherited-localized-icon
+                                        [item]="currentItem"
+                                        [editorNodeId]="editorNodeId"
+                                    ></inherited-localized-icon>
+                                }
+                                <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
+                            </div>
+
+                            @if ((currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version) {
+                                <div class="item-version">
+                                    @if (editorState.oldVersion) {
+                                        <span>
+                                            v{{ editorState.oldVersion.number }}
+                                            <icon class="comparison-icon">compare_arrows</icon>
+                                            v{{ editorState.version?.number }}
+                                        </span>
+                                    } @else {
+                                        <span>v{{ editorState.version.number }}</span>
+                                    }
+                                </div>
+                            }
+
+                            @if (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId) {
+                                <div class="item-language">
+                                    @if (itemLanguage) {
+                                        <div>{{ itemLanguage?.code | gtxI18n }}</div>
+                                    }
+                                    @if (editorState.compareWithId) {
+                                        <div>
+                                            <icon class="comparison-icon">compare_arrows</icon>
+                                        </div>
+                                        <div>{{ pageComparisonLanguage?.code | gtxI18n }}</div>
+                                    }
+                                </div>
+                            }
+
+                            @if (currentItem && currentItem?.type === 'form') {
+                                <div class="form-type">
+                                    {{ 'editor.item_type_label' | gtxI18n }}: {{ currentItem?.formType }}
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (editorState?.editMode === EditMode.EDIT && currentItem && currentItem?.type === 'form') {
+                <div class="form-editing-actions">
+                    <gtx-tabs class="form-view-modes" pure [activeId]="formViewMode">
+                        <gtx-tab
+                            [id]="FormGridViewMode.EDITOR"
+                            [title]="'form_grid.view_mode_tab_editor' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.EDITOR)"
+                        ></gtx-tab>
+                        <gtx-tab
+                            [id]="FormGridViewMode.PREVIEW"
+                            [title]="'form_grid.view_mode_tab_preview' | gtxI18n"
+                            (select)="updateFormViewMode(FormGridViewMode.PREVIEW)"
+                        ></gtx-tab>
+                    </gtx-tabs>
                 </div>
             }
 

@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableFileProps, Feature, FileOrImage, NodeFeature } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { filter, map, switchMap } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 
@@ -15,9 +14,9 @@ import { ApplicationStateService } from '../../../state';
         generateFormProvider(FilePropertiesComponent),
         generateValidatorProvider(FilePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class FilePropertiesComponent extends BasePropertiesComponent<EditableFileProps> implements OnInit {
+export class FilePropertiesComponent extends BaseFormPropertiesComponent<EditableFileProps> implements OnInit {
 
     @Input()
     public item: FileOrImage;
@@ -35,17 +34,17 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(this.appState.select(state => state.editor.nodeId).pipe(
-            switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
-            filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.includes(NodeFeature.CONTENT_AUTO_OFFLINE)),
-        ).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.editor.nodeId).pipe(
+            switchMap((nodeId) => this.appState.select((state) => state.features.nodeFeatures[nodeId])),
+            filter((nodeFeatures) => !!nodeFeatures),
+            map((nodeFeatures) => nodeFeatures.includes(NodeFeature.CONTENT_AUTO_OFFLINE)),
+        ).subscribe((enabled) => {
             this.contentAutoOfflineEnabled = enabled;
             this.configureForm(this.form.value, true);
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features[Feature.NICE_URLS]).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features[Feature.NICE_URLS]).subscribe((enabled) => {
             this.niceUrlsEnabled = enabled;
             this.configureForm(this.form.value, true);
             this.changeDetector.markForCheck();
@@ -66,8 +65,8 @@ export class FilePropertiesComponent extends BasePropertiesComponent<EditableFil
 
     protected configureForm(value: EditableFileProps, loud?: boolean): void {
         const options = { emitEvent: loud };
-        setControlsEnabled(this.form, ['forceOnline'], this.contentAutoOfflineEnabled, options);
-        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], this.niceUrlsEnabled, options);
+        setControlsEnabled(this.form, ['forceOnline'], !this.disabled && this.contentAutoOfflineEnabled, options);
+        setControlsEnabled(this.form, ['niceUrl', 'alternateUrls'], !this.disabled && this.niceUrlsEnabled, options);
     }
 
     protected assembleValue(value: EditableFileProps): EditableFileProps {

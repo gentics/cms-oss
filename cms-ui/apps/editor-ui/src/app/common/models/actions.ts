@@ -1,6 +1,6 @@
 export const PRODUCT_TOOL_KEYS = [
     'linkchecker',
-    'formgenerator',
+    'form_translations',
 ];
 
 export const ADMIN_TOOL_KEY = 'administration';
@@ -55,6 +55,7 @@ interface BasicActionButton extends BaseActionButton {
 export type ActionButton = ToolButton | BasicActionButton;
 
 export interface ActionButtonGroup {
+    id: string;
     i18nLabel: string;
     buttons: ActionButton[][];
 }

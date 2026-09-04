@@ -1,8 +1,8 @@
 import { Component, DebugElement, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { TestBed, getTestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { componentTest } from '@gentics/ui-core/testing';
 import { Observable, Subject } from 'rxjs';
-import { componentTest } from '../../testing';
 import { ProgressBarComponent } from './progress-bar.component';
 
 describe('ProgressBarComponent', () => {

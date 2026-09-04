@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { DataSourceEntry, ModelType, Raw } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 const MAX_KEY_LENGTH = 50;
 const MAX_VALUE_LENGTH = 16383;
@@ -18,7 +17,7 @@ const MAX_VALUE_LENGTH = 16383;
     ],
     standalone: false
 })
-export class DataSourceEntryPropertiesComponent extends BasePropertiesComponent<DataSourceEntry<Raw>> {
+export class DataSourceEntryPropertiesComponent extends BaseFormPropertiesComponent<DataSourceEntry<Raw>> {
 
     public readonly MAX_KEY_LENGTH = MAX_KEY_LENGTH;
     public readonly MAX_VALUE_LENGTH = MAX_VALUE_LENGTH;

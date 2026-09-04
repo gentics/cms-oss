@@ -3,12 +3,12 @@ import { ComponentFixture, TestBed, discardPeriodicTasks, fakeAsync, tick } from
 import { By } from '@angular/platform-browser';
 import { BrowserTestingModule } from '@angular/platform-browser/testing';
 import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
+import { componentTest } from '@gentics/ui-core/testing';
 import { IDialogConfig, IModalDialog } from '../../common';
 import { ButtonComponent } from '../../components/button/button.component';
 import { DynamicModal } from '../../components/dynamic-modal/dynamic-modal.component';
 import { ModalDialogComponent } from '../../components/modal-dialog/modal-dialog.component';
 import { OverlayHostComponent } from '../../components/overlay-host/overlay-host.component';
-import { componentTest } from '../../testing';
 import { OverlayHostService } from '../overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../size-tracker/size-tracker.service';
 import { UserAgentProvider } from '../user-agent/user-agent-ref';

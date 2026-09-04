@@ -26,21 +26,41 @@
     </div>
 </gtx-demo-block>
 
-<gtx-demo-block demoTitle="Thumb Label">
+<gtx-demo-block demoTitle="Decorations">
     <div class="demo-result">
         <div class="row">
             <div class="column small-8">
-                <gtx-range [thumbLabel]="showThumb"></gtx-range>
+                <gtx-range
+                    [min]="-15"
+                    [max]="25"
+                    [showThumb]="showThumb"
+                    [showBounds]="showBounds"
+                    [showIndicators]="showIndicators"
+                    [indicatorSteps]="indicatorSteps"
+                ></gtx-range>
             </div>
             <div class="column small-4">
-                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb label"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="showBounds" label="show range bounds"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="showIndicators" label="show indicator lines"></gtx-checkbox>
+                <gtx-input [(ngModel)]="indicatorSteps" [min]="1" [max]="20" [type]="'number'" label="Indicator lines every"></gtx-input>
             </div>
         </div>
     </div>
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                <gtx-range [thumbLabel]="showThumb"></gtx-range>
-                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb label"></gtx-checkbox>
+                <gtx-range
+                    [max]="100"
+                    [showThumb]="showThumb"
+                    [showBounds]="showBounds"
+                    [showIndicators]="showIndicators"
+                    [indicatorSteps]="indicatorSteps"
+                ></gtx-range>
+
+                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="showBounds" label="show range bounds"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="showIndicators" label="show indicator lines"></gtx-checkbox>
+                <gtx-input [(ngModel)]="indicatorSteps" [min]="1" [max]="20" type="number" label="Indicator lines every"></gtx-input>
         '></gtx-highlighted-code>
     </div>
 </gtx-demo-block>
@@ -52,7 +72,7 @@
         </p>
         <div class="row">
             <div class="column small-12 medium-8">
-                <gtx-range [(ngModel)]="rangeValDynamic" disabled="true" label="This range is disabled..."></gtx-range>
+                <gtx-range [(ngModel)]="rangeValDynamic" max="100" disabled="true" label="This range is disabled..."></gtx-range>
             </div>
             <div class="column small-12 medium-4">
                 <gtx-input [(ngModel)]="rangeValDynamic" type="number" label="...but can be changed here." min="0" max="100" step="1"></gtx-input>
@@ -61,7 +81,7 @@
     </div>
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                <gtx-range [(ngModel)]="rangeValDynamic" disabled="true"></gtx-range>
+                <gtx-range [(ngModel)]="rangeValDynamic" max="100" disabled="true"></gtx-range>
                 <gtx-input [(ngModel)]="rangeValDynamic" type="number" min="0" max="100" step="1"></gtx-input>
         '></gtx-highlighted-code>
     </div>

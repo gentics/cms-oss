@@ -1,0 +1,30 @@
+{
+    "name": "common",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/common/src",
+    "projectType": "library",
+    "tags": ["lib", "publish"],
+    "targets": {
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": [
+                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
+                "{workspaceRoot}/coverage/{projectRoot}"
+            ],
+            "options": {
+                "jestConfig": "{projectRoot}/jest.config.ts"
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                },
+                "ci": {
+                    "color": false,
+                    "colors": false,
+                    "ci": true,
+                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
+                }
+            }
+        }
+    }
+}

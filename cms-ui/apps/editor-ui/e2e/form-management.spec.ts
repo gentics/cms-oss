@@ -1,32 +1,87 @@
-import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair, Form, FormSaveRequest, NodeFeature, Variant } from '@gentics/cms-models';
 import {
+    AccessControlledType,
+    FormSaveRequest,
+    GcmsPermission,
+    NodeFeature,
+    Variant,
+} from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
+import {
+    clickModalAction,
     clickNotificationAction,
     EntityImporter,
     findNotification,
     FORM_ONE,
+    FORM_TWO,
+    GroupImportData,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_GROUP,
+    IMPORT_TYPE_USER,
+    ImportPermissions,
     isVariant,
     ITEM_TYPE_FORM,
     LANGUAGE_DE,
+    LANGUAGE_EN,
     loginWithForm,
-    matchesUrl,
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
+    UserImportData,
+    waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { expect, test } from '@playwright/test';
-import { AUTH } from './common';
-import { editorAction, expectItemOffline, expectItemPublished, findItem, findList, itemAction, selectNode } from './helpers';
+import { expect, Page, test } from '@playwright/test';
+import {
+    editorAction,
+    expectItemOffline,
+    expectItemPublished,
+    fgAddControl,
+    fgFindEditSidebar,
+    fgSelectElementTab,
+    findItem,
+    findList,
+    itemAction,
+    selectNode,
+    toggleDisplayAllCheckbox,
+} from './helpers';
 
 test.describe('Form Management', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
 
     const IMPORTER = new EntityImporter();
+    const NAMESPACE = 'formmngt';
+
     const NEW_FORM_NAME = 'Hello World';
     const CHANGE_FORM_NAME = 'Hello World again';
     const NEW_FORM_DESCRIPTION = 'This is an example text';
+
+    const FORM_TYPE_GENERIC = 'generic';
+
+    const TEST_GROUP_BASE: GroupImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
+        [IMPORT_ID]: `group_${NAMESPACE}_editor`,
+
+        description: 'Form Management: Editor',
+        name: `group_${NAMESPACE}_editor`,
+        permissions: [],
+    };
+
+    const TEST_USER: UserImportData = {
+        [IMPORT_TYPE]: IMPORT_TYPE_USER,
+        [IMPORT_ID]: `user_${NAMESPACE}_editor`,
+
+        group: TEST_GROUP_BASE,
+
+        email: 'something@example.com',
+        firstName: 'FormManagement',
+        lastName: 'Editor',
+        login: `${NAMESPACE}_editor`,
+        password: 'testforms',
+    };
 
     test.beforeAll(async ({ request }) => {
         await test.step('Client Setup', async () => {
@@ -56,14 +111,43 @@ test.describe('Form Management', () => {
             await IMPORTER.setupFeatures(TestSize.MINIMAL, {
                 [NodeFeature.FORMS]: true,
             });
+            const nodeId = IMPORTER.get(NODE_MINIMAL).id;
+            await IMPORTER.client.form.assignConfiguration(FORM_TYPE_GENERIC, nodeId).send();
             await IMPORTER.importData([FORM_ONE]);
         });
     });
 
+    async function setupWithPermissions(page: Page, permissions: ImportPermissions[]): Promise<void> {
+        await test.step('Test User Setup', async () => {
+            const TEST_GROUP = cloneWithSymbols(TEST_GROUP_BASE);
+            TEST_GROUP.permissions = permissions;
+
+            await IMPORTER.importData([
+                TEST_GROUP,
+                TEST_USER,
+            ]);
+        });
+
+        await test.step('Open Editor-UI', async () => {
+            await navigateToApp(page);
+            await loginWithForm(page, TEST_USER);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
+        });
+    }
+
     test('should be possible to create a new form', async ({ page }) => {
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.CREATE_FORM, value: true },
+                ],
+            },
+        ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
         await list.locator('.header-controls [data-action="create-new-item"] button').click();
@@ -72,6 +156,7 @@ test.describe('Form Management', () => {
         const form = modal.locator('gtx-form-properties');
 
         await form.locator('[formcontrolname="name"] input').fill(NEW_FORM_NAME);
+        await pickSelectValue(form.locator('[formcontrolname="formType"]'), FORM_TYPE_GENERIC);
         await form.locator('[formcontrolname="description"] input').fill(NEW_FORM_DESCRIPTION);
         await pickSelectValue(form.locator('[formcontrolname="languages"]'), [LANGUAGE_DE]);
 
@@ -86,6 +171,35 @@ test.describe('Form Management', () => {
         await expect(list.locator(`[data-id="${formId}"]`)).toBeVisible();
     });
 
+    test('should not be possible to edit the form properties without permissions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19638',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                ],
+            },
+        ]);
+
+        const formEntity = IMPORTER.get(FORM_ONE);
+        const list = findList(page, ITEM_TYPE_FORM);
+        const item = findItem(list, formEntity.id);
+
+        await itemAction(item, 'properties');
+
+        const form = page.locator('content-frame combined-properties-editor .properties-content gtx-form-properties');
+        await expect(form.locator('[formcontrolname="name"] input')).toBeDisabled();
+        await expect(form.locator('[formcontrolname="description"] input')).toBeDisabled();
+    });
+
     test('should load forms on initial navigation', async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
@@ -94,9 +208,19 @@ test.describe('Form Management', () => {
                 folderId: `${EDITING_FORM.folderId}`,
             },
         }));
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                ],
+            },
+        ]);
+
         await loadReq;
 
         const list = findList(page, ITEM_TYPE_FORM);
@@ -115,9 +239,19 @@ test.describe('Form Management', () => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const SUCCESS_URL = 'https://gentics.com';
 
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -125,60 +259,72 @@ test.describe('Form Management', () => {
 
         const form = page.locator('gtx-form-properties');
         const successPicker = form.locator('[data-action="pick-success-page"]');
-        const breadcrumbs = form.locator('.success-page-breadcrumbs .breadcrumb-path');
+        const breadcrumbs = successPicker.locator('.breadcrumbs');
 
         // Select page
-        await successPicker.locator('[data-action="browse"]').click();
-        const repoBrowser = page.locator('repository-browser');
-        await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${SUCCESS_PAGE.id}"] .item-checkbox label`).click();
-        await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
+        await test.step('Set success page', async () => {
+            await successPicker.locator('[data-action="browse"]').click();
+            const repoBrowser = page.locator('repository-browser');
+            await repoBrowser.locator(`repository-browser-list[data-type="page"] [data-id="${SUCCESS_PAGE.id}"] .item-checkbox label`).click();
+            await repoBrowser.locator('.modal-footer [data-action="confirm"] button').click();
 
-        // Validate that the page has been selected
-        await page.waitForTimeout(3_000);
-        expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-        expect(successPicker.locator('.value-display input')).toHaveValue(SUCCESS_PAGE.name);
-        expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+            // Validate that the page has been selected
+            await page.waitForTimeout(3_000);
+            await expect(successPicker.locator('.display-value')).toHaveAttribute('data-value', `page:${SUCCESS_PAGE.id}:${SUCCESS_PAGE.masterNodeId}`);
+            await expect(successPicker.locator('.display-value')).toContainText(SUCCESS_PAGE.name);
+            await expect(breadcrumbs).toContainText(SUCCESS_FOLDER.name);
+        });
 
-        // Save and validate the request
-        let saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
-        await editorAction(page, 'save');
-        let saveRes = await saveReq;
-        let saveData: FormSaveRequest = await saveRes.request().postDataJSON();
+        await test.step('Validate success page save', async () => {
+            // Save and validate the request
+            const saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+            await editorAction(page, 'save');
+            const saveRes = await saveReq;
+            const saveData: FormSaveRequest = await saveRes.request().postDataJSON();
 
-        expect(saveData.successPageId).toEqual(SUCCESS_PAGE.id);
-        expect(saveData.successNodeId).toEqual(SUCCESS_PAGE.masterNodeId);
+            // Saves the correct page
+            expect(saveData.data.successPageId).toEqual(SUCCESS_PAGE.id);
+            expect(saveData.data.successNodeId).toEqual(SUCCESS_PAGE.masterNodeId);
+            // Clears potentially saved old URLs
+            expect(saveData.data.successUrlI18n).toEqual({});
+        });
 
-        // Open the properties again and validate that the item has properly loaded the page
-        const pageLoadReq = page.waitForResponse(matchRequest('GET', `/rest/page/load/${SUCCESS_PAGE.id}`));
-        await page.waitForTimeout(2_000);
-        await editorAction(page, 'close');
+        await test.step('Validate loading of set page', async () => {
+            // Open the properties again and validate that the item has properly loaded the page
+            const pageLoadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${SUCCESS_PAGE.id}`);
+            await page.waitForTimeout(2_000);
+            await editorAction(page, 'close');
 
-        // FIXME: Temporary fix for the item changed warning, even tho we saved it.
-        const hasModal = await page.evaluate(() => window.document.querySelector('confirm-navigation-modal') != null);
-        if (hasModal) {
-            await page.click('confirm-navigation-modal gtx-button[type="alert"] button');
-        }
+            await itemAction(item, 'properties');
+            await pageLoadReq;
 
-        await itemAction(item, 'properties');
-        await pageLoadReq;
+            // Validate that the picker has the correct values loaded again
+            await expect(successPicker.locator('.display-value')).toHaveAttribute('data-value', `page:${SUCCESS_PAGE.id}:${SUCCESS_PAGE.masterNodeId}`);
+            await expect(successPicker.locator('.display-value')).toContainText(SUCCESS_PAGE.name);
+            await expect(breadcrumbs).toContainText(SUCCESS_FOLDER.name);
+        });
 
-        // Validate that the picker has the correct values loaded again
-        expect(successPicker).toHaveAttribute('data-target-id', `${SUCCESS_PAGE.id}`);
-        expect(breadcrumbs).toHaveText(SUCCESS_FOLDER.name);
+        await test.step('Set external success url', async () => {
+            await page.waitForTimeout(500);
 
-        // Change it to use a success url instead
-        await form.locator('gtx-radio-button[data-id="success-url"] label').click();
-        await form.locator('[formControlName="successurl_i18n"] input').fill(SUCCESS_URL);
+            // Change it to use a success url instead
+            await form.locator('gtx-radio-button[data-id="success-url"] label').click();
+            await form.locator('[formControlName="successUrlI18n"] input').fill(SUCCESS_URL);
 
-        // Save and validate the request
-        saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
-        await editorAction(page, 'save');
-        saveRes = await saveReq;
-        saveData = await saveRes.request().postDataJSON();
+            await page.waitForTimeout(500);
 
-        expect(saveData.successPageId).toEqual(0);
-        expect(saveData.successNodeId).toEqual(0);
-        expect(saveData.data.successurl_i18n[EDITING_FORM.languages[0]]).toEqual(SUCCESS_URL);
+            // Save and validate the request
+            const saveReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}`));
+            await editorAction(page, 'save');
+            const saveRes = await saveReq;
+            const saveData = await saveRes.request().postDataJSON() as FormSaveRequest;
+
+            // Saves the correct data for the URL
+            expect(saveData.data.successUrlI18n[LANGUAGE_EN]).toEqual(SUCCESS_URL);
+            // Clears the old selected page
+            expect(saveData.data.successPageId).toEqual(0);
+            expect(saveData.data.successNodeId).toEqual(0);
+        });
     });
 
     test('should be possible to publish the form after saving properties', {
@@ -186,12 +332,22 @@ test.describe('Form Management', () => {
             type: 'ticket',
             description: 'SUP-18802',
         }],
-    }, async ({page}) => {
+    }, async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
 
-        await navigateToApp(page);
-        await loginWithForm(page, AUTH.admin);
-        await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.PUBLISH_FORM, value: true },
+                ],
+            },
+        ]);
 
         const list = findList(page, ITEM_TYPE_FORM);
         const item = findItem(list, EDITING_FORM.id);
@@ -209,11 +365,11 @@ test.describe('Form Management', () => {
         });
 
         await test.step('Publish with notification action', async () => {
-            const publishReq = page.waitForResponse(matchRequest('PUT', `/rest/form/${EDITING_FORM.id}/online`, {
+            const publishReq = waitForResponseFrom(page, 'PUT', `/rest/form/${EDITING_FORM.id}/online`, {
                 params: {
                     at: '0',
                 },
-            }));
+            });
 
             // toast with success notification should have the "publish" action
             const publishToast = findNotification(page, `form-save-success-with-publish:${EDITING_FORM.id}`);
@@ -226,58 +382,6 @@ test.describe('Form Management', () => {
         });
     });
 
-    test('should display an error message when form config is missing', {
-        annotation: [{
-            type: 'ticket',
-            description: 'SUP-18932',
-        }],
-    }, async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(FORM_ONE);
-
-        await test.step('Specialized Setup', async () => {
-            // Block requests to the config
-            await page.route(url => matchesUrl(url, '/ui-conf/form-editor.json'), route => {
-                return route.abort('failed');
-            });
-
-            await navigateToApp(page);
-            await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
-        });
-
-        const list = findList(page, ITEM_TYPE_FORM);
-        const item = findItem(list, EDITING_FORM.id);
-
-        await test.step('Diplay when creating new form', async () => {
-            await list.locator('.header-controls [data-action="create-new-item"] button').click();
-
-            const modal = page.locator('create-form-modal');
-            const form = modal.locator('gtx-form-properties');
-
-            await expect(form.locator('form')).not.toBeVisible();
-            await expect(form.locator('.form-editor-error')).toBeVisible();
-
-            await modal.locator('.modal-footer [data-action="cancel"] button').click();
-        });
-
-        await test.step('Display in Form Edit-Mode', async () => {
-            await itemAction(item, 'edit');
-
-            await expect(page.locator('content-frame gtx-form-editor .form-editor-error')).toBeVisible();
-            await expect(page.locator('content-frame gtx-form-editor .form-editor-menu-container > *')).not.toBeAttached();
-
-            await editorAction(page, 'close');
-        });
-
-        await test.step('Display in Form Properties', async () => {
-            await itemAction(item, 'properties');
-
-            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor form')).not.toBeVisible();
-            await expect(page.locator('content-frame combined-properties-editor gtx-properties-editor .form-editor-error')).toBeVisible();
-        });
-    });
-
-    // TODO: Flaky on CI
     test('should display the label value as title', {
         annotation: [{
             type: 'ticket',
@@ -287,11 +391,18 @@ test.describe('Form Management', () => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
         const LABEL_TEXT = 'Hello World';
 
-        await test.step('Generic Setup', async () => {
-            await navigateToApp(page);
-            await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
-        });
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
 
         await test.step('Open Editor', async () => {
             const list = findList(page, ITEM_TYPE_FORM);
@@ -300,21 +411,22 @@ test.describe('Form Management', () => {
         });
 
         await test.step('Edit Form', async () => {
-            const editor = page.locator('content-frame gtx-form-editor');
-            const menu = editor.locator('gtx-form-editor-menu');
-            const list = editor.locator('.form-editor-form > gtx-form-editor-element-list');
+            const grid = page.locator('content-frame gtx-form-grid');
+            const el = await fgAddControl(grid, 'number');
 
-            const menuEl = menu.locator('.form-editor-elements-container .form-editor-menu-element').first();
-            await menuEl.dragTo(list.locator('gtx-form-element-drop-zone').first());
+            await expect(el).toBeVisible();
+            await el.click();
+            await expect(el).toContainClass('is-selected');
 
-            const el = list.locator('gtx-form-editor-element');
-            const header = el.locator('.form-element-container-header');
-            await header.locator('.form-element-btn-properties-editor-toggle').click();
+            const editSidebar = fgFindEditSidebar(grid);
+            await expect(editSidebar).toBeVisible();
 
-            const elEditor = el.locator('gtx-form-element-properties-editor');
-            await elEditor.locator('[data-control="label"] input').fill(LABEL_TEXT);
+            const elLabel = el.locator('.element-container .element-title');
+            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+            const labelCtrl = translationTab.locator('[data-control="label"] input');
 
-            await expect(el.locator('.form-element-preview-container .label-property-value-container')).toHaveText(LABEL_TEXT);
+            await labelCtrl.fill(LABEL_TEXT);
+            await expect(elLabel).toHaveText(LABEL_TEXT);
         });
     });
 
@@ -322,17 +434,24 @@ test.describe('Form Management', () => {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19335',
-        }]
+        }],
     }, async ({ page }) => {
         const EDITING_FORM = IMPORTER.get(FORM_ONE);
-        const KEY_TEXT = ' \n Hello World \t ';
-        const VALUE_TEXT = ' \tFoo Bar Content! \n  ';
+        const KEY_TEXT = 'Hello World';
+        const VALUE_TEXT = 'Foo Bar Content!';
 
-        await test.step('Generic Setup', async () => {
-            await navigateToApp(page);
-            await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
-        });
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                ],
+            },
+        ]);
 
         await test.step('Open Editor', async () => {
             const list = findList(page, ITEM_TYPE_FORM);
@@ -341,35 +460,30 @@ test.describe('Form Management', () => {
         });
 
         await test.step('Edit Form', async () => {
-            const editor = page.locator('content-frame gtx-form-editor');
-            const menu = editor.locator('gtx-form-editor-menu');
-            const list = editor.locator('.form-editor-form > gtx-form-editor-element-list');
+            const grid = page.locator('content-frame gtx-form-grid');
+            const el = await fgAddControl(grid, 'catalog');
 
-            await page.waitForTimeout(2_000);
+            await expect(el).toBeVisible();
+            await el.click();
+            await expect(el).toContainClass('is-selected');
 
-            const menuEl = menu.locator('.form-editor-elements-container .form-editor-menu-element').nth(3);
-            await menuEl.dragTo(list.locator('gtx-form-element-drop-zone').first());
+            const editSidebar = fgFindEditSidebar(grid);
+            await expect(editSidebar).toBeVisible();
 
-            const el = list.locator('gtx-form-editor-element');
-            const header = el.locator('.form-element-container-header');
-            await header.locator('.form-element-btn-properties-editor-toggle').click();
+            const definitionTab = await fgSelectElementTab(editSidebar, 'definition');
+            const keyOptions = definitionTab.locator('[data-control="selectOptions"]');
 
-            const elEditor = el.locator('gtx-form-element-properties-editor');
-            const options = elEditor.locator('[data-control="options"]');
+            // Add a new option, fill it out, save
+            await keyOptions.locator('[data-action="add-option"]').click();
+            await keyOptions.locator('gtx-input input').fill(KEY_TEXT);
 
-            await options.locator('.add-button').click();
+            // Open the translations tab, and edit the label text
+            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
+            const valueOptions = translationTab.locator('[data-control="selectOptions"]');
 
-            await page.waitForTimeout(2_000);
-
-            const entry = options.locator('gtx-sortable-list .list-entry-inputs');
-            // Key
-            entry.locator('> gtx-input input').fill(KEY_TEXT);
-
-            // No idea why we need a timeout for this, but otherwise the key content
-            // is getting put into the value sometimes
-            await page.waitForTimeout(500);
-            // Value
-            entry.locator('gtx-i18n-input input').fill(VALUE_TEXT);
+            // Should have the key as default value set initially
+            await expect(valueOptions.locator('input')).toHaveValue(KEY_TEXT);
+            await valueOptions.locator('input').fill(VALUE_TEXT);
         });
 
         await test.step('Save and Validate', async () => {
@@ -378,15 +492,127 @@ test.describe('Form Management', () => {
             const res = await saveReq;
             const req: FormSaveRequest = res.request().postDataJSON();
 
-            expect(req.data.elements).toHaveLength(1);
+            const props = Object.entries(req.data.schema?.properties || {});
+            expect(props).toHaveLength(1);
 
-            const entry = req.data.elements[0];
-            expect(entry.type).toEqual('selectgroup');
-            const options: CmsFormElementKeyI18nValuePair[] = entry.options;
-            expect(Array.isArray(options)).toBe(true);
-            expect(options).toHaveLength(1);
-            expect(options[0].key).toEqual(KEY_TEXT.trim());
-            expect(options[0].value_i18n[EDITING_FORM.languages[0]]).toEqual(VALUE_TEXT.trim());
+            const el = props[0][1];
+            expect(el.formGridOptions.selectOptions).toEqual([{
+                _defaulted: [], // Internal structure
+                value: KEY_TEXT,
+                label: {
+                    [LANGUAGE_EN]: VALUE_TEXT,
+                },
+            }]);
         });
+    });
+
+    test('should be possible to delete a language variant of a form', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19642',
+        }],
+    }, async ({ page }) => {
+        // import the language in two languages
+        await IMPORTER.importData([FORM_TWO]);
+
+        const DE_EN_FORM = IMPORTER.get(FORM_TWO);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.VIEW_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.DELETE_FORM, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+
+        await test.step('Delete english variant', async () => {
+            const deEnFormItem = findItem(list, DE_EN_FORM.id);
+            await itemAction(deEnFormItem, 'delete');
+
+            // delete modal should be opened
+            const modal = page.locator('multi-delete-modal-modal');
+            await expect(modal).toBeVisible();
+
+            // click the language selector
+            await pickSelectValue(modal.locator('gtx-form-language-selector gtx-select'), ['de']);
+
+            // prepare the expected requests
+            const saveRequest = waitForResponseFrom(page, 'PUT', `/rest/form/${DE_EN_FORM.id}`);
+            const loadListRequest = waitForResponseFrom(page, 'GET', '/rest/form');
+
+            // click "delete"
+            await clickModalAction(modal, 'confirm');
+
+            // wait for the form to be saved and the list to be reloaded
+            await saveRequest;
+            await loadListRequest;
+
+            // english should be deleted now
+            const enLangIndicator = deEnFormItem.locator('.item-primary .language-indicator [data-action="page-language"][data-id="en"]');
+            await expect(enLangIndicator).toBeHidden(); // Should be hidden, since when the language isn't available
+
+            // german should still be here
+            const deLangIndicator = deEnFormItem.locator('.item-primary .language-indicator [data-action="page-language"][data-id="de"]');
+            await expect(deLangIndicator.locator('.indicator.indicator-untranslated')).not.toBeAttached();
+        });
+    });
+
+    test('should be possible to toggle display of deleted items', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-wastebin', true);
+    });
+
+    test('should be possible to toggle display of all languages', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20081',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
+        await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
     });
 });

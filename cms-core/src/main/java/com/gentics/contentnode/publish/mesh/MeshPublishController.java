@@ -184,7 +184,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		for (ContentRepository cr : contentRepositories) {
 			if (cr.getNodes().stream().filter(n -> !n.isPublishDisabled() && n.doPublishContentmap()).findFirst().isPresent()) {
 				try {
-					MeshPublisher mp = new MeshPublisher(cr);
+					MeshPublisher mp = new MeshPublisher(cr, true, true);
 					mp.controller = controller;
 					mp.publishInfo = publishInfo;
 					controller.publishers.add(mp);

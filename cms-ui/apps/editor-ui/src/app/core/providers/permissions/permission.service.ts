@@ -156,7 +156,7 @@ export class PermissionService {
             distinctUntilChanged((a, b) =>
                 a.folder.activeFolder === b.folder.activeFolder &&
                 a.folder.activeNode === b.folder.activeNode &&
-                a.auth.currentUserId === b.auth.currentUserId &&
+                a.auth.user?.id === b.auth.user?.id &&
                 a.folder.activeLanguage === b.folder.activeLanguage,
             ),
             filter((state) => state.auth.isLoggedIn),
@@ -170,7 +170,7 @@ export class PermissionService {
                 map((folder) => ({
                     folder,
                     node: state.folder.activeNode,
-                    user: state.auth.currentUserId,
+                    user: state.auth.user?.id,
                 })),
             )),
             switchMap((current) => {
@@ -301,7 +301,7 @@ export class PermissionService {
         };
 
         const user$ = this.appState
-            .select((state) => state.auth.currentUserId)
+            .select((state) => state.auth.user?.id)
             .pipe(filter((userId) => userId != null));
 
         this.viewInbox$ = user$.pipe(
@@ -536,44 +536,44 @@ export class PermissionService {
         type: 'folder',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FolderPermissions>;
     public forItemInLanguage(
         type: 'form',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FormPermissions>;
     public forItemInLanguage(
         type: 'page',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<PagePermissions>;
     public forItemInLanguage(
         type: 'file',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<FilePermissions>;
     public forItemInLanguage(
         type: 'image',
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<ImagePermissions>;
     public forItemInLanguage(
         type: FolderItemType,
         id: number,
         nodeId: number,
-        lang: number | null
+        lang: number | string | null
     ): Observable<ItemPermissions>;
 
     public forItemInLanguage(
         type: FolderItemType,
         id: number,
         nodeId: number,
-        lang: number | null,
+        lang: number | string | null,
     ): Observable<ItemPermissions> {
         const entityState = this.appState.now.entities;
         const entityPath = entityState[type];
@@ -751,13 +751,13 @@ export class PermissionService {
      * Creates a consumable HashMap from the raw permission data returned by the server.
      * When a language is passed, the group permissions of that language are merged in.
      */
-    protected mapToPermissions(
+    public mapToPermissions(
         priv: PrivilegeMap,
         map: PermissionsMapCollection,
         languageId: number | string | null,
     ): EditorPermissions {
-        let perm;
-        let role;
+        let perm: Partial<Record<GcmsPermission, boolean>>;
+        let role: GcmsRolePrivilegeMapCollection;
 
         if (map) {
             perm = map.permissions;

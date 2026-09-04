@@ -1,30 +1,21 @@
-@if (tagProperty) {
-  <div class="tag-part-editor text-box">
-    @if (isTextShort) {
-      <gtx-input
-        maxLength="255"
-        [label]="tagPart | tagPropLabel"
-        [pattern]="tagPart?.regex?.expression"
-        [placeholder]="tagPart?.regex?.description"
-        [required]="tagPart?.mandatory"
-        [readonly]="readOnly"
-        [value]="tagProperty.stringValue"
-        (blur)="onBlur()"
-        (valueChange)="onChange($event)"
-      ></gtx-input>
-    }
-    @if (!isTextShort) {
-      <gtx-textarea
-        multiline="true"
-        [label]="tagPart | tagPropLabel"
-        [placeholder]="tagPart?.regex?.description"
-        [required]="tagPart?.mandatory"
-        [readonly]="readOnly"
-        [value]="tagProperty.stringValue"
-        (touch)="onBlur()"
-        (valueChange)="onChange($event)"
-      ></gtx-textarea>
-    }
-    <validation-error-info [validationResult]="displayedValidationResult"></validation-error-info>
-  </div>
+@if (control) {
+    <div class="tag-part-editor text-box">
+        @if (isTextShort) {
+            <gtx-input
+                maxLength="255"
+                [label]="tagPart | tagPropLabel"
+                [formControl]="control"
+                [placeholder]="tagPart?.regex?.description"
+            ></gtx-input>
+        }
+        @if (!isTextShort) {
+            <gtx-textarea
+                multiline="true"
+                [label]="tagPart | tagPropLabel"
+                [formControl]="control"
+                [placeholder]="tagPart?.regex?.description"
+            ></gtx-textarea>
+        }
+        <validation-error-info [validationResult]="validationResult"></validation-error-info>
+    </div>
 }

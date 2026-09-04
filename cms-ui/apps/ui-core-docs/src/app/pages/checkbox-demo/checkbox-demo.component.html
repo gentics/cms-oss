@@ -14,6 +14,20 @@
     </div>
 </gtx-demo-block>
 
+<gtx-demo-block demoTitle="Disabled state">
+    <div class="demo-result">
+        <gtx-checkbox [ngModel]="true" [disabled]="true" label="This is true"></gtx-checkbox>
+        <gtx-checkbox [ngModel]="false" [disabled]="true" label="This is false"></gtx-checkbox>
+        <p>someBoolean: <code>{{ someBoolean | json }}</code></p>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-checkbox [ngModel]="true" [disabled]="true" label="This is true"></gtx-checkbox>
+                <gtx-checkbox [ngModel]="false" [disabled]="true" label="This is false"></gtx-checkbox>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
 <gtx-demo-block demoTitle="Checked States">
     <div class="demo-result">
         <p>
@@ -54,29 +68,30 @@
 
 <gtx-demo-block demoTitle="Stateless Mode">
     <div class="demo-result">
-        <gtx-checkbox checked="true"
+        <gtx-checkbox [value]="true"
                       label="This is always checked"></gtx-checkbox>
 
-        <gtx-checkbox [checked]="statelessIsChecked"
+        <gtx-checkbox [value]="statelessIsChecked"
                       label="The state is set by the parent"
-                      (change)="statelessIsChecked = $event"></gtx-checkbox>
+                      (valueChange)="statelessIsChecked = $event"></gtx-checkbox>
 
-        <gtx-checkbox [checked]="checkText === 'checked'"
+        <gtx-checkbox [value]="checkText === 'checked'"
                       label="This is checked when the text input == 'checked'"></gtx-checkbox>
         <gtx-input [(ngModel)]="checkText"></gtx-input>
     </div>
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                <gtx-checkbox checked="true"
+                <gtx-checkbox [value]="true"
                               label="This is always checked"></gtx-checkbox>
 
-                <gtx-checkbox [checked]="statelessIsChecked"
+                <gtx-checkbox [value]="statelessIsChecked"
                               label="The state is set by the parent"
-                              (change)="statelessIsChecked = $event"></gtx-checkbox>
+                              (valueChange)="statelessIsChecked = $event"></gtx-checkbox>
 
-                <gtx-checkbox [checked]="checkText === `checked`"
+                <gtx-checkbox [value]="checkText === `checked`"
                               label="This is checked when the text input == `checked`"></gtx-checkbox>
                 <gtx-input [(ngModel)]="checkText"></gtx-input>
         '></gtx-highlighted-code>
     </div>
 </gtx-demo-block>
+

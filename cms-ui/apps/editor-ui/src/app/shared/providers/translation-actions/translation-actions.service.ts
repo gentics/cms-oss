@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import {
-    GenericItemResponse,
     PageResponse,
-    TranslationRequestOptions as TranslationRequestParams,
+    TranslationRequestOptions,
     TranslationResponse,
     TranslationTextRequest,
 } from '@gentics/cms-models';
@@ -15,8 +14,8 @@ export class TranslationActionsService {
 
     public translatePage(
         pageId: number,
-        params?: TranslationRequestParams,
-    ): Promise<GenericItemResponse<PageResponse>> {
+        params?: TranslationRequestOptions,
+    ): Promise<PageResponse> {
         return this.client.translation.translatePage(pageId, params).toPromise();
     }
 

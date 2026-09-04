@@ -1,4 +1,5 @@
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, Injector, ModuleWithProviders } from '@angular/core';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
 import { ActionContext, Actions, NgxsModule, Store } from '@ngxs/store';
 import { cloneDeep, merge } from 'lodash-es';
@@ -137,9 +138,10 @@ export class TestAppState extends AppStateService {
 /**
  * Imports for setting up unit tests that require the AppState.
  */
-export function assembleTestAppStateImports(): any[] {
+export function assembleTestAppStateImports(): ModuleWithProviders<any>[] {
     return [
         NgxsModule.forRoot(STATE_MODULES),
+        AuthenticationModule.forRoot(),
     ];
 }
 

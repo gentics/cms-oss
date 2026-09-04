@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.gentics</groupId>
         <artifactId>cms-oss</artifactId>
-        <version>6.5.0-SNAPSHOT</version>
+        <version>6.6.0-SNAPSHOT</version>
     </parent>
 
     <groupId>com.gentics.cms-oss</groupId>
@@ -189,6 +189,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --target=build --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
@@ -211,6 +212,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --targets=test,component-test --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>
@@ -233,6 +235,7 @@
                                     executable="${nodejs.npm.bin}"
                                     failonerror="true"
                                 >
+                                    <env key="NO_COLOR" value="1" />
                                     <arg line="run nx -- run-many --targets=e2e --configuration=${ui.nx.configuration} --output-style=static" />
                                 </exec>
                             </target>

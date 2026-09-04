@@ -1,0 +1,1 @@
+Editor User Interface: Fixed the check if values changed in the properties of a page, which will now correctly omit the unsaved changes dialog.

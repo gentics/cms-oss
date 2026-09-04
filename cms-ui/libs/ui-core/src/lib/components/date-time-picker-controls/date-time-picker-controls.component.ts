@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -73,7 +72,7 @@ function toDate(value: null | Date | number | string): Date | null {
     styleUrls: ['./date-time-picker-controls.component.scss'],
     providers: [generateFormProvider(DateTimePickerControlsComponent)],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DateTimePickerControlsComponent
     extends BaseFormElementComponent<number>
@@ -264,6 +263,7 @@ export class DateTimePickerControlsComponent
     }
 
     protected handleRomeValueChange(): void {
+        this.triggerTouch();
         this.momentValue = this.calendarInstance.getMoment();
         this.updateInternalValues();
         this.triggerChange(this.getUnixTimestamp());
@@ -322,7 +322,7 @@ export class DateTimePickerControlsComponent
         }
 
         this.years = [];
-        for (let year = minYear; year <= maxYear; year ++) {
+        for (let year = minYear; year <= maxYear; year++) {
             this.years.push(year);
         }
     }
@@ -387,7 +387,9 @@ export class DateTimePickerControlsComponent
      * Update the this.value in accordance with the input of one of the
      * time fields (h, m, s).
      */
-    public updateTime(unit: TimeUnit, value: number): void {
+    public updateTime(unit: TimeUnit, value: number, event?: Event): void {
+        this.handleBlur(event);
+
         const newValue = this.updateByUnits(this.momentValue.clone(), unit, value);
         if ((this.min && newValue.isBefore(this.min)) || (this.max && newValue.isAfter(this.max))) {
             // the new year is out of the allowed range
@@ -463,7 +465,6 @@ export class DateTimePickerControlsComponent
 
     /**
      * Create a momentjs locale from the (possibly localized) strings.
-     *
      * @internal
      */
     private getMomentLocale(): string {
@@ -479,16 +480,16 @@ export class DateTimePickerControlsComponent
         const newLocale: string = locale(`x-gtx-date-picker-${momentLocales.length}`, {
             months: localeStrings.months,
             monthsShort: localeStrings.monthsShort
-                || (
-                    localeStrings.months
-                    && localeStrings.months.map(month => month.substr(0, 3))
-                ),
+              || (
+                  localeStrings.months
+                  && localeStrings.months.map((month) => month.substr(0, 3))
+              ),
             weekdays: localeStrings.weekdays,
             weekdaysMin: localeStrings.weekdaysMin
-                || (
-                    localeStrings.weekdays
-                    && localeStrings.weekdays.map(weekday => weekday.substr(0, 2))
-                ),
+              || (
+                  localeStrings.weekdays
+                  && localeStrings.weekdays.map((weekday) => weekday.substr(0, 2))
+              ),
             week: {
                 dow: localeStrings.weekStart ?? 0,
             },
@@ -506,11 +507,11 @@ export class DateTimePickerControlsComponent
         const dayPos = time.indexOf('22');
 
         if (dayPos < monthPos && monthPos < yearPos) {
-            this.dateOrder =  'dmy';
+            this.dateOrder = 'dmy';
         } else if (monthPos < dayPos) {
-            this.dateOrder =  'mdy';
+            this.dateOrder = 'mdy';
         } else {
-            this.dateOrder =  'ymd';
+            this.dateOrder = 'ymd';
         }
     }
 

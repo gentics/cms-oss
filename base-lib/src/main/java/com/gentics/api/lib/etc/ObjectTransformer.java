@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -130,6 +131,26 @@ public final class ObjectTransformer {
 			return new Integer(o.toString().trim());
 		} catch (NumberFormatException e) {
 			return defaultValue;
+		}
+	}
+
+	/**
+	 * Get the BigInteger representation of the given object
+	 * @param o object to transform
+	 * @param defaultValue default value
+	 * @return BigInteger
+	 */
+	public static BigInteger getBigInteger(Object o, BigInteger defaultValue) {
+		if (o == null) {
+			return defaultValue;
+		} else if (o instanceof BigInteger bigInteger) {
+			return bigInteger;
+		} else {
+			try {
+				return new BigInteger(o.toString());
+			} catch (NumberFormatException e) {
+				return defaultValue;
+			}
 		}
 	}
 

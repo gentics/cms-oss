@@ -2,14 +2,15 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import {
     MockTagPropertyInfo,
     getExampleValidationSuccess,
     getMockedTagEditorContext,
     getMultiValidationResult,
     mockEditableTag,
-} from '@editor-ui/testing/test-tag-editor-data.mock';
+} from '../../../../../testing/test-tag-editor-data.mock';
+import { componentTest } from '../../../../../testing/component-test';
+import { configureComponentTest } from '../../../../../testing/configure-component-test';
 import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
@@ -88,10 +89,10 @@ describe('SelectTagPropertyEditorComponent', () => {
             expect(selectComponent.label).toEqual(tagPart.name);
             expect(selectComponent.disabled).toBe(context.readOnly);
             expect(selectComponent.optionGroups?.length).toEqual((tagProperty.options || []).length > 0 ? 1 : 0);
-            const selectValue = (Array.isArray(selectComponent.value) ? selectComponent.value : [selectComponent.value]).filter(v => !!v);
+            const selectValue = (Array.isArray(selectComponent.value) ? selectComponent.value : [selectComponent.value]).filter((v) => !!v);
             expect(selectValue.length).toEqual(tagProperty.selectedOptions.length);
-            tagProperty.selectedOptions.forEach(value => {
-                expect(selectValue.find(option => option === value.id)).toBeDefined();
+            tagProperty.selectedOptions.forEach((value) => {
+                expect(selectValue.find((option) => option === value.id)).toBeDefined();
             });
         }
 
@@ -364,7 +365,7 @@ describe('SelectTagPropertyEditorComponent', () => {
                 fixture.detectChanges();
                 tick();
                 expect(onChangeSpy).not.toHaveBeenCalled();
-                tagProperty.selectedOptions.forEach((value: { key: any; }) => {
+                tagProperty.selectedOptions.forEach((value: { key: any }) => {
                     expect(selectElement.innerHTML).toEqual(value.key);
                 });
 
@@ -379,7 +380,7 @@ describe('SelectTagPropertyEditorComponent', () => {
                 fixture.detectChanges();
                 tick();
                 expect(onChangeSpy).not.toHaveBeenCalled();
-                tagProperty.selectedOptions.forEach((value: { key: any; }) => {
+                tagProperty.selectedOptions.forEach((value: { key: any }) => {
                     expect(selectElement.innerHTML).toEqual(value.key);
                 });
 
@@ -394,7 +395,7 @@ describe('SelectTagPropertyEditorComponent', () => {
                 fixture.detectChanges();
                 tick();
                 expect(onChangeSpy).not.toHaveBeenCalled();
-                tagProperty.selectedOptions.forEach((value: { key: any; }) => {
+                tagProperty.selectedOptions.forEach((value: { key: any }) => {
                     expect(selectElement.innerHTML).toEqual(value.key);
                 });
             }),

@@ -1,11 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { getValueByPath } from '../../utils';
+import { getValueByPath } from '@gentics/common';
 
 type TransformFn = (value: any) => any;
 
 @Pipe({
     name: 'gtxTransform',
-    standalone: false
+    standalone: false,
 })
 export class TransformPipe implements PipeTransform {
 

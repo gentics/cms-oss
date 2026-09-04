@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.5.0-SNAPSHOT</version>
+		<version>6.6.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -559,6 +559,14 @@
 					<groupId>org.apache.xmlgraphics</groupId>
 					<artifactId>batik-ext</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.apache.httpcomponents.core5</groupId>
+		    		<artifactId>httpcore5</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.httpcomponents.core5</groupId>
+		    		<artifactId>httpcore5-h2</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -722,6 +730,18 @@
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+		<!-- Patch for Antisamy -->
+		<dependency>
+		    <groupId>org.apache.httpcomponents.core5</groupId>
+		    <artifactId>httpcore5</artifactId>
+		    <version>5.4.3</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.httpcomponents.core5</groupId>
+		    <artifactId>httpcore5-h2</artifactId>
+		    <version>5.4.3</version>
 		</dependency>
 	</dependencies>
 

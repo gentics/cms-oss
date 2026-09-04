@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, DataSource } from '@gentics/cms-models';
-import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-data-source-properties',
@@ -13,9 +12,9 @@ import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-cor
         generateFormProvider(DataSourcePropertiesComponent),
         generateValidatorProvider(DataSourcePropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
-export class DataSourcePropertiesComponent extends BasePropertiesComponent<DataSource> {
+export class DataSourcePropertiesComponent extends BaseFormPropertiesComponent<DataSource> {
 
     protected createForm(): FormGroup<any> {
         return new UntypedFormGroup({

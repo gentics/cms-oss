@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
+import com.gentics.contentnode.rest.model.response.AlohaFilesResponse;
 import com.gentics.contentnode.rest.model.response.MaintenanceResponse;
 
 /**
@@ -17,4 +18,12 @@ public interface InfoResource {
 	@GET
 	@Path("/maintenance")
 	MaintenanceResponse getMaintenance();
+
+	/**
+	 * Get info about aloha editor
+	 * @return info about aloha editor
+	 */
+	@GET
+	@Path("/aloha")
+	AlohaFilesResponse getAlohaEditorFiles();
 }

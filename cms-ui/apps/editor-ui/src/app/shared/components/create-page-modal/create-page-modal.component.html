@@ -1,0 +1,38 @@
+<gtx-progress-bar [active]="loading"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.create_new_page_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-page-properties
+        [mode]="PagePropertiesMode.CREATE"
+        [folderId]="folderId"
+        [nodeId]="nodeId"
+        [disabled]="loading"
+        [languages]="languages"
+        [templates]="templates"
+        [formControl]="control"
+    ></gtx-page-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        [disabled]="loading"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | gtxI18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="primary"
+        data-action="confirm"
+        [disabled]="loading|| !control?.valid"
+        (click)="saveChanges()"
+    >
+        {{ 'common.okay_button' | gtxI18n }}
+    </gtx-button>
+</div>

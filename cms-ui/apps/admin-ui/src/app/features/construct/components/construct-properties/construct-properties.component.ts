@@ -1,6 +1,3 @@
-import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructCategoryHandlerService, PermissionsService } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -11,38 +8,47 @@ import {
     OnInit,
     SimpleChange,
 } from '@angular/core';
-import { FormControl, FormGroup, UntypedFormControl, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import {
     AccessControlledType,
-    CmsI18nValue,
     ConstructCategory,
     EditorControlStyle,
     GcmsPermission,
-    GtxI18nProperty,
     Language,
     Node,
     Normalized,
     Raw,
-    TagTypeBO,
     TagTypeBase,
 } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { BaseFormPropertiesComponent, FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { createI18nRequiredValidator } from '../../../../common';
+import { ConstructCategoryHandlerService, PermissionsService } from '../../../../core';
+import { NodeDataService } from '../../../../shared';
 
-export type ConstructPropertiesFormData = Omit<
-TagTypeBase<Raw>,
+export type ConstructPropertiesFormData = Omit<TagTypeBase<Raw>,
 'name' | 'description' | 'globalId' | 'parts' | 'creator' | 'cdate' | 'editor' | 'edata'
 > & {
     nodeIds?: number[];
-}
+};
 
 export enum ConstructPropertiesMode {
     CREATE = 'create',
     UPDATE = 'update',
     COPY = 'copy',
 }
+
+const EDITOR_TAG_NAMES = [
+    {
+        value: 'div',
+        label: 'construct.liveEditorTagName_type_div',
+    },
+    {
+        value: 'span',
+        label: 'construct.liveEditorTagName_type_span',
+    },
+];
 
 /**
  * Defines the data editable by the `ConstructPropertiesComponent`.
@@ -59,14 +65,15 @@ export enum ConstructPropertiesMode {
         generateFormProvider(ConstructPropertiesComponent),
         generateValidatorProvider(ConstructPropertiesComponent),
     ],
-    standalone: false
+    standalone: false,
 })
 export class ConstructPropertiesComponent
-    extends BasePropertiesComponent<ConstructPropertiesFormData>
+    extends BaseFormPropertiesComponent<ConstructPropertiesFormData>
     implements AfterViewInit, OnChanges, OnInit {
 
     public readonly ConstructPropertiesMode = ConstructPropertiesMode;
     public readonly EditorControlStyle = EditorControlStyle;
+    public readonly EDITOR_TAG_NAMES = EDITOR_TAG_NAMES;
 
     @Input()
     public mode: ConstructPropertiesMode;
@@ -93,18 +100,18 @@ export class ConstructPropertiesComponent
         super.ngOnInit();
 
         // load required dependencies into state
-        this.constructCategories$ = this.categoryHandler.listMapped().pipe(map(res => res.items));
+        this.constructCategories$ = this.categoryHandler.listMapped().pipe(map((res) => res.items));
 
         // Load the nodes and filter out all which do not have the required 'update' permission
         this.nodes$ = this.nodeData.watchAllEntities({ perms: true }).pipe(
-            switchMap(nodes => {
-                return combineLatest(nodes.map(node => {
+            switchMap((nodes) => {
+                return combineLatest(nodes.map((node) => {
                     return this.permissions.getInstancePermissions(AccessControlledType.NODE, node.id).pipe(
-                        map(perms => perms.hasPermission(GcmsPermission.UPDATE_CONSTRUCTS) ? node : null),
-                    )
+                        map((perms) => perms.hasPermission(GcmsPermission.UPDATE_CONSTRUCTS) ? node : null),
+                    );
                 }));
             }),
-            map(nodes => nodes.filter(node => node != null)),
+            map((nodes) => nodes.filter((node) => node != null)),
         );
     }
 
@@ -123,7 +130,7 @@ export class ConstructPropertiesComponent
                 this.activeTabI18nLanguage = defaultLanguage;
             }
             if (this.form) {
-                const ctl = this.form.get('nameI18n');
+                const ctl = this.form.controls.nameI18n;
                 ctl.setValidators(this.createNameValidator());
                 ctl.updateValueAndValidity();
             }
@@ -132,24 +139,28 @@ export class ConstructPropertiesComponent
 
     protected createForm(): FormGroup {
         return new FormGroup<FormProperties<ConstructPropertiesFormData>>({
-            keyword: new FormControl<string>(null, Validators.required),
-            nameI18n: new FormControl<CmsI18nValue>({}, this.createNameValidator()),
-            descriptionI18n: new FormControl<CmsI18nValue>({}),
-            nodeIds: new FormControl<number[]>([], Validators.required),
-            externalEditorUrl: new FormControl<string>(''),
-            mayBeSubtag: new FormControl<boolean>(false),
-            mayContainSubtags: new FormControl<boolean>(false),
-            categoryId: new FormControl<number>(null),
-            autoEnable: new FormControl<boolean>(false),
-            openEditorOnInsert: new FormControl<boolean>(false),
-            editorControlStyle: new FormControl<EditorControlStyle>(EditorControlStyle.ABOVE, Validators.required),
-            editorControlsInside: new FormControl<boolean>(false),
+            keyword: new FormControl(this.safeValue('keyword'), Validators.required),
+            nameI18n: new FormControl(this.safeValue('nameI18n'), this.createNameValidator()),
+            descriptionI18n: new FormControl(this.safeValue('descriptionI18n')),
+            nodeIds: new FormControl(this.safeValue('nodeIds'), Validators.required),
+            externalEditorUrl: new FormControl(this.safeValue('externalEditorUrl') ?? ''),
+            mayBeSubtag: new FormControl(this.safeValue('mayBeSubtag')),
+            mayContainSubtags: new FormControl(this.safeValue('mayContainSubtags')),
+            categoryId: new FormControl(this.safeValue('categoryId')),
+            autoEnable: new FormControl(this.safeValue('autoEnable')),
+            liveEditorTagName: new FormControl(this.safeValue('liveEditorTagName') ?? 'div'),
+            openEditorOnInsert: new FormControl(this.safeValue('openEditorOnInsert')),
+            editorControlStyle: new FormControl(
+                this.safeValue('editorControlStyle') ?? EditorControlStyle.ABOVE,
+                Validators.required,
+            ),
+            editorControlsInside: new FormControl(this.safeValue('editorControlsInside')),
         }, { updateOn: 'change' });
     }
 
-    protected configureForm(value: Partial<TagTypeBO<Normalized>>, loud: boolean = false): void {
+    protected configureForm(_value: ConstructPropertiesFormData, loud: boolean = false): void {
         const options = { emitEvent: loud };
-        const nodesIdCtl = this.form.get('nodeIds');
+        const nodesIdCtl = this.form.controls.nodeIds;
 
         nodesIdCtl.disable(options);
 
@@ -170,7 +181,7 @@ export class ConstructPropertiesComponent
     }
 
     createNameValidator(): ValidatorFn {
-        const validator = createI18nRequiredValidator((this.supportedLanguages || []).map(l => l.code), langs => {
+        const validator = createI18nRequiredValidator((this.supportedLanguages || []).map((l) => l.code), (langs) => {
             this.invalidLanguages = langs;
             this.changeDetector.markForCheck();
         });
@@ -178,51 +189,14 @@ export class ConstructPropertiesComponent
         return validator;
     }
 
-    protected onValueChange(): void {
-        if ((this.value as any) === CONTROL_INVALID_VALUE) {
-            return;
-        }
-
-        if (!this.form) {
-            return;
-        }
-
-        const cleanedValue: ConstructPropertiesFormData = {
-            nameI18n: this.value?.nameI18n ?? {},
-            descriptionI18n: this.value?.descriptionI18n ?? {},
-            keyword: this.value?.keyword || null,
-            nodeIds: this.value?.nodeIds || [],
-            externalEditorUrl: this.value?.externalEditorUrl || '',
-            mayBeSubtag: this.value?.mayBeSubtag || false,
-            mayContainSubtags: this.value?.mayContainSubtags || null,
-            categoryId: this.value?.categoryId || null,
-            autoEnable: this.value?.autoEnable || false,
-            openEditorOnInsert: this.value?.openEditorOnInsert ?? false,
-            editorControlStyle: this.value?.editorControlStyle ?? EditorControlStyle.ABOVE,
-            editorControlsInside: this.value?.editorControlsInside ?? false,
-        };
-
-        this.form.setValue(cleanedValue, { emitEvent: false });
-        this.form.markAsPristine();
-        this.form.updateValueAndValidity();
-        this.changeDetector.markForCheck();
-    }
-
-    /**
-     * Tracking function for ngFor for better performance.
-     */
-    identify(index: number, tagpartFormControl: UntypedFormControl): string {
-        return tagpartFormControl.value['globalId'];
-    }
-
     setActiveI18nTab(languageId: number): void {
-        this.activeTabI18nLanguage = this.supportedLanguages.find(l => l.id === languageId);
+        this.activeTabI18nLanguage = this.supportedLanguages.find((l) => l.id === languageId);
     }
 
     activeI18nTabValueExists(languageCode: string): boolean {
         return [
-            this.form.get('nameI18n')?.value as GtxI18nProperty,
-            this.form.get('descriptionI18n')?.value as GtxI18nProperty,
-        ].some(data => !!data?.[languageCode]);
+            this.form.controls.nameI18n.value,
+            this.form.controls.descriptionI18n.value,
+        ].some((data) => !!data?.[languageCode]);
     }
 }

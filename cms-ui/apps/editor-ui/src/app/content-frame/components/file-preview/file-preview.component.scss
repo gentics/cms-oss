@@ -1,0 +1,219 @@
+@import "variables";
+
+$file-color: $gcms-color-file;
+
+:host {
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+.preview-pane {
+    align-content: flex-start;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    max-width: 100%;
+
+    @media screen and (max-width: $medium-screen - 1px) {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        justify-content: center;
+
+        &.file {
+            // On large screens, move file preview up to accomodate
+            // for the top-padding of the editor toolbar and the tab bar
+            padding-bottom: calc(16vh - 4em);
+        }
+    }
+
+    &.file {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    &.image {
+        width: 100%;
+    }
+}
+
+.file-preview {
+    display: flex;
+    flex-direction: row;
+    padding: 26px;
+    max-width: 100%;
+    min-height: fit-content;
+}
+
+.file-icon {
+    cursor: default;
+    display: inline-block;
+    font-size: 8rem;
+    line-height: 1;
+    min-height: 1em;
+    position: relative;
+    user-select: none;
+
+    icon {
+        color: $file-color;
+        font-size: inherit;
+        vertical-align: top;
+    }
+
+    .extension {
+        position: absolute;
+        background-color: white;
+        color: $file-color;
+        border: 0.25rem solid $file-color;
+        border-radius: 0.5rem;
+        padding: 0.2rem 0.5rem;
+        font-weight: 500;
+        line-height: 1rem;
+        bottom: 0;
+        right: 0;
+
+        &.len-1,
+        &.len-2,
+        &.len-3 { font-size: 1.5rem; }
+        &.len-4 { font-size: 1.4rem; }
+        &.len-5 { font-size: 1.3rem; }
+        &.len-6 { font-size: 1.2rem; }
+        &.len-7 { font-size: 1rem; }
+        font-size: 0.9rem;
+    }
+}
+
+.file-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 0.5rem;
+    max-width: calc(100% - 8.5rem);
+
+    > * {
+        white-space: normal;
+    }
+
+    .type, .size {
+        color: $gtx-color-mid-gray;
+    }
+}
+
+.file-details .name,
+.image-preview .filename {
+    color: rgba(0, 0, 0, 0.870588);
+    font-size: 1.25em;
+    font-weight: 500;
+    overflow: hidden;
+    word-wrap: break-word;
+    white-space: normal;
+    min-height: fit-content;
+}
+
+.image-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+    max-height: 100%;
+    padding: 26px;
+    text-align: center;
+
+    .thumbnail {
+        background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKAQMAAAC3/F3+AAAACXBIWXMAAAsTAAALEwEAmpwYAAAABlBMVEXf39////8zI3BgAAAAEUlEQVQIW2Nk38mIjH5wICMAez4Iyz2C/F8AAAAASUVORK5CYII=") repeat;
+        max-width: 100%;
+        position: relative;
+        overflow: hidden;
+        transition: height 200ms ease, opacity 200ms ease;;
+        will-change: opacity;
+
+        &.vector img {
+            min-width: 250px;
+        }
+
+        &.loading {
+            opacity: 0.001;
+            transition-duration: 0s;
+        }
+    }
+
+    .previewed-image {
+        display: contents;
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+    }
+}
+
+.image-details {
+    color: $gtx-color-mid-gray;
+}
+
+.author-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 26px;
+    min-height: min-content;
+
+    > * {
+        text-align: center;
+    }
+
+    .date {
+        white-space: nowrap;
+    }
+}
+
+.actions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem 0;
+
+    .actions-row {
+        display: flex;
+        flex-direction: row;
+        min-height: min-content;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+}
+
+.action-replace {
+    position: relative;
+    background: #fbfbfb;
+    border: 1px solid #f5f5f5;
+
+    gtx-progress-bar {
+        left: 0;
+        bottom: 0;
+        height: auto;
+        z-index: -1;
+    }
+
+    gtx-file-picker {
+        background: white;
+    }
+
+    .keep-filename {
+        text-align: center;
+        margin-top: 6px;
+    }
+
+    ::ng-deep .progress-bar-wrapper,
+    ::ng-deep .progress-indicator {
+        height: 100%;
+    }
+
+    ::ng-deep .progress-indicator {
+        background-color: transparentize($gtx-color-primary, 0.8);
+    }
+}

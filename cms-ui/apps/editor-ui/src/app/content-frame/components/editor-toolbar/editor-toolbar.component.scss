@@ -1,7 +1,7 @@
 @import "variables";
 
 .editor-toolbar {
-    padding: 0.5rem 0.5rem 0;
+    padding: 0 0.5rem 0;
     width: 100%;
     border-bottom: 2px solid #ffb84f;
     overflow: hidden;
@@ -31,9 +31,19 @@
         flex-wrap: nowrap;
         overflow: hidden;
         align-items: center;
+        justify-content: space-between;
 
         &.regular {
             padding: 1rem;
+        }
+
+        .toolbar-information {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow: hidden;
+            align-items: center;
+            flex: 1 1 auto;
         }
     }
 
@@ -46,7 +56,16 @@
         flex: 1 1 auto;
         align-self: center;
         overflow: hidden;
-        padding-right: 1rem;
+        height: 4rem;
+
+        gtx-page-editor-tabs::ng-deep {
+            .editor-tab {
+                height: 4rem;
+                padding: 0 0.75rem;
+                align-items: center;
+                line-height: 1;
+            }
+        }
     }
 
     .close-button {
@@ -289,5 +308,31 @@
 
     .page-editor-controls {
         height: 0px !important;
+    }
+}
+
+.form-editing-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex: 0 0;
+    gap: 1rem;
+
+    .form-view-modes {
+        width: auto;
+        align-self: end;
+
+        &::ng-deep .tab-link {
+            height: 4rem;
+            display: flex;
+            line-height: 1;
+            align-items: center;
+
+            > a {
+                line-height: 1;
+                height: min-content;
+                min-height: unset;
+            }
+        }
     }
 }

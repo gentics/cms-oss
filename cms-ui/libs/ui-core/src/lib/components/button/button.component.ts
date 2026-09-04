@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostListener, Input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { cancelEvent } from '@gentics/common';
 
 /**
  * A Button component.
@@ -8,7 +9,7 @@ import { ChangeDetectionStrategy, Component, HostListener, Input } from '@angula
  * <gtx-button size="large">Buy Now!</gtx-button>
  * <gtx-button type="alert">Delete all stuff</gtx-button>
  * <gtx-button icon>
- *     <i class="material-icons">settings</i>
+ *     <icon>settings</icon>
  * </gtx-button>
  * ```
  */
@@ -17,85 +18,85 @@ import { ChangeDetectionStrategy, Component, HostListener, Input } from '@angula
     templateUrl: './button.component.html',
     styleUrls: ['./button.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ButtonComponent {
 
     /**
      * Sets the input field to be auto-focused. Handled by `AutofocusDirective`.
      */
-    @Input()
-    autofocus: boolean = false;
+    @Input({ transform: booleanAttribute })
+    public autofocus = false;
 
     /**
      * Specify the size of the button. Can be "small", "regular" or "large".
      */
     @Input()
-    size: 'small' | 'regular' | 'large' = 'regular';
+    public size: 'small' | 'regular' | 'large' = 'regular';
 
     /**
      * Type determines the style of the button. Can be "default", "secondary",
      * "success", "warning" or "alert".
      */
     @Input()
-    type: 'default' | 'secondary' | 'success' | 'warning' | 'alert' = 'default';
+    public type: 'default' | 'secondary' | 'success' | 'warning' | 'alert' = 'default';
 
     /**
      * Setting the "flat" attribute gives the button a transparent background
      * and only depth on hover.
      */
-    @Input()
-    get flat(): boolean {
-        return this.isFlat;
-    }
-    set flat(val: boolean) {
-        this.isFlat = val != null && val !== false;
-    }
+    @Input({ transform: booleanAttribute })
+    public flat = false;
 
     /**
      * Setting the "icon" attribute turns the button into an "icon button", which is
      * like a flat button without a border, suitable for wrapping an icon.
      */
-    @Input()
-    get icon(): boolean {
-        return this.isIcon;
-    }
-    set icon(val: boolean) {
-        this.isIcon = val != null && val !== false;
-    }
+    @Input({ transform: booleanAttribute })
+    public icon = false;
 
     /**
      * Controls whether the button is disabled.
      */
-    @Input()
-    get disabled(): boolean {
-        return this.isDisabled;
-    }
-    set disabled(disabled: boolean) {
-        this.isDisabled = (<any> disabled) === '' || !!disabled;
-    }
+    @Input({ transform: booleanAttribute })
+    public disabled = false;
 
     /**
      * Set button as a submit button.
      */
-    @Input()
-    set submit(value: boolean) {
-        this.buttonType = (value != null && value !== false) ? 'submit' : 'button';
-    }
+    @Input({ transform: booleanAttribute })
+    public submit = false;
 
-    buttonType = 'button';
-    isFlat: boolean = false;
-    isIcon: boolean = false;
-    isDisabled: boolean = false;
+    /**
+     * Event for when the button is getting focused.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public focus = new EventEmitter<void>();
+
+    /**
+     * Event for when the button looses focus.
+     */
+    @Output()
+    // eslint-disable-next-line @angular-eslint/no-output-native
+    public blur = new EventEmitter<void>();
 
     // In some browsers, disabled elements don't fire mouse events, but bubble them up the DOM tree.
     // To not trigger actions when the button is disabled, we need to prevent them manually.
     @HostListener('click', ['$event'])
     preventDisabledClick(event: Event): void {
-        if (event && this.isDisabled) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            event.stopPropagation();
+        if (event && this.disabled) {
+            cancelEvent(event);
         }
+    }
+
+    public handleFocus(event?: Event): void {
+        cancelEvent(event);
+        this.focus.emit();
+    }
+
+    public handleBlur(event?: Event): void {
+        cancelEvent(event);
+        this.blur.emit();
     }
 }

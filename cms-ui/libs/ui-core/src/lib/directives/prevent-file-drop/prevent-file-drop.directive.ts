@@ -1,7 +1,7 @@
 import { Directive, HostListener, Input, OnDestroy } from '@angular/core';
+import { getDataTransfer, transferHasFiles } from '@gentics/common';
 import { DragStateTrackerFactoryService } from '../../providers/drag-state-tracker/drag-state-tracker.service';
 import { PageFileDragHandlerService } from '../../providers/page-file-drag-handler/page-file-drag-handler.service';
-import { getDataTransfer, transferHasFiles } from '../../utils/drag-and-drop';
 
 /**
  * Prevents accidentally dropping files outside of a {@link FileDropAreaDirective}
@@ -9,14 +9,14 @@ import { getDataTransfer, transferHasFiles } from '../../utils/drag-and-drop';
 @Directive({
     selector: '[gtxPreventFileDrop]',
     providers: [PageFileDragHandlerService, DragStateTrackerFactoryService],
-    standalone: false
+    standalone: false,
 })
 export class PreventFileDropDirective implements OnDestroy {
 
     @Input()
     set gtxPreventFileDrop(val: boolean | 'true' | 'false' | 'page') {
-        let mode: boolean | 'page' = val === 'page' ? 'page' : (val !== false && val !== 'false');
-        if (mode != this.prevent) {
+        const mode: boolean | 'page' = val === 'page' ? 'page' : (val !== false && val !== 'false');
+        if (mode !== this.prevent) {
             this.dragHandler.preventFileDropOnPageFor(this, mode === 'page');
             this.prevent = mode;
         }
@@ -34,8 +34,10 @@ export class PreventFileDropDirective implements OnDestroy {
     @HostListener('dragover', ['$event'])
     @HostListener('drop', ['$event'])
     preventAccidentalDrop(event: Event): void {
-        if (this.prevent !== true || event.defaultPrevented) { return; }
-        let dataTransfer = getDataTransfer(event);
+        if (this.prevent !== true || event.defaultPrevented) {
+            return;
+        }
+        const dataTransfer = getDataTransfer(event);
         if (transferHasFiles(dataTransfer)) {
             event.preventDefault();
             dataTransfer.effectAllowed = 'none';

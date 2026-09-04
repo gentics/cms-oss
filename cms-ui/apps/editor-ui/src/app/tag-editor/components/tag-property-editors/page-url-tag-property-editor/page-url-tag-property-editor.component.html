@@ -1,45 +1,47 @@
 @if (tagProperty) {
-  <div class="tag-part-editor">
-    <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
-    <div class="row internal-external-selector">
-      <gtx-radio-button
-        [label]="'tag_editor.internal' | gtxI18n"
-        [disabled]="readOnly"
-        [(ngModel)]="isInternalPage"
-        [value]="true"
-        (change)="onRadioButtonsChange()">
-      </gtx-radio-button>
-      <gtx-radio-button
-        [label]="'tag_editor.external' | gtxI18n"
-        [disabled]="readOnly"
-        [(ngModel)]="isInternalPage"
-        [value]="false"
-        (change)="onRadioButtonsChange()">
-      </gtx-radio-button>
+    <div class="tag-part-editor">
+        <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
+
+        <div class="row internal-external-selector">
+            <gtx-radio-button
+                [label]="'tag_editor.internal' | gtxI18n"
+                [disabled]="readOnly"
+                [(ngModel)]="isInternalPage"
+                [value]="true"
+                (change)="onRadioButtonsChange()">
+            </gtx-radio-button>
+
+            <gtx-radio-button
+                [label]="'tag_editor.external' | gtxI18n"
+                [disabled]="readOnly"
+                [(ngModel)]="isInternalPage"
+                [value]="false"
+                (change)="onRadioButtonsChange()">
+            </gtx-radio-button>
+        </div>
+
+        @if (isInternalPage) {
+            <gtx-browse-box
+                [label]="'tag_editor.internal_page' | gtxI18n"
+                [placeholder]="'editor.page_no_selection' | gtxI18n"
+                [disabled]="readOnly"
+                [showBreadcrumbs]="true"
+                [allowedSelection]="'page'"
+                [multiple]="false"
+                [contentLanguage]="page?.language"
+                [startFolder]="uploadDestination?.id"
+                [value]="selectedInternalPage.selectedItem$ | async"
+                (valueChange)="changeSelectedPage($event)"
+            ></gtx-browse-box>
+        } @else {
+            <gtx-input
+                [label]="'tag_editor.external_url' | gtxI18n"
+                [readonly]="readOnly"
+                [required]="tagPart?.mandatory"
+                [(ngModel)]="externalUrl"
+                (blur)="externalUrlBlur.next($event)"
+                (valueChange)="externalUrlChange.next($event)">
+            </gtx-input>
+        }
     </div>
-    @if (isInternalPage) {
-      <browse-box
-        [label]="'tag_editor.internal_page' | gtxI18n"
-        [displayValue]="internalPageDisplayValue$ | async"
-        [disabled]="readOnly"
-        (clear)="changeSelectedPage(null)"
-        (browse)="browseForPage()">
-    </browse-box>
-  }
-  @if (isInternalPage && selectedInternalPagePath) {
-    <div>
-      {{ 'tag_editor.selected_folder' | gtxI18n }}: {{ selectedInternalPagePath }}
-    </div>
-  }
-  @if (!isInternalPage) {
-    <gtx-input
-      [label]="'tag_editor.external_url' | gtxI18n"
-      [readonly]="readOnly"
-      [required]="tagPart?.mandatory"
-      [(ngModel)]="externalUrl"
-      (blur)="externalUrlBlur.next($event)"
-      (valueChange)="externalUrlChange.next($event)">
-    </gtx-input>
-  }
-</div>
 }

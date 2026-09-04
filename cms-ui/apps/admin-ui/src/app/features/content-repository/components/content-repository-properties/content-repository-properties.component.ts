@@ -15,7 +15,6 @@ import {
     ValidatorFn,
     Validators,
 } from '@angular/forms';
-import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import {
     BasepathType,
     CONTENT_REPOSIROTY_USERNAME_PROPERTY_PREFIX,
@@ -30,7 +29,9 @@ import {
     UsernameType,
 } from '@gentics/cms-models';
 import {
+    BaseFormPropertiesComponent,
     FormProperties,
+    VALIDATOR_JSON_ERROR_PROPERTY,
     createPropertyPatternValidator,
     generateFormProvider,
     generateValidatorProvider,
@@ -85,9 +86,12 @@ const MESH_CONTROLS: (keyof EditableContentRepositoryProperties)[] = [
     ],
     standalone: false,
 })
-export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepositoryPropertiesFormData> implements OnInit, OnChanges {
+export class ContentRepositoryPropertiesComponent
+    extends BaseFormPropertiesComponent<ContentRepositoryPropertiesFormData>
+    implements OnInit, OnChanges {
 
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
+    public readonly VALIDATOR_JSON_ERROR_PROPERTY = VALIDATOR_JSON_ERROR_PROPERTY;
 
     @Input()
     public mode: ContentRepositoryPropertiesMode;
@@ -246,7 +250,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             dbType: new FormControl(this.safeValue('dbType') || null, Validators.required),
             defaultPermission: new FormControl(this.safeValue('defaultPermission') || ''),
             diffDelete: new FormControl(this.safeValue('diffDelete') ?? false),
-            elasticsearch: new FormControl<any>(this.safeValue('elasticsearch') || '', GtxJsonValidator),
+            elasticsearch: new FormControl<any>(this.safeValue('elasticsearch') || ''),
             instantPublishing: new FormControl(this.safeValue('instantPublishing') ?? false),
             languageInformation: new FormControl(this.safeValue('languageInformation') ?? false),
             name: new FormControl(this.safeValue('name') || '', Validators.required),

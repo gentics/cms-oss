@@ -1,13 +1,9 @@
 import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 import { defineConfig } from 'cypress';
-import { createComponentReporterOptions } from '../../cypress.preset';
+import { createComponentTestConfiguration } from '../../cypress.preset';
 
 export default defineConfig({
-    component: {
+    component: createComponentTestConfiguration('apps', 'ct-link-checker', false, {
         ...nxComponentTestingPreset(__filename),
-        indexHtmlFile: './cypress/support/component-index.html',
-        video: false,
-        screenshotOnRunFailure: false,
-    },
-    ...createComponentReporterOptions('apps', 'ct-link-checker', false),
+    }),
 });

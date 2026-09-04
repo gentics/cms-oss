@@ -1,11 +1,11 @@
 import { SidebarItemComponent } from '@admin-ui/shared/components/sidebar-item/sidebar-item.component';
 import { Component, Input } from '@angular/core';
-import { Version, Update } from '@gentics/cms-models';
+import { I18nService } from '@gentics/cms-components';
+import { Update, Version } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import * as semver from 'semver';
-import { AppStateService } from '../../../state';
-import { I18nService } from '@gentics/cms-components';
+import { AppStateService, UIStateModel } from '../../../state';
 
 interface CmsUpdates {
     hotfix?: {
@@ -27,12 +27,12 @@ interface CmsUpdates {
 export class WidgetCmsStatusComponent extends SidebarItemComponent {
     // CMS Status widget title
     @Input()
-    title = this.i18n.instant('widget.cms_status_title');
+    declare title: string;
 
     currentDocsUrl = 'https://gentics.com/Content.Node/cmp8/guides-history/';
     latestDocsUrl = 'https://gentics.com/Content.Node/cmp8/guides/';
 
-    uiState$ = this.appState.select((state) => state.ui);
+    uiState$: Observable<UIStateModel>;
     updates$: Observable<CmsUpdates>;
 
     constructor(
@@ -40,6 +40,8 @@ export class WidgetCmsStatusComponent extends SidebarItemComponent {
         protected appState: AppStateService,
     ) {
         super();
+
+        this.uiState$ = this.appState.select((state) => state.ui);
 
         this.updates$ = this.uiState$.pipe(
             filter((state) => !!state.cmpVersion && !!state.cmpVersion.version),

@@ -5,18 +5,13 @@
  */
 package com.gentics.lib.image;
 
-import java.awt.image.BufferedImage;
 import java.awt.image.renderable.ParameterBlock;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
 
@@ -24,7 +19,6 @@ import org.jmage.resource.DefaultImageFactory;
 import org.jmage.resource.ResourceException;
 
 import com.gentics.lib.log.NodeLogger;
-import com.sksamuel.scrimage.ImmutableImage;
 import com.sun.media.jai.codec.FileSeekableStream;
 
 /**
@@ -77,31 +71,13 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 		if ("file".equals(scheme)) {
 			File file = new File(resource);
 
-			FileInputStream fileInputStream = null;
 			try {
-				fileInputStream = new FileInputStream(file);
-				BufferedImage image = ImageIO.read(fileInputStream);
-
-				if (image == null) {
-					ImmutableImage image2 = ImmutableImage.loader().fromFile(file);
-					if (image2 != null) {
-						image = image2.awt();
-					}
-				}
-
-				return PlanarImage.wrapRenderedImage(image);
+				return ImageUtils.read(file);
 			} catch (Exception e) {
 				String msg = "Could not load image from file.";
 
 				logger.error(msg, e);
 				throw new ResourceException(msg);
-			} finally {
-				if (fileInputStream != null) {
-					try {
-						fileInputStream.close();
-					} catch (IOException e) {
-					}
-				}
 			}
 		}
 
@@ -138,16 +114,8 @@ public class PatchedDefaultImageFactory extends DefaultImageFactory {
 
 		try {
 			byte[] urlBytes = this.readFromUrl(url).toByteArray();
-			BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(urlBytes));
+			image = ImageUtils.read(urlBytes);
 
-			if (bufferedImage == null) {
-				ImmutableImage image2 = ImmutableImage.loader().fromBytes(urlBytes);
-				if (image2 != null) {
-					bufferedImage = image2.awt();
-				}
-			}
-
-			image = PlanarImage.wrapRenderedImage(bufferedImage);
 			if (logger.isDebugEnabled()) {
 				logger.debug(URL_LOADED + url.toString());
 			}

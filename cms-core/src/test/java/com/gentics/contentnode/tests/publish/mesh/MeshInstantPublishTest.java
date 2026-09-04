@@ -19,10 +19,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -48,6 +50,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -55,6 +58,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.lib.content.GenticsContentAttribute;
+import com.gentics.lib.image.JavaImageUtils;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 
 /**
@@ -156,13 +160,16 @@ public class MeshInstantPublishTest {
 		template = Trx.supply(() -> createTemplate(node.getFolder(), "Template"));
 	}
 
-	@Parameters(name = "{index}: instant {0}, repair {1}, type {2}")
+	@Parameters(name = "{index}: instant {0}, repair {1}, type {2}, corrupted {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (boolean instant : Arrays.asList(true, false)) {
 			for (boolean repair : Arrays.asList(true, false)) {
 				for (int objType : Arrays.asList(Folder.TYPE_FOLDER, Page.TYPE_PAGE, File.TYPE_FILE)) {
-					data.add(new Object[] { instant, repair, objType });
+					if (objType == File.TYPE_FILE) {
+						data.add(new Object[] { instant, repair, objType, true });
+					}
+					data.add(new Object[] { instant, repair, objType, false });
 				}
 			}
 		}
@@ -186,6 +193,12 @@ public class MeshInstantPublishTest {
 	 */
 	@Parameter(2)
 	public int objType;
+
+	/**
+	 * Should binary data be corrupted?
+	 */
+	@Parameter(3)
+	public boolean corruptedBinary;
 
 	@Before
 	public void setup() throws Exception {
@@ -246,12 +259,17 @@ public class MeshInstantPublishTest {
 				}), Page::publish));
 				break;
 			case File.TYPE_FILE:
-				Trx.operate(() -> create(File.class, create -> {
+				int fileId = Trx.supply(() -> create(File.class, create -> {
 					create.setFolderId(folder.getId());
 					create.setFileStream(new ByteArrayInputStream("Testfile contents".getBytes()));
 					create.setName("testfile.txt");
 					create.getObjectTag("instant").setEnabled(true);
-				}));
+				}).getId());
+				if (corruptedBinary) {
+					java.io.File targetFile = new java.io.File(new java.io.File(ConfigurationValue.DBFILES_PATH.get()), fileId + ".bin");
+					String contents = FileUtils.readFileToString(targetFile, StandardCharsets.UTF_8);
+					FileUtils.write(targetFile, contents.substring(contents.length() / 2), StandardCharsets.UTF_8);
+				}
 				break;
 			default:
 				fail(String.format("Cannot test unexpected type %d", objType));

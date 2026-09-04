@@ -26,6 +26,7 @@ import com.gentics.contentnode.devtools.MainPackageSynchronizer;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.devtools.Synchronizer.Status;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
@@ -104,6 +105,11 @@ public class RenderType implements RenderInfo {
 	private final static String LANGUAGE_PARAM = "language";
 
 	private static String defaultHandlebarsHelpers = null;
+
+	/**
+	 * Service loader for implementations of {@link HandlebarsService}
+	 */
+	protected final static ServiceLoaderUtil<HandlebarsService> handlebarsServiceLoader = ServiceLoaderUtil.load(HandlebarsService.class);
 
 	private Stack<RenderInfo> infoStack;
 	private StackResolver stack;
@@ -1492,6 +1498,9 @@ public class RenderType implements RenderInfo {
 			handlebars.registerHelpers(ConditionalHelpers.class);
 			handlebars.registerHelpers(StringHelpers.class);
 			handlebars.registerHelpers(HelperSource.class);
+			handlebarsServiceLoader.forEach(handlebarsService -> {
+				handlebarsService.registerHelpers(handlebars);
+			});
 
 			handlebarsPerNode.put(node, handlebars);
 		}

@@ -1,6 +1,7 @@
 import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
-import { GCMSRestClient } from '@gentics/cms-rest-client';
-import test, { expect, Locator, Page, Request, Response, Route } from '@playwright/test';
+import { GCMSRestClient, GCMSRestClientRequestError } from '@gentics/cms-rest-client';
+import { errors } from 'playwright';
+import test, { Disposable, expect, Locator, Page, Request, Response, Route } from '@playwright/test';
 import {
     ATTR_CONTEXT_ID,
     ATTR_MULTIPLE,
@@ -13,6 +14,8 @@ import {
     ENV_E2E_APP_PATH,
     ENV_E2E_KEYCLOAK_URL,
 } from './config';
+import { createClient } from './importer';
+import { ClickOptions } from './playwright-types';
 import { hasMatchingParams, matchesPath } from './utils';
 
 const VISIBLE_TOAST = 'gtx-toast .gtx-toast:not(.dismissing)';
@@ -67,7 +70,7 @@ export function mockResponse<T>(
 }
 
 export function reroute(method: string, path: string): (route: Route) => Promise<void> {
-    return async route => {
+    return async (route) => {
         const res = await route.fetch({
             method: method,
             url: path,
@@ -103,9 +106,22 @@ export function onRequest(
     matcher: (req: Request) => boolean,
     handler: (req: Request) => any,
 ): void {
-    page.on('request', req => {
+    page.on('request', (req) => {
         if (matcher(req)) {
             handler(req);
+        }
+    });
+}
+
+export function onResponse(
+    page: Page,
+    matcher: (req: Request, res: Response) => boolean,
+    handler: (req: Request, res: Response) => any,
+): void {
+    page.on('response', (res) => {
+        const req = res.request();
+        if (matcher(req, res)) {
+            handler(req, res);
         }
     });
 }
@@ -113,7 +129,6 @@ export function onRequest(
 /**
  * Simple wrapper function for `page.waitForResponse` and {@link matchRequest}, but with an error-handler
  * to tell which request actually failed, because otherwise you have to guess.
- *
  * @param page The playwright page object
  * @param method The method of the request
  * @param path The path of the request
@@ -129,15 +144,29 @@ export function waitForResponseFrom(
     const timeout = options?.timeout ?? 5_000;
 
     return page.waitForResponse(matchRequest(method, path, options), { timeout })
-        .catch(err => {
-            // The actual class isn't publicly available, which is why we have to do this hacky workaround.
-            if (err instanceof Error && (err.constructor.name === 'TargetClosedError' || err.constructor.name === 'TimeoutError')) {
-                const timeoutStr = timeout >= 1000 ? (timeout / 1000) + 's' : (timeout + 'ms');
+        .catch((err) => {
+            let reqErrMsg: string;
+            if (path instanceof RegExp) {
+                reqErrMsg = `"${method}" matching "${path.source}"`;
+            } else {
+                reqErrMsg = `"${method} ${path}"`;
+            }
+
+            if (Object.keys(options?.params ?? {}).length > 0) {
+                reqErrMsg += ` with params ${JSON.stringify(options.params)}`;
+            }
+
+            if (err instanceof errors.TimeoutError) {
+                const timeoutStr = timeout >= 1000 ? (timeout / 1000).toFixed(2) + 's' : (timeout + 'ms');
                 if (path instanceof RegExp) {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method}" matching "${path.source}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 } else {
-                    err.message = `Reached timeout (${timeoutStr}) for request "${method} ${path}"`;
+                    err.message = `Reached timeout (${timeoutStr}) for request ${reqErrMsg}`;
                 }
+            }
+
+            if (err instanceof GCMSRestClientRequestError) {
+                err.message = `Request ${reqErrMsg}, failed with status-code ${err.responseCode}: ${err.message}`;
             }
 
             throw err;
@@ -191,7 +220,6 @@ export function findContextContent(page: Page, id: string): Locator {
 }
 
 export async function openContext(element: Locator): Promise<Locator> {
-    await element.waitFor({ state: 'visible' });
     await expect(element).toHaveAttribute(ATTR_CONTEXT_ID);
 
     const id = await element.getAttribute(ATTR_CONTEXT_ID);
@@ -236,7 +264,7 @@ export async function pickSelectValue(select: Locator, values: string | number |
  * @param dataProvider Optional provider which will get the data for the user.
  * @returns Promise from `page.route`.
  */
-export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<void> {
+export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Promise<Disposable> {
     return page.route((url) => matchesPath(url, '/rest/user/me/data'), (route, req) => {
         // Only re-route requests to load user-data
         if (req.method() !== 'GET') {
@@ -261,20 +289,43 @@ export function setupUserDataRerouting(page: Page, dataProvider?: () => any): Pr
     });
 }
 
+/**
+ * Helper function to find the source-element for further chaining.
+ * Usually used in other functions, to get a locator you know the node-type of.
+ * @example ```ts
+ * // Helper function to click our special button
+ * async function clickSpecialButton(source: Page | Locator): Promise<void> {
+ *      const btn = await getSourceLocator(source, 'my-cool-button');
+ *      await btn.first().locator('.button-container a').click();
+ * }
+ *
+ * // Would click the first button it would find
+ * await clickSpecialButton(page);
+ * // Would click the first button in the header
+ * await clickSpecialButton(page.locator('header'));
+ * // Would do the exact same as the one above
+ * await clickSpecialButton(page.locator('header my-cool-button'));
+ * // Would click our especially cool button
+ * await clickSpecialButton(page.locator('my-cool-button.very-cool'));
+ * ```
+ * @param source Source element from where it should search from
+ * @param nodeName The nodeName of source element we search for
+ * @returns A Locator which points to the searched nodeName element
+ */
 export async function getSourceLocator(source: Page | Locator, nodeName: string): Promise<Locator> {
-    if (
-        typeof (source as Page).reload === 'function'
-        || await (source as Locator).evaluate(
-            (el, args) => el == null
-              || typeof el !== 'object'
-              || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase(),
-            { nodeName },
-        )
-    ) {
+    // Determine if it's a page by checking if it has the reload function
+    if (typeof (source as Page).reload === 'function') {
         return source.locator(nodeName);
     }
 
-    return source as Locator;
+    // Check if the source is already the source we are looking for.
+    const sourceIsOtherType = await (source as Locator).evaluate((el, args) => {
+        return el == null
+          || typeof el !== 'object'
+          || el.nodeName.toLowerCase() !== args.nodeName.toLowerCase();
+    }, { nodeName });
+
+    return sourceIsOtherType ? source.locator(nodeName) : source as Locator;
 }
 
 /**
@@ -354,7 +405,7 @@ export async function waitForPublishDone(page: Page, client: GCMSRestClient): Pr
 }
 
 export async function clickButton(source: Locator, options?: ButtonClickOptions): Promise<void> {
-    const nodeType = await source.evaluate(el => el.nodeName);
+    const nodeType = await source.evaluate((el) => el.nodeName);
 
     // For a simple button, simply click it without any other stuff
     if (nodeType === 'BUTTON') {
@@ -439,8 +490,7 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
 
 export async function pickDate(source: Locator, date?: Date): Promise<void> {
     const dateTimePicker = await getSourceLocator(source, 'gtx-date-time-picker');
-    const input = dateTimePicker.locator('gtx-input');
-    await input.click();
+    await dateTimePicker.locator('.box-wrapper').click();
 
     const modal = source.page().locator('gtx-date-time-picker-modal');
 
@@ -450,4 +500,59 @@ export async function pickDate(source: Locator, date?: Date): Promise<void> {
     }
 
     await clickModalAction(modal, 'confirm');
+}
+
+export function copyText(page: Page, text: string): Promise<void> {
+    return page.evaluate((text) => {
+        // clipboard may be null, as it's an insecure context.
+        // see https://developer.mozilla.org/en-US/docs/Web/API/Clipboard
+        if (navigator.clipboard != null) {
+            return navigator.clipboard.writeText(text);
+        }
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.height = '0';
+        textArea.style.width = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        return null;
+    }, text);
+}
+
+export async function setI18nGroupLanguage(group: Locator, language: number): Promise<void> {
+    const tabs = group.locator('.properties-tabs');
+    const langTab = tabs.locator(`.tab-link[data-id="${language}"]`);
+    const isActive = await langTab.evaluate((el) => el.classList.contains('is-active'));
+    if (isActive) {
+        return;
+    }
+
+    await langTab.click();
+}
+
+export async function createClientFromPage(page: Page): Promise<GCMSRestClient> {
+    const client = await createClient({
+        context: page.request,
+        isPageContext: true,
+    });
+    const sid: string = await page.evaluate(() => window.localStorage.getItem('GCMSUI_sid'));
+    client.sid = parseInt(JSON.parse(sid), 10);
+
+    return client;
+}
+
+export async function uploadFileFromInput(page: Page, fileInput: Locator, files: string[], clickOptions?: ClickOptions): Promise<void> {
+    const fileChooserPromise = page.waitForEvent('filechooser');
+
+    await fileInput.click(clickOptions);
+    const fileChooser = await fileChooserPromise;
+
+    await fileChooser.setFiles(files);
 }

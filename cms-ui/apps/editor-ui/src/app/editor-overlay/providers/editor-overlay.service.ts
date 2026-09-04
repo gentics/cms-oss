@@ -1,4 +1,5 @@
 import { Injectable, Type } from '@angular/core';
+import { getImageType } from '@gentics/cms-components';
 import { CropResizeParameters, File, Form, Image, InheritableItem, Page, Raw } from '@gentics/cms-models';
 import { IModalDialog, IModalInstance, IModalOptions, ModalService } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
@@ -8,6 +9,7 @@ import { EntityResolver } from '../../core/providers/entity-resolver/entity-reso
 import { ErrorHandler } from '../../core/providers/error-handler/error-handler.service';
 import { ApplicationStateService, FolderActionsService, NodeSettingsActionsService } from '../../state';
 import { ImageEditorModalComponent } from '../components/image-editor-modal/image-editor-modal.component';
+import { ImageEditorOptions } from '@gentics/cms-integration-api-models';
 
 @Injectable()
 export class EditorOverlayService {
@@ -26,16 +28,15 @@ export class EditorOverlayService {
 
     /**
      * Opens the image editor modal for the image specified in the options.
-     *
      * @returns A promise, which resolves to the edited image object or to void if the
      * user cancels the dialog or if an error occurs.
      */
-    editImage(options: { nodeId: number, itemId: number }): Promise<Image<Raw> | void> {
+    editImage(options: ImageEditorOptions): Promise<Image<Raw> | void> {
         const round = (val: number) => Math.round(val);
         let image: Image;
 
-        return this.getOrLoadItem('image', options.itemId, options.nodeId)
-            .then(item => {
+        return this.getOrLoadItem('image', options.imageId, options.nodeId)
+            .then((item) => {
                 image = item;
                 return this.openEditor(ImageEditorModalComponent,
                     {
@@ -48,11 +49,15 @@ export class EditorOverlayService {
                     },
                 );
             })
-            .then(modal => modal.open())
-            .then(result => {
+            .then((modal) => modal.open())
+            .then((result) => {
                 const params = result.params;
-                const fileExt = image.name.substr(image.name.lastIndexOf('.') + 1).toLowerCase();
-                const format: 'png' | 'jpg' = fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpg' : 'png';
+                const format = getImageType(image);
+
+                if (format == null) {
+                    const fileExt = image.name.substring(image.name.lastIndexOf('.') + 1).toLowerCase();
+                    throw new Error(`Unsupported image type "${fileExt}"`);
+                }
 
                 const apiParams: CropResizeParameters = {
                     image: {
@@ -88,12 +93,12 @@ export class EditorOverlayService {
             onOpen: () => { this.editorOverlayOnOpen$.next(modalInstance); },
             onClose: () => { this.editorOverlayOnClose$.next(modalInstance); },
         })
-            .then(modal => modalInstance = modal)
-            .then<Page[]>(modal => modal.open())
-            .then(pages => {
+            .then((modal) => modalInstance = modal)
+            .then<Page[]>((modal) => modal.open())
+            .then((pages) => {
                 if (pages !== null) {
-                    return this.modalService.fromComponent(AssignPageModal, {}, {pages})
-                        .then(modal => modal.open());
+                    return this.modalService.fromComponent(AssignPageModal, {}, { pages })
+                        .then((modal) => modal.open());
                 }
             })
             .catch(this.errorHandler.catch);
@@ -110,7 +115,7 @@ export class EditorOverlayService {
 
         let modalInstance: IModalInstance<T>;
 
-        let defaultOptions = {
+        const defaultOptions = {
             onOpen: () => { this.editorOverlayOnOpen$.next(modalInstance); },
             onClose: () => { this.editorOverlayOnClose$.next(modalInstance); },
             width: '100%',
@@ -118,11 +123,11 @@ export class EditorOverlayService {
             closeOnEscape: false,
         };
 
-        let modal = this.modalService.fromComponent(component,
+        const modal = this.modalService.fromComponent(component,
             { ...defaultOptions, ...options },
             { ...locals },
         );
-        modal.then(modal => modalInstance = modal);
+        modal.then((modal) => modalInstance = modal);
         return modal;
     }
 
@@ -136,7 +141,7 @@ export class EditorOverlayService {
     private getOrLoadItem(itemType: 'page' | 'image' | 'file' | 'form', itemId: number, nodeId: number): Promise<InheritableItem> {
         let ret: Promise<InheritableItem>;
 
-        let item = this.entityResolver.getEntity(itemType, itemId);
+        const item = this.entityResolver.getEntity(itemType, itemId);
         if (item) {
             ret = Promise.resolve(item);
         } else {
@@ -145,7 +150,7 @@ export class EditorOverlayService {
 
         // Make sure, that the correct nodeId's settings are loaded
         if (typeof this.appState.now.nodeSettings.node[nodeId] === 'undefined') {
-            ret = ret.then(loadedItem => {
+            ret = ret.then((loadedItem) => {
                 return this.nodeSettingsActions.loadNodeSettings(nodeId)
                     .then(() => loadedItem);
             });

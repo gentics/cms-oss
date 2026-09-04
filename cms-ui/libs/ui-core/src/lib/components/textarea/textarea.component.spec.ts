@@ -2,8 +2,8 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { componentTest } from '@gentics/ui-core/testing';
 import { AutosizeModule } from 'ngx-autosize';
-import { componentTest } from '../../testing';
 import { TextareaComponent } from './textarea.component';
 
 describe('TextareaComponent', () => {

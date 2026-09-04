@@ -6,7 +6,8 @@ import {
     OnDestroy,
     Output,
 } from '@angular/core';
-import { BaseComponent, cancelEvent } from '@gentics/ui-core';
+import { cancelEvent } from '@gentics/common';
+import { BaseComponent } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-mesh-copy-value',

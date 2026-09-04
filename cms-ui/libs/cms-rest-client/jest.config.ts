@@ -1,8 +1,6 @@
-import { Config } from 'jest';
-import { createDefaultConfig } from '../../jest.preset';
+import { defineConfig } from 'jest';
+import { createSWCConfig } from '../../jest.preset';
 
-const config: Config = {
-    ...createDefaultConfig('libs', 'cms-rest-client'),
-};
-
-export default config;
+export default defineConfig({
+    ...createSWCConfig('libs', 'cms-rest-client'),
+});

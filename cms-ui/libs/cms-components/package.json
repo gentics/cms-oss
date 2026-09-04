@@ -1,27 +1,41 @@
 {
   "name": "@gentics/cms-components",
-  "version": "6.4.2",
+  "version": "6.5.3",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@angular/common": ">=20.3.0",
-    "@angular/core": ">=20.3.0",
-    "@gentics/cms-models": "^6.4.2",
-    "@gentics/cms-integration-api-models": "^6.4.2",
-    "@gentics/ui-core": "^6.4.2",
-    "@ngx-translate/core": "^14.0.0",
-    "@ngx-translate/http-loader": "^7.0.0",
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@gentics/common": "^6.5.3",
+    "@gentics/cms-models": "^6.5.3",
+    "@gentics/aloha-models": "^6.5.3",
+    "@gentics/cms-integration-api-models": "^6.5.3",
+    "@gentics/cms-rest-client-angular": "^6.5.3",
+    "@gentics/ui-core": "^6.5.3",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngxs/store": "20.1.0",
     "lodash-es": "^4.17.15",
-    "ngx-pagination": "^6.0.3"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@angular/common": ">=20.3.0",
-    "@angular/core": ">=20.3.0",
-    "@gentics/cms-models": "^6.4.2",
-    "@gentics/cms-integration-api-models": "^6.4.2",
-    "@gentics/ui-core": "^6.4.2",
-    "@ngx-translate/core": "^14.0.0",
-    "@ngx-translate/http-loader": "^7.0.0",
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@gentics/common": "^6.5.3",
+    "@gentics/cms-models": "^6.5.3",
+    "@gentics/aloha-models": "^6.5.3",
+    "@gentics/cms-integration-api-models": "^6.5.3",
+    "@gentics/cms-rest-client-angular": "^6.5.3",
+    "@gentics/ui-core": "^6.5.3",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngxs/store": "20.1.0",
     "lodash-es": "^4.17.15",
-    "ngx-pagination": "^6.0.3"
-  }
+    "rxjs": "^7.8.1"
+  },
+  "optionalDependencies": {
+    "keycloak-js": "^25.0.6",
+    "ngx-color": "^9.0.0",
+    "jasmine-core": "^4.2.0"
+  },
+  "sideEffects": false
 }

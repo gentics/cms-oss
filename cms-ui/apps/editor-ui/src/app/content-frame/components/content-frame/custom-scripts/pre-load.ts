@@ -1,4 +1,4 @@
-import { CNIFrameDocument, CNWindow } from '../../../models/content-frame';
+import { CNWindow } from '@gentics/cms-integration-api-models';
 
 /**
  * This script will be executed once when the IFrame calls GCMSUI.runPreLoadScript().
@@ -13,7 +13,6 @@ export class PreLoadScript {
 
     constructor(
         private iFrameWindow: CNWindow,
-        private iFrameDocument: CNIFrameDocument,
     ) { }
 
     run(): void {
@@ -25,6 +24,6 @@ export class PreLoadScript {
      * checking whether a confirmation needs to be displayed is superior.
      */
     removeAlohaUnloadLogic(): void {
-        this.iFrameWindow.onbeforeunload = () => { /* Noop */};
+        this.iFrameWindow.onbeforeunload = () => { /* Noop */ };
     }
 }

@@ -10,16 +10,15 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { ExternalAssetReference } from '@gentics/cms-integration-api-models';
 import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
-import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
-import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
-import { FolderActionsService } from '../../../../state';
 import { UploadResponse } from '../../../../common/models';
+import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
+import { FolderActionsService } from '../../../../state';
 
 /**
  * Allows the user to upload a file or image and modify its editable properties right after the upload.
@@ -87,7 +86,6 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         private folderActions: FolderActionsService,
         private i18nService: I18nService,
         private modalService: ModalService,
-        private repositoryBrowserClient: RepositoryBrowserClient,
         private uploadConflictService: UploadConflictService,
     ) { }
 
@@ -103,16 +101,6 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     ngOnDestroy(): void {
         this.subscriptions.unsubscribe();
-    }
-
-    browseForFolder(): void {
-        this.repositoryBrowserClient.openRepositoryBrowser({
-            allowedSelection: 'folder',
-            selectMultiple: false,
-        }).then((selectedItem) => {
-            this.destinationFolder = selectedItem;
-            this.changeDetector.detectChanges();
-        });
     }
 
     /** Triggered if files have been selected from user's local file system to be uploaded. */

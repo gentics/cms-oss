@@ -3,7 +3,7 @@
  * Importing them via JSON would work as well, but here we have proper type
  * checks to all entities without having to jump through hoops.
  */
-import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
+import { AccessControlledType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     FileImportData,
@@ -188,7 +188,7 @@ export const GROUP_ROOT: GroupImportData = {
             perms: [
                 { type: GcmsPermission.UPDATE, value: false },
             ],
-        } as ImportPermissions)),
+        })),
         {
             type: AccessControlledType.CONSTRUCT_ADMIN,
             perms: [
@@ -263,14 +263,54 @@ export const SCHEDULE_LINK_CHECKER: ScheduleImportData = {
     },
 };
 
-export const FIXTURE_IMAGE_ONE: FixtureFile = {
+export const FIXTURE_IMAGE_JPEG1: FixtureFile = {
     fixturePath: 'fixtures/aedrian-cDe4G55k6pE-unsplash.jpg',
     type: 'image/jpeg',
 };
 
-export const FIXTURE_FILE_ONE: FixtureFile = {
+export const FIXTURE_IMAGE_JPEG2: FixtureFile = {
+    fixturePath: 'fixtures/ivan-tsaregorodtsev-bx0e0iHWnlI-unsplash.jpg',
+    type: 'image/jpeg',
+};
+
+export const FIXTURE_IMAGE_PNG1: FixtureFile = {
+    fixturePath: 'fixtures/honbike-R1iV6Vi14vA-unsplash.png',
+    type: 'image/png',
+};
+
+export const FIXTURE_IMAGE_PNG2: FixtureFile = {
+    fixturePath: 'fixtures/howard-bouchevereau-dm_SpMwo9AQ-unsplash.png',
+    type: 'image/png',
+};
+
+export const FIXTURE_FILE_WEBP1: FixtureFile = {
+    fixturePath: 'fixtures/marek-piwnicki-IsuVD39rKgM-unsplash.webp',
+    type: 'image/webp',
+};
+
+export const FIXTURE_IMAGE_SVG1: FixtureFile = {
+    fixturePath: 'fixtures/Google__G__logo.svg',
+    type: 'image/svg',
+};
+
+export const FIXTURE_FILE_PDF1: FixtureFile = {
     fixturePath: 'fixtures/test-print.pdf',
     type: 'application/pdf',
+};
+
+export const FIXTURE_FILE_DOCX1: FixtureFile = {
+    fixturePath: 'fixtures/test-document.docx',
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+export const FIXTURE_FILE_TXT1: FixtureFile = {
+    fixturePath: 'fixtures/text-file.txt',
+    type: 'text/plain',
+};
+
+export const FIXTURE_FILE_TXT2: FixtureFile = {
+    fixturePath: 'fixtures/text-file_2.txt',
+    type: 'text/plain',
 };
 
 /*
@@ -372,7 +412,7 @@ export const PAGE_ONE: PageImportData = {
     ...createPage(NODE_MINIMAL, NODE_MINIMAL, BASIC_TEMPLATE_ID, 'One'),
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,
@@ -403,7 +443,7 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
     pageName: 'Seite Eins',
     tags: {
         content: {
-            id: null,
+            id: null as any,
             constructId: 7,
             name: 'content',
             active: true,
@@ -461,8 +501,26 @@ export const FORM_ONE: FormImportData = {
 
     name: 'Form One',
     description: 'Test Form one',
+    formType: 'generic',
+};
+
+export const FORM_TWO: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'formTwo',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_DE, LANGUAGE_EN],
+
+    name: 'Form Two',
+    description: 'Test Form two',
+    formType: 'generic',
     data: {
-        type: CmsFormType.GENERIC,
+        adminEmailSubject: {
+            de: 'Betreff',
+            en: 'Subject',
+        },
     },
 };
 

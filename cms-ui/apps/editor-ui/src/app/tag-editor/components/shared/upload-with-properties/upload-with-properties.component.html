@@ -51,13 +51,14 @@
 }
 
 @if (allowFolderSelection) {
-  <browse-box
+  <gtx-browse-box
     [disabled]="uploadInProgress"
     [label]="'tag_editor.destination_folder' | gtxI18n"
-    [displayValue]="destinationFolder?.name"
     [clearable]="false"
-    (browse)="browseForFolder()"
-  ></browse-box>
+    [allowedSelection]="'folder'"
+    [multiple]="false"
+    [(ngModel)]="destinationFolder"
+  ></gtx-browse-box>
 }
 
 @if (fileToUpload) {

@@ -1,4 +1,4 @@
-import {Feature, Response as CMSResponse, Variant} from '@gentics/cms-models';
+import { Feature, Response as CMSResponse, Variant } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     dismissNotifications,
@@ -19,8 +19,15 @@ import {
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
 import {
-    addSearchChip, expectItemPublished, findItem, findList,
-    itemAction, selectNode, setChipOperator, setDateChipValue, setStringChipValue
+    addSearchChip,
+    expectItemPublished,
+    findItem,
+    findList,
+    itemAction,
+    selectNode,
+    setChipOperator,
+    setDateChipValue,
+    setStringChipValue,
 } from './helpers';
 
 const FOLDER_TEST_ONE: FolderImportData = {
@@ -131,7 +138,7 @@ test.describe('Search', () => {
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
             setupBasicLocators(page);
         });
 
@@ -140,11 +147,11 @@ test.describe('Search', () => {
 
             await searchInput.fill(SEARCH_TERM);
 
-            const searchReq = page.waitForRequest(matchRequest('GET', '/rest/folder/getPages/*', {
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
                 params: {
                     search: SEARCH_TERM,
                 },
-            }));
+            });
 
             await dismissNotifications(page);
             await searchButton.click();
@@ -157,11 +164,11 @@ test.describe('Search', () => {
 
             await searchInput.fill(SEARCH_TERM);
 
-            const searchReq = page.waitForRequest(matchRequest('GET', '/rest/folder/getPages/*', {
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
                 params: {
                     search: SEARCH_TERM,
                 },
-            }));
+            });
 
             await searchInput.press('Enter');
 
@@ -178,11 +185,11 @@ test.describe('Search', () => {
                 await setStringChipValue(chip, CHIP_VALUE);
             });
 
-            const searchReq = page.waitForRequest(matchRequest('GET', '/rest/folder/getPages/*', {
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
                 params: {
                     [CHIP_NAME]: `%${CHIP_VALUE}%`,
                 },
-            }));
+            });
 
             await dismissNotifications(page);
             await searchButton.click();
@@ -202,15 +209,16 @@ test.describe('Search', () => {
                 await setDateChipValue(chip, chipDate);
             });
 
-            const searchReq = page.waitForRequest(matchRequest('GET', '/rest/folder/getPages/*'));
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*');
 
             await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
-            const url = new URL(req.url());
+            const url = new URL(req.request().url());
             const timeStamp = parseInt(url.searchParams.get(`${CHIP_NAME}since`) || '', 10);
-            expect([0, 3_600]).toContainEqual(Math.abs(TIME - timeStamp));
+            // Different times due to timezone differences which may occur
+            expect([0, 3_600, 7_200]).toContainEqual(Math.abs(TIME - timeStamp));
         });
 
         test('search result breadcrumbs should be displayed correctly', {
@@ -223,7 +231,7 @@ test.describe('Search', () => {
             const SEARCH_ITEM = IMPORTER.get(PAGE_TEST_LONG);
 
             await searchInput.fill(SEARCH_TERM);
-            const searchReq = page.waitForResponse(matchRequest('GET', '/rest/folder/getPages/*'));
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*');
             await dismissNotifications(page);
             await searchButton.click();
             await searchReq;
@@ -231,7 +239,7 @@ test.describe('Search', () => {
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, SEARCH_ITEM.id);
             const breadcrumbs = item.locator('item-breadcrumbs .item-breadcrumbs');
-            const size = await breadcrumbs.evaluate(el => el.getBoundingClientRect());
+            const size = await breadcrumbs.evaluate((el) => el.getBoundingClientRect());
 
             // Should be a max of 44px, i.E. two lines + a bit of buffer
             expect(size.height).toBeLessThanOrEqual(46);
@@ -247,15 +255,13 @@ test.describe('Search', () => {
             const SEARCH_ITEM = IMPORTER.get(PAGE_TEST_LONG);
 
             await searchInput.fill(SEARCH_TERM);
-            const searchReq = page.waitForResponse(matchRequest('GET', '/rest/folder/getPages/*'));
+            const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*');
             await dismissNotifications(page);
             await searchButton.click();
             await searchReq;
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, SEARCH_ITEM.id);
-
-            console.log(item);
 
             const publishReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${SEARCH_ITEM.id}`, {
                 skipStatus: true,
@@ -270,8 +276,8 @@ test.describe('Search', () => {
             await expect(toasts).toHaveCount(1);
             await expect(toasts.locator('.message')).toContainText(publishBody.messages[0].message);
 
-            await expectItemPublished(item)
-        })
+            await expectItemPublished(item);
+        });
     });
 
     // -------------------------------
@@ -287,7 +293,7 @@ test.describe('Search', () => {
 
             await navigateToApp(page);
             await loginWithForm(page, AUTH.admin);
-            await selectNode(page, IMPORTER.get(NODE_MINIMAL)!.id);
+            await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
             setupBasicLocators(page);
         });
 
@@ -296,13 +302,13 @@ test.describe('Search', () => {
 
             await searchInput.fill(SEARCH_TERM);
 
-            const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
+            const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 
             await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
-            const body = req.postDataJSON();
+            const body = req.request().postDataJSON();
 
             expect(body.query.bool).toEqual({
                 must: [
@@ -330,12 +336,12 @@ test.describe('Search', () => {
 
             await searchInput.fill(SEARCH_TERM);
 
-            const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
+            const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 
             await searchInput.press('Enter');
 
             const req = await searchReq;
-            const body = req.postDataJSON();
+            const body = req.request().postDataJSON();
 
             expect(body.query.bool).toEqual({
                 must: [
@@ -367,13 +373,13 @@ test.describe('Search', () => {
                 await setStringChipValue(chip, CHIP_VALUE);
             });
 
-            const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
+            const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 
             await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
-            const body = req.postDataJSON();
+            const body = req.request().postDataJSON();
 
             expect(body.query.bool).toEqual({
                 must: [{
@@ -397,13 +403,13 @@ test.describe('Search', () => {
                 await setDateChipValue(chip, chipDate);
             });
 
-            const searchReq = page.waitForRequest(matchRequest('POST', '/rest/elastic/page/_search'));
+            const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 
             await dismissNotifications(page);
             await searchButton.click();
 
             const req = await searchReq;
-            const body = req.postDataJSON();
+            const body = req.request().postDataJSON();
 
             expect(body.query.bool).toEqual({
                 must: [

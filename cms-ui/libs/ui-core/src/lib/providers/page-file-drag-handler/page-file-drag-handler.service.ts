@@ -1,13 +1,11 @@
 import { EventEmitter, Inject, Injectable, InjectionToken, Optional } from '@angular/core';
+import { getDataTransfer, matchesMimeType, transferHasFiles } from '@gentics/common';
 import { Observable, Subscription } from 'rxjs';
 import { filter, mapTo } from 'rxjs/operators';
-import { getDataTransfer, transferHasFiles } from '../../utils/drag-and-drop';
-import { matchesMimeType } from '../../utils/matches-mime-type';
 import { DragStateTrackerFactoryService, FileDragState } from '../drag-state-tracker/drag-state-tracker.service';
 
 /**
  * A token that can be used to inject a mock into the service
- *
  * @internal
  */
 export const PAGE_FILE_DRAG_EVENT_TARGET = new InjectionToken('PAGE_FILE_DRAG_EVENT_TARGET');
@@ -25,7 +23,6 @@ export class PageFileDragHandlerService {
 
     /**
      * Fires when a file is dragged into the current tab, dragged out or dropped.
-     *
      * @exmample
      *   class Component {
      *     constructor(private pageDrag: PageFileDragStatusService) { }
@@ -60,7 +57,6 @@ export class PageFileDragHandlerService {
 
     /**
      * Returns true if a file is dragged over the current page/tab.
-     *
      * @example
      *   class Component {
      *     constructor(private pageDragStatus: PageFileDragStatusService) {}
@@ -74,7 +70,6 @@ export class PageFileDragHandlerService {
 
     /**
      * Returns true if files are dragged over the current tab and any file matches the specified mime type.
-     *
      * @example
      *   class Component {
      *     constructor(private pageDragStatus: PageFileDragStatusService) {}
@@ -83,13 +78,12 @@ export class PageFileDragHandlerService {
      *   <ul *ngIf="pageDragStatus.anyDraggedFileIs('image/*')"> ... </ul>
      */
     public anyDraggedFileIs(allowedTypes: string): boolean {
-        return !!(this.internalFilesDragged.length && this.internalFilesDragged.some(file =>
+        return !!(this.internalFilesDragged.length && this.internalFilesDragged.some((file) =>
             matchesMimeType(file.type, allowedTypes)));
     }
 
     /**
      * Returns true if files are dragged over the current page and all files match the specified mime type.
-     *
      * @example
      *   class Component {
      *     constructor(private pageDragStatus: PageFileDragStatusService) {}
@@ -98,10 +92,9 @@ export class PageFileDragHandlerService {
      *   <ul *ngIf="pageDragStatus.allDraggedFilesAre('image/*')"> ... </ul>
      */
     public allDraggedFilesAre(allowedTypes: string): boolean {
-        return !!(this.internalFilesDragged.length && this.internalFilesDragged.every(file =>
+        return !!(this.internalFilesDragged.length && this.internalFilesDragged.every((file) =>
             matchesMimeType(file.type, allowedTypes)));
     }
-
 
     constructor(@Optional() @Inject(PAGE_FILE_DRAG_EVENT_TARGET) eventTarget: any,
         dragState: DragStateTrackerFactoryService) {
@@ -116,10 +109,10 @@ export class PageFileDragHandlerService {
 
         this.filesDragged$ = dragState.trackElement(this.eventTarget);
         this.dragEnter = this.filesDragged$.pipe(
-            filter(list => list.length > 0),
+            filter((list) => list.length > 0),
         );
         this.dragStop = this.filesDragged$.pipe(
-            filter(list => list.length === 0),
+            filter((list) => list.length === 0),
             mapTo(false),
         );
         this.bindEvents();
@@ -137,8 +130,10 @@ export class PageFileDragHandlerService {
 
     /** @internal */
     bindEvents(): void {
-        if (this.eventsBound) { return; }
-        this.subscription = this.filesDragged$.subscribe(dragged => this.internalFilesDragged = dragged);
+        if (this.eventsBound) {
+            return;
+        }
+        this.subscription = this.filesDragged$.subscribe((dragged) => this.internalFilesDragged = dragged);
         this.eventTarget.addEventListener('dragenter', this.preventAccidentalDrop, false);
         this.eventTarget.addEventListener('dragover', this.preventAccidentalDrop, false);
         this.eventTarget.addEventListener('drop', this.preventAccidentalDrop, false);
@@ -164,7 +159,7 @@ export class PageFileDragHandlerService {
     }
 
     private preventAccidentalDrop = (event: DragEvent) => {
-        let dataTransfer = getDataTransfer(event);
+        const dataTransfer = getDataTransfer(event);
         if (this.preventAccidentalFileDrop && !event.defaultPrevented && transferHasFiles(dataTransfer)) {
             event.preventDefault();
             dataTransfer.effectAllowed = 'none';
@@ -173,6 +168,6 @@ export class PageFileDragHandlerService {
                 this.dropPrevented.emit(undefined);
             }
         }
-    }
+    };
 
 }

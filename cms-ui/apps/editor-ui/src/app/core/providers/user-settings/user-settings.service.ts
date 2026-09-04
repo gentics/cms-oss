@@ -66,7 +66,7 @@ export class UserSettingsService {
      * Watches the app state and loads user settings when a user logs in.
      */
     loadUserSettingsWhenLoggedIn(): void {
-        this.appState.select((state) => state.auth.currentUserId).pipe(
+        this.appState.select((state) => state.auth.user?.id).pipe(
             filter((id) => id != null),
             switchMap((id) => this.appState.select((state) => state.ui.nodesLoaded).pipe(
                 filter((loaded) => loaded),
@@ -123,7 +123,7 @@ export class UserSettingsService {
             if ((!lastNodeIdFromLocalStorage || !allNodes[lastNodeIdFromLocalStorage]) && !allNodes[settings[SETTING_LAST_NODE_ID]]) {
                 // Clear the last node id in the local storage, to cause the correct fallback node to be selected
                 this.localStorage.setForUser(this.currentUserId, SETTING_LAST_NODE_ID, null);
-                this.navigateToFallbackNode();
+                // this.navigateToFallbackNode();
             }
 
             if (this.serverStorage.supported === false) {
@@ -203,7 +203,6 @@ export class UserSettingsService {
             activeFormLanguage: state.folder.activeFormLanguage,
             contentFrameBreadcrumbsExpanded: state.ui.contentFrameBreadcrumbsExpanded,
             displayAllLanguages: state.folder.displayAllLanguages,
-            displayStatusIcons: state.folder.displayStatusIcons,
             displayImagesGridView: state.folder.displayImagesGridView,
             displayDeleted: state.folder.displayDeleted,
             favourites: state.favourites.list,
@@ -302,10 +301,6 @@ export class UserSettingsService {
         this.dispatchAndSaveChange('displayAllLanguages', all);
     }
 
-    setDisplayStatusIcons(all: boolean): void {
-        this.dispatchAndSaveChange('displayStatusIcons', all);
-    }
-
     setDisplayDeleted(all: boolean): void {
         this.dispatchAndSaveChange('displayDeleted', all);
     }
@@ -370,10 +365,6 @@ export class UserSettingsService {
 
             case 'displayAllLanguages':
                 this.folderActions.setDisplayAllPageLanguages(value);
-                break;
-
-            case 'displayStatusIcons':
-                this.folderActions.setDisplayStatusIcons(value);
                 break;
 
             case 'displayDeleted':

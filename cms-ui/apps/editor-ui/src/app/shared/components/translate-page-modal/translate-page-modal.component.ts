@@ -102,13 +102,14 @@ export class TranslatePageModal extends BaseModal<TranslateResult> implements On
         this.createTranslationWithFunction((pageId, options) =>
             this.translationService.translatePage(pageId, options).then((result) => {
                 if (result?.page) {
-                    return result.page;
+                    return result;
                 }
                 if (result?.responseInfo.responseCode === ResponseCode.OK) {
                     this.notificationService.show({ message: result.messages[0]?.message });
                     this.cancelFn();
-                    return;
+                    return null;
                 }
+                return null;
             }),
         ).then((newPage: Page<Raw>) => {
             if (newPage) {

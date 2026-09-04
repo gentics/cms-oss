@@ -1,0 +1,1 @@
+Editor UI: A crash in the integration with Aloha Editor has been fixed, where the selection range is considered, but not actually defined.

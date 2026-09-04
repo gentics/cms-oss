@@ -1,10 +1,11 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
 import { I18nService } from '@gentics/cms-components';
+import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { MockI18nPipe, MockI18nService } from '@gentics/cms-components/testing';
+import { mockPipes } from '@gentics/ui-core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { STATE_MODULES } from '../app/state';
-import { mockPipes } from '@gentics/ui-core/testing';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -25,7 +26,10 @@ function mergeUnique(a: any[], b: any[]): any[] {
 export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
-        imports: [NgxsModule.forRoot(STATE_MODULES)],
+        imports: [
+            NgxsModule.forRoot(STATE_MODULES),
+            AuthenticationModule.forRoot(),
+        ],
         declarations: [
             MockI18nPipe,
             ...mockPipes('gtxI18nDate'),

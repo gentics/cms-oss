@@ -11,15 +11,15 @@ import {
     TemplateRef,
     ViewChild,
 } from '@angular/core';
-import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
-import { StyleObj } from '../../internal';
+import { DomSanitizer, type SafeStyle } from '@angular/platform-browser';
+import type { StyleObj } from '../../internal';
 
 @Component({
     selector: 'gtx-tooltip-content-wrapper',
     templateUrl: './tooltip-content-wrapper.component.html',
     styleUrls: ['./tooltip-content-wrapper.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TooltipContentWrapperComponent implements OnChanges, AfterViewInit {
 
@@ -59,10 +59,10 @@ export class TooltipContentWrapperComponent implements OnChanges, AfterViewInit 
         const rect = this.wrapper.nativeElement.getBoundingClientRect();
         const builtStyles: StyleObj = {
             ...this.styling,
-            /* eslint-disable @typescript-eslint/naming-convention */
+
             '--content-width': `${rect.width}px`,
             '--content-height': `${rect.height}px`,
-            /* eslint-enable @typescript-eslint/naming-convention */
+
         };
 
         const styles = Object.entries(builtStyles)

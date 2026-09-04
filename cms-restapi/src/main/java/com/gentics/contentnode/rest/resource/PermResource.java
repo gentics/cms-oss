@@ -80,8 +80,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/{type}")
-	PermBitsResponse getPermissions(@PathParam("type") String objType, @QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws Exception;
+	@Path("/{permType}")
+	PermBitsResponse getPermissions(@PathParam("permType") String objType, @QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws Exception;
 
 	/**
 	 * Get the permission bits valid for the current user on the given object (and optionally for the given node).<p>
@@ -99,8 +99,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/{type}/{id}")
-	PermBitsResponse getPermissions(@PathParam("type") String objType, @PathParam("id") int objId, @QueryParam("nodeId") @DefaultValue("0") int nodeId,
+	@Path("/{permType}/{id}")
+	PermBitsResponse getPermissions(@PathParam("permType") String objType, @PathParam("id") int objId, @QueryParam("nodeId") @DefaultValue("0") int nodeId,
 			@QueryParam("type") @DefaultValue("-1") int checkType, @QueryParam("lang") @DefaultValue("0") int languageId,
 			@QueryParam("map") @DefaultValue("false") boolean privilegeMap) throws Exception;
 
@@ -114,8 +114,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/{perm}/{type}/{id}")
-	PermResponse getObjectPermission(@PathParam("perm") Permission perm, @PathParam("type") String objType, @PathParam("id") int objId,
+	@Path("/{perm}/{permType}/{id}")
+	PermResponse getObjectPermission(@PathParam("perm") Permission perm, @PathParam("permType") String objType, @PathParam("id") int objId,
 			@QueryParam("nodeId") @DefaultValue("0") int nodeId) throws Exception;
 
 	/**
@@ -127,8 +127,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@POST
-	@Path("/{type}")
-	GenericResponse setPermissions(@PathParam("type") String type, @QueryParam("wait") @DefaultValue("0") long waitMs, SetPermsRequest req) throws Exception;
+	@Path("/{permType}")
+	GenericResponse setPermissions(@PathParam("permType") String type, @QueryParam("wait") @DefaultValue("0") long waitMs, SetPermsRequest req) throws Exception;
 
 	/**
 	 * Set the permissions on the identified object according to the posted request
@@ -140,8 +140,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@POST
-	@Path("/{type}/{id}")
-	GenericResponse setPermissions(@PathParam("type") String objType, @PathParam("id") int objId, @QueryParam("wait") @DefaultValue("0") long waitMs,
+	@Path("/{permType}/{id}")
+	GenericResponse setPermissions(@PathParam("permType") String objType, @PathParam("id") int objId, @QueryParam("wait") @DefaultValue("0") long waitMs,
 			SetPermsRequest req) throws Exception;
 
 	/**
@@ -154,8 +154,8 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/list/{type}")
-	GroupsPermBitsResponse list(@PathParam("type") String objType) throws Exception;
+	@Path("/list/{permType}")
+	GroupsPermBitsResponse list(@PathParam("permType") String objType) throws Exception;
 
 	/**
 	 * List all groups with with their permission bits for the given object
@@ -168,6 +168,6 @@ public interface PermResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/list/{type}/{id}")
-	GroupsPermBitsResponse list(@PathParam("type") String objType, @PathParam("id") int objId) throws Exception;
+	@Path("/list/{permType}/{id}")
+	GroupsPermBitsResponse list(@PathParam("permType") String objType, @PathParam("id") int objId) throws Exception;
 }

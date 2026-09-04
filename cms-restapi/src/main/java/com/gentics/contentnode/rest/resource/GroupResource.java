@@ -335,8 +335,8 @@ public interface GroupResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/{id}/perms/{type}")
-	TypePermissionResponse getTypePerms(@PathParam("id") String id, @PathParam("type") String type) throws Exception;
+	@Path("/{id}/perms/{permType}")
+	TypePermissionResponse getTypePerms(@PathParam("id") String id, @PathParam("permType") String type) throws Exception;
 
 	/**
 	 * Set type permissions for a group
@@ -348,8 +348,8 @@ public interface GroupResource {
 	 * @throws Exception
 	 */
 	@POST
-	@Path("/{id}/perms/{type}")
-	GenericResponse setTypePerms(@PathParam("id") String id, @PathParam("type") String type, @QueryParam("wait") @DefaultValue("0") long waitMs,
+	@Path("/{id}/perms/{permType}")
+	GenericResponse setTypePerms(@PathParam("id") String id, @PathParam("permType") String type, @QueryParam("wait") @DefaultValue("0") long waitMs,
 			TypePermissionRequest request) throws Exception;
 
 	/**
@@ -361,8 +361,8 @@ public interface GroupResource {
 	 * @throws Exception
 	 */
 	@GET
-	@Path("/{id}/perms/{type}/{instanceId}")
-	TypePermissionResponse getInstancePerms(@PathParam("id") String id, @PathParam("type") String type, @PathParam("instanceId") Integer instanceId)
+	@Path("/{id}/perms/{permType}/{instanceId}")
+	TypePermissionResponse getInstancePerms(@PathParam("id") String id, @PathParam("permType") String type, @PathParam("instanceId") Integer instanceId)
 			throws Exception;
 
 	/**
@@ -376,7 +376,7 @@ public interface GroupResource {
 	 * @throws Exception
 	 */
 	@POST
-	@Path("/{id}/perms/{type}/{instanceId}")
-	GenericResponse setInstancePerms(@PathParam("id") String id, @PathParam("type") String type, @PathParam("instanceId") Integer instanceId,
+	@Path("/{id}/perms/{permType}/{instanceId}")
+	GenericResponse setInstancePerms(@PathParam("id") String id, @PathParam("permType") String type, @PathParam("instanceId") Integer instanceId,
 			@QueryParam("wait") @DefaultValue("0") long waitMs, TypePermissionRequest request) throws Exception;
 }

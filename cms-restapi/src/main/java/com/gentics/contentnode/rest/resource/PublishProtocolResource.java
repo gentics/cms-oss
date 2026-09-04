@@ -27,14 +27,14 @@ public interface PublishProtocolResource {
 	 * @throws Exception if an error occurs during retrieval
 	 */
 	@GET
-	@Path("/{type}/{objId}")
+	@Path("/{protoType}/{objId}")
 	@StatusCodes({
 			@ResponseCode(code = 200, condition = "Publish protocol entry is returned."),
 			@ResponseCode(code = 404, condition = "Not found")
 
 	})
 	PublishLogDto get(
-			@PathParam("type") String type,
+			@PathParam("protoType") String type,
 			@PathParam("objId") Integer objId) throws Exception;
 
 	/**

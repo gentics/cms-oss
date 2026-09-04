@@ -1819,7 +1819,7 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 
 		try {
 			// set the channel
-			channelIdSet = setChannelToTransaction(templateListParams.folderNodeId);
+			channelIdSet = setChannelToTransaction(templateListParams.nodeId);
 			boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
 
 			try (WastebinFilter filter = getWastebinFilter(includeWastebin, inFolder.folderId)) {

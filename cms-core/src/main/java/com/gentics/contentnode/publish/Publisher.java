@@ -51,6 +51,7 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -72,6 +73,7 @@ import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.utils.GroovyUtils;
 import com.gentics.lib.content.FilesystemAttributeValue;
 import com.gentics.lib.datasource.mccr.MCCRHelper;
 import com.gentics.lib.db.SQLExecutor;
@@ -83,6 +85,8 @@ import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.ComponentsConstants;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
 import com.gentics.lib.render.exception.PublishException;
+
+import groovy.lang.GroovyRuntimeException;
 
 /**
  * Main publish process class. This implements and controls the publish process.
@@ -1029,6 +1033,20 @@ public class Publisher implements Runnable {
 			if (renderResult != null) {
 				renderResult.info(Publisher.class, "Marking changes about to be published in this run");
 			}
+
+			// get the Scripts CompilationUnits for all published nodes. This will probably compile the scripts used for the nodes
+			// and will fail if not all scripts can be compiled
+			RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
+			for (Node node : publishedNodes) {
+				if (!node.isChannel()) {
+					try {
+						renderType.getCompilationUnit(node);
+					} catch (GroovyRuntimeException e) {
+						throw new NodeException("Error while compiling scripts for %s".formatted(I18NHelper.getName(node)), e);
+					}
+				}
+			}
+
 			objectsToPublishCount = PublishQueue.startPublishProcess(publishedNodes);
 
 			// set the number of objects to publish into the JMX bean

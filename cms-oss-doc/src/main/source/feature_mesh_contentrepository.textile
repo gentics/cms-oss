@@ -410,3 +410,14 @@ To support languages in the CMS with codes not defined in ISO-639-1, they need t
 h3. GIS image variants publication
 
 With CMP 8.1, Mesh has the capability to generate all the Gentics Image Store image variants referenced from the content, during the publish run only, and store it in the database instead of the cache, disabling the ability to trigger a service denial on random GIS resized image requests in the runtime. This feature can be enabled per Node with the @Publish GIS image variants to Mesh@ checkbox.
+
+h3. User API Tokens
+
+API tokens can be maintained for users. Users with the required permissions can create and manage API tokens for other users.
+
+Each API token has a Name and an optional Expiration Date:
+
+    Name: A descriptive name for the API token.
+    Expiration Date: An optional date specifying when the API token expires. If no expiration date is specified, the token does not expire.
+
+API tokens can be deleted at any time. Deleting an API token invalidates the token and prevents it from being used.

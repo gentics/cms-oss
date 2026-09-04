@@ -10,7 +10,7 @@ import { BaseModal } from '../base-modal/base-modal.component';
     selector: 'gtx-date-time-picker-modal',
     templateUrl: './date-time-picker-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DateTimePickerModal extends BaseModal<number> {
 
@@ -43,6 +43,7 @@ export class DateTimePickerModal extends BaseModal<number> {
     }
 
     okayClicked(): void {
-        this.closeFn(this.timestamp);
+        // use seconds insetad of milliseconds
+        this.closeFn(Math.floor(this.timestamp / 1000));
     }
 }

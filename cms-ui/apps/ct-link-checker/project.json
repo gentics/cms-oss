@@ -56,9 +56,6 @@
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
-                    "@bevacqua/rome",
-                    "moment",
-                    "moment-timezone",
                     "hammerjs"
                 ],
                 "aot": true,

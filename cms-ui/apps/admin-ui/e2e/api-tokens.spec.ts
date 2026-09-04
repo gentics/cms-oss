@@ -16,9 +16,10 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import { cloneWithSymbols } from '@gentics/common';
 import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import { dateShouldBeDisabled, setGtxDateFromXpath } from './helpers';
 
 const API_MODAL = 'gtx-api-tokens-modal';
 const API_CREATE_MODAL = 'gtx-api-tokens-create-modal';
@@ -120,29 +121,21 @@ test.describe('Api Tokens', () => {
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
-        const dateInput = form.locator('input[type="date"]');
+        const dateInput = form.locator('gtx-date-time-picker');
 
-        // fill with date from yesterday
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        await dateInput.fill(yesterday.toISOString().split('T')[0]);
-
-        await expect(submitBtn.locator('button')).toBeDisabled();
+        // date from yesterday should be disabled
+        await dateShouldBeDisabled(page, form, 'xpath=preceding-sibling::button[1]');
 
         // fill with date from tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        await dateInput.fill(tomorrow.toISOString().split('T')[0]);
+        await setGtxDateFromXpath(page, dateInput, 'xpath=following-sibling::button[1]');
 
         await expect(submitBtn.locator('button')).toBeEnabled();
 
         await submitBtn.click();
 
-        await expect(page.locator('.success-message')).toBeVisible();
+        await expect(page.locator('gtx-copy-token-modal')).toBeVisible();
         await expect(findNotification(page, 'api-token-create-success')).toBeVisible();
-        await expect(page.locator('.success-message').locator('.content')).toHaveText(/\S+/);
+        await expect(page.locator('gtx-copy-token-modal').locator('.content')).toHaveText(/\S+/);
     });
 
     test('can delete Api Tokens', async ({ page }) => {
@@ -155,6 +148,8 @@ test.describe('Api Tokens', () => {
 
         const row = table.locator('.data-row').first();
 
+        const rowId = await row.getAttribute('data-id');
+
         const deleteButton = findTableAction(row, 'delete');
 
         await deleteButton.click();
@@ -165,7 +160,7 @@ test.describe('Api Tokens', () => {
 
         await expect(findNotification(page, 'api-token-delete-success')).toBeVisible();
 
-        await expect(row).not.toBeAttached();
+        await expect(table.locator(`.data-row[data-id="${rowId}"]`)).not.toBeAttached();
     });
 
     test('can delete multiple Api Tokens', async ({ page }) => {

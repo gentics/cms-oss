@@ -6,12 +6,14 @@
             [required]="true"
             formControlName="name"
         ></gtx-input>
-        <gtx-input
+        <gtx-date-time-picker
             class="columns small-12"
-            [label]="('api_token.expires_at' | gtxI18n) + ' *'"
-            [required]="false"
-            type="date"
             formControlName="expires"
-        ></gtx-input>
+            [label]="'api_token.expires_at' | gtxI18n"
+            [displayTime]="false"
+            [selectYear]="true"
+            [clearable]="true"
+            [min]="NOW"
+        />
     </div>
 </form>

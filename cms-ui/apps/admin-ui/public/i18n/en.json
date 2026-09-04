@@ -333,7 +333,9 @@
         "schema_singular": "Schema",
         "schema_plural": "Schemas",
         "microschema_singular": "Microschema",
-        "microschema_plural": "Microschemas"
+        "microschema_plural": "Microschemas",
+        "mesh_user_token_singular": "API Token",
+        "mesh_user_token_plural": "API Tokens"
     },
     "dashboard": {
         "archive_message_title": "Archive message",
@@ -1242,7 +1244,15 @@
         "published_state_draft": "Draft",
         "published_state_updated": "Updated",
         "published_state_changed": "Last modified at: {{ date }}",
-        "download_binary_content": "Download binary content"
+        "download_binary_content": "Download binary content",
+        "info_selected_user_tokens": "{{amountSelected}} of {{amountTotal}} API Tokens selected",
+        "manage_api_tokens_button": "Maintain API-Tokens",
+        "create_user_token": "Create user Token",
+        "create_user_token_title": "Create user Token for \"{{ user }}\"",
+        "manage_user_token_title": "API Token of \"{{ user }}\"",
+        "token_expires": "Expires at",
+        "token_issued": "Created at",
+        "token_valid": "Valid"
     },
     "object_property": {
         "objectProperty_plural": "Object Properties",

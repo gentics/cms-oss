@@ -65,6 +65,7 @@ h4. Additional Helpers
 | "gtx_gis":#gtx_gis | Include a resized image into the output | +<img src="{{gtx_gis cms.tag.parts.image width=100 mode="prop" }}">+ |
 | "gtx_form":#gtx_form | Include a form | +{{gtx_form cms.tag.parts.form type="java" }}+ |
 | "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
+| "gtx_script":#gtx_script | Execute a script from a devtool package and render the output | +{{gtx_script "demopackage.scriptname" page=cms.page}}+ |
 
 h5. gtx_render
 
@@ -265,6 +266,23 @@ Then it will fall back to the remaining languages of the current node (if the no
 Finally it will fall back to "default".
 
 If no translation is found, it will render nothing.
+
+h5. gtx_script
+
+This helper executes a groovy script from a devtool package and renders the output.
+
+General usage is:
+
+<shell>
+{{gtx_script [scriptname] [param1=value1 param2=value2 ...]}}
+</shell>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +scriptname+ | Fully qualified name of the script to be executed | _mandatory_ |
+
+All other parameters will be injected into the script context. See "Groovy Scripts in Devtool Packages":groovy.html#groovy-scripts-in-devtool-packages for details.
 
 h4. Custom helpers
 

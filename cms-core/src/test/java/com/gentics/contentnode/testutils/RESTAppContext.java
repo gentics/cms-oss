@@ -316,11 +316,7 @@ public class RESTAppContext extends ExternalResource {
 		 * @throws RestException
 		 */
 		public LoggedInClient(String login, String password) throws RestException {
-			if (Boolean.parseBoolean(System.getProperty("test.client.use.openapi", "false"))) {
-				client = new OpenAPIClient(getBaseUri());
-			} else {
-				client = new RestClient(getBaseUri());
-			}
+			client = new RestClient(getBaseUri());
 			client.login(login, password);
 		}
 

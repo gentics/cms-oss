@@ -339,7 +339,7 @@
 					<overWriteSnapshots>true</overWriteSnapshots>
 				</configuration>
 			</plugin>
-			<plugin>
+<!--			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
 				<version>7.19.0</version>
@@ -369,7 +369,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
+-->			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
 				<executions>

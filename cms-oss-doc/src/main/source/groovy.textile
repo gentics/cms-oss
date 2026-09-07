@@ -1,0 +1,161 @@
+h2. Implementation of Groovy Scripts
+
+Custom business logic necessary for preparation of data to be rendered with "handlebars":handlebars.html can be implemented using "Groovy":https://groovy-lang.org/
+either in the Groovy Part Type or in scripts contained in devtool packages.
+
+endprologue.
+
+h3. Groovy Part Type
+
+The Groovy Part Type can be used to add scripts directly in a construct or in tags. The Part will not render something itself,
+but the script can be executed by rendering its "attribute" @execute@.
+
+Example:
+
+In the following example we assume a construct having two parts: @script@ (Groovy Part Type) and @hbs@ (Handlebars Part Type).
+
+<shell filename="script">
+return [
+  currentpage: [
+    "name": cms.page.name,
+    "id": cms.page.id
+  ]
+]
+</shell>
+
+<shell filename="hbs">
+{{#with cms.tag.parts.script.execute}}
+{{currentpage.name}} ({{currentpage.id}})
+{{/with}}
+</shell>
+
+The example shows how to execute the script from the Groovy Part Type while rendering the Handlebars Part Type and how to use the script result.
+
+h3. Groovy Scripts in Devtool Packages
+
+In order to make code reusable, it can be put into Groovy scripts or even classes as part of devtool packages. For better understanding
+of the distinction between "script" and "class" consult "Scripts versus classes":https://groovy-lang.org/structure.html#_scripts_versus_classes
+in the Groovy documentation.
+
+The following functionality matrix will help to decide, when to use scripts and when to use classes:
+
+|                                    |_. Script |_. Class |
+|_. Access to @cms@ base object        | !images/gcn_icons/ok.gif(Yes)!     | !images/gcn_icons/remove.gif(No)! |
+|_. Reusable/importable by other code  | !images/gcn_icons/remove.gif(No)!  | !images/gcn_icons/ok.gif(Yes)!    |
+|_. Can hold state (fields)            | !images/gcn_icons/remove.gif(No)!  | !images/gcn_icons/ok.gif(Yes)!    |
+|_. Executed directly (top-level code) | !images/gcn_icons/ok.gif(Yes)!     | !images/gcn_icons/remove.gif(No)! |
+
+Example: Combining a Script and a Class
+
+The following example shows the devtool package @helpers@, containing both a class and a script. Both files are placed in the package's @scripts@
+directory, as described in "Devtool Packages":devtools_overview.html#groovy-scripts.
+
+The class @Greeter@ implements a method @greet@, which expects a name and a page object as arguments. It reads the page's @name@ and combines it
+with the given name into a greeting:
+
+<shell filename="/cms/packages/helpers/scripts/Greeter.groovy">
+package helpers
+
+class Greeter {
+	static String greet(String name, page) {
+		return "Hello ${name}, welcome to \"${page.name}\"!"
+	}
+}
+</shell>
+
+The script @greeting@ accepts the parameter @name@, imports the class @Greeter@ and passes the parameter together with the current page
+(resolved via @cms.page@) to the method @greet@:
+
+<shell filename="/cms/packages/helpers/scripts/greeting.groovy">
+package helpers
+
+import groovy.transform.Field
+import helpers.Greeter
+
+@Field def String name = ""
+
+return Greeter.greet(name, cms.page)
+</shell>
+
+The script can then be executed from a Handlebars Part Type, passing a value for the parameter @name@:
+
+<shell filename="hbs">
+{{gtx_script "helpers.greeting" name="World"}}
+</shell>
+
+NOTE: The name of the script (@helpers.greeting@ in this example) is constructed from the name of the Groovy package and the filename of the script
+(without the @.groovy@ extension), separated by a dot.
+
+NOTE: In order to handle possible namespace conflicts, it is highly recommended to always use the name of the devtool package also as name of the Groovy package
+for any script or class defined in a devtool package. See the examples above, which follow this guideline.
+
+h3. Accessing "cms"
+
+Like Handlebars, the base object @cms@ will be available in all scripts and can be used to resolve base objects similar to "Handlebars":handlebars.html#resolving.
+
+Note: The @cms@ base object will not be available per default in Groovy classes, so any object, which shall be processed in Groovy classes must be passed as method arguments
+to class methods.
+
+h3. Loading CMS objects
+
+If any objects other than the base objects, which can be resolved from @cms@ have to be used, they can be loaded with the help of the class @com.gentics.api.Loader@.
+
+The class contains the following static methods:
+
+|_. Name |_. Description |_. Example |
+| @Loader.object(type, id)@ | Load the object of given @type@ with the @id@. The @type@ can either be a number or a string (see table below). The @id@ can either be a local id (as number) or a global id (as string). | def page = Loader.object("page", 47) |
+| @Loader.page(id)@ | Load the page with the @id@. The @id@ can either be a local id (as number) or a global id (as string). | def page = Loader.page(47) |
+| @Loader.folder(id)@ | Load the folder with the @id@. The @id@ can either be a local id (as number) or a global id (as string). | def folder = Loader.folder(47) |
+| @Loader.file(id)@ | Load the file with the @id@. The @id@ can either be a local id (as number) or a global id (as string). | def file = Loader.file(47) |
+| @Loader.image(id)@ | Load the image with the @id@. The @id@ can either be a local id (as number) or a global id (as string). | def image = Loader.image(47) |
+| @Loader.node(id)@ | Load the node with the @id@. The @id@ can either be a local id (as number) or a global id (as string). | def node = Loader.node(47) |
+
+The following @types@ are supported
+
+|_. Name |_. string |_. int |
+| Page   | page     | 10007 |
+| Folder | folder   | 10002 |
+| File   | file     | 10008 |
+| Image  | image    | 10011 |
+| Node   | node     | 10001 |
+
+WARNING: It it strongly recommended to only load objects either be resolving from the @cms@ base object or by using the @com.gentics.api.Loader@. Any other methods will most probably lead to unexpected and unwanted behaviour and errors.
+
+h3. Executing code in the scope of a Channel
+
+Code that needs to be executed in the scope of a channel (especially loading and resolving of objects) can be wrapped into channel scope with the help of class @com.gentics.api.ChannelScope@.
+
+The usage is a follows:
+
+<shell>
+import com.gentics.api.Loader
+import com.gentics.api.ChannelScope
+
+def channelId = 17
+def pageInCurrentChannel = cms.page
+def pageInOtherChannel = ChannelScope.withChannel(channelId) {
+    c -> Loader.page(cms.page.id)
+}
+</shell>
+
+h3. Cross-package usage
+
+It is possible to import classes from other devtool packages, if both devtool packages are assigned to the rendered node.
+In order to make this possible, the CMS will compile all scripts found in all assigned devtool packages together per node.
+When the assignment of devtool packages to a node is changed (a new package added or a package removed) or any script file
+in an existing devtool package is modified, all scripts will have to be recompiled.
+
+h3. Handling of compilation errors
+
+If any of the scripts contained in a devtool package cannot be compiled (due to a syntax error, missing imports or other reasons), this will
+affect all Groovy script executions in all nodes to which the devtool package is assigned. All tags with Handlebars Part Types, that are calling scripts
+(either with the @gtx_script@ helper or by rendering @execute@ of a Groovy Part) will fail to render. The causing compilation error is logged in the
+browser console of the page preview and the publish process will fail (right after the start) also showing the causing compilation error.
+
+h3. Dependency Handling
+
+If implemented properly (see "Loading CMS objects":#loading-cms-objects), dependencies to CMS objects used in Groovy scripts will be handled by the CMS.
+
+Changes in Groovy scripts contained in Groovy Part Types will also be handled by the internal dependency management.
+
+TBD: Changes in Groovy scripts/classes in devtool packages.

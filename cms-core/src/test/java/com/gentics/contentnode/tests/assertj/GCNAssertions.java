@@ -32,6 +32,7 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.object.scheduler.SchedulerSchedule;
+import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.rest.model.FilePrivileges;
 import com.gentics.contentnode.rest.model.PagePrivileges;
 import com.gentics.contentnode.rest.model.RolePermissionsModel;
@@ -176,6 +177,10 @@ public class GCNAssertions extends Assertions {
 
 	public static ApiTokenDataModelAssert assertThat(ApiTokenDataModel actual) {
 		return new ApiTokenDataModelAssert(actual);
+	}
+
+	public static PublishInfoAssert assertThat(PublishInfo actual) {
+		return new PublishInfoAssert(actual);
 	}
 
 	/**

@@ -181,7 +181,9 @@ public abstract class AbstractGroovyTest {
 		String packageName = synchronizer.getName();
 		File packageRoot = synchronizer.getPackagePath().toFile();
 		File scriptsRoot = new File(packageRoot, "scripts");
-		assertThat(scriptsRoot.mkdirs()).as("Creation of dirs " + scriptsRoot + " succeded").isTrue();
+		if (!scriptsRoot.exists()) {
+			assertThat(scriptsRoot.mkdirs()).as("Creation of dirs " + scriptsRoot + " succeded").isTrue();
+		}
 
 		for (String name : scriptFileNames) {
 			try (InputStream in = GroovyRenderingTest.class.getResourceAsStream("%s/%s".formatted(packageName, name));
@@ -213,6 +215,8 @@ public abstract class AbstractGroovyTest {
 		}
 
 		String modified = modifier.apply(original);
+
+		assertThat(modified).as("Modified script content").isNotEqualTo(original);
 
 		try (Reader in = new StringReader(modified);
 				OutputStream out = new FileOutputStream(new File(scriptsRoot, scriptFileName))) {

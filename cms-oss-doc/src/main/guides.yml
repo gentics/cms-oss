@@ -110,6 +110,9 @@ index:
     - title: "Rendering with Handlebars"
       url: handlebars
       text: "Rendering in the CMS with Handlebars is an alternative to Velocity"
+    - title: "Implementation of Groovy Scripts"
+      url: groovy
+      text: "Business logic for preparation of data to be rendered can be implemented in Groovy scripts"
     - title: "Using Velocity in Tagtypes"
       url: impl_using_velocity
       text: "Learn how to use velocity in Tagtypes"

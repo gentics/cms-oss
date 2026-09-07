@@ -171,7 +171,7 @@ const RendererScreen: React.FC<{
     businessObjectID: '',
     culture: 'de-AT',
     features: {},
-    t: ((key: string) => key) as TFunction<'translation', undefined>,
+    t: props.t,
     submitted: false,
     handleFocusError: handleFocusError,
     expertMultipleHandler: () => {},

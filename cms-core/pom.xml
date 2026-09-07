@@ -380,6 +380,12 @@
 			<artifactId>mcp-json-jackson2</artifactId>
 		</dependency>
 
+		<!-- Classpath scanning, used to discover @McpTool annotated REST resource methods -->
+		<dependency>
+			<groupId>io.github.classgraph</groupId>
+			<artifactId>classgraph</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>

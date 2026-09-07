@@ -49,6 +49,7 @@ import com.gentics.contentnode.config.PackageRewriteRule;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
 import com.gentics.contentnode.mcp.MCPServer;
+import com.gentics.contentnode.mcp.McpToolRegistry;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -169,6 +170,7 @@ public class OSSRunner {
 
 		// add MCP Servlet
 		addMcpServlet(context);
+		registerMcpTools();
 
 		// add servlets for alohaeditor
 		addAlohaEditor(context);
@@ -285,6 +287,15 @@ public class OSSRunner {
 		context.addServlet(mcpServletHolder, path);
 
 		NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Serving MCP endpoint at %s", path));
+	}
+
+	/**
+	 * Scan the REST resource implementations for {@link com.gentics.contentnode.mcp.McpTool}
+	 * annotated methods and register them as tools on the MCP server (if the MCP endpoint is
+	 * enabled).
+	 */
+	private static void registerMcpTools() {
+		MCPServer.getServer().ifPresent(McpToolRegistry::scanAndRegister);
 	}
 
 	private static void addStaticFilesToContext(ServletContextHandler context) {

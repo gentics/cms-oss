@@ -562,7 +562,7 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 		// special case for HandlebarsPartType
 		if (part.getPartTypeId() == Part.HANDLEBARS) {
 			return "part." + part.getKeyname() + ".hbs";
-		} else if (part.getPartoptionId() == Part.GROOVY) {
+		} else if (part.getPartTypeId() == Part.GROOVY) {
 			return "part." + part.getKeyname() + ".groovy";
 		}
 		switch (Property.Type.get(part.getPartTypeId())) {

@@ -561,6 +561,8 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 		// special case for HandlebarsPartType
 		if (part.getPartTypeId() == 43) {
 			return "part." + part.getKeyname() + ".hbs";
+		} else if (part.getPartTypeId() == Part.JSON) {
+			return "part." + part.getKeyname() + ".json";
 		}
 		switch (Property.Type.get(part.getPartTypeId())) {
 		case STRING:

@@ -415,6 +415,8 @@ h3. User API Tokens
 
 API tokens can be maintained for users. Users with the required permissions can create and manage API tokens for other users.
 
+To manage API tokens, go to Management → Users. For the desired user, click on "Manage API Tokens" (the key symbol)
+
 Each API token has a Name and an optional Expiration Date:
 
     Name: A descriptive name for the API token.

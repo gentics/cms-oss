@@ -17,3 +17,4 @@ export * from './api-tokens-table/api-tokens-table.component';
 export * from './api-tokens-create-modal/api-tokens-create-modal.component';
 export * from './api-tokens-create-form/api-tokens-create-form.component';
 export * from './copy-value/copy-value.component';
+export * from './copy-token-modal/copy-token-modal.component';

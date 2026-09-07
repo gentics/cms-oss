@@ -30,7 +30,6 @@
                 },
                 "scripts": [],
                 "allowedCommonJsDependencies": [
-                    "@bevacqua/rome",
                     "@gentics/ui-core",
                     "cropperjs"
                 ],

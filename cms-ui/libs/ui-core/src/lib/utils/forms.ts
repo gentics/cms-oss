@@ -6,6 +6,7 @@ import {
     MultiValuePatternValidationErrorModel,
     PatternValidatorError,
     RegexValidationErrorModel,
+    toUnixSeconds,
     VALIDATOR_MULTI_VALUE_PATTERN_PROPERTY,
     VALIDATOR_PATTERN_PROPERTY,
     VALIDATOR_REGEX_ERROR_PROPERTY,
@@ -207,16 +208,18 @@ function asRegExp(pattern: string | RegExp): null | { str: string; regex: RegExp
     return { str, regex };
 }
 
-export function futureDateValidator(control: AbstractControl): ValidationErrors | null {
+export function futureDateValidator(control: AbstractControl<number | null>): ValidationErrors | null {
     if (!control.value) {
         return null;
     }
 
-    const selected = new Date(control.value);
-    selected.setHours(0, 0, 0, 0);
+    const unixSeconds = toUnixSeconds(control.value);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    if (unixSeconds === null) {
+        return null;
+    }
 
-    return selected > today ? null : { futureDate: true };
+    return new Date(unixSeconds * 1000) > new Date()
+        ? null
+        : { futureDate: true };
 };

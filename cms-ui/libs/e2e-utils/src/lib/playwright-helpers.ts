@@ -310,8 +310,8 @@ export async function clickModalAction(source: Locator, action: string): Promise
     await source.locator(`.modal-footer [data-action="${action}"] button`).click();
 }
 
-export async function selectTab(source: Page | Locator, id: number | string): Promise<Locator> {
-    const tabs = await getSourceLocator(source, 'gtx-tabs');
+export async function selectTab(source: Page | Locator, id: number | string, groupedTabs = false): Promise<Locator> {
+    const tabs = await getSourceLocator(source, groupedTabs ? 'gtx-grouped-tabs' : 'gtx-tabs');
     await tabs.locator(`.tab-link[data-id="${id}"]`).click();
     return tabs.locator(`gtx-tab[data-id="${id}"]`);
 }

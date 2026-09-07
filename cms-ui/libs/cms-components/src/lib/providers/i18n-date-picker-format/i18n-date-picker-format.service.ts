@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DateTimePickerFormatProvider, DateTimePickerStrings, Moment } from '@gentics/ui-core';
+import { DateTimePickerFormatProvider, DateTimePickerStrings } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { formatI18nDate } from '../../utils';
@@ -9,7 +9,7 @@ import { I18nService } from '../i18n/i18n.service';
  * A date format & string provider for DateTimePicker instances.
  */
 @Injectable()
-export class I18nDatePickerFormatService implements DateTimePickerFormatProvider {
+export class I18nDatePickerFormatService extends DateTimePickerFormatProvider {
 
     strings: DateTimePickerStrings;
 
@@ -18,6 +18,7 @@ export class I18nDatePickerFormatService implements DateTimePickerFormatProvider
     constructor(
         private translate: I18nService,
     ) {
+        super();
         this.changed$ = translate.onLanguageChange().pipe(
             tap(() => this.updateStrings()),
         );
@@ -25,8 +26,8 @@ export class I18nDatePickerFormatService implements DateTimePickerFormatProvider
         this.updateStrings();
     }
 
-    format(moment: Moment, displayTime: boolean, _displaySeconds: boolean): string {
-        return formatI18nDate(moment.toDate(), this.translate.getCurrentLanguage(), displayTime ? 'dateTime' : 'date');
+    public override format(date: Date, displayTime: boolean, _displaySeconds: boolean): string {
+        return formatI18nDate(date, this.translate.getCurrentLanguage(), displayTime ? 'dateTime' : 'date');
     }
 
     private updateStrings(): void {
@@ -90,12 +91,15 @@ export class I18nDatePickerFormatService implements DateTimePickerFormatProvider
             this.translate.instant('date.datepicker_weekday_minimal_saturday'),
         ];
 
-        let weekStart = 1;
+        let weekStart = 0;
         try {
             weekStart = parseInt(this.translate.instant('date.datepicker_week_start'), 10);
             if (!Number.isInteger(weekStart)) {
-                console.warn('Could not determine week-start from translation "date.datepicker_week_start"!');
-                weekStart = 1;
+                const locale = new Intl.Locale(this.translate.getCurrentLanguage());
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                    weekStart = (locale as any).getWeekInfo().firstDay;
+                } catch (err) {}
             }
         } catch (err) {}
 

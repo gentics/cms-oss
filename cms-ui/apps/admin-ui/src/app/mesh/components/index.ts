@@ -1,4 +1,3 @@
-export * from './copy-token-modal/copy-token-modal.component';
 export * from './login-gate/login-gate.component';
 export * from './manage-tag-families-modal/manage-tag-families-modal.component';
 export * from './management-tabs/management-tabs.component';
@@ -42,4 +41,7 @@ export * from './tag-family-table/tag-family-table.component';
 export * from './tag-modal/tag-modal.component';
 export * from './tag-properties/tag-properties.component';
 export * from './tag-table/tag-table.component';
-
+export * from './create-mesh-user-token-modal/create-mesh-user-token-modal.component';
+export * from './mesh-user-token-modal/mesh-user-token-modal.component';
+export * from './mesh-user-token-properties/mesh-user-token-properties.component';
+export * from './mesh-user-token-table/mesh-user-token-table.component';

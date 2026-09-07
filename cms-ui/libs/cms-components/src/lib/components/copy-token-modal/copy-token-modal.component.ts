@@ -1,26 +1,27 @@
-import { MeshUserBO } from '@admin-ui/mesh/common';
-import { getUserDisplayName } from '@admin-ui/mesh/utils';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
-import { User, UserReference } from '@gentics/mesh-models';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
+import { I18nNotificationService } from '../../providers';
 
 @Component({
-    selector: 'gtx-mesh-copy-token-modal',
+    selector: 'gtx-copy-token-modal',
     templateUrl: './copy-token-modal.component.html',
     styleUrls: ['./copy-token-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: false,
 })
-export class CopyTokenModal extends BaseModal<void> implements OnInit {
+export class CopyTokenModal extends BaseModal<void> {
 
     @Input()
     public token: string;
 
     @Input()
-    public user: UserReference | User | MeshUserBO;
+    public title: string;
 
-    public displayName: string;
+    @Input()
+    public successMessage: string;
+
+    @Input()
+    public errorMessage: string;
 
     constructor(
         protected notification: I18nNotificationService,
@@ -28,24 +29,19 @@ export class CopyTokenModal extends BaseModal<void> implements OnInit {
         super();
     }
 
-    ngOnInit(): void {
-        this.displayName = getUserDisplayName(this.user);
-    }
-
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     handleCopy(error?: any): void {
         if (error) {
             this.notification.show({
                 type: 'alert',
-                message: 'mesh.copy_token_error',
+                message: this.errorMessage,
             });
-            console.error(error);
             return;
         }
 
         this.notification.show({
             type: 'success',
-            message: 'mesh.copy_token_success',
+            message: this.successMessage,
         });
     }
 }

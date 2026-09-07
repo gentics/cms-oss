@@ -1,0 +1,39 @@
+h2. API Tokens
+
+Every user can create and manage their own API tokens in the API Token Manager. The API Token Manager
+is available in the user menu of the Editor and Administration User Interface.
+
+endprologue.
+
+h3. Overview
+
+The API Token Manager is opened from the user menu: click the user image in the top right corner of
+the "Editor or Administration User Interface":userinterfaces.html and choose the API token entry -
+the same menu that also contains the entry for changing the password.
+
+h3. Creating a token
+
+The token creation dialog requires the user to provide a name. An expiry date can optionally be specified.
+
+* *Name* – Required. The name used to identify the token.
+* *Expiry date* – Optional. The date on which the token expires.
+
+WARNING: The token value is shown only once directly after creation and cannot be retrieved again afterwards.
+
+h3. Listing tokens
+
+The token list shows the following information for each API token:
+
+* *Name* – The name assigned to the token when it was created.
+* *Creation date* – The date on which the token was created.
+* *Expiry date* – The date on which the token expires, if an expiry date was specified.
+
+h3. Revoking a token
+
+A token can be revoked by deleting it directly from the token list. Once deleted, the token is no longer
+valid and cannot be used for authentication.
+
+h3. Permissions
+
+Users need the appropriate permission to manage API tokens. Users with this permission can create, list,
+and revoke their own tokens.

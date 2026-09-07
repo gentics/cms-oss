@@ -1,0 +1,153 @@
+.calendar-months {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.25rem;
+
+    .month-button {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--gtx-primary);
+        font-size: 3rem;
+        cursor: pointer;
+        height: 1em;
+
+        > icon {
+            font-size: inherit;
+        }
+
+        &[disabled] {
+            color: var(--gtx-mid-gray);
+            cursor: not-allowed;
+        }
+    }
+
+    .current-display {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 0.25rem;
+
+    .day-indicator {
+        font-weight: bold;
+    }
+
+    .week-indicator {
+        display: none;
+        border-right: 1px solid var(--gtx-very-light-gray);
+        text-align: center;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-family: monospace;
+        user-select: none;
+
+        .week-label {
+            padding: 0.375em;
+            display: inline-block;
+            width: 1.75em;
+            height: 1.75em;
+            position: relative;
+            transition: 300ms;
+            display: block;
+            border-radius: 50%;
+            line-height: 1;
+        }
+    }
+
+    .day {
+        border: none;
+        background: none;
+        padding: 0;
+        text-align: center;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+
+        .day-label {
+            padding: 0.375em;
+            padding: 0.455em 0.285em;
+            display: inline-block;
+            width: 1.75em;
+            height: 1.75em;
+            position: relative;
+            transition: 300ms;
+            display: block;
+            border-radius: 50%;
+            line-height: 1;
+
+            &:hover {
+                color: var(--gtx-off-black);
+                background-color: color-mix(in srgb, var(--gtx-primary), transparent 60%);
+            }
+        }
+
+        &.overflow {
+            .day-label {
+                color: #a0a0a0;
+            }
+        }
+
+        &.active {
+            .day-label {
+                color: var(--gtx-very-light-gray);
+                background-color: var(--gtx-primary);
+            }
+        }
+
+        &[disabled] {
+            cursor: not-allowed;
+
+            .day-label {
+                color: var(--gtx-mid-gray);
+            }
+
+            &:hover .day-label {
+                color: var(--gtx-mid-gray);
+                background: none;
+            }
+        }
+    }
+
+    .day-indicator,
+    .day {
+        border-bottom: 1px solid var(--gtx-very-light-gray);
+    }
+
+    &.show-weeks {
+        grid-template-columns: repeat(8, 1fr);
+    }
+
+    &:not(.show-weeks) {
+        .week-indicator {
+            display: none;
+        }
+    }
+
+    &:not(.show-overflow) {
+        .day.overflow {
+            pointer-events: none;
+
+            .day-label {
+                display: none;
+            }
+        }
+    }
+}

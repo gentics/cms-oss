@@ -21,7 +21,7 @@ export async function navigateToModule(page: Page, moduleId: string): Promise<Lo
  * Logs out from the mesh management interface
  */
 export async function logoutMeshManagement(page: Page): Promise<void> {
-    const req = page.waitForResponse(response =>
+    const req = page.waitForResponse((response) =>
         response.ok() && matchesPath(response.url(), '/rest/contentrepositories/*/proxy/api/v2/auth/logout'),
     );
     await page.locator('.management-container .logout-button').click();
@@ -41,4 +41,31 @@ export async function loginWithCR(page: Page, shouldBeLoggedIn: boolean = true):
 
 export function findEntityTableActionButton(source: Page | Locator, action: string): Locator {
     return source.locator(`.entity-table-actions-bar .table-action-button[data-action="${action}"] button`);
+}
+
+export async function setGtxDateFromXpath(page: Page, dateInput: Locator, xPath: string): Promise<void> {
+    await dateInput.click();
+
+    const modal = page.locator('gtx-date-time-picker-modal');
+
+    await modal.waitFor({ state: 'visible' });
+
+    await modal.locator('.day.active').locator(xPath).click();
+    await modal.locator('[data-action="confirm"] button').click();
+}
+
+export async function dateShouldBeDisabled(page: Page, createTokenModalForm: Locator, xPath: string): Promise<void> {
+    const nameInput = createTokenModalForm.locator('input[type="text"]');
+    await nameInput.fill('test');
+
+    const dateInput = createTokenModalForm.locator('gtx-date-time-picker');
+
+    await dateInput.click();
+
+    const modal = page.locator('gtx-date-time-picker-modal');
+
+    await modal.waitFor({ state: 'visible' });
+
+    await modal.locator('.day.active').locator(xPath).isDisabled();
+    await modal.locator('.modal-footer [data-action="cancel"]').click();
 }

@@ -149,7 +149,8 @@ public class HelperSource {
 	 * @param options
 	 * @return
 	 */
-	public static Object json_path(Object renderable, String jsonPathString, Options options) {
+	@HelperFunction("gtx_json_path")
+	public static Object jsonPath(Object renderable, String jsonPathString, Options options) {
 		if (renderable instanceof ResolvableMapWrapper mw) {
 			renderable = mw.getWrapped();
 		} 

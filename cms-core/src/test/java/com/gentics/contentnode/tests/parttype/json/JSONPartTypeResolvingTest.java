@@ -123,7 +123,7 @@ public class JSONPartTypeResolvingTest extends HandlebarsPartTypeResolvingTest {
 					"{{#each cms.tag.parts.otherpart.whatever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.whoever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.wherever}}{{@key}}:{{{this}}} {{/each}}" },
 			new Object[] { JSONPartType.class, "wherever, wherever, who", 
 					JSON_INPUT, 
-					"{{json_path cms.tag.parts.otherpart \"$[*]['whoever']\"}}, {{json_path cms.tag.parts.otherpart \"$.whoever[0].whatever\"}}, {{json_path cms.tag.parts.otherpart \"$.wherever[1]\"}}" }
+					"{{gtx_json_path cms.tag.parts.otherpart \"$[*]['whoever']\"}}, {{gtx_json_path cms.tag.parts.otherpart \"$.whoever[0].whatever\"}}, {{gtx_json_path cms.tag.parts.otherpart \"$.wherever[1]\"}}" }
 		);
 		return data;
 	}

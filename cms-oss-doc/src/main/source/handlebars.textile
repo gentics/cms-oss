@@ -68,7 +68,7 @@ h4. Additional Helpers
 | "gtx_form":#gtx_form | Include a form | +{{gtx_form cms.tag.parts.form type="java" }}+ |
 | "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
 | "gtx_script":#gtx_script | Execute a script from a devtool package and render the output | +{{gtx_script "demopackage.scriptname" page=cms.page}}+ |
-| "json_path":#json_path | Navigate over a "JSON":gcn_part_types.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ | +{{json_path cms.tag.parts.json "$.objarray[0].objfield"}}+ |
+| "gtx_json_path":#gtx_json_path | Navigate over a "JSON":gcn_part_type.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ | +{{gtx_json_path cms.tag.parts.json "$.objarray[0].objfield"}}+ |
 
 h5. gtx_render
 
@@ -287,14 +287,14 @@ With the parameters
 
 All other parameters will be injected into the script context. See "Groovy Scripts in Devtool Packages":groovy.html#groovy-scripts-in-devtool-packages for details.
 
-h5. json_path
+h5. gtx_json_path
 
 Helps navigating over a "JSON":gcn_part_types.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ notation input. 
 
 General usage is:
 
 <shell>
-{{json_path [object] [JSONPath-string]}}
+{{gtx_json_path [object] [JSONPath-string]}}
 </shell>
 
 Where the parameters are
@@ -312,7 +312,7 @@ An example of rendering a JSON part type "otherpart" of a current tag, having co
 using the following calls
 
 <shell>
-{{json_path cms.tag.parts.otherpart "$[*]['whoever']"}}, {{json_path cms.tag.parts.otherpart "$.whoever[0].whatever"}}, {{json_path cms.tag.parts.otherpart "$.wherever[1]"}}
+{{gtx_json_path cms.tag.parts.otherpart "$[*]['whoever']"}}, {{gtx_json_path cms.tag.parts.otherpart "$.whoever[0].whatever"}}, {{gtx_json_path cms.tag.parts.otherpart "$.wherever[1]"}}
 </shell>
 
 will result in

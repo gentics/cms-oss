@@ -11,6 +11,4 @@ java -cp cms-server.jar com.gentics.contentnode.tools.UpdateImplementation \
   -p "${NODE_USER_PASSWORD}" \
   --base http://{{ include "cms.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.cms.service.port }}
 
-sleep 50
-exit -1
 

@@ -45,6 +45,7 @@ import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
 import com.gentics.lib.render.Renderable;
 import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.github.jknack.handlebars.Options;
+import com.github.jknack.handlebars.helper.HelperFunction;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ParseContext;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
@@ -145,7 +146,8 @@ public class HelperSource {
 	 * @param options
 	 * @return
 	 */
-	public static Object json_path(Object renderable, String jsonPathString, Options options) {
+	@HelperFunction("gtx_json_path")
+	public static Object jsonPath(Object renderable, String jsonPathString, Options options) {
 		if (renderable instanceof ResolvableMapWrapper mw) {
 			renderable = mw.getWrapped();
 		} 

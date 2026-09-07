@@ -1,0 +1,2 @@
+When a handlebars or velocity part of a tag was rendered directly, @cms.tag@ could not be
+resolved in the scope of the part. This has been fixed.

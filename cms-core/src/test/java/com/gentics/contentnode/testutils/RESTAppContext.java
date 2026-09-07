@@ -24,7 +24,6 @@ import com.gentics.contentnode.rest.client.RestApi;
 import com.gentics.contentnode.rest.client.RestClient;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
-import com.gentics.contentnode.testutils.openapi.OpenAPIClient;
 import com.gentics.lib.log.NodeLogger;
 
 import jakarta.ws.rs.core.Application;
@@ -316,11 +315,7 @@ public class RESTAppContext extends ExternalResource {
 		 * @throws RestException
 		 */
 		public LoggedInClient(String login, String password) throws RestException {
-			if (Boolean.parseBoolean(System.getProperty("test.client.use.openapi", "false"))) {
-				client = new OpenAPIClient(getBaseUri());
-			} else {
-				client = new RestClient(getBaseUri());
-			}
+			client = new RestClient(getBaseUri());
 			client.login(login, password);
 		}
 

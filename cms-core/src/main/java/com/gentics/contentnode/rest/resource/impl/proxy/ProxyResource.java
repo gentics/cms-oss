@@ -105,7 +105,6 @@ public class ProxyResource {
 	 */
 	@DELETE
 	@Path("/{key}")
-	@Hidden
 	public Response deleteNoPath() throws NodeException, HttpException, IOException {
 		return delete();
 	}

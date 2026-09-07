@@ -2,16 +2,6 @@ package com.gentics.contentnode.rest.resource;
 
 import java.util.List;
 
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
-
 import com.gentics.contentnode.rest.model.request.LinkRequest;
 import com.gentics.contentnode.rest.model.request.MultiLinkRequest;
 import com.gentics.contentnode.rest.model.request.SortOrder;
@@ -31,10 +21,20 @@ import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.ReducedListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
-import com.gentics.contentnode.rest.resource.parameter.TemplateListParameterBean;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
+
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 
 /**
  * Resource used for loading, saving and manipulating GCN templates.
@@ -75,7 +75,7 @@ public interface TemplateResource {
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
 			@BeanParam PermsParameterBean perms,
-			@BeanParam TemplateListParameterBean listParams) throws Exception;
+			@BeanParam ReducedListParameterBean listParams) throws Exception;
 
 	/**
 	 * Create a new template

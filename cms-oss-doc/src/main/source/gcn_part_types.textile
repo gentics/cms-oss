@@ -21,7 +21,7 @@ h3. Overview
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
 | 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. |
 | 43        | Handlebars              | The Handlebars part type renders its content with the Handlebars rendering engine. See "Rendering with Handlebars":handlebars.html for details. |
-| 44        | JSON                    | The JSON part type offers storing, validation and navigation/resolving over structured data in the "JavaScript Object Notation":https://www.json.org/json-en.html content. | 
+| 44        | JSON                    | The JSON part type offers storing, validation and navigation/resolving over structured data in the "JavaScript Object Notation":https://www.json.org/json-en.html content. |
 | 45        | Groovy                  | The Groovy part type allows to execute Groovy Scripts for preparation of data to be rendered. See "Implementation of Groovy Scripts":groovy.html for details. |
 
 NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type @HTML@.
@@ -73,7 +73,7 @@ So the following contents will pass the corresponding schema filters:
     "another string"
 ]
 </shell>
-For looking up into the full possibilities of JSON schemas filtering one may inspect the link:https://json-schema.org/[official JSON Schema guide].
+For looking up into the full possibilities of JSON schemas filtering one may inspect the "official JSON Schema guide":https://json-schema.org/.
 
 h3. Custom Part Type Implementations
 

@@ -26,6 +26,19 @@ import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 
 type LoadStatus = 'idle' | 'loading' | 'loaded' | 'no-session' | 'error';
 
+/**
+ * How far a scope has come. Local to this component - the tab strip and the
+ * table each take only the plain numbers they need.
+ */
+interface ScopeCompletion {
+    /** Placeholders in the scope. */
+    placeholders: number;
+    /** Placeholders where at least one active language is empty. */
+    open: number;
+    /** Empty placeholders per language code. */
+    missingByLanguage: Record<string, number>;
+}
+
 @Component({
     selector: 'gtx-app',
     templateUrl: './app.component.html',
@@ -136,30 +149,33 @@ export class AppComponent implements OnInit {
         return counter;
     });
 
+    /** Completion of the scope on screen, draft included - feeds the column headers. */
+    public readonly activeCompletion = computed<ScopeCompletion>(() => {
+        return computeCompletion(
+            merge(this.activeTranslations(), this.draft()),
+            this.languages(),
+        );
+    });
+
     public readonly scopeTabs = computed<ScopeTabInfo[]>(() => {
-        const langs = this.languages().length;
+        const languages = this.languages();
         const active = this.activeScopeId();
         const translations = this.savedTranslations();
         const dirtyCount = this.dirtyCount();
 
         return Object.values(this.scopes()).map((scope) => {
             const isActive = scope.id === active;
-            const translationData: FormTranslations = (isActive)
+            /* Only the active scope can hold draft values - the draft is
+               cleared whenever the scope changes. */
+            const data: FormTranslations = isActive
                 ? merge(translations[scope.id], this.draft())
-                : translations[scope.id];
-            const totalKeys = Object.keys(translationData).length;
-
-            let translatedCount = 0;
-            for (const row of Object.values(translationData)) {
-                for (const val of Object.values(row)) {
-                    if (val.trim() !== '') translatedCount++;
-                }
-            }
+                : (translations[scope.id] ?? {});
+            const completion = computeCompletion(data, languages);
 
             return {
                 scope,
-                translatedCount,
-                totalCount: totalKeys * langs,
+                open: completion.open,
+                total: completion.placeholders,
                 hasDirty: isActive ? dirtyCount > 0 : false,
             };
         });
@@ -351,6 +367,45 @@ export class AppComponent implements OnInit {
 /* =====================================================================
  *  Pure utilities (kept at module level — no side effects)
  * ===================================================================== */
+
+/**
+ * Counts how far a scope has come: placeholders for the tab badge, plus the
+ * per-language gap for the table's column headers.
+ *
+ * Only the *active* languages are inspected. A payload can still carry values
+ * for a language that has since been removed from the CMS, and counting those
+ * was what let the old badge exceed its own denominator.
+ */
+function computeCompletion(
+    data: FormTranslations,
+    languages: FormTranslationsLanguage[],
+): ScopeCompletion {
+    const keys = Object.keys(data ?? {});
+    const missingByLanguage: Record<string, number> = {};
+    for (const lang of languages) {
+        missingByLanguage[lang.code] = 0;
+    }
+
+    let open = 0;
+
+    for (const key of keys) {
+        const row = data[key] ?? {};
+        let rowComplete = true;
+
+        for (const lang of languages) {
+            if ((row[lang.code] ?? '').trim() === '') {
+                missingByLanguage[lang.code]++;
+                rowComplete = false;
+            }
+        }
+
+        if (!rowComplete) {
+            open++;
+        }
+    }
+
+    return { placeholders: keys.length, open, missingByLanguage };
+}
 
 function merge(base: FormTranslations, delta: FormTranslations): FormTranslations {
     const result: FormTranslations = { ...base };

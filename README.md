@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://www.gentics.com/infoportal/">
-    <img src="https://getmesh.io/blog/JPGs/Gentics_CMS_Logo.jpg" alt="Gentics CMS" style="max-width: 80%" />
+    <img src="https://www.gentics.com/GEN_Logo_RGB_341px_white.webp" alt="Gentics CMS" style="max-width: 80%" />
   </a>
 </h1>
 
@@ -88,10 +88,6 @@ What makes Gentics CMS special over other CMSes is:
 Gentics CMS is actively developed by a dedicated team at Gentics Software GmbH in Vienna,
 Austria.
 
-<p align="center">
-    <img src="https://getmesh.io/blog/JPGs/CMP-DEV.jpg" alt="CMP DEV" style="max-width: 80%" />
-</p>
-
 The Gentics CMS core team consists of the following members:
 
 <p align="center">
@@ -131,14 +127,6 @@ The Gentics CMS core team consists of the following members:
   </tr>
     </tr>
     </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/guggi">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     Oliver Guggenberger<br /><i>Backend developer</i>
-    </a>
-   </td>
-  </tr>
     </tr>
     </tr>
     </tr>
@@ -154,14 +142,6 @@ The Gentics CMS core team consists of the following members:
     </tr>
     </tr>
     </tr>
-    <tr>
-   <td align="center">
-    <a href="https://github.com/enizhou">
-     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
-     En Qiang Zhou<br /><i>Product Owner</i>
-    </a>
-   </td>
-  </tr>
  </table>
 </p>
 

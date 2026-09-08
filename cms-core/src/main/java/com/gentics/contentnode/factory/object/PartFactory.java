@@ -16,12 +16,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.stream.IntStream;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.C;
@@ -48,6 +50,11 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.mesh.core.rest.JsonSchema;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
+import com.gentics.mesh.json.JsonUtil;
+
+import io.vertx.core.json.JsonArray;
 
 /**
  * An objectfactory which can create {@link Part} objects, based on the
@@ -55,6 +62,12 @@ import com.gentics.lib.i18n.CNI18nString;
  */
 @DBTables({ @DBTable(clazz = Part.class, name = "part") })
 public class PartFactory extends AbstractFactory {
+
+	/**
+	 * Error log
+	 */
+	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
+
 	/**
 	 * SQL Statement to select a part
 	 */
@@ -644,6 +657,8 @@ public class PartFactory extends AbstractFactory {
 			if (!isNew) {
 				origPart = t.getObject(Part.class, getId());
 			}
+			// validate
+			validatePart(this, getDefaultValue(), reason -> supplyInvalidJSONException(getKeyname(), reason, this));
 
 			// save the construct, if necessary
 			if (isModified) {
@@ -833,6 +848,49 @@ public class PartFactory extends AbstractFactory {
 			// The datasource entries for the part are not deleted in here.
 			// They will be deleted when the construct is deleted.
 		}
+	}
+
+	/**
+	 * Perform the validation of a part, where applicable.
+	 * 
+	 * @param tag
+	 * @throws NodeException
+	 */
+	public static void validatePart(Part part, Object value, Function<String, ObjectModificationException> exceptionSupplier) throws NodeException {
+		if (part.getPartTypeId() == Part.JSON) {
+			if (value == null || !(value instanceof Value val)) {
+				// Nothing to validate
+				return;
+			}
+			String stringValue = val.getValueText();
+			if (StringUtils.isEmpty(stringValue)) {
+				// Nothing to validate
+				return;
+			}
+			JsonContent jsonContent = JsonContent.fromString(stringValue);
+			if (jsonContent == null) {
+				throw exceptionSupplier.apply("Not a JSON Value");
+			}
+			if (!StringUtils.isEmpty(part.getInfoText())) {
+				JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
+				JsonSchema[] allowedSchemas = null;
+				if (jsonSchemaContent.isArray()) {
+					JsonArray jsonSchemas = jsonSchemaContent.getArray();
+					allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
+				} else {
+					allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+				}
+				if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(jsonContent.getContent()).getValid() == Boolean.TRUE)) {
+					throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
+				}
+			}
+		}
+	}
+
+	private static ObjectModificationException supplyInvalidJSONException(String property, String reason, Part part) {
+		return new ObjectModificationException(property, LOG_JSON_VALIDATION_ERROR + " for "
+				+ "part {" + part.getKeyname() + "}."
+				+ " Reason: " + reason, "json_validation_failed");
 	}
 
 	/**

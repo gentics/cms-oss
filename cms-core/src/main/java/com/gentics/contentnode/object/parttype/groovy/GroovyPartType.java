@@ -3,7 +3,6 @@ package com.gentics.contentnode.object.parttype.groovy;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.Phases;
@@ -18,6 +17,7 @@ import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.object.parttype.TextPartType;
+import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.NodeObjectResolverContext;
 import com.gentics.contentnode.resolving.ResolvableGetter;
@@ -79,7 +79,7 @@ public class GroovyPartType extends TextPartType {
 				String scriptName = "%s.groovy".formatted(scriptClassName);
 
 				// check whether the unit already contains the class
-				GroovyClass groovyClass = findGroovyClass(unit, scriptClassName);
+				GroovyClass groovyClass = GroovyUtils.findGroovyClass(unit, scriptClassName);
 
 				// class does not exist, so add it to the compilation unit and compile
 				if (groovyClass == null) {
@@ -87,7 +87,7 @@ public class GroovyPartType extends TextPartType {
 					unit.compile(Phases.CLASS_GENERATION);
 
 					// when compiled, add it to the class path
-					groovyClass = findGroovyClass(unit, scriptClassName);
+					groovyClass = GroovyUtils.findGroovyClass(unit, scriptClassName);
 					if (groovyClass != null) {
 						unit.getClassLoader().defineClass(groovyClass.getName(), groovyClass.getBytes());
 					}
@@ -113,12 +113,8 @@ public class GroovyPartType extends TextPartType {
 		return Property.Type.RICHTEXT;
 	}
 
-	protected GroovyClass findGroovyClass(CompilationUnit unit, String scriptClassName) {
-		for (GroovyClass groovyClass : unit.getClasses()) {
-			if (Strings.CI.equals(groovyClass.getName(), scriptClassName)) {
-				return groovyClass;
-			}
-		}
-		return null;
+	@Override
+	public String render(RenderResult result, String template) throws NodeException {
+		return "";
 	}
 }

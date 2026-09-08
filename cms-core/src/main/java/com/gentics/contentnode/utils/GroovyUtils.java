@@ -1,6 +1,8 @@
 package com.gentics.contentnode.utils;
 
+import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.tools.GroovyClass;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -77,5 +79,20 @@ public final class GroovyUtils {
 		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 		CMSResolver cmsResolver = renderType.getCMSResolver();
 		script.setProperty("cms", new ResolvableMapWrapper(cmsResolver));
+	}
+
+	/**
+	 * Find the groovy class with given name in the compilation unit
+	 * @param unit compilation unit to search
+	 * @param name name of the class to find
+	 * @return either the class or null, if not found
+	 */
+	public static GroovyClass findGroovyClass(CompilationUnit unit, String name) {
+		for (GroovyClass groovyClass : unit.getClasses()) {
+			if (Strings.CI.equals(groovyClass.getName(), name)) {
+				return groovyClass;
+			}
+		}
+		return null;
 	}
 }

@@ -6,6 +6,7 @@
 import { AccessControlledType, CmsFormType, GcmsPermission, NodePageLanguageCode, NodeUrlMode, ScheduleType, TagPropertyType } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    URL_TEMPLATE_ID,
     FileImportData,
     FixtureFile,
     FolderImportData,
@@ -558,7 +559,7 @@ export const NODE_FULL: NodeImportData = {
 
     languages: [LANGUAGE_DE, LANGUAGE_EN],
     templates: [
-        BASIC_TEMPLATE_ID,
+        BASIC_TEMPLATE_ID, URL_TEMPLATE_ID,
     ],
 };
 

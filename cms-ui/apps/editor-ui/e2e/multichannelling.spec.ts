@@ -13,10 +13,12 @@ import {
     PageLocalizeRequest,
     PageResponse,
     ResponseCode,
+    Template,
     Variant,
 } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
+    URL_TEMPLATE_ID,
     clickModalAction,
     EntityImporter,
     findTableAction,
@@ -27,6 +29,7 @@ import {
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_NODE,
     IMPORT_TYPE_USER,
+    ITEM_TYPE_FOLDER,
     isVariant,
     ITEM_TYPE_PAGE,
     loginWithForm,
@@ -44,13 +47,24 @@ import {
     pickSelectValue,
     TestSize,
     UserImportData,
+    FolderImportData,
     wait,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import {
+    findItem,
+    findList,
+    findRepoBrowserList,
+    getAlohaIFrame,
+    getEditorToolbarContext,
+    itemAction,
+    navigateToFolder,
+    selectNode,
+    setupHelperWindowFunctions,
+} from './helpers';
 
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -175,6 +189,76 @@ test.describe('Multichannelling', () => {
             const iframe = await getAlohaIFrame(page);
             editor = iframe.locator('main .GENTICS_tagname_content[contenteditable="true"]');
             await editor.waitFor({ timeout: 60_000 });
+        });
+
+        test('should handle cross channel page links correctly', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19935',
+            }],
+        }, async ({ page }) => {
+            await page.locator('.toolbar-actions .close-button').click();
+            await selectNode(page, channelNode.id);
+            const id = 'AAA-SUP-19935';
+
+            const folderList = findList(page, ITEM_TYPE_FOLDER);
+            await folderList.locator('.header-controls [data-action="create-new-item"] button').click();
+            const newFolderModal = page.locator('create-folder-modal');
+            const folderForm = newFolderModal.locator('gtx-folder-properties');
+            await folderForm.locator('[formcontrolname="name"] input').fill(id);
+            await folderForm.locator('[formcontrolname="publishDir"] input').fill(id);
+
+            const createFolderReq = waitForResponseFrom(page, 'POST', '/rest/folder/create');
+            await clickModalAction(newFolderModal, 'confirm');
+            const createFolderRes = await createFolderReq;
+            const newFolderId = (await createFolderRes.json()).folder.id;
+
+            await expect(findItem(folderList, newFolderId)).toBeVisible();
+            await navigateToFolder(page, newFolderId);
+            await expect(page.locator('folder-contents div.title-name')).toHaveText(id);
+
+            const pageList = findList(page, ITEM_TYPE_PAGE);
+            await pageList.locator('.header-controls [data-action="create-new-item"] button').click();
+            const newPageModal = page.locator('create-page-modal');
+            const pageForm = newPageModal.locator('gtx-page-properties');
+            await pageForm.locator('[formcontrolname="name"] input').fill(id);
+            const urlTemplate = IMPORTER.get(URL_TEMPLATE_ID) as Template;
+            await pickSelectValue(pageForm.locator('[formcontrolname="templateId"]'), urlTemplate.id);
+            await clickModalAction(newPageModal, 'confirm');
+
+            const iframe = await getAlohaIFrame(page);
+            editor = iframe.locator('main div[data-gcn-tagname="url"] span.aloha-construct-buttons-container button.gcn-construct-button-edit');
+            await editor.waitFor({ timeout: 60_000 });
+            await editor.click();
+
+            let modal = page.locator('gtx-tag-editor-modal');
+            await modal.waitFor();
+            await modal.locator('browse-box [data-action="browse"] button').click();
+            let repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            // Bug #1
+            await expect(repoBrowser.locator('gtx-contents-list-item')).toBeVisible();
+
+            await selectNode(repoBrowser, masterNode.id);
+            const masterPages = findRepoBrowserList(repoBrowser, ITEM_TYPE_PAGE);
+            // Wait for the list to have switched over from the channel to the master node
+            await expect(masterPages.getByText(id)).toHaveCount(0);
+            const firstPage = masterPages.locator('gtx-contents-list-item').first();
+            await firstPage.waitFor();
+            const itemName = await firstPage.locator('.item-name-only').innerText();
+            await firstPage.locator('.item-name-only').click();
+            await clickModalAction(repoBrowser, 'confirm');
+            await expect(modal.locator('browse-box gtx-input.value-display input[type="text"]')).toHaveValue(itemName);
+            await modal.locator('.footer [data-action="confirm"] button').click();
+
+            await editor.click();
+            modal = page.locator('gtx-tag-editor-modal');
+            await modal.waitFor();
+            await modal.locator('browse-box [data-action="browse"] button').click();
+            repoBrowser = page.locator('repository-browser');
+            await repoBrowser.waitFor();
+            // Bug #2
+            await expect(repoBrowser.locator('gtx-contents-list-item').first()).toBeVisible();
         });
 
         test('should handle node IDs for overview items using sticky channels', {

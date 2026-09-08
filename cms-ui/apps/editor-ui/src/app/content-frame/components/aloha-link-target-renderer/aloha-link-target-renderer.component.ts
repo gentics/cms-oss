@@ -85,8 +85,8 @@ export class AlohaLinkTargetRendererComponent
             title,
             startFolder: this.loadedTargetElement?.folderId,
             startNode: this.loadedTargetElement?.nodeId
-                // channelId is always set, but may be 0
-                ?? (this.loadedTargetElement?.channelId || this.loadedTargetElement?.masterNodeId),
+              // channelId is always set, but may be 0
+              ?? (this.loadedTargetElement?.channelId || this.loadedTargetElement?.masterNodeId),
             contentLanguage: lang,
         }).then(pickedItem => {
             // The user aborted the select

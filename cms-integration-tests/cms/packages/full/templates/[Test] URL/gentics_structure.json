@@ -1,0 +1,15 @@
+{
+  "globalId" : "7e91.546eae91-9fcb-11f1-a40e-0ef261d42093",
+  "name" : "[Test] URL",
+  "description" : "",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId" : "7e91.602ec3cb-9fcb-11f1-a40e-0ef261d42093",
+    "name" : "url",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ],
+  "objectTags" : [ ]
+}

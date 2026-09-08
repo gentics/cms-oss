@@ -13,6 +13,7 @@ import {
     PageLocalizeRequest,
     PageResponse,
     ResponseCode,
+    Template,
     Variant,
 } from '@gentics/cms-models';
 import {
@@ -53,7 +54,17 @@ import {
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Locator, test } from '@playwright/test';
 import { AUTH } from './common';
-import { findItem, findList, getAlohaIFrame, getEditorToolbarContext, itemAction, selectNode, setupHelperWindowFunctions } from './helpers';
+import {
+    findItem,
+    findList,
+    findRepoBrowserList,
+    getAlohaIFrame,
+    getEditorToolbarContext,
+    itemAction,
+    navigateToFolder,
+    selectNode,
+    setupHelperWindowFunctions,
+} from './helpers';
 
 test.describe('Multichannelling', () => {
     test.skip(() => !isVariant(Variant.ENTERPRISE), 'Requires Enterpise features');
@@ -187,51 +198,63 @@ test.describe('Multichannelling', () => {
             }],
         }, async ({ page }) => {
             await page.locator('.toolbar-actions .close-button').click();
-            await selectNode(page, IMPORTER.get(CHANNEL_IMPORT_DATA).id);
+            await selectNode(page, channelNode.id);
             const id = 'AAA-SUP-19935';
-            await page.locator('item-list [data-item-type="folder"] item-list-header gtx-button[data-action="create-new-item"] button').click();
+
+            const folderList = findList(page, ITEM_TYPE_FOLDER);
+            await folderList.locator('.header-controls [data-action="create-new-item"] button').click();
             const newFolderModal = page.locator('create-folder-modal');
-            await newFolderModal.waitFor();
-            await newFolderModal.locator('gtx-input[formcontrolname="name"] input').fill(id);
-            await newFolderModal.locator('gtx-input[formcontrolname="publishDir"] input').fill(id);
-            await newFolderModal.locator('gtx-button[data-action="confirm"] button').click();
-            await page.locator('item-list [data-item-type="folder"] item-list-row a').getByText(id).click();
+            const folderForm = newFolderModal.locator('gtx-folder-properties');
+            await folderForm.locator('[formcontrolname="name"] input').fill(id);
+            await folderForm.locator('[formcontrolname="publishDir"] input').fill(id);
+
+            const createFolderReq = waitForResponseFrom(page, 'POST', '/rest/folder/create');
+            await clickModalAction(newFolderModal, 'confirm');
+            const createFolderRes = await createFolderReq;
+            const newFolderId = (await createFolderRes.json()).folder.id;
+
+            await expect(findItem(folderList, newFolderId)).toBeVisible();
+            await navigateToFolder(page, newFolderId);
             await expect(page.locator('folder-contents div.title-name')).toHaveText(id);
 
-            await page.locator('item-list [data-item-type="page"] item-list-header gtx-button[data-action="create-new-item"] button').click();
+            const pageList = findList(page, ITEM_TYPE_PAGE);
+            await pageList.locator('.header-controls [data-action="create-new-item"] button').click();
             const newPageModal = page.locator('create-page-modal');
-            await newPageModal.locator('gtx-input[formcontrolname="name"] input').fill(id);
-            await newPageModal.locator('gtx-select[formcontrolname="templateId"] gtx-dropdown-trigger').click();
-            await page.locator('gtx-dropdown-content .select-options .select-option span').getByText('[Test] URL').click();
-            await newPageModal.locator('gtx-button[data-action="confirm"] button').click();
+            const pageForm = newPageModal.locator('gtx-page-properties');
+            await pageForm.locator('[formcontrolname="name"] input').fill(id);
+            const urlTemplate = IMPORTER.get(URL_TEMPLATE_ID) as Template;
+            await pickSelectValue(pageForm.locator('[formcontrolname="templateId"]'), urlTemplate.id);
+            await clickModalAction(newPageModal, 'confirm');
 
             const iframe = await getAlohaIFrame(page);
             editor = iframe.locator('main div[data-gcn-tagname="url"] span.aloha-construct-buttons-container button.gcn-construct-button-edit');
             await editor.waitFor({ timeout: 60_000 });
             await editor.click();
 
-            let tagEditor = page.locator('gentics-tag-editor');
-            await tagEditor.waitFor();
-            await tagEditor.locator('browse-box gtx-button[data-action="browse"]').click();
+            let modal = page.locator('gtx-tag-editor-modal');
+            await modal.waitFor();
+            await modal.locator('browse-box [data-action="browse"] button').click();
             let repoBrowser = page.locator('repository-browser');
             await repoBrowser.waitFor();
             // Bug #1
             await expect(repoBrowser.locator('gtx-contents-list-item')).toBeVisible();
 
-            await repoBrowser.locator('node-selector gtx-button[data-action="select-node"] button').click();
-            await page.locator('node-selector-tree gtx-dropdown-item a[title="full test"]').click();
-            const firstPage = repoBrowser
-                .locator('.modal-content repository-browser-list[data-type="page"] gtx-contents-list-item');
+            await selectNode(repoBrowser, masterNode.id);
+            const masterPages = findRepoBrowserList(repoBrowser, ITEM_TYPE_PAGE);
+            // Wait for the list to have switched over from the channel to the master node
+            await expect(masterPages.getByText(id)).toHaveCount(0);
+            const firstPage = masterPages.locator('gtx-contents-list-item').first();
             await firstPage.waitFor();
-            const itemName = await firstPage.locator('.item-name-only').first().innerText();
-            await firstPage.locator('.item-name-only').first().click();
-            await repoBrowser.locator('gtx-button[data-action="confirm"] button').click();
-            await expect(tagEditor.locator('browse-box gtx-input.value-display input[type="text"]')).toHaveValue(itemName);
-            await tagEditor.locator('gtx-button[data-action="confirm"] button').click();
+            const itemName = await firstPage.locator('.item-name-only').innerText();
+            await firstPage.locator('.item-name-only').click();
+            await clickModalAction(repoBrowser, 'confirm');
+            await expect(modal.locator('browse-box gtx-input.value-display input[type="text"]')).toHaveValue(itemName);
+            await modal.locator('.footer [data-action="confirm"] button').click();
+
             await editor.click();
-            tagEditor = page.locator('gentics-tag-editor');
-            await tagEditor.waitFor();
-            await tagEditor.locator('browse-box gtx-button[data-action="browse"]').click();
+            modal = page.locator('gtx-tag-editor-modal');
+            await modal.waitFor();
+            await modal.locator('browse-box [data-action="browse"] button').click();
             repoBrowser = page.locator('repository-browser');
             await repoBrowser.waitFor();
             // Bug #2

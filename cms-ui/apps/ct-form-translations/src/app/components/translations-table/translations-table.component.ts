@@ -27,8 +27,25 @@ export class TranslationsTableComponent {
     @Input() languages: FormTranslationsLanguage[] = [];
     @Input() saved: FormTranslations = {};
     @Input() draft: FormTranslations = {};
+    /**
+     * Empty placeholders per language code, for the figure in the column header.
+     *
+     * Deliberately not derived from `keys`: those are already filtered by the
+     * search, and a header number that shifts while typing is useless.
+     */
+    @Input() missingByLanguage: Record<string, number> = {};
 
     @Output() readonly cellEdit = new EventEmitter<CellEditEvent>();
+
+    /** `name` is optional on the wire, so the code is the fallback. */
+    displayName(lang: FormTranslationsLanguage): string {
+        return lang.name || lang.code;
+    }
+
+    /** Header figure for one column, `null` while the data is still loading. */
+    missingFor(langCode: string): number | null {
+        return this.missingByLanguage[langCode] ?? null;
+    }
 
     // TODO: The rows and cells should be pre-computed and define a state, rather
     // than loading the data in the template.

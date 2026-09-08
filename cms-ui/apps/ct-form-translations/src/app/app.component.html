@@ -50,6 +50,7 @@
                             [languages]="languages()"
                             [saved]="savedTranslations()[activeScopeId()]"
                             [draft]="draft()"
+                            [missingByLanguage]="activeCompletion().missingByLanguage"
                             (cellEdit)="onCellEdit($event)">
                         </gtx-translations-table>
                     </div>

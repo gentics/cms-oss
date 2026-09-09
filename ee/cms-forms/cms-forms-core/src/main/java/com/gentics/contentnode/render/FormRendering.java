@@ -25,6 +25,7 @@ import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.forms.FormTransformer;
 import com.gentics.contentnode.forms.FormTransformer.TransformationTarget;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.*;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
@@ -81,6 +82,9 @@ public class FormRendering {
 					writer.write(translate(options.getNoForm()));
 				}
 				renderType.addDependency(form, "online");
+			} else if (renderType.getEditMode() == RenderType.EM_ALOHA) {
+				// Forms cannot be shown live/interactively while Aloha is editing the page, show a placeholder instead.
+				writer.write(I18NHelper.get("form.editmode.placeholder"));
 			} else {
 				return renderFormPreview(form, options, writer, renderType);
 			}

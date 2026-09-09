@@ -51,6 +51,7 @@ import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.forms.Migration;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -453,6 +454,11 @@ public class FormDirectiveRenderTest implements ConfigModifier {
 			switch (editModeInt) {
 			case RenderType.EM_PUBLISH:
 				renderedTag = supply(() -> String.format(EXPECTED_PUBLISHED.get(templateCode), MeshPublisher.getMeshUuid(form)));
+				break;
+			case RenderType.EM_ALOHA:
+				// Forms must not be rendered live/interactively while Aloha is editing the page, so a placeholder is shown instead,
+				// regardless of the template/options used.
+				renderedTag = I18NHelper.get("form.editmode.placeholder");
 				break;
 			default:
 				int sid = TransactionManager.getCurrentTransaction().getSession().getSessionId();

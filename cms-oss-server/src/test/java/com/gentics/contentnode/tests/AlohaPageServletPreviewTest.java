@@ -1,15 +1,5 @@
 package com.gentics.contentnode.tests;
 
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.SYSTEM_GROUP_ID;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -18,15 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.perm.PermHandler;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -34,15 +16,11 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
-import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.server.OSSRunner;
 import com.gentics.contentnode.server.OSSRunnerContext;
 import com.gentics.contentnode.testutils.DBTestContext;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
@@ -52,6 +30,22 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.SYSTEM_GROUP_ID;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 /**
  * Test cases for the {@link com.gentics.contentnode.servlets.AlohaPageServlet}.
@@ -82,8 +76,6 @@ public class AlohaPageServletPreviewTest {
 	private OkHttpClient client;
 
 	private List<Cookie> storedCookies = Collections.synchronizedList(new ArrayList<>());
-
-	private String sid;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -167,8 +159,6 @@ public class AlohaPageServletPreviewTest {
 		loginRequest.setLogin("tester");
 		loginRequest.setPassword("tester");
 		LoginResponse loginResponse = post(loginRequest, LoginResponse.class, "/rest/auth/login");
-
-		sid = loginResponse.getSid();
 	}
 
 	/**
@@ -256,7 +246,6 @@ public class AlohaPageServletPreviewTest {
 	 * @param params parameters
 	 */
 	protected final void addQueryParameters(Builder urlBuilder, Map.Entry<String, String>... params) {
-		urlBuilder.addQueryParameter("sid", sid);
 		for (Map.Entry<String, String> param : params) {
 			urlBuilder.addQueryParameter(param.getKey(), param.getValue());
 		}

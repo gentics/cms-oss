@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.SYSTEM_GROUP_ID;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
@@ -25,10 +26,13 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.Permission;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.server.OSSRunner;
@@ -94,6 +98,18 @@ public class AlohaPageServletPreviewTest {
 
 		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, SYSTEM_GROUP_ID));
 		supply(() -> createSystemUser("Tester", "Tester", null, "tester", "tester", Arrays.asList(nodeGroup)));
+
+		// grant the group permission to view and edit pages in the node, so that the
+		// page can be locked for editing (real=edit) via the AlohaPageServlet
+		String perms = new Permission(
+				PermHandler.PERM_VIEW,
+				PermHandler.PERM_PAGE_VIEW,
+				PermHandler.PERM_PAGE_UPDATE).toString();
+
+		operate(() -> {
+			PermHandler.setPermissions(Folder.TYPE_FOLDER, node.getFolder().getId(), Arrays.asList(nodeGroup), perms);
+			PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(nodeGroup), perms);
+		});
 	}
 
 	@Before

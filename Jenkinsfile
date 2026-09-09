@@ -95,6 +95,7 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
+        booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker images")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client)")
@@ -363,7 +364,9 @@ spec:
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
                     sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                    scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                    if (!params.omitScan) {
+                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
+                    }
                     if (tagName != null) {
                         String dockerImageVersionTag = imageName + ":" + tagName
                         sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag

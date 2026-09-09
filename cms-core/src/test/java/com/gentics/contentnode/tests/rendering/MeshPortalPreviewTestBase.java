@@ -137,7 +137,7 @@ public abstract class MeshPortalPreviewTestBase {
 	/**
 	 * Template
 	 */
-	private static Template template;
+	protected static Template template;
 
 	/**
 	 * Page

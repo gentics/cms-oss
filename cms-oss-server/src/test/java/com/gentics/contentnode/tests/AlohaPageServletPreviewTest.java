@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.perm.PermHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -101,10 +103,10 @@ public class AlohaPageServletPreviewTest {
 
 		// grant the group permission to view and edit pages in the node, so that the
 		// page can be locked for editing (real=edit) via the AlohaPageServlet
-		String perms = new Permission(
-				PermHandler.PERM_VIEW,
-				PermHandler.PERM_PAGE_VIEW,
-				PermHandler.PERM_PAGE_UPDATE).toString();
+		String perms = new PermHandler.Permission(
+			PermHandler.PERM_VIEW,
+			PermHandler.PERM_PAGE_VIEW,
+			PermHandler.PERM_PAGE_UPDATE).toString();
 
 		operate(() -> {
 			PermHandler.setPermissions(Folder.TYPE_FOLDER, node.getFolder().getId(), Arrays.asList(nodeGroup), perms);

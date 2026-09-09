@@ -65,6 +65,10 @@ export default function App() {
 
   // Load the data from the window variable if available, but only once
   if (initialPreviewData && !previewFromDomLoaded && !previewInitialized) {
+    new ResizeObserver(() => {
+      window.postMessage('formgen.preview.resize', '/');
+    }).observe(document.body);
+
     setFormId(initialPreviewData.formId);
     setPreviewInformation({
       dynamic: false,

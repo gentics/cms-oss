@@ -25,12 +25,15 @@ import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
 import { v4 as uuidV4 } from 'uuid';
 import {
     ATTR_CONTAINER_ID,
+    ATTR_CONTEXT_ID,
     ATTR_ELEMENT_ID,
     ElementContainerMoveEvent,
     ElementMoveData,
     ElementSelectionEvent,
     FormGridEditMode,
+    UNIQUE_ID_GLUE,
 } from '../../models';
+import { blockDragForElement } from '../../utils/dragging';
 
 interface DisplayItem {
     id: string;
@@ -67,6 +70,8 @@ export class FormGridElementsContainerComponent {
     public readonly rootId = input.required<string>();
     /** ID of this elements-container. */
     public readonly id = input.required<string>();
+    /** ID of the context this container is in */
+    public readonly contextId = input.required<string>();
 
     /** The configuration for this form. */
     public readonly config = input.required<FormTypeConfiguration>();
@@ -87,6 +92,8 @@ export class FormGridElementsContainerComponent {
     public readonly schema = model.required<FormSchema>();
     /** The elements of this container */
     public readonly elements = model.required<FormElement[]>();
+    /** Map of all elements */
+    public readonly elementMap = input.required<Record<string, FormElement>>();
     /** All schema properties */
     public readonly schemaPropertiesMap = input.required<FormSchemaProperties>();
 
@@ -97,8 +104,8 @@ export class FormGridElementsContainerComponent {
 
     /** The currently selected element to be edited */
     public readonly selectedElement = input<FormElement | null>();
-    /** The container in which the selected element is in */
-    public readonly selectedElementContainerId = input<string | null>();
+    /** The ID of the context element the selected element is in. */
+    public readonly selectedElementContextId = input<string | null>();
     /** The type of the element that is being moved/dragged/re-ordererd around. */
     public readonly elementMoving = model<ElementMoveData | null>();
 
@@ -139,32 +146,37 @@ export class FormGridElementsContainerComponent {
         },
         // Check for the whitelist in the new group we want to drop into, if available
         put: (to) => {
-            const targetId = to.el.getAttribute(ATTR_CONTAINER_ID);
-
-            // Always allow elements to be pulled to the root
-            if (targetId === this.rootId()) {
-                return true;
-            }
-
             return !to.el.classList.contains('drag-blocked');
         },
     };
+
+    /**
+     * Dragging is blocked if the whitelist doesn't allow the element type,
+     * or when the element would cause an ID collision.
+     * ID collisions can only appear, when using aggregates, and an element
+     * shares the ID on different levels.
+     */
+    public isDragBlocked = computed(() => {
+        const wl = this.whitelist();
+        const moveData = this.elementMoving();
+        const contextId = this.selfContext();
+        const rootId = this.rootId();
+        const elMap = this.elementMap();
+
+        // Check it in helper function, which checks the dragging element recursively
+        return blockDragForElement(moveData, wl, contextId, rootId, elMap, true);
+    });
 
     /* MISC
      * ===================================================================== */
 
     public readonly displayItems = signal<DisplayItem[]>([]);
 
-    /** True when palette-dragging is active and this container's whitelist rejects the dragged type. */
-    public isDragBlocked = computed(() => {
-        const wl = this.whitelist();
-        if (!Array.isArray(wl)) {
-            return false;
-        }
-
-        const elType = this.elementMoving()?.elementType;
-
-        return elType && !wl.includes(elType);
+    public readonly selfContext = computed(() => {
+        // All signals called so they are correctly observed
+        const id = this.id();
+        const context = this.contextId();
+        return this.isAggregate() ? id : context;
     });
 
     /* CONSTRUCTOR
@@ -192,8 +204,8 @@ export class FormGridElementsContainerComponent {
         }
 
         this.elementSelect.emit({
-            element,
-            containerId: this.id(),
+            elementId: element.id,
+            contextId: this.selfContext(),
         });
     }
 
@@ -362,7 +374,7 @@ export class FormGridElementsContainerComponent {
 
                 if (
                     this.selectedElement()?.id === element.id
-                    && this.selectedElementContainerId() === this.id()
+                    && this.selfContext() === this.selectedElementContextId()
                 ) {
                     this.elementSelect.emit(null);
                 }
@@ -396,10 +408,14 @@ export class FormGridElementsContainerComponent {
     public onSortableDragStart(event: ISortableEvent): void {
         const elId = event.item.getAttribute(ATTR_ELEMENT_ID);
         const el = this.elements().find((tmp) => tmp.id === elId);
+
         if (!el || !el.formGridOptions?.type) {
             return;
         }
+
         this.elementMoving.set({
+            elementId: elId,
+            contextId: this.selfContext(),
             elementType: el.formGridOptions.type,
             inserting: false,
         });
@@ -441,7 +457,9 @@ export class FormGridElementsContainerComponent {
         }
 
         const fromId = event.from.getAttribute(ATTR_CONTAINER_ID);
+        const fromCtx = event.from.getAttribute(ATTR_CONTEXT_ID);
         const toId = event.to.getAttribute(ATTR_CONTAINER_ID);
+        const toCtx = event.to.getAttribute(ATTR_CONTEXT_ID);
         const elId = (event.item).getAttribute(ATTR_ELEMENT_ID);
 
         if (!fromId || !toId || !elId) {
@@ -452,7 +470,9 @@ export class FormGridElementsContainerComponent {
             pageIndex: this.pageIndex(),
             elementId: elId,
             fromContainerId: fromId,
+            fromContextId: fromCtx,
             toContainerId: toId,
+            toContextId: toCtx,
             targetIndex: Math.max(0, event.newDraggableIndex - 1),
         });
 

@@ -4,6 +4,15 @@ export const ELEMENT_MIME = 'application/x-form-grid-element';
 export const CLIPBOARD_MIME = 'application/x-formgrid-clipboard';
 export const CLIPBOARD_STORAGE_KEY = 'formgrid-clipboard';
 
+/**
+ * String which is used as "glue"/join chars for separating container- and element-id
+ */
+export const UNIQUE_ID_GLUE = '@';
+
+export const ATTR_CONTAINER_ID = 'data-drop-container-id';
+export const ATTR_ELEMENT_ID = 'data-element-id';
+export const ATTR_CONTEXT_ID = 'data-context-id';
+
 export interface FormGridClipboardData {
     element: FormElement;
     elementSchema?: FormSchemaProperty;
@@ -14,24 +23,25 @@ export interface FormGridClipboardData {
     formName: string;
 }
 
-export const ATTR_CONTAINER_ID = 'data-drop-container-id';
-export const ATTR_ELEMENT_ID = 'data-element-id';
-
 export interface ElementMoveData {
+    elementId: string | null;
+    contextId: string | null;
     elementType: string;
     inserting: boolean;
 }
 
 export interface ElementSelectionEvent {
-    element: FormElement;
-    containerId: string;
+    elementId: string;
+    contextId: string;
 }
 
 export interface ElementContainerMoveEvent {
     pageIndex: number;
     elementId: string;
     fromContainerId: string;
+    fromContextId: string;
     toContainerId: string;
+    toContextId: string;
     targetIndex: number;
 }
 

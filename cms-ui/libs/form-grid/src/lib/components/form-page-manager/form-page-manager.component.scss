@@ -64,13 +64,14 @@
             opacity: 0;
         }
 
-        &.active {
+        &.active,
+        &.drag-blocked {
             background-color: $gtx-color-very-light-gray;
             color: $gtx-color-dark-gray;
             border-color: $gtx-color-dark-gray;
         }
 
-        &:not(.active) {
+        &:not(.active):not(.drag-blocked) {
             border-color: $gtx-color-primary;
             background: rgba($gtx-color-primary, 0.05);
             color: $gtx-color-primary;

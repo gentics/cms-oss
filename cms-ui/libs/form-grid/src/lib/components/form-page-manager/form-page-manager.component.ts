@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
 import { I18nService } from '@gentics/cms-components';
 import { FormElement, FormSchema, FormUISchema } from '@gentics/cms-models';
 import { ISortableEvent, ModalService, SortableGroup } from '@gentics/ui-core';
 import { ATTR_ELEMENT_ID, ElementInterPageMoveEvent, ElementMoveData, FormGridEditMode } from '../../models';
+import { blockDragForElement } from '../../utils/dragging';
 
 function collectElementIds(elements: FormElement[]): string[] {
     const ids: string[] = [];
@@ -40,6 +41,8 @@ export class FormPageManagerComponent {
 
     public readonly uiSchema = model.required<FormUISchema>();
     public readonly pageIndex = model.required<number>();
+    public readonly elementMap = input.required<Record<string, FormElement>>();
+    public readonly rootId = input.required<string>();
     /** Optional: required for schema cleanup when deleting pages. */
     public readonly schema = model<FormSchema | null>(null);
     public readonly mode = input<FormGridEditMode>(FormGridEditMode.NONE);
@@ -61,22 +64,39 @@ export class FormPageManagerComponent {
             if (from.option('group') === 'form-palette') {
                 return false;
             }
-            if (this.elementMoving()?.inserting) {
-                return false;
-            }
 
             // Moving to the current page should not be allowed
             try {
                 const toPageIdx = parseInt(to.el.getAttribute('data-page-index') ?? '', 10);
                 if (!Number.isInteger(toPageIdx)) {
-                    return false;
+                    return true;
                 }
-                return toPageIdx !== this.pageIndex();
+                if (toPageIdx === this.pageIndex()) {
+                    return true;
+                }
             } catch (err) {
                 return false;
             }
+
+            return !to.el.classList.contains('drag-blocked');
         },
     };
+
+    public isDragBlocked = computed(() => {
+        const moveData = this.elementMoving();
+        const rootId = this.rootId();
+        const elMap = this.elementMap();
+
+        if (!moveData) {
+            return true;
+        }
+
+        if (moveData.inserting) {
+            return false;
+        }
+
+        return blockDragForElement(moveData, [], rootId, rootId, elMap);
+    });
 
     constructor(
         private modals: ModalService,

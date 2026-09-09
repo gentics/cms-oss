@@ -27,6 +27,7 @@ export class DynamicFormSettingsComponent {
 
     public readonly config = input.required<FormTypeConfiguration>();
 
+    public readonly contextId = input.required<string>();
     public readonly settings = input.required<FormSettingConfiguration[]>();
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
@@ -59,8 +60,9 @@ export class DynamicFormSettingsComponent {
 
         effect((cleanup) => {
             const settings = this.settings() || [];
-            // only needed to re-create the whole form if the element-id changes.
+            // only needed to re-create the whole form if the element-id/context-id changes.
             this.elementId();
+            this.contextId();
 
             // Prevents changes to the data to re-create the entire form
             const disabled = untracked(() => this.disabled());

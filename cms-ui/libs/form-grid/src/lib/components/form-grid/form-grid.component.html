@@ -118,6 +118,8 @@
                     [schema]="schema()"
                     (schemaChange)="$event && updateSchema($event)"
                     [mode]="mode()"
+                    [elementMap]="elementMap()"
+                    [rootId]="ELEMENT_ROOT_CONTAINER_ID"
                     [elementMoving]="elementMoving()"
                     (elementInterPageMove)="moveElementBetweenPages($event)"
                     (editPage)="startEditPage($event)"
@@ -131,6 +133,7 @@
                         [rootId]="ELEMENT_ROOT_CONTAINER_ID"
                         [parentId]="ELEMENT_ROOT_CONTAINER_ID"
                         [id]="ELEMENT_ROOT_CONTAINER_ID"
+                        [contextId]="ELEMENT_ROOT_CONTAINER_ID"
                         [level]="0"
                         [pageIndex]="pageIndex()"
                         [languages]="languages()"
@@ -138,11 +141,12 @@
                         [gridSurface]="gridSurface"
                         [isAggregate]="false"
 
+                        [elementMap]="elementMap()"
                         [schemaPropertiesMap]="schemaPropertiesMap()"
                         [elements]="elements()"
                         (elementsChange)="updatePageElements($event)"
                         [selectedElement]="selectedElement()"
-                        [selectedElementContainerId]="selectedElementContainerId()"
+                        [selectedElementContextId]="selectedElementContextId()"
                         (elementSelect)="setSelectedElement($event)"
                         [schema]="schema()"
                         (schemaChange)="updateSchema($event)"
@@ -166,7 +170,8 @@
                 [languages]="languages()"
                 [(pageIndex)]="pageIndex"
                 [selectedElementId]="selectedElementId()"
-                (selectedElementIdChange)="setSelectedElement($event)"
+                [selectedElementContextId]="selectedElementContextId()"
+                (elementSelect)="setSelectedElement($event)"
                 [(activeLanguage)]="activeLanguage"
             />
         </main>
@@ -232,6 +237,7 @@
                                 >
                                     <gtx-form-element-definition
                                         [config]="config()"
+                                        [contextId]="selectedElementContextId()"
                                         [schema]="schema()"
                                         [element]="selectedElement()!"
                                         [elementConfig]="selectedElementConfiguration()!"
@@ -252,6 +258,7 @@
                             >
                                 <gtx-form-element-settings
                                     [config]="config()"
+                                    [contextId]="selectedElementContextId()"
                                     [schema]="schema()"
                                     [elementMap]="elementMap()"
                                     [element]="selectedElement()!"
@@ -273,6 +280,7 @@
                                 <gtx-form-element-translation
                                     [element]="selectedElement()!"
                                     (elementChange)="upsetElementChanges($event)"
+                                    [contextId]="selectedElementContextId()"
                                     [elementConfig]="selectedElementConfiguration()!"
                                     [elementSchema]="selectedElementSchema()!"
                                     (elementSchemaChange)="updateElementSchema($event)"

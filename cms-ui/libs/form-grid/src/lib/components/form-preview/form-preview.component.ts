@@ -8,11 +8,13 @@ import {
     inject,
     input,
     model,
+    output,
     signal,
     ViewChild,
 } from '@angular/core';
 import { FormFlow, FormPropertyData, FormSchema, FormTypeConfiguration, FormUISchema } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { ElementSelectionEvent } from '../../models';
 
 interface IFeatures {
     [key: string]: IFeaturesConfig & IFeatureUploadConstraintOptions;
@@ -42,6 +44,7 @@ type FormgridPreviewData = {
     prefillContent?: Record<string, FormPropertyData>;
     currentPage?: number;
     selectedElementId?: string;
+    selectedElementContextId?: string;
 };
 
 /**
@@ -71,7 +74,7 @@ interface ExtendedWindow extends Window {
 }
 
 const PREVIEW_CONNECT_EVENT = 'preview-connect';
-const PREVIEW_INTIALIZATION_EVENT_NAME = 'preview-init';
+const PREVIEW_INITIALIZATION_EVENT_NAME = 'preview-init';
 const PREVIEW_FORM_CHANGE_EVENT_NAME = 'preview-form-change';
 const PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME = 'preview-selected-element-change';
 const PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME = 'preview-current-page-change';
@@ -104,12 +107,13 @@ interface PreviewInitializationEvent extends BasePreviewEvent,
     Omit<PreviewInformation, 'features'>, Partial<Pick<PreviewInformation, 'features'>>,
     PreviewFormData
 {
-    eventType: typeof PREVIEW_INTIALIZATION_EVENT_NAME;
+    eventType: typeof PREVIEW_INITIALIZATION_EVENT_NAME;
 
     formId: string;
     language: string;
     pageIndex: number;
     elementId?: string;
+    contextId?: string;
 }
 
 interface PreviewLoadedEvent extends BasePreviewEvent {
@@ -127,6 +131,7 @@ interface PreviewSelectedElementChangeEvent extends BasePreviewEvent {
     eventType: typeof PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME;
 
     elementId: string;
+    contextId?: string;
 }
 
 interface PreviewCurrentPageChangeEvent extends BasePreviewEvent {
@@ -170,7 +175,10 @@ export class FormPreviewComponent implements AfterViewInit {
 
     public readonly pageIndex = model.required<number>();
     public readonly activeLanguage = model.required<string>();
-    public readonly selectedElementId = model<string>();
+    public readonly selectedElementId = input<string>();
+    public readonly selectedElementContextId = input<string>();
+
+    public readonly elementSelect = output<ElementSelectionEvent | null>();
 
     /* LOCAL STATE
      * ===================================================================== */
@@ -278,7 +286,7 @@ export class FormPreviewComponent implements AfterViewInit {
             });
 
             // For some reason, if the response has a non 200/300 code, it is still treated
-            // as a successful reaquest and doesn't trigger the error handler above.
+            // as a successful request and doesn't trigger the error handler above.
             // Therefore, hacky check if the page contains the formgen app root - if it doesn't,
             // then it's some kind of error page and we have to display an error.
             if (win.document.querySelector('div#root') == null) {
@@ -299,6 +307,7 @@ export class FormPreviewComponent implements AfterViewInit {
                     flowId: this.flowId(),
                     flows: this.config().flows,
                     selectedElementId: this.selectedElementId(),
+                    selectedElementContextId: this.selectedElementContextId(),
                     prefillContent: this.prefill(),
                     cmsSid: this.client.getClient().sid as number,
                 };
@@ -324,7 +333,7 @@ export class FormPreviewComponent implements AfterViewInit {
                     case PREVIEW_CONNECT_EVENT:
                         this.initialized = true;
                         this.postEvent({
-                            eventType: PREVIEW_INTIALIZATION_EVENT_NAME,
+                            eventType: PREVIEW_INITIALIZATION_EVENT_NAME,
                             receiver: PreviewEventReceiver.PUPPET,
 
                             language: this.activeLanguage(),
@@ -337,15 +346,20 @@ export class FormPreviewComponent implements AfterViewInit {
                             cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),
+                            contextId: this.selectedElementContextId(),
                             availableLanguages: this.languages(),
                             schema: this.schema(),
                             uiSchema: this.uiSchema(),
                         });
                         return;
 
-                    case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME:
-                        this.selectedElementId.set(event.elementId);
+                    case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME: {
+                        this.elementSelect.emit({
+                            elementId: event.elementId,
+                            contextId: event.contextId,
+                        });
                         return;
+                    }
 
                     case PREVIEW_CURRENT_PAGE_CHANGE_EVENT_NAME:
                         this.pageIndex.set(event.pageIndex);

@@ -37,41 +37,81 @@ import {
     FormGridClipboardData,
     FormGridEditMode,
     FormGridViewMode,
+    UNIQUE_ID_GLUE,
 } from '../../models';
 
-function addPropertiesToMap(data: FormSchemaProperties, properties: FormSchemaProperties): void {
+function addPropertiesToMap(
+    data: FormSchemaProperties,
+    properties: FormSchemaProperties,
+    parentAggregateId: string = '',
+): void {
     const entries = Object.entries(properties || {});
-    for (const ent of entries) {
-        data[ent[0]] = ent[1];
+    for (const [propId, prop] of entries) {
+        const uniquePropId = parentAggregateId ? `${parentAggregateId}${UNIQUE_ID_GLUE}${propId}` : propId;
 
-        if (ent[1].properties != null && typeof ent[1].properties === 'object') {
-            addPropertiesToMap(data, ent[1].properties);
+        if (data[uniquePropId]) {
+            console.error(`A schema property with ID ${uniquePropId} already exists in the properties map, which indicates that properties with the same ID are duplicated!`);
+        }
+        data[uniquePropId] = prop;
+
+        if (prop.properties != null && typeof prop.properties === 'object') {
+            addPropertiesToMap(
+                data,
+                prop.properties,
+                // If it's an aggregate, use this as new "root", otherwise it might be that one or more containers are inside the aggregate,
+                // and we can't override the aggregate-id then.
+                prop.type === 'aggregate' ? uniquePropId : parentAggregateId,
+            );
         }
     }
 }
 
-function addElementsToMap(data: Record<string, FormElement>, elements: FormElement[]): void {
-    for (const el of elements) {
-        if (data[el.id]) {
-            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
-        }
-        data[el.id] = el;
+function groupElementsToMaps(pages: FormPage[], rootId: string): {
+    elementMap: Record<string, FormElement>;
+    parentMap: Record<string, string>;
+} {
+    const elementMap: Record<string, FormElement> = {};
+    const parentMap: Record<string, string> = {};
 
-        if (Array.isArray(el.elements)) {
-            addElementsToMap(data, el.elements);
-        }
+    pages = pages || [];
+    for (const page of pages) {
+        addElementsToMaps(elementMap, parentMap, page.elements || [], rootId, rootId);
     }
+
+    return {
+        elementMap,
+        parentMap,
+    };
 }
 
-function addElementToContainerReverseMap(data: Record<string, string>, elements: FormElement[], container: string): void {
+function addElementsToMaps(
+    elementMap: Record<string, FormElement>,
+    parentMap: Record<string, string>,
+    elements: FormElement[],
+    parentId: string,
+    rootId: string,
+    parentAggregateId: string = '',
+): void {
     for (const el of elements) {
-        if (data[el.id]) {
-            console.error(`An element with ID ${el.id} already exists in the map, which indicates that elements with the same ID are duplicated!`);
+        const uniqueElId = parentAggregateId ? `${parentAggregateId}${UNIQUE_ID_GLUE}${el.id}` : el.id;
+
+        if (elementMap[uniqueElId]) {
+            console.error(`An element with ID ${uniqueElId} already exists in the elements map, which indicates that elements with the same ID are duplicated!`);
         }
-        data[el.id] = container;
+        elementMap[uniqueElId] = el;
+        parentMap[uniqueElId] = parentId;
 
         if (Array.isArray(el.elements)) {
-            addElementToContainerReverseMap(data, el.elements, el.id);
+            addElementsToMaps(
+                elementMap,
+                parentMap,
+                el.elements,
+                el.id,
+                rootId,
+                // If it's an aggregate, use this as new "root", otherwise it might be that one or more containers are inside the aggregate,
+                // and we can't override the aggregate-id then.
+                el.type === 'aggregate' ? uniqueElId : parentAggregateId,
+            );
         }
     }
 }
@@ -114,6 +154,49 @@ function moveNestedElement(
     }
 
     return { removed, added };
+}
+
+/**
+ * Recursively walks the element tree to find the element with the matching ID and replaces it.
+ * The existing children (`.elements`) of the matched node are preserved so an edit on a
+ * container's settings cannot accidentally wipe its children.
+ */
+function replaceElementInTree(
+    elementsContextId: string,
+    elements: FormElement[],
+    replaceContextId: string,
+    replaceId: string,
+    replacement: FormElement,
+    fullReplace: boolean = false,
+): boolean {
+    for (let i = 0; i < elements.length; i++) {
+        if (elements[i].id === replaceId && elementsContextId === replaceContextId) {
+            if (fullReplace) {
+                elements[i] = replacement;
+            } else {
+                elements[i] = {
+                    ...replacement,
+                    elements: elements[i].elements ?? replacement.elements,
+                };
+            }
+            return true;
+        }
+
+        if (
+            Array.isArray(elements[i].elements)
+            && replaceElementInTree(
+                elements[i].type === 'aggregate' ? elements[i].id : elementsContextId,
+                elements[i].elements,
+                replaceContextId,
+                replaceId,
+                replacement,
+            )
+        ) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 enum EditTabs {
@@ -189,29 +272,25 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         return data;
     });
 
-    /** Mapping of ID to each element in a flat map for the current page */
-    public readonly elementMap = computed<Record<string, FormElement>>(() => {
-        const data: Record<string, FormElement> = {};
-
-        for (const page of (this.uiSchema()?.pages || [])) {
-            if (page?.elements?.length > 0) {
-                addElementsToMap(data, page.elements);
-            }
-        }
-
-        return data;
+    /**
+     * Internal computed to compute the data once and separate them with `elementMap`, `elementParentMap`, and `contextMap`
+     */
+    private readonly elementsGroupData = computed(() => {
+        return groupElementsToMaps(this.uiSchema()?.pages, this.ELEMENT_ROOT_CONTAINER_ID);
     });
 
-    public readonly containerReverseMap = computed<Record<string, string>>(() => {
-        const data: Record<string, string> = {};
+    /** Mapping of unique element ID to each element in a flat map for the current page */
+    public readonly elementMap = computed<Record<string, FormElement>>(() => {
+        const data = this.elementsGroupData();
+        return data.elementMap;
+    });
 
-        for (const page of (this.uiSchema()?.pages || [])) {
-            if (page?.elements?.length > 0) {
-                addElementToContainerReverseMap(data, page.elements, this.ELEMENT_ROOT_CONTAINER_ID);
-            }
-        }
-
-        return data;
+    /**
+     * A map to get the ID of the parent an element relates to.
+     */
+    public readonly elementParentMap = computed(() => {
+        const data = this.elementsGroupData();
+        return data.parentMap;
     });
 
     /** Whether the selected element has any missing translations across all form languages */
@@ -249,46 +328,68 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     /** The ID of the current selected element. */
     public readonly selectedElementId = signal<string | null>(null);
-    /** The ID of the container where the selectedElement is contained in. */
-    public readonly selectedElementContainerId = signal<string | null>(null);
+    /**
+     * The ID of the context the element resides in. Either the ROOT id,
+     * or the ID of the Aggregate it connects to.
+     */
+    public readonly selectedElementContextId = signal<string | null>(null);
+
+    /** The computed unique ID used for lookups in the {@link elementMap} and {@link schemaPropertiesMap} */
+    public readonly selectedElementUniqueId = computed<string | null>(() => {
+        const id = this.selectedElementId();
+        const context = this.selectedElementContextId();
+
+        if (id == null) {
+            return null;
+        }
+
+        return context == null || context === this.ELEMENT_ROOT_CONTAINER_ID
+            ? id
+            : `${context}${UNIQUE_ID_GLUE}${id}`;
+    });
+
     /** The active language that is being viewed/edited */
     public readonly activeLanguage = signal<string | null>(null);
 
     /** The currently selected element, which may be getting edited. */
     public readonly selectedElement = computed(() => {
-        const id = this.selectedElementId();
-        return id == null ? undefined : this.elementMap()[id];
+        const id = this.selectedElementUniqueId();
+        const map = this.elementMap() || {};
+        return id == null ? undefined : map[id];
     });
 
     /** The schema definition of the selected element (if it has one) */
     public readonly selectedElementSchema = computed(() => {
-        const id = this.selectedElementId();
-        return id == null ? undefined : this.schemaPropertiesMap()?.[id];
+        const id = this.selectedElementUniqueId();
+        const map = this.schemaPropertiesMap() || {};
+        return id == null ? undefined : map[id];
     });
 
     /** Which type the element is */
     public readonly selectedElementType = computed(() => {
         const element = this.selectedElement();
+        const schema = this.selectedElementSchema();
+
         if (element == null) {
             return null;
         }
 
-        const schema = this.selectedElementSchema();
         return schema == null ? element.formGridOptions.type : schema.type;
     });
 
     /** The configuration of the currently selected element */
     public readonly selectedElementConfiguration = computed(() => {
         const element = this.selectedElement();
+        const schema = this.selectedElementSchema();
+        const config = this.config();
+
         if (element == null) {
             return undefined;
         }
 
-        const schema = this.selectedElementSchema();
-
         return schema == null
-            ? (this.config().blocks || {})[element.formGridOptions.type]
-            : this.config().controls[schema.type];
+            ? (config.blocks || {})[element.formGridOptions.type]
+            : config.controls[schema.type];
     });
 
     /* RESIZE
@@ -489,7 +590,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             if (Array.isArray(selected.elements)) {
                 const updatedSelected = structuredClone(selected);
                 updatedSelected.elements.push(pastedElement);
-                if (this.replaceElementInTree(pageElements, updatedSelected)) {
+
+                if (replaceElementInTree(
+                    this.ELEMENT_ROOT_CONTAINER_ID,
+                    pageElements,
+                    this.selectedElementContextId(),
+                    updatedSelected.id,
+                    updatedSelected,
+                    true,
+                )) {
                     this.updatePageElements(pageElements);
                 }
             } else {
@@ -509,8 +618,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         this.setSelectedElement({
-            element: pastedElement,
-            containerId: this.selectedElementContainerId() ?? this.ELEMENT_ROOT_CONTAINER_ID,
+            elementId: pastedElement.id,
+            contextId: this.selectedElementContextId() ?? this.ELEMENT_ROOT_CONTAINER_ID,
         });
 
         this.notification.show({
@@ -528,6 +637,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             return;
         }
         this.elementMoving.set({
+            elementId: null,
+            contextId: null,
             elementType: type,
             inserting: true,
         });
@@ -608,7 +719,11 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
     }
 
     public moveElementToContainer(event: ElementContainerMoveEvent): void {
-        const element = this.elementMap()[event.elementId];
+        const uniqueElId = event.fromContextId == null || event.fromContainerId === this.ELEMENT_ROOT_CONTAINER_ID
+            ? event.elementId
+            : `${event.fromContextId}${UNIQUE_ID_GLUE}${event.elementId}`;
+
+        const element = this.elementMap()[uniqueElId];
 
         // If the elements couldn't be properly determined
         if (!element) {
@@ -669,32 +784,15 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public upsetElementChanges(data: FormElement): void {
         const pageElements = structuredClone(this.elements());
-        if (this.replaceElementInTree(pageElements, data)) {
+        if (replaceElementInTree(
+            this.ELEMENT_ROOT_CONTAINER_ID,
+            pageElements,
+            this.selectedElementContextId(),
+            this.selectedElementId(),
+            data,
+        )) {
             this.updatePageElements(pageElements);
         }
-    }
-
-    /**
-     * Recursively walks the element tree to find the element with the matching ID and replaces it.
-     * The existing children (`.elements`) of the matched node are preserved so an edit on a
-     * container's settings cannot accidentally wipe its children.
-     */
-    private replaceElementInTree(elements: FormElement[], replacement: FormElement): boolean {
-        for (let i = 0; i < elements.length; i++) {
-            if (elements[i].id === replacement.id) {
-                elements[i] = {
-                    ...replacement,
-                    elements: elements[i].elements ?? replacement.elements,
-                };
-                return true;
-            }
-            if (Array.isArray(elements[i].elements)
-              && this.replaceElementInTree(elements[i].elements, replacement)
-            ) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public updateElementSchema(elementSchema?: FormSchemaProperty): void {
@@ -703,6 +801,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         const elementId = this.selectedElementId();
+        const contextId = this.selectedElementContextId();
 
         if (!elementId) {
             return;
@@ -715,14 +814,17 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
 
         const copy = structuredClone(currentSchema);
+        const context = contextId == null || contextId === this.ELEMENT_ROOT_CONTAINER_ID
+            ? copy
+            : copy.properties[contextId];
 
-        if (copy.properties[elementId] != null) {
-            Object.assign(copy.properties[elementId], elementSchema);
+        if (context.properties[elementId] != null) {
+            Object.assign(context.properties[elementId], elementSchema);
             this.updateSchema(copy);
             return;
         }
 
-        for (const innerProp of Object.values(copy.properties)) {
+        for (const innerProp of Object.values(context.properties)) {
             if (innerProp.properties?.[elementId] != null) {
                 Object.assign(innerProp.properties[elementId], elementSchema);
                 this.updateSchema(copy);
@@ -731,27 +833,34 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
         }
     }
 
-    setSelectedElement(data?: ElementSelectionEvent | string | null, event?: Event): void {
+    setSelectedElement(data?: ElementSelectionEvent | null, event?: Event): void {
         cancelEvent(event);
 
-        if (typeof data === 'string') {
-            data = {
-                element: this.elementMap()[data],
-                containerId: this.containerReverseMap()[data] ?? this.ELEMENT_ROOT_CONTAINER_ID,
-            };
-        }
-        if (data == null || data.element == null || data.containerId == null) {
+        if (data == null || data.elementId == null) {
             this.clearSelectedElement();
             return;
         }
+
+        const contextId = data.contextId;
+        const uniqueElId = contextId == null || contextId === this.ELEMENT_ROOT_CONTAINER_ID
+            ? data.elementId
+            : `${contextId}${UNIQUE_ID_GLUE}${data.elementId}`;
 
         this.editingPageIndex.set(null);
         this.definitionValid.set(true);
         this.settingsValid.set(true);
         this.translationsValid.set(true);
 
-        const blockType = data.element.formGridOptions?.type || null;
-        const elementSchema = this.schemaPropertiesMap()[data.element.id] || null;
+        const el = this.elementMap()[uniqueElId];
+
+        // If we have no element to select, clear the selection
+        if (el == null) {
+            this.clearSelectedElement();
+            return;
+        }
+
+        const blockType = el.formGridOptions?.type || null;
+        const elementSchema = this.schemaPropertiesMap()[uniqueElId] || null;
         const controlConfig = elementSchema
             ? this.config().controls[elementSchema?.type]
             : null;
@@ -776,8 +885,8 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
             this.editingSidebarTab.set(EditTabs.SETTINGS);
         }
 
-        this.selectedElementId.set(data.element.id);
-        this.selectedElementContainerId.set(data.containerId);
+        this.selectedElementId.set(data.elementId);
+        this.selectedElementContextId.set(contextId);
     }
 
     public startEditPage(index: number): void {
@@ -823,7 +932,7 @@ export class FormGridComponent extends BaseComponent implements OnInit, OnDestro
 
     public clearSelectedElement(): void {
         this.selectedElementId.set(null);
-        this.selectedElementContainerId.set(null);
+        this.selectedElementContextId.set(null);
         this.editingPageIndex.set(null);
         this.editingSidebarTab.set(EditTabs.DEFINITION);
     }

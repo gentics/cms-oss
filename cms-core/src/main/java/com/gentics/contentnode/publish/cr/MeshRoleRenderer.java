@@ -1,9 +1,14 @@
 package com.gentics.contentnode.publish.cr;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
 import com.gentics.contentnode.object.Tag;
@@ -15,10 +20,8 @@ import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.content.GenticsContentAttribute;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
-
-import io.vertx.core.json.JsonArray;
 
 /**
  * TagmapEntryRenderer implementation for Roles
@@ -108,14 +111,20 @@ public class MeshRoleRenderer implements TagmapEntryRenderer {
 	 * @return
 	 */
 	protected Object tryTransformJSON(String string) {
-		JsonContent json = JsonContent.fromString(string);
-		if (json != null) {
-			if (json.isArray()) {
-				JsonArray jsonArray = json.getArray();
-				return IntStream.range(0, jsonArray.size()).mapToObj(jsonArray::getString).collect(Collectors.toList());
-			} else {
-				return new ArrayList<>(json.getObject().getMap().keySet());
+		try {
+			JsonNode json = MiscUtils.newObjectMapper().readTree(string);
+			if (json != null) {
+				if (json.isArray()) {
+					ArrayNode jsonArray = (ArrayNode) json;
+					return IntStream.range(0, jsonArray.size()).mapToObj(jsonArray::get).map(JsonNode::asText).collect(Collectors.toList());
+				} else if (json.isObject()) {
+					ObjectNode jsonObject = (ObjectNode) json;
+					List<String> values = new ArrayList<String>();
+					jsonObject.fieldNames().forEachRemaining(values::add);
+					return values;
+				}
 			}
+		} catch (JsonProcessingException ignored) {
 		}
 		return string;
 	}

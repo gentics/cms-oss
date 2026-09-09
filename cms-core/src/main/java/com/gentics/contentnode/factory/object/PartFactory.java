@@ -18,6 +18,11 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -47,11 +52,10 @@ import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
-import com.gentics.mesh.core.rest.JsonSchema;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.json.JsonUtil;
 
 import io.vertx.core.json.JsonArray;
@@ -867,22 +871,27 @@ public class PartFactory extends AbstractFactory {
 				// Nothing to validate
 				return;
 			}
-			JsonContent jsonContent = JsonContent.fromString(stringValue);
-			if (jsonContent == null) {
-				throw exceptionSupplier.apply("Not a JSON Value");
-			}
-			if (!StringUtils.isEmpty(part.getInfoText())) {
-				JsonContent jsonSchemaContent = JsonContent.fromString(part.getInfoText());
-				JsonSchema[] allowedSchemas = null;
-				if (jsonSchemaContent.isArray()) {
-					JsonArray jsonSchemas = jsonSchemaContent.getArray();
-					allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::getJsonObject).map(JsonSchema::new).toArray(size -> new JsonSchema[size]);
-				} else {
-					allowedSchemas = new JsonSchema[] { new JsonSchema(jsonSchemaContent.getObject()) };
+			ObjectMapper objectMapper = MiscUtils.newObjectMapper();
+			try {
+				JsonNode jsonNode = objectMapper.readTree(stringValue);
+				if (!StringUtils.isEmpty(part.getInfoText())) {
+					JsonNode jsonSchemaContent;
+						jsonSchemaContent = objectMapper.readTree(part.getInfoText());
+						JsonNode[] allowedSchemas = null;
+						if (jsonSchemaContent.isArray()) {
+							ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
+
+							allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
+									.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
+						} else {
+							allowedSchemas = new JsonNode[] { jsonSchemaContent };
+						}
+						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
+							throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
+						}
 				}
-				if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.newJsonSchemaValidator(schema1.getVertxSchema()).validate(jsonContent.getContent()).getValid() == Boolean.TRUE)) {
-					throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
-				}
+			} catch (JsonProcessingException e) {
+				exceptionSupplier.apply("Error while parsing JSON");
 			}
 		}
 	}

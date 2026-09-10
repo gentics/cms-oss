@@ -167,6 +167,7 @@ export class FormPreviewComponent implements AfterViewInit {
     public readonly formId = input.required<number>();
     public readonly formType = input.required<string>();
     public readonly config = input.required<FormTypeConfiguration>();
+    public readonly rootId = input.required<string>();
     public readonly flowId = input.required<string>();
 
     public readonly schema = input.required<FormSchema>();
@@ -204,6 +205,17 @@ export class FormPreviewComponent implements AfterViewInit {
         }
 
         return propData;
+    });
+
+    /**
+     * Internal computed context id.
+     * FormGen has no idea about the "root" context/id, and doesn't actually need it.
+     * Therefore we simply use an empty string to mark it as "root".
+     */
+    private readonly contextId = computed(() => {
+        const id = this.selectedElementContextId();
+        const root = this.rootId();
+        return root === id ? '' : id;
     });
 
     /* CONSTRUCTOR
@@ -245,6 +257,7 @@ export class FormPreviewComponent implements AfterViewInit {
                 receiver: PreviewEventReceiver.PUPPET,
 
                 elementId: this.selectedElementId(),
+                contextId: this.contextId(),
             });
         });
     }
@@ -346,7 +359,7 @@ export class FormPreviewComponent implements AfterViewInit {
                             cmsSid: this.client.getClient().sid as number,
                             pageIndex: this.pageIndex(),
                             elementId: this.selectedElementId(),
-                            contextId: this.selectedElementContextId(),
+                            contextId: this.contextId(),
                             availableLanguages: this.languages(),
                             schema: this.schema(),
                             uiSchema: this.uiSchema(),
@@ -356,7 +369,7 @@ export class FormPreviewComponent implements AfterViewInit {
                     case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME: {
                         this.elementSelect.emit({
                             elementId: event.elementId,
-                            contextId: event.contextId,
+                            contextId: event.contextId || this.rootId(),
                         });
                         return;
                     }

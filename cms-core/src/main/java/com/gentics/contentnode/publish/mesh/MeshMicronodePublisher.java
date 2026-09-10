@@ -61,7 +61,6 @@ import com.gentics.mesh.core.rest.microschema.impl.MicroschemaCreateRequest;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
 import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
 import com.gentics.mesh.core.rest.node.field.Field;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.JsonFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.NodeFieldImpl;
@@ -858,8 +857,8 @@ public class MeshMicronodePublisher {
 			break;
 		case 44:
 			fieldList.add(ImmutablePair.of(value.getPart().getKeyname(), new JsonFieldImpl().setJson(
-					StringUtils.isNotBlank(value.getValueText()) 
-						? JsonContent.fromString(value.getValueText()) 
+					StringUtils.isNotBlank(value.getValueText())
+						? JsonUtil.toJsonNode(value.getValueText(), true)
 						: null)));
 			break;
 		}

@@ -4,16 +4,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import org.apache.commons.lang3.StringUtils;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import com.gentics.contentnode.rest.util.MiscUtils;
 
 /**
  * A parttype for storing JSON content. Parttype ID = 44.
@@ -21,6 +20,12 @@ import io.vertx.core.json.JsonObject;
 public class JSONPartType extends TextPartType {
 
 	private static final long serialVersionUID = -4534399369711092989L;
+
+	protected JsonNode json;
+
+	protected ArrayNode arrayNode;
+
+	protected ObjectNode objectNode;
 
 	public JSONPartType(Value value) throws NodeException {
 		super(value, TextPartType.REPLACENL_EXTENDEDNL2BR);
@@ -32,56 +37,53 @@ public class JSONPartType extends TextPartType {
 	}
 
 	@Override
+	public void setText(String text) throws NodeException {
+		super.setText(text);
+		try {
+			json = null;
+			arrayNode = null;
+			objectNode = null;
+
+			json = MiscUtils.newObjectMapper().readTree(text);
+			if (json instanceof ArrayNode array) {
+				arrayNode = array;
+			}
+			if (json instanceof ObjectNode object) {
+				objectNode = object;
+			}
+		} catch (JsonProcessingException e) {
+			throw new NodeException("Invalid JSON");
+		}
+	}
+
+	@Override
 	public Set<String> getResolvableKeys() {
 		Set<String> resolvableKeys = new HashSet<>();
-		Value value = getValueObject();
-		if (value != null) {
-			String stringValue = value.getValueText();
-			Object current = JsonContent.fromString(stringValue);
-			if (current instanceof JsonContent jc) {
-				if (jc.isArray()) {
-					IntStream.range(0, jc.getArray().size()).forEach(i -> resolvableKeys.add(Integer.toString(i)));
-				} else {
-					resolvableKeys.addAll(jc.getObject().fieldNames());
-				}
-			}
+		if (arrayNode != null) {
+			IntStream.range(0, arrayNode.size()).forEach(i -> resolvableKeys.add(Integer.toString(i)));
+		} else if (objectNode != null) {
+			objectNode.fieldNames().forEachRemaining(resolvableKeys::add);
 		}
 		return resolvableKeys;
 	}
 
 	@Override
 	public Object get(String key) {
-		Value value = getValueObject();
-		if (value != null) {
-			String stringValue = value.getValueText();
-			if (StringUtils.isNotBlank(stringValue)) {
-				Object current = JsonContent.fromString(stringValue);
-				if (StringUtils.isNotBlank(key)) {
-					if (current instanceof JsonContent jc) {
-						if (jc.isArray()) {
-							try {
-								int i = Integer.parseInt(key);
-								JsonArray ja = jc.getArray();
-								if (ja.size() > i) {
-									current = ja.getValue(i);
-								} else {
-									return null;
-								}
-							} catch (NumberFormatException e) {
-								return null;
-							}
-						} else {
-							current = jc.getObject().getValue(key);
-						}
-					} else if (current instanceof JsonObject jo) {
-						current = jo.getValue(key);
-					} else {
-						return null;
-					}
+		if (arrayNode != null) {
+			try {
+				int i = Integer.parseInt(key);
+				if (arrayNode.size() > i) {
+					return arrayNode.get(i);
+				} else {
+					return null;
 				}
-				return current;
+			} catch (NumberFormatException e) {
+				return null;
 			}
-		}		
-		return null;
+		} else if (objectNode != null) {
+			return objectNode.get(key);
+		} else {
+			return null;
+		}
 	}
 }

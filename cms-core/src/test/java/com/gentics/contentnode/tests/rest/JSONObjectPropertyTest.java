@@ -6,10 +6,7 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectPropertyDefinition;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,11 +15,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -35,13 +30,11 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.LocalizableNodeObject;
-import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
-import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.parttype.JSONPartType;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
@@ -53,55 +46,33 @@ import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.TestedType;
-import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Test updating JSON tag part for different restriction / target usecases
  */
 @RunWith(value = Parameterized.class)
-public class JSONObjectPropertyTest {
+public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 
-	private static final String PART_KEYWORD = "json";
-	private static final String CONSTRUCT_KEYWORD = "construct";
-	private static final String OBJPROP_SHORT_KEYWORD = "json";
-	private static final String OBJPROP_KEYWORD = "object." + OBJPROP_SHORT_KEYWORD;
-	private static final String RANDOM_JSON = "{\"whatever\":\"wherever\"}";
-
-	private static Node node;
-	private static Template template;
-	private static Integer constructId;
-
-	private static List<ObjectTagDefinition> properties = new ArrayList<>();
-
-	@ClassRule
-	public static DBTestContext testContext = new DBTestContext();
+	protected static List<ObjectTagDefinition> properties = new ArrayList<>();
 
 	@Parameters(name = "{index}: type {0} restriction {1}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
+		Collection<Object[]> abstractData = AbstractJSONPropertyTest.data();
 		for (TestedType type : TestedType.values()) {
-			for (Entry<String, String> schemaRestriction : Map.of(
-					"", RANDOM_JSON,
-					"{\"type\":\"array\",\"items\":{\"type\":\"string\"}}", "[\"one\", \"two\", \"three\"]",
-					"{\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\"},\"lastName\":{\"type\":\"string\"},\"middleName\":{\"type\":\"string\"}},\"required\":[\"firstName\",\"lastName\"]}", "{\"firstName\":\"Mickey\", \"lastName\":\"Mouse\"}"
-			).entrySet()) {
-				data.add(new Object[] { type, schemaRestriction.getKey(), schemaRestriction.getValue() });
-			}
+			abstractData.forEach(dataItem -> {
+				data.add(new Object[] { type, dataItem[0], dataItem[1] });
+			});
 		}
 		return data;
 	}
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
-		testContext.getContext().getTransaction().commit();
-
-		// basic setup
-		node = supply(() -> createNode());
-		template = supply(() -> createTemplate(node.getFolder(), "Template"));
-		constructId = supply(() -> createConstruct(node, JSONPartType.class, CONSTRUCT_KEYWORD, PART_KEYWORD));
+		AbstractJSONPropertyTest.setupOnce();
 
 		for (int type : Arrays.asList(Folder.TYPE_FOLDER, Page.TYPE_PAGE, ContentFile.TYPE_FILE, ContentFile.TYPE_IMAGE)) {
-			properties.add(supply(() -> createObjectPropertyDefinition(type, constructId, OBJPROP_SHORT_KEYWORD, OBJPROP_KEYWORD)));
+			properties.add(supply(() -> createObjectPropertyDefinition(type, constructId, TAG_KEYWORD, OBJPROP_KEYWORD)));
 		}
 	}
 
@@ -175,7 +146,7 @@ public class JSONObjectPropertyTest {
 				prop.setStringValue(input);
 				Tag tag = new Tag();
 				tag.setType(Type.OBJECTTAG);
-				tag.setName(OBJPROP_SHORT_KEYWORD);
+				tag.setName(TAG_KEYWORD);
 				tag.setActive(true);
 				tag.setProperties(Map.of(PART_KEYWORD, prop));
 				Object request;
@@ -220,14 +191,14 @@ public class JSONObjectPropertyTest {
 		} else {
 			// fill object tags
 			ObjectTagContainer container = update(((ObjectTagContainer) testedObject), update -> {
-				ObjectTag tag = update.getObjectTag(OBJPROP_SHORT_KEYWORD);
+				ObjectTag tag = update.getObjectTag(TAG_KEYWORD);
 				getPartType(JSONPartType.class, tag, PART_KEYWORD).setText(input);
 				tag.setEnabled(true);
 			}).build();
 
 			// assert all object tags available and filled
 			consume(o -> {
-				assertThat(o.getObjectTag(OBJPROP_SHORT_KEYWORD)).isNotNull().hasPartWithText(JSONPartType.class, PART_KEYWORD, input);
+				assertThat(o.getObjectTag(TAG_KEYWORD)).isNotNull().hasPartWithText(JSONPartType.class, PART_KEYWORD, input);
 			}, container);
 
 			return container;

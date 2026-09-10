@@ -16,12 +16,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.C;
@@ -45,9 +52,13 @@ import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.mesh.json.JsonUtil;
+
+import io.vertx.core.json.JsonArray;
 
 /**
  * An objectfactory which can create {@link Part} objects, based on the
@@ -55,6 +66,12 @@ import com.gentics.lib.i18n.CNI18nString;
  */
 @DBTables({ @DBTable(clazz = Part.class, name = "part") })
 public class PartFactory extends AbstractFactory {
+
+	/**
+	 * Error log
+	 */
+	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
+
 	/**
 	 * SQL Statement to select a part
 	 */
@@ -644,6 +661,8 @@ public class PartFactory extends AbstractFactory {
 			if (!isNew) {
 				origPart = t.getObject(Part.class, getId());
 			}
+			// validate
+			validatePart(this, getDefaultValue(), reason -> supplyInvalidJSONException(getKeyname(), reason, this));
 
 			// save the construct, if necessary
 			if (isModified) {
@@ -833,6 +852,54 @@ public class PartFactory extends AbstractFactory {
 			// The datasource entries for the part are not deleted in here.
 			// They will be deleted when the construct is deleted.
 		}
+	}
+
+	/**
+	 * Perform the validation of a part, where applicable.
+	 * 
+	 * @param tag
+	 * @throws NodeException
+	 */
+	public static void validatePart(Part part, Object value, Function<String, ObjectModificationException> exceptionSupplier) throws NodeException {
+		if (part.getPartTypeId() == Part.JSON) {
+			if (value == null || !(value instanceof Value val)) {
+				// Nothing to validate
+				return;
+			}
+			String stringValue = val.getValueText();
+			if (StringUtils.isEmpty(stringValue)) {
+				// Nothing to validate
+				return;
+			}
+			ObjectMapper objectMapper = MiscUtils.newObjectMapper();
+			try {
+				JsonNode jsonNode = objectMapper.readTree(stringValue);
+				if (!StringUtils.isEmpty(part.getInfoText())) {
+					JsonNode jsonSchemaContent;
+						jsonSchemaContent = objectMapper.readTree(part.getInfoText());
+						JsonNode[] allowedSchemas = null;
+						if (jsonSchemaContent.isArray()) {
+							ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
+
+							allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
+									.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
+						} else {
+							allowedSchemas = new JsonNode[] { jsonSchemaContent };
+						}
+						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
+							throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
+						}
+				}
+			} catch (JsonProcessingException e) {
+				exceptionSupplier.apply("Error while parsing JSON");
+			}
+		}
+	}
+
+	private static ObjectModificationException supplyInvalidJSONException(String property, String reason, Part part) {
+		return new ObjectModificationException(property, LOG_JSON_VALIDATION_ERROR + " for "
+				+ "part {" + part.getKeyname() + "}."
+				+ " Reason: " + reason, "json_validation_failed");
 	}
 
 	/**

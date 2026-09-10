@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationUnit;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -46,7 +47,6 @@ import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
 import com.gentics.contentnode.utils.GroovyUtils;
 import com.gentics.lib.render.Renderable;
-import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.helper.HelperFunction;
 import com.jayway.jsonpath.JsonPath;
@@ -156,8 +156,8 @@ public class HelperSource {
 		} 
 		if (renderable instanceof Value v) {
 			renderable = v.getValueText();
-		} else if (renderable instanceof JsonContent jc) {
-			renderable = jc.getString();
+		} else if (renderable instanceof JsonNode json) {
+			renderable = json.toString();
 		}
 		JsonPath jsonPath = JsonPath.compile(jsonPathString);
 		ParseContext parseContext = JsonPath.using(new JacksonJsonProvider());

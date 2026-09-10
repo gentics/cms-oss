@@ -7,6 +7,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.junit.Assert.fail;
 
+import com.gentics.mesh.core.rest.user.UserAPITokenCreateRequest;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -62,7 +63,9 @@ public class MeshPublishApiTokenTest {
 	@BeforeClass
 	public static void setupOnce() throws Exception {
 		UserResponse user = mesh.client().me().blockingGet();
-		UserAPITokenResponse apiToken = mesh.client().issueAPIToken(user.getUuid()).blockingGet();
+		UserAPITokenCreateRequest req = new UserAPITokenCreateRequest();
+		req.setName("Example");
+		UserAPITokenResponse apiToken = mesh.client().issueAPIToken(user.getUuid(), req).blockingGet();
 
 		node = Trx.supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY));
 		crId = createMeshCR(mesh, MESH_PROJECT_NAME);

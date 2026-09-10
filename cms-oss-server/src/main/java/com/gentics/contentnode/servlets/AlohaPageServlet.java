@@ -244,10 +244,12 @@ public class AlohaPageServlet extends ContentNodeUserServlet {
 					renderType.setFrontEnd(true);
 				}
 				renderType.addRenderer("aloha");
-				// when the return type is html, the script includes shall be
-				// added
-				// to the content
-				renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, Boolean.valueOf("html".equals(type)));
+				// when the return type is html and the page is rendered for editing, the
+				// script includes shall be added to the content. In readonly (preview) mode,
+				// Aloha Editor shall not be loaded at all, so that e.g. forms are rendered
+				// like in the published page instead of being handled by Aloha.
+				renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES,
+						Boolean.valueOf("html".equals(type) && renderMode == RenderType.EM_ALOHA));
 				renderType.setParameter(AlohaRenderer.LAST_ACTION, request.getParameter("lastaction"));
 
 				// set parameters if the user requested edit mode, but got readonly

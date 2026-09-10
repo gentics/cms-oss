@@ -2189,7 +2189,10 @@ public class PageResourceImpl implements PageResource {
 			renderType.addRenderer(ContentRenderer.RENDERER_CONTENT);
 			renderType.addRenderer(ContentRenderer.RENDERER_TAG);
 			renderType.addRenderer(ContentRenderer.RENDERER_ALOHA);
-		} else {
+		} else if (!readOnly) {
+			// only decorate the rendered page with Aloha Editor when it is actually editable.
+			// read-only (preview) rendering shall look like the published page, so that e.g.
+			// forms are rendered by the portal instead of being handled by Aloha
 			renderType.addRenderer("aloha");
 			renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, false);
 		}

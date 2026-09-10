@@ -114,9 +114,14 @@ spec:
               {{- end }}
             resources:
               {{- toYaml .Values.cms.backup.resources | nindent 14 }}
-          {{- if ((.Values.cms.backup.image).pullSecret) }}
+          {{- /* Three-state, matching the chart-wide pull secret logic: set -> use it;
+               set to "" -> no pull secret; absent -> fall back to the CMS chain
+               (image.pullSecret -> global.imagePullSecrets -> defaultImagePullSecret). */}}
+          {{- if not (kindIs "invalid" ((.Values.cms.backup.image).pullSecret)) }}
+          {{- if .Values.cms.backup.image.pullSecret }}
           imagePullSecrets:
             - name: {{ .Values.cms.backup.image.pullSecret }}
+          {{- end }}
           {{- else }}
           {{- include "cms.imagePullSecrets" . | nindent 10 }}
           {{- end }}

@@ -69,5 +69,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- include "cms.imagePullSecrets" . | nindent 6 }}
+    {{- include "cms.spellchecker.imagePullSecrets" . | nindent 6 }}
 {{- end }}

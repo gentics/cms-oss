@@ -92,11 +92,27 @@ Priority: local cms.license.secret (explicit override) → global license secret
 {{- end -}}
 
 {{/*
-Image pull secrets — local image.pullSecret overrides global; global is the default.
-Local accepts a plain secret name string; global uses the Kubernetes-native array format.
+Image pull secrets for the main CMS image (secret NAME, string format).
+Three-state: set -> local wins (global ignored); set to "" -> no pull secret;
+absent -> global.imagePullSecrets, else gentics-common.defaultImagePullSecret.
 */}}
 {{- define "cms.imagePullSecrets" -}}
 {{- include "gentics-common.imagePullSecrets" (dict "root" . "localName" .Values.image.pullSecret) -}}
+{{- end }}
+
+{{/*
+Image pull secrets for the spellchecker pod, which pulls its own image
+(gentics/languagetool) into a separate pod spec — imagePullSecrets is pod-scoped,
+so it cannot inherit the CMS pod's block.
+Three-state: set -> local wins (global ignored); set to "" -> no pull secret;
+absent -> the same chain as the main CMS image (cms.imagePullSecrets).
+*/}}
+{{- define "cms.spellchecker.imagePullSecrets" -}}
+{{- if not (kindIs "invalid" .Values.spellchecker.pullSecret) }}
+{{- include "gentics-common.imagePullSecrets" (dict "root" . "localName" .Values.spellchecker.pullSecret) -}}
+{{- else }}
+{{- include "cms.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}
 
 {{/*

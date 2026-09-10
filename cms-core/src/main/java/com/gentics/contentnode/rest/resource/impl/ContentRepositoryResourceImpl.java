@@ -165,14 +165,14 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 	@Path("/{id}/structure/check")
 	public ContentRepositoryResponse check(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception {
 		return internalCheck(id, false, waitMs);
-		}
+	}
 
 	@Override
 	@PUT
 	@Path("/{id}/structure/repair")
 	public ContentRepositoryResponse repair(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception {
 		return internalCheck(id, true, waitMs);
-		}
+	}
 
 	@Override
 	@PUT
@@ -489,8 +489,9 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			trx.success();
 		}
 
+		ContentRepositoryResponse contentRepositoryResponse;
 		try (Trx trx = ContentNodeHelper.trx()) {
-			ContentRepositoryResponse contentRepositoryResponse = Operator.executeLocked(description.toString(), waitMs, null, () -> {
+			contentRepositoryResponse = Operator.executeLocked(description.toString(), waitMs, null, () -> {
 				// check structure
 				MiscUtils.load(ContentRepository.class, id).checkStructure(repair);
 
@@ -502,8 +503,18 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			}, ContentRepositoryResponse::new);
 
 			trx.success();
-			return contentRepositoryResponse;
 		}
+
+		// when the response does not contain a cr (which happens e.g. when the operation is continued in the background) we add it now
+		if (contentRepositoryResponse.getContentRepository() == null) {
+			try (Trx trx = ContentNodeHelper.trx()) {
+				ContentRepository checkedCr = MiscUtils.load(ContentRepository.class, id);
+				contentRepositoryResponse.setContentRepository(ContentRepository.TRANSFORM2REST.apply(checkedCr));
+				trx.success();
+			}
+		}
+
+		return contentRepositoryResponse;
 	}
 
 	/**

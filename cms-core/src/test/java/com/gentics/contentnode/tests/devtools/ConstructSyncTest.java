@@ -20,9 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.gentics.contentnode.rest.model.EditorControlStyle;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -43,10 +41,14 @@ import com.gentics.contentnode.object.DatasourceEntry;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.Part;
+import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
+import com.gentics.contentnode.object.parttype.groovy.GroovyPartType;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.contentnode.tests.assertj.GCNAssertions;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -486,5 +488,53 @@ public class ConstructSyncTest {
 				.isNotNull()
 				.hasKeyword(originalKeyword);
 		});
+	}
+
+	/**
+	 * Test synchronization of construct with Groovy part
+	 * @throws NodeException
+	 */
+	@Test
+	public void testGroovyPart() throws NodeException {
+		String groovyCode = """
+				def bla = "blub"
+				return bla
+				""";
+
+		Synchronizer.disable();
+
+		Construct construct = Builder.create(Construct.class, c -> {
+			c.setKeyword("groovy");
+			c.setName("Groovy", 1);
+			c.setAutoEnable(true);
+
+			c.getParts().add(Builder.create(Part.class, p -> {
+				p.setKeyname("script");
+				p.setPartTypeId(getPartTypeId(GroovyPartType.class));
+				p.setEditable(0);
+				p.setDefaultValue(Builder.create(Value.class, v -> {
+					v.setValueText(groovyCode);
+				}).doNotSave().build());
+			}).doNotSave().build());
+		}).build();
+
+		GlobalId globalId = execute(Construct::getGlobalId, construct);
+
+		// add to package
+		consume(c -> pack.synchronize(c, true), construct);
+
+		// delete locally
+		consume(del -> update(del, Construct::delete), construct);
+
+		// sync from package
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		// assert that values exist
+		construct = supply(t -> t.getObject(Construct.class, globalId));
+		assertThat(construct).as("Synchronized construct").isNotNull();
+
+		String synchronizedGroovyCode = execute(c -> getPartType(GroovyPartType.class, c, "script").getText(),
+				construct);
+		assertThat(synchronizedGroovyCode).as("Synchronized Groovy Code").isEqualTo(groovyCode);
 	}
 }

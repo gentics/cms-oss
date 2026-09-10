@@ -54,6 +54,7 @@ public class Property implements Serializable {
 			case 36: // HTML (custom form)
 			case 43: // Handlebars
 			case 44: // JSON
+			case 45: // Groovy
 				return RICHTEXT;
 
 			case 4: // URL (page)

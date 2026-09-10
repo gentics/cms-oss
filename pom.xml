@@ -50,6 +50,7 @@
 		<mesh.andp.plugin.version>8.5.0</mesh.andp.plugin.version>
 		<hazelcast.version>5.5.0</hazelcast.version>
 		<license.checker.version>2.0.4</license.checker.version>
+		<swagger.version>2.2.4</swagger.version>
 
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>

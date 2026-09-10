@@ -111,6 +111,4 @@ class ValidatorTest {
 		var errors = this.validator.validateAndCollectErrors(cleanHtml);
 		assertThat(errors).isEmpty();
 	}
-
-
 }

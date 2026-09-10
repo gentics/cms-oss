@@ -28,8 +28,8 @@ public interface SearchResource {
 	 * @throws Exception
 	 */
 	@POST
-	@Path("/{type}/_search")
-	Response searchType(@PathParam("type") String type, @BeanParam SearchParameterBean search, String body) throws Exception;
+	@Path("/{searchType}/_search")
+	Response searchType(@PathParam("searchType") String type, @BeanParam SearchParameterBean search, String body) throws Exception;
 
 	/**
 	 * Perform a search by forwarding the posted search request to elasticsearch under the given path.

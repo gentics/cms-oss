@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -61,9 +62,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -486,11 +487,11 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@PUT
-	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{objectType}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
 	public ContentPackageLoadResponse add(
 			@PathParam("name") String name, 
-			@PathParam("type") String objectTypeId, 
+			@PathParam("objectType") String objectTypeId, 
 			@PathParam("uuid") String objectUuid, 
 			@QueryParam("recursive") @DefaultValue("false") boolean recursive
 	) throws NodeException {
@@ -572,9 +573,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 
 	@Override
 	@DELETE
-	@jakarta.ws.rs.Path("/package/{name}/{type}/{uuid}")
+	@jakarta.ws.rs.Path("/package/{name}/{objectType}/{uuid}")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
-	public ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("type") String objectTypeId, @PathParam("uuid") String objectUuid) throws NodeException {
+	public ContentPackageLoadResponse remove(@PathParam("name") String name, @PathParam("objectType") String objectTypeId, @PathParam("uuid") String objectUuid) throws NodeException {
 		Path path = checkFeatureGetPath();
 		ContentPackageLoadResponse response = new ContentPackageLoadResponse();
 		try (Trx trx = ContentNodeHelper.trx()) {
@@ -719,15 +720,16 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	@jakarta.ws.rs.Path("/package/{name}/zip")
 	@Consumes("multipart/form-data")
 	@RequiredPerm(type = PermHandler.TYPE_CONTENTSTAGING, bit = PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT)
-	public ContentPackageLoadResponse upload(@PathParam("name") String name, FormDataMultiPart multiPart) throws NodeException {
+	public ContentPackageLoadResponse upload(@PathParam("name") String name, MultiPart multiPart) throws NodeException {
 		Path path = checkFeatureGetPath();
 		if (multiPart.getBodyParts().isEmpty()) {
 			throw new NodeException(new CNI18nString("rest.file.upload.request_invalid").toString());
 		}
 
-		FormDataBodyPart upload = Optional.ofNullable(multiPart.getField("fileBinaryData"))
-				.orElseThrow(() -> new NodeException(I18NHelper.get("rest.file.upload.request_invalid")));
-		String fileName = Optional.ofNullable(multiPart.getField("fileName")).map(FormDataBodyPart::getValue).orElse(upload.getContentDisposition().getFileName());
+		BodyPart upload = multiPart.getBodyParts().stream().filter(part -> "fileBinaryData".equals(part.getContentDisposition().getParameters().get("name")))
+				.findAny().orElseThrow(() -> new NodeException(I18NHelper.get("rest.file.upload.request_invalid")));
+		String fileName = multiPart.getBodyParts().stream().filter(part -> "fileName".equals(part.getContentDisposition().getParameters().get("name")))
+				.findAny().map(part -> Objects.toString(part.getEntity())).orElse(upload.getContentDisposition().getFileName());
 
 		Path packagePath = path.resolve(name);
 		Path backupPath = packagePath.getParent().resolve(name + ".old");

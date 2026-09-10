@@ -1,3 +1,15 @@
+{{- if not $.Values.cms.nodeUserPasswordSecret }}
+{{- if not $.Values.cms.nodeUserPassword }}
+{{- $existingSecret := lookup "v1" "Secret" .Release.Namespace (include "cms.fullname" .) }}
+{{- if not $existingSecret }}
+IMPORTANT: A random node user password was generated for this installation.
+Retrieve it with:
+  kubectl get secret --namespace {{ .Release.Namespace }} {{ include "cms.fullname" . }} -o jsonpath="{.data.node-user-password}" | base64 -d
+Or check logs of first startup - it's printed out
+{{- end }}
+{{- end }}
+{{- end }}
+
 1. Get the application URL by running these commands:
 {{- if .Values.cms.ingress.enabled }}
   Visit http{{ if $.Values.cms.ingress.tls }}s{{ end }}://{{ .Values.cms.ingress.host }}

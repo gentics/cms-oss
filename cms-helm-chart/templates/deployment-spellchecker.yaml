@@ -26,7 +26,7 @@ spec:
         {{- end }}
       containers:
       - name: spellchecker
-        image: "{{ .Values.spellchecker.repository }}:{{ .Values.spellchecker.tag }}"
+        image: "{{ include "gentics-common.image" (dict "root" . "image" .Values.spellchecker) }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         {{- if .Values.spellchecker.securityContext }}
         securityContext:
@@ -69,8 +69,5 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- if .Values.image.pullSecret }}
-      imagePullSecrets:
-      - name: {{ .Values.image.pullSecret }}
-    {{- end }}
+    {{- include "cms.imagePullSecrets" . | nindent 6 }}
 {{- end }}

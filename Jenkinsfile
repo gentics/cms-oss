@@ -158,13 +158,18 @@ spec:
                     def mvnProjects   = ""
                     def mvnArguments  = ""
 
-                    version          = params.forceVersion
+                    version          = MavenHelper.getVersion()
                     branchName       = GitHelper.fetchCurrentBranchName()
 
-                    if (!version && params.runReleaseBuild) {
-                        version = MavenHelper.getVersion()
+                    if (params.forceVersion != ""){
+                        version = params.forceVersion
                     }
+                    
                     helmVersion = version
+                    if (Boolean.valueOf(params.deployTesting)) {
+                        //helm version need a semantic version ci-devtest is not valid - prefix test versions with 0-
+                        helmVersion = "0-${helmVersion}"
+                    }
 
                     // Merge the hotfix branch if building a release branch
                     if (params.mergeHotfixBranch && branchName.startsWith("release-")) {
@@ -388,7 +393,9 @@ spec:
             }
             steps {
                 script {
-                    sh ".jenkins/build-helm-chart.sh ${helmVersion}"
+                    withCredentials([usernamePassword(credentialsId: 'docker.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                       sh 'REPO_USERNAME=$repoUsername REPO_PASSWORD=$repoPassword .jenkins/build-helm-chart.sh ' + helmVersion
+                    }
 
                     if (Boolean.valueOf(params.deploy) || Boolean.valueOf(params.deployTesting)) {
                         if (Boolean.valueOf(params.deployTesting)) {

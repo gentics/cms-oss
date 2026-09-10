@@ -1,12 +1,18 @@
-{{- if and .Values.cms.backup.persistence.enabled (not .Values.cms.backup.persistence.existingClaim) }}
+{{- if and .Values.cms.backup.enabled .Values.cms.backup.persistence.enabled (not .Values.cms.backup.persistence.existingClaim) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ include "cms.fullname" . }}-backup
 
-  {{- with .Values.cms.backup.persistence.annotations }}
+  {{- $keepAnnotations := include "gentics-common.pvcKeepAnnotations" (dict "root" . "local" (.Values.cms.persistence).keepOnUninstall) }}
+  {{- if or $keepAnnotations .Values.cms.backup.persistence.annotations }}
   annotations:
+    {{- with $keepAnnotations }}
+    {{- . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.cms.backup.persistence.annotations }}
     {{ toYaml . }}
+  {{- end }}
   {{- end }}
 
   labels:
@@ -14,6 +20,8 @@ metadata:
     chart: {{ template "cms.chart" . }}
     release: {{ .Release.Name | quote }}
     heritage: {{ .Release.Service | quote }}
+    app.kubernetes.io/name: {{ include "cms.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
 
 spec:
   accessModes:

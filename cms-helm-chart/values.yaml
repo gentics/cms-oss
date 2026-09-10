@@ -4,17 +4,21 @@ global:
   fullnameOverride: ""
 
 image:
-  repository: "docker.gentics.com/gentics/cms"
-  tag: 6.1.0
+  ## Registry and repository are combined to "registry/repository:tag".
+  ## global.imageRegistry (umbrella mirror override) takes precedence over registry.
+  ## Leave registry empty if your repository already contains the registry host.
+  registry: "docker.gentics.com"
+  repository: "gentics/cms"
+  #tag: 6.5.0
   pullPolicy: IfNotPresent
-  pullSecret: docker-gentics-com
+  pullSecret: ""
 
 database:
   name: "cms"
   username: "node"
   # password: "node"
   # passwordSecret: "cms.database.secret"
-  host: "mariadb"
+  host: ""
   port: "3306"
 
 # Add custom certificates to the jvm truststore
@@ -34,6 +38,8 @@ cms:
     #secret: 
 
   nodeUserPassword: ""
+  #optionally - specify the secret name where the node user password is already stored (key need to be "password")
+  #nodeUserPasswordSecret: "cms.nodeuser.secret"
 
   #configure gentics support login (Public/Private Key Auth)
   supportLogin: false
@@ -52,12 +58,22 @@ cms:
   #  - name: EXAMPLE_ENV
   #    value: "EXAMPLE_VALUE"
 
+  # Resource requests/limits for the CMS container.
+  # Passed through to the container as-is, so any field of the Kubernetes
   resources:
     requests:
+      cpu: 500m
       memory: 1Gi
+      cpu: 500m
     limits:
+      cpu: 1000m
       memory: 2Gi
-  
+      cpu: 1000m
+
+  # Override the global podSecurityContext/securityContext for the CMS pod only
+  #podSecurityContext: {}
+  #securityContext: {}
+
   ## Configure the service
   service:
     ## Specify a service type
@@ -77,10 +93,17 @@ cms:
 
   persistence:
     enabled: true
+    ## Whether CMS volumes (data, cache, backup) survive "helm uninstall".
+    ## Unset: follows global.persistence.keepOnUninstall, defaulting to true (keep).
+    ## Leave commented so the global umbrella switch stays effective.
+    # keepOnUninstall: true
     #if false, also implementation (packages, config, ...) is persisted
     onlyData: false
     # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
     # existingClaim: ""
+    # If unset, the default StorageClass of the cluster is used.
+    # Set to "-" to disable dynamic provisioning (storageClassName: "")
+    # storageClass: ""
     annotations: {}
     accessModes:
       - ReadWriteOnce
@@ -92,6 +115,9 @@ cms:
       enabled: false
       # Use existingClaim if you want to use a pre-exising claim. No new data volume will be requested
       # existingClaim: ""
+      # If unset, the default StorageClass of the cluster is used.
+      # Set to "-" to disable dynamic provisioning (storageClassName: "")
+      # storageClass: ""
       annotations: {}
       accessModes:
         - ReadWriteOnce
@@ -122,11 +148,18 @@ cms:
         memory: 1Gi
         cpu: 250m
 
+    # Override the global podSecurityContext/securityContext for the backup job only
+    #podSecurityContext: {}
+    #securityContext: {}
+
     ## Persist backup data to a persistent volume
     persistence:
       enabled: true
       # Use existingClaim if you want to use a pre-exising claim. No new backup volume will be requested
       # existingClaim: ""
+      # If unset, the default StorageClass of the cluster is used.
+      # Set to "-" to disable dynamic provisioning (storageClassName: "")
+      # storageClass: ""
       annotations: {}
       accessModes:
         - ReadWriteOnce
@@ -135,9 +168,52 @@ cms:
     #allow to override default backup.sh script
     #backupScript: |-
 
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    timeoutSeconds: 1
+    periodSeconds: 10
+    successThreshold: 1
+    failureThreshold: 6
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: http
+    timeoutSeconds: 1
+    periodSeconds: 2
+    successThreshold: 1
+    failureThreshold: 90 #3min bootup time
+   
+  readinessProbe:
+    httpGet:
+      path: /rest/info/maintenance
+      port: http
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+
+
+
+  preUpgrade:
+    enabled: false
+    #nodeUser: "node"
+
+    #image:
+    #  repository: "docker.gentics.com/gentics/cms"
+    #  tag: "6.4.4"
+    #  pullPolicy: IfNotPresent
+    #  pullSecret: docker-gentics-com
+
+    #allow to override default preUpgrade.sh script
+    #script: |-
 
 spellchecker:
   enabled: false
+  ## Docker Hub image — registry intentionally empty; set global.imageRegistry
+  ## only if your mirror also proxies Docker Hub.
+  registry: ""
   repository: gentics/languagetool
   tag: latest
   resources:
@@ -147,6 +223,10 @@ spellchecker:
     limits:
       memory: 512Mi
       cpu: 500m
+
+  # Override the global podSecurityContext/securityContext for the spellchecker pod only
+  #podSecurityContext: {}
+  #securityContext: {}
 
 # CMS ConfigMap files
 # Override defaults or add more
@@ -176,6 +256,39 @@ serviceAccount:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Pod-level security context, applied to all pods of this chart
+# (CMS, spellchecker and the backup job).
+# Can be overridden per workload via cms.podSecurityContext,
+# spellchecker.podSecurityContext and cms.backup.podSecurityContext
+podSecurityContext: 
+  runAsUser: null
+  fsGroup: null
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+
+# Container-level security context, applied to all containers of this chart.
+# Can be overridden per workload via cms.securityContext,
+# spellchecker.securityContext and cms.backup.securityContext
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Container lifecycle hooks for the CMS and spellchecker containers
+#lifecycle:
+#  preStop:
+#    exec:
+#      command: ["/bin/sh", "-c", "sleep 10"]
+
+# Additional entries for /etc/hosts of the CMS pod
+#hostAliases:
+#  - ip: "10.0.0.1"
+#    hostnames:
+#      - "internal.example.local"
 
 # Define additional volumes which can be
 # added to the Gentics CMS pod

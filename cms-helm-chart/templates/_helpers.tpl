@@ -3,7 +3,8 @@
 Expand the name of the chart.
 */}}
 {{- define "cms.name" -}}
-{{- default .Chart.Name .Values.global.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{- $global := .Values.global | default dict -}}
+{{- default .Chart.Name $global.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
@@ -12,10 +13,11 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "cms.fullname" -}}
-{{- if .Values.global.fullnameOverride -}}
-{{- .Values.global.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- $global := .Values.global | default dict -}}
+{{- if $global.fullnameOverride -}}
+{{- $global.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- $name := default .Chart.Name .Values.global.nameOverride -}}
+{{- $name := default .Chart.Name $global.nameOverride -}}
 {{- if contains $name .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -60,4 +62,46 @@ Create the name of the service account to use
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Database host for CMS.
+Uses explicit database.host if set; falls back to the bundled MariaDB service name
+when global.mariadb.enabled is true; otherwise raises an error.
+*/}}
+{{- define "cms.databaseHost" -}}
+{{- include "gentics-common.databaseHost" (dict "root" . "db" .Values.database) -}}
+{{- end -}}
+
+{{/*
+Secret name and key for the CMS database password.
+Priority: explicit database.passwordSecret → umbrella MariaDB secret → sub-chart local secret.
+Returns a full secretKeyRef block.
+*/}}
+{{- define "cms.databasePasswordRef" -}}
+{{- include "gentics-common.databasePasswordRef" (dict "root" . "db" .Values.database "component" "cms" "localSecretName" (include "cms.fullname" .) "localSecretKey" "database-password") -}}
+{{- end -}}
+
+{{/*
+Name of the secret containing the CMS license key.
+Priority: local cms.license.secret (explicit override) → global license secret (umbrella chart)
+         → cms.fullname (sub-chart's own secret, when license.key is set locally).
+*/}}
+{{- define "cms.licenseSecretName" -}}
+{{- include "gentics-common.licenseSecretName" (dict "root" . "localSecret" .Values.cms.license.secret "fallbackName" (include "cms.fullname" .)) -}}
+{{- end -}}
+
+{{/*
+Image pull secrets — local image.pullSecret overrides global; global is the default.
+Local accepts a plain secret name string; global uses the Kubernetes-native array format.
+*/}}
+{{- define "cms.imagePullSecrets" -}}
+{{- include "gentics-common.imagePullSecrets" (dict "root" . "localName" .Values.image.pullSecret) -}}
+{{- end }}
+
+{{/*
+Fully qualified CMS image (registry/repository:tag, global.imageRegistry aware).
+*/}}
+{{- define "cms.image" -}}
+{{- include "gentics-common.image" (dict "root" . "image" .Values.image "tag" (default .Chart.AppVersion .Values.image.tag)) -}}
 {{- end -}}

@@ -31,7 +31,7 @@ spec:
         {{- end }}
       containers:
       - name: cms
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ include "cms.image" . }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         {{- if .Values.cms.securityContext }}
         securityContext:
@@ -45,48 +45,23 @@ spec:
         {{- toYaml .Values.lifecycle | nindent 12 }}
         {{- end }}
         env:
-          {{- if $.Values.cms.license.secret }}
+          {{- $globalLicense := (($.Values.global | default dict).license) | default dict -}}
+          {{- if or $.Values.cms.license.secret $globalLicense.key $.Values.cms.license.key $.Values.cms.licenseKey }}
           - name: LICENSEKEY
             valueFrom:
               secretKeyRef:
-                name: {{ $.Values.cms.license.secret }}
-                key: licensekey
-          {{- else if $.Values.cms.license.key }}
-          - name: LICENSEKEY
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "cms.fullname" . }}
-                key: licensekey
-          ## only for backwards compatibility cmp < 8.2 - remove when Helmchart moved to cms repo
-          {{- else if $.Values.cms.licenseKey }}
-          - name: LICENSEKEY
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "cms.fullname" . }}
+                name: {{ include "cms.licenseSecretName" . }}
                 key: licensekey
           {{- end }}
           - name: NODE_DB_HOST
-            value: "{{ .Values.database.host }}"
+            value: {{ include "cms.databaseHost" . | quote }}
           - name: NODE_DB_PORT
             value: "{{ .Values.database.port }}"
           - name: NODE_DB_USER
             value: "{{ .Values.database.username }}"
-          {{- if $.Values.database.passwordSecret }}
           - name: NODE_DB_PASSWORD
             valueFrom:
-              secretKeyRef:
-                name: {{ $.Values.database.passwordSecret }}
-                key: password
-          {{- else if $.Values.database.password }}
-          - name: NODE_DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ template "cms.fullname" . }}
-                key: database-password
-          {{- else }}
-          - name: NODE_DB_PASSWORD
-            value: "{{ required "Either database.password or database.passwordSecret are required!" "" }}"
-          {{- end }}
+              {{- include "cms.databasePasswordRef" . | nindent 14 }}
           - name: NODE_DB_NAME
             value: "{{ .Values.database.name }}"
           - name: ADD_JAVA_OPTS
@@ -103,25 +78,24 @@ spec:
           - name: STATIC_SERVE_LIST
             value: {{ join "," .Values.cms.staticServePaths | quote }}
           {{- end }}
-          {{- if $.Values.cms.nodeUserPasswordSecret }}
           - name: NODE_USER_PASSWORD
             valueFrom:
               secretKeyRef:
+                {{- if $.Values.cms.nodeUserPasswordSecret }}
                 name: {{ $.Values.cms.nodeUserPasswordSecret }}
                 key: password
-          {{- else if $.Values.cms.nodeUserPassword }}
-          - name: NODE_USER_PASSWORD
-            valueFrom:
-              secretKeyRef:
+                {{- else }}
                 name: {{ template "cms.fullname" . }}
                 key: node-user-password
-          {{- end }}
+                {{- end }}
           {{- if .Values.cms.extraEnv }}
           {{- toYaml .Values.cms.extraEnv | nindent 10 }}
           {{- end }}
-          {{- if and .Values.customCert .Values.customCert.secretName }}
+          {{- with .Values.customCert }}
+          {{- if .secretName }}
           - name: USE_SYSTEM_CA_CERTS
             value: "1"
+          {{- end }}
           {{- end }}
         volumeMounts:
           {{- range .Values.cmsExtraVolumes }}
@@ -189,27 +163,27 @@ spec:
           {{- end }}  
           {{- end }}
           {{- end }}
-          {{- if and .Values.customCert .Values.customCert.secretName }}
+          {{- with .Values.customCert }}
+          {{- if .secretName }}
           - name: cert-secret
             mountPath: "/certificates"
             readOnly: true
+          {{- end }}
           {{- end }}
         ports:
           - name: http
             containerPort: 8080
             protocol: TCP
+
         livenessProbe:
-          httpGet:
-            path: /
-            port: http
-          initialDelaySeconds: 60
+          {{- toYaml .Values.cms.livenessProbe | nindent 10 }}
+
+        startupProbe:
+          {{- toYaml .Values.cms.startupProbe | nindent 10 }}
+
         readinessProbe:
-          httpGet:
-            path: /rest/info/maintenance
-            port: http
-          initialDelaySeconds: 15
-          timeoutSeconds: 5
-          failureThreshold: 3
+          {{- toYaml .Values.cms.readinessProbe | nindent 10 }}
+
         resources:
           {{- toYaml .Values.cms.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
@@ -224,10 +198,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- if .Values.image.pullSecret }}
-      imagePullSecrets:
-      - name: {{ .Values.image.pullSecret }}
-    {{- end }}
+    {{- include "cms.imagePullSecrets" . | nindent 6 }}
       {{- if .Values.hostAliases }}
       hostAliases:
       {{- toYaml .Values.hostAliases | nindent 8 }}
@@ -271,8 +242,10 @@ spec:
           claimName: {{ include "cms.fullname" . }}-backup
           {{- end }}
       {{- end }}
-      {{- if and .Values.customCert .Values.customCert.secretName }}
+      {{- with .Values.customCert }}
+      {{- if .secretName }}
       - name: cert-secret
         secret:
-          secretName: {{ .Values.customCert.secretName }}
+          secretName: {{ .secretName }}
+      {{- end }}
       {{- end }}

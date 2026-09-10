@@ -108,6 +108,7 @@ const RendererScreen: React.FC<{
   previewFormData?: PreviewFormData;
   previewInformation?: PreviewInformation;
   previewSelectedElement?: string;
+  previewSelectedElementContextId?: string;
   previewPageIndex?: number;
 }> = (props) => {
   // Nutze useWindowDimensions, um die Bildschirmbreite zu ermitteln
@@ -1993,6 +1994,7 @@ const RendererScreen: React.FC<{
             summary={SummaryOptions.No}
             elements={elements}
             parentId=""
+            contextId=""
             jsonpath=""
             t={props.t}
             uiState={uiState}
@@ -2003,6 +2005,7 @@ const RendererScreen: React.FC<{
             handleSearch={handleSearch}
             handleExpertSearch={handleExpertSearch}
             selectedElementId={props.previewSelectedElement}
+            selectedElementContextId={props.previewSelectedElementContextId}
           />
         </ScrollView>
       </Host></>)

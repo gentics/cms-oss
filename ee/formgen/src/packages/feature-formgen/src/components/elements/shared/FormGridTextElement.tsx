@@ -54,7 +54,9 @@ function FormGridTextElement(props: IFormComponentAttributes) {
       localErrorMsg=''
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <CustomRenderHTML
         basePath={props.restService.initUrl}

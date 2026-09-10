@@ -52,6 +52,7 @@ const FormScreen: React.FC<IFormPageComponent> = (
         summary={summary}
         elements={elements}
         parentId=""
+        contextId=""
         jsonpath=""
         t={props.t}
         isLoggedIn={props.isLoggedIn}

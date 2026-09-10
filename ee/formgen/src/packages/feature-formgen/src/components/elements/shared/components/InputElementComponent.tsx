@@ -219,7 +219,9 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
         hideLoading={true}
         jsonPath={formComponentAttributes.jsonpath}
         objectId={formComponentAttributes.id}
+        contextId={formComponentAttributes.contextId}
         selectedElementId={formComponentAttributes.selectedElementId}
+        selectedElementContextId={formComponentAttributes.selectedElementContextId}
       >
         <View
           style={[
@@ -307,7 +309,9 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
         hideLoading={true}
         jsonPath={formComponentAttributes.jsonpath}
         objectId={formComponentAttributes.id}
+        contextId={formComponentAttributes.contextId}
         selectedElementId={formComponentAttributes.selectedElementId}
+        selectedElementContextId={formComponentAttributes.selectedElementContextId}
       >
         <View
           style={
@@ -418,7 +422,9 @@ export default function SharedInputComponent(props: SharedInputComponentProps) {
       hideLoading={true}
       jsonPath={formComponentAttributes.jsonpath}
       objectId={formComponentAttributes.id}
+      contextId={formComponentAttributes.contextId}
       selectedElementId={formComponentAttributes.selectedElementId}
+      selectedElementContextId={formComponentAttributes.selectedElementContextId}
     >
       <View
         style={[

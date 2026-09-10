@@ -45,6 +45,7 @@ import com.gentics.contentnode.object.parttype.CmsFormPartType;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
+import com.gentics.contentnode.object.parttype.JSONPartType;
 import com.gentics.contentnode.object.parttype.NormalTextPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -201,6 +202,14 @@ abstract public class AbstractContentStagingTest<T extends StageableNodeObject> 
 				p.setHidden(false);
 				p.setKeyname("normaltext");
 				p.setPartTypeId(getPartTypeId(NormalTextPartType.class));
+			}).doNotSave().build());
+
+			// JSON text reference
+			parts.add(create(Part.class, p -> {
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("json");
+				p.setPartTypeId(getPartTypeId(JSONPartType.class));
 			}).doNotSave().build());
 		}).build();
 

@@ -4,7 +4,7 @@
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "libs/form-grid/src",
-    "tags": ["lib", "angular", "publish"],
+    "tags": ["lib", "angular", "publish", "test:vitest"],
     "targets": {
         "build": {
             "executor": "@nx/angular:package",
@@ -22,25 +22,7 @@
             "defaultConfiguration": "production"
         },
         "test": {
-            "executor": "@nx/jest:jest",
-            "outputs": [
-                "{workspaceRoot}/.reports/{projectRoot}/JEST-report.xml",
-                "{workspaceRoot}/coverage/{projectRoot}"
-            ],
-            "options": {
-                "jestConfig": "{projectRoot}/jest.config.ts"
-            },
-            "configurations": {
-                "watch": {
-                    "watch": true
-                },
-                "ci": {
-                    "color": false,
-                    "colors": false,
-                    "ci": true,
-                    "jestConfig": "{projectRoot}/jest.config.ci.ts"
-                }
-            }
+            "executor": "@nx/angular:unit-test"
         },
         "lint": {
             "executor": "@nx/eslint:lint"

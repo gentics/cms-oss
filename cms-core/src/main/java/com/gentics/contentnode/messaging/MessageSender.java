@@ -12,6 +12,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.AbstractTransactional;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Transactional;
@@ -33,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
 
 /**
@@ -233,10 +235,7 @@ public class MessageSender extends AbstractTransactional {
 
 							Object[] args = new Object[5];
 
-							args[0] = t.getSessionId();
-							if (args[0] == null) {
-								args[0] = "";
-							}
+							args[0] = Optional.ofNullable(t.getSession()).map(Session::getId).map(id -> Integer.toString(id)).orElse("");
 							args[1] = new Integer(t.getUserId());
 							args[2] = new Integer(42);
 							args[3] = "";

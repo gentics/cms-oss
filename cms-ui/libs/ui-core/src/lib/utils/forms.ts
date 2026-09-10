@@ -1,4 +1,4 @@
-import type { AbstractControl, Validators } from '@angular/forms';
+import type { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 import { FormGroup, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import {
     FormChangePropagation,
@@ -6,6 +6,7 @@ import {
     MultiValuePatternValidationErrorModel,
     PatternValidatorError,
     RegexValidationErrorModel,
+    toUnixSeconds,
     VALIDATOR_MULTI_VALUE_PATTERN_PROPERTY,
     VALIDATOR_PATTERN_PROPERTY,
     VALIDATOR_REGEX_ERROR_PROPERTY,
@@ -206,3 +207,19 @@ function asRegExp(pattern: string | RegExp): null | { str: string; regex: RegExp
 
     return { str, regex };
 }
+
+export function futureDateValidator(control: AbstractControl<number | null>): ValidationErrors | null {
+    if (!control.value) {
+        return null;
+    }
+
+    const unixSeconds = toUnixSeconds(control.value);
+
+    if (unixSeconds === null) {
+        return null;
+    }
+
+    return new Date(unixSeconds * 1000) > new Date()
+        ? null
+        : { futureDate: true };
+};

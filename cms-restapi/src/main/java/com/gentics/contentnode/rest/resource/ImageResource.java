@@ -1,16 +1,6 @@
 package com.gentics.contentnode.rest.resource;
 
-import java.io.InputStream;
 import java.util.List;
-
-import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Response;
 
 import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.ImageCreateRequest;
@@ -40,12 +30,20 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+
 /**
  * Resource for loading and manipulating Images in GCN
  * @author norbert
  */
 @Path("/image")
-public interface ImageResource extends AuthenticatedResource {
+public interface ImageResource {
 
 	/**
 	 * Get a list of images in the specified folder.<br>
@@ -83,7 +81,7 @@ public interface ImageResource extends AuthenticatedResource {
 		@BeanParam SortParameterBean sortingParams,
 		@BeanParam PagingParameterBean pagingParams,
 		@BeanParam EditableParameterBean editableParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Load the image with given id
@@ -106,7 +104,7 @@ public interface ImageResource extends AuthenticatedResource {
 			@DefaultValue("false") @QueryParam("construct") boolean construct,
 			@QueryParam("nodeId") Integer nodeId, 
 			@QueryParam("package") String stagingPackageName
-			);
+			) throws Exception;
 
 	/**
 	 * Load a list of images specified in the given {@link MultiObjectLoadRequest request}.
@@ -121,7 +119,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/load")
-	MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
+	MultiImageLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws Exception;
 
 	/**
 	 * Rotate by 90° (optionally), crop (optionally) and resize an image (in this order).
@@ -130,7 +128,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/resize/")
-	FileUploadResponse resize(ImageResizeRequest imageResizeRequest);
+	FileUploadResponse resize(ImageResizeRequest imageResizeRequest) throws Exception;
 
 	/**
 	 * Rotate an image by 90°
@@ -139,17 +137,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/rotate")
-	ImageLoadResponse rotate(ImageRotateRequest request);
-
-	/**
-	 * Get the content of the image with given id
-	 * @param id image id to get
-	 * @return binary content of the image
-	 */
-	// @GET
-	// @Path("/content/load/{id}")
-	// @Produces("image/*")
-	Response loadContent(@PathParam("id") Integer id);
+	ImageLoadResponse rotate(ImageRotateRequest request) throws Exception;
 
 	/**
 	 * Create a new image
@@ -158,18 +146,18 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	// @POST
 	// @Path("/create")
-	ImageLoadResponse create(ImageCreateRequest request);
+	ImageLoadResponse create(ImageCreateRequest request) throws Exception;
 
 
 	/**
-	 * Mpve the given file to another folder
+	 * Move the given file to another folder
 	 * @param id file id
 	 * @param request request
 	 * @return generic response
 	 */
 	@POST
 	@Path("/move/{id}")
-	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request);
+	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Move multiple files to another folder
@@ -178,7 +166,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/move")
-	GenericResponse move(MultiObjectMoveRequest request);
+	GenericResponse move(MultiObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Save the given image
@@ -187,17 +175,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/save/{id}")
-	GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request);
-
-	/**
-	 * Save the posted content into the given image
-	 * @param fileContent image content
-	 * @return generic response
-	 */
-	// @POST
-	// @Path("/content/save/{id}")
-	// @Consumes("image/*")
-	GenericResponse saveContent(InputStream fileContent);
+	GenericResponse save(@PathParam("id") Integer id, ImageSaveRequest request) throws Exception;
 
 	/**
 	 * Delete the image denoted by id
@@ -208,7 +186,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws Exception;
 
 	/**
 	 * Remove the image denoted by the given id from the wastebin.
@@ -221,7 +199,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete/{id}")
-	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Remove the given images from the wastebin
@@ -231,7 +209,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete")
-	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given image from the wastebin
@@ -244,7 +222,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore/{id}")
-	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given images from the wastebin
@@ -254,7 +232,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore")
-	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Get the privileges of the current user on the given image
@@ -263,7 +241,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	// @GET
 	// @Path("/privileges/{id}")
-	PrivilegesResponse getPrivileges(@PathParam("id") Integer id);
+	PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws Exception;
 
 	/**
 	 * Get the total usage info for the given images.
@@ -276,7 +254,7 @@ public interface ImageResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/usage/total")
-	TotalUsageResponse getTotalFileUsageInfo(@QueryParam("id") List<Integer> imageId, @QueryParam("nodeId") Integer nodeId);
+	TotalUsageResponse getTotalFileUsageInfo(@QueryParam("id") List<Integer> imageId, @QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Get the folders using one of the given images.
@@ -306,7 +284,7 @@ public interface ImageResource extends AuthenticatedResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("folders") @DefaultValue("true") boolean returnFolders);
+			@QueryParam("folders") @DefaultValue("true") boolean returnFolders) throws Exception;
 
 	/**
 	 * Get the pages using one of the given images
@@ -337,7 +315,7 @@ public interface ImageResource extends AuthenticatedResource {
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel);
+			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
 	 * Get the templates using one of the given images
@@ -366,7 +344,7 @@ public interface ImageResource extends AuthenticatedResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates);
+			@QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws Exception;
 
 	/**
 	 * Get the images using one of the given images
@@ -395,7 +373,7 @@ public interface ImageResource extends AuthenticatedResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("images") @DefaultValue("true") boolean returnImages);
+			@QueryParam("images") @DefaultValue("true") boolean returnImages) throws Exception;
 
 	/**
 	 * Get the files using one of the given images
@@ -424,5 +402,5 @@ public interface ImageResource extends AuthenticatedResource {
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder,
 			@QueryParam("id") List<Integer> imageId,
 			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("files") @DefaultValue("true") boolean returnFiles);
+			@QueryParam("files") @DefaultValue("true") boolean returnFiles) throws Exception;
 }

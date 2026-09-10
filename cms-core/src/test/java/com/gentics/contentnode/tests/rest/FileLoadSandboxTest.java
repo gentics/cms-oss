@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -12,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import jakarta.ws.rs.core.Response;
-
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -22,7 +21,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentFile;
@@ -30,10 +28,11 @@ import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.resource.FileResource;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
+
+import jakarta.ws.rs.core.Response;
 
 @RunWith(value = Parameterized.class)
 public class FileLoadSandboxTest {
@@ -119,17 +118,6 @@ public class FileLoadSandboxTest {
 
 		String responseContentType = ObjectTransformer.getString(response.getMetadata().get("Content-Type").get(0), null);
 		assertEquals("Check Content-Type", contentType, responseContentType);
-	}
-
-	/**
-	 * Get a file resource
-	 * @return file resource
-	 * @throws NodeException
-	 */
-	protected FileResource getFileResource() throws NodeException {
-		FileResourceImpl fileResource = new FileResourceImpl();
-		fileResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return fileResource;
 	}
 
 	/**

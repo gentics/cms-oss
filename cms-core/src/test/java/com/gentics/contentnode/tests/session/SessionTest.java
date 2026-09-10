@@ -7,6 +7,7 @@ import java.util.Vector;
 
 import org.junit.Test;
 
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
 
 /**
@@ -30,7 +31,7 @@ public class SessionTest {
 		Vector<String> secrets = new Vector<String>(NUM_SECRETS);
 
 		for (int i = 0; i < NUM_SECRETS; ++i) {
-			String secret = Session.createSessionSecret();
+			String secret = DBSession.createSessionSecret();
 
 			assertEquals("Check length of session secret", 15, secret.length());
 			assertFalse("Check if secret was created before", secrets.contains(secret));

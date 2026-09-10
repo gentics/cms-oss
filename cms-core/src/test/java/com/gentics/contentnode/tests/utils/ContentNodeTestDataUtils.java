@@ -1,5 +1,9 @@
 package com.gentics.contentnode.tests.utils;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getImageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getTemplateResource;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -24,8 +28,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import jakarta.ws.rs.core.MediaType;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -34,7 +36,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.Assert;
 
-import com.gentics.api.contentnode.parttype.ExtensiblePartType;
 import com.gentics.api.contentnode.publish.CnMapPublishHandler;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InsufficientPrivilegesException;
@@ -43,9 +44,9 @@ import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.portalnode.connector.PortalConnectorFactory;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InstantPublishingTrx;
 import com.gentics.contentnode.factory.Session;
-import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -82,17 +83,13 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
-import com.gentics.contentnode.object.parttype.BreadcrumbPartType;
 import com.gentics.contentnode.object.parttype.ChangeableListPartType;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.DatasourcePartType;
-import com.gentics.contentnode.object.parttype.ExtensiblePartTypeWrapper;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
 import com.gentics.contentnode.object.parttype.FolderURLPartType;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.ListPartType;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.object.parttype.NavigationPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.PageTagPartType;
@@ -101,7 +98,7 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.object.parttype.TemplateTagPartType;
 import com.gentics.contentnode.object.parttype.TextPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.perm.PermissionStore;
 import com.gentics.contentnode.rest.model.request.FileSaveRequest;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
@@ -115,10 +112,6 @@ import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.lib.content.GenticsContentAttribute;
@@ -128,21 +121,13 @@ import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.testutils.GenericTestUtils;
 import com.gentics.testutils.infrastructure.TestEnvironment;
 
+import jakarta.ws.rs.core.MediaType;
+
 
 /**
  * Static helper class for generation of test data
  */
 public class ContentNodeTestDataUtils {
-	/**
-	 * Name of the template part for a velocity construct
-	 */
-	public static final String TEMPLATE_PARTNAME = "template";
-
-	/**
-	 * Name of the startfolder part for a breadcrumb/navigation construct
-	 */
-	public static final String STARTFOLDER_PARTNAME = "startfolder";
-
 	/**
 	 * Id of the System Group
 	 */
@@ -208,9 +193,6 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 */
 	public static <T extends PartType> int createConstruct(Node node, Class<T> clazz, String constructKeyword, String partKeyword) throws NodeException {
-		if (clazz.isAssignableFrom(ExtensiblePartTypeWrapper.class)) {
-			return createVelocityConstruct(node, constructKeyword, partKeyword);
-		}
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// when creating a construct with a SelectPartType part, we create a Datasource first
@@ -236,38 +218,79 @@ public class ContentNodeTestDataUtils {
 		return createConstruct(node, getPartTypeId(clazz), constructKeyword, partKeyword, ds);
 	}
 
-	/**
-	 * Create a construct with a visible part of given clazz.
-	 * This method can be used for {@link VelocityPartType}, {@link BreadcrumbPartType} or {@link NavigationPartType}
-	 * @param node node
-	 * @param clazz parttype class
-	 * @param constructKeyword keyword of the construct
-	 * @param partKeyword keyword of the part
-	 * @return id of the construct
-	 * @throws NodeException
-	 */
-	public static <T extends ExtensiblePartType> int createExtensibleConstruct(Node node, Class<T> clazz, String constructKeyword, String partKeyword)
-			throws NodeException {
-		if (clazz.isAssignableFrom(VelocityPartType.class)) {
-			return createVelocityConstruct(node, constructKeyword, partKeyword);
-		} else if (clazz.isAssignableFrom(BreadcrumbPartType.class)) {
-			return createBreadcrumbConstruct(node, constructKeyword, partKeyword);
-		} else if (clazz.isAssignableFrom(NavigationPartType.class)) {
-			return createNavigationConstruct(node, constructKeyword, partKeyword);
-		} else {
-			throw new NodeException("Unable to create construct for parttype " + clazz);
-		}
-	}
+//	/**
+//	 * Create a construct with a visible part of given clazz.
+//	 * This method can be used for {@link VelocityPartType}, {@link BreadcrumbPartType} or {@link NavigationPartType}
+//	 * @param node node
+//	 * @param clazz parttype class
+//	 * @param constructKeyword keyword of the construct
+//	 * @param partKeyword keyword of the part
+//	 * @return id of the construct
+//	 * @throws NodeException
+//	 */
+//	public static <T extends ExtensiblePartType> int createExtensibleConstruct(Node node, Class<T> clazz, String constructKeyword, String partKeyword)
+//			throws NodeException {
+//		if (clazz.isAssignableFrom(VelocityPartType.class)) {
+//			return createVelocityConstruct(node, constructKeyword, partKeyword);
+//		} else if (clazz.isAssignableFrom(BreadcrumbPartType.class)) {
+//			return createBreadcrumbConstruct(node, constructKeyword, partKeyword);
+//		} else if (clazz.isAssignableFrom(NavigationPartType.class)) {
+//			return createNavigationConstruct(node, constructKeyword, partKeyword);
+//		} else {
+//			throw new NodeException("Unable to create construct for parttype " + clazz);
+//		}
+//	}
+//
+//	/**
+//	 * Create a construct containing a velocity part
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword for the velocity part
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createVelocityConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		if (node != null) {
+//			construct.getNodes().add(node);
+//		}
+//
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(VelocityPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		t.createObject(Value.class).setPart(templatePart);
+//		construct.getParts().add(templatePart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);
+//	}
 
 	/**
-	 * Create a construct containing a velocity part
+	 * Create a construct containing a Handlebars part
 	 * @param node node
 	 * @param constructKeyword construct keyword
 	 * @param partKeyword part keyword for the velocity part
 	 * @return construct id
 	 * @throws NodeException
 	 */
-	public static int createVelocityConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+	public static int createHandlebarsConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
@@ -277,22 +300,14 @@ public class ContentNodeTestDataUtils {
 			construct.getNodes().add(node);
 		}
 
-		Part vtlPart = t.createObject(Part.class);
-		vtlPart.setEditable(0);
-		vtlPart.setHidden(false);
-		vtlPart.setKeyname(partKeyword);
-		vtlPart.setName(partKeyword, 1);
-		vtlPart.setPartTypeId(getPartTypeId(VelocityPartType.class));
-		construct.getParts().add(vtlPart);
-
-		Part templatePart = t.createObject(Part.class);
-		templatePart.setEditable(1);
-		templatePart.setHidden(true);
-		templatePart.setKeyname(TEMPLATE_PARTNAME);
-		templatePart.setName(TEMPLATE_PARTNAME, 1);
-		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-		t.createObject(Value.class).setPart(templatePart);
-		construct.getParts().add(templatePart);
+		Part hbsPart = t.createObject(Part.class);
+		hbsPart.setEditable(1);
+		hbsPart.setHidden(false);
+		hbsPart.setKeyname(partKeyword);
+		hbsPart.setName(partKeyword, 1);
+		hbsPart.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
+		t.createObject(Value.class).setPart(hbsPart);
+		construct.getParts().add(hbsPart);
 
 		construct.save();
 		t.commit(false);
@@ -300,116 +315,116 @@ public class ContentNodeTestDataUtils {
 		return ObjectTransformer.getInt(construct.getId(), 0);
 	}
 
-	/**
-	 * Create a default breadcrumb construct
-	 * @param node node
-	 * @param constructKeyword construct keyword
-	 * @param partKeyword part keyword
-	 * @return construct id
-	 * @throws NodeException
-	 */
-	public static int createBreadcrumbConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Construct construct = t.createObject(Construct.class);
-		construct.setAutoEnable(true);
-		construct.setKeyword(constructKeyword);
-		construct.setName(constructKeyword, 1);
-		construct.getNodes().add(node);
-
-		// breadcrumb part
-		Part vtlPart = t.createObject(Part.class);
-		vtlPart.setEditable(0);
-		vtlPart.setHidden(false);
-		vtlPart.setKeyname(partKeyword);
-		vtlPart.setName(partKeyword, 1);
-		vtlPart.setPartTypeId(getPartTypeId(BreadcrumbPartType.class));
-		construct.getParts().add(vtlPart);
-
-		// template part
-		Part templatePart = t.createObject(Part.class);
-		templatePart.setEditable(1);
-		templatePart.setHidden(true);
-		templatePart.setKeyname(TEMPLATE_PARTNAME);
-		templatePart.setName(TEMPLATE_PARTNAME, 1);
-		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-		templatePart.setDefaultValue(t.createObject(Value.class));
-		try {
-			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("breadcrumb.vm")));
-		} catch (IOException e) {
-			throw new NodeException("Could not create breadcrumb part", e);
-		}
-		construct.getParts().add(templatePart);
-
-		// startfolder part
-		Part startfolderPart = t.createObject(Part.class);
-		startfolderPart.setEditable(1);
-		startfolderPart.setHidden(true);
-		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
-		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
-		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
-		startfolderPart.setDefaultValue(t.createObject(Value.class));
-		construct.getParts().add(startfolderPart);
-
-		construct.save();
-		t.commit(false);
-
-		return ObjectTransformer.getInt(construct.getId(), 0);
-	}
-
-	/**
-	 * Create a default navigation construct
-	 * @param node node
-	 * @param constructKeyword construct keyword
-	 * @param partKeyword part keyword
-	 * @return construct id
-	 * @throws NodeException
-	 */
-	public static int createNavigationConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Construct construct = t.createObject(Construct.class);
-		construct.setAutoEnable(true);
-		construct.setKeyword(constructKeyword);
-		construct.setName(constructKeyword, 1);
-		construct.getNodes().add(node);
-
-		// breadcrumb part
-		Part vtlPart = t.createObject(Part.class);
-		vtlPart.setEditable(0);
-		vtlPart.setHidden(false);
-		vtlPart.setKeyname(partKeyword);
-		vtlPart.setName(partKeyword, 1);
-		vtlPart.setPartTypeId(getPartTypeId(NavigationPartType.class));
-		construct.getParts().add(vtlPart);
-
-		// template part
-		Part templatePart = t.createObject(Part.class);
-		templatePart.setEditable(1);
-		templatePart.setHidden(true);
-		templatePart.setKeyname(TEMPLATE_PARTNAME);
-		templatePart.setName(TEMPLATE_PARTNAME, 1);
-		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-		templatePart.setDefaultValue(t.createObject(Value.class));
-		try {
-			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("navigation.vm")));
-		} catch (IOException e) {
-			throw new NodeException("Could not create breadcrumb part", e);
-		}
-		construct.getParts().add(templatePart);
-
-		// startfolder part
-		Part startfolderPart = t.createObject(Part.class);
-		startfolderPart.setEditable(1);
-		startfolderPart.setHidden(true);
-		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
-		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
-		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
-		startfolderPart.setDefaultValue(t.createObject(Value.class));
-		construct.getParts().add(startfolderPart);
-
-		construct.save();
-		t.commit(false);
-
-		return ObjectTransformer.getInt(construct.getId(), 0);	}
+//	/**
+//	 * Create a default breadcrumb construct
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createBreadcrumbConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		construct.getNodes().add(node);
+//
+//		// breadcrumb part
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(BreadcrumbPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		// template part
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		templatePart.setDefaultValue(t.createObject(Value.class));
+//		try {
+//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("breadcrumb.vm")));
+//		} catch (IOException e) {
+//			throw new NodeException("Could not create breadcrumb part", e);
+//		}
+//		construct.getParts().add(templatePart);
+//
+//		// startfolder part
+//		Part startfolderPart = t.createObject(Part.class);
+//		startfolderPart.setEditable(1);
+//		startfolderPart.setHidden(true);
+//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
+//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
+//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
+//		startfolderPart.setDefaultValue(t.createObject(Value.class));
+//		construct.getParts().add(startfolderPart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);
+//	}
+//
+//	/**
+//	 * Create a default navigation construct
+//	 * @param node node
+//	 * @param constructKeyword construct keyword
+//	 * @param partKeyword part keyword
+//	 * @return construct id
+//	 * @throws NodeException
+//	 */
+//	public static int createNavigationConstruct(Node node, String constructKeyword, String partKeyword) throws NodeException {
+//		Transaction t = TransactionManager.getCurrentTransaction();
+//		Construct construct = t.createObject(Construct.class);
+//		construct.setAutoEnable(true);
+//		construct.setKeyword(constructKeyword);
+//		construct.setName(constructKeyword, 1);
+//		construct.getNodes().add(node);
+//
+//		// breadcrumb part
+//		Part vtlPart = t.createObject(Part.class);
+//		vtlPart.setEditable(0);
+//		vtlPart.setHidden(false);
+//		vtlPart.setKeyname(partKeyword);
+//		vtlPart.setName(partKeyword, 1);
+//		vtlPart.setPartTypeId(getPartTypeId(NavigationPartType.class));
+//		construct.getParts().add(vtlPart);
+//
+//		// template part
+//		Part templatePart = t.createObject(Part.class);
+//		templatePart.setEditable(1);
+//		templatePart.setHidden(true);
+//		templatePart.setKeyname(TEMPLATE_PARTNAME);
+//		templatePart.setName(TEMPLATE_PARTNAME, 1);
+//		templatePart.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+//		templatePart.setDefaultValue(t.createObject(Value.class));
+//		try {
+//			templatePart.getDefaultValue().setValueText(StringUtils.readStream(ContentNodeTestDataUtils.class.getResourceAsStream("navigation.vm")));
+//		} catch (IOException e) {
+//			throw new NodeException("Could not create breadcrumb part", e);
+//		}
+//		construct.getParts().add(templatePart);
+//
+//		// startfolder part
+//		Part startfolderPart = t.createObject(Part.class);
+//		startfolderPart.setEditable(1);
+//		startfolderPart.setHidden(true);
+//		startfolderPart.setKeyname(STARTFOLDER_PARTNAME);
+//		startfolderPart.setName(STARTFOLDER_PARTNAME, 1);
+//		startfolderPart.setPartTypeId(getPartTypeId(FolderURLPartType.class));
+//		startfolderPart.setDefaultValue(t.createObject(Value.class));
+//		construct.getParts().add(startfolderPart);
+//
+//		construct.save();
+//		t.commit(false);
+//
+//		return ObjectTransformer.getInt(construct.getId(), 0);	}
 
 	/**
 	 * Get the parttype id for the given parttype class
@@ -866,64 +881,6 @@ public class ContentNodeTestDataUtils {
 		t.commit(false);
 
 		return objProp;
-	}
-
-	/**
-	 * Creates a velocity construct
-	 *
-	 * @return
-	 * @throws NodeException
-	 */
-	public static Construct createVelocityConstruct(Node node) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
-		Construct construct = t.createObject(Construct.class);
-		construct.setKeyword("constr");
-		construct.setName("Construct (de)", 1);
-		construct.setName("Construct (en)", 2);
-		construct.getNodes().add(node);
-
-		Part velPart = t.createObject(Part.class);
-		velPart.setKeyname("velocity");
-		velPart.setHidden(false);
-		velPart.setEditable(0);
-		velPart.setName("velocity", 1);
-		velPart.setName("velocity", 2);
-		velPart.setPartOrder(1);
-		velPart.setPartTypeId(33);
-
-		Part tplPart = t.createObject(Part.class);
-		tplPart.setKeyname("template");
-		tplPart.setHidden(true);
-		tplPart.setEditable(0);
-		tplPart.setName("tpl", 1);
-		tplPart.setName("tpl", 2);
-		tplPart.setPartOrder(2);
-		tplPart.setPartTypeId(21);
-
-		Part textPart = t.createObject(Part.class);
-		textPart.setKeyname("text");
-		textPart.setHidden(true);
-		textPart.setEditable(2);
-		textPart.setName("Text", 1);
-		textPart.setName("Text", 2);
-		textPart.setPartOrder(3);
-		textPart.setPartTypeId(1);
-
-		List<Part> parts = construct.getParts();
-		parts.add(velPart);
-		parts.add(tplPart);
-		parts.add(textPart);
-
-		Value vval = t.createObject(Value.class);
-		vval.setContainer(construct);
-		vval.setPart(tplPart);
-		vval.setValueText("");
-		tplPart.setDefaultValue(vval);
-
-		construct.save();
-
-		return construct;
 	}
 
 	/**
@@ -1482,7 +1439,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name, Node channel, boolean publish) throws NodeException {
 		final NodeObject nodeObject;
 
 		byte[] data= "File contents".getBytes();
@@ -1502,7 +1459,11 @@ public class ContentNodeTestDataUtils {
 			break;
 		case ImageFile.TYPE_IMAGE:
 			InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg");
+			try {
 			nodeObject = ContentNodeTestDataUtils.createImage(folder, name, IOUtils.toByteArray(inputStream), channel);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
 			break;
 		default:
 			Assert.fail("createNodeObject can't create an NodeObject for type " + objectType);
@@ -1531,7 +1492,7 @@ public class ContentNodeTestDataUtils {
 	 * @throws NodeException
 	 * @throws Exception
 	 */
-	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException, Exception {
+	public static NodeObject createNodeObject(int objectType, Folder folder, String name) throws NodeException {
 		return createNodeObject(objectType, folder, name, null, false);
 	}
 
@@ -1680,11 +1641,8 @@ public class ContentNodeTestDataUtils {
 	 */
 	public static ContentRepository createContentRepositoryWithDatsource(
 			String name, boolean mccr, Boolean instant, Node node) throws NodeException{
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		Map<String, String> handleProperties = createDatasource(node, mccr);
 		ContentRepository cr = createContentRepository(name, mccr, instant, handleProperties.get("url"));
-
 		return cr;
 	}
 
@@ -1812,18 +1770,14 @@ public class ContentNodeTestDataUtils {
 	 * @param nodeObjectId
 	 * @param responseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
 	public static Map<String, com.gentics.contentnode.rest.model.Tag> loadRestNodeObjectAndCheckIfTagExists(
-			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
+			int objectType, Integer nodeObjectId, String tagName, boolean shouldExist) throws NodeException {
 		Map<String, com.gentics.contentnode.rest.model.Tag> restTags = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
-			FolderResourceImpl folderResourceImpl = new FolderResourceImpl();
-			folderResourceImpl.setTransaction(t);
-			FolderLoadResponse folderLoadResponse = folderResourceImpl.load(nodeObjectId.toString(), false, false, false, 0, null);
+			FolderLoadResponse folderLoadResponse = getFolderResource().load(nodeObjectId.toString(), false, false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(folderLoadResponse, ResponseCode.OK);
 			restTags = folderLoadResponse.getFolder().getTags();
 			break;
@@ -1833,24 +1787,18 @@ public class ContentNodeTestDataUtils {
 			restTags = templateLoadResponse.getTemplate().getObjectTags();
 			break;
 		case Page.TYPE_PAGE:
-			PageResourceImpl pageResourceImpl = new PageResourceImpl();
-			pageResourceImpl.setTransaction(t);
-			PageLoadResponse pageLoadResponse = pageResourceImpl.load(nodeObjectId.toString(), false, false,
+			PageLoadResponse pageLoadResponse = getPageResource().load(nodeObjectId.toString(), false, false,
 					false, false, false, false, false, false, false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(pageLoadResponse, ResponseCode.OK);
 			restTags = pageLoadResponse.getPage().getTags();
 			break;
 		case File.TYPE_FILE:
-			FileResourceImpl fileResourceImpl = new FileResourceImpl();
-			fileResourceImpl.setTransaction(t);
-			FileLoadResponse fileLoadResponse = fileResourceImpl.load(nodeObjectId.toString(), false, false, 0, null);
+			FileLoadResponse fileLoadResponse = getFileResource().load(nodeObjectId.toString(), false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(fileLoadResponse, ResponseCode.OK);
 			restTags = fileLoadResponse.getFile().getTags();
 			break;
 		case ImageFile.TYPE_IMAGE:
-			ImageResourceImpl imageResourceImpl = new ImageResourceImpl();
-			imageResourceImpl.setTransaction(t);
-			ImageLoadResponse imageLoadResponse = imageResourceImpl.load(nodeObjectId.toString(), false, false, 0, null);
+			ImageLoadResponse imageLoadResponse = getImageResource().load(nodeObjectId.toString(), false, false, 0, null);
 			ContentNodeTestUtils.assertResponseCode(imageLoadResponse, ResponseCode.OK);
 			restTags = imageLoadResponse.getImage().getTags();
 			break;
@@ -1868,25 +1816,19 @@ public class ContentNodeTestDataUtils {
 	 * @param objectType
 	 * @param nodeObjectId
 	 * @param restTags
-	 * @param shouldFail
-	 * @param reponseCode
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	public static GenericResponse saveRestNodeObjectPropertyTagsAndAssert(int objectType, Integer nodeObjectId,
-			Map<String, com.gentics.contentnode.rest.model.Tag> restTags, ResponseCode reponseCode) throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-
+	public static GenericResponse saveRestNodeObjectPropertyTags(int objectType, Integer nodeObjectId,
+			Map<String, com.gentics.contentnode.rest.model.Tag> restTags) throws NodeException {
 		GenericResponse genericResponse = null;
 		switch (objectType) {
 		case Folder.TYPE_FOLDER:
-			FolderResourceImpl folderResourceImpl = new FolderResourceImpl();
-			folderResourceImpl.setTransaction(t);
 			FolderSaveRequest folderSaveRequest = new FolderSaveRequest();
 			com.gentics.contentnode.rest.model.Folder restFolder = new com.gentics.contentnode.rest.model.Folder();
 			restFolder.setTags(restTags);
 			folderSaveRequest.setFolder(restFolder);
-			genericResponse = folderResourceImpl.save(nodeObjectId.toString(), folderSaveRequest);
+			genericResponse = getFolderResource().save(nodeObjectId.toString(), folderSaveRequest);
 			break;
 		case Template.TYPE_TEMPLATE:
 			TemplateSaveRequest templateSaveRequest = new TemplateSaveRequest();
@@ -1896,35 +1838,27 @@ public class ContentNodeTestDataUtils {
 			genericResponse = getTemplateResource().update(nodeObjectId.toString(), templateSaveRequest);
 			break;
 		case Page.TYPE_PAGE:
-			PageResourceImpl pageResourceImpl = new PageResourceImpl();
-			pageResourceImpl.setTransaction(t);
 			PageSaveRequest pageSaveRequest = new PageSaveRequest();
 			com.gentics.contentnode.rest.model.Page restPage = new com.gentics.contentnode.rest.model.Page();
 			restPage.setTags(restTags);
 			pageSaveRequest.setPage(restPage);
-			genericResponse = pageResourceImpl.save(nodeObjectId.toString(), pageSaveRequest);
+			genericResponse = getPageResource().save(nodeObjectId.toString(), pageSaveRequest);
 			break;
 		case File.TYPE_FILE:
-			FileResourceImpl fileResourceImpl = new FileResourceImpl();
-			fileResourceImpl.setTransaction(t);
 			FileSaveRequest fileSaveRequest = new FileSaveRequest();
 			com.gentics.contentnode.rest.model.File restFile = new com.gentics.contentnode.rest.model.File();
 			restFile.setTags(restTags);
 			fileSaveRequest.setFile(restFile);
-			genericResponse = fileResourceImpl.save(nodeObjectId, fileSaveRequest);
+			genericResponse = getFileResource().save(nodeObjectId, fileSaveRequest);
 			break;
 		case ImageFile.TYPE_IMAGE:
-			ImageResourceImpl imageResourceImpl = new ImageResourceImpl();
-			imageResourceImpl.setTransaction(t);
 			ImageSaveRequest imageSaveRequest = new ImageSaveRequest();
 			com.gentics.contentnode.rest.model.Image restImage = new com.gentics.contentnode.rest.model.Image();
 			restImage.setTags(restTags);
 			imageSaveRequest.setImage(restImage);
-			genericResponse = imageResourceImpl.save(nodeObjectId, imageSaveRequest);
+			genericResponse = getImageResource().save(nodeObjectId, imageSaveRequest);
 			break;
 		}
-
-		ContentNodeTestUtils.assertResponseCode(genericResponse, reponseCode);
 
 		return genericResponse;
 	}
@@ -2124,7 +2058,7 @@ public class ContentNodeTestDataUtils {
 			Transaction t = trx.getTransaction();
 			SystemUser systemUser = ((SystemUserFactory) t.getObjectFactory(SystemUser.class))
 					.getSystemUser(username, null, false);
-			session = new Session(systemUser, "", "ContentNodeTestDataUtils", "secret", 0);
+			session = new DBSession(systemUser, "", "ContentNodeTestDataUtils");
 			trx.success();
 		}
 
@@ -2363,16 +2297,10 @@ public class ContentNodeTestDataUtils {
 			String name, Integer folderId, Integer nodeId, String description, Boolean overwrite,
 			String data) throws ParseException, TransactionException {
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-
 		@SuppressWarnings("resource")
 		MultiPart multiPart = new MultiPart()
 			.bodyPart(createformDataBodyPart("form-data; name=\"folderId\"", folderId.toString(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"nodeId\"", nodeId.toString(), null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_ID_QUERY_PARAM_NAME + "\"",
-					t.getSessionId(), null))
-			.bodyPart(createformDataBodyPart("form-data; name=\"" + SessionToken.SESSION_SECRET_COOKIE_NAME + "\"",
-					t.getSession().getSessionSecret(), null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileName\"", name, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"description\"", description, null))
 			.bodyPart(createformDataBodyPart("form-data; name=\"fileBinaryData\"; filename=\"" + name + "\"",

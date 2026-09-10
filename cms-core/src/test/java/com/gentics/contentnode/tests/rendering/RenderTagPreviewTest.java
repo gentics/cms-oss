@@ -35,7 +35,6 @@ import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 
@@ -156,8 +155,7 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testRenderInnerTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.renderTag(page.getGlobalId().toString(), innerTagName, null, null, LinksType.backend);
+			PageRenderResponse response = getPageResource().renderTag(page.getGlobalId().toString(), innerTagName, null, null, LinksType.backend);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedInnerTag("Inner Tag Content"));
@@ -171,8 +169,7 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testRenderOuterTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.renderTag(page.getGlobalId().toString(), outerTagName, null, null, LinksType.backend);
+			PageRenderResponse response = getPageResource().renderTag(page.getGlobalId().toString(), outerTagName, null, null, LinksType.backend);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedOuterTag("Outer Tag Content [%s]", "Inner Tag Content"));
@@ -186,8 +183,7 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testRenderComplexTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.renderTag(page.getGlobalId().toString(), complexTagName, null, null, LinksType.backend);
+			PageRenderResponse response = getPageResource().renderTag(page.getGlobalId().toString(), complexTagName, null, null, LinksType.backend);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedComplexTag("Content of the Complex Tag"));
@@ -201,15 +197,13 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testPreviewInnerTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-
-			PageLoadResponse loadResponse = pageResource.load(page.getGlobalId().toString(), false, false, false, false,
+			PageLoadResponse loadResponse = getPageResource().load(page.getGlobalId().toString(), false, false, false, false,
 					false, false, false, false, false, true, null, null);
 			assertResponseOK(loadResponse);
 			com.gentics.contentnode.rest.model.Page model = loadResponse.getPage();
 			model.getTags().get(innerTagName).getProperties().get("test").setStringValue("Modified Inner Tag Content");
 
-			PageRenderResponse response = pageResource.renderTag(innerTagName, null, null, LinksType.backend, model);
+			PageRenderResponse response = getPageResource().renderTag(innerTagName, null, null, LinksType.backend, model);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedInnerTag("Modified Inner Tag Content"));
@@ -223,16 +217,14 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testPreviewOuterTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-
-			PageLoadResponse loadResponse = pageResource.load(page.getGlobalId().toString(), false, false, false, false,
+			PageLoadResponse loadResponse = getPageResource().load(page.getGlobalId().toString(), false, false, false, false,
 					false, false, false, false, false, true, null, null);
 			assertResponseOK(loadResponse);
 			com.gentics.contentnode.rest.model.Page model = loadResponse.getPage();
 			model.getTags().get(innerTagName).getProperties().get("test").setStringValue("Modified Inner Tag Content");
 			model.getTags().get(outerTagName).getProperties().get("test").setStringValue("Modified Outer Tag Content [<node %s>]".formatted(innerTagName));
 
-			PageRenderResponse response = pageResource.renderTag(outerTagName, null, null, LinksType.backend, model);
+			PageRenderResponse response = getPageResource().renderTag(outerTagName, null, null, LinksType.backend, model);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedOuterTag("Modified Outer Tag Content [%s]", "Modified Inner Tag Content"));
@@ -246,15 +238,13 @@ public class RenderTagPreviewTest {
 	@Test
 	public void testPreviewComplexTag() throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
-			PageResource pageResource = getPageResource();
-
-			PageLoadResponse loadResponse = pageResource.load(page.getGlobalId().toString(), false, false, false, false,
+			PageLoadResponse loadResponse = getPageResource().load(page.getGlobalId().toString(), false, false, false, false,
 					false, false, false, false, false, true, null, null);
 			assertResponseOK(loadResponse);
 			com.gentics.contentnode.rest.model.Page model = loadResponse.getPage();
 			model.getTags().get(complexTagName).getProperties().get("html").setStringValue("Modified Content of the Complex Tag");
 
-			PageRenderResponse response = pageResource.renderTag(complexTagName, null, null, LinksType.backend, model);
+			PageRenderResponse response = getPageResource().renderTag(complexTagName, null, null, LinksType.backend, model);
 			assertResponseOK(response);
 
 			assertThat(response.getContent()).as("Rendered Tag").isEqualTo(getRenderedComplexTag("Modified Content of the Complex Tag"));

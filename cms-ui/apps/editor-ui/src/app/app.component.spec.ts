@@ -402,7 +402,7 @@ describe('AppComponent', () => {
                                         id: 1,
                                         key: 'linkchecker',
                                         name: { de: 'Link Checker', en: 'Link Checker' },
-                                        toolUrl: '/tools/link-checker/?sid=15345',
+                                        toolUrl: '/tools/link-checker/',
                                         newtab: false,
                                     }]
                                     : [],

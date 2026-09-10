@@ -71,7 +71,7 @@ h4. Pasting annotated Tags
 When content is pasted into editables of pages and the _copy_tags_ feature is enabled (using +CTRL-V+), a special content handler will detect tag annotations and will then create copies of the original tags, which are placed in the edited page.
 If the tag "contains" other tags (references other tags using the _<node [tagname]>_ notation), the referenced (nested) tags will also be copied into the edited page and the references will be updated to the names of the new tags.
 
-WARNING: Tag references other than using the _<node [tagname]>_ notation will +not+ be detected and updated. This especially includes tag references using velocity.
+WARNING: Tag references other than using the _<node [tagname]>_ notation will +not+ be detected and updated. This especially includes tag references using Handlebars.
 
 WARNING: Copy & Paste of tags will only work as expected if both the source and target page are hosted on the same CMS system, Copy & Paste across CMS systems is not supported.
 

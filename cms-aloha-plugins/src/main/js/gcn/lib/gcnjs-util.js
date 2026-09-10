@@ -22,8 +22,7 @@ define('gcn/gcnjs-util', [
 	/**
 	 * Creates a URL for GCN.
 	 *
-	 * Will automatically add the sid as request parameters, additional
-	 * parameters may be given.
+	 * Additional parameters may be given.
 	 *
 	 * The data may contain the following properties:
 	 * - url: part of the URL for the specific request after /rest,
@@ -40,15 +39,18 @@ define('gcn/gcnjs-util', [
 	 * @return {string} A GCN url
 	 */
 	function createUrl(data) {
-		var url = data.url + '?sid=' + GCN.sid;
+		var url = data.url;
+		var paramAdded = false;
 		if (data.noCache) {
-			url += '&time=' + (new Date()).getTime();
+			url += '?time=' + (new Date()).getTime();
+			paramAdded = true;
 		}
 		var name;
 		for (name in data.params) {
 			if (data.params.hasOwnProperty(name)) {
-				url += '&' + name
+				url += (paramAdded ? '&' : '?') + name
 					+ '=' + encodeURI(data.params[name]);
+				paramAdded = true;
 			}
 		}
 		return url;

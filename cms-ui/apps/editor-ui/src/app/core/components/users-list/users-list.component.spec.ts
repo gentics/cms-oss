@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { ComponentFixture, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
@@ -28,18 +28,18 @@ describe('UsersList', () => {
     }));
 
     it('checks those with selected ids', componentTest(() => TestComponent, (fixture, instance) => {
-        instance.selected = [1, 3];
+        instance.selected.set([1, 3]);
         fixture.detectChanges();
 
         const checkboxes = getUserCheckboxes(fixture);
         expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([true, false, true, false]);
 
-        instance.selected = [];
+        instance.selected.set([]);
         fixture.detectChanges();
 
         expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([false, false, false, false]);
 
-        instance.selected = [1, 2, 3, 4];
+        instance.selected.set([1, 2, 3, 4]);
         fixture.detectChanges();
 
         expect(checkboxes.map((checkbox) => checkbox.value)).toEqual([true, true, true, true]);
@@ -110,27 +110,29 @@ function clickCheckbox(fixture: ComponentFixture<TestComponent>, index: number):
     selector: 'test-component',
     template: `
         <users-list
-            [users]="users"
-            [selected]="selected"
+            [users]="users()"
+            [selected]="selected()"
             (selectedChange)="selectedChange($event)"
         ></users-list>`,
     standalone: false,
 })
 class TestComponent {
-    users: any[] = [];
-    selected: number[] = [];
+    readonly users = model<any[]>([]);
+    readonly selected = model<number[]>([]);
 
     constructor() {
         for (let i = 1; i < 5; i++) {
-            this.users.push({
-                id: i,
-                firstName: `firstName_${i}`,
-                lastName: `lastName_${i}`,
+            this.users.update((arr) => {
+                return [...arr, {
+                    id: i,
+                    firstName: `firstName_${i}`,
+                    lastName: `lastName_${i}`,
+                }];
             });
         }
     }
 
     selectedChange(newSelection: number[]): void {
-        this.selected = newSelection;
+        this.selected.set(newSelection);
     }
 }

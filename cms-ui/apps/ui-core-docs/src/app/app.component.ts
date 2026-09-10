@@ -35,7 +35,7 @@ export class App implements OnInit, OnDestroy {
     });
     filteredContentItems: any[];
     hasContent = false;
-    splitFocus = 'left';
+    splitFocus:'left' | 'right' = 'left';
     searchQuery = '';
     subscription: Subscription;
 
@@ -94,7 +94,7 @@ export class App implements OnInit, OnDestroy {
         this.hasContent = false;
     }
 
-    private focusRightPanel(): void {
+    public focusRightPanel(): void {
         this.hasContent = true;
         setTimeout(() => this.splitFocus = 'right');
     }

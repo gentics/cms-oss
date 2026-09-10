@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, model } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -40,37 +40,37 @@ describe('TagPropertyEditorHostComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
             const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
-            spyOn(resolverService, 'resolveTagPropertyEditorFactory').and.callThrough();
+            const resolverSpy = spyOn(resolverService, 'createPropertyEditor').and.callThrough();
             expect(tagPart).toBeTruthy();
-            expect(instance.tagPart).toBeFalsy();
+            expect(instance.tagPart()).toBeFalsy();
 
             fixture.detectChanges();
             tick();
             const tagPropertyEditorHost = fixture.debugElement.query(By.directive(TagPropertyEditorHostComponent));
             expect((<HTMLElement> tagPropertyEditorHost.nativeElement).children.length).toBe(0);
 
-            instance.tagPart = tagPart;
+            instance.tagPart.set(tagPart);
             fixture.detectChanges();
             tick();
 
-            expect(resolverService.resolveTagPropertyEditorFactory).toHaveBeenCalledWith(tagPart);
+            expect(resolverSpy).toHaveBeenCalledTimes(1);
+            expect(resolverSpy.calls.first().args[1]).toBe(tagPart);
             expect(fixture.debugElement.query(By.directive(TextTagPropertyEditor))).toBeTruthy();
         }),
     );
 
-    it('properly distroys the TagPropertyEditor component',
+    it('properly destroys the TagPropertyEditor component',
         componentTest(() => TestComponent, (fixture, instance) => {
             const tagPart = getExampleEditableTag().tagType.parts[0];
-            const resolverService: TagPropertyEditorResolverService = TestBed.inject(TagPropertyEditorResolverService);
             expect(tagPart).toBeTruthy();
-            expect(instance.tagPart).toBeFalsy();
+            expect(instance.tagPart()).toBeFalsy();
 
             fixture.detectChanges();
             tick();
             const tagPropertyEditorHost = fixture.debugElement.query(By.directive(TagPropertyEditorHostComponent));
             expect((<HTMLElement> tagPropertyEditorHost.nativeElement).children.length).toBe(0);
 
-            instance.tagPart = tagPart;
+            instance.tagPart.set(tagPart);
             fixture.detectChanges();
             tick();
             expect(fixture.debugElement.query(By.directive(TextTagPropertyEditor))).toBeTruthy();
@@ -85,10 +85,10 @@ describe('TagPropertyEditorHostComponent', () => {
 
 @Component({
     template: `
-        <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
+        <tag-property-editor-host [tagPart]="tagPart()"></tag-property-editor-host>
     `,
     standalone: false,
 })
 class TestComponent {
-    tagPart: TagPart;
+    readonly tagPart = model<TagPart>();
 }

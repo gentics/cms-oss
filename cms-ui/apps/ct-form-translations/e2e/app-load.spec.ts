@@ -85,12 +85,4 @@ test.describe('App Load', () => {
         });
     });
 
-    test.describe('Without login', () => {
-        test('should render the no-session error when accessed without a SID', async ({ page }) => {
-            await navigateToTool(page);
-            await page.locator('[data-name="no-session"]').waitFor({ state: 'visible' });
-            await expect(page.locator('[data-name="no-session"]')).toBeVisible();
-        });
-    });
-
 });

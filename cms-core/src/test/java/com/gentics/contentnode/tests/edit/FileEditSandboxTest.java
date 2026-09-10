@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.convertStreamToString;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.generateDataFile;
 import static org.junit.Assert.assertEquals;
@@ -26,11 +27,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.ReadListener;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-
 import org.glassfish.jersey.media.multipart.MultiPart;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,7 +53,13 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.i18n.CNI18nString;
+
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 
 /**
@@ -63,7 +67,7 @@ import com.gentics.lib.i18n.CNI18nString;
  *
  * @author johannes2
  */
-public class FileEditSandboxTest {
+public class FileEditSandboxTest extends AbstractEditSandboxTest {
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
@@ -82,6 +86,11 @@ public class FileEditSandboxTest {
 	 * Folder id for creation of new files
 	 */
 	public final static int FOLDER_ID = 7;
+
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	/**
 	 * Test editing meta data of a file
@@ -239,6 +248,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByFilename() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -265,6 +276,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByDescription() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -295,6 +308,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByFolder() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -327,6 +342,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByFiletype() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -359,6 +376,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageBySize() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -1097,15 +1116,12 @@ public class FileEditSandboxTest {
 			FileUploadResponse fileUploadResponse = null;
 
 			try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
-				FileResourceImpl fileResource = new FileResourceImpl();
-				fileResource.setTransaction(trx.getTransaction());
-
 				try {
 					Random rand = new Random();
 					String filename = "abcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyz.txt";
 					multiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart(
 							filename, folder.getId(), folder.getNode().getId(), "", false, "testcontent");
-					fileUploadResponse = fileResource.create(multiPart);
+					fileUploadResponse = getFileResource().create(multiPart);
 					ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 				} finally {
 					if (multiPart != null) {

@@ -1,4 +1,3 @@
-import { Form, FormDownloadInfo } from './form';
 import { ConstructCategory } from './construct-category';
 import {
     ContentPackage,
@@ -22,6 +21,7 @@ import { ExternalLink } from './external-link';
 import { Feature, NodeFeature, NodeFeatureModel, NodeFeatures } from './feature';
 import { File } from './file';
 import { Folder } from './folder';
+import { Form, FormDownloadInfo } from './form';
 import { FormTypeConfiguration } from './form-config';
 import { Group } from './group';
 import { PermissionsAndRoles, PermissionsSet } from './group-permissions';
@@ -46,12 +46,14 @@ import { ScheduleTask } from './schedule-task';
 import { SchedulerStatus } from './scheduler';
 import { StagedItemsMap, StagingStatus } from './staging-status';
 import { Construct, Tag, TagStatus, TagType } from './tag';
+import { PartType } from './tag-part';
 import { TagmapEntry, TagmapEntryError } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
 import { UsersnapSettings } from './usersnap';
 import { NodeVersionInfo, Variant } from './version';
+import { ApiToken, ApiTokenData } from './api-token';
 
 // GENERIC RESPONSE //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -754,7 +756,6 @@ export interface QueueApproveResponse extends Response {
  * The response received from an auth request to `auth/login`
  */
 export interface LoginResponse extends Response {
-    sid: number;
     user: User<Raw>;
 }
 
@@ -1006,6 +1007,11 @@ export interface FolderUsageResponse extends BaseUsageResponse {
 export interface TemplateUsageResponse extends BaseUsageResponse {
     templates: Template<Raw>[];
 }
+
+// PART-TYPES //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/** Response from the `/parttype` endpoint */
+export interface PartTypeListResponse extends ListResponse<PartType> {}
 
 // CONSTRUCT //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1534,3 +1540,8 @@ export interface KeycloakConfiguration {
     'resource': string;
     'showSSOButton': boolean;
 }
+
+// API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ApiTokenResponse extends Response, ApiTokenData {}
+export interface ApiTokenCreateResponse extends Response, ApiToken {}

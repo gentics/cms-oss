@@ -48,7 +48,7 @@
             (click)="toggleRow(i)"
             >
             <!-- [@slideAnim] -->
-            <td class="gtx-row-data-name">{{ item.item?.typeId ? ('construct.tagPartType_' + item.item.typeId | gtxI18n) : '' }}</td>
+            <td class="gtx-row-data-name">{{ item.item?.typeId ? ('construct.part_type_' + item.item.typeId | gtxI18n) : '' }}</td>
             <td>{{ item.item?.nameI18n?.[supportedLanguages?.[0]?.code] }}</td>
             <td>{{ item.item?.keyword }}</td>
             <td>{{ (item.item?.editable ? 'shared.yes' : 'shared.no') | gtxI18n }}</td>
@@ -80,6 +80,7 @@
               <div class="gtx-nested-container">
                 <gtx-construct-part-properties
                   [formControl]="control"
+                  [partTypes]="partTypes"
                   [supportedLanguages]="supportedLanguages"
                   [mode]="ConstructPartPropertiesMode.UPDATE"
                   [initialValue]="initialValue"

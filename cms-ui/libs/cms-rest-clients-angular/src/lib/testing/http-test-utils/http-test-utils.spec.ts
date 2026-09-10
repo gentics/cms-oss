@@ -44,14 +44,6 @@ describe('http-test-utils', () => {
             expect(req).toBeFalsy();
         });
 
-        it('does not match GET request without sid query param', () => {
-            http.get(`${API_BASE_URL}/test1/test2`, { params: assembleGetParams().delete('sid') })
-                .subscribe();
-            let req: TestRequest;
-            expect(() => req = expectOneRequest(httpTestingController, 'test1/test2', 'GET')).toThrow();
-            expect(req).toBeFalsy();
-        });
-
         it('does not match GET request without gcms_ts query param', () => {
             http.get(`${API_BASE_URL}/test1/test2`, { params: assembleGetParams().delete('gcms_ts') })
                 .subscribe();
@@ -93,22 +85,6 @@ describe('http-test-utils', () => {
             const expectedAdditionalParams = new HttpParams({ fromObject: { param1: 'bla' } });
             expect(() => req = expectOneRequest(httpTestingController, 'test1/test2', 'POST', expectedAdditionalParams)).not.toThrow();
             expect(req).toBeTruthy();
-        });
-
-        it('does not match POST request without sid query param', () => {
-            http.post(`${API_BASE_URL}/test1/test2`, { test: 'value' }, { params: assemblePostParams().delete('sid') })
-                .subscribe();
-            let req: TestRequest;
-            expect(() => req = expectOneRequest(httpTestingController, 'test1/test2', 'POST')).toThrow();
-            expect(req).toBeFalsy();
-        });
-
-        it('does not match POST request with gcms_ts query param', () => {
-            http.post(`${API_BASE_URL}/test1/test2`, { test: 'value' }, { params: assemblePostParams().delete('sid') })
-                .subscribe();
-            let req: TestRequest;
-            expect(() => req = expectOneRequest(httpTestingController, 'test1/test2', 'POST')).toThrow();
-            expect(req).toBeFalsy();
         });
 
         it('does not match POST request with too few query params', () => {
@@ -254,7 +230,6 @@ describe('http-test-utils', () => {
 
 function assembleGetParams(additionalParams: any = {}): HttpParams {
     const params = {
-        sid: 4711,
         gcms_ts: 1234,
         ...additionalParams
     };
@@ -263,7 +238,6 @@ function assembleGetParams(additionalParams: any = {}): HttpParams {
 
 function assemblePostParams(additionalParams: any = {}): HttpParams {
     const params = {
-        sid: 4711,
         ...additionalParams
     };
     return new HttpParams({ fromObject: params });

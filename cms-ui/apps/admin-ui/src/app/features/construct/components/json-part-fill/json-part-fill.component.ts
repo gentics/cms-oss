@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleCha
 import { AbstractControl, UntypedFormControl } from '@angular/forms';
 import { TagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 
@@ -31,8 +31,8 @@ const validateTagPartProperty: (type: TagPropertyType) => any = (type) => {
         }
 
         return null;
-    }
-}
+    };
+};
 
 @Component({
     selector: 'gtx-json-part-fill',
@@ -40,7 +40,7 @@ const validateTagPartProperty: (type: TagPropertyType) => any = (type) => {
     styleUrls: ['./json-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(JsonPartFillComponent)],
-    standalone: false
+    standalone: false,
 })
 export class JsonPartFillComponent extends BaseFormElementComponent<TagPartProperty> implements OnInit, OnChanges {
 
@@ -57,7 +57,7 @@ export class JsonPartFillComponent extends BaseFormElementComponent<TagPartPrope
         ]).pipe(
             map(([value, status]) => status === 'VALID' ? value : null),
             distinctUntilChanged(isEqual),
-        ).subscribe(value => {
+        ).subscribe((value) => {
             if (value != null) {
                 const parsed = JSON.parse(value);
                 this.triggerChange(parsed);

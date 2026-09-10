@@ -24,6 +24,10 @@
 
         .user-name {
             margin-bottom: 10px;
+
+            strong {
+                cursor: pointer;
+            }
         }
         .description {
             color: $gtx-color-dark-gray;

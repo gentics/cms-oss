@@ -6,7 +6,8 @@
         "isolatedModules": true,
         "emitDecoratorMetadata": false,
         "module": "preserve",
-        "types": ["node", "jquery"]
+        "types": ["node", "jquery"],
+        "ignoreDeprecations": "6.0"
     },
     "files": [],
     "include": [],

@@ -32,6 +32,7 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.object.scheduler.SchedulerSchedule;
+import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.rest.model.FilePrivileges;
 import com.gentics.contentnode.rest.model.PagePrivileges;
 import com.gentics.contentnode.rest.model.RolePermissionsModel;
@@ -39,6 +40,7 @@ import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.migration.MigrationJobEntry;
 import com.gentics.contentnode.rest.model.response.migration.MigrationJobLogEntryItem;
+import com.gentics.contentnode.rest.model.token.ApiTokenDataModel;
 
 /**
  * GCN specific assertions
@@ -171,6 +173,14 @@ public class GCNAssertions extends Assertions {
 
 	public static SchedulerScheduleAssert assertThat(SchedulerSchedule actual) {
 		return new SchedulerScheduleAssert(actual);
+	}
+
+	public static ApiTokenDataModelAssert assertThat(ApiTokenDataModel actual) {
+		return new ApiTokenDataModelAssert(actual);
+	}
+
+	public static PublishInfoAssert assertThat(PublishInfo actual) {
+		return new PublishInfoAssert(actual);
 	}
 
 	/**

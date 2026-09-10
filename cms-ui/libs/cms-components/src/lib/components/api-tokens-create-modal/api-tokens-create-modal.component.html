@@ -1,0 +1,28 @@
+<div class="modal-content">
+    <h2>{{ 'api_token.new' | gtxI18n }}</h2>
+
+    <gtx-api-tokens-create-form
+        [apiTokenNames]="apiTokenNames"
+        [formControl]="control"
+    ></gtx-api-tokens-create-form>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!control.valid || loading()"
+        data-action="confirm"
+        (click)="saveForm()"
+    >
+        {{ 'modal.create_button' | gtxI18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        data-action="cancel"
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button'  | gtxI18n }}
+    </gtx-button>
+</div>

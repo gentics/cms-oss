@@ -29,7 +29,7 @@ public class UsernamePasswordLoginService extends AbstractLoginService {
 					response.setResponseInfo(new ResponseInfo(ResponseCode.NOTFOUND, "Did not find a user with the given credentials"));
 				}
 			} else {
-				response.setSid(createUserSession(systemUser, servletRequest, servletResponse));
+				createUserSession(systemUser, servletRequest, servletResponse);
 				response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully performed login"));
 				response.setUser(ModelBuilder.getUser(systemUser));
 

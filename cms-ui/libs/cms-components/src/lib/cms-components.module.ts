@@ -1,13 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { inject, ModuleWithProviders, NgModule, PipeTransform, provideAppInitializer, Provider, Type } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
 import {
+    ApiTokensCreateFormComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
     AppVersionLabelComponent,
     BrowseBoxComponent,
+    CopyTokenModal,
+    CopyValueComponent,
     I18nInputComponent,
     I18nPanelGroupComponent,
     I18nSelectComponent,
@@ -60,6 +66,12 @@ const COMPONENTS: any[] = [
     UserMenuComponent,
     UserMenuToggleComponent,
     VersionModalComponent,
+    ApiTokensModalComponent,
+    ApiTokensTableComponent,
+    ApiTokensCreateModalComponent,
+    ApiTokensCreateFormComponent,
+    CopyValueComponent,
+    CopyTokenModal,
 ];
 
 const DIRECTIVES: Type<any>[] = [
@@ -114,6 +126,8 @@ export class CmsComponentsModule {
         return {
             ngModule: CmsComponentsModule,
             providers: [
+                // Override the default format-provider with the i18n version
+                { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormatService },
                 provideAppInitializer(() => {
                     const translations = inject(TranslateService);
                     translations.setTranslation('de', DE_TRANSLATIONS, true);

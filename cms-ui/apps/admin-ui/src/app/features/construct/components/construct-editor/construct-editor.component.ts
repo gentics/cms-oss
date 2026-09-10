@@ -21,7 +21,7 @@ function normalizeTagPart(rawPart: TagPart<Raw>): TagPart<Raw> {
         };
     }
 
-    if (part.typeId === TagPartType.HtmlLong || part.typeId === TagPartType.Handlebars) {
+    if (part.typeId === TagPartType.HtmlLong || part.typeId === TagPartType.Handlebars || part.typeId === TagPartType.Json) {
         return {
             ...part,
             defaultProperty: part.defaultProperty || null,
@@ -88,7 +88,7 @@ function tagPartValidator(parts: typeof CONTROL_INVALID_VALUE | ((TagPart | type
     templateUrl: './construct-editor.component.html',
     styleUrls: ['./construct-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class ConstructEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONSTRUCT> implements OnInit {
 

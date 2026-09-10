@@ -86,11 +86,7 @@ export class UserSettingsService {
             ),
         ).subscribe((change) => {
             const name = change.key.replace(/^USER-\d+_/, '');
-            if (name === 'sid') {
-                // nothing ... yet
-            } else {
-                this.dispatchChangedSetting(name, change.newValue);
-            }
+            this.dispatchChangedSetting(name, change.newValue);
         });
     }
 

@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.rest.group;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getAuthResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collection;
@@ -26,6 +28,7 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.User;
+import com.gentics.contentnode.rest.model.request.LoginRequest;
 import com.gentics.contentnode.rest.model.response.GroupList;
 import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
@@ -641,9 +644,12 @@ public class GroupEditTest extends AbstractGroupEditTest {
 		User createdUser = Trx.supply(systemUser, () -> {
 			return new GroupResourceImpl().createUser(String.valueOf(group.getId()), new User().setLogin(login).setPassword(password)).getUser();
 		});
-		Trx.operate(systemUser, () -> {
-			assertThat(ContentNodeRESTUtils.login(createdUser.getLogin(), password)).as("SID").isNotNull();
-		});
+
+		LoginRequest loginRequest = new LoginRequest();
+		loginRequest.setLogin(createdUser.getLogin());
+		loginRequest.setPassword(password);
+
+		assertSuccess(() -> getAuthResource().login(loginRequest), null);
 	}
 
 	/**

@@ -67,10 +67,9 @@ export class FormgeneratorApiService {
             });
         }
         return this.activeMeshProject$.pipe(
-            this.getSid(),
-            switchMap(([meshProject, sid]) => this.http.get<Response>(
+            switchMap(([meshProject]) => this.http.get<Response>(
                 `${this.formgeneratorRestAPI}/forms`,
-                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject).append( 'sid', sid ) },
+                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject) },
             ).pipe(
                 catchError(err => of(err)),
             )),
@@ -79,10 +78,9 @@ export class FormgeneratorApiService {
 
     getFormRaw(uuid: string): Observable<GtxFormResponse> {
         return this.activeMeshProject$.pipe(
-            this.getSid(),
-            switchMap(([meshProject, sid]) => this.http.get<Response>(
+            switchMap(([meshProject]) => this.http.get<Response>(
                 `${this.formgeneratorRestAPI}/forms/${uuid}`,
-                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject).append( 'sid', sid ) },
+                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject) },
             ).pipe(
                 catchError(err => of(err)),
             )),
@@ -97,11 +95,10 @@ export class FormgeneratorApiService {
 
     createForm(data: GtxFormCreateRequest): Observable<GtxFormResponse> {
         return this.activeMeshProject$.pipe(
-            this.getSid(),
-            switchMap(([meshProject, sid]) => this.http.post<Response>(
+            switchMap(([meshProject]) => this.http.post<Response>(
                 `${this.formgeneratorRestAPI}/forms`,
                 data,
-                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject).append( 'sid', sid ) },
+                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject) },
             ).pipe(
                 catchError(err => of(err)),
             )),
@@ -110,11 +107,10 @@ export class FormgeneratorApiService {
 
     updateForm(uuid: string, data: GtxFormCreateRequest): Observable<GtxFormResponse> {
         return this.activeMeshProject$.pipe(
-            this.getSid(),
-            switchMap(([meshProject, sid]) => this.http.post<Response>(
+            switchMap(([meshProject]) => this.http.post<Response>(
                 `${this.formgeneratorRestAPI}/forms/${uuid}`,
                 data,
-                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject).append( 'sid', sid ) },
+                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject) },
             ).pipe(
                 catchError(err => of(err)),
             )),
@@ -123,26 +119,12 @@ export class FormgeneratorApiService {
 
     deleteForm(uuid: string): Observable<void> {
         return this.activeMeshProject$.pipe(
-            this.getSid(),
-            switchMap(([meshProject, sid]) => this.http.delete<void>(
+            switchMap(([meshProject]) => this.http.delete<void>(
                 `${this.formgeneratorRestAPI}/forms/${uuid}`,
-                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject).append( 'sid', sid ) },
+                { headers: this.urlHeaders, params: this.urlParams.append('meshProject', meshProject) },
             ).pipe(
                 catchError(err => of(err)),
             ),
-        ));
-    }
-
-    private getSid(): OperatorFunction<any, [any, string]> {
-        return withLatestFrom(this.appState.select(state => state.auth.sid).pipe(
-            map(sid => {
-                const sidParsed = parseInt(sid.toString(), 10);
-                if (Number.isInteger(sidParsed)) {
-                    return sidParsed.toString();
-                } else {
-                    throw new Error(`SID of value ${sid} read from state is not valid integer.`);
-                }
-            }),
         ));
     }
 

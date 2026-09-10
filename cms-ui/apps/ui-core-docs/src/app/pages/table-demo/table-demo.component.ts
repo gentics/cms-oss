@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { NotificationService, TableAction, TableActionClickEvent, TableColumn, TableColumnMappingFn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { NotificationService, TableAction, TableActionClickEvent, TableColumn, TableColumnMappingFn, TableRow, TableSelection, TableSortOrder } from '@gentics/ui-core';
 import { at } from 'lodash-es';
 import { IDocumentation } from '../../common/docs';
 import { InjectDocumentation } from '../../common/docs-loader';
@@ -295,8 +295,15 @@ export class TableDemoPage implements OnInit {
         this.rebuildRows();
     }
 
-    updateSelection(selection: string[]): void {
-        this.selected = selection;
+    updateSelection(selection: string[] | TableSelection): void {
+        if (Array.isArray(selection)) {
+            this.selected = selection;
+            return;
+        }
+
+        this.selected = Object.entries(selection)
+        .filter(([_, value]) => value === true)
+        .map(([elem]) => elem);
     }
 
     updateSortColumn(columnId: string): void {

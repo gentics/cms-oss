@@ -7,11 +7,12 @@
         "module": "commonjs",
         "types": ["cypress", "node"],
         "sourceMap": false,
+        "ignoreDeprecations": "6.0",
         "strict": false,
         "noImplicitOverride": false,
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
-        "noFallthroughCasesInSwitch": true,
+        "noFallthroughCasesInSwitch": true
     },
     "angularCompilerOptions": {
         "enableI18nLegacyMessageIdFormat": false,

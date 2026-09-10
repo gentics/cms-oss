@@ -282,8 +282,8 @@ import {
     PageVariantCreateRequest,
     PagedConstructListRequestOptions,
     PagedConstructListResponse,
-    PartType,
     PartTypeListOptions,
+    PartTypeListResponse,
     PermissionListResponse,
     PermissionResponse,
     PermissionsOptions,
@@ -383,6 +383,9 @@ import {
     VersionResponse,
     WastebinDeleteOptions,
     WastebinRestoreOptions,
+    ApiTokenCreateRequest,
+    ApiTokenResponse,
+    ApiTokenCreateResponse,
 } from '@gentics/cms-models';
 import {
     LoginResponse as MeshLoginResponse,
@@ -415,12 +418,16 @@ export interface AbstractAdminAPI extends BasicAPI {
 
     getPublishQueue: () => PublishQueue;
     modifyPublishQueue: (body: ContentMaintenanceActionRequest) => Response;
+
+    getApiTokens: (pageSize?: number, page?: number, sort?: string) => ListResponse<ApiTokenResponse>;
+    addApiTokens: (body: ApiTokenCreateRequest) => ApiTokenCreateResponse;
+    deleteApiTokens: (id: string) => void;
 }
 
 export interface AbstractAuthenticationAPI extends BasicAPI {
     login: (data: LoginRequest, params?: LoginOptions) => LoginResponse;
-    logout: (sid: string | number) => Response;
-    validate: (sid: string | number) => ValidateSidResponse;
+    logout: () => Response;
+    validate: () => ValidateSidResponse;
     ssoLogin: (bearerToken: string) => string;
 }
 
@@ -1001,7 +1008,7 @@ export interface AbstractPageAPI extends BasicAPI {
 }
 
 export interface AbstractPartTypeAPI extends BasicAPI {
-    list: (options?: PartTypeListOptions) => PartType[];
+    list: (options?: PartTypeListOptions) => PartTypeListResponse;
 }
 
 export interface AbstractPermissionAPI extends BasicAPI {

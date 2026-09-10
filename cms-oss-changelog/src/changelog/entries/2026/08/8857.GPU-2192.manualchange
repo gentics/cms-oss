@@ -1,0 +1,5 @@
+The Velocity rendering engine has been removed from the CMS. Constructs using one of the part types
+* Velocity
+* Breadcrumb
+* Navigation
+must be migrated to using Handlebars before updating the CMS.

@@ -90,7 +90,7 @@ public class RenderTypeTrx implements AutoCloseable {
 		oldRenderType = t.getRenderType();
 		RenderUrlFactory oldRenderUrlFactory = oldRenderType != null ? oldRenderType.getRenderUrlFactory() : null;
 
-		renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), editMode, t.getSessionId(), -1);
+		renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), editMode, 1);
 		if (!handleDependencies) {
 			renderType.setHandleDependencies(false);
 		}
@@ -116,7 +116,7 @@ public class RenderTypeTrx implements AutoCloseable {
 			if (oldRenderUrlFactory instanceof DynamicUrlFactory) {
 				renderType.setRenderUrlFactory(oldRenderUrlFactory);
 			} else {
-				renderType.setRenderUrlFactory(new DynamicUrlFactory(t.getSessionId()));
+				renderType.setRenderUrlFactory(new DynamicUrlFactory());
 			}
 			break;
 		}

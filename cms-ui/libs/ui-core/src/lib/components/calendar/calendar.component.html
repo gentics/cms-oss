@@ -1,0 +1,48 @@
+<div class="calendar-months">
+    <button
+        class="month-button previous-month"
+        data-action="previous-month"
+        [disabled]="isPreviousMonthDisabled()"
+        (click)="goToPreviousMonth()"
+    >
+        <icon>arrow_left</icon>
+    </button>
+
+    <div class="current-display">
+        <div class="month-label">{{ formatStrings.months[activeMonth] }}</div>
+        <div class="year-label">{{ activeYear }}</div>
+    </div>
+
+    <button
+        class="month-button next-month"
+        data-action="next-month"
+        [disabled]="isNextMonthDisabled()"
+        (click)="goToNextMonth()"
+    >
+        <icon>arrow_right</icon>
+    </button>
+</div>
+
+<div class="calendar-grid" [class.show-overflow]="displayOverflowDays" [class.show-weeks]="displayWeeks">
+    <div class="week-indicator"></div>
+    @for (weekIdx of (startDate | gtxRange: 6 + startDate); track weekIdx) {
+        <div class="day-indicator">{{ dayIndicators[weekIdx % 7] }}</div>
+    }
+    @for (week of weeks; track week.numInYear) {
+        <div class="week-indicator">
+            <div class="week-label">{{ week.numInYear }}</div>
+        </div>
+
+        @for (day of week.days; track `${day.year}-${day.month}-${day.date}`) {
+            <button
+                class="day"
+                [class.overflow]="day.year !== activeYear || day.month !== activeMonth"
+                [class.active]="isSelectedDay(day)"
+                [disabled]="isDayDisabled(day)"
+                (click)="handleDaySelect(day, $event)"
+            >
+                <span class="day-label" >{{ day.date }}</span>
+            </button>
+        }
+    }
+</div>

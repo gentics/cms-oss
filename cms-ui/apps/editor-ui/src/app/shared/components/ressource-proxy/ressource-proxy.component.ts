@@ -47,7 +47,6 @@ export class RessourceProxyComponent implements OnInit {
         let fileName: string = null;
 
         const params = new URLSearchParams();
-        params.set('sid', this.appState.now.auth.sid + '');
 
         Object.entries(this.route.snapshot.queryParams || {}).forEach(([key, value]) => {
             switch (key) {

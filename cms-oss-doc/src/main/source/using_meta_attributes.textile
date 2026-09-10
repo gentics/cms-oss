@@ -13,32 +13,18 @@ h4. Node-Style
 The Node-style syntax is available in pages, templates and tags. When the rendered attribute
 is a tag, it will be rendered with the appropriate icons.
 
-WARNING: Rendering tags in edit mode via the Node-Style syntax can cause problems, if the template contains "@<@" or "@>@" characters (for example @<?php ... ?>@). Consider using the @#gtx_edit@ "render directive":impl_using_velocity.html#render-directives.
+WARNING: Rendering tags in edit mode via the Node-Style syntax can cause problems, if the template contains "@<@" or "@>@" characters (for example @<?php ... ?>@). Consider using the @#gtx_edit@.
 
 <shell filename="Example: print the page name">
   <node page.name>
  </shell>
 
-h4. Velocity-Style (VTL-Style)
+h4. Handlebars-Style
 
-WARNING: Rendering tags with the plain Velocity-Style syntax will *not* generate tag icons. Use the @#gtx_edit@ "render directive":impl_using_velocity.html#render-directives to render tags in edit mode.
-
-VTL stands for "Velocity Template Language" and stands for the syntax of "Velocity" (a template language) -
-see "Velocity part type":gcn_part_types.html#velocity-part-type and
-"Using Velocity in Tagtypes":impl_using_velocity.html for details.
+WARNING: Rendering tags with the plain Handlebars syntax will *not* generate tag icons. Use the @#gtx_edit@ helper to render tags in edit mode.
 
 <shell filename="Example: print the page name">
-	$cms.page.name
-</shell>
-
-WARNING: If a Tagtype contains a part names "class" Velocity syntax cannot be used to resolve its value because it would just return the Tagtypes Java class. Use @getProperty@ as a workaround.
-
-<shell filename="Example: accessing a part named class">
-## won't work as expected will just return a Java class
-$cms.tag.parts.class
-
-## this will work as expected
-$cms.tag.parts.getProperty("class")
+	{{cms.page.name}}
 </shell>
 
 h4. Tagmap-Style
@@ -64,16 +50,15 @@ h3. Baseobjects
 
 These are the base objects that can be used in the CMS, along with examples on how they can be accessed and in which contexts they are made available.
 
-|_. Object |_. Velocity example |_. Node-Style Example |_. Availability |
-| "page":#page | $cms.page.name | &lt;node page.name&gt; | page |
-| "template":#template | $cms.template.id | &lt;node template.id&gt; | page, template |
-| "file":#file | $cms.file.name | &lt;node file.name&gt; | file |
-| "folder":#folder | $cms.folder.name | &lt;node folder.name&gt; | folder, file, page |
-| "node":#node | $cms.node.host | &lt;node node.host&gt; | file, folder, page, tag, template |
-| "object":#object | $cms.object.startpage | &lt;node object.startpage&gt; | file, folder, page |
-| "rendermode":#rendermode | $cms.rendermode | N/A | file, folder, page, tag, template |
-| "imps":#imps | $cms.imps.string | N/A | file, folder, page, tag, template |
-| "tag":#tag | $cms.tag.parts.url | &lt;node url&gt; | tag |
+|_. Object |_. Handlebars example |_. Node-Style Example |_. Availability |
+| "page":#page | {{cms.page.name}} | &lt;node page.name&gt; | page |
+| "template":#template | {{cms.template.id}} | &lt;node template.id&gt; | page, template |
+| "file":#file | {{cms.file.name}} | &lt;node file.name&gt; | file |
+| "folder":#folder | {{cms.folder.name}} | &lt;node folder.name&gt; | folder, file, page |
+| "node":#node | {{cms.node.host}} | &lt;node node.host&gt; | file, folder, page, tag, template |
+| "object":#object | {{gtx_render cms.object.startpage}} | &lt;node object.startpage&gt; | file, folder, page |
+| "rendermode":#rendermode | {{cms.rendermode}} | N/A | file, folder, page, tag, template |
+| "tag":#tag | {{gtx_render cms.tag.parts.url}} | &lt;node url&gt; | tag |
 
 h4. Page
 
@@ -84,22 +69,6 @@ The actual pageobject is only available in pagecontext (pages, pageurl's, page o
 <shell filename="Example: render the publish date">
 	<node page.publishdate> // Node-Style
 	$cms.page.publishdate // VTL-Style
-</shell>
-
-A very common use case is to check whether a page exists using a Velocity if-statement.
-
-<shell filename="Example: check if a page exists">
-## bad - the whole page will be rendered
-#if("$cms.page.languageset.pages.en" != "")
-<a href="$cms.page.languageset.pages.en.url">English</a>
-#end
-
-WARNING: When checking if pages exists in Velocity if-statements it's best to always check for page ids rather than checking for the page itself, as any direct invocation of a page object will render the page. This is rather costly if you just want to check if a page exists.
-
-## good - best performance
-#if($cms.page.languageset.pages.en.id)
-<a href="$cms.page.languageset.pages.en.url">English</a>
-#end
 </shell>
 
 h4. Template
@@ -176,25 +145,13 @@ VTL Style: $cms.page.tags.TAGNAME.name
 
 h4. Rendermode
 
-NOTE: Rendermode is *only available when using velocity syntax*. Access the list of "rendermode meta attributes":meta_attributes.html#rendermode from the "list of meta attributes":meta_attributes.html page.
+NOTE: Rendermode is *only available when using Handlebars syntax*. Access the list of "rendermode meta attributes":meta_attributes.html#rendermode from the "list of meta attributes":meta_attributes.html page.
 
-This basic object applies access to information of the actual node during rendering with velocity.
+This basic object applies access to information of the actual node during rendering with Handlebars.
 
 <shell filename="Example: Output publish status">
-VTL Style: $cms.rendermode.publish
+VTL Style: {{cms.rendermode.publish}}
 </shell>
-
-h4. Imps
-
-NOTE: Access the list of "imps meta attributes":meta_attributes.html#imps from the "list of meta attributes":meta_attributes.html page.
-
-This basic object allows access to information of velocity imps.
-
-<shell filename="Example: accessing the velocity string imp">
-$cms.imps.string
-</shell>
-
-Velocity GenericTools contains a collection of reusable and well documented tools and utility classes of general interest to Velocity users. These classes and tools have no dependency on the VelocityView or VelocityStruts sub-projects. The tools may be used as you would any other POJO ("plain old java object").
 
 h3. Childobjects
 

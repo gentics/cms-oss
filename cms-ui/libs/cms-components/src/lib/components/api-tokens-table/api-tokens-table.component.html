@@ -1,0 +1,53 @@
+<h2 class="item-tag-list-heading">{{ 'api_token.tokens' | gtxI18n }}</h2>
+<div class="entity-table-actions-bar">
+  <gtx-button
+      class="table-action-button"
+      flat
+      size="small"
+      type="primary"
+      data-action="create"
+      [disabled]="false"
+      (click)="handleCreateButton()"
+  >
+    <icon left>add</icon> {{ 'api_token.new' | gtxI18n }}
+  </gtx-button>
+</div>
+<div class="api-token-list-container">
+  <gtx-table
+      [selectAllType]="TableSelectAllType.PAGE"
+      [selectable]="true"
+      [columns]="columns"
+      [rows]="rows()"
+      [actions]="actions"
+      [(selected)]="apiTokenSelection"
+      (selectedChange)="updateSelection($event)"
+      [page]="page()"
+      [totalCount]="totalCount()"
+      [disabled]="false"
+      [perPage]="perPage"
+      [sortBy]="sortBy()"
+      [sortOrder]="sortOrder()"
+      [renderers]="{
+          cdate: dateRenderer,
+          expires: dateRenderer,
+          lastUsed: dateRenderer,
+          valid: boolIconRenderer,
+          inherited: boolIconRenderer
+      }"
+      (pageChange)="changePage($event)"
+      (sortOrderChange)="updateSortOrder($event)"
+      (sortByChange)="updateSortBy($event)"
+      (actionClick)="handleAction($event)"
+  ></gtx-table>
+</div>
+<ng-template #boolIconRenderer let-value="value">
+  <icon
+    class="gtx-table-cell-boolean"
+    [ngClass]="'gtx-table-cell-boolean-' + value"
+  >{{ value == null ? '' : (value ? 'check' : 'close') }}</icon>
+</ng-template>
+<ng-template #dateRenderer let-value="value">
+  <span class="gtx-table-cell-text">
+    {{ value | gtxI18nDate:'date' }}
+  </span>
+</ng-template>

@@ -102,8 +102,6 @@ public class MeshCrProxyTest {
 
 	private static MeshRestClient invalidClient;
 
-	private static String sid;
-
 	private static String sessionSecret;
 
 	private static UserGroup testGroup;
@@ -149,7 +147,7 @@ public class MeshCrProxyTest {
 					Request original = chain.request();
 					HttpUrl originalHttpUrl = original.url();
 
-					HttpUrl url = originalHttpUrl.newBuilder().addQueryParameter("sid", sid).build();
+					HttpUrl url = originalHttpUrl.newBuilder().build();
 					return chain.proceed(original.newBuilder().url(url)
 							.addHeader("Cookie", "GCN_SESSION_SECRET=" + sessionSecret).build());
 				})
@@ -175,7 +173,6 @@ public class MeshCrProxyTest {
 
 	protected static LoggedInClient asTestUser() throws RestException, NodeException, IOException, URISyntaxException {
 		LoggedInClient client = restContext.client("test", "test");
-		sid = client.get().getSid();
 		List<String> cookies = client.get().getCookieHandler()
 				.get(new URI("http://localhost:" + restContext.getPort() + "/"), Collections.emptyMap())
 				.getOrDefault("Cookie", Collections.emptyList());

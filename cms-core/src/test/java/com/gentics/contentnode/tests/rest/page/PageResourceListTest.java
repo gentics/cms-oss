@@ -40,6 +40,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @GCNFeature(set = { Feature.NICE_URLS })
 public class PageResourceListTest extends AbstractListSortAndFilterTest<Page> {
 	private static Node node;
+	private static int nodeRootFolder;
 	private static Template template;
 
 	@BeforeClass
@@ -47,6 +48,7 @@ public class PageResourceListTest extends AbstractListSortAndFilterTest<Page> {
 		AbstractListSortAndFilterTest.setupOnce();
 
 		node = supply(() -> createNode());
+		nodeRootFolder = supply(() -> node.getFolder().getId());
 		template = supply(() -> createTemplate(node.getFolder(), "Template"));
 	}
 
@@ -73,7 +75,7 @@ public class PageResourceListTest extends AbstractListSortAndFilterTest<Page> {
 	@Override
 	protected Page createItem() throws NodeException {
 		return supply(() -> ModelBuilder.getPage(Builder.create(com.gentics.contentnode.object.Page.class, p -> {
-			p.setFolderId(node.getFolder().getId());
+			p.setFolderId(nodeRootFolder);
 			p.setTemplateId(template.getId());
 			p.setName(randomStringGenerator.generate(5, 10));
 			p.setFilename(randomStringGenerator.generate(5, 10));
@@ -87,7 +89,7 @@ public class PageResourceListTest extends AbstractListSortAndFilterTest<Page> {
 	protected AbstractListResponse<Page> getResult(SortParameterBean sort, FilterParameterBean filter, PagingParameterBean paging)
 			throws NodeException {
 		return new PageResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)),
 				new PageListParameterBean(), filter, sort, paging, new PublishableParameterBean(),
 				new WastebinParameterBean());
 	}

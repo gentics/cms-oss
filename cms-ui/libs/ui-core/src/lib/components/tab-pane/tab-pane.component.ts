@@ -1,4 +1,5 @@
 import {
+    booleanAttribute,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -63,6 +64,9 @@ export class TabPaneComponent extends BaseComponent {
     @Input()
     public inactive = false;
 
+    @Input({ transform: booleanAttribute })
+    expanded: boolean;
+
     /**
      * When the tab is clicked, this event is fired with the tab id.
      */
@@ -94,4 +98,8 @@ export class TabPaneComponent extends BaseComponent {
     get content(): TabContentDirective | TemplateRef<any> {
         return this.explicitContent || this.implicitContent;
     }
+
+/*    get hasActiveChild(): boolean {
+        return false;
+    }*/
 }

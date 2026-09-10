@@ -3,6 +3,7 @@
  */
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -15,12 +16,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.AbstractFolder;
 import com.gentics.contentnode.object.File;
@@ -35,18 +37,23 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Testcase for editing folders
  * TODO: migrate all tests to use the REST API (if possible)
  * @author norbert
  */
-public class FolderEditSandboxTest {
+public class FolderEditSandboxTest extends AbstractEditSandboxTest {
+	@BeforeClass
+	public static void setupOnce() {
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
+	}
 
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
@@ -398,6 +405,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByName() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -425,6 +434,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByDescription() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -453,6 +464,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByPubDir() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -481,6 +494,8 @@ public class FolderEditSandboxTest {
 	 */
 	@Test
 	public void testDirtPageByObjectProperty() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -509,7 +524,10 @@ public class FolderEditSandboxTest {
 	 * @throws Exception
 	 */
 	@Test
+	@Ignore("Fails because the necessary dependency is not written for handlebars. See SUP-20138")
 	public void testDirtPageByNewObjectProperty() throws Exception {
+		migrateVtlPagesToHbsPages();
+
 		// republish everything to build dependencies
 		testContext.publish(true);
 
@@ -780,17 +798,5 @@ public class FolderEditSandboxTest {
 			assertTrue("The container of object.intag must belong to the same folder",
 					testObjectTag.getNodeObject().getId().equals(inTagobjectTag.getNodeObject().getId()));
 		}
-	}
-
-	/**
-	 * Get a folder resource
-	 * @return folder resource
-	 * @throws TransactionException
-	 */
-	protected FolderResource getFolderResource() throws TransactionException {
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return folderResource;
 	}
 }

@@ -282,7 +282,6 @@ export class CustomerScriptService implements OnDestroy {
             currentItem: item,
             editMode: state.editor.editMode,
             pageLanguage: language,
-            sid: state.auth.sid,
             uiLanguage: state.ui.language,
             uiVersion: state.ui.uiVersion,
             userId: state.auth.user?.id,

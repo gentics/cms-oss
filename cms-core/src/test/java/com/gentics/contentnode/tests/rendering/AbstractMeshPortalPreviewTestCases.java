@@ -234,7 +234,7 @@ public abstract class AbstractMeshPortalPreviewTestCases extends MeshPortalPrevi
 		try (FeatureClosure f = new FeatureClosure(Feature.MANAGELINKURL_ONLYFORPUBLISH, true)) {
 			preview = Trx.supply(t -> {
 				RenderType r = new RenderType();
-				r.setRenderUrlFactory(new DynamicUrlFactory(sid));
+				r.setRenderUrlFactory(new DynamicUrlFactory());
 				t.setRenderType(r);
 				return RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA);
 			});

@@ -1,5 +1,5 @@
 import {Component, ChangeDetectorRef} from "@angular/core";
-import {ImageTransformParams, AspectRatio, AspectRatios} from '@gentics/image-editor';
+import {ImageTransformParams, AspectRatio, AspectRatios, UILanguage} from '@gentics/image-editor';
 
 @Component({
     selector: 'app',
@@ -8,10 +8,10 @@ import {ImageTransformParams, AspectRatio, AspectRatios} from '@gentics/image-ed
     standalone: false
 })
 export class PlaygroundAppComponent {
-    language = 'en';
+    language: UILanguage = 'en';
     sourceImage = 'portrait.jpg';
     slowConnection = false;
-    transformParams: Partial<ImageTransformParams> = {};
+    transformParams: ImageTransformParams | null = null;
     disableAspectRatios: AspectRatio[] = [];
     customAspectRatios: AspectRatio[] = [];
     disableOriginal = false;

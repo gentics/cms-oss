@@ -80,8 +80,6 @@ public class ClientToServletTest {
 	@Test
 	public void testLogin() throws Exception {
 		try (LoggedInClient client1 = restContext.client(LOGIN, PASSWORD)) {
-			assertThat(client1.get().getSid()).as("SID client1").isNotNull().isNotEmpty();
-
 			UserLoadResponse user1 = client1.get().base().path("user").path("me").request().get(UserLoadResponse.class);
 			client1.get().assertResponse(user1);
 			assertThat(user1.getUser().getId()).as("User ID from REST").isEqualTo(testUser.getId());
@@ -96,9 +94,6 @@ public class ClientToServletTest {
 	public void testMultipleClients() throws Exception {
 		try (LoggedInClient client1 = restContext.client(LOGIN, PASSWORD)) {
 			try (LoggedInClient client2 = restContext.client(LOGIN, PASSWORD)) {
-				assertThat(client1.get().getSid()).as("SID client1").isNotNull().isNotEmpty();
-				assertThat(client2.get().getSid()).as("SID client2").isNotNull().isNotEmpty().isNotEqualTo(client1.get().getSid());
-
 				UserLoadResponse user1 = client1.get().base().path("user").path("me").request().get(UserLoadResponse.class);
 				client1.get().assertResponse(user1);
 				assertThat(user1.getUser().getId()).as("User ID from REST").isEqualTo(testUser.getId());

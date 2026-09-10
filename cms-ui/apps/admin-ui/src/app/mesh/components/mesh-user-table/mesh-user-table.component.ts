@@ -1,9 +1,10 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { MeshGroupBO, MeshUserBO } from '@admin-ui/mesh/common';
-import { MeshGroupHandlerService, MeshUserHandlerService, MeshUserTableLoaderService } from '@admin-ui/mesh/providers';
-import { getUserDisplayName } from '@admin-ui/mesh/utils';
+import { MeshGroupBO, MeshUserBO } from '../../common/mesh-business-objects';
+import { MeshGroupHandlerService } from '../../providers/mesh-group-handler/mesh-group-handler.service';
+import { MeshUserHandlerService } from '../../providers/mesh-user-handler/mesh-user-handler.service';
+import { MeshUserTableLoaderService } from '../../providers/mesh-user-table-loader/mesh-user-table-loader.service';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Permission, User } from '@gentics/mesh-models';
@@ -11,16 +12,16 @@ import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@
 import { I18nService } from '@gentics/cms-components';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 import { MeshUserModal } from '../mesh-user-modal/mesh-user-modal.component';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
+import { MeshUserTokenModal } from '../mesh-user-token-modal/mesh-user-token-modal.component';
 
 const EDIT_ACTION = 'edit';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
 const UNASSIGN_FROM_GROUPS_ACTION = 'unassignFromGroup';
 const MANAGE_GROUPS_ACTION = 'manageGroups';
-const CREATE_API_TOKEN_ACTION = 'createApiToken';
+const SHOW_API_TOKEN_ACTION = 'showApiToken';
 
 @Component({
     selector: 'gtx-mesh-user-table',
@@ -92,9 +93,9 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
                         single: true,
                     },
                     {
-                        id: CREATE_API_TOKEN_ACTION,
+                        id: SHOW_API_TOKEN_ACTION,
                         icon: 'vpn_key',
-                        label: this.i18n.instant('mesh.create_api_token'),
+                        label: this.i18n.instant('mesh.manage_api_tokens_button'),
                         enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
                         type: 'warning',
                         single: true,
@@ -151,8 +152,8 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
                 this.openModal(MeshUserPropertiesMode.EDIT, event.item);
                 return;
 
-            case CREATE_API_TOKEN_ACTION:
-                this.createApiToken(event.item);
+            case SHOW_API_TOKEN_ACTION:
+                this.showUserTokens(event.item);
                 return;
 
             case MANAGE_GROUPS_ACTION:
@@ -171,39 +172,10 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
         super.handleAction(event);
     }
 
-    async createApiToken(user: MeshUserBO): Promise<void> {
-        const dialog = await this.modalService.dialog({
-            title: this.i18n.instant('mesh.create_api_token'),
-            body: this.i18n.instant('mesh.create_api_token_warning', {
-                user: getUserDisplayName(user),
-            }),
-            buttons: [
-                {
-                    label: this.i18n.instant('common.cancel_button'),
-                    type: 'secondary',
-                    returnValue: false,
-                },
-                {
-                    label: this.i18n.instant('shared.confirm_button'),
-                    type: 'warning',
-                    returnValue: true,
-                },
-            ],
-        });
-        const shouldProceed = await dialog.open();
-        if (!shouldProceed) {
-            return;
-        }
-
-        const res = await this.handler.createAPIToken(user.uuid);
-        const copyModal = await this.modalService.fromComponent(CopyTokenModal, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        }, {
-            token: res.token,
+    public showUserTokens(user: MeshUserBO): void {
+        this.modalService.fromComponent(MeshUserTokenModal, {}, {
             user: user,
-        });
-        await copyModal.open();
+        }).then((modal) => modal.open());
     }
 
     async manageGroupAssignment(user: MeshUserBO): Promise<void> {

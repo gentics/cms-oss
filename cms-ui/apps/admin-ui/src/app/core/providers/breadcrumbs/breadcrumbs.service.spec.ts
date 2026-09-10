@@ -121,6 +121,11 @@ const ROUTES: GcmsAdminUiRoute[] = [
                         path: SUBMODULE_BA,
                         component: TestComponent,
                         // Intentionally no breadcrumbs for MODULE_BA.
+                        // For *whatever* reason, these data elements are inherited if not applied on the route
+                        // manually. So set a dummy element here and it doesn't inherit the parent breadcrumb data.
+                        data: {
+                            breadcrumb: {} as any,
+                        },
                         children: [
                             {
                                 path: SUBMODULE_BAA,
@@ -365,7 +370,7 @@ describe('BreadcrumbsService', () => {
             .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_B}/${SUBMODULE_BA}/${SUBMODULE_BAA}`);
-        tick();
+        tick(1_000);
         expect(breadcrumbLinks).toEqual([
             EXPECTED_BREADCRUMBS[DASHBOARD],
             EXPECTED_BREADCRUMBS[MODULE_B],
@@ -380,7 +385,7 @@ describe('BreadcrumbsService', () => {
             .subscribe((links) => breadcrumbLinks = links);
 
         navigateByUrl(`/${MODULE_B}/${SUBMODULE_BA}`);
-        tick();
+        tick(1_000);
         expect(breadcrumbLinks).toEqual([
             EXPECTED_BREADCRUMBS[DASHBOARD],
             EXPECTED_BREADCRUMBS[MODULE_B],

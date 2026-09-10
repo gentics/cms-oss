@@ -234,14 +234,14 @@ public class ContentNodeFactory {
 
 	/**
 	 * Create and start a new transaction. Set the transaction as the current
-	 * @param sessionId sessionId of the user which is associated with the transaction
+	 * @param session session of the user which is associated with the transaction
 	 * @param userId userId of the user that belongs to the session specified with sessionId
 	 * @param useConnectionPool flag whether db connections shall be pooled or not
 	 * @return new current transaction
 	 * @throws NodeException
 	 */
-	public Transaction startTransaction(String sessionId, Integer userId, boolean useConnectionPool) throws NodeException {
-		Transaction t = factory.createTransaction(sessionId, userId, useConnectionPool);
+	public Transaction startTransaction(Session session, Integer userId, boolean useConnectionPool) throws NodeException {
+		Transaction t = factory.createTransaction(session, userId, useConnectionPool);
 
 		TransactionManager.setCurrentTransaction(t);
 		return t;
@@ -249,13 +249,13 @@ public class ContentNodeFactory {
     
 	/**
 	 * Create and start a new transaction. Set the transaction as the current
-	 * @param sessionId sessionId of the user which is associated with the transaction
+	 * @param session session of the user which is associated with the transaction
 	 * @param useConnectionPool flag whether db connections shall be pooled or not
 	 * @return new current transaction
 	 * @throws NodeException
 	 */
-	public Transaction startTransaction(String sessionId, boolean useConnectionPool) throws NodeException {
-		Transaction t = factory.createTransaction(sessionId, useConnectionPool);
+	public Transaction startTransaction(Session session, boolean useConnectionPool) throws NodeException {
+		Transaction t = factory.createTransaction(session, useConnectionPool);
 
 		TransactionManager.setCurrentTransaction(t);
 		return t;

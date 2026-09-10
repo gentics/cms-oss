@@ -29,8 +29,6 @@ export interface AuthStateModel {
     changingPassword: boolean;
     /** If the sso login was skipped by the user (query param) */
     ssoSkipped: boolean;
-    /** The GCMS session ID */
-    sid: number | null;
     /** The logged in user object (if logged in) */
     user: User<Raw> | null;
     /** The message of the last error that was encountered */
@@ -49,7 +47,6 @@ export const INITIAL_AUTH_STATE = deepFreeze<AuthStateModel>({
     loggingOut: false,
     changingPassword: false,
     ssoSkipped: false,
-    sid: null,
     lastError: null,
     user: null,
     keycloakError: null,
@@ -65,7 +62,7 @@ export class LoginStart {
 @ActionDeclaration(MODULE_STATE)
 export class LoginSuccess {
     static readonly type = 'LoginSuccess';
-    constructor(public sid: number, public user: User) {}
+    constructor(public user: User) {}
 }
 
 @ActionDeclaration(MODULE_STATE)
@@ -103,7 +100,7 @@ export class ValidateStart {
 @ActionDeclaration(MODULE_STATE)
 export class ValidateSuccess {
     static readonly type = 'ValidateSuccess';
-    constructor(public sid: number, public user: User) {}
+    constructor(public user: User) {}
 }
 
 @ActionDeclaration(MODULE_STATE)

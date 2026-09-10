@@ -2,16 +2,16 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    ComponentFactoryResolver,
     ComponentRef,
     Input,
     OnDestroy,
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { CompleteTagEditor, TagChangedFn, TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { CompleteTagEditor, TagChangedFn, TagEditorContext, TagEditorResult } from '@gentics/cms-integration-api-models';
 import { EditableTag } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
+import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
 import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-editor.component';
 
@@ -25,7 +25,7 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
     templateUrl: './tag-editor-host.component.html',
     styleUrls: ['./tag-editor-host.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
 
@@ -39,8 +39,8 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
     private tagEditorComponent: ComponentRef<GenticsTagEditorComponent | CustomTagEditorHostComponent>;
 
     constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
         private changeDetector: ChangeDetectorRef,
+        private resolver: TagPropertyEditorResolverService,
     ) { }
 
     ngOnDestroy(): void {
@@ -53,7 +53,6 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
      * Opens a tag editor for the specified tag.
      * Based on the configuration of the TagType, either the GenticsTagEditor or
      * a custom tag editor is used.
-     *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param context The current context.
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
@@ -63,7 +62,7 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
         const clones = this.initTagEditor(tag, context);
 
         return this.tagEditorComponent.instance.editTag(clones.tagClone, clones.contextClone)
-            .then(editedTag => {
+            .then((editedTag) => {
                 this.closeTagEditor();
                 if (!context.readOnly) {
                     return editedTag;
@@ -87,7 +86,6 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
      * Since the GenticsTagEditor and the CustomTagEditorHost both perform validation
      * before calling onChangeFn, it is guaranteed that is parameter will be a TagPropertyMap
      * only if all TagProperties are valid, otherwise the parameter will be null.
-     *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param context The current context.
      * @param onChangeFn This function must be called with the entire `TagPropertyMap` of the tag whenever a change
@@ -104,11 +102,10 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
     /**
      * Creates either a `GenticsTagEditor` or a `CustomTagEditor`, based on the configuration of the
      * TagType and returns clones of the tag and the context.
-     *
      * @param tag
      * @param context
      */
-    private initTagEditor(tag: EditableTag, context: TagEditorContext): { tagClone: EditableTag, contextClone: TagEditorContext } {
+    private initTagEditor(tag: EditableTag, context: TagEditorContext): { tagClone: EditableTag; contextClone: TagEditorContext } {
         if (this.tagEditorComponent) {
             this.closeTagEditor();
         }
@@ -134,23 +131,12 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
     }
 
     private createGenticsTagEditor(): ComponentRef<GenticsTagEditorComponent> {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory(GenticsTagEditorComponent);
-        if (componentFactory) {
-            const ref = this.tagEditorContainer.createComponent(componentFactory);
-            ref.instance.showTitle = this.showTitle;
-            return ref;
-        } else {
-            throw new TagEditorError('Could not resolve ComponentFactory for GenticsTagEditorComponent.');
-        }
+        const ref = this.resolver.createGenticsTagEditor(this.tagEditorContainer);
+        ref.instance.showTitle = this.showTitle;
+        return ref;
     }
 
     private createCustomTagEditor(url: string): ComponentRef<CustomTagEditorHostComponent> {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory(CustomTagEditorHostComponent);
-        if (componentFactory) {
-            return this.tagEditorContainer.createComponent(componentFactory);
-        } else {
-            throw new TagEditorError('Could not resolve ComponentFactory for CustomTagEditorHostComponent.');
-        }
+        return this.resolver.createCustomTagEditor(this.tagEditorContainer);
     }
-
 }

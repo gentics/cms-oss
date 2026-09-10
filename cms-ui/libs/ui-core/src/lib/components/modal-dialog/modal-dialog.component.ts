@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { IDialogConfig, IModalDialog } from '../../common';
+import { DialogButton, IDialogConfig, IModalDialog } from '../../common';
 
 /**
  * Internal. The default modal dialog component. Should not be directly used as a component in a view. It
@@ -30,7 +30,7 @@ export class ModalDialogComponent implements IModalDialog {
         }
     }
 
-    onClick(button: { returnValue: any, shouldReject: boolean }): void {
+    onClick(button: DialogButton): void {
         if (button.shouldReject) {
             this.cancelFn(button.returnValue);
         } else {

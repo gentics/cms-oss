@@ -10,7 +10,7 @@ import com.gentics.contentnode.rest.model.response.ExportSelectionResponse;
  * Export helper resource
  */
 @Path("/export")
-public interface ExportResource extends AuthenticatedResource {
+public interface ExportResource {
 
 	/**
 	 * Get export selection data. The posted data contains the currently
@@ -26,5 +26,5 @@ public interface ExportResource extends AuthenticatedResource {
 	@POST
 	@Path("/selection")
 	ExportSelectionResponse getExportSelection(
-			ExportSelectionRequest request);
+			ExportSelectionRequest request) throws Exception;
 }

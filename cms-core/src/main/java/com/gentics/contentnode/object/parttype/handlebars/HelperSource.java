@@ -7,11 +7,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.codehaus.groovy.control.CompilationUnit;
 
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -27,6 +30,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Tag;
+import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.NodePartType;
 import com.gentics.contentnode.render.GisRendering;
@@ -40,8 +44,14 @@ import com.gentics.contentnode.render.RenderableResolvable.Scope;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
+import com.gentics.contentnode.utils.GroovyUtils;
 import com.gentics.lib.render.Renderable;
+import com.gentics.mesh.core.rest.node.field.JsonContent;
 import com.github.jknack.handlebars.Options;
+import com.github.jknack.handlebars.helper.HelperFunction;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.ParseContext;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 
 /**
  * Source for helpers used when rendering a {@link HandlebarsPartType}
@@ -132,6 +142,40 @@ public class HelperSource {
 	}
 
 	/**
+	 * Fetch the internals of a JSON content according to a given JsonPath.
+	 * 
+	 * @param renderable JSON string or object
+	 * @param jsonPathString a jsonpath
+	 * @param options
+	 * @return
+	 */
+	@HelperFunction("gtx_json_path")
+	public static Object jsonPath(Object renderable, String jsonPathString, Options options) {
+		if (renderable instanceof ResolvableMapWrapper mw) {
+			renderable = mw.getWrapped();
+		} 
+		if (renderable instanceof Value v) {
+			renderable = v.getValueText();
+		} else if (renderable instanceof JsonContent jc) {
+			renderable = jc.getString();
+		}
+		JsonPath jsonPath = JsonPath.compile(jsonPathString);
+		ParseContext parseContext = JsonPath.using(new JacksonJsonProvider());
+		Object parsed = parseContext.parse(Objects.toString(renderable)).read(jsonPath);
+		// TODO make consistent over any number of results, including 0?
+		if (parsed instanceof List list) {
+			if (list.size() == 1) {
+				return list.get(0);
+			} else if (list.size() > 1) {
+				return parsed;
+			} else {
+				return null;
+			}
+		}
+		return parsed;
+	}
+
+	/**
 	 * Sort helper
 	 * @param objects objects to be sorted
 	 * @param sortBy sort by
@@ -153,7 +197,7 @@ public class HelperSource {
 		}
 
 		int iSortOrder = Datasource.SORTORDER_ASC;
-		if (StringUtils.equalsIgnoreCase(sortOrder, "desc")) {
+		if (Strings.CI.equals(sortOrder, "desc")) {
 			iSortOrder = Datasource.SORTORDER_DESC;
 		}
 
@@ -227,5 +271,25 @@ public class HelperSource {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Script helper for calling groovy scripts (from devtool packages)
+	 * @param name script name
+	 * @param options additional options
+	 * @return return value of the script
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_script")
+	public static Object callScript(String name, Options options) throws NodeException {
+		CompilationUnit unit = GroovyUtils.getCurrentCompilationUnit();
+
+		return GroovyUtils.call(unit.getClassLoader(), name, script -> {
+			GroovyUtils.injectCmsResolver(script);
+
+			for (String key : options.hash.keySet()) {
+				script.setProperty(key, options.hash.get(key));
+}
+		});
 	}
 }

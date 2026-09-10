@@ -1,16 +1,18 @@
-import { ConstructPartPropertiesMode } from '@admin-ui/features/construct/components';
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { DataSource, Language, TagPart } from '@gentics/cms-models';
+import { DataSource, Language, PartType, TagPart } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
+import { ConstructPartPropertiesMode } from '../construct-part-properties/construct-part-properties.component';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'gtx-create-construct-part-modal',
     templateUrl: './create-construct-part-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
-export class CreateConstructPartModalComponent extends BaseModal<TagPart> implements OnInit {
+export class CreateConstructPartModalComponent extends BaseModal<TagPart> implements OnInit, OnDestroy {
 
     // tslint:disable-next-line: variable-name
     readonly ConstructPartPropertiesComponentMode = ConstructPartPropertiesMode;
@@ -31,15 +33,30 @@ export class CreateConstructPartModalComponent extends BaseModal<TagPart> implem
     public defaultOrder = 1;
 
     public form: UntypedFormControl;
+    public partTypes: PartType[] = [];
 
-    constructor() {
+    private subscriptions: Subscription[] = [];
+
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+        private client: GCMSRestClientService,
+    ) {
         super();
     }
 
     ngOnInit(): void {
+        this.subscriptions.push(this.client.partType.list().subscribe((res) => {
+            this.partTypes = res.items;
+            this.changeDetector.markForCheck();
+        }));
+
         this.form = new UntypedFormControl({
             partOrder: this.defaultOrder,
         });
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     buttonCreateEntityClicked(): void {

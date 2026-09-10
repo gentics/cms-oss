@@ -23,18 +23,17 @@ h3. Create an object property to store Aloha Editor settings
 Before creating a new object property to store our settings we will need to create a new Tagtype called "alohasettings", composed of three parts:
 
 |_. Parttype |_. Keyword |_. Visibility |_. Description |
-| +Velocity+ | - | visible | used to render velocity |
+| +Handlebars+ | handlebars | visible | used to render Handlebars |
 | +HTML/long+ | alohasettings | hidden | will store our settings |
-| +HTML/long+ | template | hidden | will render the settings |
 
-Fill the +template+ part with the following code
+Fill the +handlebars+ part with the following code
 
-<javascript filename="template">
-#if ($cms.rendermode.edit)##
+<javascript filename="handlebars">
+{{#if cms.rendermode.edit}}
 <script type="text/javascript">
 <node alohasettings>
 </script>
-#end##
+{{/if}}
 </javascript>
 
 In the next step create a new object property for pages, that will use our newly created Tagtype "alohasettings". We will call the object property "alohasettings" too.
@@ -91,6 +90,6 @@ Aloha.ready(function() {
 });
 </javascript>
 
-NOTE: When using this implementation you want to put it inside a velocity tag checking for +$cms.rendermode.edit+.
+NOTE: When using this implementation you want to put it inside a Handlebars tag checking for +cms.rendermode.edit+.
 
 Now, changing the state of the numerated-headers plugin will be persisted to the pages +object.alohasettings+ object property whenever the user saves the page.

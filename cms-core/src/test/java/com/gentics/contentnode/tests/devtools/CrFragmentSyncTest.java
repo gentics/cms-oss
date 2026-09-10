@@ -78,6 +78,7 @@ public class CrFragmentSyncTest {
 				fr.setMapname("target");
 				fr.setTagname("source");
 				fr.setMicronodeFilter("micronodefilter bla");
+				fr.setJSONSchemaFilter("{\"whatever\":\"whoever\"}");
 				fr.setNoIndex(noIndex);
 			}, false));
 		}));
@@ -98,7 +99,8 @@ public class CrFragmentSyncTest {
 				.hasFieldOrPropertyWithValue("mapname", "target")
 				.hasFieldOrPropertyWithValue("tagname", "source")
 				.hasFieldOrPropertyWithValue("noIndex", noIndex)
-				.hasFieldOrPropertyWithValue("micronodeFilter", "micronodefilter bla");
+				.hasFieldOrPropertyWithValue("micronodeFilter", "micronodefilter bla")
+				.hasFieldOrPropertyWithValue("jsonSchemaFilter", "{\"whatever\":\"whoever\"}");
 		});
 	}
 }

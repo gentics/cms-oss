@@ -7,7 +7,8 @@
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "module": "preserve"
+        "module": "preserve",
+        "ignoreDeprecations": "6.0"
     },
     "angularCompilerOptions": {
         "enableI18nLegacyMessageIdFormat": false,

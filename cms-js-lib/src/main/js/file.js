@@ -76,8 +76,8 @@
 		'!binURL': function () {
 			return (
 				GCN.settings.BACKEND_PATH + '/rest/file/content/load/'
-				+ this.id() + '?sid=' + GCN.sid
-				+ GCN._getChannelParameter(this, '&')
+				+ this.id()
+				+ GCN._getChannelParameter(this, '?')
 			);
 		},
 

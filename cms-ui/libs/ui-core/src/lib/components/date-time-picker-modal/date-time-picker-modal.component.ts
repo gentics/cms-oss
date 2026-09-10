@@ -10,7 +10,7 @@ import { BaseModal } from '../base-modal/base-modal.component';
     selector: 'gtx-date-time-picker-modal',
     templateUrl: './date-time-picker-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class DateTimePickerModal extends BaseModal<number> {
 

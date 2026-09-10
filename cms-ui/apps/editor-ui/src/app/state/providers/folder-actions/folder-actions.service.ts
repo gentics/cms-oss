@@ -221,6 +221,11 @@ export interface PostUpdateBehavior {
      * If true, the saved item will be fetched with `construct=true` after saving.
      */
     fetchForConstruct?: boolean;
+
+    /**
+     * If true, the failed update will rethrow an original error instead of giving back null item.
+     */
+    rethrowError?: boolean;
 }
 
 interface UpdateableItem<T extends ItemType> {
@@ -2020,8 +2025,12 @@ export class FolderActionsService {
             return values;
         } catch (error) {
             await this.appState.dispatch(new ListSavingErrorAction(type as any, error.message)).toPromise();
-            this.errorHandler.catch(error, { notification: true });
-            return null;
+            if (postUpdateBehavior?.rethrowError) {
+                throw error;
+            } else {
+                this.errorHandler.catch(error, { notification: true });
+                return null;
+            }
         }
     }
 

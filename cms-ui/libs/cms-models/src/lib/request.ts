@@ -1,6 +1,5 @@
 import { BoolQuery } from 'elastic-types/queries';
 import { DirtQueueEntry, Jobs } from './admin-info';
-import { EditableFormProperties, Form, FormStatus } from './form';
 import { LocalizationType } from './common';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage, EditableContentPackage } from './content-package';
@@ -13,6 +12,7 @@ import { ExternalLink } from './external-link';
 import { NodeFeatureModel } from './feature';
 import { EditableFileProps } from './file';
 import { EditableFolderProps } from './folder';
+import { EditableFormProperties, Form, FormStatus } from './form';
 import { EntityIdType } from './gcms-normalizer/gcms-normalizer-types';
 import { Group } from './group';
 import { PermissionInfo } from './group-permissions';
@@ -32,10 +32,12 @@ import { Schedule } from './schedule';
 import { ScheduleExecution } from './schedule-execution';
 import { ScheduleTask } from './schedule-task';
 import { Tag, TagType, TemplateTag } from './tag';
+import { PartType } from './tag-part';
 import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
+import { ApiToken, EditableApiToken } from './api-token';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -82,7 +84,6 @@ export interface LoginRequest {
 }
 
 export interface LoginOptions {
-    sid?: string | number;
 }
 
 /**
@@ -1235,8 +1236,12 @@ export interface TagRestoreOptions {
     version: number;
 }
 
-export interface PartTypeListOptions {
-    q?: string;
+export interface PartTypeListOptions extends BaseListOptionsWithPaging<PartType> {
+    /**
+     * If left empty, all part-types will be displayed regardless if they are deprecated.
+     * Otherwise, the deprecated field has to be the same value as this flag.
+     */
+    deprecated?: boolean;
 }
 
 /**
@@ -2195,6 +2200,8 @@ export interface TagmapEntryCreateRequest {
     elasticsearch?: object;
     /** Get the micronode filter (for entries of type "micronode") */
     micronodeFilter?: string;
+    /** Get the JSON schema filter (for entries of type "JSON") */
+    jsonSchemaFilter?: string;
     /** Name of the CR Fragment, this entry belongs to. Null, if the entry directly belongs to the ContentRepository. */
     fragmentName?: string;
 }
@@ -2515,3 +2522,13 @@ export interface PushLicenseRequest {
     crIds?: number[];
     all?: boolean;
 }
+
+// API TOKENS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface ApiTokenListOptions extends BaseListOptionsWithPaging<ApiToken> {}
+
+/**
+ * Request object used to add an api token for the
+ * `/admin/token` endpoint.
+ */
+export interface ApiTokenCreateRequest extends EditableApiToken {}

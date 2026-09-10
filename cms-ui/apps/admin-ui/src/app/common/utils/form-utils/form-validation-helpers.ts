@@ -1,5 +1,5 @@
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { combineLatest, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
@@ -78,7 +78,7 @@ export function createBlacklistValidator(blacklist: any[] | (() => any[])): Vali
                 };
             }
         }
-    }
+    };
 }
 
 type CompareFn = (a: any, b: any) => boolean;
@@ -112,7 +112,7 @@ export function createWhitelistValidator(whitelist: any[] | (() => any[]), compa
         }
 
         return null;
-    }
+    };
 }
 
 type InvalidLanguagesCallback = (invalidLanguages: string[]) => any;
@@ -170,7 +170,7 @@ export function createI18nRequiredValidator(requiredLanguages: string[] | (() =>
         }
 
         return hasError ? err : null;
-    }
+    };
 }
 
 export function createNotNullValidator(): ValidatorFn {
@@ -180,5 +180,5 @@ export function createNotNullValidator(): ValidatorFn {
         }
 
         return { null: true };
-    }
+    };
 }

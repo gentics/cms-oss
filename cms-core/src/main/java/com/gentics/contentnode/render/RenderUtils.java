@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -27,8 +26,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
-import org.apache.velocity.context.InternalContextAdapter;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -55,6 +52,7 @@ import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.parser.tag.struct.ParseStructRenderer;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -179,45 +177,6 @@ public class RenderUtils {
 			}
 		}
 		return template;
-	}
-
-	/**
-	 * Get parameter passed to a VTL Directive as object
-	 * @param <T> object type
-	 * @param clazz expected object class
-	 * @param context vtl context
-	 * @param node vtl node
-	 * @param index index of the parameter (starting with 0)
-	 * @return object instance or null, if not found
-	 */
-	public static <T> T getVtlDirectiveObject(Class<T> clazz, InternalContextAdapter context,
-			org.apache.velocity.runtime.parser.node.Node node, int index) {
-		return getVtlDirectiveObject(clazz, context, node, index, null);
-	}
-
-	/**
-	 * Get parameter passed to a VTL Directive as object
-	 * @param <T> object type
-	 * @param clazz expected object class
-	 * @param context vtl context
-	 * @param node vtl node
-	 * @param index index of the parameter (starting with 0)
-	 * @param defaultSupplier supplier for the default value (null for no default value)
-	 * @return object instance or instance supplied by defaultSupplier or null
-	 */
-	public static <T> T getVtlDirectiveObject(Class<T> clazz, InternalContextAdapter context,
-			org.apache.velocity.runtime.parser.node.Node node, int index, Supplier<T> defaultSupplier) {
-		org.apache.velocity.runtime.parser.node.Node child = null;
-		if (node.jjtGetNumChildren() > index) {
-			child = node.jjtGetChild(index);
-		}
-		if (child != null) {
-			return mapper.convertValue(child.value(context), clazz);
-		} else if (defaultSupplier != null) {
-			return defaultSupplier.get();
-		} else {
-			return null;
-		}
 	}
 
 	/**
@@ -364,6 +323,21 @@ public class RenderUtils {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Wrap the object for returning
+	 * @param object object to wrap
+	 * @return wrapped object
+	 */
+	public static Resolvable wrap(NodeObject object) {
+		if (object instanceof ResolvableMapWrappable wrappable) {
+			return new ResolvableMapWrapper(wrappable);
+		} else if (object != null) {
+			return new RenderableResolvable(object);
+		} else {
+			return null;
+		}
 	}
 
 	/**

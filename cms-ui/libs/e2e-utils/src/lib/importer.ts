@@ -732,9 +732,6 @@ export class EntityImporter {
                 folderId: folderId.toString(),
                 nodeId: nodeId.toString(),
             },
-            params: {
-                sid: this.client.sid.toString(),
-            },
         });
         const created = (await res.json() as FileUploadResponse).file;
         return created;
@@ -1315,7 +1312,6 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
             password: options.autoLogin.password,
         }).send();
         // Set the SID for future requests
-        client.sid = res.sid;
         return client;
     } catch (err) {
         return client;

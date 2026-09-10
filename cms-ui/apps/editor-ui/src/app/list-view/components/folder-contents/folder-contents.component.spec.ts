@@ -552,7 +552,6 @@ describe('FolderContentsComponent', () => {
                 user: {
                     id: 1,
                 } as any,
-                sid: 1,
                 loggingIn: false,
                 isLoggedIn: true,
             },

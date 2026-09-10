@@ -72,17 +72,17 @@
         </p>
         <div class="row">
             <div class="column small-12 medium-8">
-                <gtx-range [(ngModel)]="rangeValDynamic" max="100" disabled="true" label="This range is disabled..."></gtx-range>
+                <gtx-range [(ngModel)]="rangeValDynamic" max="100" [disabled]="true" label="This range is disabled..."></gtx-range>
             </div>
             <div class="column small-12 medium-4">
-                <gtx-input [(ngModel)]="rangeValDynamic" type="number" label="...but can be changed here." min="0" max="100" step="1"></gtx-input>
+                <gtx-input [(ngModel)]="rangeValDynamic" type="number" label="...but can be changed here." [min]="0" [max]="100" [step]="1"></gtx-input>
             </div>
         </div>
     </div>
     <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                <gtx-range [(ngModel)]="rangeValDynamic" max="100" disabled="true"></gtx-range>
-                <gtx-input [(ngModel)]="rangeValDynamic" type="number" min="0" max="100" step="1"></gtx-input>
+                <gtx-range [(ngModel)]="rangeValDynamic" max="100" [disabled]="true"></gtx-range>
+                <gtx-input [(ngModel)]="rangeValDynamic" type="number" [min]="0" [max]="100" [step]="1"></gtx-input>
         '></gtx-highlighted-code>
     </div>
 </gtx-demo-block>

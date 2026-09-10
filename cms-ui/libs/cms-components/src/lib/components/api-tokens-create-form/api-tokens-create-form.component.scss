@@ -1,0 +1,11 @@
+:host {
+    .date-input {
+        padding: 0.3em 0.5rem;
+        width: 100%;
+
+        input[type="date"] {
+            display: block;
+            padding: 0.3em;
+        }
+    }
+}

@@ -54,7 +54,7 @@
           >...</div>
         }
         <div #lastPart class="lastPart">
-          @for (link of links; track link; let i = $index; let last = $last) {
+          @for (link of links; track link?.href || link?.text; let i = $index; let last = $last) {
             @if (multilineExpanded || i > 0) {
               <a
                 class="breadcrumb link"

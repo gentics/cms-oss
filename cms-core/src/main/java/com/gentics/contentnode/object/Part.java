@@ -7,6 +7,8 @@ package com.gentics.contentnode.object;
 
 import java.net.URI;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
@@ -70,6 +72,11 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 	public static final int FILEUPLOAD = 38;
 	public static final int FOLDERUPLOAD = 39;
 	public static final int NODE = 40;
+	public static final int FORM = 41;
+	public static final int CMSFORM = 42;
+	public static final int HANDLEBARS = 43;
+	public static final int JSON = 44;
+	public static final int GROOVY = 45;
 	
 	/**
 	 * The ttype of the part object.
@@ -106,6 +113,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		switch (to.getPartTypeId()) {
+		case Part.JSON:
+			to.setInfoText(from.getJSONSchema());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -116,11 +126,6 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 				to.setInfoInt(from.getRegex().getId());
 			}
 			break;
-		default:
-			break;
-		}
-
-		switch (to.getPartTypeId()) {
 		case Part.LIST:
 		case Part.LISTORDERED:
 		case Part.LISTUNORDERED:
@@ -185,6 +190,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setTypeId(from.getPartTypeId());
 
 		switch (from.getPartTypeId()) {
+		case Part.JSON:
+			to.setJSONSchema(from.getInfoText());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -243,6 +251,9 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		switch (from.getPartTypeId()) {
+		case Part.JSON:
+			to.setHtmlClass(from.getInfoText());
+			// fallthrough
 		case Part.TEXT:
 		case Part.TEXTHMTL:
 		case Part.HTML:
@@ -251,11 +262,6 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 		case Part.HTMLLONG:
 			to.setRegexId(from.getInfoInt());
 			break;
-		default:
-			break;
-		}
-
-		switch (from.getPartTypeId()) {
 		case Part.LIST:
 		case Part.LISTORDERED:
 		case Part.LISTUNORDERED:

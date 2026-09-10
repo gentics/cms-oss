@@ -6,13 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.client.ClientResponseFilter;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-
 import org.apache.http.client.CookieStore;
 import org.apache.http.cookie.Cookie;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
@@ -30,29 +23,29 @@ import com.gentics.contentnode.rest.client.exceptions.MaintenanceModeRestExcepti
 import com.gentics.contentnode.rest.client.exceptions.NotFoundRestException;
 import com.gentics.contentnode.rest.client.exceptions.PermissionRestException;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
-import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.request.LoginRequest;
-import com.gentics.contentnode.rest.model.response.AuthenticationResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.VersionResponse;
 import com.gentics.contentnode.rest.version.Main;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.client.ClientResponseFilter;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+
 /**
- * <p>This client provides wrappers, helper-methods and exception-handling to facilitate requests to the REST API.
- * It is initialized with a URL pointing to the base-location providing the services. After a successful login,
- * a WebTarget-object can be retrieved that is then used to assemble and send requests; response-objects are
- * returned from the server, containing the requested data and further information in the case of an error.</p>
- *
  * <p>The Rest API client builds upon an underlying Jersey-client: detailed information about the use of the
  * WebTarget-object (base) to build requests can be found at http://jersey.java.net/ .</p>
  */
-public class RestClient {
+public class RestClient implements RestApi {
 	private WebTarget base;
 	// cookie handler (for storing cookies per client)
 	private CookieHandler cookieHandler = new CookieManager();
-	private String sid;
+	private String apiToken;
 	private JerseyClient jerseyClient;
 
 	/**
@@ -95,6 +88,9 @@ public class RestClient {
 					requestContext.getHeaders().add(entry.getKey(), value);
 				}
 			}
+			if (apiToken != null) {
+				requestContext.getHeaders().add("Authorization", "Bearer %s".formatted(apiToken));
+			}
 		}).register((ClientResponseFilter) (requestContext, responseContext) -> {
 			cookieHandler.put(requestContext.getUri(), responseContext.getHeaders());
 		});
@@ -107,6 +103,7 @@ public class RestClient {
 	 * @param password password
 	 * @throws RestException If the login failed
 	 */
+	@Override
 	public void login(String username, String password) throws RestException {
 		LoginRequest request = new LoginRequest();
 
@@ -116,8 +113,6 @@ public class RestClient {
 				.post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE), LoginResponse.class);
 
 		assertResponse(response);
-
-		sid = response.getSid();
 	}
 
 	/**
@@ -126,6 +121,7 @@ public class RestClient {
 	 *
 	 * @throws RestException If the login via SSO failed
 	 */
+	@Override
 	public void ssologin() throws RestException {
 		String response = base.path("auth").path("ssologin").request(MediaType.APPLICATION_JSON_TYPE).accept(MediaType.TEXT_PLAIN).get(String.class);
 
@@ -133,8 +129,6 @@ public class RestClient {
 			throw new NotFoundRestException("");
 		} else if (response.equals(ResponseCode.FAILURE.toString())) {
 			throw new FailureRestException("");
-		} else {
-			sid = response;
 		}
 	}
 
@@ -143,25 +137,11 @@ public class RestClient {
 	 *
 	 * @throws RestException If the logout failed
 	 */
+	@Override
 	public void logout() throws RestException {
-		GenericResponse response = base.path("auth").path("logout").path(sid).request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
+		GenericResponse response = base.path("auth").path("logout").request(MediaType.APPLICATION_JSON_TYPE).post(null, GenericResponse.class);
 
-		sid = null;
 		assertResponse(response);
-	}
-
-	/**
-	 * Authenticate with given sid and session secret
-	 * @param sid SID
-	 * @param sessionSecret session secret
-	 * @return user
-	 * @throws RestException if authentication fails
-	 */
-	public User authenticate(String sid, String sessionSecret) throws RestException {
-		AuthenticationResponse response = base.path("auth").path("validate").path(sid + sessionSecret).request(MediaType.APPLICATION_JSON_TYPE)
-				.get(AuthenticationResponse.class);
-		assertResponse(response);
-		return response.getUser();
 	}
 
 	/**
@@ -214,8 +194,9 @@ public class RestClient {
 	 *
 	 * @throws RestException Mismatch between the versions detected
 	 */
+	@Override
 	public void assertMatchingVersion() throws RestException {
-		VersionResponse serverVersion = base.queryParam("sid", sid).path("admin").path("version").request(MediaType.APPLICATION_JSON_TYPE)
+		VersionResponse serverVersion = base.path("admin").path("version").request(MediaType.APPLICATION_JSON_TYPE)
 				.get(VersionResponse.class);
 
 		assertResponse(serverVersion);
@@ -229,30 +210,18 @@ public class RestClient {
 	/**
 	 * Provides access to the WebTarget that is used as the base for all commands to the server
 	 *
-	 * @return The base resource, with the active SID already set
-	 * @throws RestException If no valid SID is registered with the client
+	 * @return The base resource
 	 */
-	public WebTarget base() throws RestException {
-		if (sid != null) {
-			return base.queryParam("sid", sid);
-		} else {
-			throw new AuthRequiredRestException("No valid SID is associated with this client. Log in first!");
-		}
+	public WebTarget base() {
+		return base;
 	}
 
 	/**
-	 * Get the ID of the active session, as generated during login
-	 * @return session ID
+	 * Set the API Token, that should be used
+	 * @param apiToken api token
 	 */
-	public String getSid() {
-		return sid;
-	}
-
-	/**
-	 * Set the ID of the session that should be used.
-	 */
-	public void setSid(String sid) {
-		this.sid = sid;
+	public void setApiToken(String apiToken) {
+		this.apiToken = apiToken;
 	}
 
 	/**
@@ -268,6 +237,7 @@ public class RestClient {
 	 * @return stored cookies
 	 * @throws RestException
 	 */
+	@Override
 	public List<Cookie> getCookies() throws RestException {
 		CookieStore cookieStore = ApacheConnectorProvider.getCookieStore(jerseyClient);
 		if (cookieStore != null) {
@@ -281,6 +251,7 @@ public class RestClient {
 	 * Get the cookie handler
 	 * @return cookie handler
 	 */
+	@Override
 	public CookieHandler getCookieHandler() {
 		return cookieHandler;
 	}

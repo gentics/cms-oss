@@ -147,7 +147,7 @@ describe('ErrorHandler', () => {
             const loggedOutError = new ApiError('Invalid SID', 'auth', {
                 request: {
                     method: 'GET',
-                    url: 'auth/me?sid=1234',
+                    url: 'auth/me',
                     params: undefined,
                 },
                 response: {

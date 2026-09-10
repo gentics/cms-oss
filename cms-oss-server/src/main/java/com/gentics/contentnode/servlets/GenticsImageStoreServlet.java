@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -24,9 +25,9 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.upload.FileInformation;
 import com.gentics.contentnode.factory.ChannelTrx;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.SessionToken;
-import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.object.ImageFile;
@@ -145,22 +146,23 @@ public class GenticsImageStoreServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String sessionId = request.getParameter(SessionToken.SESSION_ID_QUERY_PARAM_NAME) + getSessionSecretFromCookie(request.getCookies());
+		String sessionSecret = getSessionSecretFromCookie(request.getCookies());
 
-		if (ObjectTransformer.isEmpty(sessionId)) {
+		if (ObjectTransformer.isEmpty(sessionSecret)) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
 		}
 
 		try {
-			SessionToken sessionToken = new SessionToken(sessionId);
-			try (Trx trx = new Trx(sessionId, null); ) {
-				Transaction t = trx.getTransaction();
-				if (!sessionToken.authenticates(t.getSession())) {
-					response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-					return;
-				}
+			SessionToken sessionToken = new SessionToken(sessionSecret);
 
+			Optional<DBSession> optSession = Trx.supply(() -> DBSession.load(sessionToken));
+			if (optSession.isEmpty()) {
+				response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
+				return;
+			}
+
+			try (Trx trx = new Trx(optSession.get(), null)) {
 				String pathInfo = request.getPathInfo();
 				if (StringUtils.isEmpty(pathInfo)) {
 					// no path info found, so this is supposed to be a command
@@ -205,12 +207,12 @@ public class GenticsImageStoreServlet extends HttpServlet {
 						return;
 					}
 				}
-			} catch (NodeException e) {
-				throw new ServletException("Error while resizing", e);
 			}
 		} catch (InvalidSessionIdException e) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden");
 			return;
+		} catch (NodeException e) {
+			throw new ServletException("Error while resizing", e);
 		}
 	}
 

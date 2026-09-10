@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.rest.page;
 
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFile;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createImage;
@@ -37,8 +38,6 @@ import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.rest.model.response.ReferencedFilesListResponse;
 import com.gentics.contentnode.rest.model.response.ReferencedPagesListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
 
@@ -278,12 +277,11 @@ public class PageReferencesTest {
 	 */
 	protected void doPageTest(List<Page> pages, Page...expected) throws NodeException {
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
 			List<Integer> pageIds = new ArrayList<>();
 			for (Page page : pages) {
 				pageIds.add(page.getId());
 			}
-			ReferencedPagesListResponse response = res.getLinkedPages(0, -1, null, null, pageIds, null);
+			ReferencedPagesListResponse response = getPageResource().getLinkedPages(0, -1, null, null, pageIds, null);
 			assertThat(response).as("Response").hasCode(ResponseCode.OK);
 			Set<Integer> itemIds = response.getPages().stream().map(com.gentics.contentnode.rest.model.Page::getId).collect(Collectors.toSet());
 			Integer[] expectedIds = new Integer[expected.length];
@@ -314,12 +312,11 @@ public class PageReferencesTest {
 	 */
 	protected void doFileTest(List<Page> pages, File...expected) throws NodeException {
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
 			List<Integer> pageIds = new ArrayList<>();
 			for (Page page : pages) {
 				pageIds.add(page.getId());
 			}
-			ReferencedFilesListResponse response = res.getLinkedFiles(0, -1, null, null, pageIds, null);
+			ReferencedFilesListResponse response = getPageResource().getLinkedFiles(0, -1, null, null, pageIds, null);
 			assertThat(response).as("Response").hasCode(ResponseCode.OK);
 			Set<Integer> itemIds = response.getFiles().stream().map(com.gentics.contentnode.rest.model.File::getId).collect(Collectors.toSet());
 			Integer[] expectedIds = new Integer[expected.length];
@@ -350,12 +347,11 @@ public class PageReferencesTest {
 	 */
 	protected void doImageTest(List<Page> pages, ImageFile...expected) throws NodeException {
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
 			List<Integer> pageIds = new ArrayList<>();
 			for (Page page : pages) {
 				pageIds.add(page.getId());
 			}
-			ReferencedFilesListResponse response = res.getLinkedImages(0, -1, null, null, pageIds, null);
+			ReferencedFilesListResponse response = getPageResource().getLinkedImages(0, -1, null, null, pageIds, null);
 			assertThat(response).as("Response").hasCode(ResponseCode.OK);
 			Set<Integer> itemIds = response.getFiles().stream().map(com.gentics.contentnode.rest.model.File::getId).collect(Collectors.toSet());
 			Integer[] expectedIds = new Integer[expected.length];

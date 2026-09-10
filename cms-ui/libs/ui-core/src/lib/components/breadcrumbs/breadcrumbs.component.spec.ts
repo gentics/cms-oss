@@ -116,6 +116,7 @@ describe('Breadcrumbs', () => {
             ];
 
             fixture.detectChanges();
+
             tick(1000);
             expect(linkHrefs(fixture)).toEqual(['/a', './b', '#c']);
 
@@ -134,6 +135,9 @@ describe('Breadcrumbs', () => {
                 { text: 'B', href: './bbb' },
                 { text: 'C', href: '#ccc' },
             ];
+            fixture.detectChanges();
+            fixture.whenRenderingDone();
+            tick(1000);
             fixture.detectChanges();
 
             expect(linkHrefs(fixture)).toEqual(['/aaa', './bbb', '#ccc'],

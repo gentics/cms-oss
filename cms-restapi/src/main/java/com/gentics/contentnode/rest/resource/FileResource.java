@@ -51,7 +51,7 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
  * @author norbert
  */
 @Path("/file")
-public interface FileResource extends AuthenticatedResource {
+public interface FileResource {
 
 	/**
 	 * GET parameter name for qqfile's filename
@@ -101,7 +101,7 @@ public interface FileResource extends AuthenticatedResource {
 		@BeanParam SortParameterBean sortingParams,
 		@BeanParam PagingParameterBean pagingParams,
 		@BeanParam EditableParameterBean editableParams,
-		@BeanParam WastebinParameterBean wastebinParams);
+		@BeanParam WastebinParameterBean wastebinParams) throws Exception;
 
 	/**
 	 * Load the file with given id
@@ -114,7 +114,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/content/load/{id}")
-	Response loadContent(@PathParam("id") final String id, @QueryParam("nodeId") Integer nodeId);
+	Response loadContent(@PathParam("id") final String id, @QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Load the file (without data)
@@ -138,7 +138,7 @@ public interface FileResource extends AuthenticatedResource {
 			@DefaultValue("false") @QueryParam("update") boolean update,
 			@DefaultValue("false") @QueryParam("construct") boolean construct,
 			@QueryParam("nodeId") Integer nodeId, @QueryParam("package") String stagingPackageName
-			);
+			) throws Exception;
 
 	/**
 	 * Load a list of files specified in the given {@link MultiObjectLoadRequest request}.
@@ -153,7 +153,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/load")
-	MultiFileLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls);
+	MultiFileLoadResponse load(MultiObjectLoadRequest request, @QueryParam("fillWithNulls") @DefaultValue("false") boolean fillWithNulls) throws Exception;
 
 	/**
 	 * Create a new file handling simple post data
@@ -184,7 +184,7 @@ public interface FileResource extends AuthenticatedResource {
 			@QueryParam(META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartName,
 			@QueryParam(QQFILE_FILENAME_PARAMETER_NAME) String qqFileUploaderFileName,
 			@QueryParam(META_DATA_DESCRIPTION_KEY) String description,
-			@QueryParam(META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite);
+			@QueryParam(META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite) throws Exception;
 
 	/**
 	 * Create a new file handling simple post data
@@ -212,7 +212,7 @@ public interface FileResource extends AuthenticatedResource {
 			@QueryParam(META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartKeyName,
 			@QueryParam(QQFILE_FILENAME_PARAMETER_NAME) String fileName,
 			@QueryParam(META_DATA_DESCRIPTION_KEY) String description,
-			@QueryParam(META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite);
+			@QueryParam(META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite) throws Exception;
 
 	/**
 	 * Create a new file handling multipart form-data. The data and meta data is encoded within separate body parts.
@@ -225,7 +225,7 @@ public interface FileResource extends AuthenticatedResource {
 	@Path("/create")
 	@Consumes("multipart/form-data")
 	@Produces(MediaType.APPLICATION_JSON)
-	FileUploadResponse create(MultiPart multiPart);
+	FileUploadResponse create(MultiPart multiPart) throws Exception;
 
 	/**
 	 * Create a new file with the binary data loaded from a URL
@@ -236,7 +236,7 @@ public interface FileResource extends AuthenticatedResource {
 	@Path("/create")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	FileUploadResponse create(FileCreateRequest request);
+	FileUploadResponse create(FileCreateRequest request) throws Exception;
 
 	/**
 	 * Create a copy of the given file.
@@ -246,7 +246,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/copy")
-	FileUploadResponse copyFile(FileCopyRequest request);
+	FileUploadResponse copyFile(FileCopyRequest request) throws Exception;
 
 	/**
 	 * Mpve the given file to another folder
@@ -256,7 +256,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/move/{id}")
-	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request);
+	GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Move multiple files to another folder
@@ -265,7 +265,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/move")
-	GenericResponse move(MultiObjectMoveRequest request);
+	GenericResponse move(MultiObjectMoveRequest request) throws Exception;
 
 	/**
 	 * Save the given file
@@ -277,7 +277,7 @@ public interface FileResource extends AuthenticatedResource {
 	@POST
 	@Path("/save/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	GenericResponse save(@PathParam("id") Integer id, FileSaveRequest request);
+	GenericResponse save(@PathParam("id") Integer id, FileSaveRequest request) throws Exception;
 
 	/**
 	 * Save the posted content into the given file
@@ -292,7 +292,7 @@ public interface FileResource extends AuthenticatedResource {
 	@Path("/save/{id}")
 	@Consumes("multipart/form-data")
 	@Produces(MediaType.APPLICATION_JSON)
-	GenericResponse save(@PathParam("id") Integer id, MultiPart multiPart);
+	GenericResponse save(@PathParam("id") Integer id, MultiPart multiPart) throws Exception;
 
 	/**
 	 * Delete the file denoted by id
@@ -305,7 +305,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/delete/{id}")
-	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync);
+	GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("noSync") Boolean noCrSync) throws Exception;
 
 	/**
 	 * Remove the file denoted by the given id from the wastebin.
@@ -318,7 +318,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete/{id}")
-	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Remove the given files from the wastebin
@@ -328,7 +328,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/delete")
-	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given file from the wastebin
@@ -341,7 +341,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore/{id}")
-	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Restore the given files from the wastebin
@@ -351,7 +351,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/wastebin/restore")
-	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs);
+	GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
 	 * Get the privileges of the current user on the given file
@@ -362,7 +362,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	// @GET
 	// @Path("/privileges/{id}")
-	PrivilegesResponse getPrivileges(@PathParam("id") Integer id);
+	PrivilegesResponse getPrivileges(@PathParam("id") Integer id) throws Exception;
 
 	/**
 	 * Get the total usage information for the given files.
@@ -375,7 +375,7 @@ public interface FileResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/usage/total")
-	TotalUsageResponse getTotalUsageInfo(@QueryParam("id") List<Integer> fileId, @QueryParam("nodeId") Integer nodeId);
+	TotalUsageResponse getTotalUsageInfo(@QueryParam("id") List<Integer> fileId, @QueryParam("nodeId") Integer nodeId) throws Exception;
 
 	/**
 	 * Get the folders using one of the given files.
@@ -402,7 +402,7 @@ public interface FileResource extends AuthenticatedResource {
 	FolderUsageListResponse getFolderUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("folders") @DefaultValue("true") boolean returnFolders);
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("folders") @DefaultValue("true") boolean returnFolders) throws Exception;
 
 	/**
 	 * Get the pages using one of the given files
@@ -431,7 +431,7 @@ public interface FileResource extends AuthenticatedResource {
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
 			@QueryParam("nodeId") Integer nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
-			@BeanParam PageModelParameterBean pageModel);
+			@BeanParam PageModelParameterBean pageModel) throws Exception;
 
 	/**
 	 * Get the templates using one of the given files
@@ -458,7 +458,7 @@ public interface FileResource extends AuthenticatedResource {
 	TemplateUsageListResponse getTemplateUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("templates") @DefaultValue("true") boolean returnTemplates);
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("templates") @DefaultValue("true") boolean returnTemplates) throws Exception;
 
 	/**
 	 * Get the images using one of the given files
@@ -485,7 +485,7 @@ public interface FileResource extends AuthenticatedResource {
 	FileUsageListResponse getImageUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnImages);
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnImages) throws Exception;
 
 	/**
 	 * Get the files using one of the given files
@@ -512,5 +512,5 @@ public interface FileResource extends AuthenticatedResource {
 	FileUsageListResponse getFileUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
 			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
 			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnFiles);
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnFiles) throws Exception;
 }

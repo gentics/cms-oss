@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1130,6 +1131,41 @@ public final class DBUtils {
 		} catch (SQLException e) {
 			throw new NodeException("Error while getting metadata", e);
 		}
+	}
+
+	/**
+	 * Return an instance of {@link HandleSelectResultSet} which will proceed to the next row of a {@link ResultSet} and transform the row
+	 * using the given handler and return it as {@link Optional}.
+	 * If the ResultSet does not have a next row, an empty {@link Optional} is returned
+	 * @param <R> type of the returned entity
+	 * @param handler instance of HandleSelectResultSet which should transform the current row of the ResultSet into an entity
+	 * @return optional entity
+	 */
+	public static <R> HandleSelectResultSet<Optional<R>> getFirst(HandleSelectResultSet<R> handler) {
+		return rs -> {
+			if (rs.next()) {
+				return Optional.of(handler.handle(rs));
+			} else {
+				return Optional.empty();
+			}
+		};
+	}
+
+	/**
+	 * Return an instance of {@link HandleSelectResultSet} which will iterate through all rows of a {@link ResultSet}, transform each row
+	 * using the given handler and return the entities as list
+	 * @param <R> type of the returned entities
+	 * @param handler instance of HandleSelectResultSet which should transform the current row of the ResultSet into an entity
+	 * @return list of entities (may be empty but never null)
+	 */
+	public static <R> HandleSelectResultSet<List<R>> getAll(HandleSelectResultSet<R> handler) {
+		return rs -> {
+			List<R> result = new ArrayList<>();
+			while (rs.next()) {
+				result.add(handler.handle(rs));
+			}
+			return result;
+		};
 	}
 
 	/**

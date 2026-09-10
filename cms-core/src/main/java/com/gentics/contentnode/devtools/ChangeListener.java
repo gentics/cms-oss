@@ -91,8 +91,8 @@ public class ChangeListener {
 				String template = RenderUtils.getPreviewTemplate(page, RenderType.EM_LIVEPREVIEW);
 
 				// render the page, handle dependencies
-				RenderType renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, t.getSessionId(), 0);
-				renderType.setRenderUrlFactory(new DynamicUrlFactory(t.getSessionId()));
+				RenderType renderType = RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_LIVEPREVIEW, 0);
+				renderType.setRenderUrlFactory(new DynamicUrlFactory());
 				renderType.setParameter(AlohaRenderer.LINKS_TYPE, "backend");
 				renderType.addRenderer("aloha");
 				renderType.setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, false);

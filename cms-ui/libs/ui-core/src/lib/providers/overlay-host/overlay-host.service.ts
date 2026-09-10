@@ -55,7 +55,7 @@ export class OverlayHostService {
     }
 
     private resolveHostView(): void {
-        this.promiseResolveFns.forEach(resolve => resolve(this.hostView));
+        this.promiseResolveFns.forEach((resolve) => resolve(this.hostView));
         this.promiseResolveFns = [];
     }
 }

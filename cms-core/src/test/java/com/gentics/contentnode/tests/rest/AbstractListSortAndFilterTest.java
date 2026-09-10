@@ -1,7 +1,7 @@
 package com.gentics.contentnode.tests.rest;
 
-import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.lib.etc.StringUtils.mysqlLikeCompare;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -213,7 +213,7 @@ public abstract class AbstractListSortAndFilterTest<T> {
 	 */
 	@Test
 	public void testSortingAndFiltering() throws NodeException {
-		AbstractListResponse<T> result = supply(() -> {
+		AbstractListResponse<T> result = assertSuccess(() -> {
 			SortParameterBean sort = new SortParameterBean();
 			if (sortBy != null) {
 				sort.setSort(String.format("%s%s", sortAscending ? "+" : "-", sortBy));
@@ -221,7 +221,7 @@ public abstract class AbstractListSortAndFilterTest<T> {
 			FilterParameterBean filter = new FilterParameterBean().setQuery(query);
 			PagingParameterBean paging = new PagingParameterBean();
 			return getResult(sort, filter, paging);
-		});
+		}, null);
 		assertResponseOK(result);
 
 		int expectedItems = StringUtils.isEmpty(query) ? items.size() : 1;

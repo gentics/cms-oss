@@ -34,6 +34,14 @@ public class FolderLoadResponse extends GenericResponse {
 	public FolderLoadResponse() {}
 
 	/**
+	 * Create instance as copy of another
+	 * @param other other response
+	 */
+	public FolderLoadResponse(GenericResponse other) {
+		super(other);
+	}
+
+	/**
 	 * Create an instance of the response with single message, response info and folder
 	 * @param message message
 	 * @param responseInfo response info

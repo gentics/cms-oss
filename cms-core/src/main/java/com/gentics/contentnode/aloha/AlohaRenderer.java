@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MapPreferences;
@@ -61,19 +62,20 @@ import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.TemplateRenderer;
 import com.gentics.contentnode.render.renderer.MetaEditableRenderer;
 import com.gentics.contentnode.rest.model.Page;
+import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.Message.Type;
-import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse.Editable;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse.MetaEditable;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -524,7 +526,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		// add the proxyURL as general setting
 		settings.put("proxyUrl",
-				prefs.getProperty("stag_prefix") + "?sid=" + t.getSessionId() + "&do=19191&url=");
+				prefs.getProperty("stag_prefix") + "?do=19191&url=");
 
 		// Log levels
 		ObjectNode logSettings = mapper.createObjectNode();
@@ -559,25 +561,26 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		// Load page meta data
-		PageResourceImpl pageResource = new PageResourceImpl(t);
-
-		pageResource.omitTouchSession();
-		pageResource.setSessionId(t.getSessionId());
-		pageResource.setSessionSecret(t.getSession().getSessionSecret());
-		pageResource.setTransaction(t);
-		pageResource.initialize();
-		PageLoadResponse pageLoadResponse = pageResource.load(String.valueOf(pageId), !readonly, false, false, false, false, false, false, false, false, false, null, null);
-
-		if (pageLoadResponse.getResponseInfo().getResponseCode() != ResponseCode.OK) {
-			throw new NodeException("Error while loading page metadata", new Exception(pageLoadResponse.getResponseInfo().getResponseMessage()));
+		com.gentics.contentnode.object.Page reloadedPage;
+		try {
+			if (readonly) {
+				reloadedPage = PageResourceImpl.getPage(String.valueOf(pageId), true, ObjectPermission.view);
+			} else {
+				reloadedPage = PageResourceImpl.getLockedPage(String.valueOf(pageId), true, PermHandler.ObjectPermission.edit);
+			}
+		} catch (ReadOnlyException e) {
+			reloadedPage = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
+			readonly = true;
 		}
-		Page page = pageLoadResponse.getPage();
+
+		Page page = ModelBuilder.getPage(reloadedPage, List.of(Reference.CONTENT_TAGS, Reference.OBJECT_TAGS_VISIBLE));
+		page.setReadOnly(readonly);
 
 		// add LinkChecker plugin config
 		ObjectNode linkCheckerPlugin = mapper.createObjectNode();
 
 		linkCheckerPlugin.put("proxyUrl",
-				prefs.getProperty("stag_prefix") + "?sid=" + t.getSessionId() + "&do=19191&url=");
+				prefs.getProperty("stag_prefix") + "?do=19191&url=");
 		plugins.put("linkchecker", linkCheckerPlugin);
 
 		for (AlohaPluginService service : alohaPluginServiceLoader) {
@@ -589,7 +592,6 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		plugins.put("gcn", cnIntegrationPlugin);
 
-		cnIntegrationPlugin.put("sid", t.getSessionId());
 		cnIntegrationPlugin.put("buildRootTimestamp", buildRootTimestamp);
 		cnIntegrationPlugin.put("gcnLibVersion", gcnJSLibVersion);
 		cnIntegrationPlugin.put("webappPrefix", webappPrefix);

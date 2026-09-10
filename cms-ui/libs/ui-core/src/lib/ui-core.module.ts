@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HammerModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
@@ -11,6 +10,7 @@ import {
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
+    CalendarComponent,
     CheckboxComponent,
     ContentsListItem,
     DateTimePickerComponent,
@@ -103,6 +103,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     ButtonComponent,
     CheckboxComponent,
     ContentsListItem,
+    CalendarComponent,
     DateTimePickerComponent,
     DateTimePickerControlsComponent,
     DateTimePickerModal,
@@ -198,7 +199,6 @@ export const routerModuleForChild: ModuleWithProviders<GenticsUICoreModule> = Ro
 @NgModule({
     imports: [
         CommonModule,
-        HammerModule,
         FormsModule,
         ReactiveFormsModule,
         routerModuleForChild,

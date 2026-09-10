@@ -173,8 +173,14 @@ export enum TagPartType {
      * NOTE: Parts of this type can only be used in the new Editor User Interface.
      */
     CmsForm = 42,
-
+    /** Handlebars template part type */
     Handlebars = 43,
+    /** JSON content part type */
+    Json = 44,
+    /**
+     * Groovy Part Type for adding groovy scripts
+     */
+    Groovy = 45,
 }
 
 /** Pairs must be set correctly. */
@@ -210,6 +216,8 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.Form]: TagPropertyType.FORM,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
     [TagPartType.Handlebars]: TagPropertyType.RICHTEXT,
+    [TagPartType.Json]: TagPropertyType.RICHTEXT,
+    [TagPartType.Groovy]: TagPropertyType.RICHTEXT,
 } as const;
 
 /**

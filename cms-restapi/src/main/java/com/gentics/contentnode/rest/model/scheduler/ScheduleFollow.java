@@ -1,6 +1,5 @@
 package com.gentics.contentnode.rest.model.scheduler;
 
-import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -25,7 +24,6 @@ public class ScheduleFollow {
 	 * be executed.
 	 * @return Set of followed schedule IDs.
 	 */
-	@NotNull
 	public Set<Integer> getScheduleId() {
 		if (scheduleId == null) {
 			scheduleId = new HashSet<>();

@@ -103,12 +103,5 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     }
 
     private handleSsoResponse(result: string): void {
-        if (/^\d+$/.test(result)) {
-            console.log('Logging in via Single-Sign-On');
-            const sid = Number(result);
-            this.authOps.validateSessionId(sid);
-        } else {
-            console.error('Unsupported SSO result: ' + result);
-        }
     }
 }

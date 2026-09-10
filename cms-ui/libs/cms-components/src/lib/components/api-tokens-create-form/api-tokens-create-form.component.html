@@ -1,0 +1,19 @@
+<form [formGroup]="form">
+    <div class="flex-row row">
+        <gtx-input
+            class="columns small-12"
+            [label]="('common.name' | gtxI18n) + ' *'"
+            [required]="true"
+            formControlName="name"
+        ></gtx-input>
+        <gtx-date-time-picker
+            class="columns small-12"
+            formControlName="expires"
+            [label]="'api_token.expires_at' | gtxI18n"
+            [displayTime]="false"
+            [selectYear]="true"
+            [clearable]="true"
+            [min]="NOW"
+        />
+    </div>
+</form>

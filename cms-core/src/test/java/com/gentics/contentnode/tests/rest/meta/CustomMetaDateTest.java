@@ -5,6 +5,7 @@ import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.attribute;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,17 +24,23 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentNodeDate;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.CustomMetaDateNodeObject;
 import com.gentics.contentnode.object.Node;
@@ -49,11 +57,14 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.PageRenderResponse;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Test cases for custom item dates (custom_cdate, custom_edate)
  */
+@RunWith(Parameterized.class)
 public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R extends ContentNodeItem, I> {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -83,6 +94,8 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 
 	protected static SystemUser systemUser;
 
+	protected static Auth systemUserAuth;
+
 	protected static Integer overviewConstructId;
 
 	@BeforeClass
@@ -93,8 +106,22 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 		template = supply(() -> createTemplate(node.getFolder(), "Template"));
 
 		systemUser = supply(t -> t.getObject(SystemUser.class, 1));
+		systemUserAuth = new Auth(systemUser);
 
 		overviewConstructId = supply(() -> createConstruct(node, OverviewPartType.class, "overview", "ds"));
+	}
+
+	@Parameters(name = "{index}: auth: {0}")
+	public static Collection<Object[]> data() {
+		return Stream.of(AuthType.LOGIN, AuthType.TOKEN).map(type -> new Object[] {type}).collect(Collectors.toList());
+	}
+
+	@Parameter(0)
+	public AuthType authType;
+
+	@Before
+	public void setup() throws NodeException {
+		operate(() -> clear(node));
 	}
 
 	/**
@@ -308,13 +335,13 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 			});
 		}, overviewPage.getId());
 
-		String renderedOverview = execute(systemUser, id -> {
-			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
+		systemUserAuth.withAuth(authType, () -> {
+			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(overviewPage.getId()), null, "<node " + tagName.get() + ">", false, null,
 					LinksType.frontend, false, false, false, 0);
 			assertResponseCodeOk(response);
-			return response.getContent();
-		}, overviewPage.getId());
-		assertThat(renderedOverview).as("Rendered Overview").isEqualTo(expected);
+			String renderedOverview = response.getContent();
+			assertThat(renderedOverview).as("Rendered Overview").isEqualTo(expected);
+		});
 	}
 
 	/**
@@ -325,27 +352,28 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 	 * @throws NodeException
 	 */
 	protected Page createPage(int timestamp, Consumer<PageCreateRequest> creator) throws NodeException {
-		Page page = null;
+		int folderId = supply(() -> node.getFolder().getId());
 
-		try (Trx trx = new Trx()) {
-			trx.at(timestamp);
+		return systemUserAuth.withAuth(authType, () -> {
+			try {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.of(timestamp));
 
-			PageCreateRequest request = new PageCreateRequest();
-			request.setFolderId(String.valueOf(node.getFolder().getId()));
-			request.setTemplateId(template.getId());
+				PageCreateRequest request = new PageCreateRequest();
+				request.setFolderId(String.valueOf(folderId));
+				request.setTemplateId(template.getId());
 
-			if (creator != null) {
-				creator.accept(request);
+				if (creator != null) {
+					creator.accept(request);
+				}
+
+				PageLoadResponse response = new PageResourceImpl().create(request);
+				assertResponseCodeOk(response);
+				return response.getPage();
+
+			} finally {
+				ContentNodeHelper.setOptTrxTimestamp(Optional.empty());
 			}
-
-			PageLoadResponse response = new PageResourceImpl().create(request);
-			assertResponseCodeOk(response);
-			page = response.getPage();
-
-			trx.success();
-		}
-
-		return page;
+		});
 	}
 
 	/**
@@ -354,7 +382,7 @@ public abstract class CustomMetaDateTest<T extends CustomMetaDateNodeObject, R e
 	 * @throws NodeException
 	 */
 	protected void publishPage(int pageId) throws NodeException {
-		operate(() -> {
+		systemUserAuth.withAuth(authType, () -> {
 			GenericResponse response = new PageResourceImpl().publish(Integer.toString(pageId), null, new PagePublishRequest());
 			assertResponseCodeOk(response);
 		});

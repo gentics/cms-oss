@@ -5,8 +5,10 @@ import static com.gentics.contentnode.devtools.Synchronizer.logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -24,6 +26,9 @@ import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.render.TemplateRenderer;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Interface for a published tagmap entry
@@ -87,7 +92,11 @@ public interface TagmapEntryRenderer {
 	 */
 	default Object transformValue(Object value, BiFunction<TagmapEntryRenderer, Object, Object> linkTransformer) {
 		// when this is a mulitvalue, every single value must be transformed
-		if (value instanceof Collection) {
+		if (value instanceof JsonArray ja) {
+			return IntStream.range(0, ja.size()).mapToObj(ja::getValue).map(Objects::toString).collect(Collectors.toList());
+		} else if (value instanceof JsonObject jo) {
+			return new ArrayList<>(jo.getMap().entrySet());
+		} else if (value instanceof Collection) {
 			return ((Collection<?>) value).stream().map(v -> transformValue(v, linkTransformer)).collect(Collectors.toList());
 		} else if (value instanceof Object[]) {
 			return Arrays.asList((Object[]) value).stream().map(v -> transformValue(v, linkTransformer)).collect(Collectors.toList());

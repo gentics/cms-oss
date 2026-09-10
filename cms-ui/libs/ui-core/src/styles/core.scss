@@ -11,6 +11,20 @@ html {
     font-weight: normal;
     color: $off-black;
     @include responsive-font-size($gtx-font-size-regular);
+
+    --gtx-primary: #{$gtx-color-primary};
+    --gtx-secondary: #{$gtx-color-secondary};
+    --gtx-success: #{$gtx-color-success};
+    --gtx-warning: #{$gtx-color-warning};
+    --gtx-alert: #{$gtx-color-alert};
+
+    --gtx-off-white: #{$gtx-color-off-white};
+    --gtx-very-light-gray: #{$gtx-color-very-light-gray};
+    --gtx-light-gray: #{$gtx-color-light-gray};
+    --gtx-mid-gray: #{$gtx-color-mid-gray};
+    --gtx-dark-gray: #{$gtx-color-dark-gray};
+    --gtx-very-dark-gray: #{$gtx-color-very-dark-gray};
+    --gtx-off-black: #{$gtx-color-off-black};
 }
 
 hr {

@@ -287,7 +287,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     onLogoutClick(): void {
-        this.authOps.logout(this.appState.now.auth.sid)
+        this.authOps.logout()
             .then(() => {
                 this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`]);
             });

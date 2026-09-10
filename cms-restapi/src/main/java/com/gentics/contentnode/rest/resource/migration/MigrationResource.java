@@ -1,26 +1,25 @@
 package com.gentics.contentnode.rest.resource.migration;
 
+import com.gentics.contentnode.rest.model.request.migration.MigrationReinvokeRequest;
+import com.gentics.contentnode.rest.model.request.migration.MigrationTagsRequest;
+import com.gentics.contentnode.rest.model.request.migration.TagTypeMigrationRequest;
+import com.gentics.contentnode.rest.model.request.migration.TemplateMigrationRequest;
+import com.gentics.contentnode.rest.model.response.ConstructListResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationGetLogResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationGetLogsResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationJobItemsResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationPartsResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationStatusResponse;
+import com.gentics.contentnode.rest.model.response.migration.MigrationTagsResponse;
+import com.gentics.contentnode.rest.model.response.migration.PossiblePartMappingsResponse;
+
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
-
-import com.gentics.contentnode.rest.model.request.migration.TemplateMigrationRequest;
-import com.gentics.contentnode.rest.model.request.migration.MigrationReinvokeRequest;
-import com.gentics.contentnode.rest.model.request.migration.TagTypeMigrationRequest;
-import com.gentics.contentnode.rest.model.request.migration.MigrationTagsRequest;
-import com.gentics.contentnode.rest.model.response.ConstructListResponse;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationGetLogResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationGetLogsResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationJobItemsResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationTagsResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationPartsResponse;
-import com.gentics.contentnode.rest.model.response.migration.PossiblePartMappingsResponse;
-import com.gentics.contentnode.rest.model.response.migration.MigrationStatusResponse;
-import com.gentics.contentnode.rest.resource.AuthenticatedResource;
 
 /**
  * Resource used for performing Tag Type Migrations and Template Migrations
@@ -28,7 +27,7 @@ import com.gentics.contentnode.rest.resource.AuthenticatedResource;
  * @author Taylor
  */
 @Path("/migration")
-public interface MigrationResource extends AuthenticatedResource {
+public interface MigrationResource {
 
 	/**
 	 * Cancel the current tag type migration job, if one is being executed
@@ -37,7 +36,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/cancelMigration")
-	GenericResponse cancelMigration();
+	GenericResponse cancelMigration() throws Exception;
 
 	/**
 	 * Get the migration status for a given tag type migration job
@@ -46,7 +45,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getMigrationStatus")
-	MigrationStatusResponse getMigrationStatus();
+	MigrationStatusResponse getMigrationStatus() throws Exception;
 
 	/**
 	 * Get the migration job items for the given job
@@ -56,7 +55,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getMigrationJobItems/{jobId}")
-	MigrationJobItemsResponse getMigrationJobItems(@PathParam("jobId") int jobId);
+	MigrationJobItemsResponse getMigrationJobItems(@PathParam("jobId") int jobId) throws Exception;
 
 	/**
 	 * Get a list of all tag type migration logs
@@ -65,7 +64,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getMigrationLogs")
-	MigrationGetLogsResponse getMigrationLogs();
+	MigrationGetLogsResponse getMigrationLogs() throws Exception;
 
 	/**
 	 * Get the log for a given tag type migration job
@@ -75,7 +74,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getMigrationLog/{jobId}")
-	MigrationGetLogResponse getMigrationLog(@PathParam("jobId") int jobId);
+	MigrationGetLogResponse getMigrationLog(@PathParam("jobId") int jobId) throws Exception;
 
 	/**
 	 * Perform tag migration process
@@ -86,11 +85,11 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/performMigration")
-	MigrationResponse performTagTypeMigration(TagTypeMigrationRequest request);
+	MigrationResponse performTagTypeMigration(TagTypeMigrationRequest request) throws Exception;
 
 	@POST
 	@Path("/performTemplateMigration") 
-	MigrationResponse performTemplateMigration(TemplateMigrationRequest request);
+	MigrationResponse performTemplateMigration(TemplateMigrationRequest request) throws Exception;
 
 	/**
 	 * Reinvoke the tag type migration for the given object
@@ -99,7 +98,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/reinvokeMigration")
-	MigrationResponse reinvokeTagTypeMigration(MigrationReinvokeRequest request);
+	MigrationResponse reinvokeTagTypeMigration(MigrationReinvokeRequest request) throws Exception;
 
 	/**
 	 * Get a response that contains maps and lists with possible part mappings 
@@ -111,7 +110,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getPossiblePartMappings")
-	PossiblePartMappingsResponse getPossiblePartMappings(@QueryParam("fromTagTypeId") int fromTagTypeId, @QueryParam("toTagTypeId") int toTagTypeId);
+	PossiblePartMappingsResponse getPossiblePartMappings(@QueryParam("fromTagTypeId") int fromTagTypeId, @QueryParam("toTagTypeId") int toTagTypeId) throws Exception;
 
 	/**
 	 * Get a list of parts for a single tag type
@@ -122,7 +121,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@GET
 	@Path("/getPartsForTagType/{id}")
-	MigrationPartsResponse getPartsForTagType(@PathParam("id") String id);
+	MigrationPartsResponse getPartsForTagType(@PathParam("id") String id) throws Exception;
 
 	/**
 	 * Get a list of Tag Types for possible migration by examining the given objects
@@ -134,7 +133,7 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/getMigrationTagTypes")
-	MigrationTagsResponse getMigrationTagTypes(MigrationTagsRequest request);
+	MigrationTagsResponse getMigrationTagTypes(MigrationTagsRequest request) throws Exception;
 
 	/**
 	 * Get a list of constructs, that can be migrated for the given type
@@ -143,5 +142,5 @@ public interface MigrationResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/getMigrationConstructs")
-	ConstructListResponse getMigrationConstructs(MigrationTagsRequest request);
+	ConstructListResponse getMigrationConstructs(MigrationTagsRequest request) throws Exception;
 }

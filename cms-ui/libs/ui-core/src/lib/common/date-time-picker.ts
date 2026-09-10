@@ -74,3 +74,15 @@ export const DEFAULT_DATE_TIME_PICKER_STRINGS: DateTimePickerStrings = {
         'Sa',
     ],
 };
+
+export function toUnixSeconds(value: Date | number): number | null {
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) {
+            return null;
+        }
+
+        return value.getTime() / 1000;
+    }
+
+    return value > 300_000_000_000 ? value / 1000 : value;
+}

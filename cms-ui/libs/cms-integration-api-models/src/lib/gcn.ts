@@ -46,7 +46,6 @@ export interface GCNPluginSettings {
     portletapp_prefix?: string;
     priority?: number;
     renderMessages?: any[];
-    sid?: string;
     stag_prefix?: string;
     tags?: GCNPluginTagDefinition[];
     templateId?: number;

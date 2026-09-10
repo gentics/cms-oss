@@ -1,4 +1,4 @@
-import { Node, Template, TemplateResponse, TemplateSaveRequest } from '@gentics/cms-models';
+import { Node, Template, TemplateResponse, TemplateSaveRequest, NodeUrlMode, NodePageLanguageCode } from '@gentics/cms-models';
 import {
     BASIC_TEMPLATE_ID,
     clickModalAction,
@@ -15,6 +15,11 @@ import {
     selectTrableRow,
     TestSize,
     waitForResponseFrom,
+    IMPORT_ID,
+    IMPORT_TYPE,
+    IMPORT_TYPE_NODE,
+    LANGUAGE_DE,
+    NodeImportData
 } from '@gentics/e2e-utils';
 import { expect, Locator, Response, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -114,6 +119,46 @@ test.describe('Templates Module', () => {
         let nodeTable: Locator;
         let nodeRow: Locator;
 
+        // todo
+        const EXAMPLE_NODE_ONE: NodeImportData = {
+            [IMPORT_TYPE]: IMPORT_TYPE_NODE,
+            [IMPORT_ID]: 'templateExampleNodeOne',
+
+            node: {
+                name: 'Templates Example Node #1',
+                host: 'http://template01.localhost',
+                hostProperty: '',
+                publishDir: '',
+                binaryPublishDir: '',
+                pubDirSegment: true,
+                publishImageVariants: false,
+                publishFs: false,
+                publishFsPages: false,
+                publishFsFiles: false,
+                publishContentMap: false,
+                publishContentMapPages: false,
+                publishContentMapFiles: false,
+                publishContentMapFolders: false,
+                urlRenderWayPages: NodeUrlMode.AUTOMATIC,
+                urlRenderWayFiles: NodeUrlMode.AUTOMATIC,
+                omitPageExtension: false,
+                pageLanguageCode: NodePageLanguageCode.FILENAME,
+                meshPreviewUrlProperty: '',
+            },
+            description: 'Test Node',
+            languages: [LANGUAGE_DE],
+            templates: [],
+        };
+
+        await IMPORTER.importData([
+            EXAMPLE_NODE_ONE
+        ]);
+
+        const tmp_node = IMPORTER.get(EXAMPLE_NODE_ONE);
+
+        await IMPORTER.client.node.assignTemplate(tmp_node.id, testTemplate.id)
+            .send();
+        
         await test.step('Unassign from node', async () => {
             const nodeLoad = waitForResponseFrom(page, 'GET', '/rest/node');
             const tplNodesLoad = waitForResponseFrom(page, 'GET', `/rest/template/${testTemplate.id}/nodes`);

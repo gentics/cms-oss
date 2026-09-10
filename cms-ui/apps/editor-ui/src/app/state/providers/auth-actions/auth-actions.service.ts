@@ -42,25 +42,19 @@ export class AuthActionsService {
     ) {}
 
     /**
-     * Check the local storage for an sid, and if found, attempt to validate the user's session
+     * Attempt to validate the user's session
      * with the API.
      */
     async validateSession(): Promise<boolean> {
-        const sid = this.localStorage.getSid();
-        if (!sid) {
-            return false;
-        }
-
         await this.appState.dispatch(new ValidateStart()).toPromise();
 
         try {
-            const res = await this.client.user.me({ sid } as any).toPromise();
+            const res = await this.client.user.me().toPromise();
             const normalizedUser = normalize(res.user, userSchema);
             await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
-            await this.appState.dispatch(new ValidateSuccess(sid, res.user)).toPromise();
+            await this.appState.dispatch(new ValidateSuccess(res.user)).toPromise();
             return true;
         } catch (error) {
-            this.localStorage.setSid(null);
             await this.appState.dispatch(new ValidateError(error.message)).toPromise();
 
             if (error instanceof GCMSRestClientRequestError && error.responseCode !== 401) {
@@ -85,10 +79,9 @@ export class AuthActionsService {
 
         try {
             const res = await this.client.auth.login({ login: username, password }).toPromise();
-            this.localStorage.setSid(res.sid);
             const normalizedUser = normalize(res.user, userSchema);
             await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
-            await this.appState.dispatch(new LoginSuccess(res.sid, res.user)).toPromise();
+            await this.appState.dispatch(new LoginSuccess(res.user)).toPromise();
 
             if (returnUrl) {
                 this.router.navigateByUrl(returnUrl);
@@ -104,12 +97,11 @@ export class AuthActionsService {
         }
     }
 
-    async logout(sid: number): Promise<void> {
+    async logout(): Promise<void> {
         await this.appState.dispatch(new LogoutStart()).toPromise();
 
         try {
-            await this.client.auth.logout(sid).toPromise();
-            this.localStorage.setSid(null);
+            await this.client.auth.logout().toPromise();
             await this.appState.dispatch(new LogoutSuccess()).toPromise();
             await this.appState.dispatch(new UpdateSearchFilterAction({
                 changing: false,
@@ -135,7 +127,6 @@ export class AuthActionsService {
             await this.client.user.update(userId, {
                 password: newPassword,
             }).toPromise();
-            this.localStorage.setSid(null);
             this.notification.show({
                 message: 'message.updated_password',
                 type: 'success',

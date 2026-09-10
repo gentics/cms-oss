@@ -377,6 +377,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         }));
 
         this.subscriptions.push(this.itemWithObjectProperties$.pipe(
+            filter((itemWithObjProps) => !!itemWithObjProps.item),
             map((itemWithObjProps) => itemWithObjProps.objProperties),
             distinctUntilChanged(isEqual),
             map((objectProperties) => groupObjectPropertiesByCategory(objectProperties)),
@@ -653,7 +654,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 item.type,
                 item.id,
                 tags,
-                { showNotification: true, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true },
+                { showNotification: true, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true, rethrowError: true },
                 {},
             );
 
@@ -786,7 +787,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 item.type,
                 item.id,
                 {},
-                { showNotification: true, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true },
+                { showNotification: true, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true, rethrowError: true },
                 options,
             ).then((updatedItem) => {
                 this.item = updatedItem;
@@ -819,7 +820,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
      */
     saveChanges(
         options: SaveChangesOptions = { },
-        postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
+        postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true, rethrowError: true },
     ): Promise<void> {
         let updatePromise: Promise<any>;
         if (this.activeTabId === ITEM_PROPERTIES_TAB) {
@@ -893,7 +894,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     public saveItemProperties(
-        postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
+        postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true, rethrowError: true },
     ): Promise<ItemWithObjectTags | Form | Node | void> {
         const formValue = this.editingProperties;
         if (!formValue) {
@@ -984,7 +985,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             return this.folderActions.updateItemsObjectProperties(
                 (this.item as ItemWithObjectTags).type,
                 languageVariantsUpdate,
-                { showNotification, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true },
+                { showNotification, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true, rethrowError: true },
             )
                 .then((updatedItems) => {
                     this.item = updatedItems.find((item) => item.id === this.item.id);
@@ -1003,7 +1004,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             (this.item as ItemWithObjectTags).type,
             this.item.id,
             update,
-            { showNotification, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true },
+            { showNotification, fetchForUpdate: this.itemPermissions.edit, fetchForConstruct: true, rethrowError: true },
             requestOptions,
         )
             .then((updatedItem) => {

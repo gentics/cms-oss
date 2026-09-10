@@ -741,10 +741,10 @@ public class GroupResourceImpl implements GroupResource {
 
 	@Override
 	@GET
-	@Path("/{id}/perms/{type}")
+	@Path("/{id}/perms/{permType}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public TypePermissionResponse getTypePerms(@PathParam("id") String id, @PathParam("type") String type) throws NodeException {
+	public TypePermissionResponse getTypePerms(@PathParam("id") String id, @PathParam("permType") String type) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
 			TypePerms permType = getPermType(type);
@@ -768,10 +768,10 @@ public class GroupResourceImpl implements GroupResource {
 
 	@Override
 	@POST
-	@Path("/{id}/perms/{type}")
+	@Path("/{id}/perms/{permType}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public GenericResponse setTypePerms(@PathParam("id") String id, @PathParam("type") String type, @QueryParam("wait") @DefaultValue("0") long waitMs,
+	public GenericResponse setTypePerms(@PathParam("id") String id, @PathParam("permType") String type, @QueryParam("wait") @DefaultValue("0") long waitMs,
 			TypePermissionRequest request) throws NodeException {
 		TypePerms permType = getPermType(type);
 		expectNoInstances(permType);
@@ -785,7 +785,7 @@ public class GroupResourceImpl implements GroupResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, req);
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}
@@ -793,10 +793,10 @@ public class GroupResourceImpl implements GroupResource {
 
 	@Override
 	@GET
-	@Path("/{id}/perms/{type}/{instanceId}")
+	@Path("/{id}/perms/{permType}/{instanceId}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public TypePermissionResponse getInstancePerms(@PathParam("id") String id, @PathParam("type") String type, @PathParam("instanceId") Integer instanceId)
+	public TypePermissionResponse getInstancePerms(@PathParam("id") String id, @PathParam("permType") String type, @PathParam("instanceId") Integer instanceId)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
@@ -825,10 +825,10 @@ public class GroupResourceImpl implements GroupResource {
 
 	@Override
 	@POST
-	@Path("/{id}/perms/{type}/{instanceId}")
+	@Path("/{id}/perms/{permType}/{instanceId}")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = UserGroup.TYPE_GROUPADMIN, bit = PermHandler.PERM_VIEW)
-	public GenericResponse setInstancePerms(@PathParam("id") String id, @PathParam("type") String type, @PathParam("instanceId") Integer instanceId,
+	public GenericResponse setInstancePerms(@PathParam("id") String id, @PathParam("permType") String type, @PathParam("instanceId") Integer instanceId,
 			@QueryParam("wait") @DefaultValue("0") long waitMs, TypePermissionRequest request) throws NodeException {
 		TypePerms permType = getPermType(type);
 		expectInstances(permType);
@@ -854,7 +854,7 @@ public class GroupResourceImpl implements GroupResource {
 
 			GenericResponse response = Operator.executeRethrowing(I18NHelper.get("assign_user_permissions"), waitMs, () -> {
 				return doSetPermissions(permType, instanceId, req);
-			});
+			}, java.util.function.Function.identity());
 			trx.success();
 			return response;
 		}

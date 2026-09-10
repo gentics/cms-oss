@@ -143,6 +143,11 @@ public class CrFragmentEntryWrapper extends TagmapEntry {
 	}
 
 	@Override
+	public String getJSONSchemaFilter() {
+		return wrapped.getJsonSchemaFilter();
+	}
+
+	@Override
 	public Integer getId() {
 		return wrapped.getId();
 	}

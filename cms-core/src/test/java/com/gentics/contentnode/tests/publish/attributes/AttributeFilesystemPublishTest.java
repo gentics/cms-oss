@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.publish.attributes;
 
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
@@ -25,14 +26,16 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.tests.publish.filesystem.FilesystemPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
-import com.gentics.contentnode.tests.utils.CountDirective;
+import com.gentics.contentnode.tests.utils.CountHelperSource;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 
 /**
  * Test cases for publishing into the filesystem with attribute dirting (these tests only make sense for pages)
@@ -41,14 +44,13 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @GCNFeature(set = { Feature.MULTITHREADED_PUBLISHING, Feature.ATTRIBUTE_DIRTING })
 public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	/**
-	 * Template for the vtl construct that counts, how often it is rendered
+	 * Template for the hbs construct that counts, how often it is rendered
 	 */
-	public final static String VTL = "value of $cms.tag.name: [#gtx_test_count($cms.tag.name)]";
+	// FIXME
+	public final static String HBS = "value of {{cms.tag.name}}: [{{gtx_test_count cms.tag.name}}]";
 
 	@ClassRule
-	public static DBTestContext testContext = new DBTestContext().config(prefs -> {
-		prefs.set("contentnode.velocity.userdirective", CountDirective.class.getName());
-	});
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
 	 * Tagname
@@ -80,6 +82,8 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		TestHelpersHandlebarsService.addHelper(CountHelperSource.class);
+
 		testContext.getContext().getTransaction().commit();
 
 		node = supply(() -> createNode("hostname", "Node name", PublishTarget.FILESYSTEM, getLanguage("de"), getLanguage("en")));
@@ -96,17 +100,18 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Override
 	public void prepareData() throws Exception {
 		super.prepareData();
-		CountDirective.reset();
+		CountHelperSource.reset();
 	}
 
 	@Override
 	protected void preparePage(Page page) throws NodeException {
 		super.preparePage(page);
 		Transaction t = TransactionManager.getCurrentTransaction();
-		Construct construct = ContentNodeTestDataUtils.createVelocityConstruct(node);
-		construct.getParts().stream().filter(part -> "template".equals(part.getKeyname())).forEach(part -> {
+		int hbsConstructId = createConstruct(node, HandlebarsPartType.class, "hbs", "hbs");
+		Construct construct = t.getObject(Construct.class, hbsConstructId, true);
+		construct.getParts().stream().filter(part -> "hbs".equals(part.getKeyname())).forEach(part -> {
 			try {
-				part.getDefaultValue().setValueText(VTL);
+				part.getDefaultValue().setValueText(HBS);
 			} catch (Exception e) {
 				e.printStackTrace();
 				fail("Setup of construct failed");
@@ -124,7 +129,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeFilename() throws Exception {
 		// the page will be republished -> content will be rendered
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testChangeFilename();
 		}
 	}
@@ -133,7 +138,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeFolderPubdir() throws Exception {
 		// page will be dirted as dependency -> content not rendered
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 0)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 0)) {
 			super.testChangeFolderPubdir();
 		}
 	}
@@ -142,7 +147,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testChangeHostname() throws Exception {
 		// page will be dirted as dependency -> content not rendered
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 0)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 0)) {
 			super.testChangeHostname();
 		}
 	}
@@ -151,7 +156,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveFolderToNode() throws Exception {
 		// page will be dirted as as a whole -> content will be rendered
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveFolderToNode();
 		}
 	}
@@ -160,7 +165,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveToFolder() throws Exception {
 		// move dirts page as a whole
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveToFolder();
 		}
 	}
@@ -169,7 +174,7 @@ public class AttributeFilesystemPublishTest extends FilesystemPublishTest {
 	@Test
 	public void testMoveToNode() throws Exception {
 		// move dirts page as a whole
-		try (AutoCloseable asserter = CountDirective.asserter(TAGNAME, 1)) {
+		try (AutoCloseable asserter = CountHelperSource.asserter(TAGNAME, 1)) {
 			super.testMoveToNode();
 		}
 	}

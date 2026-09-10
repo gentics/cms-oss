@@ -471,7 +471,8 @@ define([
 		 *                   the backend.
 		 */
 		isBackendMode: function () {
-			return !!(this.settings && this.settings.sid);
+			// FIXME: is there another way to check this?
+			return !!(this.settings);
 		},
 
 		_deferred: $.Deferred(),
@@ -527,8 +528,6 @@ define([
 			this.resolveCheckForInternalLink();
 
 			if (this.isBackendMode()) {
-				GCN.setSid(this.settings.sid);
-
 				// Set the GCN JS API to the right channel context.
 				if (this.settings.nodeId) {
 					GCN.channel(parseInt(this.settings.nodeId, 10));
@@ -1143,7 +1142,7 @@ define([
 
 		/**
 		 * Perform a REST request to the GCN backend REST Service.
-		 * The method will automatically add the sid as request parameters, additional parameters may be given.
+		 * Additional parameters may be given.
 		 * The data may contain the following properties:
 		 * - url: URL for the specific request, must start with / and must not contain request parameters
 		 * - params: additional request parameters
@@ -1160,14 +1159,6 @@ define([
 		 * @return void
 		 */
 		performRESTRequest: function (data) {
-			if (!GCN.sid) {
-				var that = this;
-				GCN.sub('session.sid-set', function () {
-					that.performRESTRequest(data);
-				});
-				return;
-			}
-
 			if (!data.type) {
 				data.type = 'POST';
 			}
@@ -1180,7 +1171,7 @@ define([
 				data: JSON.stringify(data.body)
 			};
 
-			ajaxSettings.url = data.url + '?sid=' + GCN.sid + '&time=' + (new Date()).getTime();
+			ajaxSettings.url = data.url + '?time=' + (new Date()).getTime();
 
 			// add requestParams if given
 			if (data.params) {

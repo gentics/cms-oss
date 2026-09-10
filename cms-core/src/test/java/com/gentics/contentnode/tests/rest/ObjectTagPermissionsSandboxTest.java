@@ -3,13 +3,36 @@
  */
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.db.DBUtils.IDS;
+import static com.gentics.contentnode.db.DBUtils.select;
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createInTagObjectTag;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNodeObject;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createUserGroup;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.saveRestNodeObjectPropertyTags;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.doesObjectTypeInheritObjectPropertyPermissionsFromObjectType;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -18,8 +41,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -35,9 +56,12 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.Permission;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
@@ -50,72 +74,107 @@ import com.gentics.contentnode.testutils.DBTestContext;
 @RunWith(value = Parameterized.class)
 public class ObjectTagPermissionsSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
-	 * ID of the permission group
+	 * test user
 	 */
-	protected SystemUser systemUser;
+	protected static SystemUser systemUser;
+
+	protected static Auth systemUserAuth;
 
 	/**
 	 * User group to use for the tests
 	 */
-	protected UserGroup userGroup;
+	protected static UserGroup userGroup;
 
 	/**
 	 * Node that will be created for testing
 	 */
-	protected Node node;
+	protected static Node node;
 
 	/**
 	 * Construct that will be created for testing
 	 */
-	protected Construct construct;
+	protected static Construct construct;
+
+	private static Set<Integer> objectTagIds;
+
+	private static Set<Integer> objectPropertyIds;
 
 	/**
 	 * The object type to run the tests for
 	 */
-	@Parameter
+	@Parameter(0)
 	public int objectType;
 
-
+	@Parameter(1)
+	public AuthType authType;
 
 	/**
 	 * Get the test variation data
 	 * @return test variation data
 	 */
-	@Parameters(name= "Object type: {0}")
+	@Parameters(name= "Object type: {0}, auth: {1}")
 	public static Collection<Object[]> data() {
-		return Arrays.asList(new Object[][] {
-				{ Folder.TYPE_FOLDER }, { Page.TYPE_PAGE },
-				{ File.TYPE_FILE }, { ImageFile.TYPE_IMAGE },
-				// Templates are not tested, because loading new object
-				// tags over the Rest API doesn't work properly yet.
-		});
+		Collection<Object[]> data = new ArrayList<>();
+		// Templates are not tested, because loading new object
+		// tags over the Rest API doesn't work properly yet.
+		for (int objectType : List.of(Folder.TYPE_FOLDER, Page.TYPE_PAGE, File.TYPE_FILE, ImageFile.TYPE_IMAGE)) {
+			for (AuthType authType : List.of(AuthType.LOGIN, AuthType.TOKEN)) {
+				data.add(new Object[] {objectType, authType});
+			}
+		}
+		return data;
 	}
 
-	@Before 
-	public void setup() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+	@BeforeClass
+	public static void setupOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
 
-		this.node       = ContentNodeTestDataUtils.createNode("master", "ObjectTagPermissionsSandboxTest", PublishTarget.NONE);
-		int constructId = ContentNodeTestDataUtils.createConstruct(node, HTMLPartType.class, "construct", "part");
-		this.construct  = t.getObject(Construct.class, constructId);
+		node = supply(() -> createNode("master", "ObjectTagPermissionsSandboxTest", PublishTarget.NONE));
+		int constructId = supply(() -> createConstruct(node, HTMLPartType.class, "construct", "part"));
+		construct  = supply(t -> t.getObject(Construct.class, constructId));
 
-		this.userGroup = ContentNodeTestDataUtils.createUserGroup("test group", ContentNodeTestDataUtils.NODE_GROUP_ID);
-		this.systemUser = ContentNodeTestDataUtils.createSystemUser("Tester", "Tester", "", "Tester", "", Arrays.asList(userGroup));
+		userGroup = supply(() -> createUserGroup("test group", ContentNodeTestDataUtils.NODE_GROUP_ID));
+		systemUser = supply(() -> createSystemUser("Tester", "Tester", "", "Tester", "", Arrays.asList(userGroup)));
+		systemUserAuth = new Auth(systemUser);
 
-		testContext.getContext().startTransaction(ObjectTransformer.getInt(systemUser.getId(), 0));
-		t = TransactionManager.getCurrentTransaction();
+		operate(() -> {
+			// Permissions are important
+			int rootFolderId = ObjectTransformer.getInt(node.getFolder().getId(), 0);
+			PermHandler.setPermissions(Node.TYPE_NODE, rootFolderId, Arrays.asList(userGroup),
+					new Permission(PermHandler.FULL_PERM).toString());
+			PermHandler.setPermissions(Folder.TYPE_FOLDER, rootFolderId, Arrays.asList(userGroup),
+					new Permission(PermHandler.FULL_PERM).toString());
+		});
 
-		// Permissions are important
-		int rootFolderId = ObjectTransformer.getInt(this.node.getFolder().getId(), 0);
-		PermHandler.setPermissions(Node.TYPE_NODE, rootFolderId, Arrays.asList(this.userGroup),
-				new Permission(PermHandler.FULL_PERM).toString());
-		PermHandler.setPermissions(Folder.TYPE_FOLDER, rootFolderId, Arrays.asList(this.userGroup),
-				new Permission(PermHandler.FULL_PERM).toString());
-		t.commit(false);
+		objectTagIds = supply(() -> select("SELECT id FROM objtag WHERE obj_id != 0", IDS));
+		objectPropertyIds = supply(() -> select("SELECT id FROM objtag WHERE obj_id = 0", IDS));
+	}
+
+	@After
+	public void tearDown() throws NodeException {
+		operate(() -> clear(node));
+
+		operate(t -> {
+			Set<Integer> allTagIds = select("SELECT id FROM objtag WHERE obj_id != 0", IDS);
+			allTagIds.removeAll(objectTagIds);
+
+			for (ObjectTag tag : t.getObjects(ObjectTag.class, allTagIds)) {
+				tag.delete(true);
+			}
+		});
+
+		operate(t -> {
+			Set<Integer> allPropertyIds = select("SELECT id FROM objtag WHERE obj_id = 0", IDS);
+			allPropertyIds.removeAll(objectPropertyIds);
+
+			for (ObjectTagDefinition prop : t.getObjects(ObjectTagDefinition.class, allPropertyIds)) {
+				prop.delete(true);
+			}
+		});
 	}
 
 	/**
@@ -124,21 +183,27 @@ public class ObjectTagPermissionsSandboxTest {
 	 */
 	@Test
 	public void testViewPermission() throws Exception {
-		ObjectTagDefinition objectTagDefinition = createObjectPropertyDefinition(this.objectType, null);
+		ObjectTagDefinition objectTagDefinition = supply(() -> createObjectPropertyDefinition(this.objectType, null));
+		String name = execute(o -> o.getObjectTag().getName(), objectTagDefinition);
 
 		// Create the node object after the definition, or it will not be in
 		// there automatically
-		NodeObject nodeObject = ContentNodeTestDataUtils.createNodeObject(this.objectType, this.node.getFolder(), "test");
+		NodeObject nodeObject = supply(() -> createNodeObject(this.objectType, node.getFolder(), "test"));
 
 		// Test view permission: yes
-		setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.PERM_VIEW));
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				objectTagDefinition.getObjectTag().getName(), true);
+		operate(() -> setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.PERM_VIEW)));
+
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					name, true);
+		});
 
 		// Test view permission: no
-		setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				objectTagDefinition.getObjectTag().getName(), false);
+		operate(() -> setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					name, false);
+		});
 	}
 
 	/**
@@ -147,20 +212,24 @@ public class ObjectTagPermissionsSandboxTest {
 	 */
 	@Test
 	public void testEditPermission() throws Exception {
-		ObjectTagDefinition objectTagDefinition = createObjectPropertyDefinition(this.objectType, null);
+		ObjectTagDefinition objectTagDefinition = supply(() -> createObjectPropertyDefinition(this.objectType, null));
+		String name = execute(o -> o.getObjectTag().getName(), objectTagDefinition);
 
 		// Create the node object after the definition, or it will not be in
 		// there automatically
-		NodeObject nodeObject = ContentNodeTestDataUtils.createNodeObject(this.objectType, this.node.getFolder(), "test");
+		NodeObject nodeObject = supply(() -> createNodeObject(this.objectType, node.getFolder(), "test"));
+		consume(NodeObject::unlock, nodeObject);
 
-		Map<String, Tag> restTags = ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(
+		Map<String, Tag> restTags = loadRestNodeObjectAndCheckIfTagExists(
 				this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				objectTagDefinition.getObjectTag().getName(), true);
+				name, true);
 
 		// Test update permission: no, tags changed: no
-		setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
-		ContentNodeTestDataUtils.saveRestNodeObjectPropertyTagsAndAssert(this.objectType,
-				ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags, ResponseCode.OK);
+		operate(() -> setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
+		systemUserAuth.withAuth(authType, () -> {
+			assertSuccess(() -> saveRestNodeObjectPropertyTags(this.objectType,
+					ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags), null);
+		});
 
 		// Modify values
 		for(Map.Entry<String, Tag> entry : restTags.entrySet()) {
@@ -172,13 +241,18 @@ public class ObjectTagPermissionsSandboxTest {
 		}
 
 		// Test update permission: no, tags changed: yes
-		ContentNodeTestDataUtils.saveRestNodeObjectPropertyTagsAndAssert(this.objectType,
-				ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags, ResponseCode.PERMISSION);
+		systemUserAuth.withAuth(authType, () -> {
+			assertError(() -> saveRestNodeObjectPropertyTags(this.objectType,
+					ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags), InsufficientPrivilegesException.class, ResponseCode.PERMISSION, null);
+		});
 
 		// Test update permission: yes, tags changed: yes
-		setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_OBJPROP_UPDATE));
-		ContentNodeTestDataUtils.saveRestNodeObjectPropertyTagsAndAssert(this.objectType,
-				ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags, ResponseCode.OK);
+		operate(() -> setObjectPropertyDefinitionPermissions(objectTagDefinition, new Permission(PermHandler.PERM_VIEW, PermHandler.PERM_OBJPROP_UPDATE)));
+
+		systemUserAuth.withAuth(authType, () -> {
+			assertSuccess(() -> saveRestNodeObjectPropertyTags(this.objectType,
+					ObjectTransformer.getInteger(nodeObject.getId(), 0), restTags), null);
+		});
 	}
 
 	/**
@@ -192,22 +266,28 @@ public class ObjectTagPermissionsSandboxTest {
 			return;
 		}
 
-		ObjectTagDefinition pageObjectTagDefinition = createObjectPropertyDefinition(this.objectType, null);
-		setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
+		ObjectTagDefinition pageObjectTagDefinition = supply(() -> createObjectPropertyDefinition(this.objectType, null));
+		String pageOEName = execute(o -> o.getObjectTag().getName(), pageObjectTagDefinition);
+		operate(() -> setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
 
-		ObjectTagDefinition folderObjectTagDefinition = createObjectPropertyDefinition(Folder.TYPE_FOLDER, null);
-		NodeObject nodeObject = ContentNodeTestDataUtils.createNodeObject(this.objectType, this.node.getFolder(), "test_folder_inheritance");
+		ObjectTagDefinition folderObjectTagDefinition = supply(() -> createObjectPropertyDefinition(Folder.TYPE_FOLDER, null));
+		NodeObject nodeObject = supply(() -> ContentNodeTestDataUtils.createNodeObject(this.objectType, node.getFolder(), "test_folder_inheritance"));
 
 		// NodeObject: view permission: no, Template: view permission: no
-		setObjectPropertyDefinitionPermissions(folderObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				pageObjectTagDefinition.getObjectTag().getName(), false);
+		operate(() -> setObjectPropertyDefinitionPermissions(folderObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					pageOEName, false);
+		});
 
 		// NodeObject: view permission: no, Template: view permission: yes --> view permission granted
-		setObjectPropertyDefinitionPermissions(folderObjectTagDefinition, new Permission(PermHandler.PERM_VIEW));
-		boolean inherits = ContentNodeTestUtils.doesObjectTypeInheritObjectPropertyPermissionsFromObjectType(this.objectType, Folder.TYPE_FOLDER);
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				pageObjectTagDefinition.getObjectTag().getName(), inherits);
+		operate(() -> setObjectPropertyDefinitionPermissions(folderObjectTagDefinition, new Permission(PermHandler.PERM_VIEW)));
+		boolean inherits = doesObjectTypeInheritObjectPropertyPermissionsFromObjectType(this.objectType, Folder.TYPE_FOLDER);
+
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					pageOEName, inherits);
+		});
 	}
 
 	/**
@@ -221,23 +301,29 @@ public class ObjectTagPermissionsSandboxTest {
 			return;
 		}
 
-		ObjectTagDefinition pageObjectTagDefinition = createObjectPropertyDefinition(this.objectType, null);
-		setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
+		ObjectTagDefinition pageObjectTagDefinition = supply(() -> createObjectPropertyDefinition(this.objectType, null));
+		operate(() -> setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
 
-		ObjectTagDefinition templateObjectTagDefinition = createObjectPropertyDefinition(Template.TYPE_TEMPLATE, null);
-		NodeObject nodeObject = ContentNodeTestDataUtils.createNodeObject(
-				this.objectType, node.getFolder(), "testTemplatePermissionInheritance");
+		ObjectTagDefinition templateObjectTagDefinition = supply(() -> createObjectPropertyDefinition(Template.TYPE_TEMPLATE, null));
+		String templateOEName = execute(o -> o.getObjectTag().getName(), templateObjectTagDefinition);
+		NodeObject nodeObject = supply(() -> createNodeObject(
+				this.objectType, node.getFolder(), "testTemplatePermissionInheritance"));
 
 		// NodeObject: view permission: no, Template: view permission: no
-		setObjectPropertyDefinitionPermissions(templateObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				templateObjectTagDefinition.getObjectTag().getName(), false);
+		operate(() -> setObjectPropertyDefinitionPermissions(templateObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					templateOEName, false);
+		});
 
 		// NodeObject: view permission: no, Template: view permission: yes --> view permission granted
-		setObjectPropertyDefinitionPermissions(templateObjectTagDefinition, new Permission(PermHandler.PERM_VIEW));
+		operate(() -> setObjectPropertyDefinitionPermissions(templateObjectTagDefinition, new Permission(PermHandler.PERM_VIEW)));
 		boolean inherits = ContentNodeTestUtils.doesObjectTypeInheritObjectPropertyPermissionsFromObjectType(this.objectType, Template.TYPE_TEMPLATE);
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				templateObjectTagDefinition.getObjectTag().getName(), inherits);
+
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					templateOEName, inherits);
+		});
 	}
 
 	/**
@@ -246,47 +332,53 @@ public class ObjectTagPermissionsSandboxTest {
 	 */
 	@Test
 	public void testInTagObjectTagPermissionInheritance() throws Exception {
-		ObjectTagDefinition pageObjectTagDefinition = createObjectPropertyDefinition(this.objectType, "parenttag");
-		setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.PERM_VIEW));
-		NodeObject nodeObject = ContentNodeTestDataUtils.createNodeObject(
-				this.objectType, node.getFolder(), "testInTagObjectTagPermissionInheritance");
+		ObjectTagDefinition pageObjectTagDefinition = supply(() -> createObjectPropertyDefinition(this.objectType, "parenttag"));
+		operate(() -> setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.PERM_VIEW)));
+		NodeObject nodeObject = supply(
+				() -> createNodeObject(this.objectType, node.getFolder(), "testInTagObjectTagPermissionInheritance"));
 
 		ObjectTag parentTag = null;
 		switch (this.objectType) {
 		case Folder.TYPE_FOLDER:
-			parentTag = ((Folder)nodeObject).getObjectTag("parenttag");
+			parentTag = supply(() -> ((Folder)nodeObject).getObjectTag("parenttag"));
 			break;
 		case Template.TYPE_TEMPLATE:
-			parentTag = ((Template)nodeObject).getObjectTag("parenttag");
+			parentTag = supply(() -> ((Template)nodeObject).getObjectTag("parenttag"));
 			break;
 		case Page.TYPE_PAGE:
-			parentTag = ((Page)nodeObject).getObjectTag("parenttag");
+			parentTag = supply(() -> ((Page)nodeObject).getObjectTag("parenttag"));
 			break;
 		case File.TYPE_FILE:
-			parentTag = ((File)nodeObject).getObjectTag("parenttag");
+			parentTag = supply(() -> ((File)nodeObject).getObjectTag("parenttag"));
 			break;
 		case ImageFile.TYPE_IMAGE:
-			parentTag = ((ImageFile)nodeObject).getObjectTag("parenttag");
+			parentTag = supply(() -> ((ImageFile)nodeObject).getObjectTag("parenttag"));
 			break;
 		}
 
 		Assert.assertNotNull("ObjectTag parenttag must exist in node object " + nodeObject, parentTag);
 
-		ObjectTag inTag = ContentNodeTestDataUtils.createInTagObjectTag(parentTag, ObjectTransformer.getInt(construct.getId(), 0), "intag", nodeObject);
+		ObjectTag inTag = execute(pt -> createInTagObjectTag(pt, ObjectTransformer.getInt(construct.getId(), 0), "intag", nodeObject), parentTag);
 		testContext.getContext().clearNodeObjectCache();
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				inTag.getName(), true);
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					inTag.getName(), true);
+		});
 
 		// Add another sub object tag to test the permission bubbling
-		ObjectTag inIntag = ContentNodeTestDataUtils.createInTagObjectTag(inTag, ObjectTransformer.getInt(construct.getId(), 0), "inIntag", nodeObject);
+		ObjectTag inIntag = supply(() -> createInTagObjectTag(inTag, ObjectTransformer.getInt(construct.getId(), 0), "inIntag", nodeObject));
 		testContext.getContext().clearNodeObjectCache();
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				inIntag.getName(), true);
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					inIntag.getName(), true);
+		});
 
 		// Test again without view permission on the parent object tag
-		setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM));
-		ContentNodeTestDataUtils.loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
-				inIntag.getName(), false);
+		operate(() -> setObjectPropertyDefinitionPermissions(pageObjectTagDefinition, new Permission(PermHandler.EMPTY_PERM)));
+		systemUserAuth.withAuth(authType, () -> {
+			loadRestNodeObjectAndCheckIfTagExists(this.objectType, ObjectTransformer.getInteger(nodeObject.getId(), 0),
+					inIntag.getName(), false);
+		});
 	}
 
 	/**
@@ -298,17 +390,16 @@ public class ObjectTagPermissionsSandboxTest {
 			ObjectTagDefinition objectTagDefinition, Permission permission) throws NodeException {
 		PermHandler.setPermissions(ObjectTagDefinition.TYPE_OBJTAG_DEF,
 				ObjectTransformer.getInt(objectTagDefinition.getId(), 0),
-				Arrays.asList(this.userGroup),
+				Arrays.asList(userGroup),
 				permission.toString());
-		TransactionManager.getCurrentTransaction().commit(false);
 	}
 
 	/**
 	 * @param type
 	 * @return
-	 * @throws Exception
+	 * @throws NodeException
 	 */
-	protected ObjectTagDefinition createObjectPropertyDefinition(int type, String keyword) throws Exception {
+	protected ObjectTagDefinition createObjectPropertyDefinition(int type, String keyword) throws NodeException {
 		String name = keyword;
 		if (keyword == null) {
 			String className = getClass().getName();

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { FormControl, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { IDocumentation } from '../../common/docs';
 import { InjectDocumentation } from '../../common/docs-loader';
 
@@ -26,4 +26,10 @@ export class InputDemoPage {
             streetName: new UntypedFormControl(''),
         }),
     });
+
+    get streetNameControl(): FormControl {
+        return this.addressForm
+            .get('address')
+            ?.get('streetName') as FormControl;
+    }
 }

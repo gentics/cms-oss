@@ -5,8 +5,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.velocity.exception.MethodInvocationException;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.PropertyResolver;
@@ -286,7 +284,7 @@ public class GisRendering {
 		/**
 		 * Create an instance, filled with data from the given map
 		 * @param map map
-		 * @throws MethodInvocationException
+		 * @throws NodeException
 		 */
 		public ResizeInfo(Map<Object, Object> map) throws NodeException {
 			width = ObjectTransformer.getInt(map.get(WIDTH_ARG), width);

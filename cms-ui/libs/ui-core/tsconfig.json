@@ -9,7 +9,8 @@
         "noPropertyAccessFromIndexSignature": false,
         "noImplicitReturns": false,
         "noFallthroughCasesInSwitch": true,
-        "emitDecoratorMetadata": false
+        "emitDecoratorMetadata": false,
+        "ignoreDeprecations": "6.0"
     },
     "angularCompilerOptions": {
         "enableI18nLegacyMessageIdFormat": false,

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -31,10 +32,6 @@ import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.response.FolderExternalLinksResponse;
 import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
-import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.db.SQLExecutor;
 
@@ -63,20 +60,19 @@ public class GetExternalLinksSandboxTest {
 	 * Creates folders, subfolders and pages.
 	 */
 	private void createPages(int numPages) throws Exception {
-		FolderResource folderResource = getFolderResource();
 		FolderCreateRequest request = new FolderCreateRequest();
 		FolderLoadResponse loadResponse;
 
 		request.setMotherId(Integer.toString(ROOT_FOLDER_ID));
 
 		request.setName("subFolder1");
-		loadResponse = folderResource.create(request);
+		loadResponse = getFolderResource().create(request);
 
 		subFolder1Id = loadResponse.getFolder().getId();
 
 		request.setMotherId(String.valueOf(subFolder1Id));
 		request.setName("subsubfolder");
-		loadResponse = folderResource.create(request);
+		loadResponse = getFolderResource().create(request);
 
 		Integer subsubfolderId = loadResponse.getFolder().getId();
 		Template template = createTemplate(ROOT_FOLDER_ID);
@@ -265,31 +261,5 @@ public class GetExternalLinksSandboxTest {
 		t.commit(false);
 
 		return template;
-	}
-
-	/**
-	 * Get a folder resource, that can be used to test REST calls
-	 * The folder resource will have the current transaction set
-	 * @return folder resource
-	 * @throws NodeException
-	 */
-	protected FolderResource getFolderResource() throws NodeException {
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return folderResource;
-	}
-
-	/**
-	 * Get a page resource, that can be used to test REST calls
-	 * The page resource will have the current transaction set
-	 * @return page resource
-	 * @throws NodeException
-	 */
-	protected PageResource getPageResource() throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return pageResource;
 	}
 }

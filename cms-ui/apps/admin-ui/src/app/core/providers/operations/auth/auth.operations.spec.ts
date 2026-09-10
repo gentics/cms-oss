@@ -39,12 +39,6 @@ class MockRouter {
     navigateByUrl = jasmine.createSpy('navigateByUrl').and.stub();
 }
 
-class MockEditorUiLocalStorage {
-    getSid = jasmine.createSpy('getSid').and.returnValue(SID);
-    setSid = jasmine.createSpy('setSid').and.stub();
-}
-
-const SID = 1234;
 const MOCK_USER: User<Raw> = getExampleFolderData().editor;
 Object.freeze(MOCK_USER);
 const ERROR_MSG = 'Auth Error';
@@ -53,7 +47,6 @@ describe('AuthOperations', () => {
 
     let client: GCMSTestRestClientService;
     let authOps: AuthOperations;
-    let editorUiLocalStorage: MockEditorUiLocalStorage;
     let errorHandler: MockErrorHandler;
     let state: TestAppState;
     let stopper: ObservableStopper;
@@ -66,7 +59,6 @@ describe('AuthOperations', () => {
             providers: [
                 AuthOperations,
                 { provide: AppStateService, useClass: TestAppState },
-                { provide: EditorUiLocalStorageService, useClass: MockEditorUiLocalStorage },
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: Router, useClass: MockRouter },
@@ -78,7 +70,6 @@ describe('AuthOperations', () => {
 
         client = TestBed.inject(GCMSRestClientService) as any;
         authOps = TestBed.inject(AuthOperations);
-        editorUiLocalStorage = TestBed.inject(EditorUiLocalStorageService) as any;
         errorHandler = TestBed.inject(ErrorHandler) as any;
         state = TestBed.inject(AppStateService) as any;
         stopper = new ObservableStopper();
@@ -109,7 +100,6 @@ describe('AuthOperations', () => {
                 takeUntil(stopper.stopper$),
             ).subscribe((action: ValidateSuccess) => {
                 validateSuccessDispatched = true;
-                expect(action.sid).toBe(SID);
                 expect(action.user).toEqual(MOCK_USER);
             });
 
@@ -123,7 +113,6 @@ describe('AuthOperations', () => {
         });
 
         it('works for a success response', fakeAsync(() => {
-            editorUiLocalStorage.getSid.and.returnValue(null);
             spyOn(client.user, 'me').and.returnValue(
                 observableOf<ValidateSidResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
@@ -131,15 +120,13 @@ describe('AuthOperations', () => {
                 }).pipe(delay(0)), // We use delay() to make the response asynchronous.
             );
 
-            authOps.validateSessionId(SID);
+            authOps.validateSession();
             expect(validateStartDispatched).toBe(true);
-            expect(client.user.me).toHaveBeenCalledWith({ sid: SID });
+            expect(client.user.me).toHaveBeenCalled();
 
             tick();
             expect(validateSuccessDispatched).toBe(true);
             expect(validateErrorDispatched).toBe(false);
-            // The SID was not yet in the editor local storage, so it should be added.
-            expect(editorUiLocalStorage.setSid).toHaveBeenCalledWith(SID);
         }));
 
         it('works for an error response', fakeAsync(() => {
@@ -150,9 +137,8 @@ describe('AuthOperations', () => {
                 ),
             );
 
-            authOps.validateSessionId(SID);
             expect(validateStartDispatched).toBe(true);
-            expect(client.user.me).toHaveBeenCalledWith({ sid: SID });
+            expect(client.user.me).toHaveBeenCalled();
 
             tick();
             expect(validateSuccessDispatched).toBe(false);
@@ -162,23 +148,16 @@ describe('AuthOperations', () => {
     });
 
     it('validateSessionFromLocalStorage() works', fakeAsync(() => {
-        const validateSpy = spyOn(authOps, 'validateSessionId').and.callThrough();
+        const validateSpy = spyOn(authOps, 'validateSession').and.callThrough();
         spyOn(client.user, 'me').and.returnValue(
             observableOf<ValidateSidResponse>({
                 responseInfo: { responseCode: ResponseCode.OK },
                 user: MOCK_USER,
             }).pipe(delay(0)),
         );
-        authOps.validateSessionFromLocalStorage();
+        authOps.validateSession();
 
-        expect(editorUiLocalStorage.getSid).toHaveBeenCalledTimes(1);
-        expect(validateSpy).toHaveBeenCalledWith(SID);
-        editorUiLocalStorage.getSid.calls.reset();
-
-        // The SID was already in the editor local storage, so it should not be set again.
-        tick();
-        expect(editorUiLocalStorage.getSid).toHaveBeenCalledTimes(1);
-        expect(editorUiLocalStorage.setSid).not.toHaveBeenCalled();
+        expect(validateSpy).toHaveBeenCalled();
     }));
 
     describe('login()', () => {
@@ -202,7 +181,6 @@ describe('AuthOperations', () => {
                 takeUntil(stopper.stopper$),
             ).subscribe((action: LoginSuccess) => {
                 loginSuccessDispatched = true;
-                expect(action.sid).toBe(SID);
                 expect(action.user).toEqual(MOCK_USER);
             });
 
@@ -220,7 +198,6 @@ describe('AuthOperations', () => {
             spyOn(client.auth, 'login').and.returnValue(
                 observableOf<LoginResponse>({
                     responseInfo: { responseCode: ResponseCode.OK },
-                    sid: SID,
                     user: MOCK_USER,
                 }).pipe(delay(0)),
             );
@@ -235,7 +212,6 @@ describe('AuthOperations', () => {
             tick();
             expect(loginSuccessDispatched).toBe(true);
             expect(loginErrorDispatched).toBe(false);
-            expect(editorUiLocalStorage.setSid).toHaveBeenCalledWith(SID);
             expect(router.navigateByUrl).toHaveBeenCalledWith('/');
         }));
 
@@ -300,14 +276,13 @@ describe('AuthOperations', () => {
                 }).pipe(delay(0)),
             );
 
-            authOps.logout(SID);
+            authOps.logout();
             expect(logoutStartDispatched).toBe(true);
-            expect(client.auth.logout).toHaveBeenCalledWith(SID);
+            expect(client.auth.logout).toHaveBeenCalled();
 
             tick();
             expect(logoutSuccessDispatched).toBe(true);
             expect(logoutErrorDispatched).toBe(false);
-            expect(editorUiLocalStorage.setSid).toHaveBeenCalledWith(null);
         }));
 
         it('works for an error response', fakeAsync(() => {
@@ -319,9 +294,9 @@ describe('AuthOperations', () => {
                 ),
             );
 
-            authOps.logout(SID);
+            authOps.logout();
             expect(logoutStartDispatched).toBe(true);
-            expect(client.auth.logout).toHaveBeenCalledWith(SID);
+            expect(client.auth.logout).toHaveBeenCalled();
 
             tick();
             expect(logoutSuccessDispatched).toBe(false);

@@ -1,4 +1,4 @@
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, model, ViewChild } from '@angular/core';
 import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
@@ -18,13 +18,12 @@ import {
     ObjectTag,
     OverviewTagPartProperty,
     Page,
-    Raw,
     StringTagPartProperty,
     Tag,
     TagPartType,
     TagPropertyType,
     Tags,
-    Template,
+    Template
 } from '@gentics/cms-models';
 import {
     getExampleFileData,
@@ -204,10 +203,11 @@ describe('CombinedPropertiesEditorComponent', () => {
     describe('item properties', () => {
 
         it('loads additional item properties data and displays the item\'s properties',
-            componentTest(() => TestComponent, (fixture, testComponent) => {
+            componentTest(() => TestComponent, async (fixture, testComponent) => {
                 fixture.detectChanges();
-                testComponent.item = mockPage;
-                multiDetectChanges(fixture, 3);
+
+                testComponent.item.set(mockPage);
+                await multiDetectChanges(fixture, 3, 1000);
 
                 const expectedLanguages = state.now.folder.activeNodeLanguages.list.map((id) => mockLanguage(id));
                 const expectedTemplates = state.now.folder.templates.list.map((id) => mockTemplate(id));
@@ -236,7 +236,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         contentModified: true,
                     },
                 });
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 3);
 
                 const changes = { change: 'some change' };
@@ -346,7 +346,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('displays one tab for the item properties and one tab for each object property',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 // Check if the correct sequence of tabs is displayed (one for the item properties,
@@ -376,7 +376,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     withDelete: false,
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 // Navigate to the last object property.
@@ -435,7 +435,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 // Make sure that the TagEditor has been initialized correctly.
@@ -478,7 +478,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 // Make sure that the TagEditor has been initialized correctly.
@@ -511,7 +511,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -571,7 +571,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 });
                 validateTagSpy.and.returnValue({ allPropertiesValid: false });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -598,7 +598,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 3);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -623,7 +623,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -712,7 +712,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockFolder;
+                testComponent.item.set(mockFolder);
                 multiDetectChanges(fixture, 2);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -787,7 +787,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     },
                 });
 
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 const tagEditorHost: MockTagEditorHost = testComponent.combinedPropertiesEditor.tagEditorHostList.first as any;
@@ -898,7 +898,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.css(ITEM_PROPERTIES_EDITOR_SELECTOR))).toBeFalsy();
@@ -928,7 +928,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.css(ITEM_PROPERTIES_EDITOR_SELECTOR))).toBeFalsy();
@@ -971,7 +971,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     updatedItem.tags[editedObjProp.name].id = tagId;
                     folderActions.updateItemObjectProperties.and.returnValue(Promise.resolve(updatedItem));
 
-                    testComponent.item = mockFolder;
+                    testComponent.item.set(mockFolder);
                     multiDetectChanges(fixture, 2);
 
                     const iFrameWrapper = fixture.debugElement.query(By.directive(MockIFrameWrapper));
@@ -1008,7 +1008,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     // Simulate that the tag has not been added to the DB yet.
                     delete mockFolder.tags[editedObjProp.name].id;
 
-                    testComponent.item = mockFolder;
+                    testComponent.item.set(mockFolder);
                     multiDetectChanges(fixture, 2);
 
                     const iFrameWrapper = fixture.debugElement.query(By.directive(MockIFrameWrapper));
@@ -1037,7 +1037,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
                 }),
             );
@@ -1053,7 +1053,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
                 }),
             );
@@ -1069,7 +1069,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.css(ITEM_PROPERTIES_EDITOR_SELECTOR))).toBeFalsy();
@@ -1100,7 +1100,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.directive(MockIFrameWrapper))).toBeTruthy();
@@ -1157,7 +1157,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockFolder;
+                    testComponent.item.set(mockFolder);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.directive(MockIFrameWrapper))).toBeTruthy();
@@ -1233,7 +1233,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         },
                     });
 
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     expect(fixture.debugElement.query(By.directive(MockIFrameWrapper))).toBeTruthy();
@@ -1301,7 +1301,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('does not display the active/inactive checkbox',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     // Navigate to the last object property.
@@ -1329,7 +1329,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
             it('displays the active/inactive checkbox',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
-                    testComponent.item = mockPage;
+                    testComponent.item.set(mockPage);
                     multiDetectChanges(fixture, 2);
 
                     // Navigate to the last object property.
@@ -1395,7 +1395,7 @@ describe('CombinedPropertiesEditorComponent', () => {
     describe('tag list', () => {
         it('displays one tab for the tag list for page items',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 multiDetectChanges(fixture, 2);
 
                 // Check if tab list tag is present.
@@ -1413,7 +1413,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     numItems: 0,
                     responseInfo: null,
                 }));
-                testComponent.item = mockFolder;
+                testComponent.item.set(mockFolder);
                 multiDetectChanges(fixture, 2);
 
                 // Check if no tab list tag is present.
@@ -1435,7 +1435,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     numItems: 0,
                     responseInfo: null,
                 }));
-                testComponent.item = mockFile;
+                testComponent.item.set(mockFile);
                 multiDetectChanges(fixture, 2);
 
                 // Check if no tab list tag is present.
@@ -1450,7 +1450,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('displays no tab for the tag list for image items',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.item = mockImage;
+                testComponent.item.set(mockImage);
                 multiDetectChanges(fixture, 2);
 
                 // Check if no tab list tag is present.
@@ -1465,7 +1465,7 @@ describe('CombinedPropertiesEditorComponent', () => {
 
         it('with a page as item parses content tags accordingly',
             componentTest(() => TestComponent, (fixture, testComponent) => {
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 fixture.detectChanges();
                 const contentTags: Tag[] = generateContentTagList(mockPage);
                 tick(1000);
@@ -1485,7 +1485,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     numItems: 0,
                     responseInfo: null,
                 }));
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 fixture.detectChanges();
                 let contentTags: Tag[] = generateContentTagList(mockPage);
                 tick(100);
@@ -1495,7 +1495,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect(testComponent.combinedPropertiesEditor.contentTagRows.map((row) => row.item)).toEqual(contentTags);
 
                 // switch to folder item
-                testComponent.item = mockFolder;
+                testComponent.item.set(mockFolder);
                 fixture.detectChanges();
                 contentTags = generateContentTagList(mockFolder as any);
                 tick(100);
@@ -1514,7 +1514,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     numItems: 0,
                     responseInfo: null,
                 }));
-                testComponent.item = mockFolder;
+                testComponent.item.set(mockFolder);
                 fixture.detectChanges();
                 let contentTags: Tag[] = generateContentTagList(mockFolder as any);
                 tick(100);
@@ -1522,7 +1522,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect(testComponent.combinedPropertiesEditor.contentTagRows).toEqual([]);
 
                 // switch to page item
-                testComponent.item = mockPage;
+                testComponent.item.set(mockPage);
                 fixture.detectChanges();
                 contentTags = generateContentTagList(mockPage);
                 tick(100);
@@ -1545,7 +1545,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 tagType: editTagInfo.tagType,
             },
             readOnly: editTagInfo.readOnly,
-            node: editTagInfo.node as Node<Raw>,
+            node: editTagInfo.node,
             validator: {
                 validateAllTagProperties: validateTagSpy,
             } as any,
@@ -1675,11 +1675,12 @@ function mockTemplate(id: number): Template {
     return ret as Template;
 }
 
-function multiDetectChanges(fixture: ComponentFixture<any>, count: number, delay: number = 100): void {
+async function multiDetectChanges(fixture: ComponentFixture<any>, count: number, delay: number = 100): Promise<void> {
     for (let i = 0; i < count; ++i) {
         fixture.detectChanges();
         flush();
         tick(delay);
+        await fixture.whenStable();
     }
 }
 
@@ -1706,7 +1707,7 @@ class MockI18nNotification {
 @Component({
     selector: 'test-component',
     template: `
-        <combined-properties-editor [item]="item"></combined-properties-editor>
+        <combined-properties-editor [item]="item()"></combined-properties-editor>
         <gtx-overlay-host></gtx-overlay-host>
     `,
     standalone: false,
@@ -1715,7 +1716,7 @@ class TestComponent {
     @ViewChild(CombinedPropertiesEditorComponent, { static: true })
     combinedPropertiesEditor: CombinedPropertiesEditorComponent;
 
-    item: ItemWithObjectTags | Node;
+    readonly item = model<ItemWithObjectTags | Node>();
 }
 
 @Component({

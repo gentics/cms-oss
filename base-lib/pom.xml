@@ -22,6 +22,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<surefire.baselib.excludedGroups></surefire.baselib.excludedGroups>
+		<!-- These tests create their own databases, no test DB manager needed -->
+		<testdb.docker.images>testdb-mariadb</testdb.docker.images>
 		<test.forkcount>8</test.forkcount>
 	</properties>
 
@@ -56,6 +58,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -551,18 +554,6 @@
 			<artifactId>json</artifactId>
 		</dependency>
 
-		<!-- Velocity -->
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity</artifactId>
-			<version>1.6.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity-tools</artifactId>
-			<version>1.4</version>
-		</dependency>
-
 		<!-- Diff -->
 		<dependency>
 			<groupId>org.incava</groupId>
@@ -622,6 +613,28 @@
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
+		</dependency>
+				
+		<!-- Swagger / OpenAPI -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-models</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

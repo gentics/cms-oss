@@ -259,9 +259,6 @@ export function getMockedTagEditorContext(
     if (!contextInfo.node) {
         contextInfo.node = getExampleNodeData();
     }
-    if (typeof contextInfo.sid !== 'number') {
-        contextInfo.sid = 4711;
-    }
     if (!contextInfo.translator) {
         contextInfo.translator = getMockTagEditorTranslator();
     }
@@ -288,7 +285,6 @@ export function getMockedTagEditorContext(
         contextInfo.readOnly,
         contextInfo.page,
         contextInfo.node,
-        4711,
         contextInfo.translator,
         contextInfo.variableContext,
         contextInfo.gcmsUiServices,

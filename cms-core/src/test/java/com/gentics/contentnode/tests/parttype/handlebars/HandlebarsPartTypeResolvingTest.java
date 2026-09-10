@@ -62,12 +62,17 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 @RunWith(value = Parameterized.class)
 public class HandlebarsPartTypeResolvingTest {
+
+	protected static final String HANDLEBARS_CONTENT_ITERATE_KEYS = "{{#each cms.tag.parts.otherpart}}{{@key}}{{#unless @last}}, {{/unless}}{{/each}}";
+
 	public final static String TAG_NAME = "testtag";
+
+	public final static String HBS_PART_NAME = "hb";
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
-	private static Node node;
+	protected static Node node;
 
 	@Parameters(name = "{index}: template {0}")
 	public static Collection<Object[]> data() {
@@ -137,7 +142,7 @@ public class HandlebarsPartTypeResolvingTest {
 				p.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 				p.setEditable(0);
 				p.setHidden(false);
-				p.setKeyname("hb");
+				p.setKeyname(HBS_PART_NAME);
 				p.setName("Handlebars", 1);
 				p.setDefaultValue(create(Value.class, v -> {}).doNotSave().build());
 			}).doNotSave().build());
@@ -153,7 +158,7 @@ public class HandlebarsPartTypeResolvingTest {
 		}).build();
 
 		construct = update(construct, c -> {
-			getPartType(HandlebarsPartType.class, c, "hb").setText("{{#each cms.tag.parts.otherpart}}{{@key}}{{#unless @last}}, {{/unless}}{{/each}}");
+			getPartType(HandlebarsPartType.class, c, HBS_PART_NAME).setText(HANDLEBARS_CONTENT_ITERATE_KEYS);
 		}).build();
 
 		template = create(Template.class, t -> {
@@ -201,5 +206,15 @@ public class HandlebarsPartTypeResolvingTest {
 			assertThat(page.render()).as("Rendered page").isEqualTo(expectedResolvableKeys);
 			trx.success();
 		}
+	}
+
+	@Test
+	public void testRenderPart() throws NodeException {
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = RenderTypeTrx.publish()) {
+			assertThat(page.render("<node %s.parts.%s>".formatted(TAG_NAME, HBS_PART_NAME),
+					trx.getTransaction().getRenderResult(), null, null, null, null)).as("Rendered page")
+					.isEqualTo(expectedResolvableKeys);
+			trx.success();
+}
 	}
 }

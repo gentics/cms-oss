@@ -21,7 +21,6 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.gentics.contentnode.rest.model.LocalizationType;
 import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,9 +34,7 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
-import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
@@ -93,6 +90,7 @@ import com.gentics.contentnode.rest.model.DeleteInfo;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.LanguagePrivileges;
+import com.gentics.contentnode.rest.model.LocalizationType;
 import com.gentics.contentnode.rest.model.NodeFeature;
 import com.gentics.contentnode.rest.model.NodeIdObjectId;
 import com.gentics.contentnode.rest.model.Overview.ListType;
@@ -230,7 +228,7 @@ public class ModelBuilder {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		RenderType currentRenderType = t.getRenderType();
-		RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, t.getSessionId(), 0);
+		RenderType renderType = RenderType.getDefaultRenderType(preferences, RenderType.EM_ALOHA_READONLY, 0);
 
 		t.setRenderType(renderType);
 
@@ -3070,19 +3068,6 @@ public class ModelBuilder {
 			custTool.setName(nameMap);
 		}
 		String toolUrl = ObjectTransformer.getString(toolData.get("toolUrl"), null);
-		// replace ${SID} placeholder
-		if (!ObjectTransformer.isEmpty(toolUrl) && toolUrl.contains("${SID}")) {
-			try {
-				Transaction t = TransactionManager.getCurrentTransaction();
-				Session session = t.getSession();
-				if (session != null) {
-					toolUrl = toolUrl.replaceAll("\\$\\{SID\\}", String.valueOf(session.getSessionId()));
-				} else {
-					toolUrl = toolUrl.replaceAll("\\$\\{SID\\}", "");
-				}
-			} catch (TransactionException e) {
-			}
-		}
 		custTool.setToolUrl(toolUrl);
 		custTool.setIconUrl(ObjectTransformer.getString(toolData.get("iconUrl"), null));
 		custTool.setNewtab(ObjectTransformer.getBoolean(toolData.get("newtab"), false));

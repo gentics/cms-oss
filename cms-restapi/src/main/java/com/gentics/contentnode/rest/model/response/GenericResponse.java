@@ -58,6 +58,18 @@ public class GenericResponse implements Serializable {
 	}
 
 	/**
+	 * Create an instance as copy of another
+	 * @param other
+	 */
+	public GenericResponse(GenericResponse other) {
+		if (other.messages != null) {
+			messages = new LinkedList<>(other.messages);
+		}
+		responseInfo = other.responseInfo;
+		inBackground = other.inBackground;
+	}
+
+	/**
 	 * Messages contained in the response (which should be shown to the user)
 	 * @documentationType java.util.List
 	 * @return list of messages

@@ -1,6 +1,7 @@
 import {
     ChangeDetectorRef,
     Component,
+    model,
     NO_ERRORS_SCHEMA,
     Pipe,
     PipeTransform,
@@ -71,11 +72,11 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
     template: `
         <item-list-row
             [activeNode]="activeNode"
-            [item]="item"
+            [item]="item()"
             [itemInEditor]="itemInEditor"
             [icon]="'icon'"
             [selected]="true"
-            [itemType]="itemType"
+            [itemType]="itemType()"
             [startPageId]="startPageId"
             [linkPaths]="isSearching"
             [nodeLanguages]="nodeLanguages"
@@ -86,15 +87,15 @@ const getItemName = (listItem: Element): string => (listItem.querySelector('.ite
     standalone: false,
 })
 class TestComponent {
-    itemType = 'file';
-    item: Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File> = {
+    readonly itemType = model<'file' | 'page' | 'folder' | 'image' | 'form'>('file');
+    readonly item = model<Partial<Page> | Partial<Folder> | Partial<Image> | Partial<File>>({
         id: 1,
         name: 'item1',
         path: 'root/item1',
         publishPath: '/root/item1',
         type: 'file',
         deleted: { at: 0, by: null },
-    };
+    });
 
     activeNode: any = {
         name: '',
@@ -312,7 +313,7 @@ describe('ItemListRow', () => {
     it('shows online status for images that are online',
         componentTest(() => TestComponent, (fixture, instance) => {
             const testImage: Partial<Image> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'image', online: true };
-            instance.item = testImage;
+            instance.item.set(testImage);
             fixture.detectChanges();
             tick();
 
@@ -324,7 +325,7 @@ describe('ItemListRow', () => {
     it('shows offline status for images that are offline',
         componentTest(() => TestComponent, (fixture, instance) => {
             const testImage: Partial<Image> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'image', online: false };
-            instance.item = testImage;
+            instance.item.set(testImage);
             fixture.detectChanges();
             tick();
 
@@ -347,8 +348,8 @@ describe('ItemListRow', () => {
 
         it('does not show a language indicator for pages when less than 2 node languages',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = { ...getExamplePageData({ id: 1 }), languageVariants: [], deleted: { at: 0, by: null } };
+                instance.itemType.set('page');
+                instance.item.set({ ...getExamplePageData({ id: 1 }), languageVariants: [], deleted: { at: 0, by: null } });
                 instance.nodeLanguages = [
                     { id: 1, code: 'en', name: 'English' },
                 ];
@@ -361,13 +362,13 @@ describe('ItemListRow', () => {
         );
 
         it('shows a language indicator for translated pages without additional status icons and without all untranslated languages visible',
-            componentTest(() => TestComponent, (fixture, instance) => {
+            componentTest(() => TestComponent, async (fixture, instance) => {
                 fixture.detectChanges();
 
                 expect(fixture.nativeElement.querySelector('page-language-indicator')).toBe(null);
 
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -375,20 +376,27 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
+                tick();
                 fixture.detectChanges();
+                tick();
+                await fixture.whenRenderingDone();
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
 
                 tick();
+                fixture.detectChanges();
+                tick();
+                await fixture.whenRenderingDone();
 
                 const langStateBtn = fixture.nativeElement.querySelector('page-language-indicator gtx-language-state .language-button');
                 expect(langStateBtn).toBeTruthy();
@@ -398,8 +406,8 @@ describe('ItemListRow', () => {
 
         it('does show an offline language indicator for English page without additional status icons and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: false,
@@ -411,13 +419,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -433,8 +442,8 @@ describe('ItemListRow', () => {
 
         it('does show an published language indicator for English page without additional status icons and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -446,13 +455,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -468,8 +478,8 @@ describe('ItemListRow', () => {
 
         it('does show a language indicator for English page and with additional status icon "modified" and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -481,13 +491,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -508,8 +519,8 @@ describe('ItemListRow', () => {
 
         it('does show a language indicator for English page and with additional status icon "queued" and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -521,13 +532,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -548,8 +560,8 @@ describe('ItemListRow', () => {
 
         it('does show a language indicator for English page and with additional status icon "planned" and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -561,13 +573,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -588,8 +601,8 @@ describe('ItemListRow', () => {
 
         it('does show a language indicator for English page and with additional status icon "inherited" and without all untranslated languages visible',
             componentTest(() => TestComponent, (fixture, instance) => {
-                instance.itemType = 'page';
-                instance.item = {
+                instance.itemType.set('page');
+                const testItem = {
                     ...getExamplePageData({ id: 1 }),
                     languageVariants: [1, 2],
                     online: true,
@@ -601,13 +614,14 @@ describe('ItemListRow', () => {
                         at: 0,
                         by: null,
                     },
-                };
+                } as Page;
+                instance.item.set(testItem);
                 state.mockState({
                     entities: {
                         page: {
-                            [instance.item.id]: instance.item as any,
+                            [testItem.id]: testItem,
                         },
-                    },
+                    } as any,
                 });
 
                 state.dispatch(new SetDisplayAllLanguagesAction(false));
@@ -648,8 +662,8 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
-                instance.itemType = 'page';
-                instance.item = pageEN;
+                instance.itemType.set('page');
+                instance.item.set(pageEN);
                 instance.nodeLanguages = [
                     { id: 1, code: 'en', name: 'English' },
                     { id: 2, code: 'de', name: 'Deutsch (German)' },
@@ -730,8 +744,8 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
-                instance.itemType = 'page';
-                instance.item = pageEN;
+                instance.itemType.set('page');
+                instance.item.set(pageEN);
                 instance.itemsInfo.total = 1;
                 instance.nodeLanguages = [
                     { id: 1, code: 'en', name: 'English' },
@@ -816,8 +830,8 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
-                instance.itemType = 'page';
-                instance.item = pageEN;
+                instance.itemType.set('page');
+                instance.item.set(pageEN);
                 instance.itemsInfo.total = 1;
                 instance.nodeLanguages = [
                     { id: 1, code: 'en', name: 'English' },
@@ -902,8 +916,8 @@ describe('ItemListRow', () => {
                         by: null,
                     },
                 };
-                instance.itemType = 'page';
-                instance.item = pageEN;
+                instance.itemType.set('page');
+                instance.item.set(pageEN);
                 instance.itemsInfo.total = 1;
                 instance.nodeLanguages = [
                     { id: 1, code: 'en', name: 'English' },
@@ -979,7 +993,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = undefined;
                 fixture.detectChanges();
                 tick();
@@ -999,7 +1013,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 4;
                 fixture.detectChanges();
                 tick();
@@ -1019,7 +1033,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 1;
                 fixture.detectChanges();
                 tick();
@@ -1039,7 +1053,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 3;
                 fixture.detectChanges();
                 tick();
@@ -1066,7 +1080,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = undefined;
                 fixture.detectChanges();
                 tick();
@@ -1086,7 +1100,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 4;
                 fixture.detectChanges();
                 tick();
@@ -1106,7 +1120,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 1;
                 fixture.detectChanges();
                 tick();
@@ -1126,7 +1140,7 @@ describe('ItemListRow', () => {
                     inherited: false,
                     language: 'de',
                 };
-                instance.item = item;
+                instance.item.set(item);
                 instance.startPageId = 3;
                 fixture.detectChanges();
                 tick();
@@ -1157,7 +1171,7 @@ describe('ItemListRow', () => {
         it('adds to favourites when favourite star is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const testFolder: Partial<Folder> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'folder' };
-                instance.item = testFolder;
+                instance.item.set(testFolder);
                 instance.itemsInfo.list = [1];
                 instance.itemsInfo.total = 1;
                 state.mockState({ favourites: { list: [] } });
@@ -1176,7 +1190,7 @@ describe('ItemListRow', () => {
         it('removes from favourites when unfavourite star is clicked',
             componentTest(() => TestComponent, (fixture, instance) => {
                 const testFolder: Partial<Folder> = { name: 'item1', path: 'root/item1', globalId: 'itemA', type: 'folder' };
-                instance.item = testFolder;
+                instance.item.set(testFolder);
                 instance.itemsInfo.list = [1];
                 instance.itemsInfo.total = 1;
                 state.mockState({

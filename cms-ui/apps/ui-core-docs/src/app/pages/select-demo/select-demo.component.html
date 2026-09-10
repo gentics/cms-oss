@@ -56,7 +56,7 @@
 
     <div class="row">
       <div class="column small-8">
-        <gtx-select label="Multiple Select" [(ngModel)]="selectMultiVal" multiple="true">
+        <gtx-select label="Multiple Select" [(ngModel)]="selectMultiVal" [multiple]="true">
           @for (item of options; track item) {
             <gtx-option [value]="item"></gtx-option>
           }
@@ -69,7 +69,7 @@
   </div>
   <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                 <gtx-select label="Multiple Select" [(ngModel)]="selectMultiVal" multiple="true">
+                 <gtx-select label="Multiple Select" [(ngModel)]="selectMultiVal" [multiple]="true">
                     <gtx-option *ngFor="let item of options" [value]="item"></gtx-option>
                  </gtx-select>
                  Value: <code>(( selectMultiVal | json ))</code>
@@ -330,7 +330,7 @@
 <gtx-demo-block demoTitle="Clearable Select">
   <div class="demo-result">
     <div class="column small-8">
-      <gtx-select label="Select" [(ngModel)]="clearableSelectVal" clearable>
+      <gtx-select label="Select" [(ngModel)]="clearableSelectVal" [clearable]>
         @for (item of options; track item) {
           <gtx-option [value]="item"></gtx-option>
         }
@@ -342,7 +342,7 @@
   </div>
   <div class="demo-code">
             <gtx-highlighted-code language="HTML" code='
-                    <gtx-select label="Select" [(ngModel)]="clearableSelectVal" clearable>
+                    <gtx-select label="Select" [(ngModel)]="clearableSelectVal" [clearable]>
                         <gtx-option *ngFor="let item of options" [value]="item"></gtx-option>
                     </gtx-select>
                     Value: <code>(( clearableSelectVal | json ))</code>
@@ -376,7 +376,7 @@
 <gtx-demo-block demoTitle="Select with placeholder">
   <div class="demo-result">
     <div class="column small-8">
-      <gtx-select label="Select" [(ngModel)]="placeholderSelectVal" clearable placeholder="More...">
+      <gtx-select label="Select" [(ngModel)]="placeholderSelectVal" [clearable] placeholder="More...">
         @for (item of options; track item) {
           <gtx-option [value]="item"></gtx-option>
         }
@@ -388,7 +388,7 @@
   </div>
   <div class="demo-code">
         <gtx-highlighted-code language="HTML" code='
-                <gtx-select label="Select" [(ngModel)]="placeholderSelectVal" clearable placeholder="More...">
+                <gtx-select label="Select" [(ngModel)]="placeholderSelectVal" [clearable] placeholder="More...">
                     <gtx-option *ngFor="let item of options" [value]="item"></gtx-option>
                 </gtx-select>
                 Value: <code>(( placeholderSelectVal | json ))</code>

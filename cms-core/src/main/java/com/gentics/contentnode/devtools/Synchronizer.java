@@ -20,7 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
+import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.Phases;
+import org.codehaus.groovy.tools.GroovyClass;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +41,9 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.QueueWithDelay;
+import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Datasource;
@@ -51,6 +58,8 @@ import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
+
+import groovy.lang.GroovyClassLoader;
 
 /**
  * Synchronization implementation for the {@link Feature#DEVTOOLS}
@@ -141,6 +150,11 @@ public class Synchronizer {
 	 * Alternate Object Mapper for serialization/deserialization (will include NON_EMPTY attributes)
 	 */
 	private static ObjectMapper alternateMapper;
+
+	/**
+	 * Map of {@link GroovyClassLoader} instances per Node
+	 */
+	private static Map<Node, GroovyClassLoader> groovyClassLoaderPerNode = MapUtils.synchronizedMap(new HashMap<>());
 
 	static {
 		AtomicInteger priority = new AtomicInteger();
@@ -470,6 +484,9 @@ public class Synchronizer {
 			st.setInt(1, node.getId());
 			st.setString(2, packageName);
 		});
+
+		// invalidate the groovy classloader for the node
+		invalidateGroovyClassLoader(node);
 	}
 
 	/**
@@ -494,8 +511,61 @@ public class Synchronizer {
 			AbstractSynchronizer<? extends SynchronizableNodeObject, ? extends AbstractModel> synchronizer = packageSynchronizer.synchronizersPerClass
 					.get(clazz);
 			synchronizer.assignAll(node);
-			}
 		}
+
+		// invalidate the groovy classloader for the node
+		invalidateGroovyClassLoader(node);
+	}
+
+	/**
+	 * Get the {@link GroovyClassLoader} instance for the given Node. The class loader will contain all
+	 * classes compiled from scripts found in packages, which are assigned to the node
+	 * @param node
+	 * @return
+	 * @throws NodeException
+	 */
+	public static GroovyClassLoader getGroovyClassLoader(Node node) throws NodeException {
+		Set<String> nodePackages = Synchronizer.getPackages(node);
+
+		return groovyClassLoaderPerNode.computeIfAbsent(node, n -> {
+			CompilerConfiguration config = new CompilerConfiguration();
+
+			GroovyClassLoader gcl = new GroovyClassLoader(Synchronizer.class.getClassLoader(), config);
+
+			try (Timing timing = Timing.get(-1, duration -> {
+				logger.info("Compiled scripts for node %s in %d ms".formatted(I18NHelper.getName(node), duration));
+			})) {
+				CompilationUnit unit = new CompilationUnit(config, null, gcl);
+				for (String packageName : nodePackages) {
+					MainPackageSynchronizer mainPack = Synchronizer.getPackage(packageName);
+					unit.addSources(mainPack.getScriptFiles());
+				}
+				unit.compile(Phases.CLASS_GENERATION);
+
+				for (GroovyClass groovyClass : unit.getClasses()) {
+					gcl.defineClass(groovyClass.getName(), groovyClass.getBytes());
+				}
+			} catch (NodeException ignored) {
+			}
+
+			return gcl;
+		});
+	}
+
+	/**
+	 * Invalidate the {@link GroovyClassLoader} for the give node
+	 * @param node node
+	 */
+	public static void invalidateGroovyClassLoader(Node node) {
+		groovyClassLoaderPerNode.remove(node);
+	}
+
+	/**
+	 * Invalidate the {@link GroovyClassLoader} for all nodes
+	 */
+	public static void invalidateGroovyClassLoader() {
+		groovyClassLoaderPerNode.clear();
+	}
 
 	/**
 	 * Get the package synchronizer for the given path or null
@@ -530,6 +600,7 @@ public class Synchronizer {
 	 */
 	public static void clearCache() {
 		container.clearCache();
+		invalidateGroovyClassLoader();
 	}
 
 	/**

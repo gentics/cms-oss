@@ -4,7 +4,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { API_BASE_URL, CmsComponentsModule, FALLBACK_LANGUAGE } from '@gentics/cms-components';
 import { AuthenticationModule } from '@gentics/cms-components/auth';
 import { GCMSRestClientModule } from '@gentics/cms-rest-client-angular';
-import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
+import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule } from '@ngx-translate/core';
@@ -96,8 +96,6 @@ import {
     UsersnapService,
     UserTableLoaderService,
 } from './providers';
-
-export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select((state) => state.auth.sid);
 
 const COMPONENTS: any[] = [
     ActivityManagerComponent,
@@ -195,11 +193,6 @@ const PROVIDERS: any[] = [
     // @gentics/cms-rest-clients-angular configuration
     { provide: GCMS_API_BASE_URL, useValue: API_BASE_URL },
     { provide: GCMS_API_ERROR_HANDLER, useClass: ErrorHandler },
-    {
-        provide: GCMS_API_SID,
-        useFactory: createSidObservable,
-        deps: [AppStateService],
-    },
 
 ];
 

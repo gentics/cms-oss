@@ -89,7 +89,6 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
     public tableError: string | null = null;
 
-    protected sid: number;
     protected subscriptions: Subscription[] = [];
 
     private formElementMap = new Map<string, FormElement>();
@@ -105,10 +104,6 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     ) { }
 
     public ngOnInit(): void {
-        this.subscriptions.push(this.appState.select((state) => state.auth.sid).subscribe((sid) => {
-            this.sid = sid;
-        }));
-
         const statusLoader$ = new BehaviorSubject<void>(null);
 
         this.subscriptions.push(statusLoader$.pipe(
@@ -322,7 +317,7 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
             return {
                 type: ValueType.BINARY,
                 fileName,
-                link: `${link}?sid=${this.sid}`,
+                link: `${link}`,
             };
         }
 

@@ -4,7 +4,7 @@
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "libs/cms-components/src",
-    "tags": ["lib", "angular", "publish"],
+    "tags": ["lib", "angular", "publish", "test:karma"],
     "targets": {
         "build": {
             "executor": "@nx/angular:ng-packagr-lite",

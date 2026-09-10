@@ -17,7 +17,7 @@ let uniqueTabGroupId = 0;
 export class TabGroupComponent {
 
     /** Unique id for the tab group. */
-    uniqueId = `gtx-tag-group-${uniqueTabGroupId++}`;
+    UNIQUE_ID = `gtx-tag-group-${uniqueTabGroupId++}`;
 
     /** Expand state for the group */
     public expand = false;
@@ -31,10 +31,10 @@ export class TabGroupComponent {
 
     @Input()
     set id(val: string) {
-        this.uniqueId = val;
+        this.UNIQUE_ID = val;
     }
 
-    get id(): string { return this.uniqueId; }
+    get id(): string { return this.UNIQUE_ID; }
 
     /**
      * Fires an event whenever the tab group is toggled. Argument is the id and state of the tab group.

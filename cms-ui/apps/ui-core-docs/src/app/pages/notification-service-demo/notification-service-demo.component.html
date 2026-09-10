@@ -17,7 +17,7 @@
                 </gtx-select>
             </div>
             <div class="column small-4">
-                <gtx-input label="Delay" [(ngModel)]="delay" type="number" min="0" max="10000" step="500"></gtx-input>
+                <gtx-input label="Delay" [(ngModel)]="delay" type="number" [min]="0" [max]="10000" [step]="500"></gtx-input>
             </div>
         </div>
         <gtx-button (click)="showBasic()">show</gtx-button>

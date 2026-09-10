@@ -6,32 +6,36 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Vector;
 
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.request.ExportSelectionRequest;
 import com.gentics.contentnode.rest.model.response.ExportSelectionResponse;
-import com.gentics.contentnode.rest.model.response.Message;
-import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.ExportResource;
-import com.gentics.lib.i18n.CNI18nString;
+
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 /**
  * Export helper resource
  */
+@Produces({ MediaType.APPLICATION_JSON })
+@Authenticated
 @Path("/export")
-public class ExportResourceImpl extends AuthenticatedContentNodeResource implements ExportResource {
+public class ExportResourceImpl implements ExportResource {
 
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.rest.api.ExportResource#getExportSelection(com.gentics.contentnode.rest.model.request.ExportSelectionRequest)
@@ -39,18 +43,18 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 	@POST
 	@Path("/selection")
 	public ExportSelectionResponse getExportSelection(
-			ExportSelectionRequest request) {
-		Transaction t = getTransaction();
-		List<Integer> subselFolders = new Vector<Integer>();
-		Map<Integer, List<Integer>> subselInheritedFolders = new HashMap<Integer, List<Integer>>();
+			ExportSelectionRequest request) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			Transaction t = trx.getTransaction();
+			List<Integer> subselFolders = new Vector<Integer>();
+			Map<Integer, List<Integer>> subselInheritedFolders = new HashMap<Integer, List<Integer>>();
 
-		try {
 			// get all selected pages
 			List<Integer> pageIds = request.getPages();
 
 			if (!ObjectTransformer.isEmpty(pageIds)) {
 				List<Page> pages = t.getObjects(Page.class, pageIds);
-
+				
 				for (Page page : pages) {
 					addFolders(page.getChannel(), page.getFolder(), subselFolders, subselInheritedFolders);
 				}
@@ -61,7 +65,7 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			if (!ObjectTransformer.isEmpty(imageIds)) {
 				List<ImageFile> images = t.getObjects(ImageFile.class, imageIds);
-
+				
 				for (ImageFile imageFile : images) {
 					addFolders(imageFile.getChannel(), imageFile.getFolder(), subselFolders, subselInheritedFolders);
 				}
@@ -72,7 +76,7 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			if (!ObjectTransformer.isEmpty(fileIds)) {
 				List<File> files = t.getObjects(File.class, fileIds);
-
+				
 				for (File file : files) {
 					addFolders(file.getChannel(), file.getFolder(), subselFolders, subselInheritedFolders);
 				}
@@ -83,7 +87,7 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 
 			if (!ObjectTransformer.isEmpty(folderIds)) {
 				List<Folder> folders = t.getObjects(Folder.class, folderIds);
-
+				
 				for (Folder folder : folders) {
 					addFolders(folder.getChannel(), folder.getMother(), subselFolders, subselInheritedFolders);
 				}
@@ -96,25 +100,20 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 				for (Entry<Integer, List<Integer>> entry : inheritedFolders.entrySet()) {
 					Node channel = t.getObject(Node.class, entry.getKey());
 					List<Folder> folders = t.getObjects(Folder.class, entry.getValue());
-
+					
 					for (Folder folder : folders) {
 						addFolders(channel, folder.getMother(), subselFolders, subselInheritedFolders);
 					}
 				}
 			}
-		} catch (NodeException e) {
-			logger.error("Error while getting export selection", e);
-			I18nString m = new CNI18nString("rest.general.error");
 
-			return new ExportSelectionResponse(new Message(Type.CRITICAL, m.toString()),
-					new ResponseInfo(ResponseCode.FAILURE, "Error while getting export selection"));
+			ExportSelectionResponse response = new ExportSelectionResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched export selection data"));
+
+			response.setFolders(subselFolders);
+			response.setInheritedFolders(subselInheritedFolders);
+			trx.success();
+			return response;
 		}
-
-		ExportSelectionResponse response = new ExportSelectionResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched export selection data"));
-
-		response.setFolders(subselFolders);
-		response.setInheritedFolders(subselInheritedFolders);
-		return response;
 	}
 
 	/**
@@ -130,7 +129,7 @@ public class ExportResourceImpl extends AuthenticatedContentNodeResource impleme
 		if (parent == null) {
 			return;
 		}
-		Transaction t = getTransaction();
+		Transaction t = TransactionManager.getCurrentTransaction();
 		List<Integer> channelInheritedFolders = null;
 
 		if (channel != null) {

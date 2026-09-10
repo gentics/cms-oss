@@ -11,6 +11,7 @@ import {
     TagResponse,
     User,
     UserResponse,
+    UserTokenData,
 } from '@gentics/mesh-models';
 
 export enum MeshType {
@@ -48,6 +49,7 @@ export type MeshGroupBO = GroupResponse & MeshBusinessObject & {
     users?: User[];
 };
 export type MeshUserBO = UserResponse & MeshBusinessObject;
+export type MeshUserTokenBO = UserTokenData & MeshBusinessObject;
 export type MeshSchemaBO = SchemaResponse & MeshBusinessObject;
 export type MeshMicroschemaBO = MicroschemaResponse & MeshBusinessObject;
 export type MeshProjectBO = ProjectResponse & MeshBusinessObject;

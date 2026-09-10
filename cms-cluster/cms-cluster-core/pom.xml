@@ -19,6 +19,11 @@
 	<name>Gentics CMS Cluster - Core</name>
 	<url>http://www.gentics.com</url>
 
+	<properties>
+		<!-- These tests do not use a database -->
+		<testdb.docker.skip>true</testdb.docker.skip>
+	</properties>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

@@ -74,19 +74,30 @@ public class FormRendering {
 		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 
 		if (form != null) {
-			if (renderType.getEditMode() == RenderType.EM_PUBLISH) {
+			var editMode = renderType.getEditMode();
+
+			if (editMode == RenderType.EM_PUBLISH || editMode == RenderType.EM_ALOHA_READONLY) {
+				if (editMode == RenderType.EM_ALOHA_READONLY) {
+					renderFormPreview(form, options, writer, renderType);
+				}
+
 				if (form.isOnline()) {
 					// render in publish mode
 					writer.write(options.getType().render(form, options));
 				} else {
 					writer.write(translate(options.getNoForm()));
 				}
-				renderType.addDependency(form, "online");
-			} else if (renderType.getEditMode() == RenderType.EM_ALOHA) {
+
+				if (editMode == RenderType.EM_PUBLISH) {
+					renderType.addDependency(form, "online");
+				}
+			} else if (editMode == RenderType.EM_ALOHA) {
 				// Forms cannot be shown live/interactively while Aloha is editing the page, show a placeholder instead.
 				writer.write(I18NHelper.get("form.editmode.placeholder"));
 			} else {
-				return renderFormPreview(form, options, writer, renderType);
+				throw new NodeException("WTF?! How did we get here?");
+				// TODO: Clean up.
+//				return renderFormPreview(form, options, writer, renderType);
 			}
 		} else {
 			writer.write(translate(options.getNoForm()));
@@ -120,14 +131,13 @@ public class FormRendering {
 			formJson.set("flows", flowsJsonNode);
 		});
 
+		writer.append("\n<script>window.formPreviewData = %s;\n</script>".formatted(formJson.toPrettyString()));
+
+		/* TODO: Clean up.
 		FormPreviewFiles previewFiles = getFormPreviewResources(page, formJson);
 		if (previewFiles == null) {
 			return false;
 		}
-
-		StringBuilder preview = new StringBuilder();
-
-		preview.append("\n<script>window.formPreviewData = %s;\n</script>".formatted(formJson.toPrettyString()));
 
 		for (String cssPath : previewFiles.getCssFiles()) {
 			preview.append("\n<link rel=\"stylesheet\" href=\"%s\"/>".formatted(cssPath));
@@ -167,6 +177,7 @@ public class FormRendering {
 				"\"></iframe>";
 
 		writer.write(wrapper);
+		 */
 
 		return true;
 	}

@@ -108,17 +108,17 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceTemplate() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// set initial source value to the referencing template
 		ReferenceHelper.setTemplateSource(C.reference_test_data.template1_id, "Master");
-        
+
 		// localize the template and change the referencing value
 		ReferenceHelper.localizeTemplate(channelId, C.reference_test_data.template1_id, "Localized");
-        
+
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, "Master", "Localized");
 	}
-	
+
 	/**
 	 * Test page, referencing to localized page.
 	 * 
@@ -128,7 +128,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferencePage() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a new page over the REST API
 		Page referencedPage = null;
 
@@ -192,11 +192,11 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 			expectedChannel = "Master Template\n#";
 			break;
 		}
-        
+
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}
-    
+
 	/**
 	 * Test page, referencing to localized file.
 	 * 
@@ -206,7 +206,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceFile() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a new file over the REST API
 		File newFile = null;
 		File fileInMaster = null;
@@ -247,7 +247,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 
 		fileId.setFileId(ObjectTransformer.getInteger(newFile.getId(), -1));
 		fileTag.setActive(true);
-        
+
 		// save and publish the test page
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
@@ -274,7 +274,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}
-	
+
 	/**
 	 * Test page, referencing to localized image.
 	 * 
@@ -284,7 +284,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceImage() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a new image over the REST API
 		ImageFile newImage = null;
 		ImageFile imageInMaster = null;
@@ -325,7 +325,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 
 		fileId.setImageId(ObjectTransformer.getInteger(newImage.getId(), -1));
 		fileTag.setActive(true);
-        
+
 		// save and publish the test page
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
@@ -348,11 +348,11 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		} else {
 			expectedChannel += "#";
 		}
-        
+
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}
-    
+
 	/**
 	 * Test page, referencing to localized folder.
 	 * 
@@ -362,7 +362,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceFolder() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a new folder over the REST API
 		Folder newFolder = null;
 		Folder folderInMaster = null;
@@ -403,7 +403,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 
 		fileId.setFolderId(ObjectTransformer.getInteger(newFolder.getId(), -1));
 		fileTag.setActive(true);
-        
+
 		// save and publish the test page
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
@@ -430,7 +430,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}
-    
+
 	/**
 	 * Test page, referencing to localized template tag.
 	 * TODO: make test for using inherited or local template tag
@@ -440,7 +440,7 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceTemplateTag() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a test template
 		Template newTemplate = TransactionManager.getCurrentTransaction().createObject(Template.class);
 
@@ -465,9 +465,9 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		// add the template tag to the test template
 		newTemplate.getTemplateTags().put("testTag", newTemplateTag);
 		newTemplate.save();
-        
+
 		TransactionManager.getCurrentTransaction().commit(false);
-        
+
 		// get test page tags, get the folder tag and set the reference
 		Tag contentTag = testPage.getTags().get("templatetag");
 		Property tag = contentTag.getProperties().get("tag");
@@ -476,11 +476,11 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		tag.setTemplateId(ObjectTransformer.getInteger(newTemplate.getId(), -1));
 		// tag.setStringValue(C.reference_test_data.page_tag_master_value);
 		contentTag.setActive(true);
-        
+
 		// save and publish the test page
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
-        
+
 		// localize test template and change the template tag's value
 		Template localizedTemplate = (Template) newTemplate.copy();
 
@@ -489,15 +489,15 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		localizedTemplate.save();
 
 		TransactionManager.getCurrentTransaction().commit(false);
-        
+
 		// create expected rendering results for master and channel nodes
 		String expectedMaster = "Master Template\n" + C.reference_test_data.page_tag_master_value;
 		String expectedChannel = "Master Template\n" + C.reference_test_data.page_tag_channel_value;
-        
+
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}
-    
+
 	/**
 	 * Test page, referencing to localized page tag.
 	 * TODO: make test for using inherited or local template tag
@@ -507,17 +507,17 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 	public void testReferenceContentTag() throws Exception {
 		// create a new page over the REST API
 		Page testPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
-        
+
 		// create a new page over the REST API
 		Page referencedPage = ReferenceHelper.createPage(C.reference_test_data.folder_id, C.reference_test_data.template1_id);
 
 		Tag tag2 = ReferenceHelper.createTag(referencedPage.getId());
-        
+
 		ReferenceHelper.savePage(referencedPage);
 		ReferenceHelper.publishPage(referencedPage);
-        
+
 		referencedPage = ReferenceHelper.loadPage(referencedPage.getId());
-        
+
 		// get test page tags, get the folder tag and set the reference
 		Tag contentTag = testPage.getTags().get("contenttag");
 		Property tag = contentTag.getProperties().get("tag");
@@ -525,16 +525,16 @@ public class ReferenceChannelSandboxTest extends AbstractMultichannellingSandbox
 		tag.setContentTagId(referencedPage.getTags().get(tag2.getName()).getId());
 		tag.setPageId(referencedPage.getId());
 		contentTag.setActive(true);
-        
+
 		// save and publish the test page
 		ReferenceHelper.savePage(testPage);
 		ReferenceHelper.publishPage(testPage);
-        
+
 		ReferenceHelper.localizeAndPublishPageWithChangedContentTag(channelId, ObjectTransformer.getInt(referencedPage.getId(), -1), tag2);
-        
+
 		String expectedMaster = "Master Template\n" + C.reference_test_data.page_tag_master_value;
 		String expectedChannel = "Master Template\n" + C.reference_test_data.page_tag_channel_value;
-        
+
 		// compare the source value when rendered in master node and channel node
 		ReferenceHelper.renderingTest(testPage, MASTER_ID, channelId, expectedMaster, expectedChannel);
 	}

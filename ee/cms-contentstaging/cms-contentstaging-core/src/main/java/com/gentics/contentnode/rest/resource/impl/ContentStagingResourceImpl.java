@@ -885,7 +885,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 							imports.put(sanitizedName, controller);
 
 							return controller.call();
-						});
+						}, java.util.function.Function.identity());
 			}
 		} catch (IllegalStateException e) {
 			throw new NodeException("Error starting import of Content Package '" + name + "'", e);
@@ -935,7 +935,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				return new GenericResponse(
 						new Message(Type.SUCCESS, I18NHelper.get("content.staging.export.success", sanitizedName)),
 						ResponseInfo.ok("Successfully exported package"));
-			});
+			}, java.util.function.Function.identity());
 		} catch (IllegalStateException e) {
 			throw new NodeException("Error reading Content Package '" + name + "'", e);
 		}

@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.dirting;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,7 +44,6 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -251,9 +251,7 @@ public class MultichannellingLanguagesetDirtingTestNoMCCR {
 		t.commit(false);
 
 		// Create changing-contentset
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		PageLoadResponse translateResponse = pri.translate((Integer) originalPage.getId(), "ina", false, null);
+		PageLoadResponse translateResponse = getPageResource().translate((Integer) originalPage.getId(), "ina", false, null);
 		ContentNodeRESTUtils.assertResponseOK(translateResponse);
 		t.commit(false);
 		translatedPage = t.getObject(Page.class, translateResponse.getPage().getId(), true);
@@ -365,9 +363,7 @@ public class MultichannellingLanguagesetDirtingTestNoMCCR {
 		t.commit(false);
 
 		// Create change-contentset
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		PageLoadResponse translateResponse = pri.translate((Integer) originalPage.getId(), "ina", false, null);
+		PageLoadResponse translateResponse = getPageResource().translate((Integer) originalPage.getId(), "ina", false, null);
 		ContentNodeRESTUtils.assertResponseOK(translateResponse);
 		translatedPage = t.getObject(Page.class, translateResponse.getPage().getId(), true);
 		if (fixed.getChangeableChannel() != 0) {

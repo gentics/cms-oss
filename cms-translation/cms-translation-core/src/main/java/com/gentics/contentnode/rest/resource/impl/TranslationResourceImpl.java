@@ -3,6 +3,11 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.factory.Trx.supply;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
@@ -24,7 +29,6 @@ import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.Tag.Type;
 import com.gentics.contentnode.rest.model.request.TranslationRequest;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -37,8 +41,7 @@ import com.gentics.contentnode.translation.LanguageVariantService;
 import com.gentics.contentnode.translation.TagResolveService;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
-import java.util.ArrayList;
-import java.util.List;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.POST;
@@ -48,7 +51,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response.Status;
-import org.apache.commons.lang3.StringUtils;
 
 @Authenticated
 @RequiredFeature(Feature.AUTOMATIC_TRANSLATION)
@@ -99,7 +101,7 @@ public class TranslationResourceImpl implements TranslationResource {
 	@Override
 	@POST
 	@Path("/page/{id}")
-	public GenericResponse translate(final @PathParam("id") Integer pageId,
+	public PageLoadResponse translate(final @PathParam("id") Integer pageId,
 			final @QueryParam("language") String targetLanguageCode,
 			final @QueryParam("locked") @DefaultValue("true") boolean locked,
 			final @QueryParam("channelId") @DefaultValue("0") Integer channelId,
@@ -110,7 +112,7 @@ public class TranslationResourceImpl implements TranslationResource {
 		}
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return Operator.executeLocked(new CNI18nString("feature.automatic_translation").toString(), waitMs, null, () -> {
+			return Operator.executeLockedRethrowing(new CNI18nString("feature.automatic_translation").toString(), waitMs, null, () -> {
 				final var languageVariantService = new LanguageVariantService();
 				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
 				final var sourceLanguage = loadedPage.getLanguage();
@@ -167,7 +169,7 @@ public class TranslationResourceImpl implements TranslationResource {
 				response.addMessage(new Message(Message.Type.SUCCESS, resultMessage.toString()));
 
 				return response;
-			});
+			}, PageLoadResponse::new);
 		}
 	}
 

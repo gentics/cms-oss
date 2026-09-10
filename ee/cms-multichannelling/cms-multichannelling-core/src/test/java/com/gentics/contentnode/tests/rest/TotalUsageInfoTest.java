@@ -38,9 +38,6 @@ import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.rest.model.response.TotalUsageInfo;
 import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
-import com.gentics.contentnode.rest.resource.FileResource;
-import com.gentics.contentnode.rest.resource.ImageResource;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -113,16 +110,14 @@ public class TotalUsageInfoTest {
 
 		// get usageinfo in master
 		operate(() -> {
-			PageResource pageResource = getPageResource();
-			TotalUsageResponse response = pageResource.getTotalPageUsage(Arrays.asList(targetMasterPage.getId()), node.getId());
+			TotalUsageResponse response = getPageResource().getTotalPageUsage(Arrays.asList(targetMasterPage.getId()), node.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in master").containsOnly(entry(targetMasterPage.getId(), new TotalUsageInfo().setTotal(1).setPages(1)));
 		});
 
 		// get usageinfo in channel
 		operate(() -> {
-			PageResource pageResource = getPageResource();
-			TotalUsageResponse response = pageResource.getTotalPageUsage(Arrays.asList(targetChannelPage.getId()), channel.getId());
+			TotalUsageResponse response = getPageResource().getTotalPageUsage(Arrays.asList(targetChannelPage.getId()), channel.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in channel").containsOnly(entry(targetChannelPage.getId(), new TotalUsageInfo().setTotal(1).setPages(1)));
 		});
@@ -156,8 +151,7 @@ public class TotalUsageInfoTest {
 
 		// get usageinfo in master
 		operate(() -> {
-			FileResource fileResource = getFileResource();
-			TotalUsageResponse response = fileResource.getTotalUsageInfo(Arrays.asList(targetMasterFile.getId()), node.getId());
+			TotalUsageResponse response = getFileResource().getTotalUsageInfo(Arrays.asList(targetMasterFile.getId()), node.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in master")
 					.containsOnly(entry(targetMasterFile.getId(), new TotalUsageInfo().setTotal(1).setPages(1)
@@ -166,8 +160,7 @@ public class TotalUsageInfoTest {
 
 		// get usageinfo in channel
 		operate(() -> {
-			FileResource fileResource = getFileResource();
-			TotalUsageResponse response = fileResource.getTotalUsageInfo(Arrays.asList(targetChannelFile.getId()), channel.getId());
+			TotalUsageResponse response = getFileResource().getTotalUsageInfo(Arrays.asList(targetChannelFile.getId()), channel.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in channel")
 					.containsOnly(entry(targetChannelFile.getId(), new TotalUsageInfo().setTotal(1).setPages(1)
@@ -203,8 +196,7 @@ public class TotalUsageInfoTest {
 
 		// get usageinfo in master
 		operate(() -> {
-			ImageResource imageResource = getImageResource();
-			TotalUsageResponse response = imageResource.getTotalFileUsageInfo(Arrays.asList(targetMasterImage.getId()), node.getId());
+			TotalUsageResponse response = getImageResource().getTotalFileUsageInfo(Arrays.asList(targetMasterImage.getId()), node.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in master")
 					.containsOnly(entry(targetMasterImage.getId(), new TotalUsageInfo().setTotal(1).setPages(1)
@@ -213,8 +205,7 @@ public class TotalUsageInfoTest {
 
 		// get usageinfo in channel
 		operate(() -> {
-			ImageResource imageResource = getImageResource();
-			TotalUsageResponse response = imageResource.getTotalFileUsageInfo(Arrays.asList(targetChannelImage.getId()), node.getId());
+			TotalUsageResponse response = getImageResource().getTotalFileUsageInfo(Arrays.asList(targetChannelImage.getId()), node.getId());
 			assertResponseOK(response);
 			assertThat(response.getInfos()).as("Usage Info in channel")
 					.containsOnly(entry(targetChannelImage.getId(), new TotalUsageInfo().setTotal(1).setPages(1)

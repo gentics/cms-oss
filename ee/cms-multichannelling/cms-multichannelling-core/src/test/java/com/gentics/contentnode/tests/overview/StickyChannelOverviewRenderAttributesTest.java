@@ -37,6 +37,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -54,7 +55,7 @@ public class StickyChannelOverviewRenderAttributesTest {
 	@Parameters(name = "{index}: template: {0}, sticky channel: {1}, publish cache: {2}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
-		for (String template : Arrays.asList("page_props.vm", "tags.vm")) {
+		for (String template : Arrays.asList("page_props.hbs", "tags.hbs")) {
 			for (Boolean stickyChannel : Arrays.asList(false, true)) {
 				for (Boolean publishCache : Arrays.asList(false, true)) {
 					data.add(new Object[] { template, stickyChannel, publishCache });
@@ -84,7 +85,7 @@ public class StickyChannelOverviewRenderAttributesTest {
 	@Test
 	public void testRender() throws Exception {
 		final Integer htmlConstructId = Trx.supply(() -> ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, "html", "html"));
-		final Integer constructId = Trx.supply(() -> ContentNodeTestDataUtils.createVelocityConstruct(node, "vtl", "vtl"));
+		final Integer constructId = Trx.supply(() -> ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, "hbs", "hbs"));
 
 		Trx.consume(id -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -152,7 +153,7 @@ public class StickyChannelOverviewRenderAttributesTest {
 
 			// prepare vtl
 			try {
-				cTag.getValues().getByKeyname(ContentNodeTestDataUtils.TEMPLATE_PARTNAME)
+				cTag.getValues().getByKeyname("hbs")
 						.setValueText(StringUtils.readStream(getClass().getResourceAsStream(template)));
 			} catch (IOException e) {
 				throw new NodeException(e);

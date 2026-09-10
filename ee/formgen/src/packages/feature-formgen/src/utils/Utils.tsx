@@ -700,7 +700,7 @@ export function setValue(state: FormState, jsonpath: string, value: any, updateV
  *
  * @param {(string|object)} value
  * @returns {{boolean}}
-//  */
+ */
 export function isFilled(value: string | object) {
   if (value == '') {
     return false;
@@ -715,7 +715,7 @@ export function isFilled(value: string | object) {
  * @returns {{boolean}}
  */
 export function isEmptyObject(obj: object | string) {
-  return Object.keys(obj).length === 0 && obj.constructor === Object;
+  return obj == null || Object.keys(obj).length === 0 && obj.constructor === Object;
 }
 
 export function getValidation(schema: ISchema, id: string): IValidation {

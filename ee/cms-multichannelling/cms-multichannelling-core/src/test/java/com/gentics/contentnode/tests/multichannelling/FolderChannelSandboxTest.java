@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.multichannelling;
 
-import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -10,22 +11,23 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collections;
 import java.util.List;
 
-import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.object.*;
-import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.FolderListResponse;
 import com.gentics.contentnode.rest.model.response.LegacyFolderListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FolderListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
@@ -149,9 +151,6 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		newFolder.save();
 		t.commit(false);
 
-		// Get folder resource so we could use rest api to retrieve folders.
-		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 		// Get all folder for our test folder in the channel we are working in.
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(String.valueOf(ObjectTransformer.getInt(testFolder.getId(), -1)));
 		FolderListParameterBean folderListParameterBean = new FolderListParameterBean();
@@ -160,7 +159,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		LegacyPagingParameterBean paging = new LegacyPagingParameterBean();
 		EditableParameterBean editable = new EditableParameterBean();
 		WastebinParameterBean wastebin = new WastebinParameterBean();
-		FolderListResponse folderListResponse = folderResource.list(
+		FolderListResponse folderListResponse = getFolderResource().list(
 			inFolder,
 			folderListParameterBean.clone().setNodeId(Integer.valueOf(channelId)),
 			filter.toFilterParameterBean(),
@@ -177,7 +176,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertTrue("Check if the folder is inherited", !folderListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoint.
-		LegacyFolderListResponse legacyFolderListResponse = folderResource.getFolders(
+		LegacyFolderListResponse legacyFolderListResponse = getFolderResource().getFolders(
 			inFolder.folderId,
 			folderListParameterBean.recursiveIds,
 			folderListParameterBean.addPrivileges,
@@ -197,7 +196,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertTrue("Check if the folder is inherited", !legacyFolderListResponse.getFolders().get(0).isInherited());
 
 		// Get all folders for test folder in the master node.
-		folderListResponse = folderResource.list(
+		folderListResponse = getFolderResource().list(
 			inFolder,
 			folderListParameterBean,
 			filter.toFilterParameterBean(),
@@ -210,7 +209,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertTrue("Check if the folder list contains elements", folderListResponse.getItems().size() == 0);
 
 		// Check again with legacy endpoint.
-		legacyFolderListResponse = folderResource.getFolders(
+		legacyFolderListResponse = getFolderResource().getFolders(
 			inFolder.folderId,
 			folderListParameterBean.recursiveIds,
 			folderListParameterBean.addPrivileges,
@@ -270,9 +269,6 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		localCopy.save();
 		t.commit(false);
 
-		// Get a folder resource - rest resource.
-		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-
 		// Execute rest request (without http) and retrieve all folders for the test folder
 		InFolderParameterBean inFolder = new InFolderParameterBean().setFolderId(String.valueOf(ObjectTransformer.getInt(testFolder.getId(), -1)));
 		FolderListParameterBean folderListParameterBean = new FolderListParameterBean();
@@ -281,7 +277,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		LegacyPagingParameterBean paging = new LegacyPagingParameterBean();
 		EditableParameterBean editable = new EditableParameterBean();
 		WastebinParameterBean wastebin = new WastebinParameterBean();
-		FolderListResponse folderListResponse = folderResource.list(
+		FolderListResponse folderListResponse = getFolderResource().list(
 			inFolder,
 			folderListParameterBean.clone().setNodeId(channelId),
 			filter.toFilterParameterBean(),
@@ -299,7 +295,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertTrue("Check if the folder is inherited", !folderListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoint.
-		LegacyFolderListResponse legacyFolderListResponse = folderResource.getFolders(
+		LegacyFolderListResponse legacyFolderListResponse = getFolderResource().getFolders(
 			inFolder.folderId,
 			folderListParameterBean.recursiveIds,
 			folderListParameterBean.addPrivileges,
@@ -319,7 +315,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertEquals("Check if folder id is the same", localCopy.getId(), legacyFolderListResponse.getFolders().get(0).getId());
 		assertTrue("Check if the folder is inherited", !legacyFolderListResponse.getFolders().get(0).isInherited());
 
-		folderListResponse = folderResource.list(
+		folderListResponse = getFolderResource().list(
 			inFolder,
 			folderListParameterBean,
 			filter.toFilterParameterBean(),
@@ -337,7 +333,7 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		assertTrue("Check if the folder is inherited", !folderListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoint.
-		legacyFolderListResponse = folderResource.getFolders(
+		legacyFolderListResponse = getFolderResource().getFolders(
 			inFolder.folderId,
 			folderListParameterBean.recursiveIds,
 			folderListParameterBean.addPrivileges,
@@ -400,21 +396,18 @@ public class FolderChannelSandboxTest extends AbstractMultichannellingSandboxTes
 		t.commit(false);
 
 		// now use the REST API to get the folders in the channel
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(t);
 
 		// Test deleting the local folder in the channel
 		assertEquals("Check response code", ResponseCode.OK,
-				folderResource.delete(localFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+				getFolderResource().delete(localFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
-		// Test deleting the inherited folder in the channel from the master (should error out)
-		assertEquals("Check response code", ResponseCode.FAILURE,
-				folderResource.delete(inheritedFolder.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+		assertError(() -> getFolderResource().delete(inheritedFolder.getId().toString(), channelId, null),
+				NodeException.class, ResponseCode.FAILURE,
+				"Can't delete an inherated folder, the folder has to be deleted in the master node.");
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,
-				folderResource.delete(inheritedFolder.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
+				getFolderResource().delete(inheritedFolder.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
 	}
 
 	/**

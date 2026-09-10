@@ -53,6 +53,7 @@ public class PageListFilterTest {
 	public static DBTestContext context = new DBTestContext();
 
 	protected static Node node;
+	protected static int nodeRootFolder;
 
 	protected static Template normalTemplate;
 
@@ -60,6 +61,7 @@ public class PageListFilterTest {
 
 	@Parameter(0)
 	public boolean multichannelling;
+
 
 	@Parameters(name = "{index}: multichannelling {0}")
 	public static Collection<Object[]> data() {
@@ -75,16 +77,17 @@ public class PageListFilterTest {
 		context.getContext().getTransaction().commit();
 
 		node = supply(() -> createNode(Feature.FORMS));
+		nodeRootFolder = supply(() -> node.getFolder().getId());
 
 		normalTemplate = create(Template.class, create -> {
-			create.setFolderId(node.getFolder().getId());
+			create.setFolderId(nodeRootFolder);
 			create.setName("Normal Template");
 			create.setSource("");
 			create.setMlId(1);
 		}).build();
 
 		formsEmailTemplate = create(Template.class, create -> {
-			create.setFolderId(node.getFolder().getId());
+			create.setFolderId(nodeRootFolder);
 			create.setName("Forms E-Mail Template");
 			create.setSource("");
 			create.setMlId(21);
@@ -105,7 +108,7 @@ public class PageListFilterTest {
 	@Test
 	public void testMlFilter() throws NodeException {
 		Folder folder1 = create(Folder.class, create -> {
-			create.setMotherId(node.getFolder().getId());
+			create.setMotherId(nodeRootFolder);
 			create.setName("Folder 1");
 		}).build();
 
@@ -120,7 +123,7 @@ public class PageListFilterTest {
 		}).build();
 
 		Folder folder2 = create(Folder.class, create -> {
-			create.setMotherId(node.getFolder().getId());
+			create.setMotherId(nodeRootFolder);
 			create.setName("Folder 2");
 		}).build();
 
@@ -136,7 +139,7 @@ public class PageListFilterTest {
 
 		// get all pages
 		PageListResponse response = supply(() -> new PageResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())).setRecursive(true),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)).setRecursive(true),
 				new PageListParameterBean(), new FilterParameterBean(), new SortParameterBean(),
 				new PagingParameterBean(), new PublishableParameterBean(), new WastebinParameterBean()));
 		assertResponseOK(response);
@@ -146,7 +149,7 @@ public class PageListFilterTest {
 
 		// include ml's
 		response = supply(() -> new PageResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())).setRecursive(true),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)).setRecursive(true),
 				new PageListParameterBean().setIncludeMlIds(Arrays.asList(21)), new FilterParameterBean(), new SortParameterBean(),
 				new PagingParameterBean(), new PublishableParameterBean(), new WastebinParameterBean()));
 		assertResponseOK(response);
@@ -155,7 +158,7 @@ public class PageListFilterTest {
 
 		// exclude ml's
 		response = supply(() -> new PageResourceImpl().list(
-				new InFolderParameterBean().setFolderId(Integer.toString(node.getFolder().getId())).setRecursive(true),
+				new InFolderParameterBean().setFolderId(Integer.toString(nodeRootFolder)).setRecursive(true),
 				new PageListParameterBean().setExcludeMlIds(Arrays.asList(21)), new FilterParameterBean(), new SortParameterBean(),
 				new PagingParameterBean(), new PublishableParameterBean(), new WastebinParameterBean()));
 		assertResponseOK(response);

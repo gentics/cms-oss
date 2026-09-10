@@ -1,5 +1,8 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -45,7 +48,6 @@ import com.gentics.contentnode.rest.model.response.PagePreviewResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FolderResource;
 import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.LegacyFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.LegacyPagingParameterBean;
@@ -292,28 +294,25 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		localizedGerman.save();
 		t.commit(false);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(t);
-
 		// translate the localized page in the channel
-		PageLoadResponse translatedInChannel = pageResource.translate(ObjectTransformer.getInt(localizedGerman.getId(), -1), "en", true, pageTranslationNodeId);
+		PageLoadResponse translatedInChannel = getPageResource().translate(ObjectTransformer.getInt(localizedGerman.getId(), -1), "en", true, pageTranslationNodeId);
 		assertTrue("Check if translating in channel succeeded", translatedInChannel.getResponseInfo().getResponseCode().equals(ResponseCode.OK));
 		t.commit(false);
 
-		translatedInChannel = pageResource.load(Integer.toString(translatedInChannel.getPage().getId()), false, false, false, true, false,
+		translatedInChannel = getPageResource().load(Integer.toString(translatedInChannel.getPage().getId()), false, false, false, true, false,
 				false, false, false, false, false, pageTranslationNodeId, null);
 
 		assertEquals("Check for language", "en", translatedInChannel.getPage().getLanguage());
 		assertFalse("Check page status", translatedInChannel.getPage().isModified());
 
-		PageLoadResponse masterPage = pageResource.load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
+		PageLoadResponse masterPage = getPageResource().load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
 				false, false, false, false, false, ObjectTransformer.getInt(pageCreationNode.getId(), 0), null);
 
 		assertEquals("Check that the masterpage was translated in the master node", 2, masterPage.getPage().getLanguageVariants().size());
 		assertFalse("Check that translated masterpage was taken offline", masterPage.getPage().getLanguageVariants().get(english.getId()).isOnline());
 
 		// load the master page for the channel, including language variants
-		PageLoadResponse localizedMasterPage = pageResource.load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
+		PageLoadResponse localizedMasterPage = getPageResource().load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
 				false, false, false, false, false, pageTranslationNodeId, null);
 		assertResponseCode(localizedMasterPage);
 		assertEquals("Check localized page", localizedGerman.getId(), localizedMasterPage.getPage().getId());
@@ -322,7 +321,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 
 		// repeat the translate call and check whether the same page is returned
 		com.gentics.contentnode.rest.model.Page localTranslation = translatedInChannel.getPage();
-		translatedInChannel = pageResource.translate(ObjectTransformer.getInt(localizedGerman.getId(), -1), "en", true, pageTranslationNodeId);
+		translatedInChannel = getPageResource().translate(ObjectTransformer.getInt(localizedGerman.getId(), -1), "en", true, pageTranslationNodeId);
 		assertEquals("Check the translation after translating again", localTranslation.getId(), translatedInChannel.getPage().getId());
 		assertNoMultipleTranslations(masterPageGerman.getId());
 	}
@@ -385,28 +384,25 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		masterPageGerman.save();
 		t.commit(false);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(t);
-
 		// translate the page in the channel where it is inherited
-		PageLoadResponse translatedInChannel = pageResource.translate(ObjectTransformer.getInt(masterPageGerman.getId(), -1), "en", true, pageTranslationNodeId);
+		PageLoadResponse translatedInChannel = getPageResource().translate(ObjectTransformer.getInt(masterPageGerman.getId(), -1), "en", true, pageTranslationNodeId);
 		assertTrue("Check if translating in channel succeeded", translatedInChannel.getResponseInfo().getResponseCode().equals(ResponseCode.OK));
 		t.commit(false);
 
-		translatedInChannel = pageResource.load(Integer.toString(translatedInChannel.getPage().getId()), false, false, false, true, false,
+		translatedInChannel = getPageResource().load(Integer.toString(translatedInChannel.getPage().getId()), false, false, false, true, false,
 				false, false, false, false, false, pageTranslationNodeId, null);
 
 		assertEquals("Check for language", "en", translatedInChannel.getPage().getLanguage());
 		assertFalse("Check page status", translatedInChannel.getPage().isModified());
 
-		PageLoadResponse masterPage = pageResource.load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
+		PageLoadResponse masterPage = getPageResource().load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
 				false, false, false, false, false, ObjectTransformer.getInt(pageCreateNode.getId(), 0), null);
 
 		assertEquals("Check that the masterpage was translated in the master node", 2, masterPage.getPage().getLanguageVariants().size());
 		assertFalse("Check that translated masterpage was taken offline", masterPage.getPage().getLanguageVariants().get(english.getId()).isOnline());
 
 		// load the master page for the channel, including language variants
-		PageLoadResponse inheritedMasterPage = pageResource.load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
+		PageLoadResponse inheritedMasterPage = getPageResource().load(ObjectTransformer.getString(masterPageGerman.getId(), ""), false, false, false, true, false,
 				false, false, false, false, false, pageTranslationNodeId, null);
 		assertResponseCode(inheritedMasterPage);
 		assertEquals("Check inherited page", masterPageGerman.getId(), inheritedMasterPage.getPage().getId());
@@ -415,7 +411,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 
 		// repeat the translate call and check whether the same page is returned
 		com.gentics.contentnode.rest.model.Page localTranslation = translatedInChannel.getPage();
-		translatedInChannel = pageResource.translate(ObjectTransformer.getInt(masterPageGerman.getId(), -1), "en", true, pageTranslationNodeId);
+		translatedInChannel = getPageResource().translate(ObjectTransformer.getInt(masterPageGerman.getId(), -1), "en", true, pageTranslationNodeId);
 		assertEquals("Check the translation after translating again", localTranslation.getId(), translatedInChannel.getPage().getId());
 
 		assertNoMultipleTranslations(masterPageGerman.getId());
@@ -484,9 +480,6 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		newPageFirst.save();
 		t.commit(false);
 
-		// Get folder resource so we could use rest api to retrieve pages.
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-
 		// Get all pages for our test folder in the channel we are working in.
 		String folderId = Integer.toString(ObjectTransformer.getInt(testFolder.getId(), -1));
 
@@ -497,7 +490,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		LegacyPagingParameterBean paging = new LegacyPagingParameterBean();
 		PublishableParameterBean publishableParameterBean = new PublishableParameterBean();
 		WastebinParameterBean wastebinParameterBean = new WastebinParameterBean();
-		PageListResponse pageListResponse = pageResource.list(
+		PageListResponse pageListResponse = getPageResource().list(
 			inFolder,
 			pageListParameterBean.clone().setNodeId(channelId),
 			filter.toFilterParameterBean(),
@@ -517,8 +510,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the page is inherited", !pageListResponse.getItems().get(0).isInherited());
 
 		// Check again with legacy endpoints.
-		FolderResource folderResource = ContentNodeRESTUtils.getFolderResource();
-		LegacyPageListResponse legacyPageListResponse = folderResource.getPages(
+		LegacyPageListResponse legacyPageListResponse = getFolderResource().getPages(
 			inFolder.folderId,
 			inFolder,
 			pageListParameterBean.clone().setNodeId(channelId),
@@ -539,7 +531,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the page is inherited", !legacyPageListResponse.getPages().get(0).isInherited());
 
 		// Get all pages for test folder in the master node.
-		pageListResponse = pageResource.list(
+		pageListResponse = getPageResource().list(
 			inFolder,
 			pageListParameterBean,
 			filter.toFilterParameterBean(),
@@ -551,7 +543,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		assertTrue("Check if the page list contains elements", pageListResponse.getItems().size() == 0);
 
 		// Check again with legacy endpoint.
-		legacyPageListResponse = folderResource.getPages(
+		legacyPageListResponse = getFolderResource().getPages(
 			inFolder.folderId,
 			inFolder,
 			pageListParameterBean,
@@ -645,6 +637,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		localPage.setChannelInfo(channelId, channelSetId);
 
 		localPage.save();
+		localPage.unlock();
 		t.commit(false);
 
 		// Create an inherited test folder in the master
@@ -655,23 +648,18 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		inheritedPage.setTemplateId(C.page_channel_test.new_page_template_id);
 
 		inheritedPage.save();
+		inheritedPage.unlock();
 		t.commit(false);
 
-		// now use the REST API to get the folders in the channel
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-
 		// Test deleting the local folder in the channel
-		assertEquals("Check response code", ResponseCode.OK, pageResource.delete(localPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+		assertEquals("Check response code", ResponseCode.OK, getPageResource().delete(localPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
 
 		// Test deleting the inherited folder in the channel from the master (should error out)
-		assertEquals("Check response code", ResponseCode.FAILURE,
-				pageResource.delete(inheritedPage.getId().toString(), channelId, null).getResponseInfo().getResponseCode());
+		assertError(() -> getPageResource().delete(inheritedPage.getId().toString(), channelId, null), NodeException.class, ResponseCode.FAILURE, "Can't delete an inherated page, the page has to be deleted in the master node.");
 
 		// Delete from the master
 		assertEquals("Check response code", ResponseCode.OK,
-				pageResource.delete(inheritedPage.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
+				getPageResource().delete(inheritedPage.getId().toString(), MASTER_ID, null).getResponseInfo().getResponseCode());
 	}
 
 	/**
@@ -684,15 +672,11 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 
 		Page localPage = createLocalPageInLocalFolder(t, "Preview <node page.url><node page.name>");
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-
-		pageResource.setTransaction(t);
-
 		PagePreviewRequest pageRequest = new PagePreviewRequest();
 		com.gentics.contentnode.rest.model.Page page = ModelBuilder.getPage(localPage, (Collection<Reference>) null);
 		pageRequest.setPage(page);
 
-		PagePreviewResponse pagePreviewResponse = pageResource.preview(pageRequest);
+		PagePreviewResponse pagePreviewResponse = getPageResource().preview(pageRequest);
 
 		assertEquals("Check response OK", ResponseCode.OK, pagePreviewResponse.getResponseInfo().getResponseCode());
 		assertEquals("Check preview", "Preview #SomeName", pagePreviewResponse.getPreview());
@@ -920,9 +904,6 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 
 		t.commit(false);
 
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(t);
-
 		// create a page in the master channel
 		PageCreateRequest req = new PageCreateRequest();
 		req.setFolderId(Integer.toString(ObjectTransformer.getInt(masterFolder.getId(), -1)));
@@ -931,10 +912,9 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		// fallback is applied correctly
 		req.setTemplateId(ObjectTransformer.getInt(channelTemplate.getId(), -1));
 
-		PageLoadResponse masterResponse = pageResource.create(req);
+		PageLoadResponse masterResponse = getPageResource().create(req);
 
 		t.commit(false);
-		pageResource.setTransaction(t);
 
 		// create a page in the channel
 		req = new PageCreateRequest();
@@ -944,7 +924,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		// fallback is applied correctly
 		req.setTemplateId(ObjectTransformer.getInt(masterTemplate.getId(), -1));
 
-		PageLoadResponse channelResponse = pageResource.create(req);
+		PageLoadResponse channelResponse = getPageResource().create(req);
 
 		assertNotNull(masterResponse.getPage());
 		assertTrue(masterResponse.getPage().getTags().containsKey("tag1"));

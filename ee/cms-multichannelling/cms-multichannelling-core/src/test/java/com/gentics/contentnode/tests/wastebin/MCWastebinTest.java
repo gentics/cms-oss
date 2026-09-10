@@ -1,8 +1,27 @@
 package com.gentics.contentnode.tests.wastebin;
 
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
@@ -31,13 +50,11 @@ import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.rest.resource.FolderResource;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCFileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCFolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.MCPageResourceImpl;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -45,24 +62,6 @@ import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.i18n.CNI18nString;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.execute;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Multichannelling Wastebin Tests
@@ -96,9 +95,8 @@ public class MCWastebinTest {
 	private static SystemUser testUser;
 
 	/**
-	 * SID of the testuser
+	 * Session of the testuser
 	 */
-	private static String sid;
 	private static ContentLanguage german;
 	private static ContentLanguage english;
 
@@ -111,7 +109,6 @@ public class MCWastebinTest {
 		master = Trx.supply(() -> ContentNodeTestDataUtils.createNode("master", "Master Node", PublishTarget.NONE, german, english));
 		channel = Trx.supply(() -> ContentNodeTestDataUtils.createChannel(master, "Channel Node", "channel", "/"));
 		subChannel = Trx.supply(() -> ContentNodeTestDataUtils.createChannel(channel, "Subchannel Node", "subchannel", "/"));
-		sid = ContentNodeRESTUtils.login(TEST_LOGIN, TEST_PASSWORD);
 	}
 
 	/**
@@ -458,11 +455,10 @@ public class MCWastebinTest {
 
 		// move the master into the channel
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
 			ObjectMoveRequest request = new ObjectMoveRequest();
 			request.setFolderId(master.getFolder().getId());
 			request.setNodeId(channel.getId());
-			GenericResponse response = res.move(page.getId().toString(), request);
+			GenericResponse response = getPageResource().move(page.getId().toString(), request);
 			try (WastebinFilter wb = Wastebin.INCLUDE.set()) {
 				CNI18nString msg = new CNI18nString("object.move.localization.error");
 				msg.addParameter(I18NHelper.getPath(TransactionManager.getCurrentTransaction().getObject(inChannel)));
@@ -489,7 +485,7 @@ public class MCWastebinTest {
 
 		// move the master into the channel
 		Trx.operate(() -> {
-			try (Trx trx = new Trx(sid, testUser.getId())) {
+			try (Trx trx = new Trx(testUser)) {
 				FolderResource res = new FolderResourceImpl();
 				FolderMoveRequest request = new FolderMoveRequest();
 				request.setFolderId(master.getFolder().getId());
@@ -567,10 +563,9 @@ public class MCWastebinTest {
 
 		// move the master into another folder
 		Trx.operate(() -> {
-			PageResource res = new PageResourceImpl();
 			ObjectMoveRequest request = new ObjectMoveRequest();
 			request.setFolderId(targetFolder.getId());
-			GenericResponse response = res.move(page.getId().toString(), request);
+			GenericResponse response = getPageResource().move(page.getId().toString(), request);
 			ContentNodeRESTUtils.assertResponseOK(response);
 		});
 
@@ -605,7 +600,7 @@ public class MCWastebinTest {
 
 		// move the master into the channel
 		Trx.operate(() -> {
-			try (Trx trx = new Trx(sid, testUser.getId())) {
+			try (Trx trx = new Trx(testUser)) {
 				FolderResource res = new FolderResourceImpl();
 				FolderMoveRequest request = new FolderMoveRequest();
 				request.setFolderId(targetFolder.getId());

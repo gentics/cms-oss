@@ -26,6 +26,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
@@ -111,19 +112,19 @@ public class MCLanguageVariantDirtingTest {
 		channel = ContentNodeTestDataUtils.createChannel(master, "Channel", "channel", "/");
 		subChannel = ContentNodeTestDataUtils.createChannel(channel, "Subchannel", "subchannel", "/");
 		sideChannel = ContentNodeTestDataUtils.createChannel(master, "Sidechannel", "sidechannel", "/");
-		
-		int vtlConstructId = ContentNodeTestDataUtils.createVelocityConstruct(master, "vtl", "vtl");
+
+		int hbsConstructId = ContentNodeTestDataUtils.createConstruct(master, HandlebarsPartType.class, "hbs", "hbs");
 
 		template = t.createObject(Template.class);
 		template.setName("Template");
-		template.setSource("<node vtl>");
+		template.setSource("<node hbs>");
 		template.addFolder(master.getFolder());
 		TemplateTag templateTag = t.createObject(TemplateTag.class);
-		templateTag.setConstructId(vtlConstructId);
+		templateTag.setConstructId(hbsConstructId);
 		templateTag.setEnabled(true);
-		templateTag.setName("vtl");
+		templateTag.setName("hbs");
 		templateTag.setPublic(true);
-		template.getTemplateTags().put("vtl", templateTag);
+		template.getTemplateTags().put("hbs", templateTag);
 		template.save();
 		t.commit(false);
 
@@ -132,7 +133,7 @@ public class MCLanguageVariantDirtingTest {
 		dependentPage.setName("Dependent Page");
 		dependentPage.setTemplateId(template.getId());
 		dependentPage.setLanguage(german);
-		dependentPage.getContentTag("vtl").getValues().getByKeyname("template").setValueText(FileUtil.stream2String(getClass().getResourceAsStream("languageset.vm"), "UTF-8"));
+		dependentPage.getContentTag("hbs").getValues().getByKeyname("hbs").setValueText(FileUtil.stream2String(getClass().getResourceAsStream("languageset.hbs"), "UTF-8"));
 		dependentPage.save();
 		dependentPage.publish();
 		t.commit(false);

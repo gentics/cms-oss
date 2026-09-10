@@ -1,5 +1,26 @@
 package com.gentics.contentnode.tests.publish.mesh;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateTag;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -11,34 +32,13 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-
-import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplateTag;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING })
 @RunWith(Parameterized.class)
@@ -77,7 +77,7 @@ public class MeshUrlRendererTest {
 	}
 
 	private final static String MESH_PROJECT_NAME = "testproject";
-	private final static String VTL_TEMPLATE_FMT = "#gtx_channel(%d)$cms.page.tags.page#end";
+	private final static String HBS_TEMPLATE_FMT = "{{#gtx_channel %d}}{{gtx_render cms.page.tags.page}}{{/gtx_channel}}";
 
 	@ClassRule
 	public static DBTestContext context = new DBTestContext();
@@ -93,7 +93,7 @@ public class MeshUrlRendererTest {
 	private static Node otherChannel;
 	private static Page otherChannelPage;
 	private static Integer pageConstructId;
-	private static Integer vtlConstructId;
+	private static Integer hbsConstructId;
 
 	@Parameter(0)
 	public Location source;
@@ -131,11 +131,11 @@ public class MeshUrlRendererTest {
 		otherChannel = createNode("otherChannel", meshCrId, otherMaster);
 
 		pageConstructId = Trx.supply(() -> createConstruct(master, PageURLPartType.class, "pageurl", "page"));
-		vtlConstructId = Trx.supply(() -> createVelocityConstruct(master, "velocity", "vtl"));
+		hbsConstructId = Trx.supply(() -> createConstruct(master, HandlebarsPartType.class, "hbs", "hbs"));
 
 		Template template = Trx.supply(() -> createTemplate(
-			master.getFolder(), "<node vtl>", "Template",
-			createTemplateTag(vtlConstructId, "vtl", true, false),
+			master.getFolder(), "<node hbs>", "Template",
+			createTemplateTag(hbsConstructId, "hbs", true, false),
 			createTemplateTag(pageConstructId, "page", true, false)));
 
 		Folder folder = ContentNodeTestDataUtils.createFolder(master.getFolder(), "folder");
@@ -171,9 +171,9 @@ public class MeshUrlRendererTest {
 
 			getPartType(PageURLPartType.class, p.getContentTag("page"), "page")
 				.setTargetPage(target.page());
-			getPartType(LongHTMLPartType.class, p.getContentTag("vtl"), "template")
+			getPartType(HandlebarsPartType.class, p.getContentTag("hbs"), "hbs")
 				.getValueObject()
-				.setValueText(String.format(VTL_TEMPLATE_FMT, target.node().getId()));
+				.setValueText(String.format(HBS_TEMPLATE_FMT, target.node().getId()));
 			p.save();
 
 			return t.getObject(p);

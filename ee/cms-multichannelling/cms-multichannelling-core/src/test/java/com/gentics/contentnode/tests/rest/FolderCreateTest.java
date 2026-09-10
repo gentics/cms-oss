@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,12 +18,14 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.rest.model.request.FolderCreateRequest;
 import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -88,9 +91,11 @@ public class FolderCreateTest {
 			for (int i = 0; i < THREADS; i++) {
 				service.execute(() -> {
 					try {
-						Trx.operate(() -> {
-							getFolderResource().create(request);
-						});
+						ContentNodeHelper.setLanguageId(1);
+						FolderLoadResponse response = getFolderResource().create(request);
+						if (response.getResponseInfo().getResponseCode() != ResponseCode.OK) {
+							threadsFailed.incrementAndGet();
+						}
 					} catch (NodeException e) {
 						threadsFailed.incrementAndGet();
 					}

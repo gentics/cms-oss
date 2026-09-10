@@ -2,13 +2,13 @@ package com.gentics.contentnode.tests.rendering;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,18 +33,20 @@ import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
-import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.LoaderHelperSource;
+import com.gentics.contentnode.testutils.TestHelpersHandlebarsService;
 import com.gentics.lib.etc.StringUtils;
 
 /**
- * Test cases for rendering tags of foreign objects in velocity
+ * Test cases for rendering tags of foreign objects in handlebars
  */
 @GCNFeature(set = { Feature.MULTICHANNELLING })
-public class VelocityRenderForeignObjectTest {
+public class HandlebarsRenderForeignObjectTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
 
@@ -58,7 +60,7 @@ public class VelocityRenderForeignObjectTest {
 
 	private static Node channel;
 
-	private static Construct velocityConstruct;
+	private static Construct hbsConstruct;
 
 	private static Template template;
 
@@ -71,30 +73,23 @@ public class VelocityRenderForeignObjectTest {
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
 		testContext.getContext().getTransaction().commit();
+		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
 
 		master = supply(() -> createNode());
 		channel = supply(() -> createChannel(master, "Channel", "channel", "/"));
-		velocityConstruct = Builder.create(Construct.class, c -> {
+		hbsConstruct = Builder.create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setKeyword("velocity");
-			c.setName("Velocity", 1);
+			c.setKeyword("handlebars");
+			c.setName("Handlebars", 1);
 			List<Part> parts = c.getParts();
 			c.getNodes().add(master);
 
-			// add velocity part
+			// add handlebars part
 			parts.add(Builder.create(Part.class, p -> {
-				p.setPartTypeId(getPartTypeId(VelocityPartType.class));
-				p.setKeyname("vtl");
-				p.setEditable(0);
-				p.setHidden(false);
-			}).doNotSave().build());
-
-			// add template part
-			parts.add(Builder.create(Part.class, p -> {
-				p.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
-				p.setKeyname("template");
+				p.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
+				p.setKeyname("hbs");
 				p.setEditable(1);
-				p.setHidden(true);
+				p.setHidden(false);
 			}).doNotSave().build());
 
 			// add another editable part
@@ -112,7 +107,7 @@ public class VelocityRenderForeignObjectTest {
 			tmpl.setSource("<node " + TEMPLATE_TAG_NAME + ">");
 			tmpl.getTags().put(TEMPLATE_TAG_NAME, Builder.create(TemplateTag.class, tag -> {
 				tag.setName(TEMPLATE_TAG_NAME);
-				tag.setConstructId(velocityConstruct.getId());
+				tag.setConstructId(hbsConstruct.getId());
 				tag.setEnabled(true);
 				tag.setPublic(true);
 			}).doNotSave().build());
@@ -136,19 +131,19 @@ public class VelocityRenderForeignObjectTest {
 	 */
 	@Test
 	public void testTagFromMasterPage() throws NodeException, IOException {
-		String outerTagVtl = StringUtils.readStream(getClass().getResourceAsStream("nested/render_tag_from_masterpage.vtl"));
-		String innerTagVtl = StringUtils.readStream(getClass().getResourceAsStream("nested/render_part_in_editmode.vtl"));
+		String outerTagHbs = StringUtils.readStream(getClass().getResourceAsStream("nested/render_tag_from_masterpage.hbs"));
+		String innerTagHbs = StringUtils.readStream(getClass().getResourceAsStream("nested/render_part_in_editmode.hbs"));
 		Page masterPage = Builder.create(Page.class, p -> {
 			p.setFolderId(master.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Master Page");
-			getPartType(LongHTMLPartType.class, p.getContentTag(TEMPLATE_TAG_NAME), "template").setText(outerTagVtl);
+			getPartType(HandlebarsPartType.class, p.getContentTag(TEMPLATE_TAG_NAME), "hbs").setText(outerTagHbs);
 
 			p.getContentTags().put(CONTENT_TAG_NAME, Builder.create(ContentTag.class, c -> {
 				c.setName(CONTENT_TAG_NAME);
-				c.setConstructId(velocityConstruct.getId());
+				c.setConstructId(hbsConstruct.getId());
 				c.setEnabled(true);
-				getPartType(LongHTMLPartType.class, c, "template").setText(innerTagVtl);
+				getPartType(HandlebarsPartType.class, c, "hbs").setText(innerTagHbs);
 			}).doNotSave().build());
 		}).build();
 

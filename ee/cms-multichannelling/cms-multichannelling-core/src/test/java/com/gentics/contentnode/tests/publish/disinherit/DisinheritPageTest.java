@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.publish.disinherit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -16,7 +17,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -70,9 +70,7 @@ public class DisinheritPageTest {
 		assertEquals("Check # of disinherited channels", 1, disinheritedChannels.size());
 		assertEquals("Check disinherited channel", channel, disinheritedChannels.iterator().next());
 
-		PageResourceImpl res = new PageResourceImpl();
-		res.setTransaction(t);
-		res.cancel(page.getId(), null);
+		getPageResource().cancel(page.getId(), null);
 		t = testContext.startSystemUserTransaction();
 		testContext.getContext().clearNodeObjectCache();
 

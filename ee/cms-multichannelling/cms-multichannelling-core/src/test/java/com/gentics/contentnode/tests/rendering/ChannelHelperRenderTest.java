@@ -3,6 +3,14 @@ package com.gentics.contentnode.tests.rendering;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -15,8 +23,8 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.request.LinksType;
@@ -27,19 +35,12 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
-import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * Test cases for rendering with teh channel directive
+ * Test cases for rendering with the channel helper
  */
 @GCNFeature(set = {Feature.MULTICHANNELLING})
-public class ChannelDirectiveRenderTest {
+public class ChannelHelperRenderTest {
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -52,7 +53,7 @@ public class ChannelDirectiveRenderTest {
 
 	protected static Integer pageConstructId;
 
-	protected static Integer vtlConstructId;
+	protected static Integer hbsConstructId;
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -68,8 +69,8 @@ public class ChannelDirectiveRenderTest {
 				() -> ContentNodeTestDataUtils.createConstruct(sourceNode, PageURLPartType.class,
 						"pageurl",
 						"page"));
-		vtlConstructId = Trx.supply(
-				() -> ContentNodeTestDataUtils.createVelocityConstruct(sourceNode, "velocity", "vtl"));
+		hbsConstructId = Trx.supply(
+				() -> ContentNodeTestDataUtils.createConstruct(sourceNode, HandlebarsPartType.class, "hbs", "hbs"));
 	}
 
 	/**
@@ -99,9 +100,9 @@ public class ChannelDirectiveRenderTest {
 		Folder sourceFolder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(sourceNode.getFolder(), "SourceFolder"));
 		Template sourceTemplate = Trx.supply(() -> ContentNodeTestDataUtils.createTemplate(
 			sourceNode.getFolder(),
-			"<node vtl>",
+			"<node hbs>",
 			"Template",
-			ContentNodeTestDataUtils.createTemplateTag(vtlConstructId, "vtl", true, false),
+			ContentNodeTestDataUtils.createTemplateTag(hbsConstructId, "hbs", true, false),
 			ContentNodeTestDataUtils.createTemplateTag(pageConstructId, "page", true, false)));
 		Page sourcePage = Trx.supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -112,9 +113,9 @@ public class ChannelDirectiveRenderTest {
 			ContentNodeTestDataUtils.getPartType(PageURLPartType.class, p.getContentTag("page"), "page")
 				.setTargetPage(p);
 
-			String valueText = String.format("#gtx_channel(%s)<PageId:$cms.page.tags.page.parts.page.id>#end", sourceChannel.getId());
+			String valueText = String.format("{{#gtx_channel %s}}<PageId:{{gtx_render cms.page.tags.page.parts.page.target.id}}>{{/gtx_channel}}", sourceChannel.getId());
 
-			ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, p.getContentTag("vtl"), "template")
+			ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, p.getContentTag("hbs"), "hbs")
 				.getValueObject()
 				.setValueText(valueText);
 
@@ -131,7 +132,7 @@ public class ChannelDirectiveRenderTest {
 		pageProperty.setNodeId(targetPage.getChannel().getId());
 
 		SystemUser systemUser = Trx.supply(t -> t.getObject(SystemUser.class, 1));
-		PageRenderResponse renderResponse = Trx.supply(systemUser, () -> new PageResourceImpl().renderTag("vtl", sourcePage.getNode().getId(), null, LinksType.backend, restPage));
+		PageRenderResponse renderResponse = Trx.supply(systemUser, () -> new PageResourceImpl().renderTag("hbs", sourcePage.getNode().getId(), null, LinksType.backend, restPage));
 
 		assertResponseCodeOk(renderResponse);
 
@@ -160,9 +161,9 @@ public class ChannelDirectiveRenderTest {
 				() -> ContentNodeTestDataUtils.createFolder(sourceNode.getFolder(), "SourceFolder",
 						sourceChannel));
 		Template sourceTemplate = Trx.supply(
-				() -> ContentNodeTestDataUtils.createTemplate(sourceNode.getFolder(), "<node vtl>",
+				() -> ContentNodeTestDataUtils.createTemplate(sourceNode.getFolder(), "<node hbs>",
 						"Template",
-						ContentNodeTestDataUtils.createTemplateTag(vtlConstructId, "vtl", true, false),
+						ContentNodeTestDataUtils.createTemplateTag(hbsConstructId, "hbs", true, false),
 						ContentNodeTestDataUtils.createTemplateTag(pageConstructId, "page", true, false)));
 		Page sourcePage = Trx.supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -177,15 +178,15 @@ public class ChannelDirectiveRenderTest {
 			String valueText = "";
 
 			if (!isGlobalId) {
-				valueText = String.format("#gtx_channel(%s)$cms.page.tags.page#end",
+				valueText = String.format("{{#gtx_channel %s}}{{gtx_render cms.page.tags.page}}{{/gtx_channel}}",
 						targetNode.getId());
 			} else {
-				valueText = String.format("#gtx_channel(\"%s\")$cms.page.tags.page#end",
+				valueText = String.format("{{#gtx_channel \"%s\"}}{{gtx_render cms.page.tags.page}}{{/gtx_channel}}",
 						targetNode.getGlobalId());
 			}
 
-			ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, p.getContentTag("vtl"),
-							"template").getValueObject()
+			ContentNodeTestDataUtils.getPartType(HandlebarsPartType.class, p.getContentTag("hbs"),
+							"hbs").getValueObject()
 					.setValueText(valueText);
 			p.save();
 

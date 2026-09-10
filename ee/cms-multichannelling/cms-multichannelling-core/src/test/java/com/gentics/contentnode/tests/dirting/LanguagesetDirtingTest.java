@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.dirting;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -37,7 +38,6 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -125,9 +125,7 @@ public class LanguagesetDirtingTest {
 		// create & publish a page with a translation
 		Page originalPage = Creator.createPage("testpage", node.getFolder(), tpl, klingon);
 		t.commit(false);
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		PageLoadResponse translationResult = pri.translate((Integer) originalPage.getId(), "teng", false, null);
+		PageLoadResponse translationResult = getPageResource().translate((Integer) originalPage.getId(), "teng", false, null);
 		ContentNodeRESTUtils.assertResponseOK(translationResult);
 		Page translatedPage = t.getObject(Page.class, translationResult.getPage().getId(), true);
 		originalPage.publish();
@@ -180,9 +178,7 @@ public class LanguagesetDirtingTest {
 		t.commit(false);
 
 		// create translation, publish it
-		PageResourceImpl pri = new PageResourceImpl();
-		pri.setTransaction(t);
-		PageLoadResponse translationResult = pri.translate((Integer) originalPage.getId(), "teng", false, null);
+		PageLoadResponse translationResult = getPageResource().translate((Integer) originalPage.getId(), "teng", false, null);
 		ContentNodeRESTUtils.assertResponseOK(translationResult);
 		Page translatedPage = t.getObject(Page.class, translationResult.getPage().getId(), true);
 		translatedPage.publish();

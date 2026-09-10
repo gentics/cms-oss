@@ -89,7 +89,7 @@ public class WastebinPublishablePageTest {
 
 		try (Trx trx = new Trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
-			t.setRenderType(RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, null, -1));
+			t.setRenderType(RenderType.getDefaultRenderType(t.getNodeConfig().getDefaultPreferences(), RenderType.EM_PUBLISH, -1));
 			t.preparePublishData();
 
 			try (ChannelTrx cTrx = new ChannelTrx(structure.getNode(Channel.MASTER))) {

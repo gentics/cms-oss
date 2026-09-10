@@ -211,7 +211,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			Trx.operate(trx -> {
 				template.getNodes().add(otherNode);
 				formConstruct.getNodes().add(otherNode);
-				trx.getObject(Construct.class, vtlConstructId).getNodes().add(otherNode);
+				trx.getObject(Construct.class, hbsConstructId).getNodes().add(otherNode);
 			});
 
 			Form form = supply(() -> create(Form.class, f -> {

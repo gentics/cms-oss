@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -7,6 +8,16 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.model.response.TemplateListResponse;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.LegacyFilterParameterBean;
@@ -14,18 +25,6 @@ import com.gentics.contentnode.rest.resource.parameter.LegacyPagingParameterBean
 import com.gentics.contentnode.rest.resource.parameter.LegacySortParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.TemplateListParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
-
-import org.junit.Test;
-
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.object.Folder;
-import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.rest.model.response.TemplateListResponse;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 
 /**
  * Template tests for multichannelling support.
@@ -100,18 +99,13 @@ public class TemplateChannelSandboxTest extends AbstractMultichannellingSandboxT
 		localCopy.save();
 		t.commit(false);
 
-		// Get a folder resource - rest resource.
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(t);
-
 		// Execute rest request (without http) and retrieve all templates for
 		// the test folder.
 		String folderId = Integer.toString(ObjectTransformer.getInt(testFolder.getId(), -1));
-		TemplateListResponse templateListResponse = folderResource.getTemplates(
+		TemplateListResponse templateListResponse = getFolderResource().getTemplates(
 				folderId,
 				new InFolderParameterBean(),
-				new TemplateListParameterBean().setNodeId(Integer.valueOf(channelId)),
+				new TemplateListParameterBean().setFolderNodeId(Integer.valueOf(channelId)),
 				new LegacyFilterParameterBean(),
 				new LegacySortParameterBean().setSortOrder("desc"),
 				new LegacyPagingParameterBean(),
@@ -198,17 +192,12 @@ public class TemplateChannelSandboxTest extends AbstractMultichannellingSandboxT
 		testFolder.save();
 		t.commit(false);
 
-		// Get folder resource so we could use rest api to retrieve files.
-		FolderResourceImpl folderResource = new FolderResourceImpl();
-
-		folderResource.setTransaction(t);
-
 		// Get all templates for our test folder in the channel we are working
 		// in.
 		String folderId = Integer.toString(ObjectTransformer.getInt(testFolder.getId(), -1));
-		TemplateListResponse templateListResponse = folderResource.getTemplates(folderId,
+		TemplateListResponse templateListResponse = getFolderResource().getTemplates(folderId,
 				new InFolderParameterBean(),
-				new TemplateListParameterBean().setNodeId(Integer.valueOf(channelId)),
+				new TemplateListParameterBean().setFolderNodeId(Integer.valueOf(channelId)),
 				new LegacyFilterParameterBean(),
 				new LegacySortParameterBean().setSortOrder("desc"),
 				new LegacyPagingParameterBean(),
@@ -227,7 +216,7 @@ public class TemplateChannelSandboxTest extends AbstractMultichannellingSandboxT
 		assertTrue("Check if the template is inherited", !templateListResponse.getTemplates().get(0).isInherited());
 
 		// Get all files for test folder in the master node.
-		templateListResponse = folderResource.getTemplates(folderId,
+		templateListResponse = getFolderResource().getTemplates(folderId,
 				new InFolderParameterBean(),
 				new TemplateListParameterBean(),
 				new LegacyFilterParameterBean(),

@@ -1,7 +1,9 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
@@ -9,12 +11,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;	
+import java.util.stream.Stream;
+
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mockito;
+
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
-import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.exception.InvalidRequestException;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
@@ -23,19 +40,16 @@ import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.MultiTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.TagCreateRequest;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.Auth;
+import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.Mockito;
 
-
+@RunWith(Parameterized.class)
 @GCNFeature(set = {Feature.AUTOMATIC_TRANSLATION})
 public class TranslationResourceImplTest {
 
@@ -48,6 +62,7 @@ public class TranslationResourceImplTest {
 	static int checkBoxConstructId;
 	static int linkConstructId ;
 	static SystemUser user;
+	static Auth userAuth;
 	static TranslationResourceImpl translationResource = new TranslationResourceImpl();
 	TranslationService mockedTranslationService = Mockito.mock(TranslationService.class);
 
@@ -57,6 +72,7 @@ public class TranslationResourceImplTest {
 		testContext.getContext().getTransaction().commit();
 
 		user = supply(t -> t.getObject(SystemUser.class, 1));
+		userAuth = new Auth(user);
 
 		final var node = supply(
 				() -> createNode("node", "Node", PublishTarget.NONE, getLanguage("de"), getLanguage("en")));
@@ -68,10 +84,15 @@ public class TranslationResourceImplTest {
 
 		checkBoxConstructId = supply(
 				() -> createConstruct(node, CheckboxPartType.class, checkboxKeyword, "check"));
-
-		changeSessionLanguage();
 	}
 
+	@Parameters(name = "{index}: auth: {0}")
+	public static Collection<Object[]> data() {
+		return Stream.of(AuthType.LOGIN, AuthType.TOKEN).map(type -> new Object[] {type}).collect(Collectors.toList());
+	}
+
+	@Parameter(0)
+	public AuthType authType;
 
 	@Test
 	public void givenPageInSourceLanguage_shouldBeTranslatedIntoTargetLanguage()
@@ -83,19 +104,19 @@ public class TranslationResourceImplTest {
 		final var sourceLanguage = "de";
 		final var targetLanguage = "en";
 
-		try (Trx trx = new Trx(user)) {
+		userAuth.withAuth(authType, () -> {
 			var pageToTranslate = createPage(sourceLanguage);
 			createTags(pageToTranslate);
 
-			var pageTranslateRequest = (PageLoadResponse) translationResource.translate(pageToTranslate.getId(),
+			var pageTranslateRequest = assertSuccess(() -> translationResource.translate(pageToTranslate.getId(),
 					targetLanguage,
-					true, 0, 0);
+					true, 0, 0), null);
 
 			assertThat(pageTranslateRequest.getPage().getLanguage()).isEqualTo(targetLanguage);
 
 			var pageTags = pageTranslateRequest.getPage().getTags();
 			assertThat(pageTags).hasSizeGreaterThanOrEqualTo(3);
-		}
+		});
 	}
 
 	@Test
@@ -108,19 +129,15 @@ public class TranslationResourceImplTest {
 		final var targetLanguage = "en";
 		var pageToTranslate = createPage(sourceLanguage);
 
-		try (Trx trx = new Trx(user)) {
+		String msg = supply(() -> I18NHelper.get("feature.translation.error", I18NHelper.get("feature.translation.error.reason.markup_invalid")));
+
+		userAuth.withAuth(authType, () -> {
 			createTags(pageToTranslate);
 
-			var response = translationResource.translate(pageToTranslate.getId(),
-					targetLanguage,
-					true, 0, 0);
-
-			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
-			final var expectedMessage = "The page could not be translated because the markup of the translated page is invalid";
-			final var actualMessage = response.getResponseInfo().getResponseMessage();
-
-			assertThat(actualMessage).contains(expectedMessage);
-		}
+			assertError(() -> translationResource.translate(pageToTranslate.getId(), targetLanguage, true, 0, 0),
+					TranslationException.class, ResponseCode.FAILURE, msg,
+					new Message().setType(Message.Type.CRITICAL).setMessage(msg));
+		});
 	}
 
 	@Test
@@ -133,17 +150,15 @@ public class TranslationResourceImplTest {
 		final var targetLanguage = "ch";
 		var pageToTranslate = createPage(sourceLanguage);
 
-		try (Trx trx = new Trx(user)) {
+		String msg = supply(() -> I18NHelper.get("feature.translation.error.language_not_existent", targetLanguage));
+
+		userAuth.withAuth(authType, () -> {
 			createTags(pageToTranslate);
 
-			var response = translationResource.translate(pageToTranslate.getId(),
-					targetLanguage,true, 0, 0);
-
-			final var expectedMessage = "Error while translating page: invalid language code";
-			final var actualMessage = response.getResponseInfo().getResponseMessage();
-
-			assertThat(actualMessage).contains(expectedMessage);
-		}
+			assertError(() -> translationResource.translate(pageToTranslate.getId(), targetLanguage, true, 0, 0),
+					InvalidRequestException.class, ResponseCode.FAILURE, msg,
+					new Message().setType(Message.Type.CRITICAL).setMessage(msg));
+		});
 	}
 
 	/**
@@ -151,9 +166,7 @@ public class TranslationResourceImplTest {
 	 *
 	 * @param page page to add the tags
 	 */
-	private void createTags(Page page) {
-		PageResourceImpl pageResource = new PageResourceImpl();
-
+	private void createTags(Page page) throws NodeException {
 		var createTagsRequest = new MultiTagCreateRequest();
 		var create = new HashMap<String, TagCreateRequest>();
 		addTagCreateRequest(create, "content1", null, textKeyword,
@@ -165,8 +178,7 @@ public class TranslationResourceImplTest {
 
 		createTagsRequest.setCreate(create);
 
-		var response = pageResource.createTags(page.getId().toString(), createTagsRequest);
-		assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+		assertSuccess(() -> getPageResource().createTags(page.getId().toString(), createTagsRequest), null);
 	}
 
 	private void addTagCreateRequest(Map<String, TagCreateRequest> map, String id,
@@ -186,28 +198,15 @@ public class TranslationResourceImplTest {
 	 * @return the created page
 	 */
 	private Page createPage(String language) throws NodeException {
-		try (Trx trx = new Trx(user)) {
-			PageResourceImpl pageResource = new PageResourceImpl();
-			PageCreateRequest pageCreateRequest = new PageCreateRequest();
-			pageCreateRequest.setFolderId(Integer.toString(FOLDER_ID));
-			pageCreateRequest.setLanguage(language);
-			pageCreateRequest.setPageName("Page title");
+		PageCreateRequest pageCreateRequest = new PageCreateRequest();
+		pageCreateRequest.setFolderId(Integer.toString(FOLDER_ID));
+		pageCreateRequest.setLanguage(language);
+		pageCreateRequest.setPageName("Page title");
 
-			PageLoadResponse loadResponse = pageResource.create(pageCreateRequest);
-			TransactionManager.getCurrentTransaction().commit(false);
+		PageLoadResponse loadResponse = assertSuccess(() -> getPageResource().create(pageCreateRequest), null);
 
-			assertThat(loadResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
-			assertThat(loadResponse.getPage()).isNotNull();
-			assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
-			return loadResponse.getPage();
-		}
+		assertThat(loadResponse.getPage()).isNotNull();
+		assertThat(loadResponse.getPage().getLanguage()).isEqualTo(language);
+		return loadResponse.getPage();
 	}
-
-	private static void changeSessionLanguage() throws NodeException {
-		operate(user, t -> {
-			DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", getLanguage("en").getId(),
-					t.getSession().getSessionId());
-		});
-	}
-
 }

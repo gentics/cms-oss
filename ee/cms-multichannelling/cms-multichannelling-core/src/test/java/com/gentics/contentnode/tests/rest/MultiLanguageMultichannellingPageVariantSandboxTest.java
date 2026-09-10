@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -27,8 +28,6 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.ChannelStructure;
 import com.gentics.contentnode.testutils.ChannelStructure.Channel;
@@ -170,8 +169,7 @@ public class MultiLanguageMultichannellingPageVariantSandboxTest {
 		Page originalPage = Trx.supply(() -> Creator.createPage(getName() + "x", sourceFolder, template, tengwar, channels.getNode(createObject)));
 
 		PageLoadResponse translateResult = Trx.supply(() -> {
-			PageResource pri = new PageResourceImpl();
-			PageLoadResponse res = pri.translate(originalPage.getId(), klingon.getCode(), false, channels.getNode(createObject).getId());
+			PageLoadResponse res = getPageResource().translate(originalPage.getId(), klingon.getCode(), false, channels.getNode(createObject).getId());
 			ContentNodeRESTUtils.assertResponseOK(res);
 			return res;
 		});
@@ -200,7 +198,6 @@ public class MultiLanguageMultichannellingPageVariantSandboxTest {
 
 		// Create variant
 		PageLoadResponse variantResult = Trx.supply(() -> {
-			PageResource pri = new PageResourceImpl();
 			PageCreateRequest pcr = new PageCreateRequest();
 			pcr.setVariantChannelId(channels.getNode(variantSource).getId());
 			pcr.setNodeId(channels.getNode(variantDestination).getId());
@@ -214,7 +211,7 @@ public class MultiLanguageMultichannellingPageVariantSandboxTest {
 					pcr.setFolderId((variantDestination.isMainTree() ? mainRoot : otherRoot).getId().toString());
 				}
 			}
-			PageLoadResponse res = pri.create(pcr);
+			PageLoadResponse res = getPageResource().create(pcr);
 
 			// Check results
 			ContentNodeRESTUtils.assertResponseOK(res);

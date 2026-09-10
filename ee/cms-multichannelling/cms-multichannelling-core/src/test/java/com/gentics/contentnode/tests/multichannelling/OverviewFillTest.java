@@ -58,7 +58,6 @@ import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
-import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
@@ -218,8 +217,7 @@ public class OverviewFillTest {
 
 		String id = Integer.toString(overviewPage.getId());
 		operate(() -> {
-			PageResource pageResource = getPageResource();
-			PageLoadResponse loadResponse = pageResource.load(id, true, false, false, false, false, false, false, false, false, false, null, null);
+			PageLoadResponse loadResponse = getPageResource().load(id, true, false, false, false, false, false, false, false, false, false, null, null);
 			assertResponseOK(loadResponse);
 			com.gentics.contentnode.rest.model.Page page = loadResponse.getPage();
 			assertThat(page.getTags()).as("Page tags").containsKey(overviewTagName);
@@ -237,11 +235,11 @@ public class OverviewFillTest {
 			} else {
 				overview.setSelectedItemIds(selectedItemIds);
 			}
-			GenericResponse saveResponse = pageResource.save(id, new PageSaveRequest(page));
+			GenericResponse saveResponse = getPageResource().save(id, new PageSaveRequest(page));
 			assertResponseOK(saveResponse);
 
 			// load page again and assert
-			loadResponse = pageResource.load(id, true, false, false, false, false, false, false, false, false, false, null, null);
+			loadResponse = getPageResource().load(id, true, false, false, false, false, false, false, false, false, false, null, null);
 			assertResponseOK(loadResponse);
 			page = loadResponse.getPage();
 			assertThat(page.getTags()).as("Page tags").containsKey(overviewTagName);

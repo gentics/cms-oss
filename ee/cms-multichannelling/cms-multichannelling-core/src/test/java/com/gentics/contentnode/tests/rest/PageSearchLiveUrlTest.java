@@ -1,8 +1,8 @@
 package com.gentics.contentnode.tests.rest;
 
-import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
@@ -10,8 +10,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,11 +31,13 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -233,24 +234,24 @@ public class PageSearchLiveUrlTest {
 	 */
 	@Test
 	public void testSearch() throws NodeException {
-		operate(() -> {
-			Integer nodeId = null;
-			if (searchNodeId == NodeId.MASTER) {
-				nodeId = master.getId();
-			} else if (searchNodeId == NodeId.CHANNEL) {
-				nodeId = channel.getId();
-			}
-			PageLoadResponse response = getPageResource().search(false, false, true, false, false, false, false, false,
-					false, nodeId, liveUrl);
-			if (expectHit) {
-				assertResponseCodeOk(response);
-				assertThat(response.getPage()).as("Found Page")
-						.hasFieldOrPropertyWithValue("fileName", expectedPageFileName)
-						.hasFieldOrPropertyWithValue("inherited", expectedInherited);
-			} else {
-				assertResponseCode(response, ResponseCode.NOTFOUND);
-			}
-		});
+		Integer nodeId = null;
+		if (searchNodeId == NodeId.MASTER) {
+			nodeId = master.getId();
+		} else if (searchNodeId == NodeId.CHANNEL) {
+			nodeId = channel.getId();
+		}
+		final Integer fNodeId = nodeId;
+		Supplier<PageLoadResponse> method = () -> getPageResource().search(false, false, true, false, false, false, false, false,
+				false, fNodeId, liveUrl);
+
+		if (expectHit) {
+			PageLoadResponse response = assertSuccess(method, null);
+			assertThat(response.getPage()).as("Found Page")
+					.hasFieldOrPropertyWithValue("fileName", expectedPageFileName)
+					.hasFieldOrPropertyWithValue("inherited", expectedInherited);
+		} else {
+			assertError(method, EntityNotFoundException.class, ResponseCode.NOTFOUND, "");
+		}
 	}
 
 	/**

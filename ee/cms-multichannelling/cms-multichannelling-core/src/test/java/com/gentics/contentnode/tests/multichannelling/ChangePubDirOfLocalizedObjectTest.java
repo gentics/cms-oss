@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFolderResource;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
@@ -13,7 +14,6 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.request.FolderSaveRequest;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -95,7 +95,6 @@ public class ChangePubDirOfLocalizedObjectTest {
 		Folder notLocalizedSubfolder = null;
 		//Local subfolder in channel
 		Folder localFolder = null;
-		FolderResourceImpl folderResource = new FolderResourceImpl();
 
 		//Create folder and subfolder
 		try (Trx trx = new Trx()) {
@@ -149,8 +148,6 @@ public class ChangePubDirOfLocalizedObjectTest {
 
 		//Change pubdir of localized folder recursively
 		try (Trx trx = new Trx()) {
-			Transaction t = trx.getTransaction();
-			folderResource.setTransaction(t);
 			FolderSaveRequest request = new FolderSaveRequest();
 			com.gentics.contentnode.rest.model.Folder restFolder = new com.gentics.contentnode.rest.model.Folder();
 			restFolder.setId(localizedFolder.getId());
@@ -159,7 +156,7 @@ public class ChangePubDirOfLocalizedObjectTest {
 			request.setNodeId(channel.getId());
 			request.setRecursive(true);
 			request.setForegroundTime(60);
-			folderResource.save(Integer.toString(localizedFolder.getId()), request);
+			getFolderResource().save(Integer.toString(localizedFolder.getId()), request);
 			trx.success();
 		}
 

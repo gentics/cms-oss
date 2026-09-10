@@ -3,7 +3,6 @@
   "formId" : %d,
   "formType" : "generic",
   "uiSchema" : null,
-  "cmsSid" : %d,
   "language" : "%s",
   "pluginName" : "forms",
   "flows" : [ {

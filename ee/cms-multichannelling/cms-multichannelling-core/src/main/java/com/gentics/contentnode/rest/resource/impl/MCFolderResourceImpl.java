@@ -16,6 +16,7 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -386,7 +387,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 			}
 
 			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
-					Operator.lock(LockType.channelSet, folder.getChannelSetId()), new LocalizeFolderCallable(id, request.getChannelId(), false));
+					Operator.lock(LockType.channelSet, folder.getChannelSetId()), new LocalizeFolderCallable(id, request.getChannelId(), false), Function.identity());
 		}
 	}
 
@@ -537,7 +538,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 						return DisinheritRestUtil.set(com.gentics.contentnode.object.Folder.class, id, request, true);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 
@@ -580,7 +581,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 						return DisinheritRestUtil.set(com.gentics.contentnode.object.Folder.class, ids, request);
 					}
 				}
-			});
+			}, Function.identity());
 		}
 	}
 

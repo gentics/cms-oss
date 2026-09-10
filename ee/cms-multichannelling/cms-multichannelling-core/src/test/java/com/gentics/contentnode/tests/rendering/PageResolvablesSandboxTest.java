@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rendering;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
@@ -85,34 +87,24 @@ public class PageResolvablesSandboxTest {
 		construct.setName("Construct (en)", 2);
 		construct.getNodes().add(node);
 
-		Part velPart = t.createObject(Part.class);
-		velPart.setKeyname("velocity");
-		velPart.setHidden(false);
-		velPart.setEditable(0);
-		velPart.setName("velocity", 1);
-		velPart.setName("velocity", 2);
-		velPart.setPartOrder(1);
-		velPart.setPartTypeId(33);
-
-		Part tplPart = t.createObject(Part.class);
-		tplPart.setKeyname("template");
-		tplPart.setEditable(0);
-		tplPart.setName("tpl", 1);
-		tplPart.setName("tpl", 2);
-		tplPart.setPartOrder(2);
-		tplPart.setPartTypeId(21);
-		tplPart.setHidden(true);
+		Part hbsPart = t.createObject(Part.class);
+		hbsPart.setKeyname("hbs");
+		hbsPart.setHidden(false);
+		hbsPart.setEditable(0);
+		hbsPart.setName("hbs", 1);
+		hbsPart.setName("hbs", 2);
+		hbsPart.setPartOrder(1);
+		hbsPart.setPartTypeId(getPartTypeId(HandlebarsPartType.class));
 
 		List<Part> parts = construct.getParts();
-		parts.add(velPart);
-		parts.add(tplPart);
+		parts.add(hbsPart);
 		construct.save();
 
 		Value vval = t.createObject(Value.class);
 		vval.setContainer(construct);
-		vval.setPart(tplPart);
-		vval.setValueText("#foreach($lang in $cms.page.languageset.pages)##\n$lang.language.code #end");
-		tplPart.setDefaultValue(vval);
+		vval.setPart(hbsPart);
+		vval.setValueText("{{#each cms.page.languageset.pages}}{{gtx_render language.code}} {{/each}}");
+		hbsPart.setDefaultValue(vval);
 
 		construct.save();
 

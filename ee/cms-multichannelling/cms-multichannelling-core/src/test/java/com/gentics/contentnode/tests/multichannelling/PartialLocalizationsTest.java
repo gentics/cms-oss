@@ -5,7 +5,9 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static com.gentics.contentnode.tests.utils.Builder.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,6 +27,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -284,12 +287,9 @@ public class PartialLocalizationsTest {
 		saveRequest.setPage(localizedPage);
 		saveRequest.setDelete(Collections.singletonList(TAGNAME));
 
-		var saveResponse = supply(() -> new PageResourceImpl().save(localizedPage.getId().toString(), saveRequest));
-
-		assertResponse(saveResponse, ResponseCode.PERMISSION);
-		assertThat(saveResponse.getResponseInfo().getResponseMessage())
-			.as("Response message")
-			.endsWith("is readonly and cannot be modified");
+		assertError(() -> getPageResource().save(localizedPage.getId().toString(), saveRequest),
+				ReadOnlyException.class, ResponseCode.PERMISSION,
+				"Object instance {ContentTag {%s, %d}} is readonly and cannot be modified".formatted("othertesttag", localizedPage.getTags().get("othertesttag").getId()));
 	}
 
 	@Test

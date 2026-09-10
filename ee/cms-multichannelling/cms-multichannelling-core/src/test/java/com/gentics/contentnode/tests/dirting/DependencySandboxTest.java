@@ -29,8 +29,6 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.parttype.FileURLPartType;
-import com.gentics.contentnode.rest.resource.PageResource;
-import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -413,17 +411,6 @@ public class DependencySandboxTest  {
 		assertThat(DependencyManager.getDependenciesForObject(page, master.getId(), null)).as("Dependencies in master").contains(
 				DependencyManager.createDependency(file, "id", page, Events.UPDATE)
 		);
-	}
-
-	/**
-	 * Get a page resource with the current transaction
-	 * @return page resource
-	 * @throws NodeException
-	 */
-	protected PageResource getPageResource() throws NodeException {
-		PageResourceImpl pageResource = new PageResourceImpl();
-		pageResource.setTransaction(TransactionManager.getCurrentTransaction());
-		return pageResource;
 	}
 
 	/**

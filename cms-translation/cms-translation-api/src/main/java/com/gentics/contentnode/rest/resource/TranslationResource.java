@@ -2,9 +2,9 @@ package com.gentics.contentnode.rest.resource;
 
 
 import com.gentics.contentnode.rest.model.request.TranslationRequest;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.TranslationResponse;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.POST;
@@ -52,7 +52,7 @@ public interface TranslationResource {
 	@POST
 	@Path("/page/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	GenericResponse translate(@PathParam("id") Integer id,
+	PageLoadResponse translate(@PathParam("id") Integer id,
 			@QueryParam("language") String targetLanguageCode,
 			@QueryParam("locked") @DefaultValue("true") boolean locked,
 			@QueryParam("channelId") Integer channelId,

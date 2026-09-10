@@ -30,6 +30,9 @@ index:
     - title: "Editor and Administration User Interfaces"
       text: "Overview of Gentics CMS user interfaces"
       url: userinterfaces
+    - title: "API Tokens"
+      text: "How users can create and manage their own API Tokens"
+      url: api_token
     - title: "Features"
       url: oss-feature_overview
       text: "Overview of Gentics CMS features"

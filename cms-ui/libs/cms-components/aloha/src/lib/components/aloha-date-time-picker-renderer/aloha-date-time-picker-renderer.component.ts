@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { AlohaDateTimePickerComponent } from '@gentics/aloha-models';
-import { DateTimePickerFormatProvider, DateTimePickerStrings, MomentLike, generateFormProvider } from '@gentics/ui-core';
+import { DateTimePickerFormatProvider, DateTimePickerStrings, generateFormProvider } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
@@ -46,8 +46,12 @@ export class AlohaDateTimePickerRendererComponent
         }));
     }
 
-    public format(date: MomentLike, displayTime: boolean, displaySeconds: boolean): string {
+    public format(date: Date, displayTime: boolean, displaySeconds: boolean): string {
         return this.formatter.format(date, displayTime, displaySeconds);
+    }
+
+    public getDateOrder(): 'dmy' | 'ymd' | 'mdy' {
+        return this.formatter.getDateOrder();
     }
 
     public handleValueChange(timestamp: number): void {

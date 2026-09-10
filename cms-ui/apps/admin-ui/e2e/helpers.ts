@@ -45,6 +45,27 @@ export function findEntityTableActionButton(source: Page | Locator, action: stri
 
 export async function setGtxDateFromXpath(page: Page, dateInput: Locator, xPath: string): Promise<void> {
     await dateInput.click();
-    await page.locator('gtx-date-time-picker-modal').locator('td.rd-day-selected').locator(xPath).click();
-    await page.locator('gtx-date-time-picker-modal').locator('[data-action="confirm"] button').click();
+
+    const modal = page.locator('gtx-date-time-picker-modal');
+
+    await modal.waitFor({ state: 'visible' });
+
+    await modal.locator('.day.active').locator(xPath).click();
+    await modal.locator('[data-action="confirm"] button').click();
+}
+
+export async function dateShouldBeDisabled(page: Page, createTokenModalForm: Locator, xPath: string): Promise<void> {
+    const nameInput = createTokenModalForm.locator('input[type="text"]');
+    await nameInput.fill('test');
+
+    const dateInput = createTokenModalForm.locator('gtx-date-time-picker');
+
+    await dateInput.click();
+
+    const modal = page.locator('gtx-date-time-picker-modal');
+
+    await modal.waitFor({ state: 'visible' });
+
+    await modal.locator('.day.active').locator(xPath).isDisabled();
+    await modal.locator('.modal-footer [data-action="cancel"]').click();
 }

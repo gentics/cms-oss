@@ -378,6 +378,9 @@ Usage of the helper:
 {{/implementation_package.render_tag}}
 </shell>
 
+WARNING: The usage of custom helpers from devtool packages will *not* be tracked by the internal dependency management. If any helper in a
+devtool package is modified, republishing of the affected objects needs to be done manually.
+
 h5. Default package helpers
 
 Currently the only tagtype in the default package that uses Handlebars is the "Aloha Page Link Tag":https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html which uses the @gtx_alohalink@ helper also contained in the default package. Since helpers must always be prefixed with their respective package names, a custom implementation of the Aloha Page Link Tag requires adding the tag to a custom package, then adding a custom helper for use in the Handlebars part and calling that helper with the package prefix (see the "Aloha Page Link Tag":https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html#customizing-the-aloha-editor-page-link-tag guide).
@@ -407,6 +410,9 @@ will be available as partial +implementation_package.render_name+ and can be use
 </shell>
 
 NOTE: Partials will not be synchonized into the CMS, so changes in a partial file will be effective immediately.
+
+WARNING: The usage of partials from devtool packages will *not* be tracked by the internal dependency management. If any partial in a
+devtool package is modified, republishing of the affected objects needs to be done manually.
 
 h3. Differences to Velocity
 

@@ -143,7 +143,7 @@ h3. Cross-package usage
 It is possible to import classes from other devtool packages, if both devtool packages are assigned to the rendered node.
 In order to make this possible, the CMS will compile all scripts found in all assigned devtool packages together per node.
 When the assignment of devtool packages to a node is changed (a new package added or a package removed) or any script file
-in an existing devtool package is modified, all scripts will have to be recompiled.
+in an existing devtool package is modified, all scripts will be recompiled.
 
 h3. Handling of compilation errors
 
@@ -158,4 +158,7 @@ If implemented properly (see "Loading CMS objects":#loading-cms-objects), depend
 
 Changes in Groovy scripts contained in Groovy Part Types will also be handled by the internal dependency management.
 
-TBD: Changes in Groovy scripts/classes in devtool packages.
+WARNING: The usage of groovy scripts and classes from devtool packages will *not* be tracked by the internal dependency management. If any script or class in a
+devtool package is modified, republishing of the affected objects needs to be done manually.
+
+.

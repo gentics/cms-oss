@@ -1526,7 +1526,14 @@ public class RenderType implements RenderInfo {
 		if (!compilationUnitsPerNode.containsKey(node)) {
 			CompilerConfiguration config = new CompilerConfiguration();
 
-			GroovyClassLoader gcl = new GroovyClassLoader(Synchronizer.getGroovyClassLoader(node), config);
+			ClassLoader baseClassLoader;
+			if (Synchronizer.getStatus() == Status.UP) {
+				baseClassLoader = Synchronizer.getGroovyClassLoader(node);
+			} else {
+				baseClassLoader = RenderType.class.getClassLoader();
+			}
+
+			GroovyClassLoader gcl = new GroovyClassLoader(baseClassLoader, config);
 			CompilationUnit unit = new CompilationUnit(config, null, gcl);
 			compilationUnitsPerNode.put(node, unit);
 		}

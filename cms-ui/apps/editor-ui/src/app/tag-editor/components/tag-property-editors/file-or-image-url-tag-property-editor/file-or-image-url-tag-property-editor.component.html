@@ -11,6 +11,7 @@
             [canEditImage]="imageManipulationEnabled$ | async"
             [contentLanguage]="page?.language"
             [startFolder]="uploadDestination?.id"
+            [startNode]="uploadDestination ? (uploadDestination.channelId || uploadDestination.nodeId) : undefined"
             [showBreadcrumb]="true"
             [value]="selectedItem.selectedItem$ | async"
             (valueChange)="changeSelectedItem($event)"

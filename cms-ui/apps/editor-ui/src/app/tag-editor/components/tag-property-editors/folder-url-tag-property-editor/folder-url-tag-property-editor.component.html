@@ -8,6 +8,7 @@
             [multiple]="false"
             [contentLanguage]="baseLanguage"
             [startFolder]="uploadDestination?.id"
+            [startNode]="uploadDestination ? (uploadDestination.channelId || uploadDestination.nodeId) : undefined"
             [value]="selectedFolder.selectedItem$ | async"
             (valueChange)="changeSelectedItem($event)"
         ></gtx-browse-box>

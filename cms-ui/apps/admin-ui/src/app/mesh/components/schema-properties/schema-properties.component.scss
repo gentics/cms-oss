@@ -12,6 +12,12 @@
     overflow: auto;
 }
 
+gtx-json-input ::ng-deep textarea {
+    min-height: calc(7.5em + 14px) !important;
+    max-height: 45vh;
+    overflow-y: auto !important;
+}
+
 form {
     height: 100%;
     display: flex;

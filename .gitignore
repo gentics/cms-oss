@@ -197,3 +197,4 @@ velocity.log
 logs/
 *.zip
 dist/
+cms-oss-doc/src/main/assets/gcn_files/openapi.*

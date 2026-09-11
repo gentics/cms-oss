@@ -390,6 +390,10 @@ export class RestService {
    */
   async validationRequest(formData: IData): Promise<ApiResponse> {
     let url = `form/${encodeURIComponent(formData.formID)}/validate`;
+    if (this.pluginName === PluginNameEnum.CMS_FORMS) {
+      const uuid = this.readCookie(this.FORMS_DATA_COOKIE);
+      if (uuid) url += '?formDataUuid=' + encodeURIComponent(uuid);
+    }
     const requestBody = JSON.stringify(formData);
     const response = await this.post(
       formData.formID,

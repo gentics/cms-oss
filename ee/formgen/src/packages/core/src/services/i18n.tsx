@@ -3,9 +3,9 @@ import { initReactI18next } from 'react-i18next';
 import Backend, { HttpBackendOptions } from 'i18next-http-backend';
 import Constants from 'expo-constants';
 
-// Lokale (Mock-)Translations – werden in Production-Builds via metro.config.js
-// auf devTranslations.stub.ts gemappt, sodass der translations/-Ordner dann
-// nicht existieren muss.
+// Lokale (Mock-)Translations – werden in Production-Builds bzw. wenn der Ordner
+// local_dev_translations/ fehlt auf devTranslations.stub.ts gemappt (siehe
+// metro.dev-translations.js), sodass der Ordner dann nicht existieren muss.
 import { mergedDe, mergedEn } from './devTranslations';
 import { Platform } from 'react-native';
 import { PreviewInformation } from '../../../feature-formgen/src/types/preview';

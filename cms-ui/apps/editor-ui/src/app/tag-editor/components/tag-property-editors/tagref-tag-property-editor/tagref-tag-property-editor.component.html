@@ -8,6 +8,7 @@
         [multiple]="false"
         [contentLanguage]="page?.language"
         [startFolder]="uploadDestination?.id"
+        [startNode]="uploadDestination ? (uploadDestination.channelId || uploadDestination.nodeId) : undefined"
         [value]="selectedTag$ | async"
         (valueChange)="changeSelection($event)"
     ></gtx-browse-box>

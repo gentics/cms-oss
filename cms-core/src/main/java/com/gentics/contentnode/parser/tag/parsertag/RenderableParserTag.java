@@ -17,6 +17,7 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.parser.tag.ParserTag;
 import com.gentics.contentnode.render.GCNRenderable;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 
 /**
@@ -93,26 +94,27 @@ public class RenderableParserTag implements ParserTag {
 	public String render(RenderResult renderResult) throws NodeException {
 
 		String source = "";
-        
+
+		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 		StackResolver stack = null;
 		Tag pushedTag = null;
 
 		if (resolvedPath != null && renderObject instanceof Value) {
 			// if we are rendering a value, we need to put the tag on the
 			// stack so we can resolve tag parts ..
-			stack = TransactionManager.getCurrentTransaction().getRenderType().getStack();
+			stack = renderType.getStack();
 			for (int i = resolvedPath.size() - 1; i > -1 && pushedTag == null; i--) {
 				Object obj = resolvedPath.get(i);
-                
+
 				if (obj instanceof PropertyPathEntry) {
 					obj = ((PropertyPathEntry) obj).getEntry();
 				}
-                
+
 				if (obj instanceof Tag) {
 					if (!stack.getObjectStack().contains(obj)) {
 						// only push tag on stack if it isn't already there ..
 						pushedTag = (Tag) obj;
-						stack.push(pushedTag);
+						renderType.push(pushedTag);
 					}
 				}
 			}
@@ -126,13 +128,13 @@ public class RenderableParserTag implements ParserTag {
 			}
 		} finally {
 			if (pushedTag != null && stack != null) {
-				stack.pop();
+				renderType.pop(pushedTag);
 			}
 		}
-        
+
 		return source;
 	}
-    
+
 	/*
 	 * (non-Javadoc)
 	 * @see com.gentics.lib.parser.tag.ParserTag#isAlohaBlock()

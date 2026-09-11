@@ -30,6 +30,7 @@
                 [multiple]="false"
                 [contentLanguage]="page?.language"
                 [startFolder]="uploadDestination?.id"
+                [startNode]="uploadDestination ? (uploadDestination.channelId || uploadDestination.nodeId) : undefined"
                 [value]="selectedInternalPage.selectedItem$ | async"
                 (valueChange)="changeSelectedPage($event)"
             ></gtx-browse-box>

@@ -145,6 +145,33 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 		return wrap(wrapped.get(key), getSubContext(), this);
 	}
 
+	/**
+	 * Implementation of {@link Map#get(Object)}.
+	 * <p>
+	 * For String keys, delegates to {@link #get(String)}, which resolves the key
+	 * using the wrapped {@link Resolvable}. This is important because the
+	 * {@link AbstractMap#get(Object)} implementation only searches {@link #entrySet()},
+	 * which may not contain all keys that the {@link Resolvable} can resolve.
+	 * <p>
+	 * Some keys may be resolvable even if they do not exist yet. Resolving such
+	 * a key creates the dependency needed to detect changes when the key is created
+	 * later.
+	 * <p>
+	 * Being able to resolve a key does not mean that {@link #containsKey(Object)}
+	 * returns {@code true}
+	 * 
+	 * @param key the key to resolve
+	 * @return the resolved value, or null if the key is not a String
+	 */
+	@Override
+	public Object get(Object key) {
+		if (key instanceof String stringKey) {
+			return get(stringKey);
+		}
+		
+		return null;
+	}
+
 	@Override
 	public boolean canResolve() {
 		return wrapped.canResolve();

@@ -74,7 +74,7 @@ public class FormRendering {
 		RenderType renderType = TransactionManager.getCurrentTransaction().getRenderType();
 
 		if (form != null) {
-			var editMode = renderType.getEditMode();
+			var editMode = RenderUtils.getRealEditMode(renderType);
 
 			if (editMode == RenderType.EM_PUBLISH || editMode == RenderType.EM_ALOHA_READONLY) {
 				if (editMode == RenderType.EM_ALOHA_READONLY) {

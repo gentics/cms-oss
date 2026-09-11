@@ -17,10 +17,7 @@ import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationUnit;
 
 import com.gentics.api.lib.datasource.Datasource;
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.UnknownPropertyException;
-import com.gentics.api.lib.resolving.PropertyResolver;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -115,19 +112,13 @@ public class HelperSource {
 		try {
 			// switch back to the original rendermode, if the rendermode was changed for rendering the velocity tag
 			renderType = TransactionManager.getCurrentTransaction().getRenderType();
-			// we do this by getting rendermde.editMode from the CMSResolver, which will also take into consideration, whether
+			// we do this by getting the real edit mode, which will also take into consideration, whether
 			// we are rendering a foreign object or not (not edit mode for foreign objects)
-			int editMode = Optional.ofNullable(renderType.getCMSResolver()).map(cms -> {
-				try {
-					return ObjectTransformer.getInt(PropertyResolver.resolve(cms, "rendermode.editMode", false), -1);
-				} catch (UnknownPropertyException e) {
-					return -1;
-				}
-			}).orElse(-1);
+			int editMode = RenderUtils.getRealEditMode(renderType);
 
 			currentEditMode = renderType.getEditMode();
 
-			if (editMode > 0 && editMode != currentEditMode) {
+			if (editMode != currentEditMode) {
 				renderType.setEditMode(editMode);
 				editModeSet = true;
 			}
@@ -143,7 +134,7 @@ public class HelperSource {
 
 	/**
 	 * Fetch the internals of a JSON content according to a given JsonPath.
-	 * 
+	 *
 	 * @param renderable JSON string or object
 	 * @param jsonPathString a jsonpath
 	 * @param options
@@ -152,7 +143,7 @@ public class HelperSource {
 	public static Object json_path(Object renderable, String jsonPathString, Options options) {
 		if (renderable instanceof ResolvableMapWrapper mw) {
 			renderable = mw.getWrapped();
-		} 
+		}
 		if (renderable instanceof Value v) {
 			renderable = v.getValueText();
 		} else if (renderable instanceof JsonContent jc) {

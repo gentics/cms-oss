@@ -6,8 +6,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.render.RenderResult;
+import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
 
@@ -83,6 +86,9 @@ public class FormPartType extends AbstractPartType {
 	@Override
 	public String render(RenderResult renderResult, String template) throws NodeException {
 		super.render(renderResult, template);
+		if (TransactionManager.getCurrentTransaction().getRenderType().getEditMode() == RenderType.EM_ALOHA) {
+			return I18NHelper.get("form.editmode.placeholder");
+		}
 		return getFormUUID();
 	}
 }

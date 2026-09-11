@@ -5,9 +5,12 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.net.ssl.SSLContext;
@@ -29,6 +32,8 @@ import org.apache.http.util.EntityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.UnknownPropertyException;
+import com.gentics.api.lib.resolving.PropertyResolver;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.Feature;
@@ -46,6 +51,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.CMSResolver;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.parser.ContentRenderer;
 import com.gentics.contentnode.parser.tag.ParserTag;
@@ -188,6 +194,36 @@ public class RenderUtils {
 	 */
 	public static <T> T getHandlebarsHelperObject(Class<T> clazz, Options options) {
 		return mapper.convertValue(options.hash, clazz);
+	}
+
+	/**
+	 * Get the "real" edit mode of the current render process.
+	 *
+	 * <p>
+	 *     Where "real" edit mode means the mode that was originally requested, even if a part type renderer temporarily
+	 *     overwrote {@link RenderType#getEditMode()}.
+	 * </p>
+	 *
+	 * @param renderType The current render type.
+	 * @return The original edit mode.
+	 */
+	public static int getRealEditMode(RenderType renderType) {
+		CMSResolver cms;
+		try {
+			cms = renderType.getCMSResolver();
+		} catch (EmptyStackException e) {
+			// no CMSResolver has been pushed (i.e. we are not rendering inside a Velocity/Handlebars part type), so
+			// there is nothing to have overwritten the edit mode.
+			cms = null;
+		}
+
+		return Optional.ofNullable(cms).map(resolver -> {
+			try {
+				return ObjectTransformer.getInt(PropertyResolver.resolve(resolver, "rendermode.editMode", false), -1);
+			} catch (UnknownPropertyException e) {
+				return -1;
+			}
+		}).filter(mode -> mode > 0).orElseGet(renderType::getEditMode);
 	}
 
 	/**
@@ -383,9 +419,9 @@ public class RenderUtils {
 	 * not hostname verification.
 	 *
 	 * @return An HTTP client which ignores insecure SSL connections
-	 * @throws NodeException The The custom SSL context can not be created
+	 * @throws NodeException The custom SSL context can not be created
 	 */
-	private static CloseableHttpClient getHttpClient(boolean ignoreSslProblems) throws NodeException {
+	public static CloseableHttpClient getHttpClient(boolean ignoreSslProblems) throws NodeException {
 		HttpClientBuilder clientBuilder = HttpClients.custom();
 
 		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
@@ -424,7 +460,7 @@ public class RenderUtils {
 	 * @return The URI created from {@code previewUrl} with the necessary query parameters
 	 * @throws NodeException When the resulting URI would be invalid
 	 */
-	private static URI getPreviewUrl(String previewUrl, String renderMode, Node node) throws NodeException {
+	public static URI getPreviewUrl(String previewUrl, String renderMode, Node node) throws NodeException {
 		try {
 			URIBuilder builder = new URIBuilder(previewUrl);
 

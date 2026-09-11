@@ -8,13 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
-import org.codehaus.groovy.control.CompilationUnit;
 
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.exception.NodeException;
@@ -49,6 +42,11 @@ import com.github.jknack.handlebars.helper.HelperFunction;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ParseContext;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.codehaus.groovy.control.CompilationUnit;
 
 /**
  * Source for helpers used when rendering a {@link HandlebarsPartType}
@@ -56,7 +54,7 @@ import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
 public class HelperSource {
 	/**
 	 * Render helper
-	 * @param renderable renderable to render
+	 * @param value renderable to render
 	 * @param options options
 	 * @return rendered renderable
 	 */

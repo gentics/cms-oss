@@ -2,7 +2,6 @@ package com.gentics.contentnode.render;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Optional;
 
 import org.apache.velocity.context.InternalContextAdapter;
 import org.apache.velocity.exception.MethodInvocationException;
@@ -10,10 +9,7 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.parser.node.Node;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.UnknownPropertyException;
-import com.gentics.api.lib.resolving.PropertyResolver;
 import com.gentics.contentnode.factory.TransactionManager;
 
 /**
@@ -40,19 +36,13 @@ public class EditDirective extends RenderDirective {
 		try {
 			// switch back to the original rendermode, if the rendermode was changed for rendering the velocity tag
 			renderType = TransactionManager.getCurrentTransaction().getRenderType();
-			// we do this by getting rendermde.editMode from the CMSResolver, which will also take into consideration, whether
+			// we do this by getting the real edit mode, which will also take into consideration, whether
 			// we are rendering a foreign object or not (not edit mode for foreign objects)
-			int editMode = Optional.ofNullable(renderType.getCMSResolver()).map(cms -> {
-				try {
-					return ObjectTransformer.getInt(PropertyResolver.resolve(cms, "rendermode.editMode", false), -1);
-				} catch (UnknownPropertyException e) {
-					return -1;
-				}
-			}).orElse(-1);
+			int editMode = RenderUtils.getRealEditMode(renderType);
 
 			currentEditMode = renderType.getEditMode();
 
-			if (editMode > 0 && editMode != currentEditMode) {
+			if (editMode != currentEditMode) {
 				renderType.setEditMode(editMode);
 				editModeSet = true;
 			}

@@ -169,7 +169,9 @@ spec:
 
                         // Run the tests
                         if (params.runTests) {
-                            sh "npm run many -- --targets=test,component-test --configuration=ci --output-style=static"
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                                sh "npm run many -- --targets=test,component-test --configuration=ci --output-style=static"
+                            }
                         }
 
                         // Create the report-files

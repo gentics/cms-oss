@@ -8,6 +8,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.DBSession;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.UserLanguageFactory;
@@ -88,6 +89,11 @@ public class I18nResourceImpl implements I18nResource {
 			DBUtils.updateOrInsert("systemuser_data", Map.of("systemuser_id",
 					trx.getTransaction().getSession().getUserId(), "name", Session.UI_LANGUAGE_DATA_KEY),
 					Map.of("json", ObjectTransformer.getString(json, null)));
+
+			if (trx.getTransaction().getSession() instanceof DBSession dbSession) {
+				DBUtils.update("UPDATE systemsession SET language = ? WHERE id = ?", language.getId(), dbSession.getId());
+			}
+
 			trx.success();
 
 			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully modified language"));

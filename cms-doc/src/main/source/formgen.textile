@@ -1,7 +1,7 @@
 h2. FormGen Customizing
 
 *FormGen* is the React Native / Expo based renderer that displays Gentics Forms, validates user input, runs the configured form flow 
-and submits the data. See "Gentics Forms":forms.html for how forms are configured and embedded into pages.
+and submits the data. See "Gentics Forms":feature_forms.html for how forms are configured and embedded into pages.
 
 This guide describes how to adapt FormGen to project-specific requirements. FormGen establishes a clear separation between its 
 *core* and *customer-specific code*: all customizations are placed in a dedicated +custom/+ folder (and a +styles/custom/+ folder for styling). 

@@ -419,6 +419,9 @@ public abstract class AbstractSSOFilter implements Filter {
 									session.logout();
 									createNewSession = true;
 								}
+							} else {
+								// no valid session -> create a new one
+								createNewSession = true;
 							}
 
 						} catch (InvalidSessionIdException e) {

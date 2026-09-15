@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { API_BASE_URL } from '@gentics/cms-components';
-import { AuthStateModel, KeycloakService } from '@gentics/cms-components/auth';
+import { AuthStateModel, KeycloakService, SingleSignOnSuccess } from '@gentics/cms-components/auth';
 import { BaseComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { distinctUntilChanged, filter, first, take } from 'rxjs/operators';

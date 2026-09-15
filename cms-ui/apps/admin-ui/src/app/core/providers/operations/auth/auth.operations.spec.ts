@@ -29,7 +29,6 @@ import { delay, map, takeUntil } from 'rxjs/operators';
 import { ObservableStopper } from '../../../../common/utils/observable-stopper/observable-stopper';
 import { AppStateService } from '../../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../../state/utils/test-app-state';
-import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from '../../entity-manager';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { ErrorHandler } from '../../error-handler/error-handler.service';
@@ -137,6 +136,7 @@ describe('AuthOperations', () => {
                 ),
             );
 
+            authOps.validateSession();
             expect(validateStartDispatched).toBe(true);
             expect(client.user.me).toHaveBeenCalled();
 

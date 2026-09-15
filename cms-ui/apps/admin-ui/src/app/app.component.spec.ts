@@ -53,7 +53,7 @@ class MockApiBase {
 }
 
 class MockAuthOperations {
-    validateSessionFromLocalStorage = jasmine.createSpy('validateSessionFromLocalStorage').and.stub();
+    validateSession = jasmine.createSpy('validateSession').and.stub();
 }
 
 abstract class InitializableService {

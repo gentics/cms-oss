@@ -249,6 +249,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                             showNotification: true,
                             fetchForUpdate: true,
                             fetchForConstruct: true,
+                            rethrowError: true,
                         });
                         promiseResolved = true;
                     })
@@ -676,7 +677,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         // Make sure that the changes have been saved.
                         expect(folderActions.updateItemObjectProperties).toHaveBeenCalledTimes(1);
                         expect(folderActions.updateItemObjectProperties).toHaveBeenCalledWith(
-                            'page', mockPage.id, expectedUpdate, { showNotification: true, fetchForUpdate: true, fetchForConstruct: true }, undefined,
+                            'page', mockPage.id, expectedUpdate, { showNotification: true, fetchForUpdate: true, fetchForConstruct: true, rethrowError: true }, undefined,
                         );
 
                         // The item should not be refetched manually, because it is returned by the save request.
@@ -753,7 +754,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                         // Make sure that the changes have been saved.
                         expect(folderActions.updateItemObjectProperties).toHaveBeenCalledTimes(1);
                         expect(folderActions.updateItemObjectProperties).toHaveBeenCalledWith(
-                            'folder', mockFolder.id, expectedUpdate, { showNotification: true, fetchForUpdate: true, fetchForConstruct: true }, expectedOptions,
+                            'folder', mockFolder.id, expectedUpdate, { showNotification: true, fetchForUpdate: true, fetchForConstruct: true, rethrowError: true }, expectedOptions,
                         );
 
                         // The item should not be refetched manually, because it is returned by the save request.
@@ -849,7 +850,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                                 updatedObjProps: expectedUpdateToLanguageVariants,
                                 requestOptions: undefined,
                             })),
-                            { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
+                            { showNotification: true, fetchForUpdate: true, fetchForConstruct: true, rethrowError: true },
                         );
 
                         // The item should not be refetched manually, because it is returned by the save request.

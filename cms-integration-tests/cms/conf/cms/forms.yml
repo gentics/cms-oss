@@ -416,16 +416,6 @@ forms:
             condition: null
           aggregate: false
           whitelist: null
-        recaptcha:
-          labelI18n:
-            de: "Recaptcha"
-            en: "Recaptcha"
-          descriptionI18n:
-            de: "Recaptcha Spamschutz."
-            en: "Recaptcha spam protection."
-          settings: []
-          aggregate: false
-          whitelist: null
         time:
           labelI18n:
             de: "Zeit (Format: HH:MM)"
@@ -549,6 +539,14 @@ forms:
             multiple: false
           aggregate: false
           whitelist: null
+        aggregate:
+          labelI18n:
+            de: "Aggregat"
+            en: "Aggregat"
+          descriptionI18n:
+            de: "Aggregat Element"
+            en: "Aggregate Element"
+          aggregate: true
       blocks:
         spacer:
           labelI18n:

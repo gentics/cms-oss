@@ -1,3 +1,5 @@
+/* eslint-disable @stylistic/quote-props */
+/* eslint-disable @stylistic/quotes */
 /*
  * This file defines all neccessary test entities directly.
  * Importing them via JSON would work as well, but here we have proper type
@@ -412,7 +414,7 @@ export const PAGE_ONE: PageImportData = {
     ...createPage(NODE_MINIMAL, NODE_MINIMAL, BASIC_TEMPLATE_ID, 'One'),
     tags: {
         content: {
-            id: null as any,
+            id: null,
             constructId: 7,
             name: 'content',
             active: true,
@@ -443,7 +445,7 @@ export const PAGE_ONE_DE = createPageTranslation(PAGE_ONE, 'Eins', LANGUAGE_DE, 
     pageName: 'Seite Eins',
     tags: {
         content: {
-            id: null as any,
+            id: null,
             constructId: 7,
             name: 'content',
             active: true,
@@ -520,6 +522,113 @@ export const FORM_TWO: FormImportData = {
         adminEmailSubject: {
             de: 'Betreff',
             en: 'Subject',
+        },
+    },
+};
+
+export const FORM_THREE: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'formTwo',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_DE, LANGUAGE_EN],
+
+    name: 'Form Three',
+    description: 'Test Form three',
+    formType: 'generic',
+    data: {
+        schema: {
+            key: '',
+            version: '',
+            properties: {
+                input1: {
+                    type: 'string',
+                },
+                agg1: {
+                    type: 'aggregate',
+                    name: 'Aggregate One',
+                    properties: {
+                        input1: {
+                            type: 'string',
+                        },
+                    },
+                },
+            },
+        },
+        "ui-schema": {
+            key: '',
+            version: '',
+            pages: [
+                {
+                    pagename: {
+                        de: 'Beispiel',
+                        en: 'Example',
+                    },
+                    elements: [
+                        {
+                            id: 'input1',
+                            label: {
+                                de: 'Eingabefeld 1',
+                                en: 'Input field 1',
+                            },
+                            type: 'property',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'string',
+                            },
+                        },
+                        {
+                            id: 'agg1',
+                            label: {
+                                de: 'Aggregat 1',
+                                en: 'Aggregate 1',
+                            },
+                            type: 'aggregate',
+                            uiSchemaPage: 0,
+                            formGridOptions: {
+                                type: 'aggregate',
+                            },
+                            elements: [
+                                {
+                                    type: 'container',
+                                    id: 'group1',
+                                    label: {
+                                        de: 'Agg Gruppe 1',
+                                        en: 'Agg Group 1',
+                                    },
+                                    uiSchemaPage: 0,
+                                    formGridOptions: {
+                                        type: 'group',
+                                    },
+                                    elements: [
+                                        {
+                                            id: 'input1',
+                                            label: {
+                                                de: 'Agg Eingabefeld 1',
+                                                en: 'Agg Input field 1',
+                                            },
+                                            uiSchemaPage: 0,
+                                            type: 'property',
+                                            formGridOptions: {
+                                                type: 'string',
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    pagename: {
+                        de: 'Leere Seite',
+                        en: 'Empty Page',
+                    },
+                    elements: [],
+                },
+            ],
         },
     },
 };

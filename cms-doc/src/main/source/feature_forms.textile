@@ -508,6 +508,33 @@ Configuration for +string+ or +translation+ settings, which only works when the 
 | +plugins+ | list of strings | The plugins that are enabled for this setting. The following Plugins are *always* loaded and cannot be disabled: +common/ui+, +common/contenthandler+, +common/block+. On default, the following Plugins are applied if none are configured: +common/format+, +common/link+. |
 | +settings+ | object | Arbitrary settings for Aloha. Please see the "Configuration of Aloha Settings":aloha_gcn_settings.html page for more information. |
 
+Example configuration:
+
+<shell filename="conf/forms.yml">
+text:
+  labelI18n:
+    de: "Text"
+    en: "Text"
+  settings:
+  - type: "translation"
+    id: "text"
+    labelI18n:
+      de: "Text"
+      en: "Text"
+    required: false
+    backend: false
+    richContent: true
+    aloha:
+      plugins:
+        - "common/format"
+        - "common/link"
+        - "common/list"
+      settings:
+        plugins:
+          format:
+            config: ['b', 'i']
+</shell>
+
 h4. Form flows
 
 A form flow controls the sequence of screens a user is guided through when filling out a form — for example the form itself, an optional summary, and a final success screen. Each form type defines its flows in the +flows+ list of the General configuration; the first entry is used as the default. A flow determines which screens are shown, which buttons appear on each screen, and which additional variables are passed to the screen components.

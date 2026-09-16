@@ -124,9 +124,17 @@ test.describe('Login', () => {
 
         test('should be able to login', async ({ page }) => {
             await navigateToApp(page);
+
+            // Wait for the app-shell (incl. the lazy-loaded login module) to be fully
+            // bootstrapped before interacting with the form, otherwise the login and the
+            // post-login navigation (login -> node-list load -> route redirect -> editor)
+            // race against the default assertion timeout, which is more likely to be hit
+            // headless where there's extra latency (remote browser/CMS containers).
+            await expect(page.locator('gtx-login')).toBeVisible();
+
             await loginWithForm(page, TEST_USER);
 
-            await expect(page.locator('project-editor')).toBeVisible();
+            await expect(page.locator('project-editor')).toBeVisible({ timeout: 15_000 });
         });
 
         test('should skip login if already logged in', async ({ page }) => {

@@ -1,5 +1,14 @@
 package com.gentics.contentnode.tests;
 
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.Builder.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.SYSTEM_GROUP_ID;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -7,6 +16,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
@@ -21,6 +37,7 @@ import com.gentics.contentnode.rest.model.response.LoginResponse;
 import com.gentics.contentnode.server.OSSRunner;
 import com.gentics.contentnode.server.OSSRunnerContext;
 import com.gentics.contentnode.testutils.DBTestContext;
+
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
@@ -30,22 +47,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.SYSTEM_GROUP_ID;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSystemUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 /**
  * Test cases for the {@link com.gentics.contentnode.servlets.AlohaPageServlet}.
@@ -82,12 +83,16 @@ public class AlohaPageServletPreviewTest {
 		testContext.getContext().getTransaction().commit();
 
 		Node node = supply(() -> createNode());
-		Template template = supply(() -> create(Template.class, tmpl -> {
+		Template template = create(Template.class, tmpl -> {
 			tmpl.setFolderId(node.getFolder().getId());
 			tmpl.setName("Template");
 			tmpl.setSource("<html><head></head><body>Test Content</body></html>");
-		}));
-		Page page = supply(() -> createPage(node.getFolder(), template, "Page"));
+		}).build();
+		Page page = create(Page.class, p -> {
+			p.setFolder(node, node.getFolder());
+			p.setTemplateId(template.getId());
+			p.setName("Page");
+		}).unlock().build();
 		pageId = Integer.toString(page.getId());
 
 		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, SYSTEM_GROUP_ID));

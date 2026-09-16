@@ -217,8 +217,6 @@ export class ErrorHandler {
             visible: false,
         }));
 
-        console.log('this.appState.now.auth.loggedInViaSso', this.appState.now.auth.loggedInViaSso);
-
         if (this.appState.now.auth.loggedInViaSso) {
             window.location.reload();
         } else {

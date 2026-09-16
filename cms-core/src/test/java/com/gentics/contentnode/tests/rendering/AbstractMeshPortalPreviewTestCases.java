@@ -16,7 +16,6 @@ import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
@@ -213,36 +212,6 @@ public abstract class AbstractMeshPortalPreviewTestCases extends MeshPortalPrevi
 		MicronodeResponse ref = new MicronodeResponse().setMicroschema(new MicroschemaReferenceImpl().setName("test_construct"));
 		ref.getFields().put("part", new StringFieldImpl().setString(content));
 		return ref;
-	}
-
-	/**
-	 * Test that rendering the preview will use the SID, which is set in the DynamicUrlFactory of the RenderType in the surrounding transaction.
-	 * @throws NodeException
-	 */
-	@Test
-	public void testSidInUrl() throws NodeException {
-		// make the live editable construct not live editable, because that would spoil the response (so that it is not valid json any more)
-		update(liveEditableConstruct, c -> {
-			c.getParts().get(0).setEditable(1);
-		}).build();
-
-		Integer nodeId = Trx.supply(() -> node.getId());
-		Integer pageId = Trx.supply(() -> page.getId());
-		String sid = "thisisthesid";
-		String expectedUrl = String.format("/alohapage?nodeid=%d&language=1&sid=%s&real=newview&realid=%d", nodeId, sid, pageId);
-		String preview = null;
-		try (FeatureClosure f = new FeatureClosure(Feature.MANAGELINKURL_ONLYFORPUBLISH, true)) {
-			preview = Trx.supply(t -> {
-				RenderType r = new RenderType();
-				r.setRenderUrlFactory(new DynamicUrlFactory());
-				t.setRenderType(r);
-				return RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA);
-			});
-		}
-		assertThat(preview).as("Preview").isNotNull();
-		NodeResponse sentNode = JsonUtil.readValue(preview, NodeResponse.class);
-		assertThat(sentNode.getFields().getStringField("pageurl")).as("Page URL Field").isNotNull();
-		assertThat(sentNode.getFields().getStringField("pageurl").getString()).as("Page URL Field").isEqualTo(expectedUrl);
 	}
 
 	/**

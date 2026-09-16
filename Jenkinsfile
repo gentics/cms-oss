@@ -17,8 +17,6 @@ def releaseVersion             = ""
 def tagName                    = null
 def dockerImageTag             = null
 def runJUnitTests              = true
-def qaDeploy                   = false
-def qaDeployBranchList         = ["dev"] as String[]
 
 def imageHost                  = "push.docker.gentics.com"
 def imageRepo                  = "docker-snapshots"
@@ -343,8 +341,7 @@ spec:
 			when {
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild
 				}
 			}
 

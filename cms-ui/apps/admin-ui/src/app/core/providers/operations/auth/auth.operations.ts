@@ -20,6 +20,7 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
 import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { ErrorHandler } from '../../error-handler';
+import { catchError, map, Observable, of } from 'rxjs';
 
 @Injectable()
 export class AuthOperations {
@@ -36,21 +37,24 @@ export class AuthOperations {
     /**
      * Validates the session with the API.
      */
-    validateSession(): void {
+    validateSession(): Observable<boolean> {
         this.appState.dispatch(new ValidateStart());
 
-        this.client.user.me().subscribe({
-            next: (res) => {
+        return this.client.user.me().pipe(
+            map((res) => {
                 this.appState.dispatch(new ValidateSuccess(res.user));
-            },
-            error: (error: GCMSRestClientRequestError) => {
+                return true;
+            }),
+            catchError((error: GCMSRestClientRequestError) => {
                 this.appState.dispatch(new ValidateError(error.message));
 
                 if (error.responseCode !== 401) {
                     this.errorHandler.catch(error);
                 }
-            },
-        });
+
+                return of(false);
+            }),
+        );
     }
 
     login(username: string, password: string, returnUrl: string): void {

@@ -13,8 +13,6 @@ def releaseVersion             = ""
 def tagName                    = null
 def dockerImageTag             = null
 def runJUnitTests              = true
-def qaDeploy                   = false
-def qaDeployBranchList         = ["dev"] as String[]
 
 def imageHost                  = "push.docker.gentics.com"
 def imageRepo                  = "docker-snapshots"
@@ -95,7 +93,7 @@ spec:
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker images")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
-        string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client)")
+        string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client and image for testing)")
         string(name:       'alohaEditorVersion',        defaultValue: "",  description: "Optional version of aloha editor")
     }
 
@@ -381,8 +379,7 @@ spec:
 			when {
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(qaDeployBranchList.contains(branchName))
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild
 				}
 			}
 
@@ -417,8 +414,7 @@ spec:
 			when {
 				expression {
 					// Build the docker image only if the parameter runDockerBuild is enabled and
-					return env.BUILD_SKIPPED != "true" && params.runDockerBuild &&
-						(qaDeployBranchList.contains(branchName))
+					return env.BUILD_SKIPPED != "true" && params.runDockerBuild
 				}
 			}
 
@@ -475,22 +471,6 @@ spec:
                     }
                 }
             }
-		}
-
-		stage("Deploy QA images to Kubernetes") {
-			when {
-				expression {
-					return env.BUILD_SKIPPED != "true" && qaDeploy
-				}
-			}
-
-			steps {
-				build job: 'contentnode-qa-deploy',
-					parameters: [
-						string(name: 'branchName', value: branchName)
-					],
-					wait: false
-			}
 		}
 
 		stage("Git push") {

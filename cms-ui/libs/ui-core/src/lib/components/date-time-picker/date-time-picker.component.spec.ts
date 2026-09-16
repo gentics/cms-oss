@@ -34,7 +34,7 @@ import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { DateTimePickerComponent } from './date-time-picker.component';
 
-const TEST_TIMESTAMP = 1457971763;
+const TEST_TIMESTAMP = Date.UTC(2016, 2, 14, 16, 9, 23, 763) / 1000;
 
 let modalService: SpyModalService;
 let formatProvider: DateTimePickerFormatProvider;

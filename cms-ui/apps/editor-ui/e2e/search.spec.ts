@@ -14,7 +14,7 @@ import {
     navigateToApp,
     NODE_MINIMAL,
     PageImportData,
-    TestSize, waitForResponseFrom,
+    TestSize, wait, waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { expect, Locator, Page, test } from '@playwright/test';
 import { AUTH } from './common';
@@ -163,6 +163,8 @@ test.describe('Search', () => {
             const SEARCH_TERM = 'test';
 
             await searchInput.fill(SEARCH_TERM);
+            // Wait for angular to handle the data in the background
+            await wait(1_000);
 
             const searchReq = waitForResponseFrom(page, 'GET', '/rest/folder/getPages/*', {
                 params: {
@@ -199,9 +201,40 @@ test.describe('Search', () => {
 
         test('searches a date chip as expected (created AFTER)', async ({ page }) => {
             const CHIP_NAME = 'created';
-            const chipDate = new Date();
-            chipDate.setFullYear(chipDate.getFullYear(), chipDate.getMonth(), chipDate.getDate());
-            const TIME = Math.floor(chipDate.getTime() / 1_000);
+
+            // `now` is an absolute instant, so its epoch (`TIME`) is correct regardless of
+            // timezone. The date-picker widget however works with wall-clock digits
+            // (year/month/day/hour/...), and the browser context's timezone is pinned to
+            // `Europe/Vienna` (see playwright.config.ts), so it interprets whatever digits we
+            // feed it as Vienna local time. To make the widget reconstruct the same instant as
+            // `now`, we have to read those digits as they'd appear in Vienna - not in the test
+            // runner host's own timezone, which may not match and previously caused this to be
+            // flaky/wrong headless.
+            const now = new Date();
+            const TIME = Math.floor(now.getTime() / 1_000);
+
+            const viennaParts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Europe/Vienna',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+            }).formatToParts(now).reduce((parts, part) => {
+                parts[part.type] = part.value;
+                return parts;
+            }, {} as Record<string, string>);
+
+            const chipDate = new Date(
+                parseInt(viennaParts.year, 10),
+                parseInt(viennaParts.month, 10) - 1,
+                parseInt(viennaParts.day, 10),
+                parseInt(viennaParts.hour, 10),
+                parseInt(viennaParts.minute, 10),
+                parseInt(viennaParts.second, 10),
+            );
 
             await test.step('Add search chip', async () => {
                 const chip = await addSearchChip(searchBar, CHIP_NAME);
@@ -217,8 +250,11 @@ test.describe('Search', () => {
             const req = await searchReq;
             const url = new URL(req.request().url());
             const timeStamp = parseInt(url.searchParams.get(`${CHIP_NAME}since`) || '', 10);
-            // Different times due to timezone differences which may occur
-            expect([0, 3_600, 7_200]).toContainEqual(Math.abs(TIME - timeStamp));
+            // A tiny (<=1s) jitter is expected: the widget re-derives its value from its own
+            // clock as we interact with it, between when we captured `now` and when the value
+            // actually gets submitted. This is unrelated to the timezone handling above - it's
+            // just normal UI-interaction timing, so a wide tolerance would hide real regressions.
+            expect(Math.abs(timeStamp - TIME)).toBeLessThanOrEqual(1);
         });
 
         test('search result breadcrumbs should be displayed correctly', {
@@ -335,6 +371,8 @@ test.describe('Search', () => {
             const SEARCH_TERM = 'test';
 
             await searchInput.fill(SEARCH_TERM);
+            // Wait for angular to handle the data in the background
+            await wait(1_000);
 
             const searchReq = waitForResponseFrom(page, 'POST', '/rest/elastic/page/_search');
 

@@ -10,7 +10,10 @@ import {
 } from '@angular/core';
 import { wasClosedByUser } from '@gentics/cms-integration-api-models';
 import { toValidNumber } from '@gentics/common';
-import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
+import {
+    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
+} from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
@@ -102,14 +105,14 @@ export class DateTimePickerComponent
     constructor(
         changeDetector: ChangeDetectorRef,
         @Optional()
-        private defaultFormatProvider: DateTimePickerFormatProvider,
+        private defaultFormatProvider: DateTimePickerFormatProviderService,
         private modalService: ModalService,
     ) {
         super(changeDetector);
         this.booleanInputs.push('selectYear', 'displayTime', 'displaySeconds', 'clearable', 'autofocus');
 
         if (!defaultFormatProvider) {
-            this.defaultFormatProvider = new DateTimePickerFormatProvider();
+            this.defaultFormatProvider = new DateTimePickerFormatProviderService();
         }
     }
 
@@ -133,7 +136,8 @@ export class DateTimePickerComponent
             return;
         }
 
-        this.dateValue = new Date(timestamp);
+        // to milliseconds for the correct date
+        this.dateValue = new Date(timestamp * 1000);
 
         this.updateDisplayValue();
     }

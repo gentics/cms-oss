@@ -86,7 +86,7 @@ import {
     ValuePathPipe,
 } from './pipes';
 import {
-    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
     DragStateTrackerFactoryService,
     ModalService,
     NotificationService,
@@ -179,7 +179,7 @@ export const UI_CORE_PIPES: Type<any>[] = [
 ];
 
 export const UI_CORE_PROVIDERS: (Type<any> | Provider)[] = [
-    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
     DragStateTrackerFactoryService,
     ModalService,
     NotificationService,

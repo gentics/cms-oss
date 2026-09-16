@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnInit } from '@angular/core';
 import { AlohaDateTimePickerComponent } from '@gentics/aloha-models';
-import { DateTimePickerFormatProvider, DateTimePickerStrings, generateFormProvider } from '@gentics/ui-core';
+import { DateTimePickerFormatProvider, DateTimePickerFormatProviderService, DateTimePickerStrings, generateFormProvider } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
@@ -29,7 +29,7 @@ export class AlohaDateTimePickerRendererComponent
         changeDetector: ChangeDetectorRef,
         element: ElementRef<HTMLElement>,
         aloha: AlohaIntegrationService,
-        private formatter: DateTimePickerFormatProvider,
+        private formatter: DateTimePickerFormatProviderService,
     ) {
         super(changeDetector, element, aloha);
         this.self = this;

@@ -32,9 +32,10 @@ export class DateTimePickerModal extends BaseModal<number> {
     @Input()
     public selectYear: boolean;
 
-    constructor(
-        public formatProvider: DateTimePickerFormatProvider,
-    ) {
+    @Input()
+    public formatProvider: DateTimePickerFormatProvider;
+
+    constructor() {
         super();
     }
 
@@ -43,7 +44,7 @@ export class DateTimePickerModal extends BaseModal<number> {
     }
 
     okayClicked(): void {
-        // use seconds insetad of milliseconds
+        // use seconds instead of milliseconds
         this.closeFn(Math.floor(this.timestamp / 1000));
     }
 }

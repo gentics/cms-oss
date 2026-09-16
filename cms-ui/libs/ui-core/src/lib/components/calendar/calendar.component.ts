@@ -12,7 +12,7 @@ import {
 import { cancelEvent } from '@gentics/common';
 import { Subscription } from 'rxjs';
 import { DateTimePickerStrings } from '../../common';
-import { DateTimePickerFormatProvider } from '../../providers';
+import { DateTimePickerFormatProvider, DateTimePickerFormatProviderService } from '../../providers';
 import { generateFormProvider, normalizeToDate } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
@@ -121,7 +121,7 @@ export class CalendarComponent extends BaseFormElementComponent<number> implemen
     constructor(
         changeDetector: ChangeDetectorRef,
         @Optional()
-        private defaultFormatProvider: DateTimePickerFormatProvider,
+        private defaultFormatProvider: DateTimePickerFormatProviderService,
     ) {
         super(changeDetector);
     }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DateTimePickerFormatProvider, DateTimePickerStrings } from '@gentics/ui-core';
+import { DateTimePickerFormatProviderService, DateTimePickerStrings } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { formatI18nDate } from '../../utils';
@@ -9,7 +9,7 @@ import { I18nService } from '../i18n/i18n.service';
  * A date format & string provider for DateTimePicker instances.
  */
 @Injectable()
-export class I18nDatePickerFormatService extends DateTimePickerFormatProvider {
+export class I18nDatePickerFormatService extends DateTimePickerFormatProviderService {
 
     strings: DateTimePickerStrings;
 

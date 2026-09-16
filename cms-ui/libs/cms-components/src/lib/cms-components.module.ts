@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { inject, ModuleWithProviders, NgModule, PipeTransform, provideAppInitializer, Provider, Type } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
+import { DateTimePickerFormatProvider, DateTimePickerFormatProviderService, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as DE_TRANSLATIONS from '../public/i18n/de.json';
 import * as EN_TRANSLATIONS from '../public/i18n/en.json';
@@ -127,7 +127,7 @@ export class CmsComponentsModule {
             ngModule: CmsComponentsModule,
             providers: [
                 // Override the default format-provider with the i18n version
-                { provide: DateTimePickerFormatProvider, useClass: I18nDatePickerFormatService },
+                { provide: DateTimePickerFormatProviderService, useClass: I18nDatePickerFormatService },
                 provideAppInitializer(() => {
                     const translations = inject(TranslateService);
                     translations.setTranslation('de', DE_TRANSLATIONS, true);

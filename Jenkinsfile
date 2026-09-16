@@ -95,7 +95,7 @@ spec:
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker images")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
-        string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client)")
+        string(name:       'meshVersion',               defaultValue: "",  description: "Optional version of mesh (rest client and image for testing)")
         string(name:       'alohaEditorVersion',        defaultValue: "",  description: "Optional version of aloha editor")
     }
 

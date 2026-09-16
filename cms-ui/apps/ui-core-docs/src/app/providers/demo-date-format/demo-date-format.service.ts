@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { DateTimePickerFormatProvider, DateTimePickerStrings } from '@gentics/ui-core';
+import { DateTimePickerFormatProviderService, DateTimePickerStrings } from '@gentics/ui-core';
 
 @Injectable()
-export class DemoDateFormatService extends DateTimePickerFormatProvider {
+export class DemoDateFormatService extends DateTimePickerFormatProviderService {
 
     strings: DateTimePickerStrings = {
         hours: 'Stunde',

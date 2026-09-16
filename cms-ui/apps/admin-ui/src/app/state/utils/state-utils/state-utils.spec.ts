@@ -193,7 +193,6 @@ describe('StateUtils', () => {
             expect(store.snapshot()).toEqual({
                 test: {
                     ...TEST_STATE_DEFAULTS,
-                    aNumber: 4711,
                 },
             });
             // Make sure that the other handler methods have not been called.
@@ -209,7 +208,6 @@ describe('StateUtils', () => {
             expect(store.snapshot()).toEqual({
                 test: {
                     ...TEST_STATE_DEFAULTS,
-                    aNumber: 4711,
                     aString: 'test',
                 },
             });

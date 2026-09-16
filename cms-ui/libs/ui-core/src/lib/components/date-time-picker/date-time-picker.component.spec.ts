@@ -17,7 +17,10 @@ import { componentTest } from '@gentics/ui-core/testing';
 import { Subject } from 'rxjs';
 import { IModalInstance, IModalOptions } from '../../common/modal';
 import { IconDirective } from '../../directives/icon/icon.directive';
-import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
+import {
+    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
+} from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { SizeTrackerService } from '../../providers/size-tracker/size-tracker.service';
@@ -31,10 +34,10 @@ import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { DateTimePickerComponent } from './date-time-picker.component';
 
-const TEST_TIMESTAMP = 1457971763000;
+const TEST_TIMESTAMP = 1457971763;
 
 let modalService: SpyModalService;
-let formatProviderToUse: DateTimePickerFormatProvider | null = null;
+let formatProvider: DateTimePickerFormatProvider;
 
 describe('DateTimePickerComponent', () => {
 
@@ -55,7 +58,7 @@ describe('DateTimePickerComponent', () => {
                 TestComponent,
             ],
             providers: [
-                { provide: DateTimePickerFormatProvider, useFactory: (): any => formatProviderToUse },
+                { provide: DateTimePickerFormatProviderService, useClass: TestFormatProvider },
                 { provide: ModalService, useClass: SpyModalService },
                 { provide: UserAgentProvider, useClass: MockUserAgentRef },
                 OverlayHostService,
@@ -118,7 +121,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
             (fixture, instance) => {
                 fixture.detectChanges();
-                expect(instance.pickerInstance.dateValue.getTime()).toEqual(TEST_TIMESTAMP);
+                expect(instance.pickerInstance.dateValue.getTime()).toEqual(TEST_TIMESTAMP * 1000);
             },
             ),
         );
@@ -152,10 +155,10 @@ describe('DateTimePickerComponent', () => {
 
         it('formats the timestamp in the input as a date when displayTime=false',
             componentTest(() => TestComponent, `
-                <gtx-date-time-picker value="1457971763000" displayTime="false">
+                <gtx-date-time-picker value="1457971763" displayTime="false">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('14 March 2016');
+                expect(await getDisplayValue(fixture)).toBe('March 14, 2016');
             },
             ),
         );
@@ -165,7 +168,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('14 March 2016 at 17:09:23');
+                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 5:09:23 PM');
             },
             ),
         );
@@ -175,7 +178,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker [value]="testModel" displayTime="true">
                 </gtx-date-time-picker>`,
             async (fixture) => {
-                expect(await getDisplayValue(fixture)).toBe('14 March 2016 at 17:09:23');
+                expect(await getDisplayValue(fixture)).toBe('March 14, 2016 at 5:09:23 PM');
             },
             ),
         );
@@ -414,16 +417,12 @@ describe('DateTimePickerComponent', () => {
 
     describe('l10n/i18n support:', () => {
 
-        let formatProvider: TestFormatProvider;
-        beforeEach(() => {
-            formatProviderToUse = formatProvider = new TestFormatProvider();
-        });
-
         it('uses a custom format provider to display the date in the input field',
             componentTest(() => TestComponent, `
                 <gtx-date-time-picker [(ngModel)]="testModel">
                 </gtx-date-time-picker>`,
             async (fixture, instance) => {
+                formatProvider = TestBed.inject(DateTimePickerFormatProviderService);
                 const format = formatProvider.format = jasmine.createSpy('format').and.returnValue('formatted date');
                 fixture.detectChanges();
                 tick();
@@ -436,7 +435,7 @@ describe('DateTimePickerComponent', () => {
                 expect(displayValue).toBe('formatted date');
                 expect(format).toHaveBeenCalledWith(jasmine.anything(), true, true);
                 expect(format.calls.mostRecent().args[0]).toBeDefined();
-                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel);
+                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel * 1000);
 
                 instance.testModel -= 10;
                 // fixture.autoDetectChanges(true);
@@ -446,7 +445,7 @@ describe('DateTimePickerComponent', () => {
                 fixture.detectChanges();
 
                 expect(format).toHaveBeenCalledTimes(2);
-                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel);
+                expect(format.calls.mostRecent().args[0].getTime()).toEqual(instance.testModel * 1000);
             },
             ),
         );
@@ -456,6 +455,7 @@ describe('DateTimePickerComponent', () => {
                 <gtx-date-time-picker value="${TEST_TIMESTAMP}">
                 </gtx-date-time-picker>`,
             async (fixture, instance) => {
+                formatProvider = TestBed.inject(DateTimePickerFormatProviderService);
                 formatProvider.format = () => 'date in first format';
                 const sub = new Subject<void>();
                 formatProvider.changed$ = sub.asObservable();
@@ -585,7 +585,7 @@ class OnPushTestComponent { }
 })
 class MockDateTimePickerControls implements Partial<DateTimePickerControlsComponent> {
     @Input() value: number;
-    @Input() formatProvider: DateTimePickerFormatProvider = new DateTimePickerFormatProvider();
+    @Input() formatProvider: DateTimePickerFormatProvider = new DateTimePickerFormatProviderService();
     @Input() min: Date;
     @Input() max: Date;
     @Input() selectYear: boolean;
@@ -601,7 +601,12 @@ class MockUserAgentRef {
 }
 
 @Injectable()
-class TestFormatProvider extends DateTimePickerFormatProvider { }
+class TestFormatProvider extends DateTimePickerFormatProviderService {
+    constructor() {
+        super();
+        this.updateLocale('en');
+    }
+}
 
 @Injectable()
 class SpyModalService extends ModalService {

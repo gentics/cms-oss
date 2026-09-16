@@ -5,7 +5,7 @@ cacheTTL: 0
 openAPI:
   info:
     version: ${project.version}
-    title: GcmsApi
+    title: Gentics CMS OSS REST API
     description: OpenAPI specification for Gentics CMS OSS
     contact:
       url: ${project.url}

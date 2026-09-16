@@ -1,22 +1,21 @@
 package com.gentics.contentnode.tests.auth;
 
 import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,23 +23,23 @@ import java.util.concurrent.Future;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.filter.HttpAuthFilter;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.DBSession;
+import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.servlet.filters.ModifyRequestFilter;
 
 /**
@@ -264,37 +263,24 @@ public class SSOUserSyncTest {
 	 * @throws Exception
 	 */
 	protected int makeSSORequest(HttpClient client, String path, int expectedUserId, Map<Integer, Set<Integer>> expectedRestrictions) throws Exception {
-		String response = performRequest(client, path);
-		final int sid = ObjectTransformer.getInt(response, 0);
-		assertTrue("Response '"+response+"' was no SID", sid != 0);
+		String sessionSecret = StringUtils.trim(performRequest(client, path));
+		assertThat(sessionSecret).as("Session secret").isNotBlank();
 
-		testContext.getContext().startTransaction();
-		final int[] userId = new int[1];
-		DBUtils.executeStatement("SELECT user_id FROM systemsession WHERE id = ?", new SQLExecutor() {
-			@Override
-			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, sid);
-			}
+		Optional<DBSession> optSession = supply(() -> DBSession.load(new SessionToken(sessionSecret)));
+		assertThat(optSession).as("Session").isNotEmpty();
 
-			@Override
-			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				while (rs.next()) {
-					userId[0] = rs.getInt("user_id");
-				}
-			}
-		});
+		int sessionUserId = optSession.get().getUserId();
 
 		if (expectedUserId > 0) {
-			assertEquals("Check user id", expectedUserId, userId[0]);
+			assertEquals("Check user id", expectedUserId, sessionUserId);
 		}
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		SystemUser user = t.getObject(SystemUser.class, userId[0]);
-		assertNotNull("User was not saved", user);
+		SystemUser user = supply(t -> t.getObject(SystemUser.class, sessionUserId));
+		assertThat(user).as("User").isNotNull();
 
-		assertRestrictions(expectedRestrictions, user.getGroupNodeRestrictions());
+		operate(() -> assertRestrictions(expectedRestrictions, user.getGroupNodeRestrictions()));
 
-		return userId[0];
+		return sessionUserId;
 	}
 
 	/**
@@ -315,9 +301,8 @@ public class SSOUserSyncTest {
 	 * Assert equality of the node restrictions
 	 * @param expected expected node restrictions
 	 * @param actual actual node restrictions
-	 * @throws Exception
 	 */
-	protected void assertRestrictions(Map<Integer, Set<Integer>> expected, Map<Integer, Set<Integer>> actual) throws Exception {
+	protected void assertRestrictions(Map<Integer, Set<Integer>> expected, Map<Integer, Set<Integer>> actual) {
 		// check whether all expected groups are restricted
 		assertSetEquals("Check restricted groups", expected.keySet(), actual.keySet());
 
@@ -335,9 +320,8 @@ public class SSOUserSyncTest {
 	 * @param message message
 	 * @param expected expected set
 	 * @param actual actual set
-	 * @throws Exception
 	 */
-	protected void assertSetEquals(String message, Set<Integer> expected, Set<Integer> actual) throws Exception {
+	protected void assertSetEquals(String message, Set<Integer> expected, Set<Integer> actual) {
 		Set<Integer> diff = new HashSet<Integer>(expected);
 		diff.removeAll(actual);
 		assertTrue(message + ": Expected IDs " + diff + " where not found", diff.isEmpty());

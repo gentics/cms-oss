@@ -2,38 +2,60 @@ import { Injectable } from '@angular/core';
 import { NEVER, Observable } from 'rxjs';
 import { DateTimePickerStrings, DEFAULT_DATE_TIME_PICKER_STRINGS } from '../../common';
 
-const SIMPLE_FORMATTER = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'long',
-});
-const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'long',
-    timeStyle: 'short',
-});
-const SECONDS_FORMATTER = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'long',
-    timeStyle: 'medium',
-});
-const LOCALE = new Intl.Locale(navigator.language.split('-')[0]);
+export interface DateTimePickerFormatProvider {
+    changed$: Observable<any>;
+    strings: DateTimePickerStrings;
+    getDateOrder(): 'dmy' | 'ymd' | 'mdy';
+    format(date: Date, displayTime: boolean, displaySeconds: boolean): string;
+}
 
 /**
  * Format provider to localize the DateTimePicker component.
  */
 @Injectable()
-export class DateTimePickerFormatProvider {
+export class DateTimePickerFormatProviderService implements DateTimePickerFormatProvider {
+
+    protected SIMPLE_FORMATTER: Intl.DateTimeFormat;
+
+    protected TIME_FORMATTER: Intl.DateTimeFormat;
+
+    protected SECONDS_FORMATTER: Intl.DateTimeFormat;
+
+    protected LOCALE: Intl.Locale;
 
     /** Texts uses by the DateTimePicker modal. */
-    strings: DateTimePickerStrings = {
-        ...DEFAULT_DATE_TIME_PICKER_STRINGS,
-        // Cast to any as we don't have the types for it yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        weekStart: (LOCALE as any).getWeekInfo().firstDay % 7,
-    };
+    strings: DateTimePickerStrings;
 
     /** May emit a value when the translations or the date format changed. */
     changed$: Observable<any> = NEVER;
 
+    constructor() {
+        this.updateLocale(navigator.language.split('-')[0]);
+    }
+
+    protected updateLocale(locale: string): void {
+        this.LOCALE = new Intl.Locale(locale);
+        this.SIMPLE_FORMATTER = new Intl.DateTimeFormat(locale, {
+            dateStyle: 'long',
+        });
+        this.TIME_FORMATTER = new Intl.DateTimeFormat(locale, {
+            dateStyle: 'long',
+            timeStyle: 'short',
+        });
+        this.SECONDS_FORMATTER = new Intl.DateTimeFormat(locale, {
+            dateStyle: 'long',
+            timeStyle: 'medium',
+        });
+        this.strings = {
+            ...DEFAULT_DATE_TIME_PICKER_STRINGS,
+            // Cast to any as we don't have the types for it yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            weekStart: (this.LOCALE as any).getWeekInfo().firstDay % 7,
+        };
+    }
+
     getDateOrder(): 'dmy' | 'ymd' | 'mdy' {
-        const parts = SIMPLE_FORMATTER.formatToParts(new Date());
+        const parts = this.SIMPLE_FORMATTER.formatToParts(new Date());
         return parts
             .filter((part) => part.type === 'day' || part.type === 'month' || part.type === 'year')
             .map((part) => part.type[0])
@@ -43,11 +65,11 @@ export class DateTimePickerFormatProvider {
     /** Formats a human-readable string to be displayed in the control input field. */
     format(date: Date, displayTime: boolean, displaySeconds: boolean): string {
         if (displayTime && displaySeconds) {
-            return SECONDS_FORMATTER.format(date);
+            return this.SECONDS_FORMATTER.format(date);
         } else if (displayTime) {
-            return TIME_FORMATTER.format(date);
+            return this.TIME_FORMATTER.format(date);
         } else {
-            return SIMPLE_FORMATTER.format(date);
+            return this.SIMPLE_FORMATTER.format(date);
         }
     }
 }

@@ -18,7 +18,6 @@ import {
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { AppStateService } from '../../../../state/providers/app-state/app-state.service';
-import { EditorUiLocalStorageService } from '../../editor-ui-local-storage/editor-ui-local-storage.service';
 import { ErrorHandler } from '../../error-handler';
 
 @Injectable()
@@ -27,7 +26,6 @@ export class AuthOperations {
     constructor(
         private errorHandler: ErrorHandler,
         private appState: AppStateService,
-        private editorLocalStorage: EditorUiLocalStorageService,
         private router: Router,
         private notification: I18nNotificationService,
         private client: GCMSRestClientService,

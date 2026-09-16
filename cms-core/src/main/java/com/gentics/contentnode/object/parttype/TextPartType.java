@@ -129,8 +129,9 @@ public abstract class TextPartType extends AbstractPartType implements PartType 
 	/**
 	 * parse the text value depending on replaceNewline setting
 	 * @return parsed text
+	 * @throws NodeException
 	 */
-	public String parseText() {
+	public String parseText() throws NodeException {
 		Value value = getValueObject();
 		String text = value != null ? value.getValueText() : null;
 

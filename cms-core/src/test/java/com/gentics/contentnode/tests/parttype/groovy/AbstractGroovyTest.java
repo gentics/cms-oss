@@ -44,6 +44,7 @@ import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.object.parttype.groovy.GroovyPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.lib.log.NodeLogger;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -51,6 +52,8 @@ import groovy.lang.GroovyClassLoader;
  * Abstract base class for groovy tests
  */
 public abstract class AbstractGroovyTest {
+	protected final static NodeLogger logger = NodeLogger.getNodeLogger(AbstractGroovyTest.class);
+
 	protected final static String TESTPACKAGE_NAME = "testpackage";
 
 	protected final static String OTHERPACKAGE_NAME = "otherpackage";
@@ -186,10 +189,12 @@ public abstract class AbstractGroovyTest {
 		}
 
 		for (String name : scriptFileNames) {
+			File outFile = new File(scriptsRoot, name);
 			try (InputStream in = GroovyRenderingTest.class.getResourceAsStream("%s/%s".formatted(packageName, name));
-					OutputStream out = new FileOutputStream(new File(scriptsRoot, name))) {
+					OutputStream out = new FileOutputStream(outFile)) {
 				if (in != null) {
 					IOUtils.copy(in, out);
+					logger.info("Copied file from %s/%s to %s".formatted(packageName, name, outFile.getAbsolutePath()));
 				}
 			}
 		}

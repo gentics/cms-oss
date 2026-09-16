@@ -363,6 +363,9 @@
 							<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
 							<exclude>**/MeshPortalPreviewSslTest.java</exclude>
 						</excludes>
+						<environmentVariables>
+							<DOCKER_MESH_IMAGE>docker.gentics.com/gentics/mesh-hsqldb:${mesh.version}</DOCKER_MESH_IMAGE>
+						</environmentVariables>
 					</configuration>
 				</plugin>
 				<plugin>

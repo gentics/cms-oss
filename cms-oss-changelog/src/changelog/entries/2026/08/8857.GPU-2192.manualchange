@@ -2,4 +2,8 @@ The Velocity rendering engine has been removed from the CMS. Constructs using on
 * Velocity
 * Breadcrumb
 * Navigation
+
 must be migrated to using Handlebars before updating the CMS.
+
+If the migration from Velocity to Handlebars cannot be completed in advance, Velocity can be added back as a custom component.
+Please contact our Sales team at sales@gentics.com to discuss this option.

@@ -265,17 +265,18 @@ public class OperatorTest {
 		int numJobs = 100;
 		long maxWaitMs = 60_000;
 
+		SystemUser user = supply(t -> t.getObject(SystemUser.class, 1));
+
 		CountDownLatch latch = new CountDownLatch(numJobs);
 		for (int i = 0; i < numJobs; i++) {
 			String jobDescription = "Job #%d".formatted(i);
-			GenericResponse response = supply(() -> {
+			GenericResponse response = supply(user, () -> {
 				return Operator.executeLocked(jobDescription, 1, Operator.lock(LockType.channelSet, numJobs), () -> {
 					Thread.sleep(100);
 					latch.countDown();
 					return new GenericResponse(new Message(Type.SUCCESS, "%s succeeded".formatted(jobDescription)), ResponseInfo.ok(""));
 				}, Function.identity());
 			});
-
 			consume(r -> {
 				assertThat(r).as("Response").hasCode(ResponseCode.OK).isInBackground().containsMessage(Type.INFO, "job_sent_to_background", jobDescription);
 			}, response);

@@ -5,7 +5,10 @@ import { FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { componentTest } from '@gentics/ui-core/testing';
 import { DateTimePickerStrings, DEFAULT_DATE_TIME_PICKER_STRINGS } from '../../common';
-import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
+import {
+    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
+} from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ButtonComponent } from '../button/button.component';
 import { InputComponent } from '../input/input.component';
 import { DateTimePickerControlsComponent } from './date-time-picker-controls.component';
@@ -30,7 +33,7 @@ xdescribe('DateTimePickerControlsComponent', () => {
                 MockSelectOption,
             ],
             providers: [
-                { provide: DateTimePickerFormatProvider, useFactory: (): any => formatProviderToUse },
+                { provide: DateTimePickerFormatProviderService, useFactory: (): any => formatProviderToUse },
             ],
             teardown: { destroyAfterEach: false },
             schemas: [NO_ERRORS_SCHEMA],
@@ -405,8 +408,12 @@ const timePickerTestStrings: DateTimePickerStrings = {
     weekdaysMin: ['_test_su_', '_test_mo_', '_test_tu_', '_test_we_', '_test_th_', '_test_fr_', '_test_sa_'],
 };
 
-class TestFormatProvider extends DateTimePickerFormatProvider {
+class TestFormatProvider extends DateTimePickerFormatProviderService {
     strings = timePickerTestStrings;
+    constructor() {
+        super();
+        this.updateLocale('en');
+    }
 }
 
 @Component({

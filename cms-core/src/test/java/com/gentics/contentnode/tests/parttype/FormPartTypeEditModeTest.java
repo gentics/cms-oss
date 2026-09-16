@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.RenderTypeTrx;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.Node;
@@ -25,7 +26,6 @@ import com.gentics.contentnode.object.parttype.FormPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.lib.i18n.CNI18nString;
 
 /**
  * Test cases for rendering {@link FormPartType} and {@link CmsFormPartType}.
@@ -85,7 +85,7 @@ public class FormPartTypeEditModeTest {
 	@Test
 	public void testFormPartTypeEditMode() throws NodeException {
 		assertThat(renderFormTag(RenderType.EM_ALOHA)).as("Rendered form part in edit mode")
-				.isEqualTo(new CNI18nString("form.editmode.placeholder").toString());
+				.isEqualTo(supply(() -> I18NHelper.get("form.editmode.placeholder")));
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class FormPartTypeEditModeTest {
 	@Test
 	public void testCmsFormPartTypeEditMode() throws NodeException {
 		assertThat(renderCmsFormTag(RenderType.EM_ALOHA)).as("Rendered cms form part in edit mode")
-				.isEqualTo(new CNI18nString("form.editmode.placeholder").toString());
+				.isEqualTo(supply(() -> I18NHelper.get("form.editmode.placeholder")));
 	}
 
 	@Test

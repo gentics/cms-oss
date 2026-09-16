@@ -37,9 +37,9 @@ import com.gentics.contentnode.tests.devtools.PackageSynchronizerContext;
  */
 @RunWith(value = Parameterized.class)
 public class GroovyRenderingTest extends AbstractGroovyTest {
-	protected final static List<String> TESTPACKAGE_SCRIPTS = List.of("class1.groovy", "class2.groovy", "script.groovy", "foldername.groovy");
+	protected final static List<String> TESTPACKAGE_SCRIPTS = List.of("Class1.groovy", "Class2.groovy", "script.groovy", "foldername.groovy");
 
-	protected final static List<String> OTHERPACKAGE_SCRIPTS = List.of("class1.groovy", "class2.groovy", "script.groovy");
+	protected final static List<String> OTHERPACKAGE_SCRIPTS = List.of("Class1.groovy", "Class2.groovy", "script.groovy");
 
 	@ClassRule
 	public static PackageSynchronizerContext syncContext = new PackageSynchronizerContext();

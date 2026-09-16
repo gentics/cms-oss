@@ -16,7 +16,10 @@ import { dateInYears } from '@gentics/common';
 import { NEVER, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { BaseFormElementComponent } from '../../components/base-form-element/base-form-element.component';
-import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
+import {
+    DateTimePickerFormatProvider,
+    DateTimePickerFormatProviderService,
+} from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { generateFormProvider, normalizeToDate } from '../../utils';
 
 type TimeUnit = 'hours' | 'minutes' | 'seconds';
@@ -131,7 +134,7 @@ export class DateTimePickerControlsComponent
     constructor(
         changeDetector: ChangeDetectorRef,
         @Optional()
-        private defaultFormatProvider: DateTimePickerFormatProvider,
+        private defaultFormatProvider: DateTimePickerFormatProviderService,
     ) {
         super(changeDetector);
         this.booleanInputs.push('selectYear', 'displayTime', 'displaySeconds', 'compact');
@@ -139,7 +142,7 @@ export class DateTimePickerControlsComponent
 
     ngOnInit(): void {
         if (this.defaultFormatProvider == null) {
-            this.defaultFormatProvider = new DateTimePickerFormatProvider();
+            this.defaultFormatProvider = new DateTimePickerFormatProviderService();
         }
 
         if (this.formatProvider == null) {

@@ -2,7 +2,7 @@ import { EntityIdType, NormalizableEntityType, RecursivePartial } from '@gentics
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import { EntityStateModel } from './entity.state';
-
+import { NormalizedSchema } from 'normalizr';
 
 const ENTITY: keyof AppState = 'entity';
 
@@ -65,4 +65,11 @@ export class DeleteAllEntitiesInBranch<T extends NormalizableEntityType> {
 @ActionDeclaration(ENTITY)
 export class ClearAllEntities {
     static readonly type = 'ClearAllEntities';
+}
+
+@ActionDeclaration(ENTITY)
+export class AddEntitiesAction {
+    constructor(
+        public entities: NormalizedSchema<any, any>,
+    ) {}
 }

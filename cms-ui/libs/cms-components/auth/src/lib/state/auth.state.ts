@@ -19,6 +19,7 @@ import {
     LogoutSuccess,
     ResetAuth,
     SingleSignOnSkipped,
+    SingleSignOnSuccess,
     ValidateError,
     ValidateStart,
     ValidateSuccess,
@@ -181,6 +182,13 @@ export class AuthStateModule {
     handleSingleSignOnSkipped(ctx: StateContext<AuthStateModel>, action: SingleSignOnSkipped): void {
         ctx.patchState({
             ssoSkipped: action.skipped,
+            loggedInViaSso: false,
+        });
+    }
+
+    @ActionDefinition(SingleSignOnSuccess)
+    handleSingleSignOnSuccess(ctx: StateContext<AuthStateModel>): void {
+        ctx.patchState({
             loggedInViaSso: true,
         });
     }

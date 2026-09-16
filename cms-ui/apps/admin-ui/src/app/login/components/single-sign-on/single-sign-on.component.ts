@@ -8,6 +8,7 @@ import { isEqual } from 'lodash-es';
 import { distinctUntilChanged, filter, first, take } from 'rxjs/operators';
 import { AuthOperations, ErrorHandler } from '../../../core';
 import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { AuthActionsService } from '../../../state/providers/auth-actions/auth-actions.service';
 
 @Component({
     selector: 'gtx-single-sign-on',
@@ -26,6 +27,7 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
     constructor(
         changeDetector: ChangeDetectorRef,
         private appState: AppStateService,
+        private authActions: AuthActionsService,
         private authOps: AuthOperations,
         private domSanitizer: DomSanitizer,
         private errorHandler: ErrorHandler,
@@ -102,9 +104,13 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
         }
     }
 
-    private handleSsoResponse(result: string): void {
+    private async handleSsoResponse(result: string): Promise<void> {
         if (/^\d+$/.test(result)) {
-            this.appState.dispatch(new SingleSignOnSuccess());
+            const sessionValid: boolean = await this.authActions.validateSession();
+
+            if (sessionValid) {
+                this.appState.dispatch(new SingleSignOnSuccess());
+            }
         }
     }
 }

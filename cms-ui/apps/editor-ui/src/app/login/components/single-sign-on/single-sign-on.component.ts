@@ -104,11 +104,14 @@ export class SingleSignOnComponent extends BaseComponent implements OnInit {
         }
     }
 
-    private handleSsoResponse(result: string): void {
+    private async handleSsoResponse(result: string): Promise<void> {
         if (/^\d+$/.test(result)) {
             console.log('Logging in via Single-Sign-On');
-            this.appState.dispatch(new SingleSignOnSuccess());
-            this.authActions.validateSession();
+            const sessionValid: boolean = await this.authActions.validateSession();
+
+            if (sessionValid) {
+                this.appState.dispatch(new SingleSignOnSuccess());
+            }
         }
     }
 }

@@ -118,7 +118,7 @@ public class JSONPartTypeResolvingTest extends HandlebarsPartTypeResolvingTest {
 			new Object[] { JSONPartType.class, "1, 3", 
 					JSON_INPUT, 
 					"{{cms.tag.parts.otherpart.whoever.length}}, {{cms.tag.parts.otherpart.wherever.length}}" },
-			new Object[] { JSONPartType.class, "whoever:whoever=wherever , :{\"whatever\":\"wherever\"} , 0:what 1:who 2:where ", 
+			new Object[] { JSONPartType.class, "whoever:wherever , 0:{whatever=wherever} , 0:what 1:who 2:where ", 
 					JSON_INPUT, 
 					"{{#each cms.tag.parts.otherpart.whatever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.whoever}}{{@key}}:{{{this}}} {{/each}}, {{#each cms.tag.parts.otherpart.wherever}}{{@key}}:{{{this}}} {{/each}}" },
 			new Object[] { JSONPartType.class, "wherever, wherever, who", 

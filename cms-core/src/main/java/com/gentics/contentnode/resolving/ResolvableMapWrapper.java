@@ -10,9 +10,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.Vector;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BinaryNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.factory.Transaction;
@@ -91,6 +99,39 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 			});
 
 			return wrappedMap;
+		} else if (value instanceof ArrayNode arrayNode) {
+			return new AbstractList<Object>() {
+				@Override
+				public int size() {
+					return arrayNode.size();
+				}
+
+				@Override
+				public Object get(int index) {
+					return wrap(arrayNode.get(index), context, mother);
+				}
+			};
+		} else if (value instanceof ObjectNode objectNode) {
+			Map<Object, Object> wrappedMap = value instanceof LinkedHashMap<?, ?> ? new LinkedHashMap<>(objectNode.size())
+					: new HashMap<>();
+
+			objectNode.forEachEntry((k, v) -> {
+				wrappedMap.put(k, wrap(v, context, mother));
+			});
+
+			return wrappedMap;
+		} else if (value instanceof BinaryNode binaryNode) {
+			return binaryNode.binaryValue();
+		} else if (value instanceof BooleanNode booleanNode) {
+			return booleanNode.asBoolean();
+		} else if (value instanceof MissingNode || value instanceof NullNode) {
+			return null;
+		} else if (value instanceof NumericNode numericNode) {
+			return numericNode.numberValue();
+		} else if (value instanceof POJONode pojoNode) {
+			return wrap(pojoNode.getPojo(), context, mother);
+		} else if (value instanceof TextNode textNode) {
+			return textNode.asText();
 		} else {
 			return value;
 		}

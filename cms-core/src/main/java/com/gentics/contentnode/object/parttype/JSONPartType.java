@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -37,23 +39,26 @@ public class JSONPartType extends TextPartType {
 	}
 
 	@Override
-	public void setText(String text) throws NodeException {
-		super.setText(text);
-		try {
-			json = null;
-			arrayNode = null;
-			objectNode = null;
+	public String parseText() throws NodeException {
+		String parsedText = super.parseText();
+		json = null;
+		arrayNode = null;
+		objectNode = null;
 
-			json = MiscUtils.newObjectMapper().readTree(text);
-			if (json instanceof ArrayNode array) {
-				arrayNode = array;
+		if (StringUtils.isNotBlank(parsedText)) {
+			try {
+				json = MiscUtils.newObjectMapper().readTree(parsedText);
+				if (json instanceof ArrayNode array) {
+					arrayNode = array;
+				}
+				if (json instanceof ObjectNode object) {
+					objectNode = object;
+				}
+			} catch (JsonProcessingException e) {
+				throw new NodeException("Invalid JSON");
 			}
-			if (json instanceof ObjectNode object) {
-				objectNode = object;
-			}
-		} catch (JsonProcessingException e) {
-			throw new NodeException("Invalid JSON");
 		}
+		return parsedText;
 	}
 
 	@Override

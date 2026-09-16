@@ -1,4 +1,5 @@
 import type { Variant } from '@gentics/cms-models';
+import type { TraceMode } from '@playwright/test';
 
 export const ENV_CI = 'CI';
 export const ENV_E2E_CMS_VARIANT = 'E2E_CMS_VARIANT';
@@ -6,6 +7,7 @@ export const ENV_E2E_LOCAL_PLAYWRIGHT = 'E2E_LOCAL_PLAYWRIGHT';
 export const ENV_E2E_LOCAL_APP = 'E2E_LOCAL_APP';
 export const ENV_SKIP_E2E_LOCAL_APP_LAUNCH = 'SKIP_E2E_LOCAL_APP_LAUNCH';
 export const ENV_E2E_FORCE_REPEATS = 'E2E_FORCE_REPEATS';
+export const ENV_E2E_TRACE_MODE = 'E2E_TRACE_MODE';
 
 export const ENV_E2E_KEYCLOAK_URL = 'E2E_KEYCLOAK_URL';
 export const ENV_E2E_CMS_URL = 'E2E_CMS_URL';
@@ -30,8 +32,10 @@ declare global {
             [ENV_E2E_LOCAL_APP]?: string;
             /** If it should not automatically launch the local application. */
             [ENV_SKIP_E2E_LOCAL_APP_LAUNCH]?: string;
-            /** If it should force repeats of intergration tests. */
+            /** If it should force repeats of integration tests. */
             [ENV_E2E_FORCE_REPEATS]?: string;
+            /** Defines the trace-mode to use */
+            [ENV_E2E_TRACE_MODE]?: TraceMode;
 
             /** Override for the URL where keycloak is reachable. */
             [ENV_E2E_KEYCLOAK_URL]?: string;

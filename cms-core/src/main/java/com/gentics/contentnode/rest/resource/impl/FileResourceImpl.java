@@ -52,7 +52,6 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileFactory;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
@@ -1532,15 +1531,12 @@ public class FileResourceImpl implements FileResource {
 			} else {
 				try {
 					response = save.call();
-		} catch (ObjectModificationException e) {
-			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
-		} catch (NodeException e) {
+				} catch (NodeException e) {
 					throw e;
 				} catch (Exception e) {
 					throw new NodeException(e);
-		}
-	}
+				}
+			}
 			trx.success();
 			return response;
 		}

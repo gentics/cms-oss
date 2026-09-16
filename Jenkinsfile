@@ -97,6 +97,7 @@ spec:
         string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
         string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")
+        string(name:       'meshVersion',               defaultValue: "",    description: "Optional version of mesh (image for testing)")
         string(name:       'meshPluginsVersion',        defaultValue: "",    description: "Optional version of mesh plugins (for testing)")
     }
 
@@ -282,9 +283,16 @@ spec:
                     // Login to docker.gentics.com, so that the tests can pull all Mesh images
                     authDockerRegistry("docker.gentics.com", "docker.gentics.com")
                     authDockerRegistry("docker.gentics.com", "push.docker.gentics.com")
+
+                    def meshDockerImage = ""
+                    if (params.meshVersion?.trim() != "") {
+                        echo "Setting Mesh version to " + params.meshVersion.trim()
+                        meshDockerImage = "docker.gentics.com/gentics/mesh-hsqldb:" + params.meshVersion.trim()
+                    }
+
                     // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                     // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                    withEnv(["NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${mesh_enterprise_licensekey_2}", "KEYS_PATH=target/keys"]) {
+                    withEnv(["NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true", "LICENSEKEY=${mesh_enterprise_licensekey_2}", "KEYS_PATH=target/keys", "DOCKER_MESH_IMAGE=${meshDockerImage}"]) {
                         sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                             " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + mvnProjects + " clean " + mvnGoal
                     }

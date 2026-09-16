@@ -1,0 +1,45 @@
+@import 'ui-core/src/styles/base-import';
+@import '../base-entity-trable/base-entity-trable.component.scss';
+
+.search-bar {
+    flex: 0 0 auto;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.load-bar {
+    position: relative;
+}
+
+.search-bar + .load-bar + .entity-trable {
+    margin-top: 1rem;
+}
+
+.search-truncated-hint {
+    flex: 0 0 auto;
+    margin-top: 1rem;
+    color: $gtx-color-dark-gray;
+    font-size: 0.9rem;
+}
+
+.name-wrapper {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+
+    .type-icon {
+        display: inline-block;
+        font-size: 20px;
+        height: 24px;
+        margin-right: 0.5rem;
+
+        &::ng-deep .gtx-icon {
+            font-size: inherit !important;
+        }
+    }
+
+    .name {
+        margin-top: 1px;
+        display: inline-block;
+    }
+}

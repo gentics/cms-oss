@@ -1,0 +1,25 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.gtx-entity-master {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.view-mode-bar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-top: 1rem;
+}
+
+.gtx-entity-master .entity-table {
+    flex: 1 1 auto;
+    min-height: 1px;
+    height: auto;
+}

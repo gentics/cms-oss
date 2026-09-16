@@ -31,6 +31,7 @@ export * from './entity-picker/entity-picker.component';
 export * from './folder-picker/folder-picker.component';
 export * from './folder-trable/folder-trable.component';
 export * from './generic-router-outlet/generic-router-outlet.component';
+export * from './group-management-trable/group-management-trable.component';
 export * from './group-table/group-table.component';
 export * from './group-trable/group-trable.component';
 export * from './icon-checkbox/icon-checkbox.component';

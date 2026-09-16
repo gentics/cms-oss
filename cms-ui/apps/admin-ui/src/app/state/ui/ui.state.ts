@@ -51,14 +51,26 @@ export interface UIUserStateSettings {
     [userId: number]: UIStateSettings
 }
 
+/**
+ * How the group master list is rendered - as a flat, paged list or as a hierarchical tree.
+ * Modelled as a string union (and not as a boolean) so that further view modes can be
+ * added later without changing the persisted setting's type.
+ */
+export type GroupViewMode = 'list' | 'tree';
+
+export const GROUP_VIEW_MODE_LIST: GroupViewMode = 'list';
+export const GROUP_VIEW_MODE_TREE: GroupViewMode = 'tree';
+
 export interface UIStateSettings {
     uiLanguage?: GcmsUiLanguage;
     pollContentMaintenance?: boolean;
+    groupViewMode?: GroupViewMode;
 }
 
 export const INITIAL_USER_SETTINGS: UIStateSettings = {
     uiLanguage: FALLBACK_LANGUAGE,
     pollContentMaintenance: false,
+    groupViewMode: GROUP_VIEW_MODE_LIST,
 };
 
 export const INITIAL_UI_STATE = defineInitialState<UIStateModel>({

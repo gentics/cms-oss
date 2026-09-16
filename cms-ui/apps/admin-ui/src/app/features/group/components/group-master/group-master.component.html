@@ -1,8 +1,34 @@
 <div class="gtx-entity-master gtx-entity-master-with-common-actions">
-    <gtx-group-table
-        class="entity-table"
-        [showSearch]="true"
-        [activeEntity]="activeEntity"
-        (rowClick)="handleRowClick($event)"
-    ></gtx-group-table>
+    <div class="view-mode-bar">
+        <gtx-button
+            class="view-mode-button"
+            flat
+            size="small"
+            type="secondary"
+            data-action="toggle-view-mode"
+            (click)="toggleViewMode()"
+        >
+            @if (viewMode === GROUP_VIEW_MODE_TREE) {
+                <icon left>list</icon> {{ 'shared.switch_to_list' | gtxI18n }}
+            } @else {
+                <icon left>account_tree</icon> {{ 'shared.switch_to_tree' | gtxI18n }}
+            }
+        </gtx-button>
+    </div>
+
+    @if (viewMode === GROUP_VIEW_MODE_TREE) {
+        <gtx-group-management-trable
+            class="entity-table"
+            [inlineExpansion]="true"
+            [activeEntity]="activeEntity"
+            (rowClick)="handleTreeRowClick($event)"
+        ></gtx-group-management-trable>
+    } @else {
+        <gtx-group-table
+            class="entity-table"
+            [showSearch]="true"
+            [activeEntity]="activeEntity"
+            (rowClick)="handleRowClick($event)"
+        ></gtx-group-table>
+    }
 </div>

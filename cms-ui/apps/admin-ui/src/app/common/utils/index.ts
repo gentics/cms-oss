@@ -12,4 +12,5 @@ export * from './rxjs-discard-operator/discard.opertator';
 export * from './rxjs-loading-operators/detail-loading.operator';
 export * from './rxjs-loading-operators/list-loading.operator';
 export * from './rxjs-loading-operators/master-loading.operator';
+export * from './tree-utils/tree-utils';
 export * from './util-types/util-types';

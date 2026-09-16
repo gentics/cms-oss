@@ -21,6 +21,7 @@ export * from './editor-ui-local-storage';
 export * from './entity-manager/entity-manager.service';
 export * from './error-handler/error-handler.service';
 export * from './folder-trable-loader/folder-trable-loader.service';
+export * from './group-management-trable-loader/group-management-trable-loader.service';
 export * from './group-table-loader/group-table-loader.service';
 export * from './group-trable-loader/group-trable-loader';
 export * from './language-handler/language-handler.service';

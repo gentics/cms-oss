@@ -228,10 +228,12 @@ export class ErrorHandler extends ServiceBase {
     private userWasLoggedOut(): void {
         this.appState.dispatch(new LogoutSuccess());
 
+        console.log('this.appState.now.auth.loggedInViaSso', this.appState.now.auth.loggedInViaSso);
+
         if (this.appState.now.auth.loggedInViaSso) {
-            this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
-        } else {
             window.location.reload();
+        } else {
+            this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
         }
 
         this.modalService.dialog({

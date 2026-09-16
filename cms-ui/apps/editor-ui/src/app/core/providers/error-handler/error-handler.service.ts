@@ -217,10 +217,12 @@ export class ErrorHandler {
             visible: false,
         }));
 
+        console.log('this.appState.now.auth.loggedInViaSso', this.appState.now.auth.loggedInViaSso);
+
         if (this.appState.now.auth.loggedInViaSso) {
-            this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
-        } else {
             window.location.reload();
+        } else {
+            this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
         }
 
         this.modalService.dialog({

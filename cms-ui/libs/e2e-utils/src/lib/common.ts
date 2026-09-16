@@ -9,6 +9,7 @@ import {
     Folder,
     FolderCreateRequest,
     Form,
+    GcmsPermission,
     Group,
     GroupCreateRequest,
     GroupUserCreateRequest,
@@ -358,7 +359,7 @@ export interface ImportPermissions {
     instanceId?: string;
     subGroups?: boolean;
     subObjects?: boolean;
-    perms: ImportSinglePermission[];
+    perms: (ImportSinglePermission | GcmsPermission)[];
 }
 
 export interface ImportData {

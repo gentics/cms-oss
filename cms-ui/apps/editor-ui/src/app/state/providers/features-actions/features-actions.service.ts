@@ -38,6 +38,7 @@ export class FeaturesActionsService {
             [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
             [Feature.CONTENT_STAGING]: false,
             [Feature.MULTICHANNELLING]: false,
+            [Feature.PARTIAL_MULTICHANNELLING]: false,
             [Feature.MESH_CR]: false,
             [Feature.OBJECT_TAG_SYNC]: false,
             [Feature.LINK_CHECKER]: false,

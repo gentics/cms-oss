@@ -8,6 +8,7 @@ import {
     LocalizationType,
     Node,
     NodeFeature,
+    NodeFeatureResponse,
     NodePageLanguageCode,
     NodeUrlMode,
     PageLocalizeRequest,
@@ -396,15 +397,30 @@ test.describe('Multichannelling', () => {
         let testPage: CMSPage;
 
         test.beforeEach(async ({ page }) => {
-            // Enable the feature
+            // Enable the feature globally
+            await IMPORTER.setupFeatures({
+                [Feature.MULTICHANNELLING]: true,
+                [Feature.PARTIAL_MULTICHANNELLING]: true,
+            });
+            // Enable it in the nodes as well
             await IMPORTER.client.node.activateFeature(IMPORTER.get(NODE_FULL).id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
             await IMPORTER.client.node.activateFeature(channelNode.id, NodeFeature.PARTIAL_MULTICHANNELLING).send();
 
             testPage = IMPORTER.get(PAGE_FOUR);
 
+            const mcCheckReq = waitForResponseFrom(page, 'GET', `/rest/admin/features/${Feature.MULTICHANNELLING}`);
+            const channelFeatReq = waitForResponseFrom(page, 'GET', `/rest/node/features/${channelNode.id}`);
+
             await navigateToApp(page);
             await loginWithForm(page, TEST_USER);
+
+            await mcCheckReq;
+
             await selectNode(page, channelNode.id);
+
+            const channelFeatRes = await channelFeatReq;
+            const channelFeatures = (await channelFeatRes.json()) as NodeFeatureResponse;
+            expect(channelFeatures.features).toContain(NodeFeature.PARTIAL_MULTICHANNELLING);
         });
 
         test('should be possible to localize a page partially', {
@@ -446,6 +462,7 @@ test.describe('Multichannelling', () => {
 
             const list = findList(page, ITEM_TYPE_PAGE);
             const item = findItem(list, testPage.id);
+            await expect(item).toBeVisible();
             await itemAction(item, 'localize');
 
             const modal = page.locator('gtx-modal-dialog');
@@ -468,10 +485,19 @@ test.describe('Multichannelling', () => {
                 const titleRow = await findTableRowById(table, testTag.id);
                 await expect(titleRow).toBeVisible();
 
+                // `gtx-button` is a custom element, so Playwright's actionability check treats
+                // it as always "enabled" - the real, natively-disableable element is the
+                // `<button>` inside it, whose disabled state depends on an async permission
+                // check (`hasUpdatePermission`, initially `false`) resolving. We have to wait
+                // on *that* element, otherwise the click can land while it's still disabled and
+                // silently do nothing (a disabled native button doesn't dispatch a click event).
+                const localizeAction = findTableAction(titleRow, 'localize-tag').locator('button');
+                await expect(localizeAction).toBeEnabled({ timeout: 15_000 });
+
                 const localizeReq = waitForResponseFrom(page, 'POST', `/rest/page/localize/${testPage.id}/tags/${testTag.name}`);
                 const loadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${testPage.id}`);
 
-                await findTableAction(titleRow, 'localize-tag').click();
+                await localizeAction.click();
 
                 await localizeReq;
                 const loadRes = await loadReq;
@@ -484,10 +510,15 @@ test.describe('Multichannelling', () => {
                 const titleRow = await findTableRowById(table, testTag.id);
                 await expect(titleRow).toBeVisible();
 
-                const unlocalizeReq = waitForResponseFrom(page, 'POST', `/rest/page/unlocalize/${testPage.id}/tags/${testTag.name}`);
-                const loadReq = waitForResponseFrom(page, 'GET', '/rest/page/load/*');
+                const unlocalizeAction = findTableAction(titleRow, 'delete-tag-localization').locator('button');
+                await expect(unlocalizeAction).toBeEnabled({ timeout: 15_000 });
 
-                await findTableAction(titleRow, 'delete-tag-localization').click();
+                const unlocalizeReq = waitForResponseFrom(page, 'POST', `/rest/page/unlocalize/${testPage.id}/tags/${testTag.name}`);
+                // Scope this to the exact page-id, like the request above - a bare wildcard could
+                // match an unrelated `page/load` request and hand us stale/wrong tag data.
+                const loadReq = waitForResponseFrom(page, 'GET', `/rest/page/load/${testPage.id}`);
+
+                await unlocalizeAction.click();
 
                 await unlocalizeReq;
                 const loadRes = await loadReq;

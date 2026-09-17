@@ -232,12 +232,15 @@
     "api_token" : {
         "management": "Api Tokens verwalten",
         "new": "Api Token erstellen",
+        "token": "API Token",
         "tokens": "Api Tokens",
         "expires_at": "Gültig bis",
         "last_used": "Zuletzt verwendet",
-        "token_created": "Token erstellt",
+        "token_created": "API Token erstellt",
         "token_store": "Bitte bewahren Sie ihn gut auf, man kann ihn nicht noch mal ansehen.",
         "delete": "Api Token löschen",
-        "delete_warning": "Dieser Vorgang ist unwiderruflich"
+        "delete_warning": "Dieser Vorgang ist unwiderruflich",
+        "token_valid": "valide",
+        "delete_label": "API Token löschen"
     }
 }

@@ -876,20 +876,19 @@ public class PartFactory extends AbstractFactory {
 			try {
 				JsonNode jsonNode = objectMapper.readTree(stringValue);
 				if (!StringUtils.isEmpty(part.getInfoText())) {
-					JsonNode jsonSchemaContent;
-						jsonSchemaContent = objectMapper.readTree(part.getInfoText());
-						JsonNode[] allowedSchemas = null;
-						if (jsonSchemaContent.isArray()) {
-							ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
+					JsonNode jsonSchemaContent = objectMapper.readTree(part.getInfoText());
+					JsonNode[] allowedSchemas = null;
+					if (jsonSchemaContent.isArray()) {
+						ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
 
-							allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
-									.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
-						} else {
-							allowedSchemas = new JsonNode[] { jsonSchemaContent };
-						}
-						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-							throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString()))
-								.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
+								.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
+					} else {
+						allowedSchemas = new JsonNode[] { jsonSchemaContent };
+					}
+					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
+						throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString()))
+							.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {

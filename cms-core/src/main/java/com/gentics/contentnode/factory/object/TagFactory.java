@@ -31,6 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
@@ -77,6 +78,7 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.i18n.CNI18nString;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
@@ -158,10 +160,6 @@ public class TagFactory extends AbstractFactory {
 	 */
 	public final static String SYNC_RUNNING_ATTRIBUTENAME = "objtag.sync_running";
 
-	/**
-	 * Error log
-	 */
-	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
 	/**
 	 * Implementation class for a ContentTag
 	 */
@@ -1948,10 +1946,13 @@ public class TagFactory extends AbstractFactory {
 	 */
 	private static <T extends ValueContainer & NamedNodeObject> void validateTagObject(T tag) throws NodeException {
 		for (Part part: tag.getConstruct().getParts()) {
-			PartFactory.validatePart(part, tag.get(part.getKeyname()), reason -> new ObjectModificationException(tag.getName(), LOG_JSON_VALIDATION_ERROR + " for "
-					+ "tag {" + tag.getId() + " " + tag.getName() + "}"
-					+ ", part {" + part.getKeyname() + "}."
-					+ " Reason: " + reason, "json_validation_failed"));
+			PartFactory.validatePart(part, tag.get(part.getKeyname()), reason -> {
+				I18nString error = new CNI18nString("validation.json.tag.part.failed");
+				error.setParameter("0", tag.getName() + " / " + tag.getId());
+				error.setParameter("1", part.getKeyname());
+				error.setParameter("2", reason);
+				return new ObjectModificationException(tag.getName(), error.toString(), "json_validation_failed");
+			});
 		}
 	}
 

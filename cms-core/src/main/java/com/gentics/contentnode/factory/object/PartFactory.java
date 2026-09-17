@@ -53,15 +53,14 @@ import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.Message.Type;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.mesh.json.JsonUtil;
 
-import io.vertx.core.json.JsonArray;
 import jakarta.ws.rs.core.Response.Status;
 
 /**
@@ -70,11 +69,6 @@ import jakarta.ws.rs.core.Response.Status;
  */
 @DBTables({ @DBTable(clazz = Part.class, name = "part") })
 public class PartFactory extends AbstractFactory {
-
-	/**
-	 * Error log
-	 */
-	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
 
 	/**
 	 * SQL Statement to select a part
@@ -894,21 +888,22 @@ public class PartFactory extends AbstractFactory {
 							allowedSchemas = new JsonNode[] { jsonSchemaContent };
 						}
 						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-							throw new RestMappedException(exceptionSupplier.apply("the JSON contents does not match any of allowed schemas"))
+							throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString()))
 								.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {
-				throw new RestMappedException(exceptionSupplier.apply("Error while parsing JSON"))
+				throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.json.unparseable").toString()))
 					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 		}
 	}
 
 	private static ObjectModificationException supplyInvalidJSONException(String property, String reason, Part part) {
-		return new ObjectModificationException(property, LOG_JSON_VALIDATION_ERROR + " for "
-				+ "part {" + part.getKeyname() + "}."
-				+ " Reason: " + reason, "json_validation_failed");
+		I18nString error = new CNI18nString("validation.json.part.failed");
+		error.setParameter("0", part.getKeyname());
+		error.setParameter("1", reason);
+		return new ObjectModificationException(property, error.toString(), "json_validation_failed");
 	}
 
 	/**

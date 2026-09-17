@@ -1157,13 +1157,8 @@ public class PageResourceImpl implements PageResource {
 			// delete the tags, which are requested to be deleted
 			ModelBuilder.deleteTags(tagsToDelete, page);
 
-			try {
-				// save the page
-				page.save(request.isCreateVersion());
-			} catch (ObjectModificationException e) {
-				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-						new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
-			}
+			// save the page
+			page.save(request.isCreateVersion());
 
 			if (request.isClearPublishAt()) {
 				page.clearTimePub();

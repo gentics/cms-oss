@@ -52,7 +52,6 @@ import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FileFactory;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
@@ -1513,13 +1512,8 @@ public class FileResourceImpl implements FileResource {
 				}
 			}
 
-			try {
-				// save the file
-				file.save();
-			} catch (ObjectModificationException e) {
-				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-						new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
-			}
+			// save the file
+			file.save();
 
 			t.commit(false);
 
@@ -1560,7 +1554,7 @@ public class FileResourceImpl implements FileResource {
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			GenericResponse response;
-			if (!ObjectTransformer.isEmpty(sentFilename)) {
+		if (!ObjectTransformer.isEmpty(sentFilename)) {
 				String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
 				boolean isImage = mimeType != null && mimeType.startsWith("image/");
 
@@ -1571,12 +1565,12 @@ public class FileResourceImpl implements FileResource {
 
 				String lockKey = FileFactory.sanitizeName(sentFilename);
 				response = Operator.executeLockedRethrowing("", 0, Operator.lock(LockType.fileName, lockKey), () -> handleMultiPartRequest(multiPart, metaData, id), Function.identity());
-			} else {
+		} else {
 				response = handleMultiPartRequest(multiPart, metaData, id);
-			}
+		}
 			trx.success();
 			return response;
-		}
+	}
 	}
 
 	@Override

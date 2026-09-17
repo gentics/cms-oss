@@ -1,0 +1,2 @@
+Map#get(Object) only searched the existing entrySet(),
+resolvable keys that were not yet present in the map could not be found.

@@ -55,26 +55,20 @@ public class FormRendering {
 		if (form != null) {
 			var editMode = RenderUtils.getRealEditMode(renderType);
 
-			if (editMode == RenderType.EM_PUBLISH || editMode == RenderType.EM_ALOHA_READONLY) {
-				if (editMode == RenderType.EM_ALOHA_READONLY) {
-					renderFormPreview(form, options, writer, renderType);
-				}
-
+			if (editMode == RenderType.EM_PUBLISH) {
 				if (form.isOnline()) {
 					// render in publish mode
 					writer.write(options.getType().render(form, options));
 				} else {
 					writer.write(translate(options.getNoForm()));
 				}
-
-				if (editMode == RenderType.EM_PUBLISH) {
-					renderType.addDependency(form, "online");
-				}
+				renderType.addDependency(form, "online");
 			} else if (editMode == RenderType.EM_ALOHA) {
 				// Forms cannot be shown live/interactively while Aloha is editing the page, show a placeholder instead.
 				writer.write(I18NHelper.get("form.editmode.placeholder"));
 			} else {
-				return renderFormPreview(form, options, writer, renderType);
+				renderFormPreview(form, options, writer, renderType);
+				writer.write(options.getType().render(form, options));
 			}
 		} else {
 			writer.write(translate(options.getNoForm()));
@@ -108,7 +102,7 @@ public class FormRendering {
 			formJson.set("flows", flowsJsonNode);
 		});
 
-		writer.append("\n<script>window.formPreviewData = %s;\n</script>".formatted(formJson.toPrettyString()));
+		writer.append("\n<script>window.formPreviewData = %s;\n</script>\n".formatted(formJson.toPrettyString()));
 
 		return true;
 	}

@@ -22,4 +22,3 @@
   } ]
 };
 </script>
-<div id="root" tabindex="0" data-formID="%s" data-culture="%s" data-plugin-name="forms"></div>

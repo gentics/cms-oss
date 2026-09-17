@@ -314,10 +314,10 @@ export class AppComponent implements OnInit {
             const obs = scope.isGlobal
                 ? this.api.saveGlobalTranslations(saveData)
                 : this.api.saveTypeTranslations(scopeId, saveData);
-            await firstValueFrom(obs);
+            const res = await firstValueFrom(obs);
 
             this.savedTranslations.update((data) => {
-                data[scopeId] = saveData;
+                data[scopeId] = res;
                 return structuredClone(data);
             });
             this.draft.set({});

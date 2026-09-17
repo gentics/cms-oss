@@ -11,7 +11,8 @@ image:
   repository: "gentics/cms"
   #tag: 6.5.0
   pullPolicy: IfNotPresent
-  pullSecret: ""
+  ## ImagePullSecret, set to "" for no default PullSecret
+  #pullSecret: docker-gentics-com
 
 database:
   name: "cms"
@@ -216,6 +217,9 @@ spellchecker:
   registry: ""
   repository: gentics/languagetool
   tag: latest
+  ## Own pod spec, so it cannot inherit the CMS pod's pull secret.
+  ## Unset falls back to image.pullSecret; set to "" to pull anonymously.
+  #pullSecret: ""
   resources:
     requests:
       memory: 512Mi

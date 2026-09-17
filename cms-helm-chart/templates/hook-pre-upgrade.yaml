@@ -17,9 +17,14 @@ spec:
         app.kubernetes.io/name: {{ include "cms.fullname" . }}-pre-upgrade
     spec:
       restartPolicy: Never
-      {{- if ((.Values.cms.preUpgrade.image).pullSecret) }}
+      {{- /* Three-state, matching the chart-wide pull secret logic: set -> use it;
+           set to "" -> no pull secret; absent -> fall back to the CMS chain
+           (image.pullSecret -> global.imagePullSecrets -> defaultImagePullSecret). */}}
+      {{- if not (kindIs "invalid" ((.Values.cms.preUpgrade.image).pullSecret)) }}
+      {{- if .Values.cms.preUpgrade.image.pullSecret }}
       imagePullSecrets:
         - name: {{ .Values.cms.preUpgrade.image.pullSecret }}
+      {{- end }}
       {{- else }}
       {{- include "cms.imagePullSecrets" . | nindent 6 }}
       {{- end }}

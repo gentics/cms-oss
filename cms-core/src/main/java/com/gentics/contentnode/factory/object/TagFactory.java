@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
-import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.BatchUpdater;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
@@ -51,6 +50,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.PartFactory.DummyValue;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Content;
@@ -79,7 +79,6 @@ import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.i18n.CNI18nString;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
@@ -1947,13 +1946,8 @@ public class TagFactory extends AbstractFactory {
 	 */
 	private static <T extends ValueContainer & NamedNodeObject> void validateTagObject(T tag) throws NodeException {
 		for (Part part: tag.getConstruct().getParts()) {
-			PartFactory.validatePart(part, tag.get(part.getKeyname()), reason -> {
-				I18nString error = new CNI18nString("validation.json.tag.part.failed");
-				error.setParameter("0", tag.getName() + " / " + tag.getId());
-				error.setParameter("1", part.getKeyname());
-				error.setParameter("2", reason);
-				return new RestMappedException(error.toString());
-			});
+			PartFactory.validatePart(part, tag.get(part.getKeyname()), 
+					reason -> new RestMappedException(I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
 		}
 	}
 

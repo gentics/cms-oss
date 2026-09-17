@@ -41,6 +41,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.i18n.EditableI18nString;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.DummyObject;
@@ -887,22 +888,19 @@ public class PartFactory extends AbstractFactory {
 						allowedSchemas = new JsonNode[] { jsonSchemaContent };
 					}
 					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-						throw exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString())
+						throw exceptionSupplier.apply(I18NHelper.get("validation.jsonschema.nomatch"))
 							.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {
-				throw exceptionSupplier.apply(new CNI18nString("validation.json.unparseable").toString())
+				throw exceptionSupplier.apply(I18NHelper.get("validation.json.unparseable"))
 					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 		}
 	}
 
 	private static RestMappedException supplyInvalidJSONException(String property, String reason, Part part) {
-		I18nString error = new CNI18nString("validation.json.part.failed");
-		error.setParameter("0", part.getKeyname());
-		error.setParameter("1", reason);
-		return new RestMappedException(error.toString());
+		return new RestMappedException(I18NHelper.get("validation.json.part.failed", part.getKeyname(), reason));
 	}
 
 	/**

@@ -9,7 +9,6 @@ import java.awt.image.renderable.ParameterBlock;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -117,7 +116,6 @@ import com.gentics.lib.image.SmarterResizeFilter;
 import com.gentics.lib.log.NodeLogger;
 
 import jakarta.ws.rs.BeanParam;
-import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -127,7 +125,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
 /**
@@ -627,8 +624,13 @@ public class ImageResourceImpl implements ImageResource {
 				}
 			}
 
-			// save the file
-			image.save();
+			try {
+				// save the file
+				image.save();
+			} catch (ObjectModificationException e) {
+				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
+			}
 
 			trx.success();
 

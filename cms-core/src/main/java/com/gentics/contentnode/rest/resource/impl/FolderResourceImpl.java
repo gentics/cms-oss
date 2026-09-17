@@ -52,6 +52,7 @@ import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.FolderFactory;
 import com.gentics.contentnode.factory.object.FolderFactory.ReductionType;
+import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.factory.object.TagFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -2213,7 +2214,13 @@ public class FolderResourceImpl implements FolderResource {
 			}
 
 			// save the folder
-			boolean folderChanged = folder.save();
+			boolean folderChanged = false;
+			try {
+				folderChanged = folder.save();
+			} catch (ObjectModificationException e) {
+				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
+						new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
+			}
 			t.commit(false);
 
 			boolean recursivePubDir = ObjectTransformer.getBoolean(request.getRecursive(), false) && !ObjectTransformer.isEmpty(request.getFolder().getPublishDir());

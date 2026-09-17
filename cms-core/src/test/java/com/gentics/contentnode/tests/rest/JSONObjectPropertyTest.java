@@ -129,14 +129,10 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 		assertThat(response.getResponseInfo().getResponseCode()).as("Response code").isEqualTo(ResponseCode.OK);
 	}
 
-	@Test(expected = ObjectModificationException.class)
+	@Test
 	public void testRestWrong() throws NodeException {
-		testInput(RANDOM_JSON, true);
-
-		// The no-restriction case should pass here
-		if (correctAnswer.equals(RANDOM_JSON)) {
-			throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
-		}
+		GenericResponse response = (GenericResponse) testInput(RANDOM_JSON, true);
+		assertThat(response.getResponseInfo().getResponseCode()).as("Response code").isEqualTo(correctAnswer.equals(RANDOM_JSON) ? ResponseCode.OK : ResponseCode.INVALIDDATA);
 	}
 
 	protected Object testInput(String input, boolean useRest) throws NodeException {

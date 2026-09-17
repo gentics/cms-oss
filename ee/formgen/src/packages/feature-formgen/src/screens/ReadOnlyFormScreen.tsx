@@ -70,6 +70,7 @@ const ReadOnlyFormScreen: React.FC<ReadOnlyFormScreenProps> = (props) => {
           key={'readonly-elements-renderer-' + index + '-' + obj.pagename}
           elements={obj.elements}
           parentId={''}
+          contextId={''}
           jsonpath={''}
           summary={SummaryOptions.ReadOnly}
           restService={props.restService}

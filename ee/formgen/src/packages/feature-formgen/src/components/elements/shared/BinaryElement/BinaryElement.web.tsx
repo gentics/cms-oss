@@ -391,7 +391,9 @@ function BinaryElement(props: IFormComponentAttributes) {
       localErrorMsg={localErrMsg}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <View ref={dropRef}>
         <View ref={elementRef}>

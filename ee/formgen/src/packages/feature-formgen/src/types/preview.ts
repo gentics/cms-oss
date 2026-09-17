@@ -15,6 +15,7 @@ export type FormgridPreviewData = {
   prefillContent: IDataFields;
   currentPage?: number;
   selectedElementId?: string;
+  selectedElementContextId?: string;
 };
 
 /**
@@ -96,6 +97,7 @@ export interface PreviewInitializationEvent extends PreviewInformation {
     schema: ISchema;
     uiSchema: IForm;
     elementId?: string;
+    contextId?: string;
 }
 
 export interface PreviewLoadedEvent {
@@ -115,6 +117,7 @@ export interface PreviewSelectedElementChangeEvent {
     receiver: PreviewEventReceiver;
 
     elementId: string;
+    contextId?: string;
 }
 
 export interface PreviewCurrentPageChangeEvent {

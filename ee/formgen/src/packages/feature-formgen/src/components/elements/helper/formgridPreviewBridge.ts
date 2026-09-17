@@ -15,11 +15,12 @@ export function sendPreviewConnectEvent(): void {
   });
 }
 
-export function sendPreviewSelectedElementEvent(elementId: string): void {
+export function sendPreviewSelectedElementEvent(elementId: string, contextId?: string): void {
   sendEvent({
     eventType: PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME,
     receiver: PreviewEventReceiver.CONTROLLER,
     elementId,
+    contextId,
   });
 }
 

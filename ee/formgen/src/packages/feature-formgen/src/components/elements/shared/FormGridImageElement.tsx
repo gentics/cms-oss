@@ -324,7 +324,9 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
         localErrorMsg={t('form_image_invalidImageUrl')}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        contextId={props.contextId}
         selectedElementId={props.selectedElementId}
+        selectedElementContextId={props.selectedElementContextId}
       >
         <View style={{ width: targetW, ...(targetH ? { height: targetH } : {}), alignItems: 'center', justifyContent: 'center' }}>
           <AndpIcon name="warning" size={Math.max(24, Math.round((targetH || 120) / 3))} style={{ color: standardElement.validationError.color }} />
@@ -343,7 +345,9 @@ const FormGridImageElement: React.FC<IFormComponentAttributes> & {
       localErrorMsg={localErrMsg}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <View
         style={[styles.container, mapAlign(align)]}

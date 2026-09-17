@@ -227,13 +227,14 @@ export interface IFormComponentBaseAttributes {
   setElementBeingFocused?: (info: IElementBeingFocusedInfo) => void;
   t: TFunction;
   key?: string;
+  contextId: string;
   isAggregate?: boolean;
   isSearch?: boolean;
   isLoggedIn?: boolean;
   rawErrorMsgs?: IErrorMessage[];
   insideSubaggregatIndex?: number;
   selectedElementId?: string;
-
+  selectedElementContextId?: string;
 }
 
 export interface IDialogFormInitBody {

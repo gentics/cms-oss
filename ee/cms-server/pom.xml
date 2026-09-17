@@ -65,14 +65,14 @@
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.build.directory}/classes/webroot/tools</outputDirectory>
 								</artifactItem>
+								<artifactItem>
+									<groupId>com.gentics.cms</groupId>
+									<artifactId>formgen</artifactId>
+									<type>zip</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}/classes/webroot</outputDirectory>
+								</artifactItem>
 							</artifactItems>
-							<artifactItem>
-								<groupId>com.gentics.cms</groupId>
-								<artifactId>formgen</artifactId>
-								<type>zip</type>
-								<overWrite>true</overWrite>
-								<outputDirectory>${project.build.directory}/classes/webroot</outputDirectory>
-							</artifactItem>
 							<includes>**/*</includes>
 							<overWriteReleases>false</overWriteReleases>
 							<overWriteSnapshots>true</overWriteSnapshots>
@@ -267,6 +267,7 @@
             <groupId>com.gentics.cms</groupId>
             <artifactId>formgen</artifactId>
             <type>zip</type>
+			<scope>provided</scope>
         </dependency>
 
         <!--Test dependencies -->

@@ -184,17 +184,23 @@ const FormgenScreen: React.FC<{
     );
   }
   const showRenderScreen = () => {
-    if(pluginName == PluginNameEnum.ACTA_NOVA && features && props.config && t){
-      return true; 
+    //features are necessary for AN-Forms
+    if(pluginName == PluginNameEnum.ACTA_NOVA && !features ){
+      return false; 
     }
-    if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
-        return true;
-    }
+
     if (props.isFormgridPreview) {
       return props.previewFormData?.uiSchema != null
         && props.previewFormData?.schema != null;
     }
-    return false;
+
+    //translations and formFlowConfig is necessary
+    if(!t || !props.config){
+      return false;
+    }
+
+    //if no special check is invalid, render the form
+    return true;
   }
   
   if (showRenderScreen()) {

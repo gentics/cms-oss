@@ -603,10 +603,6 @@ export function getPossibleValues(
   id?: string,
 ): IPossibleValue[] {
   const elementState = getElementByIdOrJsonPath(data, jsonpath, id);
-  // CMS: possibleValues direkt am Feld
-  if (pluginName == PluginNameEnum.CMS_FORMS && elementState?.possibleValues && elementState.possibleValues.length > 0) {
-    return elementState.possibleValues;
-  }
   // AN: possibleValueSetID → possibleValueSets
   if (
     pluginName == PluginNameEnum.ACTA_NOVA &&
@@ -619,6 +615,11 @@ export function getPossibleValues(
     if (set) {
       return set.possibleValues;
     }
+  }
+
+  // CMS/Everything else: possibleValues directly from field
+  if (elementState?.possibleValues && elementState.possibleValues.length > 0) {
+    return elementState.possibleValues;
   }
   return [];
 }

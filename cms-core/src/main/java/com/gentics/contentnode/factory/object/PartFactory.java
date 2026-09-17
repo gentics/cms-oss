@@ -31,6 +31,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -52,6 +53,8 @@ import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
@@ -59,6 +62,7 @@ import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.mesh.json.JsonUtil;
 
 import io.vertx.core.json.JsonArray;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * An objectfactory which can create {@link Part} objects, based on the
@@ -857,10 +861,13 @@ public class PartFactory extends AbstractFactory {
 	/**
 	 * Perform the validation of a part, where applicable.
 	 * 
-	 * @param tag
+	 * @param part part to validate for
+	 * @param value value to validate
+	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a JSON validation error
+	 * 
 	 * @throws NodeException
 	 */
-	public static void validatePart(Part part, Object value, Function<String, ObjectModificationException> exceptionSupplier) throws NodeException {
+	public static void validatePart(Part part, Object value, Function<String, NodeException> exceptionSupplier) throws NodeException {
 		if (part.getPartTypeId() == Part.JSON) {
 			if (value == null || !(value instanceof Value val)) {
 				// Nothing to validate
@@ -887,11 +894,13 @@ public class PartFactory extends AbstractFactory {
 							allowedSchemas = new JsonNode[] { jsonSchemaContent };
 						}
 						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-							throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
+							throw new RestMappedException(exceptionSupplier.apply("the JSON contents does not match any of allowed schemas"))
+								.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {
-				exceptionSupplier.apply("Error while parsing JSON");
+				throw new RestMappedException(exceptionSupplier.apply("Error while parsing JSON"))
+					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 		}
 	}

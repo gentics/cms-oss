@@ -25,6 +25,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentFile;
@@ -114,8 +115,12 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 	}
 
 	@Test(expected = ObjectModificationException.class)
-	public void testCoreWrong() throws NodeException {
-		testInput(RANDOM_JSON, false);
+	public void testCoreWrong() throws Throwable {
+		try {
+			testInput(RANDOM_JSON, false);
+		} catch (RestMappedException e) {
+			throw e.getCause();
+		}
 
 		// The no-restriction case should pass here
 		if (correctAnswer.equals(RANDOM_JSON)) {
@@ -130,8 +135,12 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 	}
 
 	@Test(expected = ObjectModificationException.class)
-	public void testRestWrong() throws NodeException {
-		testInput(RANDOM_JSON, true);
+	public void testRestWrong() throws Throwable {
+		try {
+			testInput(RANDOM_JSON, true);
+		} catch (RestMappedException e) {
+			throw e.getCause();
+		}
 
 		// The no-restriction case should pass here
 		if (correctAnswer.equals(RANDOM_JSON)) {

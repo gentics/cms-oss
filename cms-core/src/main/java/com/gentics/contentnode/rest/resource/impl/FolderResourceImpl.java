@@ -2318,12 +2318,7 @@ public class FolderResourceImpl implements FolderResource {
 											}
 										}
 
-										try {
-											toChange.save();
-										} catch (ObjectModificationException e) {
-											return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-													new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()));
-										}
+										toChange.save();
 										autoTrx.success();
 									}
 								}

@@ -1140,12 +1140,7 @@ public class FileResourceImpl implements FileResource {
 
 		copyObjectTags(loadedFile, objectTags);
 		setProperties(loadedFile, properties);
-		try {
-			loadedFile.save();
-		} catch (ObjectModificationException e) {
-			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()), false, null);
-		}
+		loadedFile.save();
 		t.commit(false);
 		loadedFile = getFile(file.getId().toString(), true);
 
@@ -1338,12 +1333,7 @@ public class FileResourceImpl implements FileResource {
 			newFile.setChannelInfo(file.getChannel().getId(), newFile.getChannelSetId());
 		}
 
-		try {
-			newFile.save();
-		} catch (ObjectModificationException e) {
-			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()),
-					new ResponseInfo(ResponseCode.INVALIDDATA, e.getMessage(), e.getProperty()), false, null);
-		}
+		newFile.save();
 
 		if (multichannelling) {
 			File masterFile = file.getMaster();

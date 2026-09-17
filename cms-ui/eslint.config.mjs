@@ -256,6 +256,8 @@ export default defineConfig([
             'jsdoc/require-jsdoc': 'off',
             'jsdoc/require-returns': 'off',
             'jsdoc/require-param': 'off',
+            'jsdoc/no-multi-asterisks': 'off', // Disabled for markdown lists
+            'jsdoc/no-undefined-types': 'off', // Disabled for {@link} references
 
             'arrow-parens': ['off', 'always'],
             'comma-dangle': ['error', {

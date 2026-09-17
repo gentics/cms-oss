@@ -21,6 +21,7 @@ export class DynamicFormTranslationsComponent {
 
     public readonly settings = input.required<FormSettingConfiguration[]>();
 
+    public readonly contextId = input.required<string>();
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
     public readonly elementSchema = model<FormSchemaProperty>();

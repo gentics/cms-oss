@@ -14,6 +14,7 @@ export class FormElementSettingsComponent {
     public readonly FormGridEditMode = FormGridEditMode;
 
     public readonly config = input.required<FormTypeConfiguration>();
+    public readonly contextId = input.required<string>();
     public readonly schema = input.required<FormSchema>();
     public readonly elementMap = input.required<Record<string, FormElement>>();
 

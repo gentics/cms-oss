@@ -22,6 +22,7 @@ export class FormElementDefinitionComponent {
 
     public readonly mode = input.required<FormGridEditMode>();
     public readonly config = input.required<FormTypeConfiguration>();
+    public readonly contextId = input.required<string>();
     public readonly schema = input.required<FormSchema>();
 
     public readonly element = model.required<FormElement>();

@@ -48,6 +48,7 @@
         @if (elementSchema()) {
             <gtx-dynamic-form-translations
                 [settings]="schemaSettings()"
+                [contextId]="contextId()"
                 [element]="element()"
                 [elementConfig]="elementConfig()"
                 [elementSchema]="elementSchema()"
@@ -64,6 +65,7 @@
         <div class="translation-settings">
             <gtx-dynamic-form-translations
                 [settings]="elementSettings()"
+                [contextId]="contextId()"
                 [element]="element()"
                 [elementConfig]="elementConfig()"
                 [elementSchema]="elementSchema()"

@@ -469,8 +469,12 @@ export interface FormElement {
      */
     id: string;
     /**
-     * Which type this element is. Can mostly be ignored, the relevant
-     * type is saved in `formGridOptions.type` instead.
+     * Which type of element it is.
+     *
+     * * `property`: Single leaf-element, which may render a control or block.
+     * * `aggregate`: Sub-form, which aggregates the sub-form data as value.
+     * * `container`: Container/Group element, which doesn't do anything on it's own. Used for
+     * styling and grouping conditions.
      */
     type: 'property' | 'aggregate' | 'container';
     /**

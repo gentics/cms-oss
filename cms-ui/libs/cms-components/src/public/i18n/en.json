@@ -229,14 +229,17 @@
         "keycloak_unknown_error": "An unexpected error occurred while checking Keycloak availability. Using login without Single Sign-On instead."
     },
     "api_token" : {
-        "management": "Manage Api Tokens",
-        "new": "Add new Api Token",
-        "tokens": "Api Tokens",
+        "management": "Manage API Tokens",
+        "new": "Add new API Token",
+        "token": "API Token",
+        "tokens": "API Tokens",
         "expires_at": "Expires at",
         "last_used": "Last used",
-        "token_created": "Token created",
+        "token_created": "API Token created",
         "token_store": "Please store safely, it's not possible to get it again",
-        "delete": "Delete Api Token",
-        "delete_warning": "This action is permanent"
+        "delete": "Delete API Token",
+        "delete_warning": "This action is permanent",
+        "token_valid": "valid",
+        "delete_label": "delete API Token"
     }
 }

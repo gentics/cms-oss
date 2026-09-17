@@ -37,7 +37,7 @@ export class ApiTokensTableComponent implements OnInit {
             id: ACTION_DELETE,
             enabled: true,
             icon: 'delete',
-            label: this.i18n.instant('editor.tagtype_delete_label'),
+            label: this.i18n.instant('api_token.delete_label'),
             type: 'alert',
             single: true,
             multiple: true,
@@ -58,7 +58,7 @@ export class ApiTokensTableComponent implements OnInit {
         this.columns = [
             {
                 id: 'name',
-                label: this.i18n.instant('role.name'),
+                label: this.i18n.instant('common.name'),
                 fieldPath: 'name',
                 sortable: true,
             },
@@ -82,7 +82,7 @@ export class ApiTokensTableComponent implements OnInit {
             },
             {
                 id: 'valid',
-                label: this.i18n.instant('license.status_VALID'),
+                label: this.i18n.instant('api_token.token_valid'),
                 fieldPath: 'valid',
             },
         ];

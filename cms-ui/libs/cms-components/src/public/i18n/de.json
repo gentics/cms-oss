@@ -230,14 +230,17 @@
         "keycloak_unknown_error": "Ein unerwarteter Fehler ist bei der Keycloak überprüfung aufgetreten. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet."
     },
     "api_token" : {
-        "management": "Api Tokens verwalten",
-        "new": "Api Token erstellen",
-        "tokens": "Api Tokens",
+        "management": "API Tokens verwalten",
+        "new": "API Token erstellen",
+        "token": "API Token",
+        "tokens": "API Tokens",
         "expires_at": "Gültig bis",
         "last_used": "Zuletzt verwendet",
-        "token_created": "Token erstellt",
+        "token_created": "API Token erstellt",
         "token_store": "Bitte bewahren Sie ihn gut auf, man kann ihn nicht noch mal ansehen.",
-        "delete": "Api Token löschen",
-        "delete_warning": "Dieser Vorgang ist unwiderruflich"
+        "delete": "API Token löschen",
+        "delete_warning": "Dieser Vorgang ist unwiderruflich",
+        "token_valid": "valide",
+        "delete_label": "API Token löschen"
     }
 }

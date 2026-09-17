@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import {
@@ -21,7 +20,7 @@ function trimRecursive(values: any): any {
     if (values == null) {
         return null;
     } else if (Array.isArray(values)) {
-        return values.map(arrValue => trimRecursive(arrValue));
+        return values.map((arrValue) => trimRecursive(arrValue));
     } else if (typeof values === 'object') {
         return Object.fromEntries(
             Object.entries(values).map(([objKey, objValue]) => [objKey, trimRecursive(objValue)]),
@@ -38,7 +37,7 @@ function trimRecursive(values: any): any {
     templateUrl: './form-element-properties-editor.component.html',
     styleUrls: ['./form-element-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -117,8 +116,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     ): void {
         const controlsConfig = properties.reduce((
             currentControlsConfig: any,
-            property: CmsFormElementProperty) =>
-        {
+            property: CmsFormElementProperty) => {
             switch (property.type) {
                 case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
                     currentControlsConfig[property.name] = [property.value];
@@ -147,57 +145,108 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         this.formGroup = this.formBuilder.group(controlsConfig);
         // improve by listening to changes per form control (not on the whole group)
         this.formGroupSubscription = this.formGroup.valueChanges.subscribe((formValues) => {
-            (this.properties || []).forEach((property: CmsFormElementProperty) => {
+            let hadChange = false;
+            const updatedProps = (this.properties || []).map((property: CmsFormElementProperty) => {
                 switch (property.type) {
-                    case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
-                        property.value = trimRecursive(formValues[property.name]);
-                        break;
-                    case CmsFormElementPropertyType.REPOSITORY_BROWSER:
-                        property.value = formValues[property.name]?.id;
-                        property.nodeId = formValues[property.name]?.nodeId;
-                        break;
+                    case CmsFormElementPropertyType.SELECTABLE_OPTIONS: {
+                        const newVal = trimRecursive(formValues[property.name]);
+                        if (
+                            (property.value == null && newVal == null)
+                            || isEqual(property.value, newVal)
+                        ) {
+                            return property;
+                        }
+
+                        hadChange = true;
+                        return {
+                            ...property,
+                            value: newVal,
+                        };
+                    }
+
+                    case CmsFormElementPropertyType.REPOSITORY_BROWSER: {
+                        if (
+                            // eslint-disable-next-line eqeqeq
+                            property.value != formValues[property.name]?.id
+                            // eslint-disable-next-line eqeqeq
+                            || property.nodeId != formValues[property.name]?.nodeId
+                        ) {
+                            hadChange = true;
+                            return {
+                                ...property,
+                                value: formValues[property.name]?.id,
+                                nodeId: formValues[property.name]?.nodeId,
+                            };
+                        }
+                        return property;
+                    }
+
                     case CmsFormElementPropertyType.BOOLEAN:
                     case CmsFormElementPropertyType.SELECT:
                     case CmsFormElementPropertyType.NUMBER:
-                    case CmsFormElementPropertyType.STRING:
-                        property.value_i18n = trimRecursive(formValues[property.name]);
-                        break;
+                    case CmsFormElementPropertyType.STRING: {
+                        const newVal = trimRecursive(formValues[property.name]);
+                        if (
+                            // Check if both are null/undefined, since null !== undefined
+                            (newVal == null && property.value_i18n == null)
+                            || isEqual(property.value_i18n, newVal)
+                        ) {
+                            return property;
+                        }
+
+                        hadChange = true;
+                        return {
+                            ...property,
+                            value_i18n: newVal,
+                        };
+                    }
+
+                    default:
+                        return property;
                 }
             });
-            this.propertiesChange.emit(this.properties);
+
+            if (hadChange) {
+                this.propertiesChange.emit(updatedProps);
+            }
         });
 
         this.formGroupStatusSubscription = this.formGroup.statusChanges.subscribe((status) => {
             if (status === 'VALID') {
                 this.translationErrorStatus.emit(false);
                 this.requiredOrValidationErrorStatus.emit(false);
-            } else if (status === 'INVALID') {
-                let untranslated = false;
-                let requiredInCurrentLanguage = false;
-                for (const property of this.properties) {
-                    const control = this.formGroup.controls[property.name];
-                    if (control && control.status === 'INVALID') {
-                        if (control.hasError('untranslated')) {
-                            untranslated = true;
-                        }
-                        if (control.hasError('requiredInCurrentLanguage')) {
-                            requiredInCurrentLanguage = true;
-                        }
-                        if (control.hasError('invalidSelection')) {
-                            requiredInCurrentLanguage = true;
-                        }
-                        if (control.hasError('duplicateKeys')) {
-                            requiredInCurrentLanguage = true;
-                        }
-                        if (untranslated && requiredInCurrentLanguage) {
-                            // if both flags are already true, we can stop searching
-                            break;
-                        }
+                return;
+            }
+
+            if (status !== 'INVALID') {
+                return;
+            }
+
+            let untranslated = false;
+            let requiredInCurrentLanguage = false;
+            for (const property of this.properties) {
+                const control = this.formGroup.controls[property.name];
+                if (control && control.status === 'INVALID') {
+                    if (control.hasError('untranslated')) {
+                        untranslated = true;
+                    }
+                    if (control.hasError('requiredInCurrentLanguage')) {
+                        requiredInCurrentLanguage = true;
+                    }
+                    if (control.hasError('invalidSelection')) {
+                        requiredInCurrentLanguage = true;
+                    }
+                    if (control.hasError('duplicateKeys')) {
+                        requiredInCurrentLanguage = true;
+                    }
+                    if (untranslated && requiredInCurrentLanguage) {
+                        // if both flags are already true, we can stop searching
+                        break;
                     }
                 }
-                this.translationErrorStatus.emit(untranslated);
-                this.requiredOrValidationErrorStatus.emit(requiredInCurrentLanguage);
             }
+            this.translationErrorStatus.emit(untranslated);
+            this.requiredOrValidationErrorStatus.emit(requiredInCurrentLanguage);
         });
 
         this.formGroup.updateValueAndValidity();

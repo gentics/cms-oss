@@ -47,7 +47,7 @@
             (click)="viewValueContainer.focus()"
             (mouseover)="deselect()"
         >
-            @for (group of optionGroups; track group; let groupIndex = $index) {
+            @for (group of optionGroups; track (group.isDefaultGroup ? 'default' : '') + group.label; let groupIndex = $index) {
                 @if (!group.isDefaultGroup) {
                     <li class="group-label">{{ group.label }}</li>
                 }

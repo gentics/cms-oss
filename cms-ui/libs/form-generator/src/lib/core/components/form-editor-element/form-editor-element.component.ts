@@ -109,14 +109,18 @@ export class BaseFormEditorElementComponent implements OnChanges {
     }
 
     onTranslationErrorChange(v: boolean): void {
-        this.isUntranslated = v;
-        this.changeDetectorRef.detectChanges();
+        if (this.isUntranslated !== v) {
+            this.isUntranslated = v;
+            this.changeDetectorRef.detectChanges();
+        }
     }
 
     onRequiredOrValidationErrorStatus(v: boolean): void {
-        this.propertiesContainError = v;
-        this.updatePropertiesError();
-        this.changeDetectorRef.detectChanges();
+        if (this.propertiesContainError !== v) {
+            this.propertiesContainError = v;
+            this.updatePropertiesError();
+            this.changeDetectorRef.detectChanges();
+        }
     }
 
     onFormElementInsert(insertionInformation: CmsFormElementInsertionInformation): void {
@@ -126,15 +130,15 @@ export class BaseFormEditorElementComponent implements OnChanges {
     public onElementsChange(elements: CmsFormElementBO[]): void {
         if (this.element) {
             this.element.elements = elements;
+            this.elementChange.emit(this.element);
         }
-        this.elementChange.emit(this.element);
     }
 
     public onPropertiesChange(properties: CmsFormElementProperty[]): void {
         if (this.element) {
             this.element.properties = properties;
+            this.elementChange.emit(this.element);
         }
-        this.elementChange.emit(this.element);
     }
 
     onPropertiesErrorChange(propertiesError: boolean): void {

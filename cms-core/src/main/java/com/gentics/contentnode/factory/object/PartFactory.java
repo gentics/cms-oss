@@ -861,7 +861,7 @@ public class PartFactory extends AbstractFactory {
 	 * 
 	 * @throws NodeException
 	 */
-	public static void validatePart(Part part, Object value, Function<String, NodeException> exceptionSupplier) throws NodeException {
+	public static void validatePart(Part part, Object value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
 		if (part.getPartTypeId() == Part.JSON) {
 			if (value == null || !(value instanceof Value val)) {
 				// Nothing to validate
@@ -887,22 +887,22 @@ public class PartFactory extends AbstractFactory {
 						allowedSchemas = new JsonNode[] { jsonSchemaContent };
 					}
 					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-						throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString()))
+						throw exceptionSupplier.apply(new CNI18nString("validation.jsonschema.nomatch").toString())
 							.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {
-				throw new RestMappedException(exceptionSupplier.apply(new CNI18nString("validation.json.unparseable").toString()))
+				throw exceptionSupplier.apply(new CNI18nString("validation.json.unparseable").toString())
 					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 		}
 	}
 
-	private static ObjectModificationException supplyInvalidJSONException(String property, String reason, Part part) {
+	private static RestMappedException supplyInvalidJSONException(String property, String reason, Part part) {
 		I18nString error = new CNI18nString("validation.json.part.failed");
 		error.setParameter("0", part.getKeyname());
 		error.setParameter("1", reason);
-		return new ObjectModificationException(property, error.toString(), "json_validation_failed");
+		return new RestMappedException(error.toString());
 	}
 
 	/**

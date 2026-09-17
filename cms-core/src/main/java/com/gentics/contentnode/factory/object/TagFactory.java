@@ -40,6 +40,7 @@ import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
@@ -1951,7 +1952,7 @@ public class TagFactory extends AbstractFactory {
 				error.setParameter("0", tag.getName() + " / " + tag.getId());
 				error.setParameter("1", part.getKeyname());
 				error.setParameter("2", reason);
-				return new ObjectModificationException(tag.getName(), error.toString(), "json_validation_failed");
+				return new RestMappedException(error.toString());
 			});
 		}
 	}

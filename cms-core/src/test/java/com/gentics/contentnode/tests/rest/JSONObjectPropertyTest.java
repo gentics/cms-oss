@@ -26,7 +26,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.exception.RestMappedException;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
@@ -114,17 +113,13 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 		testInput(correctAnswer, false);
 	}
 
-	@Test(expected = ObjectModificationException.class)
+	@Test(expected = RestMappedException.class)
 	public void testCoreWrong() throws Throwable {
-		try {
-			testInput(RANDOM_JSON, false);
-		} catch (RestMappedException e) {
-			throw e.getCause();
-		}
+		testInput(RANDOM_JSON, false);
 
 		// The no-restriction case should pass here
 		if (correctAnswer.equals(RANDOM_JSON)) {
-			throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
+			throw new RestMappedException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
 		}
 	}
 
@@ -134,17 +129,13 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 		assertThat(response.getResponseInfo().getResponseCode()).as("Response code").isEqualTo(ResponseCode.OK);
 	}
 
-	@Test(expected = ObjectModificationException.class)
+	@Test(expected = RestMappedException.class)
 	public void testRestWrong() throws Throwable {
-		try {
-			testInput(RANDOM_JSON, true);
-		} catch (RestMappedException e) {
-			throw e.getCause();
-		}
+		testInput(RANDOM_JSON, true);
 
 		// The no-restriction case should pass here
 		if (correctAnswer.equals(RANDOM_JSON)) {
-			throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
+			throw new RestMappedException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
 		}
 	}
 

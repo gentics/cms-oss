@@ -6,7 +6,7 @@ endprologue.
 
 h3. Specification location
 
-The specification can be found at http://yourcmshost/openapi.yaml or http://yourcmshost/openapi.json, in the YAML and JSON formats, respectively.
+The specification can be found at http://yourcmshost/openapi.yaml or http://yourcmshost/openapi.json, in the YAML and JSON formats, respectively. An example is available "here":./gcn_files/openapi.yaml .
 
 h3. Client code generation
 

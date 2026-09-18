@@ -52,6 +52,7 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Content;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentTag;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Tag;
@@ -1356,7 +1357,10 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		if (rootObject instanceof com.gentics.contentnode.object.Page) {
 			page = (com.gentics.contentnode.object.Page) rootObject;
-			node = page.getFolder().getNode();
+			// Even if the tag belongs to the scope of other channel, the node of the page itself
+			// to the page scope, do we should not allow MC fallback on its retrieval.
+			Folder folder = t.getObject(Folder.class, Integer.toString(page.getFolderId()), false, false);
+			node = folder.getNode();
 		}
 
 		// render the tag as block if either aloha edit mode or aloha readonly (preview) and the feature copy_tags is on

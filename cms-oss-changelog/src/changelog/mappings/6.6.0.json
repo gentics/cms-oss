@@ -1,0 +1,19 @@
+{
+  "version": "6.6.0",
+  "date": "18.09.2026",
+  "changeLogEntryFileNames": [
+    "8904.SUP-20229.bugfix",
+    "8893.GPU-2602.enhancement",
+    "8751.GPU-2187.enhancement",
+    "8883.SUP-27013.bugfix",
+    "8857.GPU-2192.manualchange",
+    "8867.SUP-19935.bugfix",
+    "8889.SUP-20161.bugfix",
+    "8858.GPU-2192.optional-manualchange",
+    "8897.SUP-20178.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "28.08.2026",
+    "alohaeditor-version": "2.1.20"
+  }
+}

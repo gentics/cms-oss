@@ -654,7 +654,12 @@
     },
     "shared": {
         "keycloak_not_available": "Beim Zugriff auf Keycloak ist etwas schief gelaufen. Es wird stattdessen die Anmeldung ohne Single Sign-On verwendet.",
-        "i18n_properties_label": "Mehrsprachig"
+        "i18n_properties_label": "Mehrsprachig",
+        "copy": "kopieren",
+        "item_created": "{{name}} wurde erfolgreich erstellt",
+        "confirm_button": "Bestätigen",
+        "item_singular_deleted": "{{name}} wurde erfolgreich gelöscht",
+        "items_plural_deleted": "{{name}} wurden erfolgreich gelöscht"
     },
     "template": {
         "link_mode_append": "Hinzufügen",

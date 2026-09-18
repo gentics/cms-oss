@@ -241,6 +241,9 @@
         "delete": "API Token löschen",
         "delete_warning": "Dieser Vorgang ist unwiderruflich",
         "token_valid": "valide",
+        "copy_token": "Token kopieren",
+        "copy_token_success": "Token wurde in die Zwischenablage kopiert",
+        "copy_token_error": "Der Token konnte nicht kopiert werden",
         "delete_label": "API Token löschen"
     }
 }

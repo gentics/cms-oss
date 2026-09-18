@@ -153,8 +153,8 @@ export class ApiTokensTableComponent implements OnInit {
         const copyModal = await this.modalService.fromComponent(CopyTokenModal, {}, {
             token: response.token,
             title: this.i18n.instant('api_token.token_created'),
-            successMessage: this.i18n.instant('mesh.copy_token_success'),
-            errorMessage: this.i18n.instant('mesh.copy_token_error'),
+            successMessage: this.i18n.instant('api_token.copy_token_success'),
+            errorMessage: this.i18n.instant('api_token.copy_token_error'),
         });
 
         await copyModal.open();

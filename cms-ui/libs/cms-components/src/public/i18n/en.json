@@ -240,6 +240,9 @@
         "delete": "Delete API Token",
         "delete_warning": "This action is permanent",
         "token_valid": "valid",
+        "copy_token": "Copy token",
+        "copy_token_success": "The Token has been copied to the clipboard",
+        "copy_token_error": "The Token could not be copied",
         "delete_label": "delete API Token"
     }
 }

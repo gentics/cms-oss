@@ -654,7 +654,12 @@
     },
     "shared": {
         "keycloak_not_available": "Something went wrong while accessing Keycloak. Using login without Single Sign-On instead.",
-        "i18n_properties_label": "Multilingual"
+        "i18n_properties_label": "Multilingual",
+        "copy": "copy",
+        "item_created": "{{name}} has been created successfully",
+        "confirm_button": "Confirm",
+        "item_singular_deleted": "{{name}} has been deleted successfully",
+        "items_plural_deleted": "{{name}} have been deleted successfully"
     },
     "template": {
         "link_mode_append": "Append",

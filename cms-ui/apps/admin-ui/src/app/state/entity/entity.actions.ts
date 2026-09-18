@@ -3,7 +3,6 @@ import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import { EntityStateModel } from './entity.state';
 
-
 const ENTITY: keyof AppState = 'entity';
 
 /**

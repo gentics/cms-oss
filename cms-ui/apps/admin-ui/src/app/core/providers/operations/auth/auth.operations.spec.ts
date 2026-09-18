@@ -119,7 +119,7 @@ describe('AuthOperations', () => {
                 }).pipe(delay(0)), // We use delay() to make the response asynchronous.
             );
 
-            authOps.validateSession();
+            authOps.validateSession().subscribe();
             expect(validateStartDispatched).toBe(true);
             expect(client.user.me).toHaveBeenCalled();
 
@@ -155,7 +155,7 @@ describe('AuthOperations', () => {
                 user: MOCK_USER,
             }).pipe(delay(0)),
         );
-        authOps.validateSession();
+        authOps.validateSession().subscribe();
 
         expect(validateSpy).toHaveBeenCalled();
     }));

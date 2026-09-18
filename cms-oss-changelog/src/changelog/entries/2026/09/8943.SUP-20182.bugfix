@@ -1,0 +1,1 @@
+Handlebars/Aloha Editor: A crash has been fixed, when rendering the complex multichannel context with a set of `gtx_channel` and `gtx_render` calls.

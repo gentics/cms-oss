@@ -31,6 +31,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -40,6 +41,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.i18n.EditableI18nString;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.DummyObject;
@@ -52,13 +54,15 @@ import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.response.Message.Type;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.mesh.json.JsonUtil;
 
-import io.vertx.core.json.JsonArray;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * An objectfactory which can create {@link Part} objects, based on the
@@ -66,11 +70,6 @@ import io.vertx.core.json.JsonArray;
  */
 @DBTables({ @DBTable(clazz = Part.class, name = "part") })
 public class PartFactory extends AbstractFactory {
-
-	/**
-	 * Error log
-	 */
-	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
 
 	/**
 	 * SQL Statement to select a part
@@ -857,10 +856,13 @@ public class PartFactory extends AbstractFactory {
 	/**
 	 * Perform the validation of a part, where applicable.
 	 * 
-	 * @param tag
+	 * @param part part to validate for
+	 * @param value value to validate
+	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a JSON validation error
+	 * 
 	 * @throws NodeException
 	 */
-	public static void validatePart(Part part, Object value, Function<String, ObjectModificationException> exceptionSupplier) throws NodeException {
+	public static void validatePart(Part part, Object value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
 		if (part.getPartTypeId() == Part.JSON) {
 			if (value == null || !(value instanceof Value val)) {
 				// Nothing to validate
@@ -875,31 +877,30 @@ public class PartFactory extends AbstractFactory {
 			try {
 				JsonNode jsonNode = objectMapper.readTree(stringValue);
 				if (!StringUtils.isEmpty(part.getInfoText())) {
-					JsonNode jsonSchemaContent;
-						jsonSchemaContent = objectMapper.readTree(part.getInfoText());
-						JsonNode[] allowedSchemas = null;
-						if (jsonSchemaContent.isArray()) {
-							ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
+					JsonNode jsonSchemaContent = objectMapper.readTree(part.getInfoText());
+					JsonNode[] allowedSchemas = null;
+					if (jsonSchemaContent.isArray()) {
+						ArrayNode jsonSchemas = (ArrayNode)jsonSchemaContent;
 
-							allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
-									.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
-						} else {
-							allowedSchemas = new JsonNode[] { jsonSchemaContent };
-						}
-						if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
-							throw exceptionSupplier.apply("the JSON contents does not match any of allowed schemas");
+						allowedSchemas = IntStream.range(0, jsonSchemas.size()).mapToObj(jsonSchemas::get)
+								.filter(JsonNode::isObject).map(ObjectNode.class::cast).toArray(size -> new JsonNode[size]);
+					} else {
+						allowedSchemas = new JsonNode[] { jsonSchemaContent };
+					}
+					if (allowedSchemas != null && Arrays.asList(allowedSchemas).stream().noneMatch(schema1 -> JsonUtil.validate(schema1, jsonNode) == Boolean.TRUE)) {
+						throw exceptionSupplier.apply(I18NHelper.get("validation.jsonschema.nomatch"))
+							.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 						}
 				}
 			} catch (JsonProcessingException e) {
-				exceptionSupplier.apply("Error while parsing JSON");
+				throw exceptionSupplier.apply(I18NHelper.get("validation.json.unparseable"))
+					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
 		}
 	}
 
-	private static ObjectModificationException supplyInvalidJSONException(String property, String reason, Part part) {
-		return new ObjectModificationException(property, LOG_JSON_VALIDATION_ERROR + " for "
-				+ "part {" + part.getKeyname() + "}."
-				+ " Reason: " + reason, "json_validation_failed");
+	private static RestMappedException supplyInvalidJSONException(String property, String reason, Part part) {
+		return new RestMappedException(I18NHelper.get("validation.json.part.failed", part.getKeyname(), reason));
 	}
 
 	/**

@@ -39,6 +39,7 @@ import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.Supplier;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
 import com.gentics.contentnode.factory.FactoryHandle;
@@ -49,6 +50,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.PartFactory.DummyValue;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Content;
@@ -158,10 +160,6 @@ public class TagFactory extends AbstractFactory {
 	 */
 	public final static String SYNC_RUNNING_ATTRIBUTENAME = "objtag.sync_running";
 
-	/**
-	 * Error log
-	 */
-	public final static String LOG_JSON_VALIDATION_ERROR = "JSON Validation error";
 	/**
 	 * Implementation class for a ContentTag
 	 */
@@ -1948,10 +1946,8 @@ public class TagFactory extends AbstractFactory {
 	 */
 	private static <T extends ValueContainer & NamedNodeObject> void validateTagObject(T tag) throws NodeException {
 		for (Part part: tag.getConstruct().getParts()) {
-			PartFactory.validatePart(part, tag.get(part.getKeyname()), reason -> new ObjectModificationException(tag.getName(), LOG_JSON_VALIDATION_ERROR + " for "
-					+ "tag {" + tag.getId() + " " + tag.getName() + "}"
-					+ ", part {" + part.getKeyname() + "}."
-					+ " Reason: " + reason, "json_validation_failed"));
+			PartFactory.validatePart(part, tag.get(part.getKeyname()), 
+					reason -> new RestMappedException(I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
 		}
 	}
 

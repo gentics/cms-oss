@@ -97,7 +97,7 @@ export class ErrorHandler {
             const msg = (error.data?.responseInfo.responseMessage || '').toLowerCase();
             const isInvalidSid = msg === 'invalid sid';
 
-            this.handleRestClientError(error, !isInvalidSid);
+            this.handleRestClientError(error, showNotification && !isInvalidSid);
         } else if (error.cause != null && error.cause instanceof GCMSRestClientRequestError) {
             this.handleRestClientError(error.cause, showNotification);
         } else {

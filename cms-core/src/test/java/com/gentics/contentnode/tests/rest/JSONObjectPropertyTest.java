@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
@@ -16,8 +17,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -26,6 +30,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
@@ -45,6 +50,7 @@ import com.gentics.contentnode.rest.model.request.ImageSaveRequest;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.TestedType;
 
 /**
@@ -75,6 +81,9 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 			properties.add(supply(() -> createObjectPropertyDefinition(type, constructId, TAG_KEYWORD, OBJPROP_KEYWORD)));
 		}
 	}
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	@Parameter(0)
 	public TestedType type;
@@ -113,14 +122,9 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 		testInput(correctAnswer, false);
 	}
 
-	@Test(expected = RestMappedException.class)
+	@Test
 	public void testCoreWrong() throws Throwable {
 		testInput(RANDOM_JSON, false);
-
-		// The no-restriction case should pass here
-		if (correctAnswer.equals(RANDOM_JSON)) {
-			throw new RestMappedException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
-		}
 	}
 
 	@Test
@@ -129,19 +133,22 @@ public class JSONObjectPropertyTest extends AbstractJSONPropertyTest {
 		assertThat(response.getResponseInfo().getResponseCode()).as("Response code").isEqualTo(ResponseCode.OK);
 	}
 
-	@Test(expected = RestMappedException.class)
+	@Test
 	public void testRestWrong() throws Throwable {
 		testInput(RANDOM_JSON, true);
-
-		// The no-restriction case should pass here
-		if (correctAnswer.equals(RANDOM_JSON)) {
-			throw new RestMappedException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
-		}
 	}
 
 	protected Object testInput(String input, boolean useRest) throws NodeException {
 		// create tested object
 		LocalizableNodeObject<?> testedObject = supply(() -> type.create(node.getFolder(), template));
+
+		if (StringUtils.isNotBlank(jsonSchemaRestriction) && !Strings.CS.equals(input, correctAnswer)) {
+			exceptionChecker.expect(RestMappedException.class, execute(o -> {
+				ObjectTag tag = o.getObjectTag(TAG_KEYWORD);
+				return I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), PART_KEYWORD,
+						I18NHelper.get("validation.jsonschema.nomatch"));
+			}, (ObjectTagContainer) testedObject));
+		}
 
 		if (useRest) {
 			return supply(() -> {

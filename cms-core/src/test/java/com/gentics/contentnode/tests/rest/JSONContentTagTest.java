@@ -1,6 +1,7 @@
 package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -21,16 +23,20 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.object.ObjectModificationException;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
+import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.JSONPartType;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.TestedType;
 
 @RunWith(value = Parameterized.class)
@@ -52,6 +58,9 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 			template.getTemplateTags().put(templateTag.getName(), templateTag);
 		});
 	}
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	@Parameter(0)
 	public String jsonSchemaRestriction;
@@ -91,10 +100,18 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 		}, testedObject);
 	}
 
-	@Test(expected = ObjectModificationException.class)
+	@Test
 	public void testContentWrong() throws NodeException {
 		// create tested object
 		LocalizableNodeObject<?> testedObject = supply(() -> TestedType.page.create(node.getFolder(), template));
+
+		if (StringUtils.isNotBlank(jsonSchemaRestriction)) {
+			exceptionChecker.expect(RestMappedException.class, execute(page -> {
+				ContentTag tag = page.getContentTag(TAG_KEYWORD);
+				return I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), PART_KEYWORD,
+						I18NHelper.get("validation.jsonschema.nomatch"));
+			}, (Page) testedObject));
+		}
 
 		testedObject = update(((Page) testedObject), update -> {
 			Value value = (Value) update.getContentTag(TAG_KEYWORD).getValues().get(PART_KEYWORD);
@@ -107,8 +124,6 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 				assertThat(((Value) ((Page) o).getContentTag(TAG_KEYWORD).getValues().get(PART_KEYWORD)).getValueText()).isNotEqualTo(RANDOM_JSON);
 			} else {
 				assertThat(((Value) ((Page) o).getContentTag(TAG_KEYWORD).getValues().get(PART_KEYWORD)).getValueText()).isEqualTo(RANDOM_JSON);
-				// Test passed
-				throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
 			}
 		}, testedObject);
 	}
@@ -149,8 +164,15 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 	}
 
 
-	@Test(expected = ObjectModificationException.class)
+	@Test
 	public void testConstructDefaultValueWrong() throws NodeException {
+		if (StringUtils.isNotBlank(jsonSchemaRestriction)) {
+			exceptionChecker.expect(RestMappedException.class, supply(() -> {
+				return I18NHelper.get("validation.json.part.failed", PART_KEYWORD,
+						I18NHelper.get("validation.jsonschema.nomatch"));
+			}));
+		}
+
 		Construct construct1 = supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
@@ -185,8 +207,6 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 				assertThat((o.getParts().get(0).getDefaultValue()).getValueText()).isNotEqualTo(RANDOM_JSON);
 			} else {
 				assertThat((o.getParts().get(0).getDefaultValue()).getValueText()).isEqualTo(RANDOM_JSON);
-				// Test passed
-				throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
 			}
 		}, construct1);
 	}
@@ -205,8 +225,16 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 		}, template);
 	}
 
-	@Test(expected = ObjectModificationException.class)
+	@Test
 	public void testTemplateWrong() throws NodeException {
+		if (StringUtils.isNotBlank(jsonSchemaRestriction)) {
+			exceptionChecker.expect(RestMappedException.class, execute(tmpl -> {
+				Tag tag = tmpl.getTag(TAG_KEYWORD);
+				return I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), PART_KEYWORD,
+						I18NHelper.get("validation.jsonschema.nomatch"));
+			}, template));
+		}
+
 		template = update(template, template -> {
 			Value value = (Value) template.getTemplateTags().get(TAG_KEYWORD).getTagValues().get(PART_KEYWORD);
 			value.setValueText(RANDOM_JSON);
@@ -219,8 +247,6 @@ public class JSONContentTagTest extends AbstractJSONPropertyTest {
 				assertThat(((Value) o.getTemplateTag(TAG_KEYWORD).getValues().get(PART_KEYWORD)).getValueText()).isNotEqualTo(RANDOM_JSON);
 			} else {
 				assertThat(((Value) o.getTemplateTag(TAG_KEYWORD).getValues().get(PART_KEYWORD)).getValueText()).isEqualTo(RANDOM_JSON);
-				// Test passed
-				throw new ObjectModificationException(PART_KEYWORD, PART_KEYWORD, PART_KEYWORD);
 			}
 		}, template);
 	}

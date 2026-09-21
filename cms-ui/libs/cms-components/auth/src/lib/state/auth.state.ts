@@ -190,7 +190,6 @@ export class AuthStateModule {
 
     @ActionDefinition(SingleSignOnSuccess)
     handleSingleSignOnSuccess(ctx: StateContext<AuthStateModel>): void {
-        console.log('SUCCESS');
         ctx.patchState({
             loggedInViaSso: true,
         });

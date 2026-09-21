@@ -4,7 +4,7 @@ import { deepFreeze } from '@gentics/ui-core';
 import { KeycloakError } from './errors';
 
 export const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
-export const KEYCLOAK_ERROR_KEY = 'keycloakError'
+export const KEYCLOAK_ERROR_KEY = 'keycloakError';
 
 export enum KeycloakConnectionState {
     CLEAN,
@@ -29,6 +29,8 @@ export interface AuthStateModel {
     changingPassword: boolean;
     /** If the sso login was skipped by the user (query param) */
     ssoSkipped: boolean;
+    /** If the current session has been established via sso. */
+    loggedInViaSso: boolean;
     /** The GCMS session ID */
     sid: number | null;
     /** The logged in user object (if logged in) */
@@ -49,6 +51,7 @@ export const INITIAL_AUTH_STATE = deepFreeze<AuthStateModel>({
     loggingOut: false,
     changingPassword: false,
     ssoSkipped: false,
+    loggedInViaSso: false,
     sid: null,
     lastError: null,
     user: null,
@@ -132,6 +135,11 @@ export class ChangePasswordError {
 export class SingleSignOnSkipped {
     static readonly type = 'SingleSignOnSkipped';
     constructor(public skipped: boolean) {}
+}
+
+@ActionDeclaration(MODULE_STATE)
+export class SingleSignOnSuccess {
+    static readonly type = 'SingleSignOnSuccess';
 }
 
 @ActionDeclaration(MODULE_STATE)

@@ -220,7 +220,13 @@ export class ErrorHandler {
             valid: false,
             visible: false,
         }));
-        this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+
+        if (this.appState.now.auth.loggedInViaSso) {
+            window.location.reload();
+            return;
+        } else {
+            this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        }
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

@@ -17,6 +17,7 @@ import {
     KeycloakLoadStart,
     KeycloakLoadSuccess,
     SingleSignOnSkipped,
+    SingleSignOnSuccess,
     SKIP_KEYCLOAK_PARAMETER_NAME,
 } from '../../models';
 
@@ -223,6 +224,7 @@ export class KeycloakService {
             await initKeycloak(keycloak, this.config.showSSOButton ? 'check-sso' : 'login-required');
             this.state = KeycloakConnectionState.CONNECTED;
             this.store.dispatch(new KeycloakLoadSuccess(true, this.state, this.config.showSSOButton));
+            this.store.dispatch(new SingleSignOnSuccess());
             return true;
         } catch (err) {
             this.state = KeycloakConnectionState.ERROR;

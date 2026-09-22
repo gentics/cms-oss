@@ -44,6 +44,7 @@ describe('ApplicationStateService', () => {
             keycloakAvailable: null,
             keycloakError: null,
             showSingleSignOnButton: false,
+            loggedInViaSso: false,
             ssoSkipped: false,
         });
     });

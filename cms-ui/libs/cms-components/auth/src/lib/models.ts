@@ -29,6 +29,8 @@ export interface AuthStateModel {
     changingPassword: boolean;
     /** If the sso login was skipped by the user (query param) */
     ssoSkipped: boolean;
+    /** If the current session has been established via sso. */
+    loggedInViaSso: boolean;
     /** The logged in user object (if logged in) */
     user: User<Raw> | null;
     /** The message of the last error that was encountered */
@@ -47,6 +49,7 @@ export const INITIAL_AUTH_STATE = deepFreeze<AuthStateModel>({
     loggingOut: false,
     changingPassword: false,
     ssoSkipped: false,
+    loggedInViaSso: false,
     lastError: null,
     user: null,
     keycloakError: null,
@@ -129,6 +132,11 @@ export class ChangePasswordError {
 export class SingleSignOnSkipped {
     static readonly type = 'SingleSignOnSkipped';
     constructor(public skipped: boolean) {}
+}
+
+@ActionDeclaration(MODULE_STATE)
+export class SingleSignOnSuccess {
+    static readonly type = 'SingleSignOnSuccess';
 }
 
 @ActionDeclaration(MODULE_STATE)

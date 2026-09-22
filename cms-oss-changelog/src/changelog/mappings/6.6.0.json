@@ -11,7 +11,9 @@
     "8889.SUP-20161.bugfix",
     "8858.GPU-2192.optional-manualchange",
     "8942.GPU-2205.enhancement",
-    "8897.SUP-20178.bugfix"
+    "8897.SUP-20178.bugfix",
+    "8947.GPU-2603.enhancement",
+    "8948.GPU-2603.optional-manual-change"
   ],
   "genericProperties": {
     "alohaeditor-date": "28.08.2026",

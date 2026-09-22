@@ -1,0 +1,3 @@
+Auth: The authentication mechanism for the REST API has been modified to no longer
+require the sid as query parameter. Client implementations that use the sid should be
+updated accordingly.

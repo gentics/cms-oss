@@ -27,6 +27,7 @@ import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagResolvable;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
@@ -252,7 +253,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current page
 	 */
 	protected Resolvable getPage() {
-		return page;
+		return getReloaded(page);
 	}
 
 	/**
@@ -260,7 +261,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current template
 	 */
 	protected Resolvable getTemplate() {
-		return template;
+		return getReloaded(template);
 	}
 
 	/**
@@ -268,7 +269,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current tag
 	 */
 	protected Resolvable getTag() {
-		return tag;
+		return getReloaded(tag);
 	}
 
 	/**
@@ -277,11 +278,11 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 */
 	protected Resolvable getObject() {
 		if (page != null) {
-			return new ObjectTagResolvable(page);
+			return new ObjectTagResolvable(getReloadedObjectTagContainer(page));
 		} else if (file != null) {
-			return new ObjectTagResolvable(file);
+			return new ObjectTagResolvable(getReloadedObjectTagContainer(file));
 		} else if (folder != null) {
-			return new ObjectTagResolvable(folder);
+			return new ObjectTagResolvable(getReloadedObjectTagContainer(folder));
 		} else {
 			return null;
 		}
@@ -292,7 +293,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current folder
 	 */
 	protected Resolvable getFolder() {
-		return folder;
+		return getReloaded(folder);
 	}
 
 	/**
@@ -300,7 +301,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current node
 	 */
 	protected Resolvable getNode() {
-		return node;
+		return getReloaded(node);
 	}
 
 	/**
@@ -308,7 +309,41 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current file
 	 */
 	protected Resolvable getFile() {
-		return file;
+		return getReloaded(file);
+	}
+
+	/**
+	 * Reload the object (if not null) and return as {@link Resolvable}
+	 * @param object object
+	 * @return resolvable or null
+	 */
+	protected Resolvable getReloaded(NodeObject object) {
+		if (object == null) {
+			return null;
+		} else {
+			try {
+				return object.reload();
+			} catch (NodeException e) {
+				return null;
+			}
+		}
+	}
+
+	/**
+	 * Reload the object (if not null) and return as {@link ObjectTagContainer}
+	 * @param object object
+	 * @return object tag container or null
+	 */
+	protected ObjectTagContainer getReloadedObjectTagContainer(ObjectTagContainer object) {
+		if (object == null) {
+			return null;
+		} else {
+			try {
+				return object.reload();
+			} catch (NodeException e) {
+				return null;
+			}
+		}
 	}
 
 	/**

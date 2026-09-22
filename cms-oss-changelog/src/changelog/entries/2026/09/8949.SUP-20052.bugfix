@@ -1,0 +1,4 @@
+Resolving an object over @cms@ (like @cms.node@, @cms.folder@, @cms.page@, etc.) always
+returned the same object instance, regardless of the current resolving scope.
+This has been changed, so that the object will be reloaded in the current resolving scope on
+every invocation.

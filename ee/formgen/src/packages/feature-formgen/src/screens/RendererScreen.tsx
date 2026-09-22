@@ -2079,7 +2079,6 @@ const RendererScreen: React.FC<{
           contentContainerStyle={{ flexGrow: 1 }}
         >
           {Platform.OS == 'web' &&
-          flowPageReactClass !== 'SuccessScreen' &&
           uiSchema.pages?.length! > 0 &&
           hasPages ? (
             <FormProgressScreenPart

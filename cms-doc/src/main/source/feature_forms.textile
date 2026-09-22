@@ -217,7 +217,7 @@ Each entry in +steps+ describes a single screen:
 | +nameTranslationKey+ | string | optional | Translation key for the screen title. |
 | +descriptionTranslationKey+ | string | optional | Translation key for the screen description. |
 | +buttons+ | list of button configs | optional | The navigation buttons shown in the screen footer. See the button fields below. |
-| +variables+ | list of key-value pairs | optional | Additional values passed to the screen component as properties. Each entry has a +name+ and a +value+ (e.g. +showDetails: true+ to let the summary screen show detailed information). |
+| +variables+ | list of key-value pairs | optional | Additional values passed to the screen component as properties. Each entry has a +name+ and a +value+ (e.g. +showDetails: true+ to let the summary screen show detailed information, or +showProgress+ to control the progress display — see below). |
 
 Each entry in +buttons+ describes a single footer button:
 
@@ -225,6 +225,44 @@ Each entry in +buttons+ describes a single footer button:
 | +reactClass+ | string | required | The button component to render, e.g. +SubmitButton+, +CancelButton+, +PreviousPageButton+, +NextPageButton+, +PrintPdfButton+ or +DetailInfoButton+. The available components are provided by FormGen. |
 | +labelTranslationKey+ | string | optional | Translation key for the button label. |
 | +mobileDisabled+ | boolean | optional | If +true+, the button is hidden on mobile devices (where the button component supports it). |
+
+h5. Flow variable +showProgress+
+
+The progress display shows the user which page of a multi-page form is currently open and allows navigating between the already visited pages. It is rendered above the form on the web platform and only if the form actually has pages.
+
+Whether the progress display is shown can be controlled per flow step with the +showProgress+ variable:
+
+|_. Variable |_. Type |_. Default |_. Description |
+| +showProgress+ | boolean | see below | If +true+, the progress display is shown on this step. If +false+, it is hidden. If the variable is not configured, the screen type decides (see below). |
+
+The value may be configured either as a real boolean (+true+ / +false+) or as the string +"true"+ / +"false"+; both are interpreted the same way. Any other value is treated as if the variable were not configured at all.
+
+If +showProgress+ is *not* configured, the screen type of the step decides:
+
+|_. +reactClass+ |_. Progress display by default |
+| +FormScreen+ | shown |
+| +SummaryScreen+ | shown |
+| +PaymentScreen+ | shown |
+| all other screens (e.g. +SuccessScreen+) | hidden |
+
+If +showProgress+ *is* configured, only the configured value counts — the screen type is then not taken into account.
+
+The following example shows a success screen that — contrary to the default — also displays the progress:
+
+<div class="code_container">
+<pre class="brush: plain; toolbar: false; gutter: true;">
+- buttonLabelTranslationKey: form_flow_btn_success
+  reactClass: SuccessScreen
+  nameTranslationKey: form_flow_name_success
+  descriptionTranslationKey: form_flow_desc_success
+  buttons: []
+  variables:
+    - name: showProgress
+      value: true
+</pre>
+</div>
+
+NOTE: +showProgress+ only affects the progress display itself. The header of a form opened as a dialog (including its back button) is always rendered and is not influenced by this variable.
 
 NOTE: The screen and button components available as +reactClass+ values are provided by *FormGen* and can be extended per project. For configuring and customizing these components see the "FormGen Customizing Guide":formgen.html.
 

@@ -2,12 +2,14 @@ import { AccessControlledType, Feature, GcmsPermission, KeycloakConfiguration, R
 import { cloneWithSymbols } from '@gentics/common';
 import {
     EntityImporter,
+    FOLDER_A,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_USER,
     isVariant,
+    ITEM_TYPE_FOLDER,
     KEYCLOAK_LOGIN,
     loginWithForm,
     matchesUrl,
@@ -17,6 +19,7 @@ import {
     UserImportData,
 } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
+import { findItem, findList } from './helpers';
 
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
@@ -124,17 +127,9 @@ test.describe('Login', () => {
 
         test('should be able to login', async ({ page }) => {
             await navigateToApp(page);
-
-            // Wait for the app-shell (incl. the lazy-loaded login module) to be fully
-            // bootstrapped before interacting with the form, otherwise the login and the
-            // post-login navigation (login -> node-list load -> route redirect -> editor)
-            // race against the default assertion timeout, which is more likely to be hit
-            // headless where there's extra latency (remote browser/CMS containers).
-            await expect(page.locator('gtx-login')).toBeVisible();
-
             await loginWithForm(page, TEST_USER);
 
-            await expect(page.locator('project-editor')).toBeVisible({ timeout: 15_000 });
+            await expect(page.locator('project-editor')).toBeVisible();
         });
 
         test('should skip login if already logged in', async ({ page }) => {
@@ -162,12 +157,20 @@ test.describe('Login', () => {
             await loginWithForm(page, TEST_USER);
 
             await expect(page.locator('project-editor')).toBeVisible();
+            // We should not be on the login page anymore
+            await expect(page).toHaveURL((url) => {
+                return !url.hash.startsWith('#/login');
+            });
 
             // clear session cookie
             await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
 
             // click on a folder
-            await page.locator('[data-item-type="folder"] a').first().click();
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
+            const nameLink = item.locator('.item-name a');
+            await expect(nameLink).toBeVisible({ timeout: 5_000 });
+            await nameLink.click();
 
             await expect(page).toHaveURL(/login/);
 

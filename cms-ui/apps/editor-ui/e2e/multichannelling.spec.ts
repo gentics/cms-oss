@@ -235,7 +235,7 @@ test.describe('Multichannelling', () => {
 
             let modal = page.locator('gtx-tag-editor-modal');
             await modal.waitFor();
-            await modal.locator('browse-box [data-action="browse"] button').click();
+            await modal.locator('gtx-browse-box [data-action="browse"]').click();
             let repoBrowser = page.locator('repository-browser');
             await repoBrowser.waitFor();
             // Bug #1
@@ -250,13 +250,13 @@ test.describe('Multichannelling', () => {
             const itemName = await firstPage.locator('.item-name-only').innerText();
             await firstPage.locator('.item-name-only').click();
             await clickModalAction(repoBrowser, 'confirm');
-            await expect(modal.locator('browse-box gtx-input.value-display input[type="text"]')).toHaveValue(itemName);
+            await expect(modal.locator('gtx-browse-box .display-value')).toHaveText(itemName);
             await modal.locator('.footer [data-action="confirm"] button').click();
 
             await editor.click();
             modal = page.locator('gtx-tag-editor-modal');
             await modal.waitFor();
-            await modal.locator('browse-box [data-action="browse"] button').click();
+            await modal.locator('gtx-browse-box [data-action="browse"]').click();
             repoBrowser = page.locator('repository-browser');
             await repoBrowser.waitFor();
             // Bug #2

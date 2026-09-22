@@ -54,7 +54,7 @@ async function jsonFetchResponseHandler<T>(request: GCMSRestClientRequestData, r
             if (!data) {
                 return {} as T;
             }
-            throw new Error(`Unexpected error while parsing response-data from "${request.method} ${request.url}"`, { cause: err });
+            throw new Error(`Unexpected error while parsing response-data from "${request.method} ${request.url}": ${data}`, { cause: err });
         });
     }
 }
@@ -126,7 +126,7 @@ export class PlaywrightGCMSDriver implements GCMSClientDriver {
                 url: fullUrl,
                 headers: request.headers,
                 body: form,
-            } as any;
+            };
         }, (res) => jsonFetchResponseHandler<T>(request, res));
     }
 

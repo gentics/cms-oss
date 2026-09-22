@@ -388,7 +388,7 @@ export async function openSidebar(page: Page): Promise<Locator> {
 export async function logout(page: Page): Promise<void> {
     const userMenu = await openSidebar(page);
 
-    const req = page.waitForResponse(matchRequest('POST', '/rest/auth/logout/*'));
+    const req = page.waitForResponse(matchRequest('POST', '/rest/auth/logout'));
     const logoutButton = userMenu.locator('.user-details [data-action="logout"] button');
     await logoutButton.click();
     await req;
@@ -423,8 +423,8 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
 
     const content = picker.locator('.controls-content');
     const header = picker.locator('.controls-header');
-    const previousMonth = content.locator('.rd-month .rd-back');
-    const nextMonth = content.locator('.rd-month .rd-next');
+    const previousMonth = content.locator('[data-action="previous-month"]');
+    const nextMonth = content.locator('[data-action="next-month"]');
 
     // Get the current state
     let year: number;
@@ -479,13 +479,7 @@ export async function selectDateInPicker(source: Locator, date: Date): Promise<v
         }
     }
 
-    let day = `${date.getDate()}`;
-    if (day.length === 1) {
-        day = `0${day}`;
-    }
-    await content.locator('.rd-days .rd-days-body .rd-day-body:not(.rd-day-prev-month):not(.rd-day-next-month):not(.rd-day-disabled)').filter({
-        hasText: day,
-    }).click();
+    await content.locator(`.calendar-grid .day[data-value="${date.getDate()}"]:not(.overflow)`).click();
 }
 
 export async function pickDate(source: Locator, date?: Date): Promise<void> {

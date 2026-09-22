@@ -1335,8 +1335,9 @@ test.describe('Page Editing', () => {
                         await block.locator('.gcn-construct-button-edit').click();
 
                         const modal = page.locator('gtx-tag-editor-modal');
+                        await expect(modal.locator('xpath=ancestor::gtx-dynamic-modal').locator('> .gtx-modal-dialog')).toContainClass('visible');
                         const editor = modal.locator('file-or-image-url-tag-property-editor');
-                        await editor.locator('browse-box [data-action="browse"] button').click();
+                        await editor.locator('gtx-browse-box [data-action="browse"]').click();
 
                         const repoBrowser = page.locator('repository-browser');
                         const images = findRepoBrowserList(repoBrowser, ITEM_TYPE_IMAGE);

@@ -39,6 +39,7 @@
                 [class.overflow]="day.year !== activeYear || day.month !== activeMonth"
                 [class.active]="isSelectedDay(day)"
                 [disabled]="isDayDisabled(day)"
+                [attr.data-value]="day.date"
                 (click)="handleDaySelect(day, $event)"
             >
                 <span class="day-label" >{{ day.date }}</span>

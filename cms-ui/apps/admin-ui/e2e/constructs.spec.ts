@@ -129,7 +129,7 @@ test.describe('Constructs Module', () => {
             await navigateToModule(page, 'constructs');
         });
 
-        test.only('should be possible to create a new construct', async ({ page }) => {
+        test('should be possible to create a new construct', async ({ page }) => {
             const nodeOne = IMPORTER.get(EXAMPLE_NODE_ONE);
             const KEYWORD = 'e2e_test_construct';
 

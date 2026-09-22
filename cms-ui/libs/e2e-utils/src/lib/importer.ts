@@ -1325,11 +1325,10 @@ export async function createClient(options: ClientOptions): Promise<GCMSRestClie
     }
 
     try {
-        const res = await client.auth.login({
+        await client.auth.login({
             login: options.autoLogin.username,
             password: options.autoLogin.password,
         }).send();
-        // Set the SID for future requests
         return client;
     } catch (err) {
         return client;

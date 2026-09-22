@@ -1,4 +1,5 @@
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     EntityImporter,
     FIXTURE_FILE_PDF1,
@@ -25,7 +26,6 @@ import {
     UserImportData,
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
-import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, Page, test } from '@playwright/test';
 import {
     findItem,

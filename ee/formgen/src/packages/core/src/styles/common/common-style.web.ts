@@ -241,6 +241,36 @@ export const fileStyles = StyleSheet.create({
         }
       : {}),
   },
+  attachmentIcon: {
+    marginLeft: theme.space.regular,
+    color: theme.colors.textOnGray,
+  },
+  attachmentErrorIcon: {
+    marginLeft: theme.space.regular,
+    color: theme.colors.colorDeleteRed,
+  },
+  attachmentLoaderContainer: {
+    width: 24,
+    alignItems: 'center',
+    marginLeft: theme.space.regular,
+  },
+  attachmentLoader: {
+    color: theme.colors.textOnGray,
+  },
+  attachmentName: {
+    color: theme.colors.textOnGray,
+    fontWeight: theme.fontWeight.bold,
+  },
+  attachmentDate: {
+    color: theme.colors.textOnGray,
+    fontWeight: theme.fontWeight.light,
+  },
+  attachmentNameError: {
+    color: theme.colors.colorDeleteRed,
+  },
+  attachmentDateError: {
+    color: theme.colors.colorDeleteRed,
+  },
 });
 
 export const buttonsStyle = StyleSheet.create({

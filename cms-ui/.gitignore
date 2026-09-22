@@ -6,8 +6,11 @@
 /.nx
 /.playwright
 
-# JUnit test reports
+# testing outputs
 /.reports
+test-output
+test-results
+vitest.config.*.timestamp*
 
 # compiled output
 /apps/ui-core-docs/compile-docs.js
@@ -29,9 +32,3 @@ report.*.json
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 .claude/worktrees
-
-.angular
-
-test-output
-
-vitest.config.*.timestamp*

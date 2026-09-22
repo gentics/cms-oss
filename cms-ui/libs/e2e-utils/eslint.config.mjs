@@ -3,6 +3,12 @@ import baseConfig from '../../eslint.config.mjs';
 export default [
     ...baseConfig,
     {
+        files: ['**/*.ts'],
+        rules: {
+            'import-x/no-nodejs-modules': 'off',
+        },
+    },
+    {
         files: ['**/*.json'],
         rules: {
             '@nx/dependency-checks': [

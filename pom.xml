@@ -42,7 +42,7 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<cms-oss.version>6.4.10</cms-oss.version>
+		<cms-oss.version>6.4.11-SNAPSHOT</cms-oss.version>
 		<generic-testutils.version>1.15.7</generic-testutils.version>
 		<mesh.forms.plugin.version>3.2.7</mesh.forms.plugin.version>
 		<hazelcast.version>5.5.0</hazelcast.version>

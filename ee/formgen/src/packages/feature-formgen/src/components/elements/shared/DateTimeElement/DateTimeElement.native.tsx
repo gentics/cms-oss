@@ -501,6 +501,7 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
           style={[
             styles.datePickerInput,
             hasError && isEditable && styles.errorDatePickerInput,
+            !isEditable && styles.disabledDatePickerInput,
           ]}
           inputStyle={[
             styles.datePickerInputText,
@@ -553,6 +554,10 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
   const { padding, datePickerStyle } = require('@expo/ui/swift-ui/modifiers');
 
   const openPicker = () => {
+    // RN calls TextInput.onPress regardless of `editable` - only the internal
+    // focus() is gated. Without this guard the picker opens on a locked field
+    // and Save writes a value.
+    if (!isEditable) return;
     prevDisplayRef.current = displayValue;
     hadValueOnOpenRef.current = !!displayValue;
     setOpen(true);
@@ -578,6 +583,7 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
 
   const handleSave = () => {
     closePicker();
+    if (!isEditable) return;
     const m = moment(displayValue, DISPLAY_FORMAT[type], true);
     onChange(m);
     handleDateChange(formProps, m, type === 'hourAndMinute', displayValue);
@@ -618,6 +624,7 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
              containerRef.current = node;
              if (node) {
                  (node as any).focus = () => {
+                      if (!isEditable) return;
                       setOpen(true);
                  };
                  elementRef.current = node;
@@ -662,6 +669,7 @@ const DateTimeElementNative: React.FC<DateTimeElementNativeProps> = (
           style={[
             styles.datePickerInput,
             hasError && isEditable && styles.errorDatePickerInput,
+            !isEditable && styles.disabledDatePickerInput,
           ]}
           inputStyle={styles.datePickerInputText}
           rightElement={[

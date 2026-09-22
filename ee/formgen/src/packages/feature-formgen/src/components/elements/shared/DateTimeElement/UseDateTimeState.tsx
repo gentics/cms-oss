@@ -85,6 +85,7 @@ export function useDateTimeState(props: IFormComponentAttributes) {
   };
 
   const onChangeHelper = (val: string | Moment) => {
+    if (!props.editable) return;
     if (!val || (typeof val === 'string' && val.trim() === '')) {
       setDateValue('');
       handleDateChange(props, '', isTimeField);
@@ -95,6 +96,7 @@ export function useDateTimeState(props: IFormComponentAttributes) {
   };
 
   const deleteValue = () => {
+    if (!props.editable) return;
     formEventsUtils.handleChange(
       props.formState,
       props.uiState,
@@ -148,6 +150,17 @@ export function handleDateChange(
   isTimeField: boolean,
   inputValue?: string,
 ) {
+  // Read-only fields are never written.
+  //
+  // On web, react-native-web renders `editable={false}` as `readOnly` and not as
+  // `disabled` - such an input is still focusable in the DOM. A click into the
+  // field followed by a blur (e.g. onto the Next button) therefore reaches this
+  // function without the user having changed anything. The value would then be
+  // rewritten from AN format (2026-08-25T00:00:00+02:00) to UTC ISO
+  // (2026-08-24T22:00:00.000Z), and Acta Nova rejects the resulting validation
+  // request.
+  if (!props.editable) return;
+
   let finalValue: string | Moment = '';
   if (moment.isMoment(date) && date.isValid()) {
     finalValue = isTimeField ? date.format('HH:mm') : date.toISOString();

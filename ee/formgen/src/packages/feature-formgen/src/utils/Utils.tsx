@@ -565,6 +565,23 @@ export function isEditable(
   return true;
 }
 
+/**
+ * True if the element is explicitly marked as not editable (`editable: false`)
+ * in the form state.
+ *
+ * Deliberately narrower than {@link isEditable}: only the element itself counts
+ * here, not the summary page or an ongoing AN roundtrip. This allows a write to
+ * be blocked without affecting legitimate structural or server updates.
+ */
+export function isElementReadOnly(
+  state: FormState,
+  jsonpath: string,
+  id?: string,
+): boolean {
+  const elementState = getElementByIdOrJsonPath(state.data, jsonpath, id);
+  return elementState?.editable === false;
+}
+
 export function isRequired(state: FormState, id: string): boolean {
   const elementSchema = getSchemaForElement(state.schema, id);
   if (elementSchema?.mandatory) {

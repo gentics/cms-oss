@@ -298,6 +298,12 @@ export const handleChange = async (
   formGridOptions?: IFormGridOptions,
   editable?: boolean,
 ) => {
+  // Safety net: read-only fields are never modified. An element handler that
+  // forgets its editable guard must not be able to rewrite the value - Acta Nova
+  // rejects a validation request containing a changed read-only field.
+  if (utils.isElementReadOnly(formState, jsonpath, id)) {
+    return;
+  }
   utils.setValue(formState, jsonpath, value);
   await afterChange(
     formState,

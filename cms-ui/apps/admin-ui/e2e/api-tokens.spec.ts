@@ -1,3 +1,5 @@
+import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import { cloneWithSymbols } from '@gentics/common';
 import {
     createClient,
     EntityImporter,
@@ -16,9 +18,7 @@ import {
     TestSize,
     UserImportData,
 } from '@gentics/e2e-utils';
-import { expect, Locator, Page, test } from '@playwright/test';
-import { cloneWithSymbols } from '@gentics/common';
-import { AccessControlledType, GcmsPermission, LoginResponse } from '@gentics/cms-models';
+import { expect, Page, test } from '@playwright/test';
 import { dateShouldBeDisabled, setGtxDateFromXpath } from './helpers';
 
 const API_MODAL = 'gtx-api-tokens-modal';
@@ -206,8 +206,6 @@ async function addEntries(login: LoginResponse, page: Page, amount: number) {
         context: page.context().request,
         isPageContext: true,
     });
-
-    client.sid = login?.sid ?? null;
 
     for (let i = 0; i < amount; i++) {
         await client.admin.addApiTokens({ name: `token ${i + 1}` }).send();

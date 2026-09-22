@@ -40,6 +40,7 @@ export enum Feature {
     MESH_CR = 'mesh_contentrepository',
     OBJECT_TAG_SYNC = 'objtag_sync',
     LINK_CHECKER = 'link_checker',
+    FORMS = 'forms',
 }
 
 /**

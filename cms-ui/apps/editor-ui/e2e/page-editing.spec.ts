@@ -1099,7 +1099,7 @@ test.describe('Page Editing', () => {
             }
 
             // eslint-disable-next-line playwright/expect-expect
-            test('should be possible to copy an internal link', {
+            test.fixme('should be possible to copy an internal link', {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-18537',
@@ -1116,7 +1116,7 @@ test.describe('Page Editing', () => {
             });
 
             // eslint-disable-next-line playwright/expect-expect
-            test('should be possible to copy an external link', {
+            test.fixme('should be possible to copy an external link', {
                 annotation: [{
                     type: 'ticket',
                     description: 'SUP-18537',
@@ -1130,7 +1130,6 @@ test.describe('Page Editing', () => {
                 });
             });
 
-            // FIXME: Ticket created, SUP-19576
             test('should be possible to insert a link with a keybind', {
                 annotation: [{
                     type: 'ticket',

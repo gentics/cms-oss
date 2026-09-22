@@ -2,6 +2,7 @@ import {
     AccessControlledType,
     Page as CMSPage,
     Response as CMSResponse,
+    Feature,
     GcmsPermission,
     NodePageLanguageCode,
     NodeUrlMode,
@@ -536,6 +537,11 @@ test.describe('Page Management', () => {
         }],
     }, async ({ page }) => {
         const NICE_URL = '/test';
+
+        // Needs the nice-url feature to be enabled
+        await IMPORTER.setupFeatures({
+            [Feature.NICE_URLS]: true,
+        });
 
         // Create another page which has the nice-url set
         const DUMMY_PAGE = cloneWithSymbols(PAGE_ONE);

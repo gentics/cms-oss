@@ -1,3 +1,4 @@
+import { NodeFeature } from '@gentics/cms-models';
 import { EntityImporter, TestSize } from '@gentics/e2e-utils';
 import { expect, test } from '@playwright/test';
 import { GLOBAL_SCOPE_ID } from './common';
@@ -6,11 +7,9 @@ import {
     findScopeTabBar,
     findTable,
     findToolbar,
-    navigateToTool,
     navigateToToolWithLogin,
     waitForToolReady,
 } from './helpers';
-import { NodeFeature } from '@gentics/cms-models';
 
 /**
  * Smoke tests: verifies that the tool boots up against a real CMS and renders

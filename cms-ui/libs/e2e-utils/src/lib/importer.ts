@@ -373,12 +373,12 @@ export class EntityImporter {
     /** Apply node features for the nodes in the specified TestSize, and global features */
     public async setupFeatures(
         size: TestSize,
-        features: Partial<Record<Feature | NodeFeature, boolean>>,
+        features: Partial<Record<Feature & NodeFeature, boolean>>,
     ): Promise<void>;
     /** Apply global features; or node and global features with a reference to a TestSize. */
     public async setupFeatures(
         sizeOrGlobalFeatures: TestSize | Partial<Record<Feature, boolean>>,
-        features?: Partial<Record<Feature | NodeFeature, boolean>>,
+        features?: Partial<Record<Feature & NodeFeature, boolean>>,
     ): Promise<void> {
         // Safety check
         if (sizeOrGlobalFeatures == null) {

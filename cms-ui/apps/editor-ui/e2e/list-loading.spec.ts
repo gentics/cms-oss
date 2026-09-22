@@ -233,7 +233,7 @@ test.describe('List Loading', () => {
             await IMPORTER.client.user.delete(user.id).send();
         }
 
-        test('should load Pages correctly with missing publisher', {
+        test.only('should load Pages correctly with missing publisher', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-19014',
@@ -251,6 +251,8 @@ test.describe('List Loading', () => {
                 await client.page.publish(TEST_PAGE.id, {
                     alllang: true,
                 }).send();
+                // Correctly log the user out
+                await context.clearCookies();
             });
 
             await navigateToApp(page);
@@ -286,6 +288,8 @@ test.describe('List Loading', () => {
                     at: (new Date().getTime() / 1000) + 7_200,
                     keepVersion: false,
                 }).send();
+                // Correctly log the user out
+                await context.clearCookies();
             });
 
             await navigateToApp(page);

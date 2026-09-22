@@ -227,10 +227,10 @@
 		var anchorUrlMatch = href.match(ANCHOR_LINK);
 		var tagparts = {
 			text: $link.html(),
-			anchor: $link.attr(ATTR_LINK_ANCHOR),
-			title: $link.attr(ATTR_LINK_TITLE),
+			anchor: $link.attr(ATTR_LINK_ANCHOR) || '',
+			title: $link.attr(ATTR_LINK_TITLE) || '',
 			target: $link.attr(ATTR_LINK_TARGET),
-			language: $link.attr(ATTR_LINK_LANGUAGE),
+			language: $link.attr(ATTR_LINK_LANGUAGE) || '',
 			'class': cleanBlockClasses($link.attr('class')),
 			channel: $link.attr(ATTR_LINK_NODE_ID)
 		};

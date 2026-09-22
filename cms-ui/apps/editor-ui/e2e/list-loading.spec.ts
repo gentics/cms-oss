@@ -233,7 +233,7 @@ test.describe('List Loading', () => {
             await IMPORTER.client.user.delete(user.id).send();
         }
 
-        test.only('should load Pages correctly with missing publisher', {
+        test('should load Pages correctly with missing publisher', {
             annotation: [{
                 type: 'ticket',
                 description: 'SUP-19014',

@@ -1356,7 +1356,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		if (rootObject instanceof com.gentics.contentnode.object.Page) {
 			page = (com.gentics.contentnode.object.Page) rootObject;
-			node = page.getFolder().getNode();
+			node = page.getOwningNode();
 		}
 
 		// render the tag as block if either aloha edit mode or aloha readonly (preview) and the feature copy_tags is on

@@ -13,3 +13,15 @@ export const renderHTMLStyles = StyleSheet.create({
   imageError: {},
   caption: {},
 });
+
+export const fileStyles = StyleSheet.create({
+  attachmentItem: {},
+  attachmentIcon: {},
+  attachmentErrorIcon: {},
+  attachmentLoaderContainer: {},
+  attachmentLoader: {},
+  attachmentName: {},
+  attachmentDate: {},
+  attachmentNameError: {},
+  attachmentDateError: {},
+});

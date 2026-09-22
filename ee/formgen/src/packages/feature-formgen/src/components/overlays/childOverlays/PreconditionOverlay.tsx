@@ -1,4 +1,4 @@
-import { Linking, Platform, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Platform, Pressable, useWindowDimensions, View } from 'react-native';
 import { ICommonOverlayProps, IOverlayExtraCommonProps } from '../../../types/interfaces';
 import DefaultOverlay from '../DefaultOverlay';
 import * as formEventsUtils from '../../../utils/FormEventsUtils';
@@ -31,10 +31,11 @@ const PreconditionOverlay: React.FC<ICommonOverlayProps> = (
               style={styles.preconditionItem}
             >
               {precondition.formID ? (
-                <TouchableOpacity
+                <Pressable
                   onPress={() => {
                     if (Platform.OS == 'web') {
-                      Linking.openURL(
+                      // same tab instead of a new one (SUP-20151)
+                      window.location.assign(
                         '/form/' + encodeURI(precondition.formID!),
                       );
                     } else {
@@ -45,7 +46,7 @@ const PreconditionOverlay: React.FC<ICommonOverlayProps> = (
                   <AndpText style={styles.preconditionItemLink}>
                     {precondition.message}
                   </AndpText>
-                </TouchableOpacity>
+                </Pressable>
               ) : (
                  <AndpText>{precondition.message}</AndpText>
               )}

@@ -27,6 +27,7 @@ import {
   FriendlyCaptchaMode,
   reCaptchaMode,
   ICmsCondition,
+  IFormFlowClass,
 } from '../types/interfaces';
 import JsonPath from 'jsonpath';
 import { StatesToUpdateEnum } from '../constants/enums/StateToUpdateEnum';
@@ -119,6 +120,48 @@ export function isFormGridType(ElemTyp: IElementType): boolean {
 export function getFormPagesLengthForDisplay(formState: FormState): number {
   if (formState.schema.formType === 'report') return -1;
   return formState.form.pages?.length ?? 0;
+}
+
+/*
+ * screens that show the progress display when showProgress is not configured
+ */
+const SCREENS_WITH_PROGRESS_BY_DEFAULT = [
+  'FormScreen',
+  'SummaryScreen',
+  'PaymentScreen',
+];
+
+/*
+ * read a boolean flow variable of a flow step
+ * the CMS may deliver the value as a real boolean or as a string, both are accepted
+ * returns undefined if the variable is missing or holds no interpretable value
+ */
+export function getFlowFlag(
+  step: IFormFlowClass | undefined,
+  name: string,
+): boolean | undefined {
+  const value = step?.variables?.find((x) => x.name === name)?.value;
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return undefined;
+}
+
+/*
+ * decide whether the progress display is shown for a flow step
+ * if showProgress is configured, only that value counts - the screen type is
+ * then not taken into account at all
+ * without configuration the screen type decides (SCREENS_WITH_PROGRESS_BY_DEFAULT)
+ */
+export function shouldShowProgress(step: IFormFlowClass | undefined): boolean {
+  const configured = getFlowFlag(step, 'showProgress');
+  if (configured !== undefined) return configured;
+  return SCREENS_WITH_PROGRESS_BY_DEFAULT.includes(step?.reactClass ?? '');
 }
 
 /**

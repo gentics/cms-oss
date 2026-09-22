@@ -2,6 +2,8 @@ package com.gentics.contentnode.rest.resource.parameter;
 
 import jakarta.ws.rs.QueryParam;
 
+import com.gentics.contentnode.rest.mcp.McpToolParam;
+
 /**
  * Parameter bean for embed parameters
  */
@@ -10,6 +12,8 @@ public class EmbedParameterBean {
 	 * Comma separated list of attributes that contain references to other objects, which shall be embedded into the returned objects.
 	 */
 	@QueryParam("embed")
+	@McpToolParam(description = "Comma separated list of attributes that contain references to other objects, "
+			+ "which shall be embedded into the returned objects.", required = false)
 	public String embed;
 
 	/**

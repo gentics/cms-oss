@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JavaType;
@@ -90,12 +91,16 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  * annotated with {@code @Context} (e.g. {@code AbstractContentNodeResource}'s injected
  * {@code HttpServletRequest}/{@code HttpServletResponse}/{@code ContainerRequestContext}, or a
  * method parameter like {@code FileResourceImpl#createSimple}'s
- * {@code @Context HttpServletRequest}). Rather than let such a field silently stay {@code null}
- * and NullPointerException on first use, {@link #checkNoContextInjection(Class, Method)} rejects
- * (logs and skips) any method whose declaring class (walking up the hierarchy) or own parameters
- * use {@code @Context} at all, regardless of whether that specific tool method actually touches
- * the injected member - a coarser check than analyzing what the method body actually accesses,
- * but a safe one.
+ * {@code @Context HttpServletRequest}). {@link #checkNoContextInjection(Class, Method)} always
+ * rejects a tool method that itself declares a {@code @Context} parameter - that would definitely
+ * stay {@code null} and NullPointerException on first use. For {@code @Context} <em>fields</em>
+ * declared somewhere in the class hierarchy, it is more permissive: {@link ContextUsageAnalyzer}
+ * statically analyzes whether the specific tool method - or a method it (transitively) calls
+ * within the resource class's own hierarchy - actually reads one of those fields, and only
+ * rejects the tool if it does. A tool that is allowed through despite its class having
+ * {@code @Context} fields is still logged at {@code WARN}, since the analysis only follows direct
+ * method calls (not lambdas, method references, or reflection) and can therefore miss an
+ * indirect use.
  * </p>
  *
  * <p>
@@ -262,52 +267,83 @@ public final class McpToolRegistry {
 	}
 
 	/**
-	 * Reject a tool method whose declaring class (or its superclasses) relies on JAX-RS
-	 * {@code @Context} injection - as a field, a context-injection setter method (JAX-RS also
-	 * supports {@code @Context} on methods, not just fields, e.g.
-	 * {@code AbstractContentNodeResource#setSessionSecretFromCookie}), or a parameter of the tool
-	 * method itself (e.g. {@code FileResourceImpl#createSimple}'s
-	 * {@code @Context HttpServletRequest}).
-	 *
-	 * <p>
-	 * {@code McpToolRegistry} instantiates the resource class with a bare no-arg constructor and
-	 * never runs it through Jersey/HK2, so any such field/parameter would simply stay {@code null}
-	 * - this fails fast at registration time with a clear message, instead of a confusing
-	 * {@link NullPointerException} the first time a tool call actually touches it.
-	 * </p>
-	 * @throws IllegalStateException if the method's declaring class (or the method itself) uses
-	 * {@code @Context} injection
+	 * Reject a tool method that itself declares a JAX-RS {@code @Context} parameter (e.g.
+	 * {@code FileResourceImpl#createSimple}'s {@code @Context HttpServletRequest}) - that always
+	 * stays {@code null}, since {@code McpToolRegistry} instantiates the resource class with a
+	 * bare no-arg constructor and never runs it through Jersey/HK2. For {@code @Context} fields
+	 * declared somewhere in the class's hierarchy (e.g. {@code AbstractContentNodeResource}'s
+	 * injected {@code HttpServletRequest}/{@code HttpServletResponse}/
+	 * {@code ContainerRequestContext}), reject the tool only if {@link ContextUsageAnalyzer}
+	 * finds that the method (directly, or via a method it calls within the hierarchy) actually
+	 * reads one of them - otherwise allow it through, but log a {@code WARN} (see
+	 * {@link ContextUsageAnalyzer}'s class Javadoc for why this is a heuristic, not a guarantee).
+	 * @throws IllegalStateException if the method declares a {@code @Context} parameter, or if
+	 * static analysis found a reachable use of a {@code @Context} field
 	 */
 	static void checkNoContextInjection(Class<?> resourceClass, Method method) {
-		List<String> contextMembers = new ArrayList<>();
-
-		for (Class<?> current = resourceClass; current != null && current != Object.class; current = current.getSuperclass()) {
-			for (Field field : current.getDeclaredFields()) {
-				if (field.isAnnotationPresent(Context.class)) {
-					contextMembers.add(String.format("field %s#%s", current.getName(), field.getName()));
-				}
-			}
-			for (Method candidate : current.getDeclaredMethods()) {
-				if (candidate.isAnnotationPresent(Context.class)) {
-					contextMembers.add(String.format("method %s#%s", current.getName(), candidate.getName()));
-				}
-			}
-		}
-
+		List<String> contextParams = new ArrayList<>();
 		for (Parameter parameter : method.getParameters()) {
 			if (parameter.isAnnotationPresent(Context.class)) {
-				contextMembers.add(String.format("parameter '%s' of %s#%s", parameter.getName(),
+				contextParams.add(String.format("parameter '%s' of %s#%s", parameter.getName(),
 						resourceClass.getName(), method.getName()));
 			}
 		}
-
-		if (!contextMembers.isEmpty()) {
+		if (!contextParams.isEmpty()) {
 			throw new IllegalStateException(String.format(
-					"%s#%s cannot be an MCP tool: it relies on JAX-RS @Context injection (%s), which "
+					"%s#%s cannot be an MCP tool: it declares JAX-RS @Context parameter(s) (%s), which "
 							+ "McpToolRegistry does not provide (the resource class is instantiated with a "
 							+ "bare no-arg constructor, not through Jersey/HK2)",
-					resourceClass.getName(), method.getName(), String.join(", ", contextMembers)));
+					resourceClass.getName(), method.getName(), String.join(", ", contextParams)));
 		}
+
+		List<Field> contextFields = collectContextFields(resourceClass);
+		if (contextFields.isEmpty()) {
+			return;
+		}
+
+		if (ContextUsageAnalyzer.usesContext(resourceClass, method, contextFields)) {
+			throw new IllegalStateException(String.format(
+					"%s#%s cannot be an MCP tool: static analysis found that it (directly, or via a method it "
+							+ "calls within %s's hierarchy) reads a JAX-RS @Context field (%s), which "
+							+ "McpToolRegistry does not provide (the resource class is instantiated with a bare "
+							+ "no-arg constructor, not through Jersey/HK2)",
+					resourceClass.getName(), method.getName(), resourceClass.getSimpleName(), describeFields(contextFields)));
+		}
+
+		logger.warn(String.format(
+				"Registering %s#%s as an MCP tool even though %s's hierarchy declares JAX-RS @Context field(s) "
+						+ "(%s): static analysis found no reachable use of them from this method. That analysis "
+						+ "only follows direct method calls (not lambdas, method references, or reflection), so "
+						+ "if this tool throws a NullPointerException at runtime, re-check whether it reaches one "
+						+ "of these fields indirectly",
+				resourceClass.getName(), method.getName(), resourceClass.getSimpleName(), describeFields(contextFields)));
+	}
+
+	/**
+	 * Collect every {@code @Context}-annotated field in {@code resourceClass}'s hierarchy (up to
+	 * but not including {@link Object}). {@code @Context}-annotated <em>methods</em> (JAX-RS also
+	 * supports setter-style injection, e.g.
+	 * {@code AbstractContentNodeResource#setSessionSecretFromCookie}) are deliberately not
+	 * collected here: they are only ever invoked by the JAX-RS injection machinery itself, never
+	 * reachable from a tool method's own code, so they are not a concern for
+	 * {@link ContextUsageAnalyzer}.
+	 */
+	static List<Field> collectContextFields(Class<?> resourceClass) {
+		List<Field> contextFields = new ArrayList<>();
+		for (Class<?> current = resourceClass; current != null && current != Object.class; current = current.getSuperclass()) {
+			for (Field field : current.getDeclaredFields()) {
+				if (field.isAnnotationPresent(Context.class)) {
+					contextFields.add(field);
+				}
+			}
+		}
+		return contextFields;
+	}
+
+	private static String describeFields(List<Field> fields) {
+		return fields.stream()
+				.map(field -> field.getDeclaringClass().getSimpleName() + "#" + field.getName())
+				.collect(Collectors.joining(", "));
 	}
 
 	/**
@@ -339,27 +375,38 @@ public final class McpToolRegistry {
 
 	/**
 	 * Build the input schema of a tool method, from every {@link McpToolParam} annotated parameter
-	 * and every {@link McpToolParam} annotated field of a parameter's type.
+	 * and every {@link McpToolParam} annotated field of a parameter's type. Rejects the method if
+	 * two parameters/fields resolve to the same argument name (see
+	 * {@link #checkNotDuplicateArgument(Set, String, Method)}) - this can happen when a method
+	 * combines several parameter beans, or a bean and a directly-annotated parameter, whose fields
+	 * happen to share a name (e.g. {@code TemplateResourceImpl#list}'s own
+	 * {@code @QueryParam("nodeId") List<String> nodeIds} parameter alongside
+	 * {@code TemplateListParameterBean}'s {@code @QueryParam("nodeId") Integer nodeId} field - the
+	 * same JAX-RS query key bound to two differently-typed targets, which JAX-RS itself allows).
 	 * @param method tool method
 	 * @return JSON schema describing the tool's arguments
+	 * @throws IllegalStateException if two parameters/fields resolve to the same argument name
 	 */
 	static JsonSchema buildInputSchema(Method method) {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		List<String> required = new ArrayList<>();
+		Set<String> seenNames = new HashSet<>();
 
 		for (Parameter parameter : method.getParameters()) {
 			McpToolParam paramAnnotation = parameter.getAnnotation(McpToolParam.class);
 			if (paramAnnotation != null) {
-				addProperty(properties, required, resolveName(paramAnnotation, parameter.getName()), paramAnnotation,
-						parameter.getType(), parameter.getParameterizedType());
+				String name = resolveName(paramAnnotation, parameter.getName());
+				checkNotDuplicateArgument(seenNames, name, method);
+				addProperty(properties, required, name, paramAnnotation, parameter.getType(), parameter.getParameterizedType());
 				continue;
 			}
 
 			for (Field field : parameter.getType().getDeclaredFields()) {
 				McpToolParam fieldAnnotation = field.getAnnotation(McpToolParam.class);
 				if (fieldAnnotation != null) {
-					addProperty(properties, required, resolveName(fieldAnnotation, field.getName()), fieldAnnotation,
-							field.getType(), field.getGenericType());
+					String name = resolveName(fieldAnnotation, field.getName());
+					checkNotDuplicateArgument(seenNames, name, method);
+					addProperty(properties, required, name, fieldAnnotation, field.getType(), field.getGenericType());
 				}
 			}
 		}
@@ -370,6 +417,24 @@ public final class McpToolRegistry {
 				.required(required)
 				.additionalProperties(false)
 				.build();
+	}
+
+	/**
+	 * Reject an argument name that was already used by another parameter/field of the same tool
+	 * method's input schema.
+	 * @param seenNames argument names used so far while building this method's schema; {@code name}
+	 * is added to it if not already present
+	 * @param name argument name to check
+	 * @param method tool method being built, used only for the error message
+	 * @throws IllegalStateException if {@code name} is already present in {@code seenNames}
+	 */
+	static void checkNotDuplicateArgument(Set<String> seenNames, String name, Method method) {
+		if (!seenNames.add(name)) {
+			throw new IllegalStateException(String.format(
+					"Tool argument name '%s' is used by more than one parameter/field of %s#%s; set an explicit, "
+							+ "unique McpToolParam#name() on one of them",
+					name, method.getDeclaringClass().getName(), method.getName()));
+		}
 	}
 
 	/**

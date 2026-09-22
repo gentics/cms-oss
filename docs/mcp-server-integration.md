@@ -7,7 +7,7 @@ Gentics CMS OSS server, so that the CMS can act as an MCP (Model Context Protoco
 | --- | --- | --- |
 | **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **first tool implemented (§7)** |
 | GPU-2666 | Integrate the MCP server as a servlet under `/mcp` | implemented |
-| GPU-2667 | (follow-up) | open |
+| GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9) |
 | GPU-2672 | (follow-up) | open |
 | GPU-2674 | (follow-up) | open |
 
@@ -420,19 +420,118 @@ discovering a non-public method but then crashing on first real call with an
 
 * **Authentication and authorization.** `/mcp` is currently unauthenticated — the CMS session
   filter is only mapped to `/rest/*`, and `McpToolRegistry` (§7.5) does not bind or check a CMS
-  session/permissions either. Before any tool touches CMS data as a real user (GPU-2667 and
-  later), the endpoint needs to be tied to the CMS authentication (SID / API token), e.g. through
-  the transport's `contextExtractor` (`McpTransportContextExtractor<HttpServletRequest>`), which
-  can hand the CMS session down into the tool handlers, which `McpToolRegistry` would then use to
-  open a `Trx` for that session/user and re-run the method's `@RequiredPerm` checks before invoking
-  it.
+  session/permissions either. Before any tool touches CMS data as a real user, the endpoint needs
+  to be tied to the CMS authentication (SID / API token), e.g. through the transport's
+  `contextExtractor` (`McpTransportContextExtractor<HttpServletRequest>`), which can hand the CMS
+  session down into the tool handlers, which `McpToolRegistry` would then use to open a `Trx` for
+  that session/user and re-run the method's `@RequiredPerm` checks before invoking it. Still open.
 * **Transport security.** The transport provider accepts a `ServerTransportSecurityValidator`
   (default: NOOP). `Origin` header validation should be considered, since the CMS is a browser
-  facing application.
+  facing application. Still open.
 * **Configuration reload.** The MCP server is built once at startup. If it should react to
-  `onReloadConfiguration()` (see `ServletContextHandlerService`), that has to be added.
-* **Tool arguments beyond scalars/collections.** `McpToolRegistry` (7.3) does not yet support a
-  nested/complex bean type as a single argument — needed as soon as a tool requires it.
-* **`@Context`-dependent endpoints.** Currently rejected outright at registration time (§7.6), not
-  supported — see that section for why a generic fix is likely not worth building speculatively.
-* **Documentation** in `cms-oss-doc` once the endpoint has user-visible functionality.
+  `onReloadConfiguration()` (see `ServletContextHandlerService`), that has to be added. Still open.
+* **Tool arguments beyond scalars/collections.** `McpToolRegistry` (§7.3) still does not support a
+  nested/complex bean type (a field whose own type has further `@McpToolParam` fields) as a single
+  argument — needed as soon as a tool requires it. Still open; not needed by any of the endpoints
+  wired up in §9.
+* **`@Context`-dependent endpoints.** No longer rejected outright at the class level — see §9.3.
+  Still not supported for a tool method that actually needs a real `HttpServletRequest`/
+  `HttpServletResponse` value (as opposed to one that merely lives on a `@Context`-using class but
+  never reads it); that remains blocked, by design, until the authentication/authorization point
+  above is resolved (a real request only becomes available once a real session is threaded
+  through).
+* **Documentation** in `cms-oss-doc` once the endpoint has user-visible functionality. Still open.
+
+---
+
+## 9. GPU-2667 — wiring 10 more endpoints, hardening the registry
+
+To manually test the `@McpTool`/`@McpToolParam` annotations against realistic argument shapes,
+10 endpoints were selected (from `Vorschlag=Ja` in the project's endpoint-selection spreadsheet)
+spanning bare scalars, multiple `@PathParam`s, method-level `@QueryParam`s (not bean-flattened),
+1–5 parameter beans combined in one call, `List`/`Set` collections, enums, and endpoints whose
+declaring class relies on JAX-RS `@Context` injection: `ConstructResource#list` (both overloads),
+`ConstructResource#list` (`/construct/list`), `ObjectPropertyResource#list`,
+`TemplateResource#list`, `MarkupLanguageResource#list`, `PartTypeResource#list`,
+`LanguageResource#get`, `PublishProtocolResource#get`, `InfoResource#getMaintenance`,
+`FileResource#getFileUsageInfo` and `PageResource#render`.
+
+Wiring these up against the real source (not just the endpoint spreadsheet) surfaced two gaps in
+`McpToolRegistry` beyond "just add more annotations", both fixed here.
+
+### 9.1 Argument name collisions within one tool
+
+`buildInputSchema` used to flatten every annotated parameter/field into one shared `properties`
+map keyed only by resolved name, with no check that a name wasn't already used earlier in the
+same method — a later duplicate would silently overwrite the earlier property (and, in
+`buildMethodArguments`, silently bind the wrong field on invocation). This is not theoretical:
+`TemplateResourceImpl#list` (`GET /template`) takes a direct
+`@QueryParam("nodeId") List<String> nodeIds` **and** `TemplateListParameterBean`, whose own field
+is `@QueryParam("nodeId") Integer nodeId` — the same JAX-RS query key bound to two differently
+typed targets, which JAX-RS itself allows. `buildInputSchema` now tracks resolved names as it
+builds a method's schema (`checkNotDuplicateArgument`) and rejects (logs, skips) the whole tool if
+two parameters/fields collide — mirroring how `checkNotDuplicate` already handles a duplicate
+*tool* name. For the `TemplateResource#list` case, the bean field keeps the name `nodeId`, and the
+direct parameter is explicitly named `nodeIds`.
+
+A related, simpler pitfall hit while wiring these endpoints: `ConstructResourceImpl` has two
+overloaded `list` methods (`GET /construct` and `GET /construct/list`). `resolveToolName` derives
+a name from `method.getName()` alone, with no parameter-signature disambiguation, so both would
+derive to `construct_list` — `checkNotDuplicate` would then silently drop whichever is scanned
+second. Both now have explicit, distinct `@McpTool#name()`s (`construct_list` and
+`construct_list_for_page`). This isn't a registry bug to fix, just a naming pitfall to know about
+whenever a resource class has overloaded methods.
+
+### 9.2 `@Context`: per-method reachability analysis instead of a class-wide check
+
+The original `checkNoContextInjection` (§7.6) rejected a tool if its declaring class's hierarchy
+had **any** `@Context` field/method, regardless of whether the specific tool method touched it.
+This blocked every `@McpTool` candidate on `FileResource`, `FolderResource`, `ImageResource`,
+`PageResource` (via `AuthenticatedContentNodeResource` → `AbstractContentNodeResource`, which has
+3 `@Context` fields plus a `@Context`-annotated setter) and `NodeResource` (extends
+`AbstractContentNodeResource` directly) — the majority of the `Vorschlag=Ja` endpoints, including
+`FileResource#getFileUsageInfo` and `PageResource#render` from this batch. Neither method's body
+(nor its callees) actually touches those fields.
+
+`checkNoContextInjection` now does two different things depending on what it finds:
+
+* A `@Context` **parameter** on the tool method itself is still an unconditional, certain
+  rejection — that always stays `null`, since the resource class is instantiated with a bare
+  no-arg constructor, not through Jersey/HK2.
+* A `@Context` **field** somewhere in the class hierarchy is only a rejection if a new
+  `ContextUsageAnalyzer` (`com.gentics.contentnode.mcp`) finds that the tool method — or a method
+  it (transitively) calls within the resource class's own hierarchy — actually reads it. It does
+  this via static bytecode analysis (ASM's tree API, added as a new dependency alongside
+  ClassGraph): starting from the tool method, it follows direct `invokevirtual`/`invokespecial`/
+  `invokestatic`/`invokeinterface` call edges, scoped to the resource class and its superclass
+  chain (that's where inherited helpers like `AbstractContentNodeResource#getRequest()` live), and
+  scans each reachable method's bytecode for a `GETFIELD`/`PUTFIELD` against one of the class's
+  `@Context` fields. `@Context`-annotated *methods* (JAX-RS setter-style injection, e.g.
+  `AbstractContentNodeResource#setSessionSecretFromCookie`) are not part of this analysis at all —
+  they're only ever invoked by the JAX-RS injection machinery itself, never reachable from a tool
+  method's own code.
+
+This is a heuristic, not a guarantee: the analysis only follows direct call instructions, not
+method references, lambdas, or reflective calls. A tool that's allowed through despite its class
+having `@Context` fields is logged at `WARN`, so a `NullPointerException` at runtime on such a
+tool has a paper trail pointing back at "this was allowed by a heuristic analysis, re-check it."
+On a bytecode-reading failure, the analysis conservatively treats the field as used (rejects the
+tool) rather than silently letting it through unanalyzed.
+
+Note what this does *not* solve: a tool method that actually **needs** a real
+`HttpServletRequest`/`HttpServletResponse` (as opposed to merely living on a class that happens to
+declare one) is still rejected — there's still no real value to give it. That's tied to the
+still-open authentication/authorization point in §8.
+
+### 9.3 Tests
+
+`McpToolRegistryTest` gained fixtures/tests for: a `@Context` field the tool method never reads
+(now allowed) vs. one it reads directly, or via a called helper method (both still rejected); a
+`@Context`-annotated method alone, with no field (now allowed, whereas the old class-wide check
+would have rejected it); two beans combined in one method whose fields collide on the same
+argument name (rejected); overloaded methods deriving the same tool name by default; and a
+`Set<Enum>` field (schema generation and argument conversion both already handled this generically
+via the existing `Collection`/enum branches — no registry change needed, just test coverage, since
+`ObjectPropertyParameterBean#types` is the first field of that shape). Two characterization tests
+were added against the real, production-annotated `FileResourceImpl#getFileUsageInfo` and
+`PageResourceImpl#render`, asserting they now register despite their class's `@Context` members.

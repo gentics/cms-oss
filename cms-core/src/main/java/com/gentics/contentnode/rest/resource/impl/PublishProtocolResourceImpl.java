@@ -17,6 +17,8 @@ import com.gentics.contentnode.publish.protocol.PublishLogEntry;
 import com.gentics.contentnode.publish.protocol.PublishProtocolUtil;
 import com.gentics.contentnode.rest.client.exceptions.RestException;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.model.PublishLogDto;
 import com.gentics.contentnode.rest.model.response.GenericItemList;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
@@ -61,7 +63,10 @@ public class PublishProtocolResourceImpl implements PublishProtocolResource {
 	@Override
 	@GET
 	@Path("/{protoType}/{objId}")
-	public PublishLogDto get(@PathParam("protoType") String type, @PathParam("objId") Integer objId)
+	@McpTool(description = "Get the publish protocol log entry for the object with the given type and ID.")
+	public PublishLogDto get(
+			@PathParam("protoType") @McpToolParam(name = "type", description = "Object type of the publish log entry.") String type,
+			@PathParam("objId") @McpToolParam(name = "objId", description = "Object ID of the publish log entry.") Integer objId)
 			throws NodeException {
 		validateRequest(type);
 		try (Trx trx = ContentNodeHelper.trx()) {

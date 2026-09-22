@@ -71,6 +71,8 @@ import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.BulkLinkUpdateRequest;
@@ -125,6 +127,7 @@ public class ConstructResourceImpl implements ConstructResource {
 
 	@Override
 	@GET
+	@McpTool(name = "construct_list", description = "Get the list of constructs, optionally filtered, sorted, paged and/or embedded.")
 	public PagedConstructListResponse list(
 			@BeanParam FilterParameterBean filter,
 			@BeanParam SortParameterBean sorting,
@@ -558,17 +561,30 @@ public class ConstructResourceImpl implements ConstructResource {
 	@Override
 	@GET
 	@Path("/list")
+	@McpTool(name = "construct_list_for_page", description = "Get the list of constructs that are usable on/linked "
+			+ "to a given page or node, optionally filtered and sorted.")
 	public ConstructListResponse list(
-			@QueryParam("skipCount") @DefaultValue("0")    final Integer skipCount,
-			@QueryParam("maxItems")  @DefaultValue("-1")   final Integer maxItems,
-			@QueryParam("search")                          final String search,
-			@QueryParam("changeable")                      final Boolean changeable,
-			@QueryParam("pageId")                          final Integer pageId,
-			@QueryParam("nodeId")                          final Integer nodeId,
-			@QueryParam("category")                        final Integer categoryId,
-			@QueryParam("partTypeId")                      final List<Integer> partTypeId,
-			@QueryParam("sortby")    @DefaultValue("name") final ConstructSortAttribute sortBy,
-			@QueryParam("sortorder") @DefaultValue("asc")  final SortOrder sortOrder
+			@QueryParam("skipCount") @DefaultValue("0")
+			@McpToolParam(name = "skipCount", description = "Number of items to skip.", required = false) final Integer skipCount,
+			@QueryParam("maxItems")  @DefaultValue("-1")
+			@McpToolParam(name = "maxItems", description = "Maximum number of items to return. -1 returns all matching items.", required = false) final Integer maxItems,
+			@QueryParam("search")
+			@McpToolParam(name = "search", description = "Search string for filtering.", required = false) final String search,
+			@QueryParam("changeable")
+			@McpToolParam(name = "changeable", description = "True to only get changeable constructs, false for only "
+					+ "getting not changeable items. Leave unset to get all.", required = false) final Boolean changeable,
+			@QueryParam("pageId")
+			@McpToolParam(name = "pageId", description = "ID of the page from which to get constructs.", required = false) final Integer pageId,
+			@QueryParam("nodeId")
+			@McpToolParam(name = "nodeId", description = "ID of the node for getting constructs linked to a node.", required = false) final Integer nodeId,
+			@QueryParam("category")
+			@McpToolParam(name = "categoryId", description = "ID of the category for filtering.", required = false) final Integer categoryId,
+			@QueryParam("partTypeId")
+			@McpToolParam(name = "partTypeId", description = "IDs of part types for filtering.", required = false) final List<Integer> partTypeId,
+			@QueryParam("sortby")    @DefaultValue("name")
+			@McpToolParam(name = "sortBy", description = "Attribute to sort by.", required = false) final ConstructSortAttribute sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc")
+			@McpToolParam(name = "sortOrder", description = "Sort order.", required = false) final SortOrder sortOrder
 			) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			TransactionManager.getCurrentTransaction().setPublishData(new PublishData(true, false, false, true));

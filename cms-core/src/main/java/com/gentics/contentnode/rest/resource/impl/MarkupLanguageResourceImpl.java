@@ -17,6 +17,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.MarkupLanguage;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.model.response.MarkupLanguageListResponse;
 import com.gentics.contentnode.rest.resource.MarkupLanguageResource;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -37,6 +38,7 @@ public class MarkupLanguageResourceImpl implements MarkupLanguageResource {
 
 	@Override
 	@GET
+	@McpTool(description = "Get the list of markup languages, optionally filtered, sorted and/or paged.")
 	public MarkupLanguageListResponse list(@BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter, @BeanParam PagingParameterBean paging)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {

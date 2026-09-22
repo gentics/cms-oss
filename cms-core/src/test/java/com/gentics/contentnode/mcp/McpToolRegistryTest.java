@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.mcp.McpToolParam;
@@ -108,31 +109,114 @@ public class McpToolRegistryTest {
 		}
 	}
 
-	static class FieldContextResource {
+	/** Has a {@code @Context} field, but the tool method never reads it - must be allowed to register. */
+	static class FieldContextUnusedResource {
 		@Context
 		private Object request;
 
-		@McpTool(description = "uses context field")
+		@McpTool(name = "field_context_unused_tool", description = "has a context field but never reads it")
 		public String doStuff() {
 			return "ok";
 		}
 	}
 
+	/** Has a {@code @Context} field that the tool method reads directly - must be rejected. */
+	static class FieldContextUsedResource {
+		@Context
+		private Object request;
+
+		@McpTool(name = "field_context_used_tool", description = "reads a context field directly")
+		public String doStuff() {
+			return String.valueOf(request);
+		}
+	}
+
+	/**
+	 * Has a {@code @Context} field that the tool method only reads indirectly, via a private
+	 * helper it calls - must still be rejected (the reachability analysis follows same-class
+	 * calls).
+	 */
+	static class FieldContextUsedViaHelperResource {
+		@Context
+		private Object request;
+
+		@McpTool(name = "field_context_used_via_helper_tool", description = "reads a context field via a helper method")
+		public String doStuff() {
+			return helper();
+		}
+
+		private String helper() {
+			return String.valueOf(request);
+		}
+	}
+
+	/**
+	 * Has a {@code @Context}-annotated <em>method</em> (JAX-RS setter-style injection), but no
+	 * {@code @Context} field - must be allowed to register, since such methods are only ever
+	 * invoked by the JAX-RS injection machinery, never reachable from a tool method's own code.
+	 */
 	static class MethodContextResource {
 		@Context
 		public void setContext(Object ctx) {
 		}
 
-		@McpTool(description = "uses context method")
+		@McpTool(name = "method_context_tool", description = "class has a @Context method, not a field")
 		public String doStuff() {
 			return "ok";
 		}
 	}
 
 	static class ParamContextResource {
-		@McpTool(description = "uses context param")
+		@McpTool(name = "param_context_tool", description = "uses context param")
 		public String doStuff(@Context Object ctx) {
 			return "ok";
+		}
+	}
+
+	static class DuplicateArgBeanA {
+		@McpToolParam(description = "a's value", required = false)
+		public String value;
+	}
+
+	static class DuplicateArgBeanB {
+		@McpToolParam(description = "b's value", required = false)
+		public String value;
+	}
+
+	/** Combines two beans whose fields resolve to the same argument name ("value"). */
+	static class DuplicateArgResource {
+		@McpTool(name = "duplicate_arg_tool", description = "combines two beans with a colliding field name")
+		public String run(DuplicateArgBeanA a, DuplicateArgBeanB b) {
+			return "ok";
+		}
+	}
+
+	/**
+	 * Two overloaded methods sharing a Java name - {@code resolveToolName} only looks at
+	 * {@code method.getName()}, not the parameter signature, so both derive the same tool name.
+	 * Mirrors the real {@code ConstructResourceImpl#list}/{@code #list} situation.
+	 */
+	static class OverloadedNameResource {
+		@McpTool(description = "first overload")
+		public String run(String a) {
+			return "one";
+		}
+
+		@McpTool(description = "second overload")
+		public String run(int a) {
+			return "two";
+		}
+	}
+
+	static class SetEnumBean {
+		@McpToolParam(description = "modes", required = false)
+		public Set<Mode> modes;
+	}
+
+	static class SetEnumResource {
+		@McpTool(name = "set_enum_tool", description = "takes a Set<Enum> argument")
+		public Set<Mode> echoModes(SetEnumBean bean) {
+			return bean.modes;
 		}
 	}
 
@@ -249,6 +333,20 @@ public class McpToolRegistryTest {
 				.isInstanceOf(IllegalStateException.class);
 	}
 
+	@Test
+	public void testResolveToolName_overloadedMethodsCollideByDefault() throws Exception {
+		Method stringOverload = OverloadedNameResource.class.getDeclaredMethod("run", String.class);
+		Method intOverload = OverloadedNameResource.class.getDeclaredMethod("run", int.class);
+
+		// Overloaded methods share a Java name, and resolveToolName only looks at
+		// method.getName() - it does not consider the parameter signature - so both derive the
+		// same tool name (GPU-2667 gap #1, mirroring ConstructResourceImpl's two overloaded
+		// `list` methods). Whichever is scanned second needs an explicit @McpTool#name(), or it
+		// silently loses to checkNotDuplicate.
+		assertThat(McpToolRegistry.resolveToolName(OverloadedNameResource.class, stringOverload))
+				.isEqualTo(McpToolRegistry.resolveToolName(OverloadedNameResource.class, intOverload));
+	}
+
 	// ---------------------------------------------------------------------------------------
 	// checkNotDuplicate
 	// ---------------------------------------------------------------------------------------
@@ -266,6 +364,23 @@ public class McpToolRegistryTest {
 	}
 
 	// ---------------------------------------------------------------------------------------
+	// checkNotDuplicateArgument
+	// ---------------------------------------------------------------------------------------
+
+	@Test
+	public void testCheckNotDuplicateArgument() throws Exception {
+		Method method = CleanResource.class.getDeclaredMethod("doStuff");
+		Set<String> seenNames = new HashSet<>();
+
+		McpToolRegistry.checkNotDuplicateArgument(seenNames, "foo", method);
+		McpToolRegistry.checkNotDuplicateArgument(seenNames, "bar", method);
+		assertThat(seenNames).containsExactlyInAnyOrder("foo", "bar");
+
+		assertThatThrownBy(() -> McpToolRegistry.checkNotDuplicateArgument(seenNames, "foo", method))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
+	// ---------------------------------------------------------------------------------------
 	// checkNoContextInjection
 	// ---------------------------------------------------------------------------------------
 
@@ -277,20 +392,35 @@ public class McpToolRegistryTest {
 	}
 
 	@Test
-	public void testCheckNoContextInjection_field() throws Exception {
-		Method method = FieldContextResource.class.getDeclaredMethod("doStuff");
-		assertThatThrownBy(() -> McpToolRegistry.checkNoContextInjection(FieldContextResource.class, method))
+	public void testCheckNoContextInjection_fieldUnused_isAllowed() throws Exception {
+		// Per-method analysis (GPU-2667 gap #3): a @Context field the method never reads must not
+		// block it, unlike the old class-wide check.
+		Method method = FieldContextUnusedResource.class.getDeclaredMethod("doStuff");
+		McpToolRegistry.checkNoContextInjection(FieldContextUnusedResource.class, method); // must not throw
+	}
+
+	@Test
+	public void testCheckNoContextInjection_fieldUsedDirectly_isRejected() throws Exception {
+		Method method = FieldContextUsedResource.class.getDeclaredMethod("doStuff");
+		assertThatThrownBy(() -> McpToolRegistry.checkNoContextInjection(FieldContextUsedResource.class, method))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("field")
 				.hasMessageContaining("request");
 	}
 
 	@Test
-	public void testCheckNoContextInjection_method() throws Exception {
-		Method method = MethodContextResource.class.getDeclaredMethod("doStuff");
-		assertThatThrownBy(() -> McpToolRegistry.checkNoContextInjection(MethodContextResource.class, method))
+	public void testCheckNoContextInjection_fieldUsedViaHelper_isRejected() throws Exception {
+		Method method = FieldContextUsedViaHelperResource.class.getDeclaredMethod("doStuff");
+		assertThatThrownBy(() -> McpToolRegistry.checkNoContextInjection(FieldContextUsedViaHelperResource.class, method))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("setContext");
+				.hasMessageContaining("request");
+	}
+
+	@Test
+	public void testCheckNoContextInjection_contextMethodAloneIsAllowed() throws Exception {
+		// @Context-annotated *methods* (JAX-RS setter-style injection) are never invoked from tool
+		// code, so they are excluded from the reachability analysis; only @Context *fields* matter.
+		Method method = MethodContextResource.class.getDeclaredMethod("doStuff");
+		McpToolRegistry.checkNoContextInjection(MethodContextResource.class, method); // must not throw
 	}
 
 	@Test
@@ -341,6 +471,38 @@ public class McpToolRegistryTest {
 		assertThat((Map<String, Object>) properties.get("mode"))
 				.containsEntry("type", "string")
 				.containsEntry("enum", List.of("FAST", "SLOW"));
+	}
+
+	@Test
+	public void testBuildInputSchema_duplicateArgumentNameThrows() throws Exception {
+		Method method = DuplicateArgResource.class.getDeclaredMethod("run", DuplicateArgBeanA.class, DuplicateArgBeanB.class);
+		assertThatThrownBy(() -> McpToolRegistry.buildInputSchema(method))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("value");
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testBuildInputSchema_setOfEnum() throws Exception {
+		Method method = SetEnumResource.class.getDeclaredMethod("echoModes", SetEnumBean.class);
+		JsonSchema schema = McpToolRegistry.buildInputSchema(method);
+
+		Map<String, Object> modesSchema = (Map<String, Object>) schema.properties().get("modes");
+		assertThat(modesSchema).containsEntry("type", "array");
+
+		Map<String, Object> itemsSchema = (Map<String, Object>) modesSchema.get("items");
+		assertThat(itemsSchema).containsEntry("type", "string").containsEntry("enum", List.of("FAST", "SLOW"));
+	}
+
+	@Test
+	public void testInvoke_setOfEnumConvertsCorrectly() throws Exception {
+		Method method = SetEnumResource.class.getDeclaredMethod("echoModes", SetEnumBean.class);
+		CallToolResult result = McpToolRegistry.invoke(SetEnumResource.class, method, Map.of("modes", List.of("FAST", "SLOW")));
+
+		assertThat(result.isError()).isNotEqualTo(Boolean.TRUE);
+		Set<String> parsed = new ObjectMapper().readValue(textOf(result), new TypeReference<Set<String>>() {
+		});
+		assertThat(parsed).containsExactlyInAnyOrder("FAST", "SLOW");
 	}
 
 	// ---------------------------------------------------------------------------------------
@@ -439,8 +601,21 @@ public class McpToolRegistryTest {
 		long duplicateCount = tools.stream().filter(t -> t.name().equals("duplicate_tool")).count();
 		assertThat(duplicateCount).isEqualTo(1);
 
-		// @Context-using fixtures must never be registered
-		assertThat(names).doesNotContain("uses_context_field", "uses_context_method", "uses_context_param");
+		// a @Context field the tool method doesn't touch, and a @Context method alone (not a
+		// field), must not block registration
+		assertThat(names).contains("field_context_unused_tool", "method_context_tool");
+
+		// a @Context field the tool method (or a helper it calls) does touch, and a @Context
+		// parameter on the tool method itself, must always block registration
+		assertThat(names).doesNotContain("field_context_used_tool", "field_context_used_via_helper_tool",
+				"param_context_tool");
+
+		// two beans combined in one method whose fields collide on the same argument name must be
+		// rejected as a whole tool, not silently overwrite one another in the schema
+		assertThat(names).doesNotContain("duplicate_arg_tool");
+
+		// Set<Enum> argument
+		assertThat(names).contains("set_enum_tool");
 
 		// invalid explicit name must never be registered
 		assertThat(names).doesNotContain("InvalidName");
@@ -476,6 +651,26 @@ public class McpToolRegistryTest {
 
 		Map<String, Object> properties = (Map<String, Object>) schema.get("properties");
 		assertThat(properties).containsOnlyKeys("page", "pageSize", "user", "action", "type", "objId", "start", "end");
+
+		server.closeGracefully();
+	}
+
+	/**
+	 * Characterization/regression test for GPU-2667 gap #3: {@code FileResourceImpl} (own
+	 * {@code @Context} field) and {@code PageResourceImpl} (inherits {@code @Context} fields via
+	 * {@code AuthenticatedContentNodeResource}/{@code AbstractContentNodeResource}) both declare
+	 * {@code @McpTool} methods that never actually touch those fields. Under the old class-wide
+	 * {@code checkNoContextInjection}, both would have been rejected outright; the per-method
+	 * analysis must let both register.
+	 */
+	@Test
+	public void testScanAndRegisterRealFileAndPageResources() {
+		McpSyncServer server = newTestServer();
+
+		McpToolRegistry.scanAndRegister(server);
+
+		Set<String> names = server.listTools().stream().map(Tool::name).collect(Collectors.toSet());
+		assertThat(names).contains("file_get_file_usage_info", "page_render");
 
 		server.closeGracefully();
 	}

@@ -22,6 +22,7 @@ import {
     ScheduleTask,
     Template,
     User,
+    Variant,
 } from '@gentics/cms-models';
 import { GCMSRestClient, GCMSRestClientConfig, GCMSRestClientRequestError, RequestMethod } from '@gentics/cms-rest-client';
 import { MeshRestClient } from '@gentics/mesh-rest-client';
@@ -82,7 +83,7 @@ import {
 import { createMeshProxy } from './mesh-proxy';
 import { PlaywrightGCMSDriver } from './playwright-cms-driver';
 import { PlaywrightMeshDriver } from './playwright-mesh-driver';
-import { getDefaultSystemLogin, wait } from './utils';
+import { getDefaultSystemLogin, isVariant, wait } from './utils';
 
 const DEFAULT_IMPORTER_OPTIONS: ImporterOptions = {
     logImports: false,
@@ -287,7 +288,9 @@ export class EntityImporter {
         // Since we can't delete the channels then, we also can't delete the master nodes, making
         // the cleanup impossible.
         // So we enable it here temporarily to solve this.
-        await this.setFeatureEnabled(Feature.MULTICHANNELLING, true);
+        if (isVariant(Variant.ENTERPRISE)) {
+            await this.setFeatureEnabled(Feature.MULTICHANNELLING, true);
+        }
 
         const nodes = (await this.client.node.list().send()).items || [];
         let deleteQueue = nodes.slice();

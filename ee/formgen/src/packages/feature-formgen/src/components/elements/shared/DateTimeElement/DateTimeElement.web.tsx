@@ -84,6 +84,9 @@ function DateTimeElement(props: IFormComponentAttributes) {
 
   const formattedPropsDisplay = formattedPropsValue;
   const [inputValue, setInputValue] = useState(formattedPropsDisplay);
+  // See comment on SUP-20237
+  const latestValuesRef = useRef({ inputValue, dateValue });
+  latestValuesRef.current = { inputValue, dateValue };
 
   useEffect(() => {
     // Monkey-patch measureLayout for Web scrolling support
@@ -214,11 +217,16 @@ function DateTimeElement(props: IFormComponentAttributes) {
       const inInput = inputContainerRef.current?.contains(target);
 
       if (open && !inPortal && !inInput) {
-        setIsFocused(false); 
-        if ((inputValue === '' || !dateValue || dateValue === '')) {
+        // See comment on SUP-20237
+        const { inputValue: currentInput, dateValue: currentDate } =
+          latestValuesRef.current;
+        setIsFocused(false);
+        if (currentInput === '' || !currentDate || currentDate === '') {
           handleAnimationForBlur();
         }
         setOpen(false);
+        // See comment on SUP-20237
+        handleDateChange(props, currentDate, isTimeField, currentInput);
       }
     }
 

@@ -1,5 +1,7 @@
 package com.gentics.contentnode.rest.model.formtype;
 
+import org.apache.commons.codec.binary.StringUtils;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -21,7 +23,17 @@ public class FormGenTranslations extends LinkedHashMap<String, Map<String, Strin
 		if (other != null) {
 			for (Map.Entry<String, Map<String, String>> entry : other.entrySet()) {
 				String key = entry.getKey();
-				copy.computeIfAbsent(key, k -> new LinkedHashMap<>()).putAll(entry.getValue());
+				if (entry.getValue() == null) {
+					continue;
+				}
+				var data = copy.computeIfAbsent(key, k -> new LinkedHashMap<>());
+				for (Map.Entry<String, String> translationEntry : entry.getValue().entrySet()) {
+					var translationString = translationEntry.getValue();
+					if (translationString == null || translationString.isEmpty()) {
+						continue;
+					}
+					data.put(translationEntry.getKey(), translationString);
+				}
 			}
 		}
 

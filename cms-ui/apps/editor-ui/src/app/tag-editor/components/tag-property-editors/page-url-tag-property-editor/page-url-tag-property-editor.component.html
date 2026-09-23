@@ -40,7 +40,7 @@
                 [readonly]="readOnly"
                 [required]="tagPart?.mandatory"
                 [(ngModel)]="externalUrl"
-                (blur)="externalUrlBlur.next($event)"
+                (blur)="externalUrlBlur.next(externalUrl)"
                 (valueChange)="externalUrlChange.next($event)">
             </gtx-input>
         }

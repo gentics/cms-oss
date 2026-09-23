@@ -237,12 +237,12 @@ const BaseDropDownInputElement = forwardRef<any, BaseDropDownInputElementProps>(
         useNativeDriver: Platform.OS !== 'web',
       }).start();
       if (!isDropdownVisible) {
-        setTimeout(() => {
-          setDropdownInDOM(isDropdownVisible);
+        const unmountTimeout = setTimeout(() => {
+          setDropdownInDOM(false);
         }, 320);
-      } else {
-        setDropdownInDOM(isDropdownVisible);
+        return () => clearTimeout(unmountTimeout);
       }
+      setDropdownInDOM(true);
     }, [
       dropdownTransformAnimation,
       dropdownOpacityAnimation,

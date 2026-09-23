@@ -11,6 +11,10 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { UpdateSearchFilterAction } from '../../../state/modules/folder/folder.actions';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
+function isSessionErrorMessage(msg: string): boolean {
+    return msg === 'invalid sid' || msg === 'missing sid';
+}
+
 /**
  * A central error handler that shows a notification for occuring errors,
  * logs their details to the console and supports serializing.
@@ -94,7 +98,10 @@ export class ErrorHandler {
         if (error instanceof ApiError) {
             this.handleApiError(error, showNotification);
         } else if (error instanceof GCMSRestClientRequestError) {
-            this.handleRestClientError(error, showNotification);
+            const msg = (error.data?.responseInfo.responseMessage || '').toLowerCase();
+            const isInvalidSid = isSessionErrorMessage(msg);
+
+            this.handleRestClientError(error, showNotification && !isInvalidSid);
         } else if (error.cause != null && error.cause instanceof GCMSRestClientRequestError) {
             this.handleRestClientError(error.cause, showNotification);
         } else {
@@ -123,7 +130,7 @@ export class ErrorHandler {
                 // Invalid SID always display the login screen, or tries to login with SSO
                 // So it can mislead the user, therefore we not display it.
                 const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+                const isInvalidSid = isSessionErrorMessage(msg);
 
                 if (showNotification && !isInvalidSid) {
                     this.notification.show({
@@ -190,8 +197,8 @@ export class ErrorHandler {
                 // All other codes have the message simply in them
                 // Invalid SID always display the login screen, or tries to login with SSO
                 // So it can mislead the user, therefore we not display it.
-                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || error.rawBody || '').toLowerCase();
+                const isInvalidSid = isSessionErrorMessage(msg);
 
                 if (showNotification && !isInvalidSid) {
                     this.notification.show({
@@ -220,7 +227,13 @@ export class ErrorHandler {
             valid: false,
             visible: false,
         }));
-        this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+
+        if (this.appState.now.auth.loggedInViaSso) {
+            window.location.reload();
+            return;
+        } else {
+            this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        }
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

@@ -1,12 +1,14 @@
 import { AccessControlledType, Feature, GcmsPermission, KeycloakConfiguration, Response, ResponseCode, Variant } from '@gentics/cms-models';
 import {
     EntityImporter,
+    FOLDER_A,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     IMPORT_TYPE_USER,
     isVariant,
+    ITEM_TYPE_FOLDER,
     KEYCLOAK_LOGIN,
     loginWithForm,
     matchesUrl,
@@ -17,6 +19,7 @@ import {
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
 import { expect, test } from '@playwright/test';
+import { findItem, findList } from './helpers';
 
 test.describe('Login', () => {
     const IMPORTER = new EntityImporter();
@@ -297,6 +300,33 @@ test.describe('Login', () => {
             const err = page.locator('gtx-login .keycloak-error');
             await expect(err).toBeVisible();
             await expect(err).toHaveAttribute('data-value', 'shared.keycloak_not_available');
+        });
+
+        test('should refresh the page when logged out with SSO', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20251',
+            }],
+        }, async ({ page, context }) => {
+            await navigateToApp(page, '/', true);
+            await loginWithForm(page, KEYCLOAK_LOGIN);
+            await expect(page.locator('project-editor')).toBeVisible();
+
+            // clear session cookie
+            await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
+
+            // click on a folder
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
+            const nameLink = item.locator('.item-name a');
+            await expect(nameLink).toBeVisible({ timeout: 5_000 });
+            await nameLink.click();
+
+            const currentUrl = page.url();
+
+            await page.reload();
+
+            await expect(page).toHaveURL(currentUrl);
         });
     });
 });

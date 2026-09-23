@@ -353,6 +353,7 @@ function BinaryElement(props: IFormComponentAttributes) {
         key={key}
         t={props.t}
         file={item}
+        maxFileSizeToPreviewMB={props.formState?.formgenSettings?.maxFileSizeToPreviewMB}
         onLink={() => {
           Linking.openURL(binaryLink);
         }}

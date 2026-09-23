@@ -31,6 +31,7 @@ import { RestService } from '../services/RestService';
 import { useFormMirrorStore } from '../state/useFormMirrorState';
 import {
   ApiResponse,
+  FormgenSettings,
   FormState,
   IData,
   IDataFields,
@@ -84,6 +85,7 @@ interface FormResponseBody {
   data?: IData;
   captchaConfig?: any;
   successUrl?: { [language: string]: string };
+  formgenSettings?: FormgenSettings;
 }
 
 const RendererScreen: React.FC<{
@@ -183,6 +185,7 @@ const RendererScreen: React.FC<{
     hasDetail: props.hasDetail,
     pluginName: props.pluginName as PluginNameEnum,
     captchaConfig: undefined,
+    formgenSettings: undefined,
   };
 
   // Initialer Zustand
@@ -847,6 +850,7 @@ const RendererScreen: React.FC<{
       formState.schema = data.schema;
       formState.captchaConfig = mapCaptchaConfig(data.captchaConfig);
       formState.successUrl = data.successUrl;
+      formState.formgenSettings = data.formgenSettings;
       uiState.lastPage = data.uiSchema.pages.length;
 
       if (data.schema.formType) {
@@ -887,6 +891,7 @@ const RendererScreen: React.FC<{
       formState.schema = responseBody.schema;
       formState.captchaConfig = mapCaptchaConfig(responseBody.captchaConfig);
       formState.successUrl = responseBody.successUrl;
+      formState.formgenSettings = responseBody.formgenSettings;
       uiState.lastPage = responseBody.uiSchema.pages.length;
       const missingFlowResponse2 = applyFormFlow(responseBody);
       if (missingFlowResponse2) return missingFlowResponse2;
@@ -966,12 +971,14 @@ const RendererScreen: React.FC<{
       formState.schema = props.previewFormData.schema;
       // Preview does not have a captcha
       formState.captchaConfig = undefined;
+      formState.formgenSettings = props.previewInformation?.formgenSettings;
       responseBody = {
         schema: props.previewFormData.schema,
         uiSchema: props.previewFormData.uiSchema,
         captchaConfig: null,
         flows: props.previewInformation!.flows || [],
         flowId: props.previewInformation!.flowId,
+        formgenSettings: props.previewInformation?.formgenSettings,
       };
     } else {
       const mockJSON = await mockFormularUtils.fetchMockDefaultFormular(mockFormType);
@@ -982,6 +989,7 @@ const RendererScreen: React.FC<{
         formState.schema = responseBody!.schema;
         formState.successUrl = responseBody!.successUrl;
         formState.captchaConfig = mapCaptchaConfig(responseBody!.captchaConfig);
+        formState.formgenSettings = responseBody?.formgenSettings;
       }
     }
     if (formState?.form?.pages) {

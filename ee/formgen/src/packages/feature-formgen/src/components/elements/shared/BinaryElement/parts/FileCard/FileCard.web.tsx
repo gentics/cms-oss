@@ -20,12 +20,13 @@ export interface IFileCardProps {
     t: TFunction;
     parentJsonPath: string;
     index:number;
+    maxFileSizeToPreviewMB?: number;
 }
 
 
 type IconName = React.ComponentProps<typeof AndpIcon>['name'];
 
-const maxFileSizeToPreview = 2500000; // 2,5MB 
+const DEFAULT_MAX_FILE_SIZE_TO_PREVIEW = 2500000; // 2,5MB
 const fileTypesToPreview = ['pdf', 'png', 'jpg', 'jpeg'];
 const extensionToIconName: Record<string, IconName> = {
     pdf: 'pdfFile',
@@ -54,6 +55,7 @@ function FileCard({
     t,
     parentJsonPath,
     index,
+    maxFileSizeToPreviewMB,
 }: IFileCardProps) {
     const DEVICE_IS_TOUCH_ONLY = isTouchOnlyDevice();
     const breakpoints = useBreakpoints();
@@ -71,6 +73,9 @@ function FileCard({
     }
 
     const iconName = getIconNameForExt(file.fileExt);
+    const maxFileSizeToPreview = maxFileSizeToPreviewMB != null
+        ? maxFileSizeToPreviewMB * 1000 * 1000
+        : DEFAULT_MAX_FILE_SIZE_TO_PREVIEW;
     const isPreviewAble = fileTypesToPreview.includes(file.fileExt) && ((file.binary && file.binary.size && file.binary.size <= maxFileSizeToPreview) || (file.file && file.file.size <= maxFileSizeToPreview));
     const isImage = fileTypesToPreview.filter(x => x != "pdf").includes(file.fileExt)
 

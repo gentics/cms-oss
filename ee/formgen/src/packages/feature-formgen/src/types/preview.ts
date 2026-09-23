@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { IDataFields, IFeatures, IForm, IFormFlowSteps, ISchema } from "./interfaces";
+import { FormgenSettings, IDataFields, IFeatures, IForm, IFormFlowSteps, ISchema } from "./interfaces";
 
 export type FormgridPreviewData = {
   formId: string;
@@ -16,6 +16,7 @@ export type FormgridPreviewData = {
   currentPage?: number;
   selectedElementId?: string;
   selectedElementContextId?: string;
+  formgenSettings?: FormgenSettings;
 };
 
 /**
@@ -30,6 +31,7 @@ export interface PreviewInformation {
   availableLanguages: string[];
   cmsSid?: number;
   features?: IFeatures;
+  formgenSettings?: FormgenSettings;
 }
 
 /**

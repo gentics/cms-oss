@@ -66,6 +66,22 @@ h4. Form-Type Configuration
 | +pluginConfiguration+ | object | optional | Arbitrary configuration object passed to the Mesh plugin to configure type-specific behaviour. Structure depends on the plugin. |
 | +captchaOptions+ | list of select options | optional | Defines which captchas can be used for the form. |
 
+h5. FormGen settings
+
+Settings under +pluginConfiguration.formgenSettings+ are passed on to FormGen. Currently supported:
+
+|_. Setting |_. Type |_. Default |_. Description |
+| +maxFileSizeToPreviewMB+ | number | 2.5 | Maximum file size (MB) up to which uploaded files show a preview in the +binary+ control. If not set, 2.5 MB is used by default. |
+
+<shell filename="conf/forms.yml">
+forms:
+  types:
+    generic:
+      pluginConfiguration:
+        formgenSettings:
+          maxFileSizeToPreviewMB: 5
+</shell>
+
 h5. Internal and external forms
 
 Forms come in two kinds, *internal* and *external*, which are handled differently. Which kind a form is, is determined by its form type and configured per form type via the +external+ flag (in combination with +pluginName+) in the General configuration above.

@@ -359,6 +359,12 @@ export interface FormState {
   // Optional redirect target shown as a button on the SuccessScreen.
   // Keyed by language code (e.g. { "de": "http://..." }).
   successUrl?: { [language: string]: string };
+  formgenSettings?: FormgenSettings;
+}
+
+export interface FormgenSettings {
+  maxFileSizeToPreviewMB?: number;
+  [key: string]: any;
 }
 
 export type FriendlyCaptchaMode = 'auto' | 'button' | 'background'

@@ -9,7 +9,7 @@ import { TFunction } from "i18next";
 
 type IconName = React.ComponentProps<typeof AndpIcon>['name'];
 
-const maxFileSizeToPreview = 2500000; // 2,5MB 
+const DEFAULT_MAX_FILE_SIZE_TO_PREVIEW = 2500000; // 2,5MB
 const fileTypesToPreview = ['png', 'jpg', 'jpeg'];
 const extensionToIconName: Record<string, IconName> = {
     pdf: 'pdfFile',
@@ -36,7 +36,8 @@ function FileCard({
     onLink,
     showDownload,
     showDelete,
-    t
+    t,
+    maxFileSizeToPreviewMB,
 }: {
     file: IBinaryFile;
     onRemove: () => void;
@@ -44,6 +45,7 @@ function FileCard({
     showDownload: boolean;
     showDelete: boolean;
     t: TFunction;
+    maxFileSizeToPreviewMB?: number;
 }) {
     const [hovered, setHovered] = useState(false);
     const breakpoints = useBreakpoints();
@@ -58,6 +60,9 @@ function FileCard({
     }
 
     const iconName = getIconNameForExt(file.fileExt);
+    const maxFileSizeToPreview = maxFileSizeToPreviewMB != null
+        ? maxFileSizeToPreviewMB * 1000 * 1000
+        : DEFAULT_MAX_FILE_SIZE_TO_PREVIEW;
     const isPreviewAble =
       fileTypesToPreview.includes(file.fileExt) &&
       (

@@ -14,6 +14,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.mcp.McpToolParam;
 
@@ -106,6 +108,14 @@ public class McpToolRegistryTest {
 		@McpTool(name = "clean_tool", description = "clean tool")
 		public String doStuff() {
 			return "ok";
+		}
+	}
+
+	/** Reports the {@code ContentNodeHelper} language ID visible while the tool method runs. */
+	static class LanguageCheckResource {
+		@McpTool(name = "language_check_tool", description = "reports the active backend language id")
+		public int getLanguageIdDuringCall() throws NodeException {
+			return ContentNodeHelper.getLanguageId();
 		}
 	}
 
@@ -558,6 +568,22 @@ public class McpToolRegistryTest {
 
 		assertThat(result.isError()).isEqualTo(Boolean.TRUE);
 		assertThat(textOf(result)).isEqualTo("boom");
+	}
+
+	@Test
+	public void testInvoke_setsBackendLanguageForDuration() throws Exception {
+		// no CMS session is bound to an MCP call, so without this, i18n-translated exception
+		// messages (e.g. from RestMappedException/CNI18nString) would fall back to their raw,
+		// untranslated key instead of readable text (found via manual testing, see docs/mcp-tests.md)
+		Method method = LanguageCheckResource.class.getDeclaredMethod("getLanguageIdDuringCall");
+
+		CallToolResult result = McpToolRegistry.invoke(LanguageCheckResource.class, method, Map.of());
+
+		assertThat(result.isError()).isNotEqualTo(Boolean.TRUE);
+		assertThat(textOf(result)).isEqualTo("2");
+
+		// must not leak into whatever else runs on this (pooled, reused) thread afterwards
+		assertThatThrownBy(ContentNodeHelper::getLanguageId).isInstanceOf(NodeException.class);
 	}
 
 	// ---------------------------------------------------------------------------------------

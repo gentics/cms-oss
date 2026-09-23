@@ -38,7 +38,7 @@ public class PartTypeResourceImpl implements PartTypeResource {
 
 	@GET
 	@McpTool(description = "Get the list of available part types, optionally filtered.")
-  public PartTypeListResponse list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
+	public PartTypeListResponse list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging,  @BeanParam PartTypeListParameterBean partTypeFilter) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			PartTypeFactory factory = PartTypeFactory.getInstance();

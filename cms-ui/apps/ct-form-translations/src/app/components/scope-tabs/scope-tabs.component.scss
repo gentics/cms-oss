@@ -15,14 +15,18 @@
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  padding: var(--pm-spacing-md);
+  padding: 10px var(--pm-spacing-md) 8px;
   font-family: inherit;
   font-size: var(--pm-font-size-md);
   color: var(--pm-color-text-secondary);
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--pm-spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  max-width: 260px;
+  text-align: left;
   white-space: nowrap;
   transition: var(--pm-transition);
 
@@ -31,24 +35,42 @@
     background: var(--pm-color-primary-subtle);
   }
 
+  &:focus-visible {
+    outline: 2px solid var(--pm-color-primary);
+    outline-offset: -2px;
+  }
+
   &--active {
     color: var(--pm-color-primary-dark);
     border-bottom-color: var(--pm-color-primary);
     background: var(--pm-color-primary-subtle);
-    font-weight: 600;
 
-    .scope-tabs__count {
-      background: var(--pm-color-primary);
-      color: #fff;
-    }
+    .scope-tabs__label { font-weight: 600; }
+    .scope-tabs__stat  { color: var(--pm-color-primary-dark); }
   }
 }
 
-.scope-tabs__count {
-  background: var(--pm-color-border-light);
-  color: var(--pm-color-text-secondary);
-  border-radius: 999px;
-  padding: 2px 8px 1px;
+.scope-tabs__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.scope-tabs__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scope-tabs__stat {
   font-size: var(--pm-font-size-xs);
-  font-weight: 500;
+  color: var(--pm-color-text-secondary);
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .scope-tabs { padding: 0 var(--pm-spacing-md); }
 }

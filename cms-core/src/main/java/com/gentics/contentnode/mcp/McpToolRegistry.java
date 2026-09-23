@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.lib.log.NodeLogger;
@@ -130,6 +131,14 @@ public final class McpToolRegistry {
 	 * lower snake_case, starting with a letter.
 	 */
 	private static final Pattern SNAKE_CASE = Pattern.compile("^[a-z][a-z0-9]*(_[a-z0-9]+)*$");
+
+	/**
+	 * Language ID set on {@link ContentNodeHelper} for the duration of a tool call, so that
+	 * i18n-translated messages (e.g. from thrown {@code RestMappedException}s) resolve to readable
+	 * text instead of a raw key. Same value/convention as {@code PublishWorker}/{@code Publisher}/
+	 * {@code JobController} already use for their own sessionless background work.
+	 */
+	private static final int BACKEND_LANGUAGE_ID = 2;
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(McpToolRegistry.class);
 
@@ -379,10 +388,15 @@ public final class McpToolRegistry {
 	 * two parameters/fields resolve to the same argument name (see
 	 * {@link #checkNotDuplicateArgument(Set, String, Method)}) - this can happen when a method
 	 * combines several parameter beans, or a bean and a directly-annotated parameter, whose fields
-	 * happen to share a name (e.g. {@code TemplateResourceImpl#list}'s own
-	 * {@code @QueryParam("nodeId") List<String> nodeIds} parameter alongside
-	 * {@code TemplateListParameterBean}'s {@code @QueryParam("nodeId") Integer nodeId} field - the
-	 * same JAX-RS query key bound to two differently-typed targets, which JAX-RS itself allows).
+	 * happen to share a name. For example, a resource method could take a direct
+	 * {@code @QueryParam("nodeId") List<String> nodeIds} parameter alongside a bean with its own
+	 * {@code @QueryParam("nodeId") Integer nodeId} field - the same JAX-RS query key bound to two
+	 * differently-typed targets, which JAX-RS itself allows (this was the case for
+	 * {@code TemplateResourceImpl#list}'s {@code nodeIds} parameter and
+	 * {@code TemplateListParameterBean#nodeId} when this guard was added; the resource method has
+	 * since been changed to use a different, unrelated parameter bean, but the guard remains
+	 * necessary for any future case shaped like it - see {@code DuplicateArgResource} in
+	 * {@code McpToolRegistryTest}).
 	 * @param method tool method
 	 * @return JSON schema describing the tool's arguments
 	 * @throws IllegalStateException if two parameters/fields resolve to the same argument name
@@ -487,12 +501,24 @@ public final class McpToolRegistry {
 	/**
 	 * Invoke the given tool method on a fresh instance of its declaring class and turn the result
 	 * into a {@link CallToolResult}.
+	 *
+	 * <p>
+	 * Sets a fixed backend language ({@link #BACKEND_LANGUAGE_ID}) for the duration of the call,
+	 * the same way {@code PublishWorker}/{@code Publisher}/{@code JobController} already do for
+	 * their own sessionless background work. Without this, {@link ContentNodeHelper#getLanguageId()}
+	 * has nothing to return (no CMS session is bound to an MCP call, see §7.5/§8 of
+	 * {@code docs/mcp-server-integration.md}), which makes any i18n-translated message (e.g. from
+	 * {@code com.gentics.lib.i18n.CNI18nString}, used by most {@code RestMappedException}s such as
+	 * {@code EntityNotFoundException}) fall back to its raw, untranslated key instead of readable
+	 * text - confirmed by manual testing, see {@code docs/mcp-tests.md}.
+	 * </p>
 	 * @param resourceClass declaring class of the method
 	 * @param method method to invoke
 	 * @param callArguments arguments of the incoming tool call
 	 * @return result of the tool call
 	 */
 	static CallToolResult invoke(Class<?> resourceClass, Method method, Map<String, Object> callArguments) {
+		ContentNodeHelper.setLanguageId(BACKEND_LANGUAGE_ID);
 		try {
 			Constructor<?> constructor = resourceClass.getDeclaredConstructor();
 			constructor.setAccessible(true);
@@ -511,6 +537,11 @@ public final class McpToolRegistry {
 			Throwable cause = e instanceof InvocationTargetException && e.getCause() != null ? e.getCause() : e;
 			logger.error(String.format("Error while invoking MCP tool %s#%s", resourceClass.getName(), method.getName()), cause);
 			return CallToolResult.builder().isError(true).addTextContent(String.valueOf(cause.getMessage())).build();
+		} finally {
+			// the reactor scheduler threads that run tool calls are pooled/reused across many
+			// unrelated invocations, unlike PublishWorker's dedicated thread - reset the ThreadLocal
+			// so it doesn't leak into whatever runs next on this thread.
+			ContentNodeHelper.setLanguageId(-1);
 		}
 	}
 

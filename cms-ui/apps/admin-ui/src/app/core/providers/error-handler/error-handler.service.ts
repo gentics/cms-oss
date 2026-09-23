@@ -72,7 +72,7 @@ export class ErrorHandler extends ServiceBase {
         }
 
         let returnValue: string;
-        let suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
+        const suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
         if (!suppressConsoleError) {
             console.error('Error details: ', error);
         }
@@ -227,7 +227,12 @@ export class ErrorHandler extends ServiceBase {
 
     private userWasLoggedOut(): void {
         this.appState.dispatch(new LogoutSuccess());
-        this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+
+        if (this.appState.now.auth.loggedInViaSso) {
+            window.location.reload();
+        } else {
+            this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        }
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

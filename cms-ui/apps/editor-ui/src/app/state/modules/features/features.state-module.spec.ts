@@ -8,7 +8,7 @@ import { STATE_MODULES } from '../state-modules';
 import { SetFeatureAction, SetNodeFeaturesAction } from './features.actions';
 
 const getOrderedObjectKeys = (o: object): string[] => Object.keys(o)
-    .filter(k => k !== 'nodeFeatures')
+    .filter((k) => k !== 'nodeFeatures')
     .sort();
 
 describe('FeaturesStateModule', () => {
@@ -50,6 +50,7 @@ describe('FeaturesStateModule', () => {
             [Feature.MESH_CR]: false,
             [Feature.OBJECT_TAG_SYNC]: false,
             [Feature.LINK_CHECKER]: false,
+            [Feature.FORMS]: false,
 
             nodeFeatures: {},
         };
@@ -62,14 +63,14 @@ describe('FeaturesStateModule', () => {
     });
 
     it('setNodeFeatures() works', () => {
-        appState.dispatch(new SetNodeFeaturesAction(4711, [ NodeFeature.CONTENT_AUTO_OFFLINE ]));
-        expect(appState.now.features.nodeFeatures).toEqual({ 4711: [ NodeFeature.CONTENT_AUTO_OFFLINE ] });
+        appState.dispatch(new SetNodeFeaturesAction(4711, [NodeFeature.CONTENT_AUTO_OFFLINE]));
+        expect(appState.now.features.nodeFeatures).toEqual({ 4711: [NodeFeature.CONTENT_AUTO_OFFLINE] });
     });
 
     it('feature definitions are congruent with feature state', () => {
         const featureEnumKeys: string[] = Object.keys(Feature)
-            .filter(key => key !== 'nodeSettings')
-            .map(key => Feature[key])
+            .filter((key) => key !== 'nodeSettings')
+            .map((key) => Feature[key])
             .sort();
         const appStateFeaturesKeys: string[] = getOrderedObjectKeys(appState.now.features);
         expect(featureEnumKeys).toEqual(appStateFeaturesKeys);

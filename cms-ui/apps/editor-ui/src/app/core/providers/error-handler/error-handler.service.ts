@@ -71,7 +71,7 @@ export class ErrorHandler {
             return;
         }
 
-        let suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
+        const suppressConsoleError = error && ((error as any).reason === 'auth' || (error as any).statusCode === 401 || (error as any).responseCode === 401);
         if (!suppressConsoleError) {
             console.error('Error details: ', error);
         }
@@ -95,10 +95,7 @@ export class ErrorHandler {
         if (error instanceof ApiError) {
             this.handleApiError(error, showNotification);
         } else if (error instanceof GCMSRestClientRequestError) {
-            const msg = (error.data?.responseInfo.responseMessage || '').toLowerCase();
-            const isInvalidSid = isSessionErrorMessage(msg);
-
-            this.handleRestClientError(error, showNotification && !isInvalidSid);
+            this.handleRestClientError(error, showNotification);
         } else if (error.cause != null && error.cause instanceof GCMSRestClientRequestError) {
             this.handleRestClientError(error.cause, showNotification);
         } else {
@@ -224,7 +221,7 @@ export class ErrorHandler {
             window.location.reload();
             return;
         } else {
-        this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+            this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
         }
 
         this.modalService.dialog({

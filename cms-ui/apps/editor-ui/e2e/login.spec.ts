@@ -323,5 +323,32 @@ test.describe('Login', () => {
             await expect(err).toBeVisible();
             await expect(err).toHaveAttribute('data-value', 'shared.keycloak_not_available');
         });
+
+        test('should refresh the page when logged out with SSO', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20251',
+            }],
+        }, async ({ page, context }) => {
+            await navigateToApp(page, '/', true);
+            await loginWithForm(page, KEYCLOAK_LOGIN);
+            await expect(page.locator('project-editor')).toBeVisible();
+
+            // clear session cookie
+            await context.clearCookies({ name: 'GCN_SESSION_SECRET' });
+
+            // click on a folder
+            const list = findList(page, ITEM_TYPE_FOLDER);
+            const item = findItem(list, IMPORTER.get(FOLDER_A).id);
+            const nameLink = item.locator('.item-name a');
+            await expect(nameLink).toBeVisible({ timeout: 5_000 });
+            await nameLink.click();
+
+            const currentUrl = page.url();
+
+            await page.reload();
+
+            await expect(page).toHaveURL(currentUrl);
+        });
     });
 });

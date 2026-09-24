@@ -95,7 +95,10 @@ export class ErrorHandler {
         if (error instanceof ApiError) {
             this.handleApiError(error, showNotification);
         } else if (error instanceof GCMSRestClientRequestError) {
-            this.handleRestClientError(error, showNotification);
+            const msg = (error.data?.responseInfo.responseMessage || '').toLowerCase();
+            const isInvalidSid = isSessionErrorMessage(msg);
+
+            this.handleRestClientError(error, showNotification && !isInvalidSid);
         } else if (error.cause != null && error.cause instanceof GCMSRestClientRequestError) {
             this.handleRestClientError(error.cause, showNotification);
         } else {
@@ -216,7 +219,13 @@ export class ErrorHandler {
             valid: false,
             visible: false,
         }));
+
+        if (this.appState.now.auth.loggedInViaSso) {
+            window.location.reload();
+            return;
+        } else {
         this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        }
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

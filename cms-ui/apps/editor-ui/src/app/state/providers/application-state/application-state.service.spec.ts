@@ -44,6 +44,7 @@ describe('ApplicationStateService', () => {
             keycloakAvailable: null,
             keycloakError: null,
             showSingleSignOnButton: false,
+            loggedInViaSso: false,
             ssoSkipped: false,
         });
     });
@@ -51,8 +52,8 @@ describe('ApplicationStateService', () => {
     it('can be subscribed to via select()', () => {
         const emittedValues: number[] = [];
         const sub = appState
-            .select(state => state.auth.user)
-            .subscribe(user => emittedValues.push(user?.id ?? null));
+            .select((state) => state.auth.user)
+            .subscribe((user) => emittedValues.push(user?.id ?? null));
 
         expect(emittedValues.length).toBe(1);
         appState.dispatch(new LoginStart());
@@ -73,8 +74,8 @@ describe('ApplicationStateService', () => {
     it('select() result can be unsubscribed from', () => {
         const emittedValues: number[] = [];
         const sub = appState
-            .select(state => state.auth.user)
-            .subscribe(user => emittedValues.push(user?.id ?? null));
+            .select((state) => state.auth.user)
+            .subscribe((user) => emittedValues.push(user?.id ?? null));
 
         expect(emittedValues.length).toBe(1);
         sub.unsubscribe();
@@ -114,7 +115,7 @@ describe('ApplicationStateService', () => {
         appState.mockState({
             auth: {
                 user: {
-                    id: 1234
+                    id: 1234,
                 } as any,
             },
         });

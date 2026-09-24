@@ -26,6 +26,7 @@
 <gtx-sortable-list
     class="editor-drop-container"
     [attr.data-drop-container-id]="id()"
+    [attr.data-context-id]="selfContext()"
     [class.element-moving]="elementMoving() != null"
     [class.drag-blocked]="isDragBlocked()"
     [class.editor-drop-container--root]="id() === rootId()"
@@ -43,11 +44,16 @@
 
         <gtx-sortable-item
             class="form-item columns"
-            [class.is-selected]="selectedElement() != null && element?.id === selectedElement()?.id"
+            [class.is-selected]="
+                selectedElement() != null
+                && element?.id === selectedElement()?.id
+                && selfContext() === selectedElementContextId()
+            "
             [class.container-element]="displayItem.isAggregate || displayItem.isContainer"
             [ngClass]="'small-' + getDisplaySpan(element, $index)"
             data-drop-item="true"
             [attr.data-element-id]="element?.id"
+            [attr.data-context-id]="selfContext()"
             [attr.data-drop-index]="$index"
         >
             <div
@@ -104,6 +110,7 @@
                     [config]="config()"
                     [rootId]="rootId()"
                     [parentId]="id()"
+                    [contextId]="selfContext()"
                     [id]="element.id"
                     [level]="level() + 1"
                     [pageIndex]="pageIndex()"
@@ -113,13 +120,14 @@
                     [isAggregate]="displayItem.isAggregate"
                     [whitelist]="displayItem.whitelist"
 
+                    [elementMap]="elementMap()"
                     [schemaPropertiesMap]="schemaPropertiesMap()"
                     [elements]="element.elements || []"
                     (elementsChange)="updateChildElements(element, $event)"
                     [(schema)]="schema"
 
                     [selectedElement]="selectedElement()"
-                    [selectedElementContainerId]="selectedElementContainerId()"
+                    [selectedElementContextId]="selectedElementContextId()"
                     (elementSelect)="elementSelect.emit($event)"
                     (moveToContainer)="moveToContainer.emit($event)"
                     [(elementMoving)]="elementMoving"

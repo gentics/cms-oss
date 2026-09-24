@@ -659,13 +659,30 @@ interface FGElement {
 
 const DRAG_THRESHOLD = 2;
 
-export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, target?: FGDropTarget): Promise<Locator> {
-    let containerEl: Locator;
-    if (!target?.containerId) {
-        containerEl = grid.locator('.editor-main .editor-drop-container.editor-drop-container--root');
-    } else {
-        containerEl = grid.locator(`.editor-main .editor-drop-container[data-drop-container-id="${target.containerId}"]`);
+export function fgFindDropContainer(grid: Locator, containerId?: string): Locator {
+    if (!containerId) {
+        return grid.locator('.editor-main .editor-drop-container.editor-drop-container--root');
     }
+
+    return grid.locator(`.editor-main .editor-drop-container[data-drop-container-id="${containerId}"]`);
+}
+
+/**
+ * Finds the form-item of an element which is a direct child of the given container
+ * (root container, if no `containerId` is given). This is needed as element ids may not
+ * be unique across the whole form, i.E. elements nested in an aggregate may re-use ids from
+ * outside the aggregate.
+ */
+export function fgFindElement(grid: Locator, elementId: string, containerId?: string): Locator {
+    return fgFindDropContainer(grid, containerId).locator(`> .form-item[data-element-id="${elementId}"]`);
+}
+
+async function fgComputeDropTarget(grid: Locator, target?: FGDropTarget): Promise<{
+    containerEl: Locator;
+    targetPosition: { x: number; y: number };
+    entries: FGElement[];
+}> {
+    const containerEl = fgFindDropContainer(grid, target?.containerId);
 
     const containerRect = await containerEl.evaluate((el) => el.getBoundingClientRect());
     const entries: FGElement[] = await containerEl.evaluate((el) => {
@@ -687,9 +704,16 @@ export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, targe
     ) {
         if (entries.length > 0) {
             const ent = entries[entries.length - 1];
+            // Target a point well within the last entry itself (roughly its top-left third),
+            // rather than past its edge: Most containers/aggregates span the full row/container
+            // width & height, so aiming beside/below them would place the point outside of the
+            // container's actual bounds. Landing solidly inside the entry (rather than right at
+            // its edge, which may be a layout gap between its header and its own nested elements
+            // container that is actually still part of an ANCESTOR element) also reliably avoids
+            // being interpreted as hovering over any of ITS OWN nested elements/ancestors.
             targetPosition = {
-                x: (ent.rect.x - containerRect.x) + ent.rect.width + DRAG_THRESHOLD,
-                y: (ent.rect.y - containerRect.x) + ent.rect.height + DRAG_THRESHOLD,
+                x: (ent.rect.x - containerRect.x) + (ent.rect.width * 0.3),
+                y: (ent.rect.y - containerRect.y) + (ent.rect.height * 0.3),
             };
         } else {
             targetPosition = {
@@ -701,9 +725,15 @@ export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, targe
         const ent = entries[target.position];
         targetPosition = {
             x: (ent.rect.x - containerRect.x) + DRAG_THRESHOLD,
-            y: (ent.rect.y - containerRect.x) + DRAG_THRESHOLD,
+            y: (ent.rect.y - containerRect.y) + DRAG_THRESHOLD,
         };
     }
+
+    return { containerEl, targetPosition, entries };
+}
+
+export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, target?: FGDropTarget): Promise<Locator> {
+    const { containerEl, targetPosition, entries } = await fgComputeDropTarget(grid, target);
 
     await item.dragTo(containerEl, {
         targetPosition,
@@ -726,6 +756,44 @@ export async function fgAddControl(grid: Locator, controlId: string, target?: FG
     }
 
     return fgAddPaletteItemToGrid(grid, item, target);
+}
+
+/**
+ * Drags an existing element (already present in the grid) to a different position/container.
+ * Does not report whether the move was actually applied or blocked - inspect the resulting DOM
+ * (i.E. via {@link fgFindElement}) to determine that.
+ */
+export async function fgMoveElement(grid: Locator, source: Locator, target?: FGDropTarget): Promise<void> {
+    const { containerEl, targetPosition } = await fgComputeDropTarget(grid, target);
+
+    await source.dragTo(containerEl, {
+        // The source element's bounding box includes all of its own nested elements (if it is a
+        // container/aggregate), so its default (center) grab point may actually be located over a
+        // NESTED child rather than over the element itself. Grab it near its own header instead.
+        sourcePosition: { x: 20, y: 20 },
+        targetPosition,
+        // Deeply/newly nested drop-containers may be very small (e.g. empty) or visually overlap
+        // with an ancestor's own chrome, which Playwright's actionability check interprets as the
+        // ancestor "intercepting" the pointer. The actual drop is handled by SortableJS via the
+        // real mouse coordinates (verified to correctly resolve to the intended container), so it
+        // is safe to skip that check here.
+        force: true,
+    });
+}
+
+/**
+ * Drags an existing root-level element (already present in the grid) onto the tab of another page,
+ * to move it to that page.
+ */
+export async function fgMoveElementToPage(grid: Locator, source: Locator, pageIndex: number): Promise<void> {
+    const pageTab = grid.locator(`gtx-form-page-manager .page-tab[data-page-index="${pageIndex}"]`);
+    await source.dragTo(pageTab, {
+        // The source element's bounding box includes all of its own nested elements (if it is a
+        // container/aggregate), so its center may actually be located over a NESTED child rather
+        // than over the element itself. Grab it near its own header instead.
+        sourcePosition: { x: 20, y: 20 },
+        force: true,
+    });
 }
 
 export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {

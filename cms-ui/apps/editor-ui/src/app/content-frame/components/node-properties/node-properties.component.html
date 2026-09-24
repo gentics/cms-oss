@@ -17,27 +17,18 @@
             }
         </div>
 
-        <div class="columns small-12 flex-row hostname-group">
-            <gtx-checkbox
-                label="https"
-                class="columns small-2"
-                formControlName="https"
-                [gtxDisabled]="disabled"
-            ></gtx-checkbox>
-
-            <gtx-select
-                class="columns small-10 hostname-type"
-                [label]="('editor.node_hostname_type_label' | gtxI18n) + ' *'"
-                [value]="hostnameType"
-                [clearable]="false"
-                [disabled]="disabled"
-                (valueChange)="updateHostnameType($event)"
-            >
-                @for (type of HOSTNAME_TYPES; track type.id) {
-                    <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
-                }
-            </gtx-select>
-        </div>
+        <gtx-select
+            class="columns small-12 hostname-type"
+            [label]="('editor.node_hostname_type_label' | gtxI18n) + ' *'"
+            [value]="hostnameType"
+            [clearable]="false"
+            [disabled]="disabled"
+            (valueChange)="updateHostnameType($event)"
+        >
+            @for (type of HOSTNAME_TYPES; track type.id) {
+                <gtx-option [value]="type.id">{{ type.label | gtxI18n }}</gtx-option>
+            }
+        </gtx-select>
 
         <gtx-input
             class="columns small-12"

@@ -1,0 +1,4 @@
+Under specific circumstances, resolving of inexistent object properties
+did not create the dependencies during the publish process, and automatic
+publishing did not happen when the object property was created.
+This has been fixed.

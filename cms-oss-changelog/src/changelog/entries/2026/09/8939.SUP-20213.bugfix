@@ -1,0 +1,1 @@
+Editor User Interface: Fixed an issue with editing of external forms with aggregations, where elements may have the same IDs.

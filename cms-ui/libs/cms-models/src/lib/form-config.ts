@@ -14,6 +14,8 @@ export enum FormSettingType {
     REFERENCE = 'reference',
 }
 
+export const FORM_OPTION_SETTING_EDITABLE = 'editable';
+
 export interface FormAlohaConfiguration {
     plugins?: string[];
     settings?: Record<string, unknown>;
@@ -130,6 +132,8 @@ export type FormSelectSetting = FormBaseSetting & {
  */
 export type FormOptionsSetting = FormBaseSetting & {
     type: FormSettingType.OPTIONS;
+
+    multiple?: boolean | typeof FORM_OPTION_SETTING_EDITABLE;
 };
 
 /**

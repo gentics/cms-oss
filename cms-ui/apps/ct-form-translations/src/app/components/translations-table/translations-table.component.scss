@@ -72,13 +72,43 @@ table.translations th {
     min-width: 180px;
   }
 
-  .lang-meta {
-    font-weight: 400;
-    color: var(--pm-color-primary);
+  /* Language on the left, its gap count hard right - so the number lines up
+     over its own column. */
+  .lang-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--pm-spacing-sm);
+  }
+
+  .lang-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Same pill as the tiles used to carry, same colour family as the legend's
+     "empty" swatch; green once the column is done. */
+  .lang-open {
+    flex: 0 0 auto;
+    min-width: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fdf1f1;
+    color: var(--pm-color-danger);
+    font-size: var(--pm-font-size-xs);
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
     text-transform: none;
     letter-spacing: 0;
-    margin-left: 4px;
-    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+
+    &--done {
+      background: #e8f5e9;
+      color: var(--pm-color-success);
+    }
   }
 }
 
@@ -170,12 +200,6 @@ table.translations td {
   &.is-empty .cell-indicator { color: var(--pm-color-danger); }
 }
 
-.pm-empty-state {
-    icon {
-        font-size: 4.5rem;
-    }
-}
-
 /* =====================================================================
    Responsive: kompaktere Darstellung auf schmalen Viewports
    ===================================================================== */
@@ -206,8 +230,11 @@ table.translations td {
     }
     th.col-lang { min-width: 140px; }
 
-    /* Sprach-Meta (Code in Klammern) hat auf sehr engen Screens zu wenig Platz */
-    th.col-lang .lang-meta { display: none; }
+    th.col-lang .lang-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
   }
 
   .cell-input-wrapper input {

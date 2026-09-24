@@ -22,6 +22,7 @@ export class FormElementTranslationComponent {
 
     public readonly mode = input.required<FormGridEditMode>();
 
+    public readonly contextId = input.required<string>();
     public readonly element = model.required<FormElement>();
     public readonly elementConfig = input.required<FormElementConfiguration>();
     public readonly elementSchema = model<FormSchemaProperty>();
@@ -88,7 +89,7 @@ export class FormElementTranslationComponent {
     public updateSummary(value: I18nString | null): void {
         this.element.update((el) => ({
             ...el,
-            formGridOptions: { ...el.formGridOptions, valueSummary: value ?? undefined } as any,
+            formGridOptions: { ...el.formGridOptions, valueSummary: value ?? undefined },
         }));
     }
 

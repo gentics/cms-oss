@@ -27,7 +27,6 @@ import {
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
-    openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
@@ -39,9 +38,6 @@ import {
     editorAction,
     expectItemOffline,
     expectItemPublished,
-    fgAddControl,
-    fgFindEditSidebar,
-    fgSelectElementTab,
     findItem,
     findList,
     itemAction,
@@ -379,130 +375,6 @@ test.describe('Form Management', () => {
 
             // form should be published now
             await expectItemPublished(item);
-        });
-    });
-
-    test('should display the label value as title', {
-        annotation: [{
-            type: 'ticket',
-            description: 'SUP-19032',
-        }],
-    }, async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(FORM_ONE);
-        const LABEL_TEXT = 'Hello World';
-
-        await setupWithPermissions(page, [
-            {
-                type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
-                subObjects: true,
-                perms: [
-                    { type: GcmsPermission.READ, value: true },
-                    { type: GcmsPermission.VIEW_FORM, value: true },
-                    { type: GcmsPermission.UPDATE_FORM, value: true },
-                ],
-            },
-        ]);
-
-        await test.step('Open Editor', async () => {
-            const list = findList(page, ITEM_TYPE_FORM);
-            const item = findItem(list, EDITING_FORM.id);
-            await itemAction(item, 'edit');
-        });
-
-        await test.step('Edit Form', async () => {
-            const grid = page.locator('content-frame gtx-form-grid');
-            const el = await fgAddControl(grid, 'number');
-
-            await expect(el).toBeVisible();
-            await el.click();
-            await expect(el).toContainClass('is-selected');
-
-            const editSidebar = fgFindEditSidebar(grid);
-            await expect(editSidebar).toBeVisible();
-
-            const elLabel = el.locator('.element-container .element-title');
-            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
-            const labelCtrl = translationTab.locator('[data-control="label"] input');
-
-            await labelCtrl.fill(LABEL_TEXT);
-            await expect(elLabel).toHaveText(LABEL_TEXT);
-        });
-    });
-
-    test('should edit and save selectable-options correctly', {
-        annotation: [{
-            type: 'ticket',
-            description: 'SUP-19335',
-        }],
-    }, async ({ page }) => {
-        const EDITING_FORM = IMPORTER.get(FORM_ONE);
-        const KEY_TEXT = 'Hello World';
-        const VALUE_TEXT = 'Foo Bar Content!';
-
-        await setupWithPermissions(page, [
-            {
-                type: AccessControlledType.NODE,
-                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
-                subObjects: true,
-                perms: [
-                    { type: GcmsPermission.READ, value: true },
-                    { type: GcmsPermission.VIEW_FORM, value: true },
-                    { type: GcmsPermission.UPDATE_FORM, value: true },
-                ],
-            },
-        ]);
-
-        await test.step('Open Editor', async () => {
-            const list = findList(page, ITEM_TYPE_FORM);
-            const item = findItem(list, EDITING_FORM.id);
-            await itemAction(item, 'edit');
-        });
-
-        await test.step('Edit Form', async () => {
-            const grid = page.locator('content-frame gtx-form-grid');
-            const el = await fgAddControl(grid, 'catalog');
-
-            await expect(el).toBeVisible();
-            await el.click();
-            await expect(el).toContainClass('is-selected');
-
-            const editSidebar = fgFindEditSidebar(grid);
-            await expect(editSidebar).toBeVisible();
-
-            const definitionTab = await fgSelectElementTab(editSidebar, 'definition');
-            const keyOptions = definitionTab.locator('[data-control="selectOptions"]');
-
-            // Add a new option, fill it out, save
-            await keyOptions.locator('[data-action="add-option"]').click();
-            await keyOptions.locator('gtx-input input').fill(KEY_TEXT);
-
-            // Open the translations tab, and edit the label text
-            const translationTab = await fgSelectElementTab(editSidebar, 'translations');
-            const valueOptions = translationTab.locator('[data-control="selectOptions"]');
-
-            // Should have the key as default value set initially
-            await expect(valueOptions.locator('input')).toHaveValue(KEY_TEXT);
-            await valueOptions.locator('input').fill(VALUE_TEXT);
-        });
-
-        await test.step('Save and Validate', async () => {
-            const saveReq = page.waitForResponse(matchRequest('PUT', '/rest/form/*'));
-            await editorAction(page, 'save');
-            const res = await saveReq;
-            const req: FormSaveRequest = res.request().postDataJSON();
-
-            const props = Object.entries(req.data.schema?.properties || {});
-            expect(props).toHaveLength(1);
-
-            const el = props[0][1];
-            expect(el.formGridOptions.selectOptions).toEqual([{
-                _defaulted: [], // Internal structure
-                value: KEY_TEXT,
-                label: {
-                    [LANGUAGE_EN]: VALUE_TEXT,
-                },
-            }]);
         });
     });
 

@@ -1150,6 +1150,134 @@ test.describe('Page Editing', () => {
                 // Modal should be open now
                 await expect(page.locator('gtx-dynamic-form-modal')).toBeVisible();
             });
+
+            test('should be able to clear link parts', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-20240',
+                }],
+            }, async ({ page }) => {
+                const TEXT_CONTENT = 'Hello ';
+                const LINK_TEXT = 'World';
+                const LINK_URL = 'http://example.com';
+                const LINK_ANCHOR = 'example-anchor';
+                const LINK_TITLE = 'Cool Title';
+                const LINK_LANGUAGE = LANGUAGE_EN;
+
+                // The link isn't part of the `content` tag itself, but gets extracted into its
+                // own `gtxalohapagelink` tag (identifiable via its `anchor` part) when the page
+                // is saved. See `cms-js-lib/src/main/js/page.js#getTagPartsFromLink`.
+                function getLinkTagProperties(pageUpdate: PageSaveRequest): Record<string, StringTagPartProperty> {
+                    const tags = pageUpdate.page.tags || {};
+                    const linkTagName = Object.keys(tags).find((tagName) => tags[tagName]?.properties?.['anchor'] != null);
+                    expect(linkTagName, 'Expected a link-tag with an "anchor" property to be present in the save payload').toBeTruthy();
+
+                    return tags[linkTagName].properties as Record<string, StringTagPartProperty>;
+                }
+
+                async function reopenPageForEditing(): Promise<void> {
+                    await editorAction(page, 'close');
+                    await page.locator('content-frame').waitFor({ state: 'detached' });
+                    await openEditingPageInEditmode(page);
+                }
+
+                async function saveAndGetLinkTagProperties(): Promise<Record<string, StringTagPartProperty>> {
+                    const saveReq = page.waitForResponse(matchRequest('POST', `/rest/page/save/${editingPage.id}`));
+                    await editorAction(page, 'save');
+                    const res = await saveReq;
+                    const data = await res.request().postDataJSON() as PageSaveRequest;
+                    return getLinkTagProperties(data);
+                }
+
+                async function selectLinkAndOpenModal(): Promise<Locator> {
+                    const linkElement = mainEditable.locator('a');
+                    await linkElement.click();
+
+                    const insertLinkButton = findAlohaComponent(page, {
+                        slot: 'insertLink',
+                        action: 'secondary',
+                        type: 'toggle-split-button',
+                    });
+                    await insertLinkButton.click();
+
+                    const modal = page.locator('gtx-dynamic-form-modal');
+                    await modal.waitFor();
+                    return modal;
+                }
+
+                await test.step('Create link with all parts filled', async () => {
+                    await mainEditable.click();
+                    await mainEditable.clear();
+                    await mainEditable.fill(TEXT_CONTENT + LINK_TEXT);
+
+                    expect(await selectRangeIn(mainEditable, TEXT_CONTENT.length, TEXT_CONTENT.length + LINK_TEXT.length)).toBe(true);
+
+                    await createExternalLink(page, async (form) => {
+                        await form.locator('[data-slot="url"] .target-input input').fill(LINK_URL);
+                        await form.locator('[data-slot="url"] .anchor-input input').fill(LINK_ANCHOR);
+                        await form.locator('[data-slot="title"] input').fill(LINK_TITLE);
+                        await form.locator('[data-slot="lang"] input').fill(LINK_LANGUAGE);
+                    });
+
+                    // Verify the link was created correctly, before it gets turned into an actual tag.
+                    const linkElement = mainEditable.locator('a');
+                    await expect(linkElement).toHaveAttribute('href', `${LINK_URL}#${LINK_ANCHOR}`);
+                    await expect(linkElement).toHaveAttribute('hreflang', LINK_LANGUAGE);
+                    await expect(linkElement).toHaveAttribute('title', LINK_TITLE);
+                    await expect(linkElement).toHaveAttribute('data-gentics-gcn-anchor', LINK_ANCHOR);
+                    await expect(linkElement).toHaveText(LINK_TEXT);
+                });
+
+                await test.step('Save and verify link properties are present in the save payload', async () => {
+                    const properties = await saveAndGetLinkTagProperties();
+
+                    expect(properties['anchor'].stringValue).toBe(LINK_ANCHOR);
+                    expect(properties['title'].stringValue).toBe(LINK_TITLE);
+                    expect(properties['language'].stringValue).toBe(LINK_LANGUAGE);
+                    expect(properties['text'].stringValue).toBe(LINK_TEXT);
+                });
+
+                await test.step('Close and re-open the page', async () => {
+                    await reopenPageForEditing();
+                });
+
+                await test.step('Select the link and clear anchor, title and language', async () => {
+                    const modal = await selectLinkAndOpenModal();
+                    const form = modal.locator('.form-wrapper');
+
+                    // Sanity check that the previously saved values are actually loaded into the form.
+                    await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveValue(LINK_ANCHOR);
+                    await expect(form.locator('[data-slot="title"] input')).toHaveValue(LINK_TITLE);
+                    await expect(form.locator('[data-slot="lang"] input')).toHaveValue(LINK_LANGUAGE);
+
+                    await form.locator('[data-slot="url"] .anchor-input input').fill('');
+                    await form.locator('[data-slot="title"] input').fill('');
+                    await form.locator('[data-slot="lang"] input').fill('');
+
+                    await clickModalAction(modal, 'confirm');
+                });
+
+                await test.step('Save and verify link properties are cleared in the save payload', async () => {
+                    const properties = await saveAndGetLinkTagProperties();
+
+                    expect(properties['anchor'].stringValue).toBe('');
+                    expect(properties['title'].stringValue).toBe('');
+                    expect(properties['language'].stringValue).toBe('');
+                });
+
+                await test.step('Close and re-open the page', async () => {
+                    await reopenPageForEditing();
+                });
+
+                await test.step('Select the link and verify the fields are empty', async () => {
+                    const modal = await selectLinkAndOpenModal();
+                    const form = modal.locator('.form-wrapper');
+
+                    await expect(form.locator('[data-slot="url"] .anchor-input input')).toHaveValue('');
+                    await expect(form.locator('[data-slot="title"] input')).toHaveValue('');
+                    await expect(form.locator('[data-slot="lang"] input')).toHaveValue('');
+                });
+            });
         });
 
         test.describe('Tables', () => {

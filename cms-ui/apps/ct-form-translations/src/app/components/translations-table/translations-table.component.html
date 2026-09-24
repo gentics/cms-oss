@@ -5,9 +5,26 @@
                 <tr>
                     <th class="col-key">{{ 'tool.table_column_placeholder' | gtxI18n }}</th>
                     @for (lang of languages; track lang.code) {
-                        <th class="col-lang" [attr.data-lang]="lang.code">
-                            {{ lang.name }}
-                            <span class="lang-meta">({{ lang.code }})</span>
+                        @let missing = missingFor(lang.code);
+                        <th
+                            class="col-lang"
+                            [attr.data-lang]="lang.code"
+                            [attr.data-missing]="missing"
+                        >
+                            <span class="lang-head">
+                                <span class="lang-name">{{ displayName(lang) }}</span>
+
+                                <!-- Incomplete cells in this column, sitting right
+                                     above the column they are about. -->
+                                @if (missing != null) {
+                                    <span
+                                        class="lang-open"
+                                        [class.lang-open--done]="missing === 0"
+                                        data-name="lang-open"
+                                        [title]="'tool.language_open_cells' | gtxI18n:{ count: missing }"
+                                    >{{ missing }}</span>
+                                }
+                            </span>
                         </th>
                     }
                 </tr>
@@ -19,12 +36,13 @@
                             <span class="placeholder-key" data-name="key">{{ key }}</span>
                         </td>
                         @for (lang of languages; track lang.code) {
+                            @let state = getCellState(key, lang.code);
                             <td [attr.data-lang]="lang.code" data-name="cell">
                                 <div
                                     class="cell-input-wrapper"
-                                    [attr.data-state]="getCellState(key, lang.code)"
-                                    [class.is-dirty]="getCellState(key, lang.code) === 'dirty'"
-                                    [class.is-empty]="getCellState(key, lang.code) === 'empty'"
+                                    [attr.data-state]="state"
+                                    [class.is-dirty]="state === 'dirty'"
+                                    [class.is-empty]="state === 'empty'"
                                 >
                                     <input
                                         type="text"
@@ -37,7 +55,7 @@
                                     />
 
                                     <icon class="cell-indicator" aria-hidden="true">
-                                        @switch (getCellState(key, lang.code)) {
+                                        @switch (state) {
                                             @case ('dirty') {circle}
                                             @case ('empty') {remove}
                                         }

@@ -1,0 +1,3 @@
+Form Translations Custom Tool: The scope tabs now state how many placeholders are still open instead of a 
+combined placeholder-times-language figure, and every language column header shows how many entries are 
+still empty in that language.

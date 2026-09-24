@@ -27,6 +27,7 @@ import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObjectInfo;
 import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagResolvable;
 import com.gentics.contentnode.object.Page;
@@ -36,6 +37,7 @@ import com.gentics.contentnode.object.parttype.imps.CMSLoaderImp;
 import com.gentics.contentnode.render.RenderInfo;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
+import com.gentics.contentnode.resolving.ResolvableWrapper;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.portalnode.formatter.GenticsStringFormatter;
@@ -322,7 +324,14 @@ public class CMSResolver implements ResolvableMapWrappable {
 			return null;
 		} else {
 			try {
-				return object.reload();
+				NodeObjectInfo objectInfo = object.getObjectInfo();
+				NodeObject reloaded = TransactionManager.getCurrentTransaction().getObject(objectInfo.getObjectClass(),
+						object.getId(), objectInfo.getVersionTimestamp());
+				if (reloaded instanceof Resolvable resolvable) {
+					return resolvable;
+				} else {
+					return new ResolvableWrapper<>(reloaded);
+				}
 			} catch (NodeException e) {
 				return null;
 			}
@@ -339,7 +348,14 @@ public class CMSResolver implements ResolvableMapWrappable {
 			return null;
 		} else {
 			try {
-				return object.reload();
+				NodeObjectInfo objectInfo = object.getObjectInfo();
+				NodeObject reloaded = TransactionManager.getCurrentTransaction().getObject(objectInfo.getObjectClass(),
+						object.getId(), objectInfo.getVersionTimestamp());
+				if (reloaded instanceof ObjectTagContainer objectTagContainer) {
+					return objectTagContainer;
+				} else {
+					return null;
+				}
 			} catch (NodeException e) {
 				return null;
 			}

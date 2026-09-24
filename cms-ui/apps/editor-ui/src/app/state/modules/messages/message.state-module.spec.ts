@@ -5,7 +5,7 @@ import { MessageState } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { STATE_MODULES } from '../state-modules';
-import { MessagesFetchingErrorAction, MessagesFetchingSuccessAction, MessagesReadAction, StartMessagesFetchingAction } from './message.actions';
+import { MessagesFetchingSuccessAction, MessagesReadAction } from './message.actions';
 
 describe('MessageStateModule', () => {
 
@@ -23,21 +23,12 @@ describe('MessageStateModule', () => {
 
     it('sets the correct initial state', () => {
         expect(state.now.messages).toEqual({
-            fetching: false,
             all: [],
             read: [],
             unread: [],
             deliveredInstantMessages: [],
-            lastError: undefined,
         } as MessageState);
     });
-
-    it('fetchAllMessagesStart works', fakeAsync(() => {
-        state.dispatch(new StartMessagesFetchingAction());
-        tick();
-
-        expect(state.now.messages.fetching).toBe(true);
-    }));
 
     it('fetchAllMessagesSuccess works', fakeAsync(() => {
         const firstMessage: Message<Normalized> = {
@@ -60,7 +51,6 @@ describe('MessageStateModule', () => {
                 },
             },
             messages: {
-                fetching: true,
                 all: [1],
                 read: [1],
                 unread: [],
@@ -101,7 +91,6 @@ describe('MessageStateModule', () => {
         state.dispatch(new MessagesFetchingSuccessAction(false, unreadMessagesFromServer, messagesFromServer));
         tick();
 
-        expect(state.now.messages.fetching).toBe(false);
         expect(state.now.messages.all).toEqual([2, 3]);
         expect(state.now.messages.read).toEqual([3]);
         expect(state.now.messages.unread).toEqual([2]);
@@ -129,22 +118,6 @@ describe('MessageStateModule', () => {
             firstName: 'Second',
             lastName: 'User',
         }));
-    }));
-
-    it('fetchAllMessagesError works', fakeAsync(() => {
-        const errorMessage = 'some error happened';
-        state.dispatch(new MessagesFetchingErrorAction(errorMessage));
-        tick();
-
-        expect(state.now.messages.fetching).toBe(false);
-        expect(state.now.messages.lastError).toBe(errorMessage);
-    }));
-
-    it('fetchUnreadMessagesStart works', fakeAsync(() => {
-        state.dispatch(new StartMessagesFetchingAction());
-        tick();
-
-        expect(state.now.messages.fetching).toBe(true);
     }));
 
     describe('fetchUnreadMessagesSuccess', () => {
@@ -176,7 +149,6 @@ describe('MessageStateModule', () => {
                     },
                 },
                 messages: {
-                    fetching: true,
                     all: [1, 2],
                     read: [1],
                     unread: [2],
@@ -198,7 +170,6 @@ describe('MessageStateModule', () => {
             state.dispatch(new MessagesFetchingSuccessAction(true, [unreadMessage]));
             tick();
 
-            expect(state.now.messages.fetching).toBe(false);
             expect(state.now.messages.all).toEqual([1, 2, 3]);
             expect(state.now.messages.read).toEqual([1]);
             expect(state.now.messages.unread).toEqual([2, 3]);
@@ -232,21 +203,12 @@ describe('MessageStateModule', () => {
             tick();
             const stateAfter = state.now;
 
-            expect(stateAfter.messages.fetching).toBeFalse();
             expect(stateBefore.messages.all).toEqual(stateAfter.messages.all);
             expect(stateBefore.messages.read).toEqual(stateAfter.messages.read);
             expect(stateBefore.messages.unread).toEqual(stateAfter.messages.unread);
         }));
 
     });
-
-    it('fetchUnreadMessagesError works', fakeAsync(() => {
-        const errorMessage = 'some error';
-        state.dispatch(new MessagesFetchingErrorAction(errorMessage));
-        tick();
-
-        expect(state.now.messages.lastError).toBe(errorMessage);
-    }));
 
     it('markMessagesAsRead works', fakeAsync(() => {
         state.mockState({
@@ -279,7 +241,6 @@ describe('MessageStateModule', () => {
                 },
             },
             messages: {
-                fetching: true,
                 all: [1, 2, 3],
                 read: [],
                 unread: [1, 2, 3],

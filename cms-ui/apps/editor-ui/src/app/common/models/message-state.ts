@@ -3,6 +3,4 @@ export interface MessageState {
     read: number[];
     unread: number[];
     deliveredInstantMessages: number[];
-    fetching: boolean;
-    lastError?: string;
 }

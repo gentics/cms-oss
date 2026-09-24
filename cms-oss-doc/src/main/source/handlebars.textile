@@ -171,6 +171,26 @@ The reference to the node/channel can be one of
 * A resolved node/channel object
 * Tag part of type "Node"
 
+The channel scope influences the @resolving@ (loading) of objects, that take part in multichannelling. It is important to note, that the channel scope does *not* change
+the objects, which are *directly* referenced via @cms@ (like @cms.node@, @cms.page@, ...), because those objects have already been loaded.
+
+Objects, which are further resolved, however, *will* be influenced by the channel scope. The following example should make this clear:
+
+<html>
+{{#gtx_channel [channel]}}
+  <!-- Examples, which are independent of the channel scope -->
+  {{cms.node}} <!-- This is always the current node -->
+  {{cms.page}} <!-- This is always the current page -->
+  {{cms.folder}} <!-- This is always the current folder -->
+
+  <!-- Examples, which depend on the channel scope -->
+  {{cms.page.folder}} <!-- This is the current page's folder in the scope of the channel -->
+  {{cms.page.node}} <!-- This is the current page's node in the scope of the channel -->
+  {{cms.folder.node}} <!-- This is the current folder's node in the scope of the channel -->
+
+{{/gtx_channel}}
+</html>
+
 h5. gtx_gis
 
 This helper will either render a Gentics Image Store URL for a resized image, or - when used for an installation of Gentics Portal | php - a widget that will resize that image.

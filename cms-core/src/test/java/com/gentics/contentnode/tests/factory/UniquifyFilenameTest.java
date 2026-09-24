@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,12 +21,16 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.UniquifyHelper;
+import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Tests for {@link UniquifyHelper#makeFilenameUnique(String, Set)}
  */
 @RunWith(value = Parameterized.class)
 public class UniquifyFilenameTest {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
 	public final static int REPEAT = 101;
 
 	@Parameters(name = "{index}: start {0}, expected {1}, obstructors {2}")

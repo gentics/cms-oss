@@ -27,8 +27,6 @@ import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
-import com.gentics.contentnode.object.NodeObjectInfo;
-import com.gentics.contentnode.object.ObjectTagContainer;
 import com.gentics.contentnode.object.ObjectTagResolvable;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
@@ -37,7 +35,6 @@ import com.gentics.contentnode.object.parttype.imps.CMSLoaderImp;
 import com.gentics.contentnode.render.RenderInfo;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
-import com.gentics.contentnode.resolving.ResolvableWrapper;
 import com.gentics.contentnode.resolving.StackResolvable;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.portalnode.formatter.GenticsStringFormatter;
@@ -255,7 +252,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current page
 	 */
 	protected Resolvable getPage() {
-		return getReloaded(page);
+		return page;
 	}
 
 	/**
@@ -263,7 +260,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current template
 	 */
 	protected Resolvable getTemplate() {
-		return getReloaded(template);
+		return template;
 	}
 
 	/**
@@ -271,7 +268,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current tag
 	 */
 	protected Resolvable getTag() {
-		return getReloaded(tag);
+		return tag;
 	}
 
 	/**
@@ -280,11 +277,11 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 */
 	protected Resolvable getObject() {
 		if (page != null) {
-			return new ObjectTagResolvable(getReloadedObjectTagContainer(page));
+			return new ObjectTagResolvable(page);
 		} else if (file != null) {
-			return new ObjectTagResolvable(getReloadedObjectTagContainer(file));
+			return new ObjectTagResolvable(file);
 		} else if (folder != null) {
-			return new ObjectTagResolvable(getReloadedObjectTagContainer(folder));
+			return new ObjectTagResolvable(folder);
 		} else {
 			return null;
 		}
@@ -295,7 +292,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current folder
 	 */
 	protected Resolvable getFolder() {
-		return getReloaded(folder);
+		return folder;
 	}
 
 	/**
@@ -303,7 +300,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current node
 	 */
 	protected Resolvable getNode() {
-		return getReloaded(node);
+		return node;
 	}
 
 	/**
@@ -311,55 +308,7 @@ public class CMSResolver implements ResolvableMapWrappable {
 	 * @return current file
 	 */
 	protected Resolvable getFile() {
-		return getReloaded(file);
-	}
-
-	/**
-	 * Reload the object (if not null) and return as {@link Resolvable}
-	 * @param object object
-	 * @return resolvable or null
-	 */
-	protected Resolvable getReloaded(NodeObject object) {
-		if (object == null) {
-			return null;
-		} else {
-			try {
-				NodeObjectInfo objectInfo = object.getObjectInfo();
-				NodeObject reloaded = TransactionManager.getCurrentTransaction().getObject(objectInfo.getObjectClass(),
-						object.getId(), objectInfo.getVersionTimestamp());
-				if (reloaded instanceof Resolvable resolvable) {
-					return resolvable;
-				} else {
-					return new ResolvableWrapper<>(reloaded);
-				}
-			} catch (NodeException e) {
-				return null;
-			}
-		}
-	}
-
-	/**
-	 * Reload the object (if not null) and return as {@link ObjectTagContainer}
-	 * @param object object
-	 * @return object tag container or null
-	 */
-	protected ObjectTagContainer getReloadedObjectTagContainer(ObjectTagContainer object) {
-		if (object == null) {
-			return null;
-		} else {
-			try {
-				NodeObjectInfo objectInfo = object.getObjectInfo();
-				NodeObject reloaded = TransactionManager.getCurrentTransaction().getObject(objectInfo.getObjectClass(),
-						object.getId(), objectInfo.getVersionTimestamp());
-				if (reloaded instanceof ObjectTagContainer objectTagContainer) {
-					return objectTagContainer;
-				} else {
-					return null;
-				}
-			} catch (NodeException e) {
-				return null;
-			}
-		}
+		return file;
 	}
 
 	/**

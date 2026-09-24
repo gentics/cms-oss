@@ -12,6 +12,10 @@ import { AppStateService } from '../../../state';
 import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 
+function isSessionErrorMessage(msg: string): boolean {
+    return msg === 'invalid sid' || msg === 'missing sid';
+}
+
 /**
  * A central error handler that shows a notification for occuring errors,
  * logs their details to the console and supports serializing.
@@ -126,7 +130,7 @@ export class ErrorHandler extends ServiceBase {
                 // Invalid SID always display the login screen, or tries to login with SSO
                 // So it can mislead the user, therefore we not display it.
                 const msg = (error.response?.responseInfo?.responseMessage || error.response?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+                const isInvalidSid = isSessionErrorMessage(msg);
 
                 if (showNotification && !isInvalidSid) {
                     this.notification.show({
@@ -193,9 +197,8 @@ export class ErrorHandler extends ServiceBase {
                 // All other codes have the message simply in them
                 // Invalid SID always display the login screen, or tries to login with SSO
                 // So it can mislead the user, therefore we not display it.
-
-                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || '').toLowerCase();
-                const isInvalidSid = msg === 'invalid sid' || msg === 'missing sid';
+                const msg = (error?.data?.responseInfo?.responseMessage || error?.data?.toString?.() || error.rawBody || '').toLowerCase();
+                const isInvalidSid = isSessionErrorMessage(msg);
 
                 if (showNotification && !isInvalidSid) {
                     (error.data?.messages || [])
@@ -232,7 +235,13 @@ export class ErrorHandler extends ServiceBase {
 
     private userWasLoggedOut(): void {
         this.appState.dispatch(new LogoutSuccess());
-        this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+
+        if (this.appState.now.auth.loggedInViaSso) {
+            window.location.reload();
+            return;
+        } else {
+            this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: this.router.routerState.snapshot.url } });
+        }
 
         this.modalService.dialog({
             title: this.translate.instant('modal.logged_out_by_backend_title'),

@@ -63,7 +63,6 @@ services:
 
       # Misc settings
       NODE_USER_PASSWORD: cms_integrationTest#node
-      ELASTICSEARCH_ENABLED: false
       ELASTICSEARCH_URL:
       CONF_FILES: cms
       KEYCLOAK_ACTIVE: false

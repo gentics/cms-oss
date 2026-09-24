@@ -49,7 +49,7 @@ import com.github.jknack.handlebars.Options;
 public class HelperSource {
 	/**
 	 * Render helper
-	 * @param renderable renderable to render
+	 * @param value renderable to render
 	 * @param options options
 	 * @return rendered renderable
 	 */

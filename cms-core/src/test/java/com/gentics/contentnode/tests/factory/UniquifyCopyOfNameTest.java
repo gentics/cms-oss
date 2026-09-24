@@ -12,6 +12,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -22,6 +23,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.Language;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.i18n.StaticLanguageProvider;
+import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.i18n.LanguageProvider;
 import com.gentics.lib.i18n.LanguageProviderFactory;
 import com.gentics.lib.i18n.LanguageProviderWrapper;
@@ -31,6 +33,9 @@ import com.gentics.lib.i18n.LanguageProviderWrapper;
  */
 @RunWith(value = Parameterized.class)
 public class UniquifyCopyOfNameTest {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
 	public final static Locale LOCALE = new Locale("en", "EN");
 
 	@Parameters(name = "{index}: start {0}, expected {1}, obstructors {2}")

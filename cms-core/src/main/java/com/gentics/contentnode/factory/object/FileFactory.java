@@ -2339,8 +2339,7 @@ public class FileFactory extends AbstractFactory {
 	 * @throws NodeException
 	 */
 	public static String sanitizeName(String name) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
+		NodePreferences nodePreferences = NodeConfigRuntimeConfiguration.getPreferences();
 
 		Map<String, String> sanitizeCharacters = nodePreferences.getPropertyMap(
 				"sanitize_character");

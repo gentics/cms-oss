@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Set;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -16,12 +17,16 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Tests for {@link UniquifyHelper#makeNameUnique(String, Set)e}
  */
 @RunWith(value = Parameterized.class)
 public class UniquifyNameTest {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
 	public final static Locale LOCALE = new Locale("en", "EN");
 
 	@Parameters(name = "{index}: start {0}, expected {1}, obstructors {2}")

@@ -80,6 +80,7 @@ const SummaryScreen: React.FC<SummaryScreenProps> = (props) => {
           formState={formState}
           uiState={props.uiState}
           parentId={''}
+          contextId={''}
           summary={SummaryOptions.SummaryText}
           restService={props.restService}
           updateState={props.updateState}

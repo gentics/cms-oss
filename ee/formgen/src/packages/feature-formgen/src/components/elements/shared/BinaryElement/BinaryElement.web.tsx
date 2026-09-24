@@ -353,6 +353,7 @@ function BinaryElement(props: IFormComponentAttributes) {
         key={key}
         t={props.t}
         file={item}
+        maxFileSizeToPreviewMB={props.formState?.formgenSettings?.maxFileSizeToPreviewMB}
         onLink={() => {
           Linking.openURL(binaryLink);
         }}
@@ -391,7 +392,9 @@ function BinaryElement(props: IFormComponentAttributes) {
       localErrorMsg={localErrMsg}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <View ref={dropRef}>
         <View ref={elementRef}>

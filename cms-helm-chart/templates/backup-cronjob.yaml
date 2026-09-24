@@ -52,8 +52,22 @@ spec:
             args:
               - "/backup.sh"
             env:
+              {{- if $.Values.database.passwordSecret }}
               - name: MYSQL_PWD
-                value: "{{ .Values.database.password }}"
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $.Values.database.passwordSecret }}
+                    key: password
+              {{- else if $.Values.database.password }}
+              - name: MYSQL_PWD
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ template "cms.fullname" . }}
+                    key: database-password
+              {{- else }}
+              - name: MYSQL_PWD
+                value: "{{ required "Either database.password or database.passwordSecret are required!" "" }}"
+              {{- end }}
             volumeMounts:
               - mountPath: /backup
                 name: backup

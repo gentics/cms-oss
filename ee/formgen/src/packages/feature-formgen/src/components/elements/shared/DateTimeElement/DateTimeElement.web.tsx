@@ -84,6 +84,9 @@ function DateTimeElement(props: IFormComponentAttributes) {
 
   const formattedPropsDisplay = formattedPropsValue;
   const [inputValue, setInputValue] = useState(formattedPropsDisplay);
+  // See comment on SUP-20237
+  const latestValuesRef = useRef({ inputValue, dateValue });
+  latestValuesRef.current = { inputValue, dateValue };
 
   useEffect(() => {
     // Monkey-patch measureLayout for Web scrolling support
@@ -214,11 +217,16 @@ function DateTimeElement(props: IFormComponentAttributes) {
       const inInput = inputContainerRef.current?.contains(target);
 
       if (open && !inPortal && !inInput) {
-        setIsFocused(false); 
-        if ((inputValue === '' || !dateValue || dateValue === '')) {
+        // See comment on SUP-20237
+        const { inputValue: currentInput, dateValue: currentDate } =
+          latestValuesRef.current;
+        setIsFocused(false);
+        if (currentInput === '' || !currentDate || currentDate === '') {
           handleAnimationForBlur();
         }
         setOpen(false);
+        // See comment on SUP-20237
+        handleDateChange(props, currentDate, isTimeField, currentInput);
       }
     }
 
@@ -265,6 +273,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
   const onChangeWeb = (
     val: string | Moment,
   ): { m: Moment | ''; formatted: string } => {
+    if (!props.editable) return { m: '', formatted: '' };
     if (!val || (typeof val === 'string' && val.trim() === '')) {
       setDateValue('');
       setInputValue('');
@@ -296,6 +305,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
    *    damit der Nutzer sofort einen neuen Wert wählen kann.
    */
   const handleDelete = () => {
+    if (!props.editable) return;
     setInputValue('');
     setDateValue('');
     formEventsUtils.handleChange(
@@ -314,6 +324,7 @@ function DateTimeElement(props: IFormComponentAttributes) {
   };
 
   const onChangeInput = (val: string) => {
+    if (!props.editable) return;
     const m = isTimeField
       ? moment(val, 'HH:mm', true)
       : schema.dateOnly
@@ -340,6 +351,9 @@ function DateTimeElement(props: IFormComponentAttributes) {
     if ((inputValue === '' || !dateValue || dateValue === '') && !onClose) {
       handleAnimationForBlur();
     }
+    // Never write read-only fields: a `readOnly` input is still focusable in the
+    // DOM, so a blur can arrive here without any user change at all.
+    if (!props.editable) return;
     handleDateChange(props, dateValue, isTimeField, inputValue);
   };
 
@@ -479,77 +493,92 @@ function DateTimeElement(props: IFormComponentAttributes) {
       hideAnFieldLoadErrorIcon
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
-      <View ref={inputContainerRef}>
-        <Animated.Text
-          style={[
-            styles.datePickerLabel,
-            {
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            },
-            placeholderAnimatedStyle,
-            placeholderTextAnimatedStyle,
-            props.error && props.editable && styles.errorDatePickerLabel,
-          ]}
-          // @ts-ignore
-          pointerEvents="none"
+      <View
+        style={[
+          Platform.OS === 'web' &&
+            !props.editable &&
+            ({ cursor: 'not-allowed' } as any),
+        ]}
+      >
+        {/* A locked field must not take focus - otherwise clicking away fires
+            a blur (same approach as InputElement.tsx). */}
+        <View
+          ref={inputContainerRef}
+          pointerEvents={!props.editable ? 'none' : 'auto'}
         >
-          {labelText}
-        </Animated.Text>
+          <Animated.Text
+            style={[
+              styles.datePickerLabel,
+              {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              },
+              placeholderAnimatedStyle,
+              placeholderTextAnimatedStyle,
+              props.error && props.editable && styles.errorDatePickerLabel,
+            ]}
+            // @ts-ignore
+            pointerEvents="none"
+          >
+            {labelText}
+          </Animated.Text>
 
-        <Datetime
-          renderInput={renderInput}
-          renderView={(viewMode: any, renderCalendar: any) => (
-            <>
-              {open && (
-                <Portal>
-                  <div
-                    ref={portalRef}
-                    className="rdt custom-datetime rdtOpen"
-                    // Verhindert, dass der Input bei mousedown im Kalender den
-                    // Fokus verliert. Sonst würde onBlur setOpen(false) auslösen
-                    // und den Portal-Kalender unmounten, BEVOR der click/onChange
-                    // des Tages feuert (mousedown läuft vor click).
-                    onMouseDown={(e) => e.preventDefault()}
-                    style={{
-                      top: anchor.y + anchor.height,
-                      left: anchor.x,
-                      width: anchor.width,
-                    }}
-                  >
-                    <div className="rdtPicker">{renderCalendar()}</div>
-                  </div>
-                </Portal>
-              )}
-            </>
-          )}
-          locale={lng}
-          value={dateValue}
-          dateFormat={
-            isTimeField ? false : schema.dateOnly ? 'DD.MM.YYYY' : 'DD.MM.YYYY'
-          }
-          timeFormat={isTimeField ? 'HH:mm' : schema.dateOnly ? false : 'HH:mm'}
-          closeOnSelect={true}
-          open={open}
-          onOpen={() => setOpen(true)}
-          onClose={() => {
-            setOpen(false);
-            handleBlur();
-          }}
-          closeOnClickOutside={true}
-          onChange={(val: any) => {
-            const { m, formatted } = onChangeWeb(val);
-            if (schema.dateOnly) {
-              setOpen(false);
-              setIsFocused(false);
-              handleDateChange(props, m, isTimeField, formatted);
+          <Datetime
+            renderInput={renderInput}
+            renderView={(viewMode: any, renderCalendar: any) => (
+              <>
+                {open && (
+                  <Portal>
+                    <div
+                      ref={portalRef}
+                      className="rdt custom-datetime rdtOpen"
+                      // Verhindert, dass der Input bei mousedown im Kalender den
+                      // Fokus verliert. Sonst würde onBlur setOpen(false) auslösen
+                      // und den Portal-Kalender unmounten, BEVOR der click/onChange
+                      // des Tages feuert (mousedown läuft vor click).
+                      onMouseDown={(e) => e.preventDefault()}
+                      style={{
+                        top: anchor.y + anchor.height,
+                        left: anchor.x,
+                        width: anchor.width,
+                      }}
+                    >
+                      <div className="rdtPicker">{renderCalendar()}</div>
+                    </div>
+                  </Portal>
+                )}
+              </>
+            )}
+            locale={lng}
+            value={dateValue}
+            dateFormat={
+              isTimeField ? false : schema.dateOnly ? 'DD.MM.YYYY' : 'DD.MM.YYYY'
             }
-          }}
-          className="custom-datetime"
-        />
+            timeFormat={isTimeField ? 'HH:mm' : schema.dateOnly ? false : 'HH:mm'}
+            closeOnSelect={true}
+            open={open}
+            onOpen={() => setOpen(true)}
+            onClose={() => {
+              setOpen(false);
+              handleBlur();
+            }}
+            closeOnClickOutside={true}
+            onChange={(val: any) => {
+              const { m, formatted } = onChangeWeb(val);
+              if (schema.dateOnly) {
+                setOpen(false);
+                setIsFocused(false);
+                handleDateChange(props, m, isTimeField, formatted);
+              }
+            }}
+            className="custom-datetime"
+          />
+        </View>
       </View>
     </FormElementWrapper>
   );

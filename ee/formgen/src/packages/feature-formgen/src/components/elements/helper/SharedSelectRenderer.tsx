@@ -271,7 +271,9 @@ function SharedSelectRenderer({
           localErrorMsg={props.error ? props.error : ''}
           jsonPath={props.jsonpath}
           objectId={props.id}
+          contextId={props.contextId}
           selectedElementId={props.selectedElementId}
+          selectedElementContextId={props.selectedElementContextId}
         >
           <View ref={elementRef} style={booleanStyles.radioButtonGroupContainer}>
             <AndpText
@@ -339,7 +341,9 @@ function SharedSelectRenderer({
         localErrorMsg={props.error ? props.error : ''}
         jsonPath={props.jsonpath}
         objectId={props.id}
+        contextId={props.contextId}
         selectedElementId={props.selectedElementId}
+        selectedElementContextId={props.selectedElementContextId}
       >
         <View ref={elementRef} style={booleanStyles.radioButtonGroupContainer}>
           <AndpText
@@ -561,7 +565,9 @@ function SharedSelectRenderer({
       localErrorMsg={props.error ? props.error : ''}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <View style={{ zIndex: 10 }}>
         <BaseDropDownInputElement

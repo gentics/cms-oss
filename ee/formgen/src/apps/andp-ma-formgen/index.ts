@@ -32,10 +32,10 @@ if (Platform.OS === "web") {
 
     const style = document.createElement("style");
     style.id = "formgen-fonts";
-    const fontFamilies =
-      customFontFamilies && Object.keys(customFontFamilies).length > 0
-        ? customFontFamilies
-        : commonFontFamilies;
+    const useCustomFonts =
+      customFontFamilies && Object.keys(customFontFamilies).length > 0;
+    const fontFamilies = useCustomFonts ? customFontFamilies : commonFontFamilies;
+    const fontFolder = useCustomFonts ? "custom" : "common";
 
     Object.entries(fontFamilies).forEach(([fontName, fontPath]) => {
       const fullName = (fontPath as string).split("/").pop() || "";
@@ -43,7 +43,7 @@ if (Platform.OS === "web") {
       const filename = fullName.substring(0, fullName.lastIndexOf("."));
       const fontFace = `@font-face {
         font-family: '${fontName}';
-        src: url('${basePath}assets/__packages/core/src/styles/common/fonts/${filename}.${ext}') format('truetype');
+        src: url('${basePath}assets/__packages/core/src/styles/${fontFolder}/fonts/${filename}.${ext}') format('truetype');
         font-display: auto;
       }`;
       style.appendChild(document.createTextNode(fontFace));

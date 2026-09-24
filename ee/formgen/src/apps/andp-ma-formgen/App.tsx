@@ -43,7 +43,8 @@ export default function App() {
   const [previewInitialized, setPreviewInitialized] = useState(false);
   const [previewFormData, setPreviewFormData] = useState<PreviewFormData>();
   const [previewInformation, setPreviewInformation] = useState<PreviewInformation>();
-  const [previewSelectedElement, setPreviewSelectedElement] = useState<string>();
+  const [previewSelectedElementId, setPreviewSelectedElementId] = useState<string>();
+  const [previewSelectedElementContextId, setPreviewSelectedElementContextId] = useState<string>();
   const [previewPageIndex, setPreviewPageIndex] = useState<number>();
   const [previewMessageListener, setPreviewMessageListener] = useState(false);
   const [previewFromDomLoaded, setPreviewFromDomLoaded] = useState(false);
@@ -91,7 +92,8 @@ export default function App() {
       setPreviewPageIndex(initialPreviewData.currentPage);
     }
     if (initialPreviewData.selectedElementId) {
-      setPreviewSelectedElement(initialPreviewData.selectedElementId);
+      setPreviewSelectedElementId(initialPreviewData.selectedElementId);
+      setPreviewSelectedElementContextId(initialPreviewData.selectedElementContextId);
     }
     setPreviewFromDomLoaded(true);
 
@@ -130,7 +132,8 @@ export default function App() {
           });
           setLanguage(event.language);
           setPreviewPageIndex(event.pageIndex);
-          setPreviewSelectedElement(event.elementId);
+          setPreviewSelectedElementId(event.elementId);
+          setPreviewSelectedElementContextId(event.contextId);
           setPreviewInitialized(true);
           break;
 
@@ -151,7 +154,8 @@ export default function App() {
           break;
 
         case PREVIEW_SELECTED_ELEMENT_CHANGE_EVENT_NAME:
-          setPreviewSelectedElement(event.elementId);
+          setPreviewSelectedElementId(event.elementId);
+          setPreviewSelectedElementContextId(event.contextId);
           break;
       }
     });
@@ -275,7 +279,8 @@ export default function App() {
             isFormgridPreview={isFormgridPreview}
             previewFormData={previewFormData}
             previewInformation={previewInformation}
-            previewSelectedElement={previewSelectedElement}
+            previewSelectedElement={previewSelectedElementId}
+            previewSelectedElementContextId={previewSelectedElementContextId}
             previewPageIndex={previewPageIndex}
           />
         </>

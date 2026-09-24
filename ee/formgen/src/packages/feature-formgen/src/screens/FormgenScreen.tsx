@@ -7,16 +7,16 @@ import theme from '@andp/core/src/styles/theme';
 import { TFunction } from 'i18next';
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
+import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
 import FormgenScreenErrorOverlay from '../components/overlays/childOverlays/FormgenScreenErrorOverlay';
 import { PluginNameEnum } from '../constants/enums/PluginNameEnum';
 import { RestService } from '../services/RestService';
 import { baseStyles } from '../styles/common/common-style';
 import { baseStyles as customBaseStyles } from '../styles/custom/custom-style';
-import { IDataFields, IFeatures, IForm, IFormFlowData, ISchema, ISummaryDetailsUser } from '../types/interfaces';
+import { IDataFields, IFeatures, IFormFlowData, ISummaryDetailsUser } from '../types/interfaces';
+import { PreviewFormData, PreviewInformation } from '../types/preview';
 import { fetchMockDefaultFeatures } from '../utils/MockFormularUtils';
 import RendererScreen from './RendererScreen';
-import { sendPreviewLoadedEvent } from '../components/elements/helper/formgridPreviewBridge';
-import { PreviewFormData, PreviewInformation } from '../types/preview';
 
 const FormgenScreen: React.FC<{
   formId: string;
@@ -40,6 +40,7 @@ const FormgenScreen: React.FC<{
   previewFormData?: PreviewFormData;
   previewInformation?: PreviewInformation;
   previewSelectedElement?: string;
+  previewSelectedElementContextId?: string;
   previewPageIndex?: number;
 }> = (props) => {
   const [features, setFeatures] = useState<IFeatures>();
@@ -184,17 +185,23 @@ const FormgenScreen: React.FC<{
     );
   }
   const showRenderScreen = () => {
-    if(pluginName == PluginNameEnum.ACTA_NOVA && features && props.config && t){
-      return true; 
+    //features are necessary for AN-Forms
+    if(pluginName == PluginNameEnum.ACTA_NOVA && !features ){
+      return false; 
     }
-    if(pluginName == PluginNameEnum.CMS_FORMS && props.config && t){
-        return true;
-    }
+
     if (props.isFormgridPreview) {
       return props.previewFormData?.uiSchema != null
         && props.previewFormData?.schema != null;
     }
-    return false;
+
+    //translations and formFlowConfig is necessary
+    if(!t || !props.config){
+      return false;
+    }
+
+    //if no special check is invalid, render the form
+    return true;
   }
   
   if (showRenderScreen()) {
@@ -222,6 +229,7 @@ const FormgenScreen: React.FC<{
           previewFormData={props.previewFormData}
           previewInformation={props.previewInformation}
           previewSelectedElement={props.previewSelectedElement}
+          previewSelectedElementContextId={props.previewSelectedElementContextId}
           previewPageIndex={props.previewPageIndex}
         />}
         {Platform.OS === "web" && <span dangerouslySetInnerHTML={{ __html: styleHtml }} />}

@@ -73,7 +73,9 @@ export interface FormElementWrapperProps {
   isSmallerWarning?: boolean;
   jsonPath: string;
   objectId: string;
+  contextId?: string;
   selectedElementId?: string;
+  selectedElementContextId?: string;
 }
 
 export function FormElementWrapper(props: FormElementWrapperProps) {
@@ -91,7 +93,9 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
   const [isWrapperHovering, setIsWrapperHovering] = useState(false);
   const [isWrapperPressed, setIsWrapperPressed] = useState(false);
   const isPreview = !!props.formState?.isFormgridPreview;
-  const isSelected = !!props.selectedElementId && props.selectedElementId === props.objectId;
+  const isSelected = !!props.selectedElementId
+    && props.selectedElementId === props.objectId
+    && props.selectedElementContextId === props.contextId;
   const hasAutoScrolledToSelectionRef = useRef(false);
   const wrapperRef = useRef<any>(null);
 
@@ -169,7 +173,7 @@ export function FormElementWrapper(props: FormElementWrapperProps) {
     // Ensure selection event fires even if something inside prevents default later
     e?.stopPropagation?.();
 
-    sendPreviewSelectedElementEvent(props.objectId);
+    sendPreviewSelectedElementEvent(props.objectId, props.contextId);
   };
 
   const hasIcons = !!(

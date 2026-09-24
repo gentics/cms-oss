@@ -199,7 +199,9 @@ function ANDropDownReferenceElement(props: IFormComponentAttributes) {
       localErrorMsg={hasErrors || ""}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
       selectedElementId={props.selectedElementId}
+      selectedElementContextId={props.selectedElementContextId}
     >
       <View ref={containerRef as any} style={{ zIndex: 10 }}>
         <BaseDropDownInputElement

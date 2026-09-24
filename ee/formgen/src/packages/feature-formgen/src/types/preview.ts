@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { IDataFields, IFeatures, IForm, IFormFlowSteps, ISchema } from "./interfaces";
+import { FormgenSettings, IDataFields, IFeatures, IForm, IFormFlowSteps, ISchema } from "./interfaces";
 
 export type FormgridPreviewData = {
   formId: string;
@@ -15,6 +15,8 @@ export type FormgridPreviewData = {
   prefillContent: IDataFields;
   currentPage?: number;
   selectedElementId?: string;
+  selectedElementContextId?: string;
+  formgenSettings?: FormgenSettings;
 };
 
 /**
@@ -29,6 +31,7 @@ export interface PreviewInformation {
   availableLanguages: string[];
   cmsSid?: number;
   features?: IFeatures;
+  formgenSettings?: FormgenSettings;
 }
 
 /**
@@ -96,6 +99,7 @@ export interface PreviewInitializationEvent extends PreviewInformation {
     schema: ISchema;
     uiSchema: IForm;
     elementId?: string;
+    contextId?: string;
 }
 
 export interface PreviewLoadedEvent {
@@ -115,6 +119,7 @@ export interface PreviewSelectedElementChangeEvent {
     receiver: PreviewEventReceiver;
 
     elementId: string;
+    contextId?: string;
 }
 
 export interface PreviewCurrentPageChangeEvent {

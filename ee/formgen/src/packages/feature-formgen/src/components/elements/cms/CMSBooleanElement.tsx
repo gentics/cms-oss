@@ -95,6 +95,7 @@ function CMSBooleanElement(props: IFormComponentAttributes) {
       isSmallerWarning={true}
       jsonPath={props.jsonpath}
       objectId={props.id}
+      contextId={props.contextId}
     >
       <View ref={elementRef}>
         <AndpRadioButton

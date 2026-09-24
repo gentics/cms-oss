@@ -82,6 +82,12 @@ const FormProgressScreenPart: React.FC<{
     return <></>;
   }
 
+  // Only the progress display is rendered from here on. The flow step decides
+  // whether it is shown at all - the DialogForm header above is not affected.
+  if (!utils.shouldShowProgress(uiState.flowList?.[uiState.flowPageIndex])) {
+    return <></>;
+  }
+
   if (breakPoints.maximumMd) {
     const currentPageText = currentPage + 1;
     const maxPageText = formPagesLength;

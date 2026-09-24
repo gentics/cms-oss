@@ -237,6 +237,7 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
           label={obj.label}
           value={value}
           id={obj.id}
+          contextId={props.contextId}
           description={obj.description}
           required={utils.isRequired(formState, obj.id)}
           editable={utils.isEditable(
@@ -297,6 +298,6 @@ export function ElementRenderer(props: IFormComponentBaseAttributes) {
         {elements}
       </Row>
     ),
-    [elements.length, props.formState, props.uiState.currentPage, props.selectedElementId],
+    [elements.length, props.formState, props.uiState.currentPage, props.selectedElementId, props.selectedElementContextId],
   );
 }

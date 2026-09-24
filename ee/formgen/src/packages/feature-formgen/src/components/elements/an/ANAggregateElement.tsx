@@ -1117,6 +1117,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
           key={key}
           aggregatShowOnlyFirstLine={props.formGridOptions?.showOnlyFirstLine}
           parentId={props.id}
+          contextId={props.id}
           isAggregate={true}
           summary={SummaryOptions.SummaryText}
         />
@@ -1402,6 +1403,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                         props.formGridOptions?.showOnlyFirstLine
                       }
                       parentId={props.id}
+                      contextId={props.id}
                       isAggregate={true}
                       insideSubaggregatIndex={index}
                     />
@@ -1433,6 +1435,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                               props.formGridOptions?.showOnlyFirstLine
                             }
                             parentId={props.id}
+                            contextId={props.id}
                             isAggregate
                             insideSubaggregatIndex={index}
                           />
@@ -1540,6 +1543,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                     props.formGridOptions?.showOnlyFirstLine
                   }
                   parentId={props.id}
+                  contextId={props.id}
                   isAggregate={true}
                   insideSubaggregatIndex={index}
                 />
@@ -1585,6 +1589,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
                         props.formGridOptions?.showOnlyFirstLine
                       }
                       parentId={props.id}
+                      contextId={props.id}
                       isAggregate={true}
                       insideSubaggregatIndex={index}
                     />
@@ -1648,6 +1653,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
             elements={allElems}
             jsonpath={elementJsonPath}
             parentId={props.id}
+            contextId={props.id}
             isAggregate={true}
             insideSubaggregatIndex={index}
           />
@@ -1718,9 +1724,9 @@ function ANAggregateElement(props: IFormComponentAttributes) {
     if (table) {
       elements[0] = table;
     }
-  } else if (props.isList) {
+  } else if (!props.formState.isFormgridPreview && props.isList) {
     if (props.value != null && Array.isArray(props.value)) {
-      const filterResult = applyFilter(transformedFilters, props.value);
+      const filterResult = applyFilter(transformedFilters, (props.value || []));
       const indexSave: number[] = filterResult.indexSave;
       const localValues = filterResult.valueFiltered;
       let newAggregates = undefined;
@@ -1790,6 +1796,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
             }
             aggregatShowOnlyFirstLine={props.formGridOptions?.showOnlyFirstLine}
             parentId={props.id}
+            contextId={props.id}
             isAggregate={true}
             summary={SummaryOptions.SummaryText}
           />
@@ -1802,6 +1809,7 @@ function ANAggregateElement(props: IFormComponentAttributes) {
             {...props}
             jsonpath={props.jsonpath + '.value'}
             parentId={props.id}
+            contextId={props.id}
             isAggregate={true}
             key={
               'AggRowView-ElementRenderer-' + jsonpath + '-' + props.parentId

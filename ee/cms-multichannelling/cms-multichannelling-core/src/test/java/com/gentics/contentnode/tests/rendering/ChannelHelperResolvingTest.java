@@ -57,18 +57,30 @@ public class ChannelHelperResolvingTest {
 	@Parameters(name = "{index}: resolve {0}, channel {1}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
+		// Note: Regardless of the channel scope, cms.X will always return the same object
 		data.add(new Object[] {"cms.node.id", false, "node.id"});
-		data.add(new Object[] {"cms.node.id", true, "channel.id"});
+		data.add(new Object[] {"cms.node.id", true, "node.id"});
 		data.add(new Object[] {"cms.node.host", false, "node.host"});
-		data.add(new Object[] {"cms.node.host", true, "channel.host"});
+		data.add(new Object[] {"cms.node.host", true, "node.host"});
 		data.add(new Object[] {"cms.page.id", false, "masterPage.id"});
-		data.add(new Object[] {"cms.page.id", true, "channelPage.id"});
+		data.add(new Object[] {"cms.page.id", true, "masterPage.id"});
 		data.add(new Object[] {"cms.page.name", false, "masterPage.name"});
-		data.add(new Object[] {"cms.page.name", true, "channelPage.name"});
+		data.add(new Object[] {"cms.page.name", true, "masterPage.name"});
 		data.add(new Object[] {"cms.folder.id", false, "masterFolder.id"});
-		data.add(new Object[] {"cms.folder.id", true, "channelFolder.id"});
+		data.add(new Object[] {"cms.folder.id", true, "masterFolder.id"});
 		data.add(new Object[] {"cms.folder.name", false, "masterFolder.name"});
-		data.add(new Object[] {"cms.folder.name", true, "channelFolder.name"});
+		data.add(new Object[] {"cms.folder.name", true, "masterFolder.name"});
+
+		// Here are some examples, where something is resolved from the current page,
+		// in this case, the channel scope is relevant
+		data.add(new Object[] {"cms.page.node.id", false, "node.id"});
+		data.add(new Object[] {"cms.page.node.id", true, "channel.id"});
+		data.add(new Object[] {"cms.page.node.host", false, "node.host"});
+		data.add(new Object[] {"cms.page.node.host", true, "channel.host"});
+		data.add(new Object[] {"cms.page.folder.id", false, "masterFolder.id"});
+		data.add(new Object[] {"cms.page.folder.id", true, "channelFolder.id"});
+		data.add(new Object[] {"cms.page.folder.name", false, "masterFolder.name"});
+		data.add(new Object[] {"cms.page.folder.name", true, "channelFolder.name"});
 		return data;
 	}
 

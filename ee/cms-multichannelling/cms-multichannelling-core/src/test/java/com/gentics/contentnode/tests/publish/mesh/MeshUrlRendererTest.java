@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.publish.mesh;
 
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
@@ -25,8 +27,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -35,6 +35,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -121,6 +122,8 @@ public class MeshUrlRendererTest {
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		context.getContext().getTransaction().commit();
+
 		Integer meshCrId = createMeshCR("", 0, MESH_PROJECT_NAME);
 
 		master = createNode("master", meshCrId, null);
@@ -133,19 +136,19 @@ public class MeshUrlRendererTest {
 		pageConstructId = Trx.supply(() -> createConstruct(master, PageURLPartType.class, "pageurl", "page"));
 		hbsConstructId = Trx.supply(() -> createConstruct(master, HandlebarsPartType.class, "hbs", "hbs"));
 
-		Template template = Trx.supply(() -> createTemplate(
+		Template template = supply(() -> createTemplate(
 			master.getFolder(), "<node hbs>", "Template",
 			createTemplateTag(hbsConstructId, "hbs", true, false),
 			createTemplateTag(pageConstructId, "page", true, false)));
 
-		Folder folder = ContentNodeTestDataUtils.createFolder(master.getFolder(), "folder");
-		masterPage = update(createPage(folder, template, "master page", null), Page::publish);
-		channelPage = update(createPage(folder, template, "channel page", channel), Page::publish);
-		sideChannelPage = update(createPage(folder, template, "sideChannel page", sideChannel), Page::publish);
+		Folder folder = supply(() -> ContentNodeTestDataUtils.createFolder(master.getFolder(), "folder"));
+		masterPage = execute(f -> update(createPage(f, template, "master page", null), Page::publish), folder);
+		channelPage = execute(f -> update(createPage(f, template, "channel page", channel), Page::publish), folder);
+		sideChannelPage = execute(f -> update(createPage(f, template, "sideChannel page", sideChannel), Page::publish), folder);
 
-		folder = ContentNodeTestDataUtils.createFolder(otherMaster.getFolder(), "folder");
-		otherMasterPage = update(createPage(folder, template, "otherMaster page", otherMaster), Page::publish);
-		otherChannelPage = update(createPage(folder, template, "otherChannel page", otherChannel), Page::publish);
+		folder = supply(() -> ContentNodeTestDataUtils.createFolder(otherMaster.getFolder(), "folder"));
+		otherMasterPage = execute(f -> update(createPage(f, template, "otherMaster page", otherMaster), Page::publish), folder);
+		otherChannelPage = execute(f -> update(createPage(f, template, "otherChannel page", otherChannel), Page::publish), folder);
 	}
 
 	private static Node createNode(String name, Integer meshCrId, Node master) throws NodeException {
@@ -165,19 +168,13 @@ public class MeshUrlRendererTest {
 
 	@Test
 	public void testCrossChannelLink() throws NodeException {
-		Page sourcePage = Trx.supply(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			Page p = t.getObject(source.page(), true);
-
+		Page sourcePage =Builder.update(source.page(), p -> {
 			getPartType(PageURLPartType.class, p.getContentTag("page"), "page")
-				.setTargetPage(target.page());
+			.setTargetPage(target.page());
 			getPartType(HandlebarsPartType.class, p.getContentTag("hbs"), "hbs")
-				.getValueObject()
-				.setValueText(String.format(HBS_TEMPLATE_FMT, target.node().getId()));
-			p.save();
-
-			return t.getObject(p);
-		});
+			.getValueObject()
+			.setValueText(String.format(HBS_TEMPLATE_FMT, target.node().getId()));
+		}).unlock().publish().build();
 
 		Trx.operate(() -> {
 			try (ChannelTrx cTrx = new ChannelTrx(source.node());

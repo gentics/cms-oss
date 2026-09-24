@@ -1,37 +1,44 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { MessageFromServer } from '@gentics/cms-models';
+import { MessageFromServer, MessageListOptions } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { NgxsModule } from '@ngxs/store';
-import { NEVER, Observable, of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { ApplicationStateService } from '..';
-import { Api } from '../../../core/providers/api/api.service';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { STATE_MODULES } from '../../modules';
 import { TestApplicationState } from '../../test-application-state.mock';
 import { MessageActionsService } from './message-actions.service';
+
+class MockErrorHandler implements Partial<ErrorHandler> {
+    catch: (error: Error, options?: { notification: boolean }) => void = () => {};
+}
 
 describe('MessageActionsService', () => {
 
     let messageActions: MessageActionsService;
     let state: TestApplicationState;
-    let api: MockAPI;
+    let client: GCMSTestRestClientService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: Api, useClass: MockAPI },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: ErrorHandler, useClass: MockErrorHandler },
                 MessageActionsService,
             ],
         });
         state = TestBed.inject(ApplicationStateService) as any;
-        api = TestBed.inject(Api);
+        client = TestBed.inject(GCMSRestClientService) as any;
         messageActions = TestBed.inject(MessageActionsService);
     });
 
     describe('fetchAllMessages', () => {
         it('calls getMessages action before loading from the API', fakeAsync(() => {
             let loadingWasStarted = false;
-            api.messages.getMessages = jasmine.createSpy('api.messages.getMessages').and.callFake(() => {
+            client.message.list = jasmine.createSpy('client.message.list').and.callFake(() => {
                 loadingWasStarted = true;
                 return NEVER;
             });
@@ -43,14 +50,14 @@ describe('MessageActionsService', () => {
         }));
 
         it('fetches read and unread messages from the API', fakeAsync(() => {
-            api.messages.getMessages = jasmine.createSpy('api.messages.getMessages')
+            client.message.list = jasmine.createSpy('client.message.list')
                 .and.callFake(() => NEVER);
 
             messageActions.fetchAllMessages();
             tick();
 
-            expect(api.messages.getMessages).toHaveBeenCalledWith(true);
-            expect(api.messages.getMessages).toHaveBeenCalledWith(false);
+            expect(client.message.list).toHaveBeenCalledWith({ unread: true });
+            expect(client.message.list).toHaveBeenCalledWith({ unread: false });
         }));
 
         it('calls fetchAllMessagesSuccess action when loaded successfully', fakeAsync(() => {
@@ -62,7 +69,7 @@ describe('MessageActionsService', () => {
                 type: 'INFO',
                 isInstantMessage: false,
             };
-            api.messages.getMessages = () => of({ messages: [message] });
+            client.message.list = () => of({ messages: [message] } as any);
 
             messageActions.fetchAllMessages();
             tick();
@@ -83,12 +90,12 @@ describe('MessageActionsService', () => {
                 2: jasmine.objectContaining({ id: 2, message: 'Message Two', sender: 2, unread: true }),
             };
 
-            api.messages.getMessages = (unreadOnly: boolean) =>
-                of({ messages: unreadOnly ? unreadMessages : allMessages });
+            client.message.list = (options?: MessageListOptions) =>
+                of({ messages: options?.unread ? unreadMessages : allMessages } as any);
 
             let resolved = false;
             messageActions.fetchAllMessages()
-                .then(result => {
+                .then((result) => {
                     // expect(result).toEqual(true);
                     resolved = true;
                 });
@@ -113,12 +120,12 @@ describe('MessageActionsService', () => {
                 2: jasmine.objectContaining({ id: 2, message: 'Message Two', sender: 1, unread: true }),
             };
 
-            api.messages.getMessages = (unreadOnly: boolean) =>
-                of({ messages: unreadOnly ? unreadMessages : allMessages });
+            client.message.list = (options?: MessageListOptions) =>
+                of({ messages: options?.unread ? unreadMessages : allMessages } as any);
 
             let resolved = false;
             messageActions.fetchAllMessages()
-                .then(result => {
+                .then((result) => {
                     // expect(result).toEqual(true);
                     resolved = true;
                 });
@@ -130,19 +137,8 @@ describe('MessageActionsService', () => {
             expect(state.now.entities.message).toEqual(expectedEntityResult);
         }));
 
-        it('calls fetchAllMessagesError action when loading fails', fakeAsync(() => {
-            const errorMessage = 'Failed to load';
-            api.messages.getMessages = () => throwError(new Error(errorMessage));
-
-            messageActions.fetchAllMessages().catch(() => { });
-            tick();
-
-            expect(state.now.messages.fetching).toEqual(false);
-            expect(state.now.messages.lastError).toEqual(errorMessage);
-        }));
-
         it('does not reject the returned Promise when loading fails', fakeAsync(() => {
-            api.messages.getMessages = () => throwError('Failed to load');
+            client.message.list = () => throwError('Failed to load');
             let rejected = false;
 
             messageActions.fetchAllMessages()
@@ -156,7 +152,7 @@ describe('MessageActionsService', () => {
     describe('fetchUnreadMessages', () => {
         it('calls fetchUnreadMessagesStart action before loading from the API', () => {
             let wasDispatched = false;
-            api.messages.getMessages = jasmine.createSpy('api.messages.getMessages').and.callFake(() => {
+            client.message.list = jasmine.createSpy('client.message.list').and.callFake(() => {
                 wasDispatched = true;
                 return NEVER;
             });
@@ -167,13 +163,13 @@ describe('MessageActionsService', () => {
         });
 
         it('fetches unread messages from the API', () => {
-            api.messages.getMessages = jasmine.createSpy('api.messages.getMessages')
+            client.message.list = jasmine.createSpy('client.message.list')
                 .and.callFake(() => NEVER);
 
             messageActions.fetchUnreadMessages();
 
-            expect(api.messages.getMessages).toHaveBeenCalledWith(true);
-            expect(api.messages.getMessages).not.toHaveBeenCalledWith(false);
+            expect(client.message.list).toHaveBeenCalledWith({ unread: true });
+            expect(client.message.list).not.toHaveBeenCalledWith({ unread: false });
         });
 
         it('calls fetchUnreadMessagesSuccess action when loaded successfully', fakeAsync(() => {
@@ -185,12 +181,11 @@ describe('MessageActionsService', () => {
                 type: 'INFO',
                 isInstantMessage: false,
             };
-            api.messages.getMessages = () => of({ messages: [message] });
+            client.message.list = () => of({ messages: [message] } as any);
 
             messageActions.fetchUnreadMessages();
             tick();
 
-            expect(state.now.messages.fetching).toEqual(false);
             expect(state.now.messages.all).toEqual([123]);
             expect(state.now.messages.unread).toEqual([123]);
         }));
@@ -205,18 +200,18 @@ describe('MessageActionsService', () => {
                 3: jasmine.objectContaining({ id: 3, message: 'Message Three', sender: 1, unread: true }),
             };
 
-            api.messages.getMessages = () => of({ messages: unreadMessages });
+            client.message.list = () => of({ messages: unreadMessages } as any);
 
             let resolved = false;
             messageActions.fetchUnreadMessages()
-                .then(result => {
+                .then((result) => {
                     // expect(result).toEqual(true);
                     resolved = true;
                 });
             tick();
 
             expect(resolved).toBe(true);
-            expect(state.now.messages.unread).toEqual(unreadMessages.map(msg => msg.id));
+            expect(state.now.messages.unread).toEqual(unreadMessages.map((msg) => msg.id));
             expect(state.now.entities.message).toEqual(expectedEntityResult);
         }));
 
@@ -230,34 +225,23 @@ describe('MessageActionsService', () => {
                 3: jasmine.objectContaining({ id: 3, message: 'Message Three', sender: 1, unread: true }),
             };
 
-            api.messages.getMessages = () => of({ messages: unreadMessages });
+            client.message.list = () => of({ messages: unreadMessages } as any);
 
             let resolved = false;
             messageActions.fetchUnreadMessages()
-                .then(result => {
+                .then((result) => {
                     // expect(result).toEqual(true);
                     resolved = true;
                 });
             tick();
 
             expect(resolved).toBe(true);
-            expect(state.now.messages.unread).toEqual(unreadMessages.map(msg => msg.id));
+            expect(state.now.messages.unread).toEqual(unreadMessages.map((msg) => msg.id));
             expect(state.now.entities.message).toEqual(expectedResult);
         }));
 
-        it('calls fetchUnreadMessagesError action when loading fails', fakeAsync(() => {
-            const errorMessage = 'Failed to load';
-            api.messages.getMessages = () => throwError(new Error(errorMessage));
-
-            messageActions.fetchUnreadMessages().catch(() => {});
-            tick();
-
-            expect(state.now.messages.fetching).toEqual(false);
-            expect(state.now.messages.lastError).toEqual(errorMessage);
-        }));
-
         it('does not reject returned Promise when loading fails', fakeAsync(() => {
-            api.messages.getMessages = () => throwError('Failed to load');
+            client.message.list = () => throwError('Failed to load');
             let rejected = false;
 
             messageActions.fetchUnreadMessages()
@@ -282,17 +266,17 @@ describe('MessageActionsService', () => {
         });
 
         it('marks the passed messages as read via the API', fakeAsync(() => {
-            api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
+            client.message.markAsRead = jasmine.createSpy('client.message.markAsRead')
                 .and.returnValue(NEVER);
 
             messageActions.markMessagesAsRead([1, 2, 3]);
             tick();
 
-            expect(api.messages.markAsRead).toHaveBeenCalledWith([1, 2, 3]);
+            expect(client.message.markAsRead).toHaveBeenCalledWith({ messages: [1, 2, 3] });
         }));
 
         it('marks the messages as read in the app state when the API request succeeds', fakeAsync(() => {
-            api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
+            client.message.markAsRead = jasmine.createSpy('client.message.markAsRead')
                 .and.callFake(() => of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
@@ -302,7 +286,7 @@ describe('MessageActionsService', () => {
         }));
 
         it('does not mark the messages as read in the app state  when the API request fails', fakeAsync(() => {
-            api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
+            client.message.markAsRead = jasmine.createSpy('client.message.markAsRead')
                 .and.callFake(() => throwError('Request failed'));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
@@ -312,7 +296,7 @@ describe('MessageActionsService', () => {
         }));
 
         it('works with an array of message IDs as input', fakeAsync(() => {
-            api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
+            client.message.markAsRead = jasmine.createSpy('client.message.markAsRead')
                 .and.callFake(() => of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);

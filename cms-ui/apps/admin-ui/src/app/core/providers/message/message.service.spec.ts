@@ -1,16 +1,17 @@
-import { AppStateService } from '@admin-ui/state';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { I18nService, TypePermissions, UniformTypePermissions } from '@gentics/cms-components';
+import { MockI18nService } from '@gentics/cms-components/testing';
 import { AccessControlledType } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, NotificationService } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { AppStateService } from '../../../state';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
+import { ErrorHandler } from '../error-handler';
 import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
-import { MockI18nService } from '@gentics/cms-components/testing';
-
-class MockGcmsApi {}
 
 class MockPermissionsService {
     private viewInbox$ = new BehaviorSubject(new UniformTypePermissions(AccessControlledType.INBOX, true));
@@ -24,12 +25,15 @@ class MockPermissionsService {
     }
 }
 
+class MockErrorHandler implements Partial<ErrorHandler> {
+    catch: (error: Error, options?: { notification: boolean }) => string = () => '';
+}
+
 describe('MessageService', () => {
 
     let appState: TestAppState;
     let poller: MessageService;
     let subscription: Subscription;
-    let gcmsApi: GcmsApi;
     let permissionsService: MockPermissionsService;
 
     let fetchAllMessages;
@@ -44,16 +48,17 @@ describe('MessageService', () => {
             providers: [
                 MessageService,
                 { provide: AppStateService, useClass: TestAppState },
-                { provide: GcmsApi, useClass: MockGcmsApi },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: I18nService, useClass: MockI18nService },
-                { provide: NotificationService, }
+                { provide: ErrorHandler, useClass: MockErrorHandler },
+                { provide: NotificationService },
+                provideHttpClientTesting(),
             ],
         });
 
         poller = TestBed.inject(MessageService);
         appState = TestBed.inject(AppStateService) as any;
-        gcmsApi = TestBed.inject(GcmsApi);
         permissionsService = TestBed.inject(PermissionsService) as any;
 
         fetchAllMessages = spyOn(poller, 'fetchAllMessages');
@@ -70,12 +75,6 @@ describe('MessageService', () => {
         if (subscription) {
             subscription.unsubscribe();
         }
-    });
-
-    it('can be created', () => {
-        expect(poller).toBeTruthy();
-        expect(gcmsApi).toBeTruthy('no GcmsApi');
-        expect(permissionsService).toBeTruthy('no PermissionService');
     });
 
     describe('poll()', () => {

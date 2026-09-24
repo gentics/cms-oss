@@ -39,9 +39,9 @@ export class MessageService implements OnDestroy {
         intervalInSeconds: number = DEFAULT_INTERVAL,
     ): Subscription {
         if (
-            !this.subscription ||
-            delayInSeconds !== this.fetchDelay ||
-            intervalInSeconds !== this.fetchInterval
+            !this.subscription
+            || delayInSeconds !== this.fetchDelay
+            || intervalInSeconds !== this.fetchInterval
         ) {
             if (this.subscription) {
                 this.subscription.unsubscribe();
@@ -64,16 +64,14 @@ export class MessageService implements OnDestroy {
     }
 
     private fetchWhenUserIsLoggedIn(): void {
-        const doFetch$ = this.appState
-            .select((state) => state.auth.isLoggedIn)
-            .pipe(
-                mergeMap((loggedIn) => {
-                    if (loggedIn) {
-                        return this.permissions.viewInbox$;
-                    }
-                    return of(false);
-                }),
-            );
+        const doFetch$ = this.appState.select((state) => state.auth.isLoggedIn).pipe(
+            mergeMap((loggedIn) => {
+                if (loggedIn) {
+                    return this.permissions.viewInbox$;
+                }
+                return of(false);
+            }),
+        );
 
         this.subscription = combineLatest([
             doFetch$,
@@ -92,36 +90,28 @@ export class MessageService implements OnDestroy {
             )
             .subscribe((firstFetch) => {
                 if (firstFetch) {
-                    this.messageActions
-                        .fetchAllMessages()
-                        .then((allMessages) => {
-                            const [_all, unread] = allMessages;
-                            this.deliverInstantMessagesOnce(unread);
-                        });
+                    this.messageActions.fetchAllMessages().then(({ unread }) => {
+                        this.deliverInstantMessagesOnce(unread || []);
+                    });
                 } else {
                     this.messageActions.fetchUnreadMessages().then((unread) => {
-                        this.deliverInstantMessagesOnce(unread);
+                        this.deliverInstantMessagesOnce(unread || []);
                     });
                 }
             });
     }
 
     private deliverInstantMessagesOnce(messages: MessageFromServer[]): void {
-        const deliveredInstantMessages =
-            this.appState.now.messages.deliveredInstantMessages;
+        const deliveredInstantMessages = this.appState.now.messages.deliveredInstantMessages || [];
 
         messages
-            .filter(
-                (message) =>
-                    message.isInstantMessage &&
-                    !deliveredInstantMessages.includes(message.id),
+            .filter((message) => message.isInstantMessage
+              && !deliveredInstantMessages.includes(message.id),
             )
             .forEach((message) => this.sendInstantMessage(message));
 
         const deliveredMessageIds = messages.map((message) => message.id);
-        this.appState.dispatch(
-            new InstantMessagesDeliveredAction(deliveredMessageIds),
-        );
+        this.appState.dispatch(new InstantMessagesDeliveredAction(deliveredMessageIds));
     }
 
     private sendInstantMessage(message: MessageFromServer): void {

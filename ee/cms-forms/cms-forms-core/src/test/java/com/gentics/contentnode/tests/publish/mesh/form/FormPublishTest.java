@@ -793,6 +793,7 @@ public class FormPublishTest extends AbstractFormPublishTest {
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de", "en"));
 			f.setFolderId(folder.getId());
+			f.setData(getFormData("form_data.json"));
 		}));
 
 		// create and publish page

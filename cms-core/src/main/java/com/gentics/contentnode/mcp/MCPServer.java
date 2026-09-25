@@ -3,6 +3,8 @@ package com.gentics.contentnode.mcp;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.contentnode.mcp.auth.CmsMcpContextExtractor;
+import com.gentics.contentnode.mcp.auth.CmsMcpSecurityValidator;
 import com.gentics.contentnode.rest.version.Main;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
@@ -32,7 +34,15 @@ import io.modelcontextprotocol.spec.McpSchema.ServerCapabilities;
  *
  * <p>
  * Tools, resources and prompts are not registered here. They are added to the
- * {@link McpSyncServer} instance returned by {@link #getServer()}.
+ * {@link McpSyncServer} instance returned by {@link #getServer()} (see
+ * {@code com.gentics.contentnode.mcp.ManualMcpTools}).
+ * </p>
+ *
+ * <p>
+ * The transport is configured with a {@link CmsMcpContextExtractor} (extracts CMS credentials
+ * from the raw HTTP request, so a tool call can later resolve them into a real CMS session - see
+ * {@code com.gentics.contentnode.mcp.AbstractMcpTool}) and a {@link CmsMcpSecurityValidator}
+ * (optional, disabled-by-default HTTP 401 rejection when no credential is present at all).
  * </p>
  */
 public final class MCPServer {
@@ -95,6 +105,8 @@ public final class MCPServer {
 			transportProvider = HttpServletStreamableServerTransportProvider.builder()
 					.jsonMapper(new JacksonMcpJsonMapper(new ObjectMapper()))
 					.mcpEndpoint(path)
+					.contextExtractor(new CmsMcpContextExtractor())
+					.securityValidator(new CmsMcpSecurityValidator())
 					.build();
 
 			server = McpServer.sync(transportProvider)

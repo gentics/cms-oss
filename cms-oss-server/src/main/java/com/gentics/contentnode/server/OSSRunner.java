@@ -49,7 +49,7 @@ import com.gentics.contentnode.config.PackageRewriteRule;
 import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
 import com.gentics.contentnode.mcp.MCPServer;
-import com.gentics.contentnode.mcp.McpToolRegistry;
+import com.gentics.contentnode.mcp.ManualMcpTools;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -290,12 +290,19 @@ public class OSSRunner {
 	}
 
 	/**
-	 * Scan the REST resource implementations for {@link com.gentics.contentnode.mcp.McpTool}
-	 * annotated methods and register them as tools on the MCP server (if the MCP endpoint is
-	 * enabled).
+	 * Register the manually implemented MCP tools (see
+	 * {@link com.gentics.contentnode.mcp.ManualMcpTools}) on the MCP server, if the MCP endpoint
+	 * is enabled.
+	 *
+	 * <p>
+	 * Note: the classpath scan for {@code @McpTool}-annotated REST resource methods
+	 * ({@code com.gentics.contentnode.mcp.McpToolRegistry#scanAndRegister}) is intentionally not
+	 * called anymore - tools are now registered manually. See
+	 * {@code docs/mcp-server-integration.md}.
+	 * </p>
 	 */
 	private static void registerMcpTools() {
-		MCPServer.getServer().ifPresent(McpToolRegistry::scanAndRegister);
+		MCPServer.getServer().ifPresent(ManualMcpTools::registerAll);
 	}
 
 	private static void addStaticFilesToContext(ServletContextHandler context) {

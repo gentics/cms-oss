@@ -5,7 +5,7 @@ Gentics CMS OSS server, so that the CMS can act as an MCP (Model Context Protoco
 
 | Ticket | Scope | Status |
 | --- | --- | --- |
-| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **first tool implemented (§7)** |
+| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10)** |
 | GPU-2666 | Integrate the MCP server as a servlet under `/mcp` | implemented |
 | GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9) |
 | GPU-2672 | (follow-up) | open |
@@ -330,6 +330,11 @@ The call handler:
 `registerMcpTools()` helper, so tools are only registered when the MCP endpoint itself is enabled
 (`MCPServer.getServer()` is empty otherwise).
 
+> **Update (§10):** `registerMcpTools()` no longer calls `scanAndRegister` - it now calls
+> `ManualMcpTools.registerAll` instead. `McpToolRegistry`'s classpath scan (and the annotations it
+> looks for) are kept in the codebase and still covered by their own tests, but are no longer
+> invoked at startup. See §10 for why, and for how tools are registered now.
+
 ### 7.4 Scope of the first tool
 
 `getActionLog` now takes optional paging (`page`, `pageSize`) and filter (`user`, `action`, `type`,
@@ -340,7 +345,13 @@ output (`outputSchema`/`structuredContent` — results are always a single JSON 
 `ToolAnnotations`/`_meta`. These can be added incrementally to `McpToolRegistry` as soon as a tool
 actually needs them.
 
-### 7.5 Known limitation: no authentication/authorization
+### 7.5 Known limitation: no authentication/authorization (resolved, see §10)
+
+> **This section describes the state as of GPU-2665/2667, before authentication was added. It is
+> kept for historical context. See §10 for the current state**, including a still-open
+> caveat: tools registered through the classpath scan described in this section (§7) are no
+> longer invoked at all (§10.5) - the limitation below is only still relevant if that scan is ever
+> re-enabled.
 
 A tool call arrives on the `/mcp` servlet, entirely outside the Jersey request pipeline that
 normally binds an authenticated CMS session to the thread and enforces `@RequiredPerm` via
@@ -418,16 +429,17 @@ discovering a non-public method but then crashing on first real call with an
 
 ## 8. Open points / follow-ups
 
-* **Authentication and authorization.** `/mcp` is currently unauthenticated — the CMS session
-  filter is only mapped to `/rest/*`, and `McpToolRegistry` (§7.5) does not bind or check a CMS
-  session/permissions either. Before any tool touches CMS data as a real user, the endpoint needs
-  to be tied to the CMS authentication (SID / API token), e.g. through the transport's
-  `contextExtractor` (`McpTransportContextExtractor<HttpServletRequest>`), which can hand the CMS
-  session down into the tool handlers, which `McpToolRegistry` would then use to open a `Trx` for
-  that session/user and re-run the method's `@RequiredPerm` checks before invoking it. Still open.
-* **Transport security.** The transport provider accepts a `ServerTransportSecurityValidator`
-  (default: NOOP). `Origin` header validation should be considered, since the CMS is a browser
-  facing application. Still open.
+* **Authentication and authorization.** Resolved for the manually implemented tools - see §10.
+  `/mcp` now extracts an API token/session cookie from the request and resolves it into a real
+  CMS session before a tool runs (`AbstractMcpTool`); a tool without a resolvable session is
+  rejected. `McpToolRegistry`'s classpath scan itself (§7.5) still doesn't do any of this, but is
+  also no longer invoked (§10.5), so this is moot unless that scan is re-enabled for some tools.
+* **Transport security.** Partially addressed - see §10.3. `CmsMcpSecurityValidator` covers
+  credential *presence*, not `Origin` header validation, which is a distinct concern (CSRF-style
+  cross-origin requests from a browser) and is **still open**. The transport's
+  `ServerTransportSecurityValidator` also supports `Origin`/`Host` validation
+  (`DefaultServerTransportSecurityValidator`); wiring that in (in addition to, or combined with,
+  `CmsMcpSecurityValidator`) is a separate follow-up.
 * **Configuration reload.** The MCP server is built once at startup. If it should react to
   `onReloadConfiguration()` (see `ServletContextHandlerService`), that has to be added. Still open.
 * **Tool arguments beyond scalars/collections.** `McpToolRegistry` (§7.3) still does not support a
@@ -464,15 +476,21 @@ Wiring these up against the real source (not just the endpoint spreadsheet) surf
 `buildInputSchema` used to flatten every annotated parameter/field into one shared `properties`
 map keyed only by resolved name, with no check that a name wasn't already used earlier in the
 same method — a later duplicate would silently overwrite the earlier property (and, in
-`buildMethodArguments`, silently bind the wrong field on invocation). This is not theoretical:
-`TemplateResourceImpl#list` (`GET /template`) takes a direct
+`buildMethodArguments`, silently bind the wrong field on invocation). This was not theoretical at
+the time: `TemplateResourceImpl#list` (`GET /template`) took a direct
 `@QueryParam("nodeId") List<String> nodeIds` **and** `TemplateListParameterBean`, whose own field
-is `@QueryParam("nodeId") Integer nodeId` — the same JAX-RS query key bound to two differently
+was `@QueryParam("nodeId") Integer nodeId` — the same JAX-RS query key bound to two differently
 typed targets, which JAX-RS itself allows. `buildInputSchema` now tracks resolved names as it
 builds a method's schema (`checkNotDuplicateArgument`) and rejects (logs, skips) the whole tool if
 two parameters/fields collide — mirroring how `checkNotDuplicate` already handles a duplicate
-*tool* name. For the `TemplateResource#list` case, the bean field keeps the name `nodeId`, and the
-direct parameter is explicitly named `nodeIds`.
+*tool* name. For the `TemplateResource#list` case, the bean field kept the name `nodeId`, and the
+direct parameter was explicitly named `nodeIds`.
+
+*(A later rebase changed `TemplateResourceImpl#list` to use `ReducedListParameterBean` instead of
+`TemplateListParameterBean` — which has no `nodeId` field — so this specific collision no longer
+occurs there today. The guard itself is still necessary for any future case shaped like it; it's
+covered directly by the `DuplicateArgResource` fixture in `McpToolRegistryTest`, independent of
+whether any real endpoint currently triggers it.)*
 
 A related, simpler pitfall hit while wiring these endpoints: `ConstructResourceImpl` has two
 overloaded `list` methods (`GET /construct` and `GET /construct/list`). `resolveToolName` derives
@@ -535,3 +553,199 @@ via the existing `Collection`/enum branches — no registry change needed, just 
 `ObjectPropertyParameterBean#types` is the first field of that shape). Two characterization tests
 were added against the real, production-annotated `FileResourceImpl#getFileUsageInfo` and
 `PageResourceImpl#render`, asserting they now register despite their class's `@Context` members.
+
+---
+
+## 10. GPU-2665 — authentication, and manual tool registration
+
+Two things changed in this slice, both scoped to a new `page_load` tool used to prove the first
+one actually works end to end:
+
+1. `/mcp` tool calls are no longer unauthenticated (§7.5/§8's "Authentication and authorization"
+   point). A tool call now resolves the same credentials the regular REST API accepts - an API
+   token, or the CMS session cookie - into a real CMS session, and runs with that session bound,
+   so permission checks the delegated-to code performs run against the actual caller, not the CMS
+   system user.
+2. Tools are now registered **manually**, one `McpToolProvider` implementation per tool, instead
+   of (only) via `McpToolRegistry`'s `@McpTool` classpath scan. That scan is kept in the codebase
+   - its tests still pass - but is no longer invoked at startup (§10.5).
+
+### 10.1 Changed and added files
+
+| File | Change |
+| --- | --- |
+| `cms-core/…/mcp/auth/McpRequestCredentials.java` | **new** — record carrying the credentials extracted from a request |
+| `cms-core/…/mcp/auth/CmsMcpContextExtractor.java` | **new** — `McpTransportContextExtractor<HttpServletRequest>`, extracts the bearer token/session cookie |
+| `cms-core/…/mcp/auth/McpAuthenticator.java` | **new** — resolves `McpRequestCredentials` into a real CMS `Session` |
+| `cms-core/…/mcp/auth/McpSessionBinding.java` | **new** — binds/restores a `Session` on `ContentNodeHelper` for the duration of a tool call |
+| `cms-core/…/mcp/auth/CmsMcpSecurityValidator.java` | **new** — optional, disabled-by-default `ServerTransportSecurityValidator` (HTTP 401 on a missing credential) |
+| `cms-core/…/mcp/McpToolProvider.java` | **new** — interface for a manually implemented tool |
+| `cms-core/…/mcp/AbstractMcpTool.java` | **new** — base class handling authentication/session-binding/result-serialization for a manual tool |
+| `cms-core/…/mcp/ManualMcpTools.java` | **new** — explicit list of manual tools + registration on the `McpSyncServer` |
+| `cms-core/…/mcp/tools/PageLoadTool.java` | **new** — first manual tool, delegates to `PageResourceImpl#load` |
+| `cms-core/…/mcp/MCPServer.java` | wires `CmsMcpContextExtractor`/`CmsMcpSecurityValidator` into the transport provider builder |
+| `cms-core/…/runtime/ConfigurationValue.java` | new value `MCP_REQUIRE_AUTH` |
+| `cms-oss-server/…/server/OSSRunner.java` | `registerMcpTools()` now calls `ManualMcpTools.registerAll` instead of `McpToolRegistry.scanAndRegister` |
+| `cms-oss-changelog/…/entries/2026/09/8943.GPU-2665.enhancement` | **new** — changelog entry |
+
+Plus unit tests for every new class under `cms-core/src/test/java/com/gentics/contentnode/mcp/`
+(`auth/` and `tools/` subpackages).
+
+### 10.2 Credential extraction and resolution
+
+`CmsMcpContextExtractor` runs on every incoming request (it is the transport's
+`contextExtractor`, set once in `MCPServer.getServlet()`). It reads the same two credential
+shapes `AuthenticationRequestFilter` accepts for `/rest/*` - an `Authorization: Bearer <token>`
+header, and the `GCN_SESSION_SECRET` cookie - into a `McpRequestCredentials` record, and stores it
+on the `McpTransportContext` under `McpRequestCredentials#CONTEXT_KEY`. It deliberately does
+**no DB access and never throws**: it runs outside the transport's own try/catch (verified against
+the `HttpServletStreamableServerTransportProvider` source at the `v2.0.1` tag), so an exception
+here would surface to the client as a raw HTTP 500 instead of a clean MCP-level error.
+
+`McpAuthenticator.resolve(McpRequestCredentials)` is the counterpart that *does* touch the DB - it
+mirrors `AuthenticationRequestFilter#tryApiToken()`/`#trySessionSecretSession()` exactly (same
+precedence: API token first, then session cookie; same lookups: `ApiTokenFactory#hash`/`#load` +
+`ApiTokenSession`, respectively `SessionToken` + `DBSession#load` + `#touch()`), wrapped in its own
+short-lived system-user `Trx` (`Trx.supply(...)`, the same pattern `ApiTokenSessionClosure` uses)
+since that filter is bound to the Jersey pipeline and never runs for `/mcp`. Empty credentials
+short-circuit before any DB access.
+
+### 10.3 Where credentials are checked, and the two independent guards
+
+There are two independent places an unauthenticated/invalid request can be rejected, and they
+default to different behavior on purpose:
+
+* **Per tool call, always on.** `AbstractMcpTool#call` resolves the session and, if
+  `McpToolProvider#requiresAuthentication()` (default `true`) and no session was resolved, returns
+  a `CallToolResult.isError(true)` without ever running the tool's own logic. This is the
+  baseline: "most tool calls without authentication should fail." A tool that legitimately does
+  *not* need an existing session (e.g. a future login tool that establishes one) overrides
+  `requiresAuthentication()` to `false`.
+* **At the transport level, opt-in, disabled by default.** `CmsMcpSecurityValidator` (the
+  transport's `securityValidator`) rejects a request with **HTTP 401** if it carries *neither* an
+  `Authorization: Bearer` header *nor* the session cookie - but only when
+  `ConfigurationValue#MCP_REQUIRE_AUTH` is `true` (env `MCP_REQUIRE_AUTH`, system property
+  `com.gentics.contentnode.mcp.requireAuth`, config `mcp.requireAuth`; default `false`, so
+  existing setups - e.g. the MCP Inspector connecting without configuring any credentials at all -
+  keep working unless this is explicitly opted into). **This only checks presence, not validity** -
+  it runs before any transaction/DB access is available to the transport
+  (`HttpServletStreamableServerTransportProvider#doPost`/`#doGet`/`#doDelete` call the security
+  validator synchronously, ahead of session/DB handling), so an invalid or expired token/cookie
+  still passes this check and is only caught by the per-tool-call guard above. Enabling the flag
+  only makes a missing credential fail earlier and more explicitly (401 instead of a 200 response
+  whose body is an MCP-level error) - it does not change what ultimately succeeds.
+
+### 10.4 Session binding and thread-locals
+
+A sync tool handler does not run on the servlet thread that received the HTTP request - the SDK
+offloads it onto a pooled `Schedulers.boundedElastic()` thread (`McpServerFeatures
+.AsyncToolSpecification#fromSync`, checked against the SDK source at the `v2.0.1` tag), and that
+thread is reused across unrelated calls. `McpSessionBinding` (an `AutoCloseable`, always used in a
+try-with-resources by `AbstractMcpTool#call`) binds the resolved session on `ContentNodeHelper` for
+the duration of the call and restores whatever was bound before - the same session leak concern
+`McpToolRegistry#invoke` already had to deal with for its fixed backend language ID (§7's
+`invoke` Javadoc), generalized here to the session itself. If no session is bound (only possible
+for a tool with `requiresAuthentication() == false`), the same fixed backend language ID (`2`) is
+set instead, for the same reason `McpToolRegistry#invoke` sets it: without *some* language,
+i18n-translated messages fall back to their raw, untranslated key.
+
+### 10.5 Manual tool registration replaces the classpath scan
+
+`McpToolProvider` (a tool's definition + call handler) and `AbstractMcpTool` (the base class that
+does the authentication/session-binding/result-serialization described above, so a concrete tool
+only implements `tool()` and `invoke(Map<String, Object>, Optional<Session>)`) replace
+`McpToolRegistry`'s classpath scan as the way new tools get added. `ManualMcpTools` holds the
+explicit list of tool instances and registers each of them on the `McpSyncServer`;
+`OSSRunner.registerMcpTools()` now calls `ManualMcpTools.registerAll` instead of
+`McpToolRegistry.scanAndRegister`.
+
+`McpToolRegistry` itself (the scan, the `@McpTool`/`@McpToolParam` annotations, `ContextUsage
+Analyzer`, and all of §7/§9's hardening) is **not deleted** - it still compiles, its tests still
+pass, and the 12 REST methods already annotated with `@McpTool` are untouched - but none of it
+runs anymore, so none of those 12 tools are exposed until/unless `scanAndRegister` is called again
+from somewhere. This was a deliberate choice (see the project's planning discussion for this
+ticket): keep the annotation-based approach available/dormant rather than deleting it outright,
+in case some of those endpoints are migrated to manual tools individually later, but stop treating
+it as the live registration path.
+
+### 10.6 The `page_load` tool
+
+`PageLoadTool` is deliberately minimal: it exists to prove that a tool call now runs as the real,
+authenticated caller. It takes a required `id` and an optional `nodeId`, and delegates to
+`PageResourceImpl#load` (with every other flag `false`/`null`) - the same method the real
+`GET /rest/page/load/{id}` REST endpoint calls. That method's own object-permission check
+(`ObjectPermission.view`, inside `PageResourceImpl#getPage`) is what actually proves the point:
+with a real session bound (§10.4), it runs against that user's actual permissions - a user without
+view permission on a page gets a permission error, not the page. No separate permission check was
+added to the tool itself, since the delegated-to method already performs the relevant one; per
+this ticket's direction, a tool is responsible only for whatever permission checks the code it
+calls does *not* already perform on its own (there was none missing here).
+
+### 10.7 Tests
+
+Unit tests were added for every new class (`CmsMcpContextExtractorTest`,
+`CmsMcpSecurityValidatorTest`, `McpSessionBindingTest`, `McpAuthenticatorTest`, `PageLoadToolTest`,
+`ManualMcpToolsTest`), all runnable without a DB: credential extraction/parsing, the security
+validator's enabled/disabled and presence-only behavior, session-binding restore-on-close
+(including when the tool body throws), the empty-credentials short circuit, the tool's input
+schema and its unauthenticated-call rejection, and that `ManualMcpTools.registerAll` registers
+`page_load`. Resolving an actual, valid API token/session cookie against the database, and the
+resulting permission check inside `PageResourceImpl#load`, needs a real CMS instance and is
+covered by a manual test protocol instead - see `docs/mcp-tests.md`.
+
+**How this was verified in-session, and what that does/doesn't prove.** The sandbox this code was
+written in has no credentials for Gentics' internal Maven repository (`repo.gentics.com`), so a
+real `mvn compile`/`test`/`install` of this reactor could not be run there - several dependencies
+(e.g. `ojdbc7`, `generic-testutils`) only resolve with those credentials. Instead: a classpath was
+rebuilt from this checkout's pre-existing `target/classes` directories (a prior successful build)
+plus public dependency jars fetched from Maven Central, every new/changed file was compiled
+directly with `javac` against that classpath, and the six unit test classes above were run
+directly with `org.junit.runner.JUnitCore` - all passed. This is real signal (the code compiles
+against the actual SDK/CMS types and the tests' assertions hold), but it is not the same guarantee
+a real `mvn -pl cms-core -am test` run gives (Checkstyle/SpotBugs/PMD were not run; the reactor's
+own dependency resolution was never exercised end-to-end). Per this repo's `CLAUDE.md`, builds and
+tests are now run manually by the user rather than attempted in the sandbox going forward - treat
+a user-reported `mvn` run as the actual ground truth for "this builds/passes", not the `javac`
+check described here.
+
+### 10.8 Manual testing tooling (MCP Inspector / Insomnia)
+
+Two ways to drive `docs/mcp-tests.md` §9's manual protocol against a real, running server, beyond
+plain `curl`:
+
+* **MCP Inspector.** The current web UI (`clients/web` in the
+  [Inspector repo](https://github.com/modelcontextprotocol/inspector)) configures a server's
+  outgoing headers under its **"Custom Headers"** settings section (`+ Add Header`, then a
+  `Key`/`Value` pair per row) - this covers both credential shapes: `Key: Authorization`,
+  `Value: Bearer <api token>`, or `Key: Cookie`, `Value: GCN_SESSION_SECRET=<value>`. The `Cookie`
+  case is worth calling out: a browser normally refuses to let JavaScript set a raw `Cookie`
+  header at all (it's on the Fetch spec's forbidden-header-name list), which would otherwise make
+  this untestable from a browser-based tool. Checked against Inspector's own source
+  (`core/mcp/node/proxyFetch.ts`): the web client's outgoing request to the target MCP server is
+  made by Inspector's own local Node backend (via `undici`), not the browser's `fetch`, so that
+  restriction doesn't apply here.
+* **Insomnia** (or any REST client with the same two features). Its per-workspace cookie jar
+  auto-captures `Set-Cookie` from a `/rest/auth/login` response and auto-attaches matching cookies
+  to later requests by default, so the session-cookie path needs no manual extraction once a login
+  request has run. Its native **Response** template tag (attribute **Header**) can pull the
+  `Mcp-Session-Id` value out of the `initialize` response directly into the `tools/call` request's
+  header field, instead of copy-pasting it by hand.
+
+Either way, the underlying protocol exchange is the same three calls `docs/mcp-tests.md` §9 and
+§5's example walk through: log in (sets the session cookie) → `initialize` (returns
+`Mcp-Session-Id`) → `tools/call` for `page_load` (needs that session ID plus the credential).
+
+### 10.9 Still open
+
+* **`Origin`/`Host` header validation** for the transport, as a defense against a browser making
+  cross-origin requests to `/mcp` with the user's own session cookie attached - a different
+  concern than `CmsMcpSecurityValidator`'s presence check (§10.3). See the updated §8 bullet.
+* **Re-running `@RequiredPerm`** is intentionally **not** done automatically for a manual tool -
+  each tool is responsible for whatever permission checks the code it delegates to does not
+  already perform (§10.6). This is a deliberate scope decision for this ticket, not an oversight,
+  but it does mean a future tool author has to actually verify that the call they delegate to
+  performs the check they expect.
+* **A tool with `requiresAuthentication() == false`** (e.g. a login tool) is supported by the
+  `McpToolProvider` contract, but none exists yet.
+* **Configuration reload / transport security (`Origin` validation) / documentation** - see §8,
+  unchanged by this section.

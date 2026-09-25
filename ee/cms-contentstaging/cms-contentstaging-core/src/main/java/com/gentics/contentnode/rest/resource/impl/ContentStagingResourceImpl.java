@@ -50,7 +50,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.codec.Charsets;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.codec.net.URLCodec;
@@ -679,7 +678,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				// Make a content-disposition filename
 				String urlEncodedName;
 				try {
-					urlEncodedName = new URLCodec(Charsets.UTF_8.name()).encode(name);
+					urlEncodedName = new URLCodec(StandardCharsets.UTF_8.name()).encode(name);
 				} catch (EncoderException e) {
 					logger.warn("Could not url encode package name, falling back to sanitize check", e);
 					urlEncodedName = sanitizeCheck(name, false);
@@ -1674,9 +1673,6 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				} else if (Files.exists(packageMetadata)) {
 					logger.info("Content Package to export: " + currentPath.toAbsolutePath());
 					// ignore
-				} else {
-					logger.warn("Removing alien folder " + currentPath.toAbsolutePath());
-					deferDeleting.add(currentPath);
 				}
 			} else {
 				if (filename.endsWith(PAGE_EXTENSION)) {

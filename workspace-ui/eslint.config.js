@@ -5,6 +5,7 @@ import { defineConfig } from 'eslint/config';
 import playwright from 'eslint-plugin-playwright';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -29,15 +30,41 @@ export default defineConfig([
     // TanStack Query.
     ...pluginQuery.configs['flat/recommended'],
 
-    // Formatting.
+    // Formatting and import sorting.
     {
         files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
         plugins: {
             '@stylistic': stylistic,
+            'simple-import-sort': simpleImportSort
         },
 
         rules: {
+            // Import sorting.
+            'simple-import-sort/imports': [
+                'error',
+                {
+                    groups: [
+                        // Node.js built-ins.
+                        ['^node:'],
+
+                        // External packages.
+                        ['^@?\\w'],
+
+                        // Internal aliases.
+                        ['^@/'],
+
+                        // Relative imports.
+                        ['^\\.'],
+
+                        // Styles.
+                        ['^.+\\.s?css$'],
+                    ],
+                },
+            ],
+
+            'simple-import-sort/exports': 'error',
+            // Formatting
             '@stylistic/arrow-parens': ['warn', 'always'],
 
             '@stylistic/brace-style': [

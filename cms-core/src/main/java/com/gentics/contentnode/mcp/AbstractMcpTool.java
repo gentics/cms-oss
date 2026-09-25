@@ -29,8 +29,9 @@ import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
  * <li>binding the resolved session for the duration of the call ({@link McpSessionBinding}), so
  * that whatever the tool delegates to (typically a REST resource implementation method) runs as
  * the real caller, not the CMS system user;</li>
- * <li>serializing the result of {@link #invoke(Map, Optional)} to a JSON text content block, or
- * turning any exception it throws into an {@code isError(true)} result.</li>
+ * <li>serializing the result of {@link #invoke(Map, Optional)} to a JSON text content block (and,
+ * if the tool declares an output schema, also as structured content), or turning any exception it
+ * throws into an {@code isError(true)} result.</li>
  * </ul>
  *
  * <p>
@@ -68,7 +69,13 @@ public abstract class AbstractMcpTool implements McpToolProvider {
 
 		try (McpSessionBinding binding = new McpSessionBinding(session.orElse(null))) {
 			Object result = invoke(arguments, session);
-			return CallToolResult.builder().addTextContent(MAPPER.writeValueAsString(result)).build();
+			CallToolResult.Builder builder = CallToolResult.builder().addTextContent(MAPPER.writeValueAsString(result));
+			// the SDK turns a result without structured content into an error if the tool declares an
+			// output schema (and validates the structured content against it), so only set it then
+			if (tool().outputSchema() != null) {
+				builder.structuredContent(MAPPER.convertValue(result, Map.class));
+			}
+			return builder.build();
 		} catch (Exception e) {
 			// method.invoke()-style reflective delegation wraps the real cause in an
 			// InvocationTargetException, whose own getMessage() is null - unwrap it so the actual

@@ -5,7 +5,7 @@ Gentics CMS OSS server, so that the CMS can act as an MCP (Model Context Protoco
 
 | Ticket | Scope | Status |
 | --- | --- | --- |
-| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10)** |
+| **GPU-2665** | **Umbrella story: integrate MCP server, expose CMS resources as MCP endpoints via annotations** | **authentication + manual tool registration implemented (§10); `list_nodes` tool + shared `ObjectRef` (§11)** |
 | GPU-2666 | Integrate the MCP server as a servlet under `/mcp` | implemented |
 | GPU-2667 | Wire up 10 more endpoints spanning varied argument shapes; harden `McpToolRegistry` | implemented (§9) |
 | GPU-2672 | (follow-up) | open |
@@ -749,3 +749,332 @@ Either way, the underlying protocol exchange is the same three calls `docs/mcp-t
   `McpToolProvider` contract, but none exists yet.
 * **Configuration reload / transport security (`Origin` validation) / documentation** - see §8,
   unchanged by this section.
+
+## 11. GPU-2665 — `list_nodes` tool and shared `ObjectRef`
+
+A second manual tool, `list_nodes`, plus `ObjectRef`, the first shared, cross-tool MCP output
+type. The full design brief is `docs/plan-tool-list-nodes.md`. This section records what was
+actually built, including where the implementation had to deviate from that brief (§11.3).
+
+### 11.1 Changed and added files
+
+| File | Change |
+| --- | --- |
+| `cms-core/…/mcp/model/ObjectRef.java` | **new** — shared object reference record (`type`/`id`/`globalId`/`nodeId`/`name`/`path`/`language`/`niceUrl`/`url`) |
+| `cms-core/…/mcp/tools/ListNodesTool.java` | **new** — the `list_nodes` tool, delegates to `NodeResourceImpl#list` and `#languages` |
+| `cms-core/…/mcp/ManualMcpTools.java` | registers `ListNodesTool` after `PageLoadTool` |
+| `cms-core/…/mcp/AbstractMcpTool.java` | also sets `structuredContent` on the result when the tool declares an output schema (§11.3) |
+| `cms-oss-changelog/…/entries/2026/09/8943.GPU-2665.enhancement` | **new** — changelog entry (§10.1 refers to an `8943` entry for the auth work, but no such file exists in the tree - `a898bc84f` deleted the earlier GPU-2665/2667 entries - so `8943` was the next free number after `8942`) |
+
+Tests: `ObjectRefTest`, `ListNodesToolTest`, `AbstractMcpToolTest` (all new, no DB),
+`ManualMcpToolsTest` (extended), and `tests/mcp/ListNodesToolIntegrationTest` (new,
+`DBTestContext`).
+
+### 11.2 Design decisions
+
+* **`ObjectRef` lives in `com.gentics.contentnode.mcp.model` (cms-core)**, not in cms-restapi: it
+  is not a JAX-RS DTO, only glue for the MCP tool layer, which lives entirely in cms-core. Its
+  `Type` enum serializes to the spec's lowercase strings (`node`, `folder`, …) via
+  `@JsonValue`/`@JsonCreator`. An unknown string fails with an `IllegalArgumentException` that
+  lists the valid values, rather than silently becoming `null`. On input only `type`/`id` are
+  meaningful. Unknown JSON fields are ignored (`@JsonIgnoreProperties(ignoreUnknown = true)`), so
+  a ref emitted by one tool can be passed back unchanged. Unset fields are omitted on output
+  (`@JsonInclude(NON_NULL)`, see §11.3). Only one factory exists so far, `forNode(...)`; factories
+  for other object types are to be added by the tools that need them.
+* **Languages are folded into every item** (`items[].languages`, `{id, code, name}`), fetched
+  per node via `NodeResourceImpl#languages` in the same call. Node counts are small, so this is
+  cheap even at `size = 200`, and the tool's stated purpose ("learn which languages a node
+  supports") depends on the field. `LanguageInfo` is a nested record of `ListNodesTool` and was
+  deliberately not promoted to the shared `mcp.model` package.
+* **Paging is "fetch all, then slice in memory".** The tool's input is offset-based (`from`,
+  arbitrary in `[0, 10000]`), while `PagingParameterBean` is page-number based (`page`/`pageSize`).
+  The two only line up when `from` is a multiple of `size`. So `NodeResourceImpl#list` is called
+  unpaged (`pageSize = -1`, the bean's own default) and `[from, from + size)` is sliced out
+  afterwards (`ListNodesTool.Slice`, which also computes `truncated`/`nextFrom` and uses `long`
+  arithmetic so `from + size` cannot overflow). `total` is always the exact count of visible,
+  matching nodes, so `totalIsExact` is always `true`.
+* **No extra permission check.** `NodeResourceImpl#list` already filters to
+  `ObjectPermission.view` (`PermissionFilter`), and `#languages` re-checks `view` per node
+  (`MiscUtils.getNode`). Same principle as `page_load` (§10.6).
+* **`@Context` safety** was re-checked by hand at implementation time (the tool bypasses
+  `ContextUsageAnalyzer`, like every manual tool). `list`/`languages` and everything they call use
+  only `ContentNodeHelper`/`TransactionManager`/static `MiscUtils` helpers. None read the
+  `@Context` fields declared on `AbstractContentNodeResource`.
+* **No outer `Trx`.** Both resource methods open their own via `ContentNodeHelper.trx()`, like
+  `PageResourceImpl#load` for `page_load`.
+* Arguments: `q` (optional, max 200 chars, blank = no filter; matched case-insensitively against
+  the node's ID and name by the resource's own `ResolvableFilter`), `size` (1–200, default 25),
+  `from` (0–10000, default 0). `size`/`from` are additionally clamped in the tool, and numbers
+  may arrive as any JSON number type or a numeric string. Results keep the resource's own default
+  sort (`name`).
+* `host` is passed through exactly as the REST model reports it. That value includes the
+  protocol, e.g. `http://www.example.com` (`ModelBuilder#getNode`), not the bare hostname.
+
+### 11.3 Deviation from the plan: output schema requires structured content
+
+The plan said no MCP infrastructure had to change for this tool. That turned out to be wrong for
+the output schema it also asked for. In MCP Java SDK `2.0.1`, every registered tool's handler is
+wrapped in `McpAsyncServer.StructuredOutputCallToolHandler` (checked against the `mcp-core-2.0.1`
+sources jar). If the tool declares an `outputSchema` and a successful result has no
+`structuredContent`, the result is replaced with an `isError(true)` "Response missing structured
+content which is expected when calling tool with non-empty outputSchema". If structured content is
+present, it is validated against the schema (networknt `json-schema-validator` via
+`mcp-json-jackson2`'s `DefaultJsonSchemaValidator`).
+
+`AbstractMcpTool#call` only produced a JSON text block, so as planned every successful
+`list_nodes` call would have come back as an error. Two changes fix this:
+
+1. `AbstractMcpTool#call` now also sets `structuredContent` (the same result, converted to a
+   `Map` with the same `ObjectMapper`), **but only if `tool().outputSchema() != null`**. Tools
+   without an output schema, i.e. `page_load`, are unaffected (the SDK would log a warning for
+   structured content without a schema). The text block is still always sent, for clients that
+   don't read structured content.
+2. The result records (`ListNodesResult`, `NodeListItem`, `LanguageInfo`) and `ObjectRef` are
+   `@JsonInclude(NON_NULL)`. JSON Schema's `"type": "integer"` does not accept `null`, so an
+   unset optional field (e.g. `nextFrom` on the last page, or a node without a default image
+   folder) would otherwise fail validation.
+
+`ListNodesToolTest` runs the declared output schema and a sample result through the SDK's own
+`DefaultJsonSchemaValidator`, so a later schema/record mismatch shows up in a unit test instead of
+at runtime.
+
+### 11.4 Tests
+
+* `ObjectRefTest`: `Type` wire values for all constants in both directions (incl.
+  case-insensitive input), a clear failure for an unknown value, `forNode`/`of` populate exactly
+  the expected fields, a full Jackson round trip with every field set and exactly the spec's JSON
+  keys, unset fields omitted, unknown input fields ignored.
+* `ListNodesToolTest`: tool name/description, input schema (`q`/`size`/`from` with their
+  constraints, nothing required, no additional properties), output schema field names, output
+  schema is a valid schema, a sample result validates against it, null fields are omitted,
+  `requiresAuthentication()`, unauthenticated-call rejection, argument parsing/clamping, and the
+  `Slice` math (first/middle/last/exact-end/beyond-total/empty/overflow, plus a loop that pages
+  through a list via `nextFrom` and checks every item is covered exactly once).
+* `AbstractMcpToolTest`: `structuredContent` set iff an output schema is declared.
+* `ManualMcpToolsTest`: `registerAll` also registers `list_nodes`.
+* `tests/mcp/ListNodesToolIntegrationTest` (`DBTestContext`): a user whose group has *only* view
+  permission on three of four freshly created nodes, authenticated via a real API token passed as
+  `McpRequestCredentials`, calls `new ListNodesTool().call(...)` directly. Asserts that only the
+  three visible nodes are listed, sorted by name, with their assigned languages in order; that
+  `q` matching one node returns exactly that node, and `q` matching only the hidden node returns
+  nothing; that paging with `size=2` across two calls is consistent and neither duplicates nor
+  skips a node; and that `from` beyond `total` returns an empty page.
+
+**Verification status.** Same approach and limits as §10.7. The four main-source files were
+compiled with `javac --release 17` against the classpath rebuilt from the pre-existing
+`target/classes` directories plus the local Maven repository jars. The four unit test classes
+above plus `PageLoadToolTest` (34 tests) were run with `org.junit.runner.JUnitCore`, and all
+passed. The existing `auth/` unit tests also still pass against the changed `AbstractMcpTool`.
+The integration test was **compiled only, not run** (it needs the MariaDB/test-DB-manager
+containers). Checkstyle/SpotBugs/PMD were not run. A user-run `mvn -pl cms-core -am test` remains
+the ground truth.
+
+### 11.5 Still open
+
+* `ObjectRef` has only a `forNode` factory. Folder/page/file/etc. factories (and populating
+  `nodeId`/`path`/`language`/`niceUrl`/`url`) come with the tools that need them.
+* `get_folder_tree`, referenced by `list_nodes`' description, does not exist yet.
+* `list_nodes` does not expose the resource's `sort`, `perms` or staging `package` parameters.
+* The `ref` object in the output schema describes its fields but, like the rest of the MCP
+  schemas here, does not use `$ref` or require any of them.
+
+## 12. GPU-2665 — `update_page_properties` tool
+
+The first **write** tool. It changes page metadata (name, filename, description, nice URL,
+priority, template) without touching content/tags. The design brief is
+`docs/plan-tool-update-page-properties.md` (revised 2026-09-25). This section records what was
+built, including one deviation from that brief (§12.3).
+
+### 12.1 Changed and added files
+
+| File | Change |
+| --- | --- |
+| `cms-core/…/mcp/tools/UpdatePagePropertiesTool.java` | **new**: the tool, delegates to `PageResourceImpl#load` and `#save` |
+| `cms-core/…/mcp/model/ObjectRef.java` | new factory `forPage(Page, Integer nodeId)` |
+| `cms-core/…/mcp/ManualMcpTools.java` | registers `UpdatePagePropertiesTool` after `ListNodesTool` |
+| `cms-oss-changelog/…/entries/2026/09/8944.GPU-2665.enhancement` | **new**: changelog entry (see §12.10 on the numbering) |
+
+Tests: `UpdatePagePropertiesToolTest` (new, no DB), `ObjectRefTest` and `ManualMcpToolsTest`
+(extended), `tests/mcp/UpdatePagePropertiesToolIntegrationTest` (new, `DBTestContext`).
+
+No REST API was changed.
+
+### 12.2 Load → save → reload, and why `save()` was not changed
+
+The tool calls `PageResourceImpl#load(update = true)` (checks `ObjectPermission.edit`, locks the
+page), then `#save` (with `unlock = true`), then `#load(update = false)` again for its output.
+`save()` keeps returning `GenericResponse`. Changing it to return the saved page was implemented
+and reverted (plan §2): the page instance inside `save()` has a stale lock state after
+`unlock()`, so it needed a fresh fetch anyway; the new `page` field broke Java `RestClient`s
+reading the response as `GenericResponse` (`UnrecognizedPropertyException`); and it made every
+save more expensive, including the Aloha keepalive save
+(`PageHandlingQueryCountTest#testUpdateTags` exceeded its statement budget). The reload in the
+tool keeps that cost on MCP calls only.
+
+Step 1 loads without any references (only the six mutable fields are needed for the snapshot).
+Step 3 loads with `folder`, `langvars`, `translationstatus` and `versioninfo`, for the output.
+
+### 12.3 Deviation from the plan: the save request contains only the supplied fields
+
+The plan's sketch mutated the page returned by step 1 and submitted it to `save()`. That page
+would carry more than the six fields: `ModelBuilder#getPage(restPage, false)` applies **every
+non-null field** of the submitted REST page, and `load()` always fills content tags and visible
+object tags, plus the translation status if requested. Submitting it would:
+
+* re-save every tag, and require edit permission on every visible object tag
+  (`MiscUtils.checkObjectTagEditPermissions`), although this tool must not touch tags;
+* call `page.synchronizeWithPage(...)` whenever a translation status is present, i.e. silently
+  change the page's translation sync state;
+* make `deriveFileName` a no-op: `save()` only derives the filename if the submitted page's
+  `fileName` is empty, and a loaded page always has one.
+
+So the tool submits a fresh REST `Page` with only the supplied fields set (`UpdateRequest
+#toRestPage`). Everything else stays `null` and is left unchanged by `ModelBuilder#getPage`. This
+is the same shape existing REST tests use for page saves (e.g. `FilenameUniquenessTest`).
+Consequences of `ModelBuilder#getPage`'s null/empty handling, documented in the input schema:
+
+* `description: ""` and `niceUrl: ""` clear the value.
+* `fileName: ""` does nothing by itself (empty filenames are ignored), but it lets
+  `deriveFileName` apply, same as omitting `fileName`.
+* `niceUrl` is ignored if the `NICE_URLS` feature is off. It then never shows up in
+  `changedFields`.
+
+### 12.4 `changedFields`: before/after snapshot diff
+
+`changedFields` lists the fields whose value **actually differs** after the save, not the fields
+present in the request (plan decision 3). `MutableFieldsSnapshot` takes `name`/`fileName`/
+`description`/`niceUrl`/`priority`/`templateId` from the page loaded in step 1, and `diff(...)`
+compares them (`Objects.equals`) with the page reloaded in step 3, in that fixed order. Diffing
+around the whole cycle instead of bookkeeping while applying the arguments also catches changes
+`save()` makes on its own: a filename derived via `deriveFileName`, or the template's file
+extension appended to a given `fileName`. A resubmitted unchanged value is not reported.
+
+### 12.5 Releasing the lock on failure
+
+`load(update = true)` commits the lock. `save()` only unlocks at its very end, so every early
+return (`INVALIDDATA` for a duplicate name, filename or nice URL) and every exception would leave
+the page locked for the lock timeout (`lock_time`, default 600 s). The tool therefore:
+
+* checks `save()`'s response code and turns anything but `OK` into a tool error, with the
+  response's messages (`save()` reports duplicates in the response, it does not throw);
+* wraps everything after step 1 in `try`/`finally` and calls `releaseLock(id)` unless the save
+  succeeded. `releaseLock` opens a `Trx` for the bound session and calls `Page#unlock()`, whose
+  `UPDATE content … WHERE id = ? AND locked_by = ?` only ever releases the caller's own lock. It
+  deliberately does **not** use `PageResourceImpl#cancel`, which restores the latest page version
+  before unlocking. A failure in `releaseLock` is logged and does not replace the original error.
+
+Argument validation runs **before** step 1 (`UpdateRequest.of`), so an invalid argument never
+locks the page in the first place.
+
+Known edge case, same as the REST `save(unlock = true)`: if the calling user already had the page
+locked before the call (e.g. open in the editor under the same account), the tool releases that
+lock too, on success and on failure. If the page is locked by **another** user, step 1 does not
+lock it (`load()` returns it read-only with a warning), `save()` then fails with the "locked by"
+error, and `releaseLock` leaves the other user's lock alone.
+
+### 12.6 `nodeId` is rejected
+
+The input schema declares `nodeId` (to match the external tool catalog), but a call that supplies
+it is rejected with "update_page_properties does not yet support nodeId (multichannelling); …",
+before any argument validation or CMS access. Ignoring an explicit channel on a write could edit
+the wrong page variant without the caller noticing. This refinement of plan decision 4 was
+confirmed on 2026-09-25, before implementing it.
+
+### 12.7 Input validation
+
+The plan asked to verify whether the SDK enforces the input schema. It does. In MCP Java SDK
+`2.0.1` (checked against the `mcp-core-2.0.1` sources jar), `McpAsyncServer`'s tool-call handler
+runs `ToolInputValidator.validate(...)` before the tool's handler, unless the server was built
+with `validateToolInputs(false)`. The builder default is `true`, and `MCPServer` does not change
+it. `DefaultJsonSchemaValidator` was then run on this tool's constraint types in isolation
+(scratch program against the cached jars): `minimum`/`maximum`, `minLength`/`maxLength`,
+`required`, `additionalProperties: false`, wrong JSON types and `null` values were all rejected
+with "Tool (…) input validation failed: …". `UpdatePagePropertiesToolTest
+#testSdkInputValidationEnforcesConstraints` pins this down for the real schema.
+
+The tool still repeats every check itself (`UpdateRequest.of`), because `AbstractMcpTool#call`
+can be invoked without the SDK (as the tests do). Unlike `list_nodes`, which clamps `size`/`from`,
+this write tool **rejects** out-of-range values instead of silently adjusting them, and requires
+real JSON integers/booleans/strings (no numeric strings).
+
+### 12.8 Output
+
+`{ page, changedFields }`, both required. `page` is the tool's own `PageProperties` record,
+mapped from the reloaded REST `Page`. It has **no `tags` field** (plan decision 2). Details
+resolved at implementation time:
+
+* **`ref`** comes from `ObjectRef.forPage(page, nodeId)`. `path` is `Page#getPath()`, which
+  `ModelBuilder` always fills with `ModelBuilder#getFolderPath(folder)` (e.g. `/Node/News/2026/`),
+  so no new path logic was needed. `nodeId` is the page's folder's `nodeId` (`Reference.FOLDER`
+  is requested in step 3). `url` is the preview URL, falling back to `liveUrl` if blank.
+* **`translationStatus`** is `Page#getTranslationStatus()`, a
+  `com.gentics.contentnode.rest.model.TranslationStatus`, mapped 1:1: `pageId`, `name`,
+  `language`, `inSync`, `version`, `versionTimestamp`, `latestVersion {version,
+  versionTimestamp}`. For a page not synchronized with another variant, `ModelBuilder
+  #getTranslationStatus` sets only `inSync: true`.
+* **`languageVariants`** is keyed by **language code**, not by the REST model's map key (the
+  numeric language ID), with an `ObjectRef` per variant. The page itself is included, as in the
+  REST model.
+* Users (`lockedBy`, `creator`, `editor`, `publisher`, version `editor`) are `{id, login}`.
+  `versions` is newest first, as in the REST model.
+* Timestamps that are unset in the REST model (`lockedSince = -1`, `pdate = 0` for a page never
+  published) are omitted rather than reported as `-1`/`0`.
+
+Like `list_nodes` (§11.3), all records are `@JsonInclude(NON_NULL)` so that the structured result
+validates against the output schema.
+
+### 12.9 Tests
+
+* `UpdatePagePropertiesToolTest` (no DB): tool name/description and every input property's type
+  and constraints; the SDK's own input validation against the real schema (valid call accepted, 13
+  invalid shapes rejected); unauthenticated-call rejection; `nodeId` rejected before any CMS access
+  (no transaction exists in the test, so reaching `load()` would fail differently; the same message
+  comes back even with an otherwise invalid `pageId`); `UpdateRequest` defaults, every field, every
+  rejection, boundary values, and that `toRestPage()` leaves tags/translation status/language
+  unset; `MutableFieldsSnapshot.diff` for no change, each field individually, all fields in order,
+  a resubmitted unchanged value, a filename changed by `save()`, `null` ↔ value in both directions,
+  and `""` vs. `null`; `errorMessage` with and without messages; the full output mapping; a full
+  and a minimal result validated against the output schema with `DefaultJsonSchemaValidator`.
+* `ObjectRefTest`: `forPage` with all fields, and the `liveUrl` fallback.
+* `ManualMcpToolsTest`: `registerAll` also registers `update_page_properties`.
+* `tests/mcp/UpdatePagePropertiesToolIntegrationTest` (`DBTestContext`): an editor (page view +
+  update on the test folder) and a viewer (page view only), each with a real API token, call
+  `new UpdatePagePropertiesTool().call(...)` directly. Every test uses its own pages and checks the
+  page state independently of the tool (object layer, and the `content.locked` column for the
+  lock). Cases: name only (`changedFields == ["name"]`, only the name changed, unlocked); the same
+  name again (`changedFields == []`, nothing changed); description + priority; template change to
+  a second template; `deriveFileName` (`["name", "fileName"]`); duplicate name and duplicate
+  filename (error, page **unlocked** and unchanged); viewer rejected (unchanged, unlocked);
+  `nodeId` rejected (unchanged, unlocked); a page locked by another user (error "Could not
+  lock…", and that user's lock is **kept**, §12.5); unknown page ID. Every successful result is
+  also validated against the output schema, since the direct call bypasses the SDK's check.
+  Note for fixtures: a newly created page is locked by its creator (`PageFactory
+  #saveContentObject` inserts `content` with `locked`/`locked_by` set), so the test unlocks each
+  page after `createPage` (as the system user). The first run of this test lacked that, and
+  every editor call failed with "Could not lock … locked for user {1}".
+
+**Verification status.** The changed main sources and all new/changed test classes were compiled
+with `javac --release 17` against the pre-existing `target/classes` directories plus the local
+Maven repository jars. `UpdatePagePropertiesToolTest`, `ObjectRefTest`, `ManualMcpToolsTest`,
+`ListNodesToolTest`, `PageLoadToolTest` and `AbstractMcpToolTest` (60 tests) were run with
+`org.junit.runner.JUnitCore`, and all passed. The integration test was **compiled only, not run**
+(it needs the MariaDB/test-DB-manager containers), so the DB-backed expectations, in particular
+the exact `changedFields` after a real save and the lock release after a rejected save, are
+unconfirmed until it runs. Checkstyle/SpotBugs/PMD were not run. A user-run
+`mvn -pl cms-core -am test` remains the ground truth.
+
+### 12.10 Still open
+
+* Multichannelling: `nodeId` is rejected (§12.6).
+* Tag content is out of scope, for a future `update_page_tags`. `get_template` and
+  `update_page_tags`, referenced by the tool description, do not exist yet.
+* The tool description is **not** verbatim from the external tool-catalog spec (which is not in
+  this repository). Only the "Do NOT use this tool to change content, that is `update_page_tags`"
+  sentence quoted in the plan is. Replace it with the spec's text if they differ.
+* `alternateUrls`, `customCdate`/`customEdate`, language, and publish/offline times are not
+  exposed.
+* Changelog numbering: `8943` is already used by `8943.SUP-20182.bugfix` (commit `6c4f88666`
+  on `origin/hotfix-6.4.x-sup-20182`, not on this branch). The `8943.GPU-2665.enhancement` that
+  §11.1 mentions for `list_nodes` does not exist in the working tree. This tool's entry is
+  `8944`. The `list_nodes` entry still needs to be created, under a free number.
+* `idempotencyKey` is only logged. Calls are not de-duplicated.

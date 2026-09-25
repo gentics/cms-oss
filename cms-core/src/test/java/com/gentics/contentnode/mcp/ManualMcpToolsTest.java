@@ -21,4 +21,23 @@ public class ManualMcpToolsTest {
 
 		verify(server).addTool(argThat((SyncToolSpecification spec) -> "page_load".equals(spec.tool().name())));
 	}
+
+	@Test
+	public void testRegisterAllRegistersListNodesTool() {
+		McpSyncServer server = mock(McpSyncServer.class);
+
+		ManualMcpTools.registerAll(server);
+
+		verify(server).addTool(argThat((SyncToolSpecification spec) -> "list_nodes".equals(spec.tool().name())));
+	}
+
+	@Test
+	public void testRegisterAllRegistersUpdatePagePropertiesTool() {
+		McpSyncServer server = mock(McpSyncServer.class);
+
+		ManualMcpTools.registerAll(server);
+
+		verify(server).addTool(
+				argThat((SyncToolSpecification spec) -> "update_page_properties".equals(spec.tool().name())));
+	}
 }

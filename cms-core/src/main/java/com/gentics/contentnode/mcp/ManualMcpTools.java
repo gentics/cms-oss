@@ -2,7 +2,9 @@ package com.gentics.contentnode.mcp;
 
 import java.util.List;
 
+import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
+import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.lib.log.NodeLogger;
 
 import io.modelcontextprotocol.server.McpSyncServer;
@@ -23,7 +25,8 @@ public final class ManualMcpTools {
 	/**
 	 * Every manually implemented tool, in registration order.
 	 */
-	private static final List<McpToolProvider> TOOLS = List.of(new PageLoadTool());
+	private static final List<McpToolProvider> TOOLS = List.of(new PageLoadTool(), new ListNodesTool(),
+			new UpdatePagePropertiesTool());
 
 	/**
 	 * Static class, no instances

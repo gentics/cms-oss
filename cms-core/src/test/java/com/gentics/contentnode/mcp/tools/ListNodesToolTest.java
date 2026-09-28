@@ -1,7 +1,6 @@
 package com.gentics.contentnode.mcp.tools;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
@@ -11,12 +10,11 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.mcp.auth.McpRequestCredentials;
+import com.gentics.contentnode.mcp.model.LanguageInfo;
+import com.gentics.contentnode.mcp.model.ListResult;
+import com.gentics.contentnode.mcp.model.NodeInfo;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
-import com.gentics.contentnode.mcp.tools.ListNodesTool.LanguageInfo;
-import com.gentics.contentnode.mcp.tools.ListNodesTool.ListNodesResult;
-import com.gentics.contentnode.mcp.tools.ListNodesTool.NodeListItem;
-import com.gentics.contentnode.mcp.tools.ListNodesTool.Slice;
 
 import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.json.schema.JsonSchemaValidator.ValidationResponse;
@@ -32,8 +30,9 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
  * <p>
  * Covers everything that does not need a DB/CMS instance: the tool definition, the
  * unauthenticated-call rejection (handled by {@code AbstractMcpTool#call} before
- * {@link ListNodesTool#invoke} runs), argument parsing, the paging slice computation, and that the
- * result shape validates against the declared output schema. Listing real nodes with a real,
+ * {@link ListNodesTool#invoke} runs), and that the result shape validates against the declared
+ * output schema. Argument parsing and the paging slice computation are covered by
+ * {@code ListArgsTest} and {@code SliceTest}. Listing real nodes with a real,
  * authenticated session is covered by
  * {@code com.gentics.contentnode.tests.mcp.ListNodesToolIntegrationTest} and the manual protocol
  * in {@code docs/mcp-tests.md}.
@@ -89,8 +88,8 @@ public class ListNodesToolTest {
 
 	@Test
 	public void testResultValidatesAgainstOutputSchema() {
-		ListNodesResult result = new ListNodesResult(3, true, 1, true,
-				List.of(new NodeListItem(new ObjectRef(Type.NODE, 1, "A547.1", null, "Node", null, null, null, null),
+		ListResult<NodeInfo> result = new ListResult<>(3, true, 1, true,
+				List.of(new NodeInfo(new ObjectRef(Type.NODE, 1, "A547.1", null, "Node", null, null, null, null),
 						"www.example.com", "/", List.of(new LanguageInfo(1, "de", "Deutsch")), 10, null, null)));
 
 		Map<String, Object> structured = MAPPER.convertValue(result, new TypeReference<Map<String, Object>>() {
@@ -103,7 +102,7 @@ public class ListNodesToolTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testResultOmitsNullFields() {
-		ListNodesResult result = new ListNodesResult(0, true, null, false, List.of(new NodeListItem(
+		ListResult<NodeInfo> result = new ListResult<>(0, true, null, false, List.of(new NodeInfo(
 				ObjectRef.of(Type.NODE, 1), null, "/", List.of(), null, null, null)));
 
 		Map<String, Object> structured = MAPPER.convertValue(result, new TypeReference<Map<String, Object>>() {
@@ -139,99 +138,5 @@ public class ListNodesToolTest {
 		CallToolResult result = tool.call(context, request);
 
 		assertThat(result.isError()).isTrue();
-	}
-
-	@Test
-	public void testIntArg() {
-		assertThat(ListNodesTool.intArg(Map.of(), "size", 25, 1, 200)).isEqualTo(25);
-		assertThat(ListNodesTool.intArg(Map.of("size", 10), "size", 25, 1, 200)).isEqualTo(10);
-		assertThat(ListNodesTool.intArg(Map.of("size", 10L), "size", 25, 1, 200)).isEqualTo(10);
-		assertThat(ListNodesTool.intArg(Map.of("size", 10.0), "size", 25, 1, 200)).isEqualTo(10);
-		assertThat(ListNodesTool.intArg(Map.of("size", "10"), "size", 25, 1, 200)).isEqualTo(10);
-		assertThat(ListNodesTool.intArg(Map.of("size", 0), "size", 25, 1, 200)).isEqualTo(1);
-		assertThat(ListNodesTool.intArg(Map.of("size", 1000), "size", 25, 1, 200)).isEqualTo(200);
-		assertThatThrownBy(() -> ListNodesTool.intArg(Map.of("size", "abc"), "size", 25, 1, 200))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("size");
-	}
-
-	@Test
-	public void testSliceFirstPage() {
-		Slice slice = Slice.of(0, 2, 5);
-
-		assertThat(slice.fromIndex()).isEqualTo(0);
-		assertThat(slice.toIndex()).isEqualTo(2);
-		assertThat(slice.truncated()).isTrue();
-		assertThat(slice.nextFrom()).isEqualTo(2);
-	}
-
-	@Test
-	public void testSliceMiddlePageNotAlignedToSize() {
-		Slice slice = Slice.of(3, 2, 10);
-
-		assertThat(slice.fromIndex()).isEqualTo(3);
-		assertThat(slice.toIndex()).isEqualTo(5);
-		assertThat(slice.nextFrom()).isEqualTo(5);
-	}
-
-	@Test
-	public void testSliceLastPartialPage() {
-		Slice slice = Slice.of(4, 2, 5);
-
-		assertThat(slice.fromIndex()).isEqualTo(4);
-		assertThat(slice.toIndex()).isEqualTo(5);
-		assertThat(slice.truncated()).isFalse();
-		assertThat(slice.nextFrom()).isNull();
-	}
-
-	@Test
-	public void testSliceExactlyAtEnd() {
-		Slice slice = Slice.of(3, 2, 5);
-
-		assertThat(slice.toIndex()).isEqualTo(5);
-		assertThat(slice.truncated()).isFalse();
-		assertThat(slice.nextFrom()).isNull();
-	}
-
-	@Test
-	public void testSliceFromBeyondTotal() {
-		Slice slice = Slice.of(10, 2, 5);
-
-		assertThat(slice.fromIndex()).isEqualTo(5);
-		assertThat(slice.toIndex()).isEqualTo(5);
-		assertThat(slice.truncated()).isFalse();
-		assertThat(slice.nextFrom()).isNull();
-	}
-
-	@Test
-	public void testSliceEmptyList() {
-		Slice slice = Slice.of(0, 25, 0);
-
-		assertThat(slice.fromIndex()).isEqualTo(0);
-		assertThat(slice.toIndex()).isEqualTo(0);
-		assertThat(slice.truncated()).isFalse();
-		assertThat(slice.nextFrom()).isNull();
-	}
-
-	@Test
-	public void testSliceNoOverflow() {
-		Slice slice = Slice.of(Integer.MAX_VALUE - 1, Integer.MAX_VALUE, Integer.MAX_VALUE);
-
-		assertThat(slice.toIndex()).isEqualTo(Integer.MAX_VALUE);
-		assertThat(slice.truncated()).isFalse();
-	}
-
-	@Test
-	public void testSlicesCoverEveryItemExactlyOnce() {
-		int total = 7;
-		int size = 3;
-		int covered = 0;
-		Integer from = 0;
-		while (from != null) {
-			Slice slice = Slice.of(from, size, total);
-			assertThat(slice.fromIndex()).isEqualTo(covered);
-			covered = slice.toIndex();
-			from = slice.nextFrom();
-		}
-		assertThat(covered).isEqualTo(total);
 	}
 }

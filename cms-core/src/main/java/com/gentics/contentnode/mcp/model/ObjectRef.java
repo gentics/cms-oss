@@ -1,6 +1,10 @@
 package com.gentics.contentnode.mcp.model;
 
+import static com.gentics.contentnode.mcp.McpSchemas.schema;
+
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -119,5 +123,36 @@ public record ObjectRef(
 				: restPage.getLiveUrl();
 		return new ObjectRef(Type.PAGE, restPage.getId(), restPage.getGlobalId(), nodeId, restPage.getName(),
 				restPage.getPath(), restPage.getLanguage(), restPage.getNiceUrl(), url);
+	}
+
+	/**
+	 * Create the ref for a page, like {@link #forPage(Page, Integer)}, taking {@link #nodeId()}
+	 * from the page's folder ({@link Page#getFolder()}), which is only set if the page was loaded
+	 * with its folder
+	 * @param restPage REST model of the page
+	 * @return ref, without node ID if the folder was not loaded
+	 */
+	public static ObjectRef forPage(Page restPage) {
+		return forPage(restPage, restPage.getFolder() != null ? restPage.getFolder().getNodeId() : null);
+	}
+
+	/**
+	 * Build the output schema of a ref. Describes its fields, but does not validate them further
+	 * (nothing is required). Must be kept in sync with the components.
+	 * @param description description, may be null
+	 * @return schema
+	 */
+	public static Map<String, Object> jsonSchema(String description) {
+		Map<String, Object> properties = new LinkedHashMap<>();
+		properties.put("type", schema("string", null));
+		properties.put("id", schema("integer", null));
+		properties.put("globalId", schema("string", null));
+		properties.put("nodeId", schema("integer", null));
+		properties.put("name", schema("string", null));
+		properties.put("path", schema("string", null));
+		properties.put("language", schema("string", null));
+		properties.put("niceUrl", schema("string", null));
+		properties.put("url", schema("string", null));
+		return schema("object", description, "properties", properties);
 	}
 }

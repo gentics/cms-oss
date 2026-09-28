@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
+import com.gentics.contentnode.rest.model.Folder;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.Page;
 
@@ -88,6 +89,31 @@ public class ObjectRefTest {
 
 		assertThat(ref.url()).isEqualTo("https://www.example.com/home.html");
 		assertThat(ref.nodeId()).isNull();
+	}
+
+	@Test
+	public void testForPageTakesNodeIdFromFolder() {
+		Folder folder = new Folder();
+		folder.setNodeId(3);
+		Page page = new Page();
+		page.setId(7);
+		page.setFolder(folder);
+
+		assertThat(ObjectRef.forPage(page).nodeId()).isEqualTo(3);
+	}
+
+	@Test
+	public void testForPageWithoutFolderHasNoNodeId() {
+		Page page = new Page();
+		page.setId(7);
+
+		assertThat(ObjectRef.forPage(page)).isEqualTo(ObjectRef.forPage(page, null));
+	}
+
+	@Test
+	public void testJsonSchemaDescription() {
+		assertThat(ObjectRef.jsonSchema("Reference.")).containsEntry("description", "Reference.");
+		assertThat(ObjectRef.jsonSchema(null)).doesNotContainKey("description");
 	}
 
 	@Test

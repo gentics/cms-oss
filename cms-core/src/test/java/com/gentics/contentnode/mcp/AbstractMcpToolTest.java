@@ -1,6 +1,7 @@
 package com.gentics.contentnode.mcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,11 @@ import java.util.Optional;
 import org.junit.Test;
 
 import com.gentics.contentnode.factory.Session;
+import com.gentics.contentnode.mcp.model.ObjectRef;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
 
 import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
@@ -18,8 +24,9 @@ import io.modelcontextprotocol.spec.McpSchema.TextContent;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 
 /**
- * Unit tests for the result serialization of {@link AbstractMcpTool}. Uses tools that do not
- * require authentication, so no session (and no DB) is involved.
+ * Unit tests for the result serialization and the shared static helpers of
+ * {@link AbstractMcpTool}. Uses tools that do not require authentication, so no session (and no
+ * DB) is involved.
  */
 public class AbstractMcpToolTest {
 	/**
@@ -76,5 +83,68 @@ public class AbstractMcpToolTest {
 		assertThat(result.isError()).isNotEqualTo(Boolean.TRUE);
 		assertThat(((TextContent) result.content().get(0)).text()).isEqualTo("{\"value\":\"hello\"}");
 		assertThat(result.structuredContent()).isEqualTo(Map.of("value", "hello"));
+	}
+
+	@Test
+	public void testErrorMessage() {
+		GenericResponse withMessage = new GenericResponse(new Message(Message.Type.CRITICAL, "Name already used."),
+				new ResponseInfo(ResponseCode.INVALIDDATA, "Error while saving page 7: Name already used.", "name"));
+		assertThat(AbstractMcpTool.errorMessage("Page 7 was not saved", withMessage))
+				.isEqualTo("Page 7 was not saved: Name already used.");
+
+		GenericResponse withoutMessage = new GenericResponse(null,
+				new ResponseInfo(ResponseCode.INVALIDDATA, "Error while saving page."));
+		assertThat(AbstractMcpTool.errorMessage("Page 7 was not saved", withoutMessage))
+				.isEqualTo("Page 7 was not saved: Error while saving page.");
+
+		assertThat(AbstractMcpTool.errorMessage("Page 7 was not saved", new GenericResponse()))
+				.isEqualTo("Page 7 was not saved: unknown error");
+	}
+
+	@Test
+	public void testRequireOk() {
+		AbstractMcpTool.requireOk(new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Saved.")), "Not saved");
+
+		assertThatThrownBy(() -> AbstractMcpTool.requireOk(new GenericResponse(
+				new Message(Message.Type.CRITICAL, "Name already used."),
+				new ResponseInfo(ResponseCode.INVALIDDATA, "Error")), "Page 7 was not saved"))
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("Page 7 was not saved: Name already used.");
+		assertThatThrownBy(() -> AbstractMcpTool.requireOk(new GenericResponse(), "Page 7 was not saved"))
+				.isInstanceOf(IllegalArgumentException.class).hasMessage("Page 7 was not saved: unknown error");
+		assertThatThrownBy(() -> AbstractMcpTool.requireOk(null, "Page 7 was not saved"))
+				.isInstanceOf(IllegalArgumentException.class).hasMessage("Page 7 was not saved: unknown error");
+	}
+
+	/**
+	 * Only the successful save: releasing the lock after a failed save needs a DB, and is covered by
+	 * {@code UpdatePagePropertiesToolIntegrationTest} (rejected saves leave the page unlocked).
+	 */
+	@Test
+	public void testSaveOrReleaseLockReturnsOkResponse() throws Exception {
+		GenericResponse ok = new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Saved."));
+
+		assertThat(AbstractMcpTool.saveOrReleaseLock(com.gentics.contentnode.object.Page.class, "7", "Not saved",
+				() -> ok)).isSameAs(ok);
+	}
+
+	@Test
+	public void testArgDelegates() {
+		Map<String, Object> arguments = Map.of("name", "abc", "size", 10, "flag", true);
+
+		assertThat(AbstractMcpTool.stringArg(arguments, "name", 1, 5)).isEqualTo("abc");
+		assertThat(AbstractMcpTool.intArg(arguments, "size", 1, 200)).isEqualTo(10);
+		assertThat(AbstractMcpTool.intArg(arguments, "from", 0, 100, 7)).isEqualTo(7);
+		assertThat(AbstractMcpTool.booleanArg(arguments, "flag", false)).isTrue();
+		assertThat(AbstractMcpTool.nullIfBlank(" ")).isNull();
+		assertThatThrownBy(() -> AbstractMcpTool.intArg(Map.of("size", 0), "size", 1, 200))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("'size'");
+	}
+
+	@Test
+	public void testSchemaDelegates() {
+		assertThat(AbstractMcpTool.schema("integer", "Some number.", "minimum", 1))
+				.isEqualTo(McpSchemas.schema("integer", "Some number.", "minimum", 1));
+		assertThat(AbstractMcpTool.objectRefSchema("Reference.")).isEqualTo(ObjectRef.jsonSchema("Reference."));
 	}
 }

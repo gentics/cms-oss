@@ -784,13 +784,14 @@ Tests: `ObjectRefTest`, `ListNodesToolTest`, `AbstractMcpToolTest` (all new, no 
 * **Languages are folded into every item** (`items[].languages`, `{id, code, name}`), fetched
   per node via `NodeResourceImpl#languages` in the same call. Node counts are small, so this is
   cheap even at `size = 200`, and the tool's stated purpose ("learn which languages a node
-  supports") depends on the field. `LanguageInfo` is a nested record of `ListNodesTool` and was
-  deliberately not promoted to the shared `mcp.model` package.
+  supports") depends on the field. `LanguageInfo` was first a nested record of `ListNodesTool`;
+  that decision was reversed on 2026-09-28, and it is now the shared `mcp.model.LanguageInfo`
+  (§12.11).
 * **Paging is "fetch all, then slice in memory".** The tool's input is offset-based (`from`,
   arbitrary in `[0, 10000]`), while `PagingParameterBean` is page-number based (`page`/`pageSize`).
   The two only line up when `from` is a multiple of `size`. So `NodeResourceImpl#list` is called
   unpaged (`pageSize = -1`, the bean's own default) and `[from, from + size)` is sliced out
-  afterwards (`ListNodesTool.Slice`, which also computes `truncated`/`nextFrom` and uses `long`
+  afterwards (`mcp.util.Slice`, §12.11, which also computes `truncated`/`nextFrom` and uses `long`
   arithmetic so `from + size` cannot overflow). `total` is always the exact count of visible,
   matching nodes, so `totalIsExact` is always `true`.
 * **No extra permission check.** `NodeResourceImpl#list` already filters to
@@ -804,9 +805,10 @@ Tests: `ObjectRefTest`, `ListNodesToolTest`, `AbstractMcpToolTest` (all new, no 
   `PageResourceImpl#load` for `page_load`.
 * Arguments: `q` (optional, max 200 chars, blank = no filter; matched case-insensitively against
   the node's ID and name by the resource's own `ResolvableFilter`), `size` (1–200, default 25),
-  `from` (0–10000, default 0). `size`/`from` are additionally clamped in the tool, and numbers
-  may arrive as any JSON number type or a numeric string. Results keep the resource's own default
-  sort (`name`).
+  `from` (0–10000, default 0). All three are checked again in the tool (`mcp.util.ListArgs`,
+  §12.11), which rejects out-of-range values, a `q` that is not a JSON string (or `null`), and a
+  `size`/`from` that is not an integral JSON number (no numeric strings). Results keep the
+  resource's own default sort (`name`).
 * `host` is passed through exactly as the REST model reports it. That value includes the
   protocol, e.g. `http://www.example.com` (`ModelBuilder#getNode`), not the bare hostname.
 
@@ -829,7 +831,7 @@ present, it is validated against the schema (networknt `json-schema-validator` v
    without an output schema, i.e. `page_load`, are unaffected (the SDK would log a warning for
    structured content without a schema). The text block is still always sent, for clients that
    don't read structured content.
-2. The result records (`ListNodesResult`, `NodeListItem`, `LanguageInfo`) and `ObjectRef` are
+2. The result records (now `ListResult`, `NodeInfo`, `LanguageInfo`, §12.11) and `ObjectRef` are
    `@JsonInclude(NON_NULL)`. JSON Schema's `"type": "integer"` does not accept `null`, so an
    unset optional field (e.g. `nextFrom` on the last page, or a node without a default image
    folder) would otherwise fail validation.
@@ -847,10 +849,13 @@ at runtime.
 * `ListNodesToolTest`: tool name/description, input schema (`q`/`size`/`from` with their
   constraints, nothing required, no additional properties), output schema field names, output
   schema is a valid schema, a sample result validates against it, null fields are omitted,
-  `requiresAuthentication()`, unauthenticated-call rejection, argument parsing/clamping, and the
-  `Slice` math (first/middle/last/exact-end/beyond-total/empty/overflow, plus a loop that pages
-  through a list via `nextFrom` and checks every item is covered exactly once).
-* `AbstractMcpToolTest`: `structuredContent` set iff an output schema is declared.
+  `requiresAuthentication()`, and unauthenticated-call rejection. The `Slice` math
+  (first/middle/last/exact-end/beyond-total/empty/overflow, plus a loop that pages through a list
+  via `nextFrom` and checks every item is covered exactly once) moved to `util/SliceTest`
+  (§12.11).
+* `AbstractMcpToolTest`: `structuredContent` set iff an output schema is declared, and the shared
+  helpers (`errorMessage`, `requireOk`, the successful path of `saveOrReleaseLock`, the argument
+  and schema delegates). The argument parsing and rejection tests are in `McpArgsTest`.
 * `ManualMcpToolsTest`: `registerAll` also registers `list_nodes`.
 * `tests/mcp/ListNodesToolIntegrationTest` (`DBTestContext`): a user whose group has *only* view
   permission on three of four freshly created nodes, authenticated via a real API token passed as
@@ -942,9 +947,10 @@ Consequences of `ModelBuilder#getPage`'s null/empty handling, documented in the 
 ### 12.4 `changedFields`: before/after snapshot diff
 
 `changedFields` lists the fields whose value **actually differs** after the save, not the fields
-present in the request (plan decision 3). `MutableFieldsSnapshot` takes `name`/`fileName`/
-`description`/`niceUrl`/`priority`/`templateId` from the page loaded in step 1, and `diff(...)`
-compares them (`Objects.equals`) with the page reloaded in step 3, in that fixed order. Diffing
+present in the request (plan decision 3). The tool's `CHANGED_FIELDS` (a `ChangedFields`, §12.11)
+takes a snapshot of `name`/`fileName`/`description`/`niceUrl`/`priority`/`templateId` of the page
+loaded in step 1, and `diff(...)` compares them (`Objects.equals`) with the page reloaded in
+step 3, in that fixed order. Diffing
 around the whole cycle instead of bookkeeping while applying the arguments also catches changes
 `save()` makes on its own: a filename derived via `deriveFileName`, or the template's file
 extension appended to a given `fileName`. A resubmitted unchanged value is not reported.
@@ -955,10 +961,11 @@ extension appended to a given `fileName`. A resubmitted unchanged value is not r
 return (`INVALIDDATA` for a duplicate name, filename or nice URL) and every exception would leave
 the page locked for the lock timeout (`lock_time`, default 600 s). The tool therefore:
 
-* checks `save()`'s response code and turns anything but `OK` into a tool error, with the
-  response's messages (`save()` reports duplicates in the response, it does not throw);
-* wraps everything after step 1 in `try`/`finally` and calls `releaseLock(id)` unless the save
-  succeeded. `releaseLock` opens a `Trx` for the bound session and calls `Page#unlock()`, whose
+* runs the save through `AbstractMcpTool#saveOrReleaseLock` (§12.11), which checks `save()`'s
+  response code (`requireOk`) and turns anything but `OK` into a tool error, with the response's
+  messages (`save()` reports duplicates in the response, it does not throw);
+* if the save throws or is not `OK`, `saveOrReleaseLock` calls `releaseLock(Page.class, id)`.
+  `releaseLock` opens a `Trx` for the bound session and calls `Page#unlock()`, whose
   `UPDATE content … WHERE id = ? AND locked_by = ?` only ever releases the caller's own lock. It
   deliberately does **not** use `PageResourceImpl#cancel`, which restores the latest page version
   before unlocking. A failure in `releaseLock` is logged and does not replace the original error.
@@ -993,17 +1000,17 @@ with "Tool (…) input validation failed: …". `UpdatePagePropertiesToolTest
 #testSdkInputValidationEnforcesConstraints` pins this down for the real schema.
 
 The tool still repeats every check itself (`UpdateRequest.of`), because `AbstractMcpTool#call`
-can be invoked without the SDK (as the tests do). Unlike `list_nodes`, which clamps `size`/`from`,
-this write tool **rejects** out-of-range values instead of silently adjusting them, and requires
-real JSON integers/booleans/strings (no numeric strings).
+can be invoked without the SDK (as the tests do). Like all tools using the argument helpers of
+`AbstractMcpTool`, it **rejects** out-of-range values instead of silently adjusting them, and
+requires real JSON integers/booleans/strings (no numeric strings).
 
 ### 12.8 Output
 
-`{ page, changedFields }`, both required. `page` is the tool's own `PageProperties` record,
+`{ page, changedFields }`, both required. `page` is a `PageInfo` record (`mcp.model`, §12.11),
 mapped from the reloaded REST `Page`. It has **no `tags` field** (plan decision 2). Details
 resolved at implementation time:
 
-* **`ref`** comes from `ObjectRef.forPage(page, nodeId)`. `path` is `Page#getPath()`, which
+* **`ref`** comes from `ObjectRef.forPage(page)`, which takes `nodeId` from the page's folder. `path` is `Page#getPath()`, which
   `ModelBuilder` always fills with `ModelBuilder#getFolderPath(folder)` (e.g. `/Node/News/2026/`),
   so no new path logic was needed. `nodeId` is the page's folder's `nodeId` (`Reference.FOLDER`
   is requested in step 3). `url` is the preview URL, falling back to `liveUrl` if blank.
@@ -1031,9 +1038,9 @@ validates against the output schema.
   (no transaction exists in the test, so reaching `load()` would fail differently; the same message
   comes back even with an otherwise invalid `pageId`); `UpdateRequest` defaults, every field, every
   rejection, boundary values, and that `toRestPage()` leaves tags/translation status/language
-  unset; `MutableFieldsSnapshot.diff` for no change, each field individually, all fields in order,
+  unset; `CHANGED_FIELDS` snapshot diff for no change, each field individually, all fields in order,
   a resubmitted unchanged value, a filename changed by `save()`, `null` ↔ value in both directions,
-  and `""` vs. `null`; `errorMessage` with and without messages; the full output mapping; a full
+  and `""` vs. `null`; the full output mapping; a full
   and a minimal result validated against the output schema with `DefaultJsonSchemaValidator`.
 * `ObjectRefTest`: `forPage` with all fields, and the `liveUrl` fallback.
 * `ManualMcpToolsTest`: `registerAll` also registers `update_page_properties`.
@@ -1078,3 +1085,44 @@ unconfirmed until it runs. Checkstyle/SpotBugs/PMD were not run. A user-run
   §11.1 mentions for `list_nodes` does not exist in the working tree. This tool's entry is
   `8944`. The `list_nodes` entry still needs to be created, under a free number.
 * `idempotencyKey` is only logged. Calls are not de-duplicated.
+
+### 12.11 Shared building blocks
+
+Pieces of `update_page_properties` and `list_nodes` that other tools will need were moved out of
+the tools, so that future tools reuse them instead of copying them:
+
+| Where | What |
+|---|---|
+| `mcp/AbstractMcpTool` | `protected static` helpers: `errorMessage(failure, response)`, `requireOk(response, failure)`; `saveOrReleaseLock(clazz, id, failure, save)` and `releaseLock(clazz, id)`; delegates `stringArg`/`intArg`/`booleanArg`/`nullIfBlank` (to `McpArgs`) and `schema`/`objectRefSchema` (to `McpSchemas`/`ObjectRef`) |
+| `mcp/McpArgs` | public argument parsing, usable outside tool classes (e.g. `ListArgs`): `stringArg`, `intArg` (strict, with and without default), `booleanArg`, `nullIfBlank` |
+| `mcp/McpSchemas` | public `schema(type, description, keyValues...)`, usable outside tool classes (the model records) |
+| `mcp/model` | public output records, each with a static `jsonSchema(...)` next to it: `ObjectRef` (plus `forPage(Page)`, node ID from the folder), `UserRef`, `VersionInfo` (maps any `ItemVersion`, not only `PageVersion`), `TranslationStatusInfo` with nested `LatestVersionInfo`, `PageInfo` (was `UpdatePagePropertiesTool.PageProperties`), `LanguageInfo` (maps a REST `ContentLanguage`), `NodeInfo` (was `ListNodesTool.NodeListItem`), generic `ListResult<T>` with `of(Slice, items)` and `jsonSchema(itemSchema, plural)` (was `ListNodesTool.ListNodesResult`); `Timestamps.orNull` |
+| `mcp/util/ChangedFields` | generic `changedFields` support: a named list of getters, `snapshot(before).diff(after)` (was `UpdatePagePropertiesTool.MutableFieldsSnapshot`) |
+| `mcp/util/Slice` | offset-based page `[from, from + size)` of a fully fetched list, with `apply(list)`, `truncated()`, `nextFrom()` (was `ListNodesTool.Slice`) |
+| `mcp/util/ListArgs` | the list arguments `q`/`size`/`from`: `of(arguments, limits)`, `schemaProperties(queryDescription, singular, plural, limits)`, `slice(total)`; the limits (`ListArgs.Limits`) are per tool |
+| `mcp/util/ListResponses` | `items(response)`: the items of any REST `AbstractListResponse`, never null |
+
+`releaseLock` delegates to `NodeObject#unlock()`. That was checked for the types that implement
+it: pages (`PageFactory`, `UPDATE content … WHERE id = ? AND locked_by = ?`) and templates
+(`TemplateFactory#unlock(int, int)`, `… WHERE id = ? AND locked_by = ?`) only clear the caller's
+own lock; forms (`FormFactory`) throw `ReadOnlyException` if another user holds the lock, which
+`releaseLock` logs. For most other object types, `unlock()` is the empty implementation in
+`AbstractContentObject`, so `releaseLock` does nothing for them.
+
+`list_nodes` now parses `q` with the strict `stringArg` (via `ListArgs`) instead of its former
+lenient `queryArg`, which converted any value with `String.valueOf`. A non-string or `null` `q` is
+therefore rejected when `call()` is invoked directly; through the MCP server the SDK already
+rejected it against `"type": "string"`. A blank `q` still means "no filter". `list()` and
+`languages()` of `NodeResourceImpl` throw on failure instead of returning a non-`OK` response, so
+`list_nodes` does not need `requireOk`.
+
+The output schemas of the model records are still hand-built. `ModelJsonSchemaTest` checks for
+each record that its schema describes exactly its record components and is a valid schema, so a
+component added without updating the schema fails the build.
+
+Tests: `McpSchemasTest`, `McpArgsTest`, `util/ChangedFieldsTest`, `util/SliceTest`,
+`util/ListArgsTest`, `util/ListResponsesTest`, `model/ModelJsonSchemaTest` (new);
+`ObjectRefTest` (`forPage(Page)`, `jsonSchema` description), `AbstractMcpToolTest` (`requireOk`,
+`saveOrReleaseLock` success path). Releasing the lock after a failed save needs a DB and is
+covered by `UpdatePagePropertiesToolIntegrationTest` (duplicate name/filename leave the page
+unlocked).

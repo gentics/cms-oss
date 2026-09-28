@@ -1,5 +1,6 @@
 package com.gentics.contentnode.mcp.tools;
 
+import static com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool.CHANGED_FIELDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,20 +16,16 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.mcp.auth.McpRequestCredentials;
 import com.gentics.contentnode.mcp.model.ObjectRef;
-import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool.MutableFieldsSnapshot;
-import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool.PageProperties;
+import com.gentics.contentnode.mcp.model.PageInfo;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool.UpdatePagePropertiesResult;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool.UpdateRequest;
+import com.gentics.contentnode.mcp.util.ChangedFields;
 import com.gentics.contentnode.rest.model.Folder;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.PageVersion;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.TranslationStatus;
 import com.gentics.contentnode.rest.model.User;
-import com.gentics.contentnode.rest.model.response.GenericResponse;
-import com.gentics.contentnode.rest.model.response.Message;
-import com.gentics.contentnode.rest.model.response.ResponseCode;
-import com.gentics.contentnode.rest.model.response.ResponseInfo;
 
 import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.json.schema.JsonSchemaValidator.ValidationResponse;
@@ -245,7 +242,7 @@ public class UpdatePagePropertiesToolTest {
 	public void testDiffNothingChanged() {
 		Page before = page("Name", "name.html", "Description", "/nice", 50, 3);
 
-		assertThat(MutableFieldsSnapshot.of(before).diff(page("Name", "name.html", "Description", "/nice", 50, 3)))
+		assertThat(CHANGED_FIELDS.snapshot(before).diff(page("Name", "name.html", "Description", "/nice", 50, 3)))
 				.isEmpty();
 	}
 
@@ -255,7 +252,7 @@ public class UpdatePagePropertiesToolTest {
 	 */
 	@Test
 	public void testDiffUnchangedResubmittedValueIsNotChanged() {
-		MutableFieldsSnapshot before = MutableFieldsSnapshot.of(page("Name", "name.html", null, null, 50, 3));
+		ChangedFields.Snapshot<Page> before = CHANGED_FIELDS.snapshot(page("Name", "name.html", null, null, 50, 3));
 
 		// the request contained name = "Name" again, so the page after the save is equal
 		Page after = page("Name", "name.html", null, null, 50, 3);
@@ -265,7 +262,8 @@ public class UpdatePagePropertiesToolTest {
 
 	@Test
 	public void testDiffEachFieldIndividually() {
-		MutableFieldsSnapshot before = MutableFieldsSnapshot.of(page("Name", "name.html", "Description", "/nice", 50, 3));
+		ChangedFields.Snapshot<Page> before = CHANGED_FIELDS.snapshot(
+				page("Name", "name.html", "Description", "/nice", 50, 3));
 
 		assertThat(before.diff(page("Other", "name.html", "Description", "/nice", 50, 3))).containsExactly("name");
 		assertThat(before.diff(page("Name", "other.html", "Description", "/nice", 50, 3))).containsExactly("fileName");
@@ -277,7 +275,8 @@ public class UpdatePagePropertiesToolTest {
 
 	@Test
 	public void testDiffAllFieldsInFixedOrder() {
-		MutableFieldsSnapshot before = MutableFieldsSnapshot.of(page("Name", "name.html", "Description", "/nice", 50, 3));
+		ChangedFields.Snapshot<Page> before = CHANGED_FIELDS.snapshot(
+				page("Name", "name.html", "Description", "/nice", 50, 3));
 
 		assertThat(before.diff(page("A", "a.html", "B", "/c", 1, 9))).containsExactly("name", "fileName",
 				"description", "niceUrl", "priority", "templateId");
@@ -289,7 +288,7 @@ public class UpdatePagePropertiesToolTest {
 	 */
 	@Test
 	public void testDiffReportsFileNameChangedBySave() {
-		MutableFieldsSnapshot before = MutableFieldsSnapshot.of(page("Old", "old.html", null, null, 1, 3));
+		ChangedFields.Snapshot<Page> before = CHANGED_FIELDS.snapshot(page("Old", "old.html", null, null, 1, 3));
 
 		assertThat(before.diff(page("New", "new.html", null, null, 1, 3))).containsExactly("name", "fileName");
 	}
@@ -299,40 +298,28 @@ public class UpdatePagePropertiesToolTest {
 		Page withValues = page("Name", "name.html", "Description", "/nice", 50, 3);
 		Page withNulls = page("Name", "name.html", null, null, null, null);
 
-		assertThat(MutableFieldsSnapshot.of(withValues).diff(withNulls)).containsExactly("description", "niceUrl",
+		assertThat(CHANGED_FIELDS.snapshot(withValues).diff(withNulls)).containsExactly("description", "niceUrl",
 				"priority", "templateId");
-		assertThat(MutableFieldsSnapshot.of(withNulls).diff(withValues)).containsExactly("description", "niceUrl",
+		assertThat(CHANGED_FIELDS.snapshot(withNulls).diff(withValues)).containsExactly("description", "niceUrl",
 				"priority", "templateId");
-		assertThat(MutableFieldsSnapshot.of(withNulls).diff(page("Name", "name.html", null, null, null, null)))
+		assertThat(CHANGED_FIELDS.snapshot(withNulls).diff(page("Name", "name.html", null, null, null, null)))
 				.isEmpty();
 	}
 
 	@Test
 	public void testDiffEmptyStringIsNotNull() {
-		MutableFieldsSnapshot before = MutableFieldsSnapshot.of(page("Name", "name.html", "Description", null, 1, 3));
+		ChangedFields.Snapshot<Page> before = CHANGED_FIELDS.snapshot(
+				page("Name", "name.html", "Description", null, 1, 3));
 
 		assertThat(before.diff(page("Name", "name.html", "", null, 1, 3))).containsExactly("description");
 	}
 
 	@Test
-	public void testErrorMessage() {
-		GenericResponse withMessage = new GenericResponse(new Message(Message.Type.CRITICAL, "Name already used."),
-				new ResponseInfo(ResponseCode.INVALIDDATA, "Error while saving page 7: Name already used.", "name"));
-		assertThat(UpdatePagePropertiesTool.errorMessage("7", withMessage))
-				.isEqualTo("Page 7 was not saved: Name already used.");
-
-		GenericResponse withoutMessage = new GenericResponse(null,
-				new ResponseInfo(ResponseCode.INVALIDDATA, "Error while saving page."));
-		assertThat(UpdatePagePropertiesTool.errorMessage("7", withoutMessage))
-				.isEqualTo("Page 7 was not saved: Error while saving page.");
-	}
-
-	@Test
 	@SuppressWarnings("unchecked")
-	public void testPagePropertiesMapping() throws Exception {
+	public void testPageInfoMapping() throws Exception {
 		Page page = fullPage();
 
-		Map<String, Object> map = MAPPER.convertValue(PageProperties.of(page), new TypeReference<Map<String, Object>>() {
+		Map<String, Object> map = MAPPER.convertValue(PageInfo.of(page), new TypeReference<Map<String, Object>>() {
 		});
 
 		assertThat(map).doesNotContainKeys("tags", "lockedBy", "lockedSince", "published", "publisher");
@@ -371,7 +358,7 @@ public class UpdatePagePropertiesToolTest {
 		Map<String, Object> outputSchema = tool.tool().outputSchema();
 
 		for (Page page : List.of(fullPage(), minimalPage())) {
-			UpdatePagePropertiesResult result = new UpdatePagePropertiesResult(PageProperties.of(page),
+			UpdatePagePropertiesResult result = new UpdatePagePropertiesResult(PageInfo.of(page),
 					List.of("name"));
 			var validation = validator.validate(outputSchema, MAPPER.convertValue(result, Map.class));
 			assertThat(validation.valid()).as(validation.errorMessage()).isTrue();
@@ -380,7 +367,7 @@ public class UpdatePagePropertiesToolTest {
 
 	@Test
 	public void testRefWithoutFolderHasNoNodeId() {
-		ObjectRef ref = PageProperties.of(minimalPage()).ref();
+		ObjectRef ref = PageInfo.of(minimalPage()).ref();
 
 		assertThat(ref.nodeId()).isNull();
 		assertThat(ref.id()).isEqualTo(7);

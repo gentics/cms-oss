@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/**/*.{tsx,css}"
+---
+
 # Gentics Workspace: Design Guidelines
 
 Dieses Dokument beschreibt das Aussehen der Workspace-UI: Farben, Schrift, Abstände, Formen, Schatten, Icons, Bewegung, Zustände und Bausteine.

@@ -1,645 +1,180 @@
-Runtime
-Project Instructions
+# Project Instructions
 
-This repository is a React + TypeScript application using Vite, TanStack Query, a Node.js backend API, Web Streams, Vitest, Testing Library, Playwright, ESLint with ESLint Stylistic, npm, GitHub Actions, and Renovate.
+This repository is a React + TypeScript application using Vite, plain CSS, TanStack Query, TanStack Router, Web Streams, Vitest, Testing Library, Playwright, ESLint with ESLint Stylistic, npm, GitHub Actions, and Renovate. It is intentionally developed with AI assistance. Follow these instructions for every task.
 
-Use npm as the package manager.
+- Use npm as the package manager. Do not change it to pnpm, Yarn, Bun, or another tool unless explicitly requested.
+- Requires Node.js `>=26.4.0` and npm `>=11` (`engines` in `package.json`; `.nvmrc` pins `v26.4.0`). If the active Node version is lower, say so before reporting validation results.
 
-Do not change the package manager to pnpm, Yarn, Bun, or another tool unless explicitly requested.
+## Project Layout and Commands
 
-The project is developed with AI assistance. Follow these instructions for every task.
+This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside this folder unless the task requires otherwise.
 
-Core Principles
-Inspect before modifying
+- `src/lib/api.ts` API client · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/test/setup.ts` Vitest setup.
+- Unit/component tests sit next to the code as `src/**/*.test.{ts,tsx}`. E2E tests live in `e2e/` (for example `e2e/App.spec.ts`).
+- Import from `src/` with the `@/` alias (for example `@/lib/api`).
 
-Before changing code:
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Vite dev server |
+| `npm run typecheck` | `tsc -b` |
+| `npm run lint` | ESLint; warnings fail |
+| `npm run format` / `npm run lint:fix` | ESLint autofix |
+| `npm test` / `npm run test:run` | Vitest in watch mode / once |
+| `npm run test:coverage` | Vitest with coverage |
+| `npm run test:e2e` / `npm run test:e2e:ui` | Playwright (starts Vite itself). Browsers must be installed first: `npx playwright install` |
+| `npm run check` | typecheck, lint, `test:run`, build |
 
-Inspect the relevant files.
+## Core Principles
 
-Understand the existing architecture and conventions.
+### Inspect before modifying
 
-Search for existing implementations that solve a similar problem.
+1. Inspect the relevant files and understand the existing architecture and conventions.
+2. Search for existing implementations that solve a similar problem, and reuse existing patterns where appropriate.
+3. Only then make changes. Do not modify files based on assumptions about how the project works.
 
-Reuse existing patterns where appropriate.
+### Preserve the existing architecture
 
-Only then make changes.
+- Do not restructure the project unless the task requires it. Do not introduce new architectural patterns merely because they are personally preferred.
+- When extending functionality, follow the existing structure and conventions.
+- If an architectural change appears necessary, explain why before making a broad change. Do not silently make major architectural decisions.
 
-Do not modify files based on assumptions about how the project works.
+### Prefer the smallest change
 
-Preserve the existing architecture
+- Make the smallest change that correctly solves the requested problem. A task should not become an excuse to "clean up" unrelated code.
+- Avoid unrelated refactoring, unnecessary renaming, speculative abstractions, large-scale rewrites, formatting unrelated files, and introducing dependencies for trivial functionality.
 
-Do not restructure the project unless the task requires it.
+### Ambiguous requirements
 
-Do not introduce new architectural patterns merely because they are personally preferred.
+- Use existing project conventions where possible, and do not invent behavior.
+- Ask for clarification when the ambiguity materially affects the implementation.
 
-When extending functionality, follow the existing structure and conventions.
+## Do Not Invent Things
 
-If an architectural change appears necessary, explain why before making a broad change.
+- Never invent API endpoints, request fields, response fields, authentication mechanisms, environment variables, database schemas, library APIs, configuration options, or undocumented behavior. If an API or behavior is unclear, inspect the repository and available documentation first. If it still cannot be determined, state the uncertainty instead of guessing.
+- IMPORTANT: Never claim that tests passed, lint passed, type checking passed, a build succeeded, an API works, a browser test passed, or something was deployed unless the relevant command was actually executed and succeeded. If a command could not be run, explicitly say so.
 
-Prefer the smallest change
+## Technology Guidelines
 
-Make the smallest change that correctly solves the requested problem.
+### React
 
-Avoid:
+- Prefer functional components, hooks, composition, small focused components, and semantic HTML. Avoid unnecessary component abstractions.
+- Do not put business logic directly into large UI components when it can reasonably live in a feature or domain module.
 
-unrelated refactoring
+### Text and i18n
 
-unnecessary renaming
+- UI text goes through react-i18next (`useTranslation()`, `t('key')`) instead of being hard-coded. The app is in English and German.
+- Add every new key to both `src/i18n/locales/en/common.json` and `src/i18n/locales/de/common.json` (default namespace `common`, fallback `en`).
 
-speculative abstractions
+### Styling
 
-large-scale rewrites
+- Use plain CSS. Do not add a CSS preprocessor (Sass/SCSS, Less) or CSS-in-JS.
+- Component styles use CSS Modules: `Component.module.css` next to the component, imported as `import styles from './Component.module.css';`.
+- Global styles (design tokens, base styles) live only in `src/index.css`. Do not add global class names for components.
+- Design tokens are CSS custom properties. Visual values (colors, radii, shadows, spacing, font sizes) come from `.claude/rules/design.md`.
+- Native CSS nesting, cascade layers, and container queries are allowed. `var()` does not work in `@media` conditions; write breakpoints as literal values.
 
-formatting unrelated files
+### State Management
 
-introducing dependencies for trivial functionality
-
-A task should not become an excuse to "clean up" unrelated code.
-
-Do Not Invent Things
-Do not invent APIs
-
-Never invent:
-
-API endpoints
-
-request fields
-
-response fields
-
-authentication mechanisms
-
-environment variables
-
-database schemas
-
-library APIs
-
-configuration options
-
-undocumented behavior
-
-If an API or behavior is unclear, inspect the repository and available documentation first.
-
-If it still cannot be determined, state the uncertainty instead of guessing.
-
-Do not fabricate results
-
-Never claim that:
-
-tests passed
-
-lint passed
-
-type checking passed
-
-a build succeeded
-
-an API works
-
-a browser test passed
-
-unless the relevant command was actually executed and succeeded.
-
-If a command could not be run, explicitly say so.
-
-Technology Guidelines
-React
-
-Use modern React patterns.
-
-Prefer:
-
-functional components
-
-hooks
-
-composition
-
-small focused components
-
-semantic HTML
-
-Avoid unnecessary component abstractions.
-
-Do not introduce shared or global state when local React state, URL state, form state, or TanStack Query is sufficient.
-
-Do not put business logic directly into large UI components when it can reasonably live in a feature or domain module.
-
-State Management
-
-Choose the simplest state-management mechanism appropriate for the type of state:
+Choose the simplest state-management mechanism appropriate for the type of state. Do not move state into a more global system unless the scope of the state requires it.
 
 | State | Preferred tool |
 | --- | --- |
-| Component-only state | React `useState` / `useReducer` |
-| Shared client/UI state | Zustand |
+| Local to a component or small component subtree | React `useState` / `useReducer` |
+| Shared client/UI state accessed by multiple components or features | Zustand |
 | Server/API state | TanStack Query |
-| URL state | Router/search params |
-| Form state | Form library or local React state, depending on complexity |
+| State that should be represented in the URL | TanStack Router search/route params |
+| Form state | Local React state |
 
-Do not move state into a more global system unless the scope of the state requires it.
+### Zustand
 
-Use React state for state that is local to a component or small component subtree.
-
-Use Zustand for shared client-side state that needs to be accessed by multiple components or features.
-
-Use TanStack Query for server state and API data.
-
-Use the router's search parameters or route parameters for state that should be represented in the URL.
-
-Use the project's existing form solution for complex form state. Use local React state for simple forms when appropriate.
-
-Zustand
-
-Use Zustand for shared client-side state that needs to be accessed by multiple components or features.
-
-Zustand stores belong in `src/store/`.
-
-Organize stores by feature or domain rather than creating a single global store.
-
-Appropriate use cases include:
-
-- UI state shared across unrelated components
-- application-wide preferences
-- client-side workflows
-- ephemeral client-side state shared across features
-- other client-side state that does not belong in React local state, TanStack Query, or URL state
-
-Do not use Zustand for server state.
-
-Do not duplicate data managed by TanStack Query in Zustand.
-
-Do not introduce a Zustand store when local React state is sufficient.
-
-Keep business logic close to the state it manages, but do not move API communication into Zustand stores when the operation is better handled by the API layer and TanStack Query.
-
-Use TypeScript interfaces or types for store state and actions.
-
-Prefer selectors when consuming Zustand state so components subscribe only to the state they need.
-
-Use descriptive store filenames such as:
-
-- `useAuthStore.ts`
-- `useUIStore.ts`
-- `useCartStore.ts`
-
-When creating a Zustand store, follow the existing project structure and conventions. Do not introduce a new store architecture or directory structure if an existing pattern is already present.
-
-For example:
+- Stores belong in `src/store/`, organized by feature or domain rather than a single global store. Use descriptive filenames such as `useAuthStore.ts`, `useUIStore.ts`, `useCartStore.ts`.
+- Appropriate for UI state shared across unrelated components, application-wide preferences, client-side workflows, ephemeral client-side state shared across features, and other client-side state that does not belong in React local state, TanStack Query, or URL state.
+- Do not use Zustand for server state. Keep business logic close to the state it manages, but do not move API communication into stores when the operation is better handled by the API layer and TanStack Query.
+- Use TypeScript interfaces or types for store state and actions. Prefer selectors so components subscribe only to the state they need.
+- Follow the existing project structure and conventions. Do not introduce a new store architecture or directory structure if an existing pattern is already present.
 
 ```ts
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 interface UIState {
-  isSidebarOpen: boolean
-  toggleSidebar: () => void
+    isSidebarOpen: boolean;
+    toggleSidebar: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  isSidebarOpen: false,
+    isSidebarOpen: false,
 
-  toggleSidebar: () =>
-    set((state) => ({
-      isSidebarOpen: !state.isSidebarOpen,
-    })),
-}))
+    toggleSidebar: () =>
+        set((state) => ({
+            isSidebarOpen: !state.isSidebarOpen,
+        })),
+}));
 ```
 
-TypeScript
+### TypeScript
 
-Use TypeScript strictly.
+- Use TypeScript strictly (`"strict": true` in `tsconfig.app.json` and `tsconfig.node.json`).
+- Prefer precise types over `any`, and `unknown` with proper narrowing over `any`. Explicit `any` is an ESLint error (`@typescript-eslint/no-explicit-any`). If `any` is genuinely unavoidable, disable the rule for that line only and give the reason: `// eslint-disable-next-line @typescript-eslint/no-explicit-any -- <reason>`.
+- Do not use type assertions merely to silence TypeScript errors. Understand why a type assertion is safe before using one.
+- API boundaries should have explicit types.
 
-Prefer precise types over any.
+### TanStack Query
 
-Avoid any unless there is a clear and documented reason.
+- Use TanStack Query for server state (data retrieved from or synchronized with backend APIs): fetching, caching, synchronization, mutations, invalidation, request state, and server-side errors. Do not manually recreate caching or request-state behavior that TanStack Query already provides.
+- Do not duplicate server state unnecessarily in React state, and do not duplicate it in Zustand.
+- Use stable and meaningful query keys. For mutations, ensure affected queries are invalidated or updated appropriately after successful changes.
 
-Prefer:
+### API Access
 
-unknown
+- Do not call `fetch()` directly from React components. Components consume hooks or feature-level functions; API communication goes through the project's API client or an appropriate feature-level abstraction, for example `src/lib/api.ts`.
+- Keep HTTP concerns, serialization, error handling, authentication, and API-specific behavior outside presentation components.
 
-with proper narrowing over:
+### Web Streams
 
-any
+- Use Web Streams when the application genuinely needs streaming behavior: AI-generated responses, incremental responses, progress streams, long-running operations, Server-Sent Events, streaming logs, incremental data processing.
+- Do not use streams simply because they are technically available. Do not turn ordinary request/response APIs into streaming APIs without a concrete requirement.
+- Streaming code should correctly handle cancellation, errors, stream completion, reader cleanup, and decoding. Prefer the platform Web Streams APIs over a dependency when the native API is sufficient.
 
-Do not use type assertions merely to silence TypeScript errors.
+### Backend
 
-Understand why a type assertion is safe before using one.
+- The Workspace UI is a pure browser app without its own backend. Server-side functionality belongs to the CMS and GenAIx. Do not add a server or other backend code to this app.
 
-API boundaries should have explicit types.
+## Testing
 
-TanStack Query
+- Test observable behavior rather than implementation details. Use the simplest appropriate testing layer. Add or update tests when behavior changes.
+- **Vitest:** unit tests, utilities, business logic, API clients, hooks, and isolated modules.
+- **Testing Library:** React component behavior. Tests interact with components the way users do. Prefer `getByRole()`, `getByLabelText()`, `getByText()` over implementation-specific selectors. Avoid testing internal component state or implementation details unless there is a specific reason.
+- **Playwright:** browser-level behavior and end-to-end scenarios (complete user journeys, routing, browser behavior, frontend/backend integration, authentication flows, critical application workflows). Do not use it for tests that Vitest or Testing Library can adequately cover. Prefer accessible locators such as `getByRole()`, `getByLabel()`, `getByText()`.
 
-Use TanStack Query for server state.
+## Validation and Definition of Done
 
-Server state includes data retrieved from or synchronized with backend APIs.
+- Before considering a task complete, run `npm run check`. It covers TypeScript, ESLint (including ESLint Stylistic formatting rules), unit/component tests, and the production build. ESLint warnings fail the check (`--max-warnings 0`).
+- If browser behavior is affected, also run `npm run test:e2e`.
+- A task is complete when the requested functionality is implemented, this validation passes, and documentation is updated when behavior or architecture changes.
 
-Prefer TanStack Query for:
+## Dependencies
 
-fetching server data
+- Do not introduce dependencies unnecessarily. Before adding one, check whether the platform already provides the functionality, whether the project already has a suitable dependency, and whether it can reasonably be implemented without one. Consider the maintenance and security implications. Add it only when it provides meaningful value, and prefer native browser and Node.js APIs when they are sufficient.
+- When dependencies change, update the lockfile through npm. Do not manually edit `package-lock.json`.
+- Renovate manages dependency updates; allow CI to validate them. Do not manually upgrade unrelated dependencies while working on another task unless explicitly requested.
+- Do not blindly bypass dependency or peer-dependency warnings. If an update creates compatibility problems, investigate the dependency tree before forcing installation. Do not use `npm install --force` or `npm install --legacy-peer-deps` to hide dependency problems unless explicitly instructed to do so.
 
-caching
+## Formatting and ESLint
 
-synchronization
+- Formatting is handled by ESLint using `@stylistic/eslint-plugin` (rules for arrow parentheses, brace style, indentation, TypeScript member delimiters, quotes, and semicolons). The repository's ESLint configuration is the source of truth. Do not introduce a second formatting system or formatting rules that conflict with it.
+- Imports are sorted by `simple-import-sort` in groups: `node:` built-ins, packages, `@/` aliases, relative imports, styles.
+- Prefix intentionally unused variables and arguments with `_`. Only `console.warn` and `console.error` are allowed (`no-console`).
+- Format with ESLint autofix: `npm run format`. The configured editor should also apply Stylistic fixes on save. In formatting-only changes, do not manually reformat unrelated files.
+- Do not disable ESLint rules globally to make a change pass. If a rule genuinely needs to be disabled, keep the scope as narrow as possible and document the reason when appropriate. Do not add unnecessary `eslint-disable` comments; prefer fixing the underlying issue.
 
-mutations
+## Environment Variables and Secrets
 
-invalidation
+- Never commit secrets or place them in source code. Do not print secrets in logs, test output, or error messages.
+- All app code runs in the browser. Never expose API secrets, database credentials, private keys, server-only environment variables, or internal credentials to it, including through Vite. Only environment variables explicitly intended for browser exposure should use the Vite `VITE_` prefix.
+- Use `.env.example` to document required environment variables without including secret values.
 
-request state
+## Git
 
-server-side errors
-
-Do not duplicate server state unnecessarily in React state.
-
-Use stable and meaningful query keys.
-
-For mutations, ensure affected queries are invalidated or updated appropriately after successful changes.
-
-Do not manually recreate caching or request-state behavior that TanStack Query already provides.
-
-API Access
-
-Do not call fetch() directly from React components.
-
-API communication should go through the project's API client or appropriate feature-level abstraction.
-
-For example:
-
-src/lib/api.ts
-
-Components should consume hooks or feature-level functions rather than implementing HTTP requests themselves.
-
-Keep:
-
-HTTP concerns
-
-serialization
-
-error handling
-
-authentication
-
-API-specific behavior
-
-outside presentation components.
-
-Do not invent endpoints or API contracts.
-
-Web Streams
-
-Use Web Streams when the application genuinely needs streaming behavior.
-
-Appropriate use cases include:
-
-AI-generated responses
-
-incremental responses
-
-progress streams
-
-long-running operations
-
-Server-Sent Events
-
-streaming logs
-
-incremental data processing
-
-Do not use streams simply because they are technically available.
-
-Do not turn ordinary request/response APIs into streaming APIs without a concrete requirement.
-
-Streaming code should correctly handle:
-
-cancellation
-
-errors
-
-stream completion
-
-reader cleanup
-
-decoding
-
-Prefer the platform Web Streams APIs rather than adding a dependency when the native API is sufficient.
-
-Backend
-
-Backend code belongs in the backend/server area of the project.
-
-Do not move server-only functionality into browser code.
-
-Never expose:
-
-API secrets
-
-database credentials
-
-private keys
-
-server-only environment variables
-
-internal credentials
-
-to the browser.
-
-Only environment variables explicitly intended for browser exposure should use the Vite VITE\_ prefix.
-
-Validate external input at backend boundaries.
-
-Do not trust client-provided data.
-
-Keep HTTP handlers focused. Move substantial business logic into appropriate modules rather than creating large request handlers.
-
-Testing
-Testing philosophy
-
-Test observable behavior rather than implementation details.
-
-Use the simplest appropriate testing layer.
-
-Vitest
-
-Use Vitest for:
-
-unit tests
-
-utilities
-
-business logic
-
-API clients
-
-hooks
-
-isolated modules
-
-Testing Library
-
-Use Testing Library for React component behavior.
-
-Tests should interact with components the way users do.
-
-Prefer:
-
-getByRole()
-getByLabelText()
-getByText()
-
-over implementation-specific selectors.
-
-Avoid testing internal component state or implementation details unless there is a specific reason.
-
-Playwright
-
-Use Playwright for browser-level behavior and end-to-end scenarios.
-
-Use it for:
-
-complete user journeys
-
-routing
-
-browser behavior
-
-frontend/backend integration
-
-authentication flows
-
-critical application workflows
-
-Do not use Playwright for tests that can be adequately covered by Vitest or Testing Library.
-
-Prefer accessible Playwright locators such as:
-
-getByRole()
-getByLabel()
-getByText()
-
-Validation
-
-Before considering a task complete, run the relevant validation.
-
-For normal changes, run:
-
-npm run check
-
-If browser behavior is affected, also run:
-
-npm run test:e2e
-
-The complete check should cover:
-
-TypeScript
-
-ESLint, including ESLint Stylistic formatting rules
-
-unit/component tests
-
-production build
-
-Do not claim validation succeeded unless the commands actually ran.
-
-If a test cannot be run because of the environment, explain the limitation.
-
-Dependencies
-
-Do not introduce dependencies unnecessarily.
-
-Before adding a dependency:
-
-Check whether the platform already provides the functionality.
-
-Check whether the existing project already has a suitable dependency.
-
-Check whether the functionality can reasonably be implemented without a dependency.
-
-Consider the maintenance and security implications.
-
-Add the dependency only when it provides meaningful value.
-
-Prefer native browser and Node.js APIs when they are sufficient.
-
-Use npm as the package manager.
-
-Do not switch to pnpm, Yarn, Bun, or another package manager unless explicitly requested.
-
-When dependencies change, update the appropriate lockfile through npm.
-
-Do not manually edit package-lock.json.
-
-Dependency Updates
-
-Renovate manages dependency updates.
-
-Do not manually upgrade unrelated dependencies while working on another task unless explicitly requested.
-
-When Renovate creates a dependency update, allow CI to validate it.
-
-Do not blindly bypass dependency or peer-dependency warnings.
-
-If an update creates compatibility problems, investigate the dependency tree before forcing installation.
-
-Do not use:
-
-npm install --force
-
-or:
-
-npm install --legacy-peer-deps
-
-as a way to hide dependency problems unless explicitly instructed to do so.
-
-Formatting
-
-Formatting is handled by ESLint using @stylistic/eslint-plugin.
-
-Do not introduce a second formatting system.
-
-Follow the formatting rules defined in the repository's ESLint configuration.
-
-The repository's Stylistic configuration currently includes rules for:
-
-arrow parentheses
-
-brace style
-
-indentation
-
-TypeScript member delimiters
-
-quotes
-
-semicolons
-
-The configured formatting style should be treated as the source of truth.
-
-Use ESLint autofix to format files:
-
-npm run format
-
-ESLint should also apply Stylistic fixes when saving files in the configured editor.
-
-When making a formatting-only change, do not manually reformat unrelated files.
-
-Do not introduce formatting rules that conflict with the repository's existing ESLint Stylistic configuration.
-
-ESLint
-
-Follow the repository's ESLint configuration.
-
-Formatting is provided by @stylistic/eslint-plugin.
-
-Do not disable ESLint rules globally to make a change pass.
-
-If an ESLint rule genuinely needs to be disabled, keep the scope as narrow as possible and document the reason when appropriate.
-
-Do not add unnecessary eslint-disable comments.
-
-Prefer fixing the underlying issue rather than suppressing a rule.
-
-When formatting code manually, follow the existing ESLint Stylistic configuration rather than introducing personal formatting preferences.
-
-Environment Variables and Secrets
-
-Never commit secrets.
-
-Never place secrets in source code.
-
-Never expose server-only secrets through Vite.
-
-Use:
-
-.env.example
-
-to document required environment variables without including secret values.
-
-Do not print secrets in logs, test output, or error messages.
-
-Git
-
-Keep changes focused.
-
-Do not modify unrelated files.
-
-Do not rewrite Git history.
-
-Do not create commits unless explicitly requested.
-
-Do not commit generated files such as:
-
-dist/
-coverage/
-playwright-report/
-test-results/
-
-Review the final diff before considering the task complete.
-
-AI-Assisted Development
-
-This repository is intentionally designed for AI-assisted development.
-
-When working on a task:
-
-Inspect before modifying.
-
-Understand the existing implementation.
-
-Search for existing patterns.
-
-Make the smallest appropriate change.
-
-Do not invent APIs or requirements.
-
-Do not introduce unnecessary dependencies.
-
-Preserve the existing architecture.
-
-Add or update tests when behavior changes.
-
-Run the relevant validation.
-
-Report what was actually verified.
-
-When requirements are ambiguous:
-
-use existing project conventions where possible
-
-do not invent behavior
-
-ask for clarification when the ambiguity materially affects the implementation
-
-Do not silently make major architectural decisions.
-
-Definition of Done
-
-A task is complete when:
-
-The requested functionality is implemented.
-
-Existing architecture is preserved.
-
-No unnecessary dependencies were introduced.
-
-TypeScript passes.
-
-ESLint passes.
-
-ESLint Stylistic formatting rules pass.
-
-Relevant unit/component tests pass.
-
-Relevant E2E tests pass when applicable.
-
-The production build succeeds.
-
-No secrets were introduced.
-
-Documentation is updated when behavior or architecture changes.
-
-The final response accurately reports what was actually tested.
-
-Most importantly:
-
-Never claim something was tested, verified, built, or deployed unless it actually was.
+- Do not rewrite Git history. Do not create commits unless explicitly requested.
+- Do not commit generated files such as `dist/`, `coverage/`, `playwright-report/`, `test-results/`.
+- Review the final diff before considering the task complete.

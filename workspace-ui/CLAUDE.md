@@ -122,9 +122,89 @@ semantic HTML
 
 Avoid unnecessary component abstractions.
 
-Do not introduce global state when local state or TanStack Query is sufficient.
+Do not introduce shared or global state when local React state, URL state, form state, or TanStack Query is sufficient.
 
 Do not put business logic directly into large UI components when it can reasonably live in a feature or domain module.
+
+State Management
+
+Choose the simplest state-management mechanism appropriate for the type of state:
+
+| State | Preferred tool |
+| --- | --- |
+| Component-only state | React `useState` / `useReducer` |
+| Shared client/UI state | Zustand |
+| Server/API state | TanStack Query |
+| URL state | Router/search params |
+| Form state | Form library or local React state, depending on complexity |
+
+Do not move state into a more global system unless the scope of the state requires it.
+
+Use React state for state that is local to a component or small component subtree.
+
+Use Zustand for shared client-side state that needs to be accessed by multiple components or features.
+
+Use TanStack Query for server state and API data.
+
+Use the router's search parameters or route parameters for state that should be represented in the URL.
+
+Use the project's existing form solution for complex form state. Use local React state for simple forms when appropriate.
+
+Zustand
+
+Use Zustand for shared client-side state that needs to be accessed by multiple components or features.
+
+Zustand stores belong in `src/store/`.
+
+Organize stores by feature or domain rather than creating a single global store.
+
+Appropriate use cases include:
+
+- UI state shared across unrelated components
+- application-wide preferences
+- client-side workflows
+- ephemeral client-side state shared across features
+- other client-side state that does not belong in React local state, TanStack Query, or URL state
+
+Do not use Zustand for server state.
+
+Do not duplicate data managed by TanStack Query in Zustand.
+
+Do not introduce a Zustand store when local React state is sufficient.
+
+Keep business logic close to the state it manages, but do not move API communication into Zustand stores when the operation is better handled by the API layer and TanStack Query.
+
+Use TypeScript interfaces or types for store state and actions.
+
+Prefer selectors when consuming Zustand state so components subscribe only to the state they need.
+
+Use descriptive store filenames such as:
+
+- `useAuthStore.ts`
+- `useUIStore.ts`
+- `useCartStore.ts`
+
+When creating a Zustand store, follow the existing project structure and conventions. Do not introduce a new store architecture or directory structure if an existing pattern is already present.
+
+For example:
+
+```ts
+import { create } from 'zustand'
+
+interface UIState {
+  isSidebarOpen: boolean
+  toggleSidebar: () => void
+}
+
+export const useUIStore = create<UIState>((set) => ({
+  isSidebarOpen: false,
+
+  toggleSidebar: () =>
+    set((state) => ({
+      isSidebarOpen: !state.isSidebarOpen,
+    })),
+}))
+```
 
 TypeScript
 

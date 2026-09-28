@@ -2,6 +2,7 @@
   "name": "Workspace UI",
   "private": true,
   "version": "0.0.0",
+  "license": "Apache-2.0",
   "type": "module",
   "engines": {
     "node": ">=26.4.0",
@@ -22,6 +23,17 @@
     "test:e2e:ui": "playwright test --ui",
     "check": "npm run typecheck && npm run lint && npm run test:run && npm run build"
   },
+  "author": "Gentics PSC",
+  "contributors": [
+    {
+      "name": "Dominik Schatz",
+      "url": "https://github.com/dominikschatz"
+    },
+    {
+      "name": "David Barbu",
+      "url": "https://github.com/Davyd-crypto"
+    }
+  ],
   "dependencies": {
     "@tanstack/react-query": "^5.103.2",
     "@tanstack/react-query-devtools": "^5.103.2",

@@ -84,7 +84,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 			};
 		} else if (value instanceof Map<?, ?> mapValue) {
 
-			Map<Object, Object> wrappedMap = value instanceof SortedMap<?, ?> ? new LinkedHashMap<>(mapValue.size())
+			Map<Object, Object> wrappedMap = value instanceof LinkedHashMap<?, ?> ? new LinkedHashMap<>(mapValue.size())
 					: new HashMap<>();
 			mapValue.forEach((k, v) -> {
 				wrappedMap.put(k, wrap(v, context, mother));

@@ -32,36 +32,9 @@ import io.modelcontextprotocol.spec.McpSchema.Tool;
 /**
  * Changes the metadata of a single page (name, filename, description, nice URL, priority,
  * template), without touching its content/tags.
- *
- * <p>
- * Runs load &rarr; save &rarr; reload, delegating to {@link PageResourceImpl#load} and
- * {@link PageResourceImpl#save}, so the same permission checks as the REST endpoints apply
- * ({@code ObjectPermission.edit}, checked when the page is loaded for update and again in
- * {@code save()}). {@code save()} returns no page, so the tool reloads it afterwards for its
- * output (see {@code docs/mcp-server-integration.md} §12 for why {@code save()} was not changed).
- * </p>
- *
- * <p>
- * The save request contains a REST page with <b>only</b> the supplied fields set, not the loaded
- * page: {@code ModelBuilder#getPage(restPage, false)} applies every non-null field of the REST page
- * (including tags and the translation status, which would re-synchronize the page), and
- * {@code save()} only derives the filename if the submitted filename is empty.
- * </p>
- *
- * <p>
- * {@code changedFields} is a before/after diff of the mutable fields (see
- * {@link MutableFieldsSnapshot}), so it also reports changes that {@code save()} makes on its own
- * (a derived filename, an appended file extension) and omits fields resubmitted unchanged.
- * </p>
- *
- * <p>
- * Loading the page for update locks it (committed immediately). {@code save()} only unlocks at its
- * very end, so on every failure after the page was locked, the tool releases the lock itself (see
- * {@link #releaseLock(String)}). Like {@code save()} with {@code unlock}, this also releases a lock
- * the calling user already held before the call (e.g. with the page open in the editor).
- * </p>
  */
 public class UpdatePagePropertiesTool extends AbstractMcpTool {
+
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(UpdatePagePropertiesTool.class);
 
 	static final String ARG_PAGE_ID = "pageId";

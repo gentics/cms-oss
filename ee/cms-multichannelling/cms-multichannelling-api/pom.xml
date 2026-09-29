@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-multichannelling</artifactId>
-		<version>6.4.12-SNAPSHOT</version>
+		<version>6.4.11-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-multichannelling-api</artifactId>

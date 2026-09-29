@@ -135,10 +135,6 @@ export const useUIStore = create<UIState>((set) => ({
 - Do not use streams simply because they are technically available. Do not turn ordinary request/response APIs into streaming APIs without a concrete requirement.
 - Streaming code should correctly handle cancellation, errors, stream completion, reader cleanup, and decoding. Prefer the platform Web Streams APIs over a dependency when the native API is sufficient.
 
-### Backend
-
-- The Workspace UI is a pure browser app without its own backend. Server-side functionality belongs to the CMS and GenAIx. Do not add a server or other backend code to this app.
-
 ## Testing
 
 - Test observable behavior rather than implementation details. Use the simplest appropriate testing layer. Add or update tests when behavior changes.

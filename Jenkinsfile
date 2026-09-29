@@ -88,7 +88,6 @@ spec:
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
         booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
-        booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker image")
         booleanParam(name: 'runHelmBuild',              defaultValue: false, description: "Whether to run the helm build steps.")
@@ -168,16 +167,6 @@ spec:
                     if (Boolean.valueOf(params.deployTesting)) {
                         //helm version need a semantic version ci-devtest is not valid - prefix test versions with 0-
                         helmVersion = "0-${helmVersion}"
-                    }
-
-                    // Merge the hotfix branch if building a release branch
-                    if (params.mergeHotfixBranch && branchName.startsWith("release-")) {
-                        def branchToMerge = branchName.replaceFirst(/^release-/, "hotfix-")
-                        try {
-                            GitHelper.merge('origin/' + branchToMerge)
-                        } catch (Exception e) {
-                            error 'Couldn\'t merge ref origin/' + branchToMerge + 'into ' + branchName
-                        }
                     }
 
                     if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {

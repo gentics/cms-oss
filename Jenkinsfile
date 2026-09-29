@@ -88,7 +88,6 @@ spec:
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
         booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
-        booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
         booleanParam(name: 'omitScan',                  defaultValue: false, description: "Omit scanning the docker images")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
@@ -124,6 +123,36 @@ spec:
 			}
 		}
 
+        stage("Set Version") {
+            when {
+				expression {
+					return env.BUILD_SKIPPED != "true"
+				}
+			}
+            steps {
+                script {
+                    // Get the version from the parameter
+                    version = params.forceVersion
+
+                    // if the version was not set, and this is a release build, get the current maven version
+                    if (!version && params.runReleaseBuild) {
+                        version = MavenHelper.getVersion()
+                    }
+
+                    if (version) {
+                        // for a release build, we need to advance a snapshot version to the next release version
+                        if (params.runReleaseBuild) {
+                            version = MavenHelper.transformSnapshotToReleaseVersion(version)
+                        }
+
+                        // in any case, set the version to maven
+                        MavenHelper.setVersion(version)
+                        currentBuild.description = version
+                    }
+                }
+            }
+        }
+
         // Build the UI in preparation to be used in the CMS
         stage("Build UI") {
             when {
@@ -142,18 +171,6 @@ spec:
             steps {
                 script {
                     dir(path: 'cms-ui') {
-                        // Get the correct version
-                        version = params.forceVersion
-
-                        if (
-                            // If the version isn't semver, we can't set it, as NX just explodes
-                            !(version ==~ /[\d]+\.[\d]+\.[\d]+(?:\.[a-zA-Z0-9-]+)?/)
-                            // Or for release-builds, we can't override it
-                            || (!version && params.runReleaseBuild)
-                        ) {
-                            version = MavenHelper.getVersion()
-                        }
-
                         // Install the dependencies
                         sh "npm ci --no-audit --no-fund"
 
@@ -209,31 +226,7 @@ spec:
                     def mvnProjects   = ""
                     def mvnArguments  = " "
 
-                    version          = params.forceVersion
                     branchName       = GitHelper.fetchCurrentBranchName()
-
-                    if (!version && params.runReleaseBuild) {
-                        version = MavenHelper.getVersion()
-                    }
-
-                    // Merge the hotfix branch if building a release branch
-                    if (params.mergeHotfixBranch && branchName.startsWith("release-")) {
-                        def branchToMerge = branchName.replaceFirst(/^release-/, "hotfix-")
-                        try {
-                            GitHelper.merge('origin/' + branchToMerge)
-                        } catch (Exception e) {
-                            error 'Couldn\'t merge ref origin/' + branchToMerge + 'into ' + branchName
-                        }
-                    }
-
-                    if (version) {
-                        if (params.runReleaseBuild) {
-                            version = MavenHelper.transformSnapshotToReleaseVersion(version)
-                        }
-
-                        MavenHelper.setVersion(version)
-                        currentBuild.description = version
-                    }
 
                     if (params.runTests) {
                         if (!params.runBaseLibTests) {

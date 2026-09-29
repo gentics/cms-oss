@@ -35,6 +35,8 @@ export class ApiTokensCreateFormComponent extends BaseFormPropertiesComponent<Ed
             expires: new FormControl(this.safeValue('expires'), {
                 validators: [futureDateValidator],
             }),
+            pruneOnExpiry: new FormControl(this.safeValue('pruneOnExpiry'), {
+            }),
         });
     }
 

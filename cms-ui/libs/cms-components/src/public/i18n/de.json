@@ -235,6 +235,7 @@
         "token": "API Token",
         "tokens": "API Tokens",
         "expires_at": "Gültig bis",
+        "prune_on_expiry": "Nach Ablauf löschen",
         "last_used": "Zuletzt verwendet",
         "token_created": "API Token erstellt",
         "token_store": "Bitte bewahren Sie ihn gut auf, man kann ihn nicht noch mal ansehen.",

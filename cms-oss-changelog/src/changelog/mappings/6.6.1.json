@@ -1,10 +1,11 @@
 {
   "version": "6.6.1",
-  "date": "28.09.2026",
+  "date": "29.09.2026",
   "changeLogEntryFileNames": [
     "8908.SUP-20206.enhancement",
     "8939.SUP-20213.bugfix",
-    "8955.SUP-20265.bugfix"
+    "8955.SUP-20265.bugfix",
+    "8963.security"
   ],
   "genericProperties": {
     "alohaeditor-date": "28.08.2026",

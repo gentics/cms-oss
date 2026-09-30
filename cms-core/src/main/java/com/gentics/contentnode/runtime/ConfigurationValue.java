@@ -205,7 +205,29 @@ public enum ConfigurationValue {
 	/**
 	 * Path to the built formgen path to serve instead of the bundled/prebuilt formgen.
 	 */ 
-	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path")
+	FORMGEN_PATH("FORMGEN_PATH", "com.gentics.contentnode.forms.formgen.path"),
+
+	/**
+	 * Whether the MCP (Model Context Protocol) endpoint shall be available
+	 */
+	MCP_ENABLED("MCP_ENABLED", "com.gentics.contentnode.mcp.enabled", "mcp.enabled", () -> "true"),
+
+	/**
+	 * Path of the MCP (Model Context Protocol) endpoint
+	 */
+	MCP_PATH("MCP_PATH", "com.gentics.contentnode.mcp.path", "mcp.path", () -> "/mcp",
+			path -> StringUtils.removeEnd(StringUtils.prependIfMissing(path, "/"), "/")),
+
+	/**
+	 * Whether the MCP (Model Context Protocol) endpoint shall reject a request with HTTP 401 at
+	 * the transport level, when it carries neither an {@code Authorization: Bearer} header nor
+	 * the CMS session cookie (see {@code com.gentics.contentnode.mcp.auth.CmsMcpSecurityValidator}).
+	 * This is a coarse, presence-only check; it does not validate the credential. An MCP tool call
+	 * itself always rejects an unresolvable/invalid credential regardless of this setting -
+	 * enabling it only makes a missing credential fail earlier, and more explicitly, at the
+	 * transport level. Disabled (i.e. {@code false}) by default.
+	 */
+	MCP_REQUIRE_AUTH("MCP_REQUIRE_AUTH", "com.gentics.contentnode.mcp.requireAuth", "mcp.requireAuth", () -> "false")
 
 	;
 

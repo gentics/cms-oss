@@ -3,6 +3,8 @@ package com.gentics.contentnode.rest.resource.parameter;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.QueryParam;
 
+import com.gentics.contentnode.rest.mcp.McpToolParam;
+
 /**
  * Parameter bean for paging
  */
@@ -12,6 +14,7 @@ public class PagingParameterBean {
 	 */
 	@QueryParam("page")
 	@DefaultValue("1")
+	@McpToolParam(description = "Returned page, if paging is used. Paging starts with 1.", required = false)
 	public int page = 1;
 
 	/**
@@ -20,6 +23,7 @@ public class PagingParameterBean {
 	 */
 	@QueryParam("pageSize")
 	@DefaultValue("-1")
+	@McpToolParam(description = "Page size for paging. -1 (default) returns all matching items unpaged, 0 returns no items.", required = false)
 	public int pageSize = -1;
 
 	public PagingParameterBean setPage(int page) {

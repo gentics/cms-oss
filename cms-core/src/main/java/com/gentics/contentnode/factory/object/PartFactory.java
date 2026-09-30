@@ -5,6 +5,7 @@
  */
 package com.gentics.contentnode.factory.object;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.PreparedStatement;
@@ -61,6 +62,10 @@ import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.mesh.json.JsonUtil;
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.HandlebarsError;
+import com.github.jknack.handlebars.HandlebarsException;
+import com.github.jknack.handlebars.io.StringTemplateSource;
 
 import jakarta.ws.rs.core.Response.Status;
 
@@ -855,15 +860,17 @@ public class PartFactory extends AbstractFactory {
 
 	/**
 	 * Perform the validation of a part, where applicable.
+	 * JSON parts are validated for valid JSON (and optionally against the JSON schema), Handlebars parts for valid template syntax.
 	 * 
 	 * @param part part to validate for
 	 * @param value value to validate
-	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a JSON validation error
+	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a JSON or Handlebars validation error
 	 * 
 	 * @throws NodeException
 	 */
 	public static void validatePart(Part part, Object value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
-		if (part.getPartTypeId() == Part.JSON) {
+		switch (part.getPartTypeId()) {
+		case Part.JSON: {
 			if (value == null || !(value instanceof Value val)) {
 				// Nothing to validate
 				return;
@@ -896,11 +903,51 @@ public class PartFactory extends AbstractFactory {
 				throw exceptionSupplier.apply(I18NHelper.get("validation.json.unparseable"))
 					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
 			}
+			break;
+		}
+		case Part.HANDLEBARS: {
+			if (value == null || !(value instanceof Value val)) {
+				// Nothing to validate
+				return;
+			}
+			String stringValue = val.getValueText();
+			if (StringUtils.isEmpty(stringValue)) {
+				// Nothing to validate
+				return;
+			}
+			// only the syntax is validated: helpers depend on the node (devtool packages) and are resolved when rendering,
+			// so unknown helpers are accepted here (partials are resolved when rendering anyway)
+			Handlebars handlebars = new Handlebars().registerHelperMissing((context, options) -> null);
+			try {
+				handlebars.compile(new StringTemplateSource(part.getKeyname(), stringValue));
+			} catch (HandlebarsException e) {
+				HandlebarsError error = e.getError();
+				String reason = error != null
+						? I18NHelper.get("validation.handlebars.syntaxerror", Integer.toString(error.line), Integer.toString(error.column), error.reason)
+						: e.getMessage();
+				throw exceptionSupplier.apply(reason)
+					.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+			break;
+		}
+		default:
+			break;
 		}
 	}
 
 	private static RestMappedException supplyInvalidJSONException(String property, String reason, Part part) {
-		return new RestMappedException(I18NHelper.get("validation.json.part.failed", part.getKeyname(), reason));
+		String key;
+		switch (part.getPartTypeId()) {
+		case Part.HANDLEBARS:
+			key = "validation.handlebars.part.failed";
+			break;
+		default:
+			key = "validation.json.part.failed";
+			break;
+		}
+		return new RestMappedException(I18NHelper.get(key, part.getKeyname(), reason));
 	}
 
 	/**

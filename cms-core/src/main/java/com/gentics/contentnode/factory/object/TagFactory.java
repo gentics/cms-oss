@@ -1946,8 +1946,17 @@ public class TagFactory extends AbstractFactory {
 	 */
 	private static <T extends ValueContainer & NamedNodeObject> void validateTagObject(T tag) throws NodeException {
 		for (Part part: tag.getConstruct().getParts()) {
+			String key;
+			switch (part.getPartTypeId()) {
+			case Part.HANDLEBARS:
+				key = "validation.handlebars.tag.part.failed";
+				break;
+			default:
+				key = "validation.json.tag.part.failed";
+				break;
+			}
 			PartFactory.validatePart(part, tag.get(part.getKeyname()), 
-					reason -> new RestMappedException(I18NHelper.get("validation.json.tag.part.failed", tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
+					reason -> new RestMappedException(I18NHelper.get(key, tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
 		}
 	}
 

@@ -11,6 +11,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "mock:genaix": "../../../api-contract/mocks/genaix-mock/run.sh",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",

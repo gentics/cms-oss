@@ -1945,18 +1945,12 @@ public class TagFactory extends AbstractFactory {
 	 * @throws NodeException
 	 */
 	private static <T extends ValueContainer & NamedNodeObject> void validateTagObject(T tag) throws NodeException {
+		// the values are not resolved with tag.get(), because that would only resolve the values of enabled tags
+		// and would ignore errors while getting the values
+		ValueList tagValues = tag.getTagValues();
 		for (Part part: tag.getConstruct().getParts()) {
-			String key;
-			switch (part.getPartTypeId()) {
-			case Part.HANDLEBARS:
-				key = "validation.handlebars.tag.part.failed";
-				break;
-			default:
-				key = "validation.json.tag.part.failed";
-				break;
-			}
-			PartFactory.validatePart(part, tag.get(part.getKeyname()), 
-					reason -> new RestMappedException(I18NHelper.get(key, tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
+			PartFactory.validatePart(part, tagValues.getByKeyname(part.getKeyname()),
+					(partType, reason) -> new RestMappedException(I18NHelper.get(partType.getTagPartValidationMessageKey(), tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
 		}
 	}
 

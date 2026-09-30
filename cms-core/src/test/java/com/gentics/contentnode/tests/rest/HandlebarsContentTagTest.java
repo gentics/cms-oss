@@ -28,6 +28,7 @@ import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTag;
@@ -207,6 +208,23 @@ public class HandlebarsContentTagTest {
 
 		RestMappedException e = catchThrowableOfType(RestMappedException.class, () -> update(page, update -> {
 			getValue(update.getContentTag(TAG_KEYWORD)).setValueText(INVALID_TEMPLATE);
+		}).build());
+
+		assertBadRequest(e, execute(p -> expectedTagMessage(p.getContentTag(TAG_KEYWORD)), page));
+		assertContentTagText(page, "");
+	}
+
+	/**
+	 * Test that saving a page with a syntax error in a disabled content tag also fails with "Bad Request" and is not stored
+	 */
+	@Test
+	public void testDisabledContentTagInvalid() throws NodeException {
+		Page page = createPage().build();
+
+		RestMappedException e = catchThrowableOfType(RestMappedException.class, () -> update(page, update -> {
+			ContentTag tag = update.getContentTag(TAG_KEYWORD);
+			tag.setEnabled(false);
+			getValue(tag).setValueText(INVALID_TEMPLATE);
 		}).build());
 
 		assertBadRequest(e, execute(p -> expectedTagMessage(p.getContentTag(TAG_KEYWORD)), page));

@@ -8,7 +8,6 @@ import {
   IFeaturesConfig,
   IFormElement,
   ITranslationSet,
-  PossibleValueSet,
   FormState,
   IDataFieldProperties,
   ISchemaFieldProperties,

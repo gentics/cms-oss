@@ -86,7 +86,7 @@ function CmsFriendlyCaptchaElement(props: CaptchaConfig) {
       language
     });
 
-    CaptchaService.activate('friendly');
+    CaptchaService.activate('friendlycaptcha');
 
     const handleComplete = (e: CustomEvent<{ response: string }>) => {
       CaptchaService.setToken(e.detail.response);

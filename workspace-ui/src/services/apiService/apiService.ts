@@ -1,5 +1,5 @@
-import type { Me } from '@/lib/genaix/types';
-import { httpRequest } from '@/lib/http';
+import type { Me } from '@/services/apiService/genaix/types';
+import { httpRequest } from '@/services/httpService/httpService';
 
 // Same-origin path of the CMS proxy, which adds the installation token and X-GCMS-Subject.
 // In development the Vite dev server plays that role (see `vite.config.ts`).

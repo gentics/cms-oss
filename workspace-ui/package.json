@@ -15,7 +15,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "generate:api": "openapi-typescript .claude/contracts/openapi.yaml -o src/lib/genaix/schema.d.ts",
+    "generate:api": "openapi-typescript .claude/contracts/openapi.yaml -o src/services/apiService/genaix/schema.d.ts",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "eslint . --fix",

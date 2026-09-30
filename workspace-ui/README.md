@@ -23,7 +23,7 @@ These variables have no `VITE_` prefix, so they stay on the dev server and are n
 
 ### API types
 
-`src/lib/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/lib/genaix/types.ts`.
+`src/services/apiService/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/services/apiService/genaix/types.ts`.
 
 `openapi-typescript` declares a peer dependency on TypeScript 5. The `overrides` entry in `package.json` points it at this project's TypeScript 6. With 7.13.0 this produced byte-identical output to a TypeScript 5.9.3 run. Remove the override once `openapi-typescript` supports TypeScript 6.
 

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { httpRequest } from './http';
+import { HttpError, httpRequest } from './httpService';
 
 describe('httpRequest', () => {
     afterEach(() => {
@@ -17,5 +17,14 @@ describe('httpRequest', () => {
         vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 401 })));
 
         await expect(httpRequest('/genaix/api/v1/me')).rejects.toThrow('failed with status 401');
+    });
+
+    it('rejects with an HttpError that carries the status', async () => {
+        vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response('Forbidden', { status: 403 })));
+
+        const error = await httpRequest('/rest/admin/token').catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(HttpError);
+        expect((error as HttpError).status).toBe(403);
     });
 });

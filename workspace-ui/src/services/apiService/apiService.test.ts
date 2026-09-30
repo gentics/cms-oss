@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getMe } from './api';
+import { getMe } from './apiService';
 
 describe('getMe', () => {
     afterEach(() => {

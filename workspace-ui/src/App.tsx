@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useCmsToken } from '@/hooks/useCmsToken';
+
 import heroImg from './assets/hero.png';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
@@ -12,6 +14,9 @@ import './i18n';
 function App() {
     const { t, i18n } = useTranslation();
     const [count, setCount] = useState(0);
+
+    // Session start: check for a CMS token, or create one, as soon as the app loads.
+    useCmsToken();
 
     return (
         <>

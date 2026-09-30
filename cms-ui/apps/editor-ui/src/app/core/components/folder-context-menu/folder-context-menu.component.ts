@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { Feature, Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
 import { EditorPermissions, UIMode } from '../../../common/models';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { ContextMenuOperationsService } from '../../providers/context-menu-operations/context-menu-operations.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
 
@@ -14,7 +14,7 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     templateUrl: './folder-context-menu.component.html',
     styleUrls: ['./folder-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -46,10 +46,11 @@ export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy 
         private contextMenuOperations: ContextMenuOperationsService,
         private navigationService: NavigationService,
         private appState: ApplicationStateService,
+        private folderActions: FolderActionsService,
     ) { }
 
     ngOnInit(): void {
-        this.subscriptions.push(this.appState.select(state => state.features[Feature.MULTICHANNELLING]).subscribe(enabled => {
+        this.subscriptions.push(this.appState.select((state) => state.features[Feature.MULTICHANNELLING]).subscribe((enabled) => {
             this.multiChannelingEnabled = enabled;
             this.buttons = this.determineVisibleButtons();
             this.changeDetector.markForCheck();
@@ -64,7 +65,7 @@ export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy 
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
+        this.subscriptions.forEach((s) => s.unsubscribe());
     }
 
     nodePropertiesClicked(): void {
@@ -100,11 +101,39 @@ export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy 
     }
 
     deleteClicked(): void {
+        const isLocalized = !this.folder.inherited && !this.folder.isMaster;
+        const inheritedFrom = this.folder.masterId;
+        const nodeId = this.folder.channelId || this.folder.masterId;
+
         this.contextMenuOperations.deleteItems('folder', [this.folder], this.activeNodeId)
-            .then(deletedIds => {
-                if (deletedIds) {
-                    this.navigationService.list(this.activeNodeId, this.folder.motherId).navigate();
+            .then(async (deletedIds) => {
+                // If it didn't actually delete the folder, ignore
+                if (!deletedIds) {
+                    return;
                 }
+
+                // If the folder was inherited, then we try to navigate to the master version instead.
+                if (isLocalized) {
+                    // We have to check for permissions of the master version now, as it
+                    // may be the case that the user can't see it, so the navigation would fail.
+                    const loadedFolders = this.appState.now.entities.folder;
+                    let perms = loadedFolders[inheritedFrom]?.permissionsMap;
+
+                    // We don't have the permissions for the folder yet, so we have to load them first
+                    if (!perms) {
+                        const masterFolder = await this.folderActions.getFolder(inheritedFrom, { nodeId: nodeId });
+                        perms = masterFolder.permissionsMap;
+                    }
+
+                    // If the user can see the folder now, we can safely navigate
+                    if (perms.permissions?.read) {
+                        this.navigationService.list(nodeId, inheritedFrom).navigate();
+                        return;
+                    }
+                }
+
+                // Default behavior, to go back one level
+                this.navigationService.list(this.activeNodeId, this.folder.motherId).navigate();
             });
     }
 
@@ -124,13 +153,15 @@ export class FolderContextMenuComponent implements OnInit, OnChanges, OnDestroy 
         const inherited = this.folder ? this.folder.inherited : false;
         const isMaster = this.folder ? this.folder.isMaster : false;
         const isLocalized = !isMaster && !inherited && !this.isBaseFolder;
-        const userCan: FolderPermissions & TemplatePermissions = { ...this.permissions.folder, ...this.permissions.template };
+        // Folder permissions have to take precedence, as both share the same keys (i.E. `localize`).
+        // Only `link` is actually used from the template permissions.
+        const userCan: FolderPermissions & TemplatePermissions = { ...this.permissions.template, ...this.permissions.folder };
 
         // Items can be synchronized to master when they are inside a folder
         // of an inherited channel and are not inherited (localized & local is both OK!).
         const canBeSynchronizedToParentNode = !inherited
-            && this.permissions.synchronizeChannel
-            && (this.folder.nodeId !== this.folder.inheritedFromId);
+          && this.permissions.synchronizeChannel
+          && (this.folder.nodeId !== this.folder.inheritedFromId);
 
         return {
             nodeProperties: this.isBaseFolder,

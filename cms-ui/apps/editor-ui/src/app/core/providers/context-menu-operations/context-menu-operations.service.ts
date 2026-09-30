@@ -30,7 +30,7 @@ import {
     Normalized,
     Page,
     Raw,
-	ItemPermissions,
+    ItemPermissions,
     Template,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
@@ -580,7 +580,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             // Wait half a second to let the server unlock the pages
             await new Promise((resolve) => setTimeout(resolve, 500));
             await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
-            const languages = new Set([...response.queued, ...response.takenOffline].map(page => page.language));
+            const languages = new Set([...response.queued, ...response.takenOffline].map((page) => page.language));
             await this.folderActions.refreshList('page', Array.from(languages));
         } catch (error) {
             this.errorHandler.catch(error);
@@ -620,24 +620,31 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     localize(item: InheritableItem, activeNodeId: number): void {
         const localizingEditedItem = item.id === this.state.now.editor.itemId;
+        const localizingActiveFolder = item.type === 'folder' && this.state.now.folder.activeFolder === item.id;
         const nodeFeatures = this.state.now.features.nodeFeatures[activeNodeId] || [];
         const partialLocalizeEnabled = nodeFeatures.includes(NodeFeature.PARTIAL_MULTICHANNELLING);
 
         if (!partialLocalizeEnabled || item.type !== 'page') {
             this.folderActions.localizeItem(item.type, item.id, activeNodeId)
-                .then((item: InheritableItem) => {
-                    this.folderActions.refreshList(item.type);
+                .then((localizedItem: InheritableItem) => {
+                    // Edge case, for when you localize the active folder
+                    if (localizingActiveFolder) {
+                        this.navigationService.list(activeNodeId, localizedItem.id).navigate();
+                    } else {
+                        this.folderActions.refreshList(localizedItem.type);
+                    }
+
                     if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                        this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                        this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.PREVIEW).navigate();
                     }
                 });
             return;
         }
 
-		const body = this.i18n.instant(['modal.choose_localization_type_body','modal.localization_type_description']) as any;
+        const body = this.i18n.instant(['modal.choose_localization_type_body', 'modal.localization_type_description']) as any;
         this.modalService.dialog({
             title: this.i18n.instant('modal.choose_localization_type_title'),
-            body: Object.keys(body).map(key => body[key]).join('<br>'),
+            body: Object.keys(body).map((key) => body[key]).join('<br>'),
             buttons: [
                 {
                     id: 'cancel',
@@ -672,17 +679,21 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                         return Promise.resolve([null, null]);
                 }
             })
-            .then(([item, type]: [Page | null, 'full' | 'partial' | null]) => {
-                if (item == null) {
+            .then(([localizedItem, type]: [Page | null, 'full' | 'partial' | null]) => {
+                if (localizedItem == null) {
                     return;
                 }
 
-                this.folderActions.refreshList(item.type);
+                if (localizingActiveFolder) {
+                    this.navigationService.list(activeNodeId, localizedItem.id).navigate();
+                } else {
+                    this.folderActions.refreshList(localizedItem.type);
+                }
 
                 if (type === 'partial') {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.EDIT_INHERITANCE).navigate();
+                    this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.EDIT_INHERITANCE).navigate();
                 } else if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
+                    this.navigationService.detailOrModal(activeNodeId, localizedItem.type, localizedItem.id, EditMode.PREVIEW).navigate();
                 }
             });
     }
@@ -1055,9 +1066,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     private removeLanguagesFromFormData(formData: CmsFormData, languages: string[]): CmsFormData {
         if (formData.elements) {
-        formData.elements.forEach((element: CmsFormElement) => {
-            this.removeLanguagesFromFormElement(element, languages);
-        });
+            formData.elements.forEach((element: CmsFormElement) => {
+                this.removeLanguagesFromFormElement(element, languages);
+            });
         }
         if (formData.mailsubject_i18n) {
             for (const language of languages) {

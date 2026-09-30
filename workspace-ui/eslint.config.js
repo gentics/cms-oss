@@ -18,6 +18,9 @@ export default defineConfig([
             'playwright-report/**',
             'test-results/**',
             'node_modules/**',
+
+            // Generated from the GenAIx contract by `npm run generate:api`.
+            'src/lib/genaix/schema.d.ts',
         ],
     },
 

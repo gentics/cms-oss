@@ -21,6 +21,12 @@ Configuration is read from `.env.local` (see `.env.example`). All three variable
 
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
 
+### API types
+
+`src/lib/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/lib/genaix/types.ts`.
+
+`openapi-typescript` declares a peer dependency on TypeScript 5. The `overrides` entry in `package.json` points it at this project's TypeScript 6. With 7.13.0 this produced byte-identical output to a TypeScript 5.9.3 run. Remove the override once `openapi-typescript` supports TypeScript 6.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

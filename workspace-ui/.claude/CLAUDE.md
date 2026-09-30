@@ -9,7 +9,7 @@ This repository is a React + TypeScript application using Vite, plain CSS, TanSt
 
 This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside this folder unless the task requires otherwise.
 
-- `src/lib/api.ts` API client · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/test/setup.ts` Vitest setup.
+- `src/lib/api.ts` API client · `src/lib/genaix/` GenAIx types (`schema.d.ts` generated, aliases in `types.ts`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/test/setup.ts` Vitest setup.
 - Unit/component tests sit next to the code as `src/**/*.test.{ts,tsx}`. E2E tests live in `e2e/` (for example `e2e/App.spec.ts`).
 - Import from `src/` with the `@/` alias (for example `@/lib/api`).
 
@@ -18,6 +18,7 @@ This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside 
 | `npm run dev` | Vite dev server; proxies `/genaix/api/v1` and adds the GenAIx headers (README, "Local GenAIx API") |
 | `npm run mock:genaix` | GenAIx mock on `:8080` from `../../../api-contract` |
 | `npm run typecheck` | `tsc -b` |
+| `npm run generate:api` | Regenerate `src/lib/genaix/schema.d.ts` from `.claude/contracts/openapi.yaml` |
 | `npm run lint` | ESLint; warnings fail |
 | `npm run format` / `npm run lint:fix` | ESLint autofix |
 | `npm test` / `npm run test:run` | Vitest in watch mode / once |

@@ -15,6 +15,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
+    "generate:api": "openapi-typescript .claude/contracts/openapi.yaml -o src/lib/genaix/schema.d.ts",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "eslint . --fix",
@@ -67,9 +68,15 @@
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.12.0",
     "jsdom": "^30.1.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }

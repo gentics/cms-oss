@@ -19,6 +19,7 @@ import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.render.TemplateRenderer;
 import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 
@@ -144,14 +145,15 @@ public interface PartType extends Resolvable, TemplateRenderer, TransformablePar
 	 * Implementations, which throw an exception, must also implement {@link #getPartValidationMessageKey()} and {@link #getTagPartValidationMessageKey()}.
 	 * @param part part
 	 * @param value value to validate
+	 * @param container container of the value (tag or construct for default values). Must be used instead of {@link Value#getContainer()}, which might not be set yet
 	 * @param exceptionSupplier supplier of the exception to throw, when the validation fails. The parameter is the reason of the failure
 	 * @throws NodeException if the validation fails (exception from the exceptionSupplier) or something else went wrong
 	 */
-	default void validateValue(Part part, Value value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
+	default void validateValue(Part part, Value value, ValueContainer container, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
 	}
 
 	/**
-	 * Get the i18n key of the message for a failed validation (see {@link #validateValue(Part, Value, Function)}) of a part's default value.
+	 * Get the i18n key of the message for a failed validation (see {@link #validateValue(Part, Value, ValueContainer, Function)}) of a part's default value.
 	 * Parameters of the message are the part's keyname and the reason.
 	 * @return i18n key or null, if the part type does not validate values
 	 */
@@ -160,7 +162,7 @@ public interface PartType extends Resolvable, TemplateRenderer, TransformablePar
 	}
 
 	/**
-	 * Get the i18n key of the message for a failed validation (see {@link #validateValue(Part, Value, Function)}) of a tag's value.
+	 * Get the i18n key of the message for a failed validation (see {@link #validateValue(Part, Value, ValueContainer, Function)}) of a tag's value.
 	 * Parameters of the message are the tag (name and ID), the part's keyname and the reason.
 	 * @return i18n key or null, if the part type does not validate values
 	 */

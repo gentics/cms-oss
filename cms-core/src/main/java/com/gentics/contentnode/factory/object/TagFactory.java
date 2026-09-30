@@ -1949,7 +1949,7 @@ public class TagFactory extends AbstractFactory {
 		// and would ignore errors while getting the values
 		ValueList tagValues = tag.getTagValues();
 		for (Part part: tag.getConstruct().getParts()) {
-			PartFactory.validatePart(part, tagValues.getByKeyname(part.getKeyname()),
+			PartFactory.validatePart(part, tagValues.getByKeyname(part.getKeyname()), tag,
 					(partType, reason) -> new RestMappedException(I18NHelper.get(partType.getTagPartValidationMessageKey(), tag.getName() + " / " + tag.getId(), part.getKeyname(), reason)));
 		}
 	}

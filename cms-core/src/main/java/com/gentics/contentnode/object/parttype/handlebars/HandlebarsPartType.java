@@ -124,7 +124,7 @@ public class HandlebarsPartType extends TextPartType {
 	}
 
 	@Override
-	public void validateValue(Part part, Value value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
+	public void validateValue(Part part, Value value, ValueContainer container, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
 		String stringValue = value.getValueText();
 		if (StringUtils.isEmpty(stringValue)) {
 			// Nothing to validate

@@ -18,6 +18,7 @@ import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.ValueContainer;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
@@ -90,7 +91,7 @@ public class JSONPartType extends TextPartType {
 	}
 
 	@Override
-	public void validateValue(Part part, Value value, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
+	public void validateValue(Part part, Value value, ValueContainer container, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
 		String stringValue = value.getValueText();
 		if (StringUtils.isEmpty(stringValue)) {
 			// Nothing to validate

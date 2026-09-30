@@ -650,9 +650,6 @@ public class PartFactory extends AbstractFactory {
 			if (!isNew) {
 				origPart = t.getObject(Part.class, getId());
 			}
-			// validate
-			validatePart(this, getDefaultValue(), (partType, reason) -> createPartValidationException(this, partType, reason));
-
 			// save the construct, if necessary
 			if (isModified) {
 				saveFactoryObject(this);
@@ -845,15 +842,16 @@ public class PartFactory extends AbstractFactory {
 
 	/**
 	 * Perform the validation of a part, where applicable.
-	 * The validation is done by the part type (see {@link PartType#validateValue(Part, Value, Function)}).
+	 * The validation is done by the part type (see {@link PartType#validateValue(Part, Value, ValueContainer, Function)}).
 	 * 
 	 * @param part part to validate for
 	 * @param value value to validate
+	 * @param container container of the value (tag or construct for default values)
 	 * @param exceptionSupplier the supplier of a wrapping exception to throw upon a validation error. Parameters are the part type and the reason
 	 * 
 	 * @throws NodeException
 	 */
-	public static void validatePart(Part part, Object value, BiFunction<PartType, String, RestMappedException> exceptionSupplier) throws NodeException {
+	public static void validatePart(Part part, Object value, ValueContainer container, BiFunction<PartType, String, RestMappedException> exceptionSupplier) throws NodeException {
 		if (value == null || !(value instanceof Value val)) {
 			// Nothing to validate
 			return;
@@ -868,7 +866,17 @@ public class PartFactory extends AbstractFactory {
 			// Nothing to validate
 			return;
 		}
-		partType.validateValue(part, val, reason -> exceptionSupplier.apply(partType, reason));
+		partType.validateValue(part, val, container, reason -> exceptionSupplier.apply(partType, reason));
+	}
+
+	/**
+	 * Perform the validation of the default value of a part (see {@link #validatePart(Part, Object, ValueContainer, BiFunction)})
+	 * @param part part
+	 * @param construct construct of the part, as it will be saved (e.g. with the new node assignment)
+	 * @throws NodeException
+	 */
+	public static void validateDefaultValue(Part part, Construct construct) throws NodeException {
+		validatePart(part, part.getDefaultValue(), construct, (partType, reason) -> createPartValidationException(part, partType, reason));
 	}
 
 	private static RestMappedException createPartValidationException(Part part, PartType partType, String reason) {

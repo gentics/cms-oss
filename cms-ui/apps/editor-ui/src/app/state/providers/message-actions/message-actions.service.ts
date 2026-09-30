@@ -1,121 +1,96 @@
 import { Injectable } from '@angular/core';
-import { MessageFromServer, Response } from '@gentics/cms-models';
-import { forkJoin, Observable } from 'rxjs';
-import { Api } from '../../../core/providers/api/api.service';
+import { MessageFromServer } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { catchError, forkJoin, map, of, tap } from 'rxjs';
+import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import {
-    MessagesFetchingErrorAction,
     MessagesFetchingSuccessAction,
     MessagesReadAction,
-    StartMessagesFetchingAction,
 } from '../../modules';
 import { ApplicationStateService } from '../../providers';
 
 @Injectable()
 export class MessageActionsService {
-    constructor(private appState: ApplicationStateService, private api: Api) {}
 
-    fetchAllMessages(): Promise<MessageFromServer[][]> {
-        this.appState.dispatch(new StartMessagesFetchingAction());
+    constructor(
+        private appState: ApplicationStateService,
+        private client: GCMSRestClientService,
+        private errorHandler: ErrorHandler,
+    ) {}
 
+    fetchAllMessages(): Promise<{
+        all: MessageFromServer[];
+        unread: MessageFromServer[];
+    }> {
         return forkJoin([
-            this.api.messages.getMessages(false),
-            this.api.messages.getMessages(true),
-        ])
-            .toPromise()
-            .then(
-                (responses) => {
-                    const [all, unread] = responses.map((res) => res.messages);
+            this.client.message.list({ unread: false }).pipe(
+                map((res) => res.messages || []),
+            ),
+            this.client.message.list({ unread: true }).pipe(
+                map((res) => res.messages || []),
+            ),
+        ]).pipe(
+            map(([all, unread]) => {
+                const unreadInboxMessages = unread.filter(
+                    (message) => !message.isInstantMessage,
+                );
 
-                    const unreadInboxMessages = unread.filter(
-                        (message) => !message.isInstantMessage,
-                    );
+                this.appState.dispatch(new MessagesFetchingSuccessAction(
+                    false,
+                    unreadInboxMessages,
+                    all,
+                ));
 
-                    this.appState.dispatch(
-                        new MessagesFetchingSuccessAction(
-                            false,
-                            unreadInboxMessages,
-                            all,
-                        ),
-                    );
-                    return [all, unread];
-                },
-                (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
-                            ? error
-                            : // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            error.message || error.toString();
-                    this.appState.dispatch(
-                        new MessagesFetchingErrorAction(errorMessage),
-                    );
-                    return [] as MessageFromServer[][];
-                },
-            );
+                return { all, unread };
+            }),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: false });
+
+                return of({
+                    all: [],
+                    unread: [],
+                });
+            }),
+        ).toPromise();
     }
 
     fetchUnreadMessages(): Promise<MessageFromServer[]> {
-        this.appState.dispatch(new StartMessagesFetchingAction());
-
-        return this.api.messages
-            .getMessages(true)
-            .toPromise()
-            .then(
-                (response) => {
-                    this.appState.dispatch(
-                        new MessagesFetchingSuccessAction(
-                            true,
-                            response.messages,
-                        ),
-                    );
-                    return response.messages;
-                },
-                (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
-                            ? error
-                            : // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            error.message || error.toString();
-                    this.appState.dispatch(
-                        new MessagesFetchingErrorAction(errorMessage),
-                    );
-                    return [] as MessageFromServer[];
-                },
-            );
+        return this.client.message.list({ unread: true }).pipe(
+            map((res) => {
+                return res.messages;
+            }),
+            tap((messages) => {
+                this.appState.dispatch(new MessagesFetchingSuccessAction(
+                    true,
+                    messages,
+                ));
+            }),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: false });
+                return of([]);
+            }),
+        ).toPromise();
     }
 
     markMessagesAsRead(messageIds: number[]): void {
-        this.api.messages.markAsRead(messageIds).subscribe(
-            (success) => {
+        this.client.message.markAsRead({ messages: messageIds }).subscribe({
+            next: () => {
                 this.appState.dispatch(new MessagesReadAction(messageIds));
             },
-            (error) => {
-                // Handle error?
+            error: (error) => {
+                this.errorHandler.catch(error, { notification: true });
             },
-        );
+        });
     }
 
     deleteMessages(messageIds: number[]): void {
-        const deleteReqs: Observable<Response>[] = [];
-
-        messageIds.forEach((messageId) =>
-            deleteReqs.push(this.api.messages.deleteMessage(messageId)),
-        );
-
-        forkJoin(deleteReqs)
-            .toPromise()
-            .then(
-                () => this.fetchAllMessages(),
-                (error) => {
-                    const errorMessage =
-                        typeof error === 'string'
-                            ? error
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            : error.message || error.toString();
-                    this.appState.dispatch(
-                        new MessagesFetchingErrorAction(errorMessage),
-                    );
-                    return false;
-                },
-            );
+        forkJoin(messageIds.map((id) => this.client.message.delete(id))).subscribe({
+            next: () => {
+                this.fetchAllMessages();
+            },
+            error: (error) => {
+                this.errorHandler.catch(error, { notification: true });
+            },
+        });
     }
 }

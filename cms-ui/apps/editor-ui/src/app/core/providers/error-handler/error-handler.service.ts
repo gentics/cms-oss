@@ -7,7 +7,6 @@ import { ResponseCode } from '@gentics/cms-models';
 import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
 import { ModalService } from '@gentics/ui-core';
-import { BehaviorSubject, Observable } from 'rxjs';
 import { UpdateSearchFilterAction } from '../../../state/modules/folder/folder.actions';
 import { ApplicationStateService } from '../../../state/providers/application-state/application-state.service';
 
@@ -46,14 +45,9 @@ function isSessionErrorMessage(msg: string): boolean {
 @Injectable()
 export class ErrorHandler {
 
-    /** Emits a list of all caught errors when an error is caught. */
-    caughtErrors$: Observable<Error[]>;
-
     // TODO: Use a WeakSet instead?
     private lastError: Error;
     private lastErrorTime: number;
-    // TODO: Remove, as it's unused. Same for `caughtErrors$`
-    private errorList = new BehaviorSubject<Error[]>([]);
 
     constructor(
         private appState: ApplicationStateService,
@@ -61,9 +55,7 @@ export class ErrorHandler {
         private modalService: ModalService,
         private translate: I18nService,
         private notification: I18nNotificationService,
-    ) {
-        this.caughtErrors$ = this.errorList.asObservable();
-    }
+    ) {}
 
     /**
      * Handles an error thrown by the API or the application.
@@ -118,7 +110,6 @@ export class ErrorHandler {
 
         this.lastError = error;
         this.lastErrorTime = Date.now();
-        this.errorList.next(this.errorList.value.concat(error));
     };
 
     private handleApiError(error: ApiError, showNotification: boolean): void {

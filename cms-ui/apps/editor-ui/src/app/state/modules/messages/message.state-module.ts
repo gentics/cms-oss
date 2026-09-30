@@ -10,19 +10,15 @@ import { AddEntitiesAction, SetMessageEntitiesAction, UpdateEntitiesAction } fro
 import {
     InstantMessagesDeliveredAction,
     MESSAGES_STATE_KEY,
-    MessagesFetchingErrorAction,
     MessagesFetchingSuccessAction,
     MessagesReadAction,
-    StartMessagesFetchingAction,
 } from './message.actions';
 
 const INITIAL_MESSAGES_STATE: MessageState = {
-    fetching: false,
     all: [],
     read: [],
     unread: [],
     deliveredInstantMessages: [],
-    lastError: undefined,
 };
 
 @AppStateBranch<MessageState>({
@@ -36,13 +32,6 @@ export class MessageStateModule {
         private appState: ApplicationStateService,
     ) {}
 
-    @ActionDefinition(StartMessagesFetchingAction)
-    handleStartMessagesFetchingAction(ctx: StateContext<MessageState>, action: StartMessagesFetchingAction): void {
-        ctx.patchState({
-            fetching: true,
-        });
-    }
-
     @ActionDefinition(MessagesFetchingSuccessAction)
     async handleMessagesFetchSuccessAction(ctx: StateContext<MessageState>, action: MessagesFetchingSuccessAction): Promise<void> {
         const state = ctx.getState();
@@ -55,15 +44,12 @@ export class MessageStateModule {
 
             // No new messages from the server, nothing to do
             if (newMessages.length === 0) {
-                ctx.patchState({
-                    fetching: false,
-                });
                 return;
             }
         }
 
-        let allMessageIds = newMessages.map(msg => msg.id);
-        let unreadIds = action.unread.map(msg => msg.id);
+        let allMessageIds = newMessages.map((msg) => msg.id);
+        let unreadIds = action.unread.map((msg) => msg.id);
 
         const { messages, normalized } = normalizeMessages(newMessages);
         const messagesMap = {} as { [id: number]: Message<Normalized> };
@@ -84,26 +70,17 @@ export class MessageStateModule {
         }
 
         ctx.setState(patch<MessageState>({
-            fetching: false,
             all: allMessageIds,
-            read: allMessageIds.filter(id => !unreadIds.includes(id)),
+            read: allMessageIds.filter((id) => !unreadIds.includes(id)),
             unread: unreadIds,
         }));
-    }
-
-    @ActionDefinition(MessagesFetchingErrorAction)
-    handleMessagesFetchingErrorAction(ctx: StateContext<MessageState>, action: MessagesFetchingErrorAction): void {
-        ctx.patchState({
-            fetching: false,
-            lastError: action.errorMessage,
-        });
     }
 
     @ActionDefinition(MessagesReadAction)
     async handleMessagesReadAction(ctx: StateContext<MessageState>, action: MessagesReadAction): Promise<void> {
         const state = ctx.getState();
         const messageEntities = this.appState.now.entities.message;
-        const hasChanges = action.messageIds?.length && action.messageIds.some(id => messageEntities[id]?.unread);
+        const hasChanges = action.messageIds?.length && action.messageIds.some((id) => messageEntities[id]?.unread);
 
         if (!hasChanges) {
             // Nothing to do
@@ -125,26 +102,25 @@ export class MessageStateModule {
 
         ctx.patchState({
             read: allReadIds,
-            unread: state.unread.filter(id => !allReadIds.includes(id)),
+            unread: state.unread.filter((id) => !allReadIds.includes(id)),
         });
     }
 
     @ActionDefinition(InstantMessagesDeliveredAction)
     handleInstantMessagesDeliveredAction(ctx: StateContext<MessageState>, action: InstantMessagesDeliveredAction): void {
         ctx.patchState({
-            deliveredInstantMessages: action.messageIds,
+            deliveredInstantMessages: action.messageIds || [],
         });
     }
 }
-
 
 /**
  * Normalizes messages and the users that sent them.
  * Since specific system messages do not have a sender, normalizr can not be used for messages.
  */
 function normalizeMessages(messages: MessageFromServer[]): {
-    messages: Message<Normalized>[],
-    normalized: NormalizedSchema<any, any>,
+    messages: Message<Normalized>[];
+    normalized: NormalizedSchema<any, any>;
 } {
     const messageHash: { [id: number]: Message<Normalized> } = {};
     const userHash: { [id: number]: User<Raw> } = {};
@@ -174,4 +150,3 @@ function normalizeMessages(messages: MessageFromServer[]): {
         },
     };
 }
-

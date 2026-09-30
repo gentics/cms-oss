@@ -1,33 +1,30 @@
-import { ServiceBase } from '@admin-ui/shared/providers/service-base/service.base';
-import { AppStateService } from '@admin-ui/state';
-import {
-    DeleteMessageError,
-    FetchAllMessageError,
-    FetchAllMessageStart,
-    FetchAllMessageSuccess,
-    FetchUnreadMessageError,
-    FetchUnreadMessageStart,
-    FetchUnreadMessageSuccess,
-    MarkMessagesAsRead,
-} from '@admin-ui/state/messages/message.actions';
 import { Injectable } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     GcmsPermission,
     MessageFromServer,
 } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { NotificationService } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import {
+    combineLatest,
     forkJoin,
-    NEVER,
+    interval,
     Observable,
+    of,
     Subject,
     Subscription,
-    timer,
 } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { catchError, delay, filter, map, mergeMap, startWith, switchMap } from 'rxjs/operators';
+import { ServiceBase } from '../../../shared/providers/service-base/service.base';
+import {
+    FetchAllMessageSuccess,
+    FetchUnreadMessageSuccess,
+    MarkMessagesAsRead,
+} from '../../../state/messages/message.actions';
+import { AppStateService } from '../../../state/providers/app-state/app-state.service';
+import { ErrorHandler } from '../error-handler';
 import { PermissionsService } from '../permissions/permissions.service';
 
 const DEFAULT_DELAY = 2;
@@ -35,6 +32,7 @@ const DEFAULT_INTERVAL = 30;
 
 @Injectable()
 export class MessageService extends ServiceBase {
+
     get onOpenInbox$(): Observable<void> {
         return this.openInbox$.asObservable();
     }
@@ -46,10 +44,11 @@ export class MessageService extends ServiceBase {
 
     constructor(
         private appState: AppStateService,
-        private api: GcmsApi,
+        private client: GCMSRestClientService,
         private permissions: PermissionsService,
         private notificationService: NotificationService,
         private i18n: I18nService,
+        private errorHandler: ErrorHandler,
     ) {
         super();
     }
@@ -97,19 +96,30 @@ export class MessageService extends ServiceBase {
     }
 
     private fetchWhenUserIsLoggedIn(): void {
-        this.subscription = this.appState
-            .select((state) => state.auth.isLoggedIn)
-            .pipe(
-                filter((loggedIn) => loggedIn),
-                switchMap(() => this.hasInboxPermissions()),
-                switchMap((hasPermissions) =>
-                    hasPermissions
-                        ? timer(
-                            this.fetchDelay * 1000,
-                            this.fetchInterval * 1000,
-                        ).pipe(map((ignored, index) => index === 0))
-                        : NEVER,
+        const doFetch$ = this.appState.select((state) => state.auth.isLoggedIn).pipe(
+            switchMap((loggedIn) => {
+                if (loggedIn) {
+                    return this.hasInboxPermissions().pipe(map((hasPerms) => [loggedIn, hasPerms]));
+                }
+                return of([false, false]);
+            }),
+            map(([loggedIn, hasPerms]) => loggedIn && hasPerms),
+        );
+
+        this.subscription = combineLatest([
+            doFetch$,
+            combineLatest([
+                interval(this.fetchInterval * 1000).pipe(
+                    // Needs to be emitted on default, otherwise `combineLatest` won't publish anything
+                    // and this entire observable only starts after the interval, which isn't what's intended.
+                    startWith(0),
                 ),
+                of(null).pipe(delay(this.fetchDelay * 1000)),
+            ]),
+        ])
+            .pipe(
+                filter(([allow]) => allow),
+                map((_, idx) => idx === 0),
             )
             .subscribe((firstFetch) => {
                 if (firstFetch) {
@@ -121,77 +131,55 @@ export class MessageService extends ServiceBase {
     }
 
     fetchAllMessages(): Promise<boolean> {
-        this.appState.dispatch(new FetchAllMessageStart());
-
         return forkJoin([
-            this.api.messages.getMessages(false),
-            this.api.messages.getMessages(true),
-        ])
-            .toPromise()
-            .then(
-                (responses) => {
-                    const [all, unread] = responses.map((res) => res.messages);
-                    const instantMessages = unread.filter(
-                        (message) => message.isInstantMessage,
-                    );
-                    const unreadInboxMessages = unread.filter(
-                        (message) => !message.isInstantMessage,
-                    );
+            this.client.message.list({ unread: false }).pipe(
+                map((res) => res.messages),
+            ),
+            this.client.message.list({ unread: true }).pipe(
+                map((res) => res.messages),
+            ),
+        ]).pipe(
+            map(([all, unread]) => {
+                const instantMessages = unread.filter(
+                    (message) => message.isInstantMessage,
+                );
+                const unreadInboxMessages = unread.filter(
+                    (message) => !message.isInstantMessage,
+                );
 
-                    this.deliverInstantMessagesOnce(instantMessages);
+                this.deliverInstantMessagesOnce(instantMessages);
 
-                    this.appState.dispatch(
-                        new FetchAllMessageSuccess(
-                            all,
-                            unreadInboxMessages,
-                            instantMessages,
-                        ),
-                    );
+                this.appState.dispatch(
+                    new FetchAllMessageSuccess(
+                        all,
+                        unreadInboxMessages,
+                        instantMessages,
+                    ),
+                );
 
-                    return true;
-                },
-                (error) => {
-                    const errorMessage
-                        = typeof error === 'string'
-                            ? error
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            : error.message || error.toString();
-                    this.appState.dispatch(
-                        new FetchAllMessageError(errorMessage),
-                    );
-                    return false;
-                },
-            );
+                return true;
+            }),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: false });
+                return of(false);
+            }),
+        ).toPromise();
     }
 
     fetchUnreadMessages(): Promise<boolean> {
-        this.appState.dispatch(new FetchUnreadMessageStart());
+        return this.client.message.list({ unread: true }).pipe(
+            map((res) => {
+                this.deliverInstantMessagesOnce(res?.messages);
 
-        return this.api.messages
-            .getMessages(true)
-            .toPromise()
-            .then(
-                (response) => {
-                    this.deliverInstantMessagesOnce(response?.messages);
+                this.appState.dispatch(new FetchUnreadMessageSuccess(res?.messages));
 
-                    this.appState.dispatch(
-                        new FetchUnreadMessageSuccess(response?.messages),
-                    );
-
-                    return true;
-                },
-                (error) => {
-                    const errorMessage
-                        = typeof error === 'string'
-                            ? error
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            : error.message || error.toString();
-                    this.appState.dispatch(
-                        new FetchUnreadMessageError(errorMessage),
-                    );
-                    return false;
-                },
-            );
+                return true;
+            }),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: false });
+                return of(false);
+            }),
+        ).toPromise();
     }
 
     deliverInstantMessagesOnce(messages: MessageFromServer[]): void {
@@ -199,10 +187,8 @@ export class MessageService extends ServiceBase {
             .deliveredInstantMessages;
 
         messages
-            .filter(
-                (message) =>
-                    message.isInstantMessage
-                    && !deliveredInstantMessages.includes(message.id),
+            .filter((message) => message.isInstantMessage
+              && !deliveredInstantMessages.includes(message.id),
             )
             .forEach((undeliveredInstantMessage) => {
                 this.sendInstantMessage(undeliveredInstantMessage);
@@ -218,40 +204,26 @@ export class MessageService extends ServiceBase {
                 label: this.i18n.instant('common.message_read_label'),
                 onClick: () => {
                     msg.dismiss();
-                    this.api.messages.markAsRead([message.id]).subscribe();
+                    this.client.message.markAsRead({ messages: [message.id] }).subscribe();
                 },
             },
         });
     }
 
     markMessagesAsRead(messageIds: number[]): void {
-        this.api.messages.markAsRead(messageIds).subscribe(
-            () => this.appState.dispatch(new MarkMessagesAsRead(messageIds)),
-        );
+        this.client.message.markAsRead({ messages: messageIds }).subscribe({
+            next: () => this.appState.dispatch(new MarkMessagesAsRead(messageIds)),
+            error: (error) => this.errorHandler.catch(error, { notification: true }),
+        });
     }
 
     deleteMessages(messageIds: number[]): Promise<boolean> {
-        const deleteReqs = [];
-
-        messageIds.forEach((messageId) =>
-            deleteReqs.push(this.api.messages.deleteMessage(messageId)),
-        );
-
-        return forkJoin(deleteReqs)
-            .toPromise()
-            .then(
-                () => this.fetchAllMessages(),
-                (error) => {
-                    const errorMessage
-                        = typeof error === 'string'
-                            ? error
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                            : error.message || error.toString();
-                    this.appState.dispatch(
-                        new DeleteMessageError(errorMessage),
-                    );
-                    return false;
-                },
-            );
+        return forkJoin(messageIds.map((id) => this.client.message.delete(id))).pipe(
+            switchMap(() => this.fetchAllMessages()),
+            catchError((error) => {
+                this.errorHandler.catch(error, { notification: true });
+                return of(false);
+            }),
+        ).toPromise();
     }
 }

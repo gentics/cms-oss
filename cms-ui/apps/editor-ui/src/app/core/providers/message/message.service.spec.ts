@@ -1,13 +1,13 @@
 import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { I18nNotificationService } from '@gentics/cms-components';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { NgxsModule } from '@ngxs/store';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { ApplicationStateService, MessageActionsService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PermissionService } from '../permissions/permission.service';
 import { MessageService } from './message.service';
-
-class MockI18nService {}
 
 class MockI18nNotification {
     show = jasmine.createSpy();
@@ -30,6 +30,7 @@ describe('MessageService', () => {
                 { provide: MessageActionsService, useClass: MockMessageActions },
                 { provide: PermissionService, useClass: MockPermissionsService },
                 { provide: I18nNotificationService, useClass: MockI18nNotification },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
         });
 

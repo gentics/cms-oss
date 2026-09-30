@@ -15,7 +15,7 @@ This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside 
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Vite dev server |
+| `npm run dev` | Vite dev server; proxies `/genaix/api/v1` and adds the GenAIx headers (README, "Local GenAIx API") |
 | `npm run typecheck` | `tsc -b` |
 | `npm run lint` | ESLint; warnings fail |
 | `npm run format` / `npm run lint:fix` | ESLint autofix |

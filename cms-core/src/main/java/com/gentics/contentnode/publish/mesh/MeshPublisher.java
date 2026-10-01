@@ -773,11 +773,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * For localized copies, the global ID of the master is returned.
 	 * @param object object
 	 * @param useProjectRootNode true when the returned uuid may be the uuid of the project's root node (if project per node is activated). False to always use the uuid converted from the cms uuid
-	 * @return Mesh UUID
+	 * @return Mesh UUID or null if the object was null
 	 * @throws NodeException
 	 */
 	public static String getMeshUuid(NodeObject object, boolean useProjectRootNode) throws NodeException {
-		if (object instanceof DummyObject) {
+		if (object == null) {
+			return null;
+		} else if (object instanceof DummyObject) {
 			return ((DummyObject) object).getMeshUuid();
 		} else if (object instanceof Page) {
 			Page page = (Page) object;

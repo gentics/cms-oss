@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpError } from '@/services/httpService/httpService';
 import { useCmsTokenStore } from '@/store/useCmsTokenStore';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 import { type CmsTokenInfo, createCmsToken, getCmsToken } from './cmsApiService';
 
@@ -150,27 +151,33 @@ describe('getCmsToken', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    describe('logging', () => {
-        it('logs a failed POST with console.error', async () => {
+    describe('error notification', () => {
+        beforeEach(() => {
+            useErrorNotificationStore.setState({ errors: [] });
+        });
+
+        it('shows a notification for a failed POST instead of logging it', async () => {
             const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
             stubFetchSequence(new Response('Forbidden', { status: 403 }));
 
             await getCmsToken(NOW_S * 1000).catch(() => undefined);
 
-            expect(errorSpy).toHaveBeenCalledTimes(1);
-            expect(errorSpy).toHaveBeenCalledWith('Getting the CMS token failed', expect.any(HttpError));
+            expect(useErrorNotificationStore.getState().errors).toEqual([{
+                id: expect.any(String),
+                messageKey: 'errorNotifications.cmsTokenFailed',
+                detail: 'Request to /rest/admin/token failed with status 403',
+            }]);
+            expect(errorSpy).not.toHaveBeenCalled();
         });
 
-        it('logs nothing when a token is stored or created', async () => {
-            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-
+        it('shows no notification when a token is stored or created', async () => {
             stubFetchSequence(createdResponse());
 
             await getCmsToken(NOW_S * 1000);
             await getCmsToken(NOW_S * 1000);
 
-            expect(errorSpy).not.toHaveBeenCalled();
+            expect(useErrorNotificationStore.getState().errors).toEqual([]);
         });
     });
 });

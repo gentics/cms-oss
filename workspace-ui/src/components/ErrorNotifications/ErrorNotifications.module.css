@@ -1,0 +1,92 @@
+/* Placement like a toast (design.md §11), look of an error status (§3.3). */
+.region {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 16px;
+  z-index: 1000;
+  width: min(520px, calc(100% - 24px));
+  margin-inline: auto;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid rgba(var(--err-rgb), 0.3);
+  border-left: 3px solid var(--err);
+  border-radius: var(--r-lg);
+  background: var(--errbg);
+  box-shadow: var(--sh-toast);
+  color: var(--err);
+  font-size: var(--fs-base);
+  line-height: 1.45;
+  text-align: left;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding-block: 4px;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.message {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.text,
+.detail {
+  margin: 0;
+}
+
+.detail {
+  font-size: var(--fs-sm);
+}
+
+.dismiss {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 130ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  &:hover {
+    background: rgba(var(--az-rgb), 0.1);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dismiss {
+    transition-duration: 0ms;
+  }
+}

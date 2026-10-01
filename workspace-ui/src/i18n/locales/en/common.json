@@ -1,3 +1,8 @@
 {
-    "getStarted": "Get started"
+    "getStarted": "Get started",
+    "errorNotifications": {
+        "label": "Errors",
+        "dismiss": "Dismiss",
+        "cmsTokenFailed": "Getting the CMS token failed"
+    }
 }

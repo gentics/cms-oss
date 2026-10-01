@@ -1,5 +1,6 @@
 import { httpRequest } from '@/services/httpService/httpService';
 import { type CmsToken, useCmsTokenStore } from '@/store/useCmsTokenStore';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 /** A CMS API token of the current CMS user, as returned by `POST /rest/admin/token`: the token plus its metadata. */
 export interface CmsTokenInfo {
@@ -59,8 +60,11 @@ export function getCmsToken(now: number = Date.now()): Promise<CmsToken> {
 
         return cmsToken;
     }, (error: unknown) => {
-        // Logged here for every caller, until there is UI for it. The error carries no response body.
-        console.error('Getting the CMS token failed', error);
+        // Shown once here for every caller. The error carries no response body.
+        useErrorNotificationStore.getState().addError({
+            messageKey: 'errorNotifications.cmsTokenFailed',
+            detail: error instanceof Error ? error.message : undefined,
+        });
         throw error;
     }).finally(() => {
         pendingCmsToken = null;

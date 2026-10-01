@@ -1,3 +1,8 @@
 {
-    "getStarted": "Los geht's"
+    "getStarted": "Los geht's",
+    "errorNotifications": {
+        "label": "Fehler",
+        "dismiss": "Schließen",
+        "cmsTokenFailed": "Der CMS-Token konnte nicht abgerufen werden"
+    }
 }

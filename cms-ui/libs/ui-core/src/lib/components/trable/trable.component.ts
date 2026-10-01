@@ -35,7 +35,7 @@ function createRowId(row: TrableRow<any>): string {
     templateUrl: './trable.component.html',
     styleUrls: ['./trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
 
@@ -47,7 +47,7 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
     public inlineExpansion = false;
 
     /**
-     * If the trable selection checkboxes should be displayed inline in the first colunn
+     * If the trable selection checkboxes should be displayed inline in the first column
      * instead of creating an initial separate one.
      */
     @Input()
@@ -88,9 +88,5 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
         id += `:${row.loaded ? '0' : '1'}:${row.loading ? '0' : '1'}:${row.expanded ? '0' : '1'}`;
 
         return id;
-    }
-
-    public cancel(event?: MouseEvent) {
-        cancelEvent(event);
     }
 }

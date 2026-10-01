@@ -634,6 +634,20 @@ export const FORM_THREE: FormImportData = {
     },
 };
 
+export const EXT_FORM_ONE: FormImportData = {
+    [IMPORT_TYPE]: ITEM_TYPE_FORM,
+    [IMPORT_ID]: 'externalFormOne',
+
+    nodeId: NODE_MINIMAL[IMPORT_ID],
+    folderId: NODE_MINIMAL[IMPORT_ID],
+
+    languages: [LANGUAGE_EN],
+
+    name: 'Form One',
+    description: 'Test Form one',
+    formType: 'andp',
+};
+
 /*
  * FULL SETUP
  * ---------------------------------------------------------------- */

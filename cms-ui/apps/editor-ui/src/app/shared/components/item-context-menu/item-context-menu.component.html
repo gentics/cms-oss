@@ -45,7 +45,7 @@
           </gtx-dropdown-item>
         }
         @if (buttons.publishProtocol) {
-          <gtx-dropdown-item (click)="publishProtocolClicked(item)">
+          <gtx-dropdown-item data-action="publish-protocol" (click)="publishProtocolClicked(item)">
             <icon left>news</icon>
             {{ 'editor.published_protocol_label' | gtxI18n }}
           </gtx-dropdown-item>

@@ -23,9 +23,11 @@ import { basename } from 'node:path';
 import { HelperWindow, RENDERABLE_ALOHA_COMPONENTS, UploadOptions } from './common';
 import { readFileSync } from 'node:fs';
 
-export function findList(page: Page, type: string): Locator {
+export function findList(page: Page, type: string): Locator;
+export function findList(page: Page, type: 'form', external?: boolean): Locator;
+export function findList(page: Page, type: string, external: boolean = false): Locator {
     if (type === ITEM_TYPE_FORM) {
-        return page.locator('gtx-form-list');
+        return page.locator(`gtx-form-list .content-list[data-item-type="${external ? 'external_' : ''}form"]`);
     } else {
         return page.locator(`item-list .content-list[data-item-type="${type}"]`);
     }

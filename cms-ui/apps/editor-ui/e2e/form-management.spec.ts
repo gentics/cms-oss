@@ -10,6 +10,7 @@ import {
     clickModalAction,
     clickNotificationAction,
     EntityImporter,
+    EXT_FORM_ONE,
     findNotification,
     FORM_ONE,
     FORM_TWO,
@@ -27,6 +28,7 @@ import {
     matchRequest,
     navigateToApp,
     NODE_MINIMAL,
+    openContext,
     PAGE_ONE,
     pickSelectValue,
     TestSize,
@@ -56,6 +58,7 @@ test.describe('Form Management', () => {
     const NEW_FORM_DESCRIPTION = 'This is an example text';
 
     const FORM_TYPE_GENERIC = 'generic';
+    const FORM_TYPE_ANDP = 'andp';
 
     const TEST_GROUP_BASE: GroupImportData = {
         [IMPORT_TYPE]: IMPORT_TYPE_GROUP,
@@ -486,5 +489,43 @@ test.describe('Form Management', () => {
         const list = findList(page, ITEM_TYPE_FORM);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', false);
         await toggleDisplayAllCheckbox(page, list, 'toggle-language-display', true);
+    });
+
+    test('external forms should have correct item actions', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20231',
+        }],
+    }, async ({ page }) => {
+        const AVAILABLE_ACTIONS = ['edit', 'properties', 'publish-protocol', 'publish', 'time-management', 'move', 'delete'];
+
+        await IMPORTER.client.form.assignConfiguration(FORM_TYPE_ANDP, IMPORTER.get(NODE_MINIMAL).id).send();
+        await IMPORTER.importData([EXT_FORM_ONE]);
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.UPDATE, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_FORM, value: true },
+                    { type: GcmsPermission.PUBLISH_FORM, value: true },
+                    { type: GcmsPermission.DELETE_FORM, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_FORM, true);
+        const item = findItem(list, IMPORTER.get(EXT_FORM_ONE).id);
+        await expect(item).toBeVisible();
+
+        const contextMenu = await openContext(item.locator('[data-action="item-context"]'));
+        for (const action of AVAILABLE_ACTIONS) {
+            await expect(contextMenu.locator(`[data-action="${action}"]`)).toBeVisible();
+        }
     });
 });

@@ -114,59 +114,59 @@ forms:
             de: "Allgemeines Eingabefeld für mehrere Datentypen."
             en: "Generic input field for multiple data types."
           settings:
-          - type: "translation"
-            id: "placeholder"
-            labelI18n:
-              de: "Platzhalter"
-              en: "Placeholder"
-            descriptionI18n:
-              de: "Platzhalter für dieses Eingabefeld."
-              en: "Placeholder for this input field."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "string"
-            id: "defaultValue"
-            labelI18n:
-              de: "Standardwert"
-              en: "Default Value"
-            descriptionI18n:
-              de: "Standardwert für dieses Eingabefeld."
-              en: "Default value for this input field."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-            multiple: false
-          - type: "number"
-            id: "minValue"
-            labelI18n:
-              de: "Mindestwert"
-              en: "Minimum Value"
-            descriptionI18n:
-              de: "Mindestwert für Zahleneingaben."
-              en: "Minimum value for number inputs."
-            required: false
-            backend: true
-            propertyPath: "validation.minValue"
-            condition: null
-          - type: "number"
-            id: "maxValue"
-            labelI18n:
-              de: "Maximalwert"
-              en: "Maximum Value"
-            descriptionI18n:
-              de: "Maximalwert für Zahleneingaben."
-              en: "Maximum value for number inputs."
-            required: false
-            backend: true
-            propertyPath: "validation.maxValue"
-            condition: null
+            - type: "translation"
+              id: "placeholder"
+              labelI18n:
+                de: "Platzhalter"
+                en: "Placeholder"
+              descriptionI18n:
+                de: "Platzhalter für dieses Eingabefeld."
+                en: "Placeholder for this input field."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "string"
+              id: "defaultValue"
+              labelI18n:
+                de: "Standardwert"
+                en: "Default Value"
+              descriptionI18n:
+                de: "Standardwert für dieses Eingabefeld."
+                en: "Default value for this input field."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+              multiple: false
+            - type: "number"
+              id: "minValue"
+              labelI18n:
+                de: "Mindestwert"
+                en: "Minimum Value"
+              descriptionI18n:
+                de: "Mindestwert für Zahleneingaben."
+                en: "Minimum value for number inputs."
+              required: false
+              backend: true
+              propertyPath: "validation.minValue"
+              condition: null
+            - type: "number"
+              id: "maxValue"
+              labelI18n:
+                de: "Maximalwert"
+                en: "Maximum Value"
+              descriptionI18n:
+                de: "Maximalwert für Zahleneingaben."
+                en: "Maximum value for number inputs."
+              required: false
+              backend: true
+              propertyPath: "validation.maxValue"
+              condition: null
           aggregate: false
           whitelist: null
         datetime:
@@ -177,35 +177,35 @@ forms:
             de: "Allgemeines Eingabefeld für mehrere Datentypen."
             en: "Generic input field for multiple data types."
           settings:
-          - type: "translation"
-            id: "placeholder"
-            labelI18n:
-              de: "Platzhalter"
-              en: "Placeholder"
-            descriptionI18n:
-              de: "Platzhalter für dieses Eingabefeld."
-              en: "Placeholder for this input field."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "string"
-            id: "defaultValue"
-            labelI18n:
-              de: "Standardwert"
-              en: "Default Value"
-            descriptionI18n:
-              de: "Standardwert für dieses Eingabefeld."
-              en: "Default value for this input field."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-            multiple: false
+            - type: "translation"
+              id: "placeholder"
+              labelI18n:
+                de: "Platzhalter"
+                en: "Placeholder"
+              descriptionI18n:
+                de: "Platzhalter für dieses Eingabefeld."
+                en: "Placeholder for this input field."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "string"
+              id: "defaultValue"
+              labelI18n:
+                de: "Standardwert"
+                en: "Default Value"
+              descriptionI18n:
+                de: "Standardwert für dieses Eingabefeld."
+                en: "Default value for this input field."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+              multiple: false
           aggregate: false
           whitelist: null
         boolean:
@@ -216,30 +216,30 @@ forms:
             de: "Einfache checkbox."
             en: "Simple checkbox."
           settings:
-          - type: "string"
-            id: "storedValue"
-            labelI18n:
-              de: "StoredWert"
-              en: "StoredValue"
-            descriptionI18n:
-              de: "Wert der für diese Checkbox gespeichert wird."
-              en: "Value that is stored for this checkbox."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-          - type: "boolean"
-            id: "defaultValue"
-            labelI18n:
-              de: "Ausgewählt"
-              en: "Checked"
-            descriptionI18n:
-              de: "Dieses Checkbox ist ausgewählt."
-              en: "This checkbox is checked."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
+            - type: "string"
+              id: "storedValue"
+              labelI18n:
+                de: "StoredWert"
+                en: "StoredValue"
+              descriptionI18n:
+                de: "Wert der für diese Checkbox gespeichert wird."
+                en: "Value that is stored for this checkbox."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+            - type: "boolean"
+              id: "defaultValue"
+              labelI18n:
+                de: "Ausgewählt"
+                en: "Checked"
+              descriptionI18n:
+                de: "Dieses Checkbox ist ausgewählt."
+                en: "This checkbox is checked."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
           aggregate: false
           whitelist: null
         string:
@@ -250,87 +250,90 @@ forms:
             de: "Allgemeines Eingabefeld für mehrere Datentypen."
             en: "Generic input field for multiple data types."
           settings:
-          - type: "translation"
-            id: "placeholder"
-            labelI18n:
-              de: "Platzhalter"
-              en: "Placeholder"
-            descriptionI18n:
-              de: "Platzhalter für dieses Eingabefeld."
-              en: "Placeholder for this input field."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "string"
-            id: "defaultValue"
-            labelI18n:
-              de: "Standardwert"
-              en: "Default Value"
-            descriptionI18n:
-              de: "Standardwert für dieses Eingabefeld."
-              en: "Default value for this input field."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-            multiple: false
-          - type: "number"
-            id: "maxLength"
-            labelI18n:
-              de: "Eingabelänge"
-              en: "Input Length"
-            descriptionI18n:
-              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
-              en: "Maximum number of allowed characters."
-            required: false
-            backend: true
-            propertyPath: "validation.maxLength"
-            condition: null
-          - type: "select"
-            id: "validation"
-            labelI18n:
-              de: "Validator"
-              en: "Validator"
-            options:
-            - value:
-                key: "telephone"
-                regex: "^[\\s\\d\\+\\/]*$"
-                errorMessage:
-                  de: "Telephonnummer falsch"
+            - type: "translation"
+              id: "placeholder"
               labelI18n:
-                de: "Telefonnummer (nur Ziffern, und Leerzeichen)"
-                en: "Telephone (only numbers, and spaces)"
-            - value:
-                key: "socialsecurity"
-                regex: "^[1-9]\\d{9}$"
-                errorMessage:
-                  de: "Das ist keine Sozialversicherungsnummer"
+                de: "Platzhalter"
+                en: "Placeholder"
+              descriptionI18n:
+                de: "Platzhalter für dieses Eingabefeld."
+                en: "Placeholder for this input field."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "string"
+              id: "defaultValue"
               labelI18n:
-                de: "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes\
-                  \ Datum)"
-                en: "Social Security Number (only numbers 10 digits, last 6 digits\
-                  \ denote past date)"
-            - value:
-                key: "email"
-                regex: "^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\\
-                  s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\\
-                  .[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$"
-                errorMessage:
-                  de: "Das soll ne eMail Adresse sein?"
+                de: "Standardwert"
+                en: "Default Value"
+              descriptionI18n:
+                de: "Standardwert für dieses Eingabefeld."
+                en: "Default value for this input field."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+              multiple: false
+            - type: "number"
+              id: "maxLength"
               labelI18n:
-                de: "E-Mail"
-                en: "Mail"
-            descriptionI18n: null
-            required: false
-            backend: true
-            propertyPath: "validation.regexValidation"
-            condition: null
-            multiple: false
+                de: "Eingabelänge"
+                en: "Input Length"
+              descriptionI18n:
+                de: "Anzahl der Zeichen, die eingegeben werden dürfen."
+                en: "Maximum number of allowed characters."
+              required: false
+              backend: true
+              propertyPath: "validation.maxLength"
+              condition: null
+            - type: "select"
+              id: "validation"
+              labelI18n:
+                de: "Validator"
+                en: "Validator"
+              options:
+                - value:
+                    key: "telephone"
+                    regex: "^[\\s\\d\\+\\/]*$"
+                    errorMessage:
+                      de: "Telephonnummer falsch"
+                  labelI18n:
+                    de: "Telefonnummer (nur Ziffern, und Leerzeichen)"
+                    en: "Telephone (only numbers, and spaces)"
+                - value:
+                    key: "socialsecurity"
+                    regex: "^[1-9]\\d{9}$"
+                    errorMessage:
+                      de: "Das ist keine Sozialversicherungsnummer"
+                  labelI18n:
+                    de:
+                      "SV-Nr (nur Ziffern 10 Stellen, letzten 6 Stellen vergangenes\
+                      \ Datum)"
+                    en:
+                      "Social Security Number (only numbers 10 digits, last 6 digits\
+                      \ denote past date)"
+                - value:
+                    key: "email"
+                    regex:
+                      "^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\\
+                      s@\"]+)*)|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\\
+                      .[0-9]{1,3}])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$"
+                    errorMessage:
+                      de: "Das soll ne eMail Adresse sein?"
+                  labelI18n:
+                    de: "E-Mail"
+                    en: "Mail"
+              descriptionI18n: null
+              required: false
+              backend: true
+              propertyPath: "validation.regexValidation"
+              condition: null
+              multiple: false
           aggregate: false
           whitelist: null
         catalog:
@@ -341,31 +344,31 @@ forms:
             de: "Liste an auswählbaren Werten."
             en: "List of values to select from."
           settings:
-          - type: "options"
-            id: "selectOptions"
-            labelI18n:
-              de: "Auswahlmöglichkeiten"
-              en: "Selectable Options"
-            descriptionI18n:
-              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
-              en: "List of key value pairs to select from."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            multiple: false
-          - type: "boolean"
-            id: "customOption"
-            labelI18n:
-              de: "Zusätzliches Element"
-              en: "Additional Element"
-            descriptionI18n:
-              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-              en: "Field to enter additional selection option."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
+            - type: "options"
+              id: "selectOptions"
+              labelI18n:
+                de: "Auswahlmöglichkeiten"
+                en: "Selectable Options"
+              descriptionI18n:
+                de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+                en: "List of key value pairs to select from."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              multiple: false
+            - type: "boolean"
+              id: "customOption"
+              labelI18n:
+                de: "Zusätzliches Element"
+                en: "Additional Element"
+              descriptionI18n:
+                de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+                en: "Field to enter additional selection option."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
           aggregate: false
           whitelist: null
         binary:
@@ -376,44 +379,44 @@ forms:
             de: "Einfacher Fileupload."
             en: "Simple file upload."
           settings:
-          - type: "translation"
-            id: "tooltip"
-            labelI18n:
-              de: "Tooltip"
-              en: "Tooltip"
-            descriptionI18n:
-              de: "Der Tooltip des Upload-Elements."
-              en: "The tooltip of the upload element."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "number"
-            id: "maxFilesize"
-            labelI18n:
-              de: "Max. Dateigröße (MB)"
-              en: "Max. Filesize (MB)"
-            descriptionI18n:
-              de: "Max. erlaubte Dateigröße (MB)"
-              en: "Max. allowed Filesize (MB)"
-            required: false
-            backend: true
-            propertyPath: "validation.binary.maxFilesize"
-            condition: null
-          - type: "boolean"
-            id: "multiple"
-            labelI18n:
-              de: "Mehrfach Upload"
-              en: "Multiupload"
-            descriptionI18n:
-              de: "Upload von mehreren Dateien erlauben"
-              en: "Allow upload of multiple files"
-            required: false
-            backend: true
-            propertyPath: "isList"
-            condition: null
+            - type: "translation"
+              id: "tooltip"
+              labelI18n:
+                de: "Tooltip"
+                en: "Tooltip"
+              descriptionI18n:
+                de: "Der Tooltip des Upload-Elements."
+                en: "The tooltip of the upload element."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "number"
+              id: "maxFilesize"
+              labelI18n:
+                de: "Max. Dateigröße (MB)"
+                en: "Max. Filesize (MB)"
+              descriptionI18n:
+                de: "Max. erlaubte Dateigröße (MB)"
+                en: "Max. allowed Filesize (MB)"
+              required: false
+              backend: true
+              propertyPath: "validation.binary.maxFilesize"
+              condition: null
+            - type: "boolean"
+              id: "multiple"
+              labelI18n:
+                de: "Mehrfach Upload"
+                en: "Multiupload"
+              descriptionI18n:
+                de: "Upload von mehreren Dateien erlauben"
+                en: "Allow upload of multiple files"
+              required: false
+              backend: true
+              propertyPath: "isList"
+              condition: null
           aggregate: false
           whitelist: null
         time:
@@ -424,35 +427,35 @@ forms:
             de: "Allgemeines Eingabefeld für mehrere Datentypen."
             en: "Generic input field for multiple data types."
           settings:
-          - type: "translation"
-            id: "placeholder"
-            labelI18n:
-              de: "Platzhalter"
-              en: "Placeholder"
-            descriptionI18n:
-              de: "Platzhalter für dieses Eingabefeld."
-              en: "Placeholder for this input field."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "string"
-            id: "defaultValue"
-            labelI18n:
-              de: "Standardwert"
-              en: "Default Value"
-            descriptionI18n:
-              de: "Standardwert für dieses Eingabefeld."
-              en: "Default value for this input field."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-            multiple: false
+            - type: "translation"
+              id: "placeholder"
+              labelI18n:
+                de: "Platzhalter"
+                en: "Placeholder"
+              descriptionI18n:
+                de: "Platzhalter für dieses Eingabefeld."
+                en: "Placeholder for this input field."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "string"
+              id: "defaultValue"
+              labelI18n:
+                de: "Standardwert"
+                en: "Default Value"
+              descriptionI18n:
+                de: "Standardwert für dieses Eingabefeld."
+                en: "Default value for this input field."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+              multiple: false
           aggregate: false
           whitelist: null
         usermail:
@@ -460,83 +463,85 @@ forms:
             de: "Benutzer E-Mail Feld"
             en: "User EMail Field"
           descriptionI18n:
-            de: "Feld für Benutzer eMail. Wenn ausgefüllt, bekommt der Benutzer ein\
+            de:
+              "Feld für Benutzer eMail. Wenn ausgefüllt, bekommt der Benutzer ein\
               \ eMail nach dem Absenden des Formulares."
-            en: "Field for user eMail. When filled, the user will get an eMail after\
+            en:
+              "Field for user eMail. When filled, the user will get an eMail after\
               \ filling out the form."
           settings:
-          - type: "translation"
-            id: "placeholder"
-            labelI18n:
-              de: "Platzhalter"
-              en: "Placeholder"
-            descriptionI18n:
-              de: "Platzhalter für dieses Eingabefeld."
-              en: "Placeholder for this input field."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "translation"
-            id: "tooltip"
-            labelI18n:
-              de: "Tooltip"
-              en: "Tooltip"
-            descriptionI18n:
-              de: "Der Tooltip des Benutzer-E-Mail-Elements."
-              en: "The tooltip of the user mail element."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "number"
-            id: "maxLength"
-            labelI18n:
-              de: "Eingabelänge"
-              en: "Input Length"
-            descriptionI18n:
-              de: "Anzahl der Zeichen, die eingegeben werden dürfen."
-              en: "Maximum number of allowed characters."
-            required: false
-            backend: true
-            propertyPath: "validation.maxLength"
-            condition: null
-          - type: "translation"
-            id: "mailsubject"
-            labelI18n:
-              de: "E-Mail Betreff"
-              en: "Email Subject"
-            descriptionI18n:
-              de: "Betreff des E-Mails, das an den Benutzer geschickt wird."
-              en: "Subject of the Email, sent to the user."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
-          - type: "select"
-            id: "mailtemplate"
-            labelI18n:
-              de: "E-Mail Vorlage"
-              en: "Email Template"
-            options:
-            - value: "useremail"
+            - type: "translation"
+              id: "placeholder"
               labelI18n:
-                de: "Standard"
-                en: "Default"
-            descriptionI18n:
-              de: "Vorlage, die zur Darstellung des E-Mail Inhalts verwendet wird."
-              en: "Template, which is used to display the Email body."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            multiple: false
+                de: "Platzhalter"
+                en: "Placeholder"
+              descriptionI18n:
+                de: "Platzhalter für dieses Eingabefeld."
+                en: "Placeholder for this input field."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "translation"
+              id: "tooltip"
+              labelI18n:
+                de: "Tooltip"
+                en: "Tooltip"
+              descriptionI18n:
+                de: "Der Tooltip des Benutzer-E-Mail-Elements."
+                en: "The tooltip of the user mail element."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "number"
+              id: "maxLength"
+              labelI18n:
+                de: "Eingabelänge"
+                en: "Input Length"
+              descriptionI18n:
+                de: "Anzahl der Zeichen, die eingegeben werden dürfen."
+                en: "Maximum number of allowed characters."
+              required: false
+              backend: true
+              propertyPath: "validation.maxLength"
+              condition: null
+            - type: "translation"
+              id: "mailsubject"
+              labelI18n:
+                de: "E-Mail Betreff"
+                en: "Email Subject"
+              descriptionI18n:
+                de: "Betreff des E-Mails, das an den Benutzer geschickt wird."
+                en: "Subject of the Email, sent to the user."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
+            - type: "select"
+              id: "mailtemplate"
+              labelI18n:
+                de: "E-Mail Vorlage"
+                en: "Email Template"
+              options:
+                - value: "useremail"
+                  labelI18n:
+                    de: "Standard"
+                    en: "Default"
+              descriptionI18n:
+                de: "Vorlage, die zur Darstellung des E-Mail Inhalts verwendet wird."
+                en: "Template, which is used to display the Email body."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              multiple: false
           aggregate: false
           whitelist: null
         aggregate:
@@ -563,9 +568,11 @@ forms:
             de: "Wenn-Dann-Container"
             en: "Conditional container"
           descriptionI18n:
-            de: "Wenn-Dann-Container dessen Inhalt nur aktiv ist, wenn das geprüfte\
+            de:
+              "Wenn-Dann-Container dessen Inhalt nur aktiv ist, wenn das geprüfte\
               \ Element den erwarteten Wert hat."
-            en: "Conditional container which contents is only active when the checked\
+            en:
+              "Conditional container which contents is only active when the checked\
               \ element has the expected value."
           settings: []
           container: true
@@ -578,18 +585,18 @@ forms:
             de: "Überschrift für einen neuen Abschnitt im Formular."
             en: "Headline for a new section of the form."
           settings:
-          - type: "translation"
-            id: "text"
-            labelI18n:
-              de: "Text"
-              en: "Text"
-            descriptionI18n: {}
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: true
-            multiline: false
+            - type: "translation"
+              id: "text"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              descriptionI18n: {}
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: true
+              multiline: false
           container: false
           whitelist: null
         text:
@@ -600,18 +607,18 @@ forms:
             de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
             en: "Text to furher explain the form."
           settings:
-          - type: "translation"
-            id: "text"
-            labelI18n:
-              de: "Text"
-              en: "Text"
-            descriptionI18n: {}
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: true
-            multiline: false
+            - type: "translation"
+              id: "text"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              descriptionI18n: {}
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: true
+              multiline: false
           container: false
           whitelist: null
         group:
@@ -776,30 +783,30 @@ forms:
             de: "Einfache checkbox."
             en: "Simple checkbox."
           settings:
-          - type: "string"
-            id: "storedValue"
-            labelI18n:
-              de: "StoredWert"
-              en: "StoredValue"
-            descriptionI18n:
-              de: "Wert der für diese Checkbox gespeichert wird."
-              en: "Value that is stored for this checkbox."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-          - type: "boolean"
-            id: "defaultValue"
-            labelI18n:
-              de: "Ausgewählt"
-              en: "Checked"
-            descriptionI18n:
-              de: "Dieses Checkbox ist ausgewählt."
-              en: "This checkbox is checked."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
+            - type: "string"
+              id: "storedValue"
+              labelI18n:
+                de: "StoredWert"
+                en: "StoredValue"
+              descriptionI18n:
+                de: "Wert der für diese Checkbox gespeichert wird."
+                en: "Value that is stored for this checkbox."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+            - type: "boolean"
+              id: "defaultValue"
+              labelI18n:
+                de: "Ausgewählt"
+                en: "Checked"
+              descriptionI18n:
+                de: "Dieses Checkbox ist ausgewählt."
+                en: "This checkbox is checked."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
           aggregate: false
           whitelist: null
         catalog:
@@ -810,31 +817,31 @@ forms:
             de: "Liste an auswählbaren Werten."
             en: "List of values to select from."
           settings:
-          - type: "options"
-            id: "selectOptions"
-            labelI18n:
-              de: "Auswahlmöglichkeiten"
-              en: "Selectable Options"
-            descriptionI18n:
-              de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
-              en: "List of key value pairs to select from."
-            required: false
-            backend: true
-            propertyPath: null
-            condition: null
-            multiple: false
-          - type: "boolean"
-            id: "customOption"
-            labelI18n:
-              de: "Zusätzliches Element"
-              en: "Additional Element"
-            descriptionI18n:
-              de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
-              en: "Field to enter additional selection option."
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
+            - type: "options"
+              id: "selectOptions"
+              labelI18n:
+                de: "Auswahlmöglichkeiten"
+                en: "Selectable Options"
+              descriptionI18n:
+                de: "Liste an auswählbaren Schlüssel-Wert-Paaren."
+                en: "List of key value pairs to select from."
+              required: false
+              backend: true
+              propertyPath: null
+              condition: null
+              multiple: false
+            - type: "boolean"
+              id: "customOption"
+              labelI18n:
+                de: "Zusätzliches Element"
+                en: "Additional Element"
+              descriptionI18n:
+                de: "Möglichkeit eine weitere Auswahlmöglichkeit einzugeben."
+                en: "Field to enter additional selection option."
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
           aggregate: false
           whitelist: null
       blocks:
@@ -856,18 +863,18 @@ forms:
             de: "Überschrift für einen neuen Abschnitt im Formular."
             en: "Headline for a new section of the form."
           settings:
-          - type: "translation"
-            id: "text"
-            labelI18n:
-              de: "Text"
-              en: "Text"
-            descriptionI18n: {}
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
+            - type: "translation"
+              id: "text"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              descriptionI18n: {}
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
           container: false
           whitelist: null
         text:
@@ -878,18 +885,18 @@ forms:
             de: "Text um weitere Erklärungen zwischen den Formularfeldern anzuzeigen."
             en: "Text to furher explain the form."
           settings:
-          - type: "translation"
-            id: "text"
-            labelI18n:
-              de: "Text"
-              en: "Text"
-            descriptionI18n: {}
-            required: false
-            backend: false
-            propertyPath: null
-            condition: null
-            richContent: false
-            multiline: false
+            - type: "translation"
+              id: "text"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              descriptionI18n: {}
+              required: false
+              backend: false
+              propertyPath: null
+              condition: null
+              richContent: false
+              multiline: false
           container: false
           whitelist: null
       userOptions: null
@@ -941,3 +948,361 @@ forms:
           labelI18n:
             de: Test admin email template 2
             en: Test admin email template 2
+    andp:
+      nameI18n:
+        de: "ANDP"
+        en: "ANDP"
+      pluginName: "acta-nova"
+      languageMapping:
+        "de-AT": "de"
+        "en-AT": "en"
+      descriptionI18n: null
+      external: true
+      submitOnce: false
+      controls:
+        controls:
+        number:
+          labelI18n:
+            de: "Zahl"
+            en: "Number"
+          descriptionI18n:
+            de: "Eingabefeld für Zahlen"
+            en: "Number Input Field"
+        aggregate:
+          labelI18n:
+            de: "Aggregat"
+            en: "Aggregat"
+          descriptionI18n:
+            de: "Aggregat Element"
+            en: "Aggregate Element"
+          aggregate: true
+          settings:
+            - type: "boolean"
+              id: "showFilter"
+              labelI18n:
+                de: "Filter anzeigen"
+                en: "Show Filter"
+            - type: "boolean"
+              id: "showOnlyFirstLine"
+              labelI18n:
+                de: "Nur erste Zeile anzeigen"
+                en: "Show only first line"
+            - type: "boolean"
+              id: "tableColumnWidthOptimized"
+              labelI18n:
+                de: "Einträge werden als Tabelle angezeigt"
+                en: "Entries as Table"
+              condition:
+                source:
+                  schema: "editModeDialogFormID"
+                empty: "false"
+            - type: "string"
+              id: "tableRowMaxLineHeight"
+              labelI18n:
+                de: "Maximale Zeilenanzahl"
+                en: "Max Row Count"
+              condition:
+                source:
+                  schema: "editModeDialogFormID"
+                empty: "false"
+            - type: "select"
+              id: "buttonDisplayStyle"
+              labelI18n:
+                de: "DarstellungsArt Aggregats-Optionen"
+                en: "DisplayOptions for Aggregate Items"
+              options:
+                - labelI18n:
+                    de: "Icon"
+                    en: "Icon"
+                  value: "icon"
+                - labelI18n:
+                    de: "Text"
+                    en: "Text"
+                  value: "text"
+                - labelI18n:
+                    de: "Icon + Text"
+                    en: "Icon + Text"
+                  value: "icontext"
+        datetime:
+          labelI18n:
+            de: "Datum+Zeit"
+            en: "DateTime"
+          descriptionI18n:
+            de: "Auswahl von Datum + Zeit"
+            en: "DateTime Picker"
+        time:
+          labelI18n:
+            de: "Zeit"
+            en: "Time"
+          descriptionI18n:
+            de: "Auswahl von Zeit"
+            en: "Time Picker"
+        boolean:
+          labelI18n:
+            de: "Boolean"
+            en: "Boolean"
+          descriptionI18n:
+            de: "ActaNova Boolean Element"
+            en: "ActaNova Boolean Element"
+          settings:
+            - type: "boolean"
+              id: "radio"
+              labelI18n:
+                de: "Darstellung Variante Radio-Button"
+                en: "Variant Radio-Button"
+            - type: "boolean"
+              id: "dropdown"
+              labelI18n:
+                de: "Darstellung Variante Dropdown"
+                en: "Variant Dropdown"
+            - type: "boolean"
+              id: "button"
+              labelI18n:
+                de: "Darstellung Variante Button"
+                en: "Variant Button"
+            - type: "boolean"
+              id: "buttonIsPrimary"
+              labelI18n:
+                de: "Button in Primärfarben anzeigen?"
+                en: "Show Button in Primary Color"
+              condition:
+                source:
+                  setting: "button"
+                equals: true
+        string:
+          labelI18n:
+            de: "Eingabefeld"
+            en: "Input Field"
+          descriptionI18n:
+            de: "Allgemeines Eingabefeld für mehrere Datentypen."
+            en: "Generic input field for multiple data types."
+        catalog:
+          labelI18n:
+            de: "Katalog"
+            en: "Catalog"
+          descriptionI18n:
+            de: "ActaNova Katalog Element"
+            en: "ActaNova Catalog Element"
+
+          settings:
+            - type: "boolean"
+              id: "radio"
+              labelI18n:
+                de: "Ausprägung Radiobutton/Checkbox"
+                en: "Variant Radio Button / Checkbox"
+            - type: "select"
+              id: "radioColumns"
+              labelI18n:
+                de: "Anzahl Spalten mit Radion-Buttons/Checkboxen"
+                en: "Column Count with RadioButton / Checkbox Variant"
+              condition:
+                source:
+                  setting: "radio"
+                equals: true
+              options:
+                - labelI18n:
+                    de: "1"
+                    en: "1"
+                  value: "1"
+                - labelI18n:
+                    de: "2"
+                    en: "2"
+                  value: "2"
+        lazyCatalog:
+          labelI18n:
+            de: "Lazy-Katalog"
+            en: "Lazy-Catalog"
+          descriptionI18n:
+            de: "ActaNova Lazy-Katalog Element"
+            en: "ActaNova Lazy-Catalog Element"
+        reference:
+          labelI18n:
+            de: "Referenz"
+            en: "Reference"
+          descriptionI18n:
+            de: "ActaNova Referenz Element"
+            en: "ActaNova Reference Element"
+
+        binary:
+          labelI18n:
+            de: "File Upload"
+            en: "File Upload"
+          descriptionI18n:
+            de: "Element für File Upload"
+            en: "File Upload Element"
+
+      blocks:
+        sectionheadline:
+          labelI18n:
+            de: "Überschrift"
+            en: "Headline"
+          descriptionI18n:
+            de: "Überschrift für einen neuen Abschnitt im Formular."
+            en: "Headline for a new section of the form."
+          settings:
+            - type: "translation"
+              id: "text"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              required: false
+              backend: false
+              multiline: false
+          container: false
+          whitelist: null
+        formgridText:
+          labelI18n:
+            de: "Formgrid Text"
+            en: "Formgrid Text"
+          settings:
+            - type: "translation"
+              id: "value"
+              labelI18n:
+                de: "Text"
+                en: "Text"
+              required: false
+              backend: false
+              richContent: true
+        formgridSpacer:
+          labelI18n:
+            de: "Formgrid Abstand"
+            en: "Formgrid Spacer"
+          settings:
+        formgridImage:
+          labelI18n:
+            de: "Formgrid Image"
+            en: "Formgrid Image"
+          settings:
+            - type: "string"
+              id: "url"
+              labelI18n:
+                de: "Bild-URL (absolut oder relativ)"
+                en: "Image-URL (absolute or relative)"
+              required: true
+              backend: false
+              richContent: false
+              propertyPath: "formGridOptions.image.url"
+            - type: "select"
+              id: "align"
+              labelI18n:
+                de: "Ausrichtung"
+                en: "Alignment"
+              options:
+                - labelI18n:
+                    de: "Links"
+                    en: "Left"
+                  value: "start"
+                - labelI18n:
+                    de: "Zentriert"
+                    en: "Centered"
+                  value: "center"
+                - labelI18n:
+                    de: "Rechts"
+                    en: "Right"
+                  value: "end"
+                - labelI18n:
+                    de: "Gestreckt"
+                    en: "Stretched"
+                  value: "stretch"
+              required: false
+              backend: false
+              propertyPath: "formGridOptions.image.align"
+            - type: "select"
+              id: "objectFit"
+              labelI18n:
+                de: "Bildskalierung"
+                en: "Image Fit"
+              options:
+                - labelI18n:
+                    de: "Passend"
+                    en: "Contain"
+                  value: "contain"
+                - labelI18n:
+                    de: "Abdecken"
+                    en: "Covered"
+                  value: "cover"
+                - labelI18n:
+                    de: "Ausfüllen"
+                    en: "Fill"
+                  value: "fill"
+                - labelI18n:
+                    de: "Keine"
+                    en: "None"
+                  value: "none"
+                - labelI18n:
+                    de: "Verkleinern"
+                    en: "Scale-Down"
+                  value: "scale-down"
+              required: false
+              backend: false
+              propertyPath: "formGridOptions.image.objectFit"
+            - type: "translation"
+              id: "alt"
+              labelI18n:
+                de: "ALT-Text"
+                en: "ALT-Text"
+              required: false
+              backend: false
+              richContent: false
+              propertyPath: "formGridOptions.image.alt"
+            - type: "translation"
+              id: "caption"
+              labelI18n:
+                de: "Bildunterschrift"
+                en: "Caption"
+              required: false
+              backend: false
+              richContent: false
+              propertyPath: "formGridOptions.image.caption"
+            - type: "number"
+              id: "width"
+              labelI18n:
+                de: "Breite (px, optional)"
+                en: "Width (px, optional)"
+              required: false
+              backend: false
+              propertyPath: "formGridOptions.image.width"
+            - type: "number"
+              id: "height"
+              labelI18n:
+                de: "Höhe (px, optional)"
+                en: "Length (px, optional)"
+              required: false
+              backend: false
+              propertyPath: "formGridOptions.image.height"
+      userOptions: null
+      captchaOptions: null
+      templateOptions: null
+      userEmailTemplateOptions: null
+      adminEmailTemplateOptions: null
+      flows:
+        - id: default
+          labelI18n:
+            de: Standard
+            en: Standard
+          nameTranslationKey: formgen_flow_translation_key
+          steps:
+            - buttonLabelTranslationKey: form_flow_btn_form
+              reactClass: FormScreen
+              nameTranslationKey: form_flow_name_form
+              descriptionTranslationKey: form_flow_desc_form
+              buttons:
+                - reactClass: DetailInfoButton
+                  labelTranslationKey: form_detailinfo
+                  mobileDisabled: true
+                - reactClass: CancelButton
+                  labelTranslationKey: form_cancel
+                - reactClass: PreviousPageButton
+                  labelTranslationKey: form_previousPage
+                - reactClass: NextPageButton
+                  labelTranslationKey: form_nextPage
+                - reactClass: SubmitButton
+                  labelTranslationKey: form_submit
+              variables: []
+            - buttonLabelTranslationKey: form_flow_btn_success
+              reactClass: SuccessScreen
+              nameTranslationKey: form_flow_name_success
+              descriptionTranslationKey: form_flow_desc_success
+              buttons: []
+              variables: []
+      pluginConfiguration: null

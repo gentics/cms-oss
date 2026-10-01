@@ -1,5 +1,6 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { cancelEvent } from '@gentics/common';
+import { ColorThemes } from '../../common';
 
 /**
  * A Button component.
@@ -35,11 +36,11 @@ export class ButtonComponent {
     public size: 'small' | 'regular' | 'large' = 'regular';
 
     /**
-     * Type determines the style of the button. Can be "default", "secondary",
+     * Type determines the style of the button. Can be "primary", "secondary",
      * "success", "warning" or "alert".
      */
     @Input()
-    public type: 'primary' | 'secondary' | 'success' | 'warning' | 'alert' | 'default' = 'default';
+    public type: ColorThemes = 'primary';
 
     /**
      * Setting the "flat" attribute gives the button a transparent background

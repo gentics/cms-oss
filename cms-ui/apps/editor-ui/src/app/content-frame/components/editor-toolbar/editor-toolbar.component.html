@@ -171,10 +171,8 @@
                         [title]="'editor.content_frame_save_changes_tooltip' | gtxI18n"
                     >
                         <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
-                            <div class="save-button-primary-action">
-                                <icon class="save-button-icon" left>save</icon>
-                                <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | gtxI18n"></span>
-                            </div>
+                            <icon class="save-button-icon" left>save</icon>
+                            <span class="save-button-label" [innerHTML]="'editor.content_frame_save_changes_button' | gtxI18n"></span>
                         </gtx-split-button-primary-action>
 
                         @if (currentItem?.type === 'folder' && editorState.openPropertiesTab !== ITEM_PROPERTIES_TAB) {

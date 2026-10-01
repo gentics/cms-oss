@@ -46,23 +46,24 @@
             <ul
                 class="select-options"
                 (click)="viewValueContainer.focus()"
-                (mouseover)="deselect()"
             >
                 @for (group of optionGroups; track group.id; let groupIndex = $index) {
                     @if (!group.isDefaultGroup) {
                         <li class="group-label">{{ group.label }}</li>
                     }
                     @for (option of group.options; track option; let optionIndex = $index) {
+                        @let optionSelected = isSelected(option);
+
                         <li
                             class="select-option"
                             [attr.data-id]="idPath ? (option.value | gtxValuePath:idPath) : option.value"
                             [class.disabled]="group.disabled || option.disabled"
-                            [class.selected]="selectedIndex[0] === groupIndex && selectedIndex[1] === optionIndex"
+                            [class.selected]="optionSelected"
                             (click)="selectItem(groupIndex, optionIndex)"
                         >
                             @if (multiple) {
                                 <gtx-checkbox
-                                    [value]="isSelected(option)"
+                                    [value]="optionSelected"
                                     (valueChange)="selectItem(groupIndex, optionIndex)"
                                 ></gtx-checkbox>
                             }

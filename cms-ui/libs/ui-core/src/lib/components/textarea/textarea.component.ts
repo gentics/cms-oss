@@ -77,6 +77,8 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
     @ViewChild('textarea', { static: true })
     private textAreaEl: ElementRef<HTMLTextAreaElement>;
 
+    public focused = false;
+
     private observer: IntersectionObserver;
 
     constructor(
@@ -129,6 +131,16 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         if (this.observer) {
             this.observer.disconnect();
         }
+    }
+
+    public override handleBlur(event?: Event): void {
+        this.focused = false;
+        super.handleBlur(event);
+    }
+
+    public override handleFocus(event?: Event): void {
+        this.focused = true;
+        super.handleFocus(event);
     }
 
     public textAreaInputHandler(event: KeyboardEvent | InputEvent): void {

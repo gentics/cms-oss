@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ErrorNotifications } from '@/components/ErrorNotifications/ErrorNotifications';
-import { useCmsToken } from '@/hooks/useCmsToken';
 
+// import { useCmsToken } from '@/hooks/useCmsToken';
 import heroImg from './assets/hero.png';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
@@ -18,7 +18,7 @@ function App() {
 
     // Session start: check for a CMS token, or create one, as soon as the app loads.
     // Disabled for now.
-    useCmsToken();
+    // useCmsToken();
 
     return (
         <>

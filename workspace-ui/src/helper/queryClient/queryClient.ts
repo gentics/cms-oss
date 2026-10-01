@@ -1,6 +1,6 @@
 import { QueryCache, QueryClient, type QueryClientConfig } from '@tanstack/react-query';
 
-import { errorMessageKey } from '@/services/errorMapper/errorMapper';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 declare module '@tanstack/react-query' {

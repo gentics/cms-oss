@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
 import i18n from '@/i18n';
+import i18n from '@/i18n';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 import { ErrorNotifications } from './ErrorNotifications';
@@ -55,8 +56,36 @@ describe('ErrorNotifications', () => {
         expect(toast).toHaveAccessibleDescription('Request to /rest/admin/token failed with status 403');
     });
 
-    it('shows one error toast per error', async () => {
-        renderNotifications();
+    it('shows the detail translated when it is given as a key, also after a language change', async () => {
+        render(<ErrorNotifications />);
+
+        act(() => {
+            useErrorNotificationStore.getState().addError({
+                messageKey: 'errorNotifications.cmsTokenFailed',
+                detailKey: 'errors.cms.PERMISSION',
+            });
+        });
+
+        const alert = screen.getByRole('alert');
+
+        expect(within(alert).getByText('You don\'t have permission for this in the CMS.')).toBeInTheDocument();
+
+        try {
+            await act(async () => {
+                await i18n.changeLanguage('de');
+            });
+
+            expect(within(alert).getByText('Sie haben dafür im CMS keine Berechtigung.')).toBeInTheDocument();
+            expect(within(alert).getByText('Der CMS-Token konnte nicht abgerufen werden')).toBeInTheDocument();
+        } finally {
+            await act(async () => {
+                await i18n.changeLanguage('en');
+            });
+        }
+    });
+
+    it('stacks one notification per error, newest last', () => {
+        render(<ErrorNotifications />);
 
         addError('errorNotifications.cmsTokenFailed', 'first');
         addError('errorNotifications.cmsTokenFailed', 'second');

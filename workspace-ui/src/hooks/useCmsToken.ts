@@ -28,5 +28,7 @@ export function useCmsToken() {
         // created a token, and a retry would create another. Network errors carry no response
         // code and are not retried.
         retry: (failureCount, error) => error instanceof HttpError && failureCount < MAX_RETRIES,
+        // One notification once the last retry has failed (`createQueryClient`).
+        meta: { errorMessageKey: 'errorNotifications.cmsTokenFailed' },
     });
 }

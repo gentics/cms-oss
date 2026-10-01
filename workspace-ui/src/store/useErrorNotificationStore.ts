@@ -7,6 +7,8 @@ export interface ErrorNotification {
     messageKey: string;
     /** Technical detail shown below the message, for example an error's message. Not translated. */
     detail?: string;
+    /** i18n key of the detail, translated when shown; takes the place of `detail`. */
+    detailKey?: string;
 }
 
 interface ErrorNotificationState {

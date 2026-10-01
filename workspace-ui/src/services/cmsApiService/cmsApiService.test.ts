@@ -156,18 +156,15 @@ describe('getCmsToken', () => {
             useErrorNotificationStore.setState({ errors: [] });
         });
 
-        it('shows a notification for a failed POST instead of logging it', async () => {
+        // The query shows it, once after its last retry (`createQueryClient`), not every attempt.
+        it('shows no notification itself for a failed POST, and logs nothing', async () => {
             const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
             stubFetchSequence(new Response('Forbidden', { status: 403 }));
 
             await getCmsToken(NOW_S * 1000).catch(() => undefined);
 
-            expect(useErrorNotificationStore.getState().errors).toEqual([{
-                id: expect.any(String),
-                messageKey: 'errorNotifications.cmsTokenFailed',
-                detail: 'Request to /rest/admin/token failed with status 403',
-            }]);
+            expect(useErrorNotificationStore.getState().errors).toEqual([]);
             expect(errorSpy).not.toHaveBeenCalled();
         });
 

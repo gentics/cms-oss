@@ -17,6 +17,7 @@ function ErrorMessage({ messageKey }: { messageKey: string }) {
  * removed from the store closes its toast. Needs `UiProvider` around it.
  */
 export function ErrorNotifications() {
+    const { t } = useTranslation();
     const toast = useToast();
     const errors = useErrorNotificationStore((state) => state.errors);
     const dismissError = useErrorNotificationStore((state) => state.dismissError);
@@ -36,7 +37,7 @@ export function ErrorNotifications() {
                     priority: 'low',
                     timeout: 0,
                     title: <ErrorMessage messageKey={error.messageKey} />,
-                    description: error.detail,
+                    description: error.detailKey ? t(error.detailKey) : error.detail,
                     onClose: () => dismissError(error.id),
                 });
             }
@@ -48,7 +49,7 @@ export function ErrorNotifications() {
                 toast.close(id);
             }
         }
-    }, [errors, toast, dismissError]);
+    }, [errors, toast, dismissError, t]);
 
     return null;
 }

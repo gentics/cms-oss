@@ -21,6 +21,8 @@ Configuration is read from `.env.local` (see `.env.example`). All three variable
 
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
 
+The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/genaix/api/v1`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/genaix/api/v1`, so a different value in development needs a matching `server.proxy` entry.
+
 ### API types
 
 `src/services/apiService/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/services/apiService/genaix/types.ts`.

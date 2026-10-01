@@ -1,6 +1,19 @@
 import { httpRequest } from '@/services/httpService/httpService';
 import { type CmsToken, useCmsTokenStore } from '@/store/useCmsTokenStore';
-import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+
+/**
+ * `responseInfo.responseCode` of a CMS REST response, which CMS REST responses carry alongside the
+ * HTTP status (`.claude/contracts/genaix-docs/04-mcp-scope.md`, §2.5).
+ */
+export type CmsResponseCode =
+    | 'AUTHREQUIRED'
+    | 'PERMISSION'
+    | 'NOTFOUND'
+    | 'INVALIDDATA'
+    | 'LOCKED'
+    | 'MAINTENANCEMODE'
+    | 'NOTLICENSED'
+    | 'FAILURE';
 
 /** A CMS API token of the current CMS user, as returned by `POST /rest/admin/token`: the token plus its metadata. */
 export interface CmsTokenInfo {
@@ -59,13 +72,6 @@ export function getCmsToken(now: number = Date.now()): Promise<CmsToken> {
         useCmsTokenStore.getState().setCmsToken(cmsToken);
 
         return cmsToken;
-    }, (error: unknown) => {
-        // Shown once here for every caller. The error carries no response body.
-        useErrorNotificationStore.getState().addError({
-            messageKey: 'errorNotifications.cmsTokenFailed',
-            detail: error instanceof Error ? error.message : undefined,
-        });
-        throw error;
     }).finally(() => {
         pendingCmsToken = null;
     });

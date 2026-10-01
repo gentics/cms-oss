@@ -20,6 +20,7 @@ export class ApiTokensCreateModalComponent extends BaseModal<ApiTokenCreateRespo
     public control: FormControl<EditableApiToken> = new FormControl({
         name: '',
         expires: null,
+        pruneOnExpiry: false,
     });
 
     constructor(
@@ -35,10 +36,11 @@ export class ApiTokensCreateModalComponent extends BaseModal<ApiTokenCreateRespo
     }
 
     private addApiToken(): void {
-        const { name, expires } = this.control.value;
+        const { name, expires, pruneOnExpiry } = this.control.value;
 
         const submitData = {
             name,
+            pruneOnExpiry,
             ...(expires != null ? { expires: expires } : {}),
         };
 

@@ -37,6 +37,7 @@ public class AdminResourceListApiTokensTest extends AbstractListSortAndFilterTes
 				Pair.of("name", ApiTokenDataModel::getName),
 				Pair.of("cdate", item -> addLeadingZeros(item.getCdate())),
 				Pair.of("expires", item -> addLeadingZeros(item.getExpires())),
+				Pair.of("pruneOnExpiry", item -> Boolean.toString(item.isPruneOnExpiry())),
 				Pair.of("lastUsed", item -> addLeadingZeros(item.getLastUsed())),
 				Pair.of("valid", item -> Boolean.toString(item.isValid()))
 		);
@@ -53,11 +54,15 @@ public class AdminResourceListApiTokensTest extends AbstractListSortAndFilterTes
 			String token = ApiTokenFactory.createToken();
 			String name = randomStringGenerator.generate(10, 20);
 			int expires = 0;
+			boolean pruneOnExpiry = false;
 			if (random.nextBoolean()) {
 				long diff = random.nextLong(-3600, 3600);
 				expires = (int) Instant.now().plus(diff, ChronoUnit.SECONDS).getEpochSecond();
+				pruneOnExpiry = random.nextBoolean();
 			}
-			ResolvableApiTokenDataModel tokenDataModel = ApiTokenFactory.create(new ApiTokenCreationRequest().setName(name).setExpires(expires), 1, token);
+			ResolvableApiTokenDataModel tokenDataModel = ApiTokenFactory.create(
+					new ApiTokenCreationRequest().setName(name).setExpires(expires).setPruneOnExpiry(pruneOnExpiry), 1,
+					token);
 
 			// fake cdate and last_used
 			int cdate = (int) Instant.now().minus(random.nextLong(3600), ChronoUnit.SECONDS).getEpochSecond();

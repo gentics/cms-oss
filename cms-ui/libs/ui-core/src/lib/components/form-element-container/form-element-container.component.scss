@@ -1,7 +1,5 @@
-@import "../../../styles/variables";
-
 gtx-form-element-container {
-    border-color: $gtx-color-light-gray;
+    border-color: var(--gtx-light-gray);
     transition: 200ms;
     width: 100%;
     font-size: 1rem;
@@ -16,7 +14,7 @@ gtx-form-element-container {
         border-color: inherit;
 
         label {
-            color: $gtx-color-dark-gray;
+            color: var(--gtx-dark-gray);
             max-width: 100%;
             overflow: hidden;
             white-space: nowrap;
@@ -73,8 +71,8 @@ gtx-form-element-container {
                 align-self: flex-start;
                 height: 100%;
 
-                background: $gtx-color-very-light-gray;
-                color: $gtx-color-dark-gray;
+                background: var(--gtx-very-light-gray);
+                color: var(--gtx-dark-gray);
                 border: none;
                 border-left: 1px solid;
                 border-color: inherit;
@@ -95,19 +93,19 @@ gtx-form-element-container {
                 }
 
                 &.icon-alert {
-                    color: $gtx-color-alert;
+                    color: var(--gtx-alert);
                 }
 
                 &.icon-warning {
-                    color: $gtx-color-warning;
+                    color: var(--gtx-warning);
                 }
 
                 &.icon-success {
-                    color: $gtx-color-success;
+                    color: var(--gtx-success);
                 }
 
                 &.icon-primary {
-                    color: $gtx-color-primary;
+                    color: var(--gtx-primary);
                 }
 
                 &:disabled {
@@ -115,65 +113,65 @@ gtx-form-element-container {
                 }
 
                 &:not(:disabled):hover {
-                    color: $gtx-color-mid-gray;
+                    color: var(--gtx-mid-gray);
                     cursor: pointer;
 
                     &.icon-alert {
-                        color: lighten($gtx-color-alert, 15%);
+                        color: color-mix(in oklab, var(--gtx-alert), white 15%);
                     }
 
                     &.icon-warning {
-                        color: lighten($gtx-color-warning, 15%);
+                        color: color-mix(in oklab, var(--gtx-warning), white 15%);
                     }
 
                     &.icon-success {
-                        color: lighten($gtx-color-success, 15%);
+                        color: color-mix(in oklab, var(--gtx-success), white 15%);
                     }
 
                     &.icon-primary {
-                        color: lighten($gtx-color-primary, 15%);
+                        color: color-mix(in oklab, var(--gtx-primary), white 15%);
                     }
                 }
 
                 &:not(:disabled):focus {
-                    outline-color: $gtx-color-primary;
+                    outline-color: var(--gtx-primary);
                     z-index: 1;
                 }
             }
         }
 
         &.active {
-            border-color: $gtx-color-primary;
+            border-color: var(--gtx-primary);
         }
 
         &.readonly {
             .box-wrapper {
-                color: lighten($gtx-color-dark-gray, 10%);
+                color: color-mix(in oklab, var(--gtx-dark-gray), white 10%);
             }
         }
 
         &.disabled {
             label {
-                color: $gtx-color-dark-gray;
+                color: var(--gtx-dark-gray);
             }
 
             .box-wrapper {
-                background-color: $gtx-color-off-white;
-                color: $gtx-color-mid-gray;
+                background-color: var(--gtx-off-white);
+                color: var(--gtx-mid-gray);
             }
         }
 
         &:not(.disabled):not(.readonly) .box-wrapper:focus {
-            border-color: $gtx-color-primary;
+            border-color: var(--gtx-primary);
         }
     }
 
     &.invalid,
     &.ng-invalid.ng-touched {
-        border-color: $gtx-color-alert;
+        border-color: var(--gtx-alert);
 
         label {
-            color: $gtx-color-alert;
+            color: var(--gtx-alert);
         }
     }
 

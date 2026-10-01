@@ -85,10 +85,6 @@ export class AccordionComponent extends BaseComponent implements OnChanges {
     /* TEMPLATE INTERACTION FUNCTIONS
      * --------------------------------------------------------------------- */
 
-    slideAnimationDone(): void {
-        this.showContent = this.open;
-    }
-
     toggleOpen(event?: MouseEvent, fromTrigger: boolean = false): void {
         this.clickTrigger.emit();
 

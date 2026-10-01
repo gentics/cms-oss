@@ -56,6 +56,8 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.TemplateInNode;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -249,8 +251,12 @@ public class TemplateResourceImpl implements TemplateResource {
 
 	@Override
 	@GET
+	@McpTool(description = "Get the list of templates usable in the given node(s), optionally filtered, sorted, "
+			+ "paged and/or restricted to inherited/local templates.")
 	public TemplateInNodeResponse list(
-			@QueryParam("nodeId") List<String> nodeIds,
+			@QueryParam("nodeId")
+			@McpToolParam(name = "nodeIds", description = "IDs of the nodes to get templates for. If empty, all "
+					+ "nodes the current user may view are used.", required = false) List<String> nodeIds,
 			@BeanParam FilterParameterBean filterParams,
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,

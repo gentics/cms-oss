@@ -113,6 +113,8 @@ import com.gentics.contentnode.render.renderer.MetaEditableRenderer;
 import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -1893,16 +1895,27 @@ public class PageResourceImpl implements PageResource {
 	@Override
 	@GET
 	@Path("/render/{id}")
-	public PageRenderResponse render(@PathParam("id") String id,
-			@QueryParam("nodeId") Integer nodeId,
-			@QueryParam("template") String template,
-			@QueryParam("edit") @DefaultValue("false") boolean editMode,
-			@QueryParam("proxyprefix") String proxyprefix,
-			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
-			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
-			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
-			@QueryParam("publish") @DefaultValue("false") boolean publish,
-			@QueryParam("version") Integer versionTimestamp) throws NodeException {
+	@McpTool(description = "Render the page with the given ID.")
+	public PageRenderResponse render(
+			@PathParam("id") @McpToolParam(name = "id", description = "ID of the page to render.") String id,
+			@QueryParam("nodeId")
+			@McpToolParam(name = "nodeId", description = "ID of the node/channel to render the page in.", required = false) Integer nodeId,
+			@QueryParam("template")
+			@McpToolParam(name = "template", description = "Source code of a template to render the page with, instead of its own template.", required = false) String template,
+			@QueryParam("edit") @DefaultValue("false")
+			@McpToolParam(name = "editMode", description = "True to render the page in edit mode.", required = false) boolean editMode,
+			@QueryParam("proxyprefix")
+			@McpToolParam(name = "proxyprefix", description = "Proxy prefix to render links with.", required = false) String proxyprefix,
+			@QueryParam("links") @DefaultValue("backend")
+			@McpToolParam(name = "linksType", description = "How links in the rendered content shall be rendered.", required = false) LinksType linksType,
+			@QueryParam("tagmap") @DefaultValue("false")
+			@McpToolParam(name = "tagmap", description = "True to also generate tagmap output.", required = false) boolean tagmap,
+			@QueryParam("inherited") @DefaultValue("false")
+			@McpToolParam(name = "inherited", description = "True to render an inherited (multichannelling) page.", required = false) boolean inherited,
+			@QueryParam("publish") @DefaultValue("false")
+			@McpToolParam(name = "publish", description = "True to render the page as it would be published.", required = false) boolean publish,
+			@QueryParam("version")
+			@McpToolParam(name = "versionTimestamp", description = "Timestamp of the page version to render.", required = false) Integer versionTimestamp) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			PageRenderResponse response = internalRender(id, nodeId, template, editMode, proxyprefix, linksType, tagmap,
 					inherited, publish, versionTimestamp);

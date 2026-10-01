@@ -1,0 +1,3 @@
+OpenAPI: The security schemes of the OpenAPI specification have been updated to the
+authentication of the REST API (API Token as Bearer token or session secret cookie).
+The outdated scheme with the sid query parameter has been removed.

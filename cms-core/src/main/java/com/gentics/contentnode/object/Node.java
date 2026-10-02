@@ -38,7 +38,7 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 /**
  * The object for a Node or Domain in content.node.
  */
-@TType(Node.TYPE_NODE)
+@TType(value = Node.TYPE_NODE, name = "node")
 public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject, ResolvableMapWrappable, MetaDateNodeObject {
 
 	/**

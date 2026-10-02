@@ -9,10 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -27,10 +29,13 @@ import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.File;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CmsFormPartType;
@@ -56,11 +61,17 @@ import com.gentics.contentnode.resolving.ResolvableMapWrapper.RenderContext;
 import com.gentics.lib.render.Renderable;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.TagType;
+import com.github.jknack.handlebars.helper.HelperFunction;
 
 /**
  * Source for helpers used when rendering a {@link HandlebarsPartType}
  */
 public class HelperSource {
+	/**
+	 * Set of loadable classes
+	 */
+	private final static Set<Class<? extends NodeObject>> LOADABLE_CLASSES = Set.of(Node.class, Folder.class, Page.class, File.class, ImageFile.class);
+
 	/**
 	 * Render helper
 	 * @param value renderable to render
@@ -167,7 +178,7 @@ public class HelperSource {
 		}
 
 		int iSortOrder = Datasource.SORTORDER_ASC;
-		if (StringUtils.equalsIgnoreCase(sortOrder, "desc")) {
+		if (Strings.CI.equals(sortOrder, "desc")) {
 			iSortOrder = Datasource.SORTORDER_DESC;
 		}
 
@@ -268,6 +279,91 @@ public class HelperSource {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Load Helper
+	 * @param type type of the object to load
+	 * @param id id of the object to load
+	 * @param options options
+	 * @return loaded object as {@link Resolvable}
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load")
+	public static Resolvable gtxLoad(Object type, Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Class<? extends NodeObject> objClass = t.getClassForTypeOrName(type);
+
+		if (objClass == null || !LOADABLE_CLASSES.contains(objClass)) {
+			return null;
+		}
+
+		return wrap(t.getObject(objClass, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
+	 * Load Helper for nodes
+	 * @param id id of the node to load
+	 * @param options options
+	 * @return loaded node
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load_node")
+	public static Resolvable gtxLoadNode(Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(Node.class, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
+	 * Load Helper for folders
+	 * @param id id of the folder to load
+	 * @param options options
+	 * @return loaded folder
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load_folder")
+	public static Resolvable gtxLoadFolder(Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(Folder.class, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
+	 * Load Helper for pages
+	 * @param id id of the page to load
+	 * @param options options
+	 * @return loaded page
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load_page")
+	public static Resolvable gtxLoadPage(Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(Page.class, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
+	 * Load Helper for images
+	 * @param id id of the image to load
+	 * @param options options
+	 * @return loaded image
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load_image")
+	public static Resolvable gtxLoadImage(Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(ImageFile.class, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
+	 * Load Helper for files
+	 * @param id id of the file to load
+	 * @param options options
+	 * @return loaded file
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load_file")
+	public static Resolvable gtxLoadFile(Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		return wrap(t.getObject(File.class, ObjectTransformer.getString(id, null)));
 	}
 
 	/**
@@ -391,6 +487,20 @@ public class HelperSource {
 	}
 
 	/**
+	 * Wrap the given instance of {@link NodeObject} into an instance of {@link ResolvableMapWrapper} or return null, if the
+	 * object is no instance of {@link ResolvableMapWrappable}
+	 * @param object object to wrap (may be null)
+	 * @return wrapped object or null
+	 */
+	protected static ResolvableMapWrapper wrap(NodeObject object) {
+		if (object instanceof ResolvableMapWrappable wrappable) {
+			return new ResolvableMapWrapper(wrappable);
+		} else {
+			return null;
+		}
+	}
+
+	/**
 	 * Render the given tag in the current edit mode
 	 * @param tag tag to render
 	 * @param renderType rendertype
@@ -412,6 +522,6 @@ public class HelperSource {
 			return alohaRenderer.block(tag.render(result), tag, result);
 		} else {
 			return tag.render(result);
-}
+		}
 	}
 }

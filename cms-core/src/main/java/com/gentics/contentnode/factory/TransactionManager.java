@@ -1493,6 +1493,16 @@ public final class TransactionManager {
 			return factoryHandle.getClass(tableName);
 		}
 
+		@Override
+		public Class<? extends NodeObject> getClassForName(String objName) {
+			return factoryHandle.getClassForName(objName);
+		}
+
+		@Override
+		public Class<? extends NodeObject> getClassForTypeOrName(Object spec) {
+			return factoryHandle.getClassForTypeOrName(spec);
+		}
+
 		/* (non-Javadoc)
 		 * @see com.gentics.lib.base.factory.Transaction#getTable(java.lang.Class)
 		 */

@@ -42,7 +42,7 @@ import com.gentics.lib.etc.StringUtils;
 /**
  * This is a Folder of the object layer.
  */
-@TType(Folder.TYPE_FOLDER)
+@TType(value = Folder.TYPE_FOLDER, name = "folder")
 public interface Folder
 		extends ObjectTagContainer, StackResolvable, LocalizableNodeObject<Folder>, Disinheritable<Folder>, Resolvable,
 		StageableChanneledNodeObject, NamedNodeObject, StackResolvableNodeObject, MetaDateNodeObject {

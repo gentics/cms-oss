@@ -86,6 +86,12 @@ public class TableVersion {
 	private boolean autoIncrement = false;
 
 	/**
+	 * Flag to mark whether the data shall be read with locking reads (SELECT ... FOR UPDATE), which read the latest committed data
+	 * (and the data written by the current transaction) instead of the snapshot of the transaction
+	 */
+	private boolean lockingReads = false;
+
+	/**
 	 * Processor for handling "restore version" operations
 	 */
 	private TableVersionRestoreProcessor restoreProcessor;
@@ -276,6 +282,32 @@ public class TableVersion {
 		insertSQLStatementNoParams = "INSERT INTO `%s_nodeversion` (%s, nodeversiontimestamp, nodeversion_user, nodeversionlatest, nodeversionremoved) VALUES "
 				.formatted(table, columnsList);
 		insertSQLStatementParams = "(%s)".formatted(StringUtils.repeat("?", tableColumns.size() + 4, ","));
+	}
+
+	/**
+	 * Set whether the data shall be read with locking reads (SELECT ... FOR UPDATE)
+	 * @param lockingReads true for locking reads
+	 */
+	public void setLockingReads(boolean lockingReads) {
+		this.lockingReads = lockingReads;
+	}
+
+	/**
+	 * Get the SQL statement, which selects the maximum auto_id of the versioned records (in the _nodeversion table).
+	 * The statement contains the bind parameters of the where part (see {@link #setWherePart(String)}) and can be used as subquery.
+	 * @return SQL statement
+	 */
+	public String getMaxAutoIdSQL() {
+		return "SELECT MAX(gentics_main.auto_id) FROM " + getFromPart() + " WHERE " + getWherePart();
+	}
+
+	/**
+	 * Append FOR UPDATE to the given select statement, if {@link #lockingReads} is set
+	 * @param sql select statement
+	 * @return select statement
+	 */
+	private String lock(String sql) {
+		return lockingReads ? sql + " FOR UPDATE" : sql;
 	}
 
 	/**
@@ -716,7 +748,8 @@ public class TableVersion {
 			}
 
 			String versionTable = table + "_nodeversion";
-			if (autoIncrement) {
+			// with locking reads, we do not select the auto_ids first (which would read from the snapshot), but update directly
+			if (autoIncrement && !lockingReads) {
 
 				if (!modifiedIds.isEmpty()) {
 					DBUtils.updateWithPK(versionTable, "auto_id", "nodeversionlatest = ?", new Object[] { 0 },
@@ -902,8 +935,9 @@ public class TableVersion {
 	 * 		The SQL statement to the the versioned data.
 	 */
 	private String getVersionedDataSelect() {
+		// if there are multiple rows for the same version (which should not happen), the first written row is returned first
 		return " SELECT " + columnsList + " FROM `" + table + "_nodeversion` " + " WHERE " + table + "_nodeversion.id = ? AND " + table
-				+ "_nodeversion.nodeversiontimestamp = ?";
+				+ "_nodeversion.nodeversiontimestamp = ? ORDER BY " + table + "_nodeversion.auto_id";
 	}
 
 	/**
@@ -926,7 +960,7 @@ public class TableVersion {
 		Object[] params = new Object[] { new Integer(id), new Integer(nodeversionrtime) };
 		SimpleResultProcessor versionedData = new SimpleResultProcessor();
 
-		DB.query(getHandle(), getVersionedDataSelect(), params, versionedData);
+		DB.query(getHandle(), lock(getVersionedDataSelect()), params, versionedData);
 
 		Map<String, Object> data = new HashMap<String, Object>();
 
@@ -939,7 +973,7 @@ public class TableVersion {
 		if (!nonVersionedColumns.isEmpty()) {
 			SimpleResultProcessor currentData = new SimpleResultProcessor();
 
-			DB.query(getHandle(), getCurrentDataSelect(), new Object[] { id }, currentData);
+			DB.query(getHandle(), lock(getCurrentDataSelect()), new Object[] { id }, currentData);
 			if (currentData.size() > 0) {
 				SimpleResultRow currentRow = currentData.getRow(1);
 
@@ -1044,10 +1078,12 @@ public class TableVersion {
 			timestamps.add(versionTimestampMap.get(id));
 		}
 
+		// order by auto_id descending, so that if there are multiple rows for the same version (which should not happen),
+		// the first written row comes last and is used by fetchVersionedData
 		String sql = String.format(
-				"SELECT %s, nodeversiontimestamp FROM `%s_nodeversion` WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s)",
+				"SELECT %s, nodeversiontimestamp FROM `%s_nodeversion` WHERE %s_nodeversion.id IN (%s) AND %s_nodeversion.nodeversiontimestamp IN (%s) ORDER BY %s_nodeversion.auto_id DESC",
 				columnsList, table, table, StringUtils.repeat("?", ids.size(), ","), table,
-				StringUtils.repeat("?", timestamps.size(), ","));
+				StringUtils.repeat("?", timestamps.size(), ","), table);
 
 		Integer[] params = new Integer[ids.size() + timestamps.size()];
 		int index = 0;
@@ -1058,7 +1094,7 @@ public class TableVersion {
 			params[index++] = timestamp;
 		}
 		SimpleResultProcessor tmp = new SimpleResultProcessor();
-		DB.query(getHandle(), sql, params, tmp);
+		DB.query(getHandle(), lock(sql), params, tmp);
 		return tmp;
 	}
 
@@ -1073,7 +1109,7 @@ public class TableVersion {
 				StringUtils.repeat("?", ids.size(), ","));
 
 		SimpleResultProcessor tmp = new SimpleResultProcessor();
-		DB.query(getHandle(), sql, ids.toArray(), tmp);
+		DB.query(getHandle(), lock(sql), ids.toArray(), tmp);
 		return tmp;
 	}
 
@@ -1181,7 +1217,7 @@ public class TableVersion {
 				sql += " ORDER BY gentics_main.id";
 			}
 			try {
-				DB.query(getHandle(), sql, idData, retval);
+				DB.query(getHandle(), lock(sql), idData, retval);
 			} catch (SQLException e) {
 				throw new NodeException("Error while getting versioned data of table {" + table + "}", e);
 			}
@@ -1196,7 +1232,7 @@ public class TableVersion {
 
 			try {
 				SimpleResultProcessor rsVersions = new SimpleResultProcessor();
-				DB.query(getHandle(), sql, idData, rsVersions);
+				DB.query(getHandle(), lock(sql), idData, rsVersions);
 
 				Map<Integer, Integer> versionTimestampMap = new HashMap<Integer, Integer>(rsVersions.size());
 				List<Integer> ids = new ArrayList<Integer>(rsVersions.size());
@@ -1253,7 +1289,7 @@ public class TableVersion {
 		try {
 			SimpleResultProcessor resultProcessor = new SimpleResultProcessor();
 
-			DB.query(getHandle(), sql, idParams, resultProcessor);
+			DB.query(getHandle(), lock(sql), idParams, resultProcessor);
 
 			for (Iterator<SimpleResultRow> iter = resultProcessor.iterator(); iter.hasNext();) {
 				SimpleResultRow row = iter.next();
@@ -1699,7 +1735,8 @@ public class TableVersion {
 	 * @throws SQLException
 	 */
 	protected void update(String set, Object[] setParams, String where, Object[] whereParams) throws SQLException, NodeException {
-		if (autoIncrement) {
+		// with locking reads, we do not select the auto_ids first (which would read from the snapshot), but update directly
+		if (autoIncrement && !lockingReads) {
 			AutoIdCollector autoIds = new AutoIdCollector();
 
 			DB.query(getHandle(), "SELECT auto_id FROM `" + table + "_nodeversion` WHERE " + where, whereParams, autoIds);
@@ -1720,7 +1757,8 @@ public class TableVersion {
 	 * @throws SQLException
 	 */
 	protected void delete(String where, Object[] whereParams) throws SQLException, NodeException {
-		if (autoIncrement) {
+		// with locking reads, we do not select the auto_ids first (which would read from the snapshot), but delete directly
+		if (autoIncrement && !lockingReads) {
 			// when the _nodeversion table contains a auto_id column, we will use it to delete the entries
 			AutoIdCollector autoIds = new AutoIdCollector();
 

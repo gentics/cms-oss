@@ -14,5 +14,15 @@ import com.gentics.contentnode.object.NodeObject;
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface TType {
+	/**
+	 * Integer value of the ttype
+	 * @return int value
+	 */
 	int value();
+
+	/**
+	 * Optional name of the ttype
+	 * @return optional name (default to empty)
+	 */
+	String name() default "";
 }

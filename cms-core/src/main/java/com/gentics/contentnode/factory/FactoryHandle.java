@@ -123,6 +123,20 @@ public interface FactoryHandle {
 	Class<? extends NodeObject> getClass(String tableName);
 
 	/**
+	 * Get the class for objects of given "name" (like "page", "folder", ...)
+	 * @param objName object name
+	 * @return class or null if not found
+	 */
+	Class<? extends NodeObject> getClassForName(String objName);
+
+	/**
+	 * Get the class of objects for given type or name
+	 * @param spec either a type or a name
+	 * @return class or null if not found
+	 */
+	Class<? extends NodeObject> getClassForTypeOrName(Object spec);
+
+	/**
 	 * Try to get the TType of a given objectclass.
 	 * @param clazz class of the object.
 	 * @return the corresponding ttype, or 0 if no ttype is mapped to this class.

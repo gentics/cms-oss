@@ -8,6 +8,13 @@ import { useCmsTokenStore } from '@/store/useCmsTokenStore';
 
 import App from './App';
 
+// jsdom has no ResizeObserver; the AppShell's workspace layout measures its columns with one.
+class ResizeObserverStub {
+    observe() {}
+
+    disconnect() {}
+}
+
 const tokenCreated = { token: 'cmstok_app', id: 1, userId: 3, name: 'genaix-workspace-1', cdate: 1_790_752_317, expires: 0, lastUsed: 0, valid: true };
 
 function renderApp() {
@@ -26,16 +33,18 @@ describe('App', () => {
     beforeEach(() => {
         useCmsTokenStore.getState().clearCmsToken();
         vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(() => Promise.resolve(Response.json(tokenCreated))));
+        vi.stubGlobal('ResizeObserver', ResizeObserverStub);
     });
 
     afterEach(() => {
         vi.unstubAllGlobals();
     });
 
-    it('renders the main content', () => {
+    // The router resolves the route asynchronously, so the page is awaited with findByRole.
+    it('renders the main content', async () => {
         renderApp();
 
-        expect(screen.getByRole('heading', { name: 'Get started' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Get started' })).toBeInTheDocument();
     });
 
     it('increments the counter when clicked', async () => {
@@ -43,7 +52,7 @@ describe('App', () => {
 
         renderApp();
 
-        const counter = screen.getByRole('button', { name: 'Count is 0' });
+        const counter = await screen.findByRole('button', { name: 'Count is 0' });
 
         expect(counter).toBeInTheDocument();
 

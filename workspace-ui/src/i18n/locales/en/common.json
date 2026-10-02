@@ -1,5 +1,17 @@
 {
     "getStarted": "Get started",
+    "topbar": {
+        "brand": "Gentics Workspace",
+        "hideLeftColumn": "Hide the left column",
+        "showLeftColumn": "Show the left column",
+        "darkMode": "Dark mode",
+        "lightMode": "Light mode"
+    },
+    "workspace": {
+        "resizeLeft": "Width of the left column",
+        "resizeRight": "Width of the right column",
+        "resizeHint": "Drag · double-click resets"
+    },
     "errorNotifications": {
         "cmsTokenFailed": "Getting the CMS token failed"
     },

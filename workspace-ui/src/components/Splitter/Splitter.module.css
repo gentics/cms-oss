@@ -1,0 +1,60 @@
+/* Splitter (design.md §6.2): hit area 9 px, visible 1 px `--line`; on hover, focus or drag 2 px
+   `--azure` plus a taller grip. Its place in the grid comes from the parent through `className`. */
+.splitter {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    left: 4px;
+    width: 1px;
+    background: var(--line);
+    transition: background 120ms cubic-bezier(0.2, 0.8, 0.2, 1), width 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure);
+  }
+
+  &:hover::before,
+  &:focus-visible::before,
+  &.dragging::before {
+    width: 2px;
+    background: var(--azure);
+  }
+
+  &:hover .grip,
+  &:focus-visible .grip,
+  &.dragging .grip {
+    height: 46px;
+    background: var(--azure);
+  }
+}
+
+.grip {
+  width: 4px;
+  height: 30px;
+  border-radius: var(--r-xs);
+  background: rgba(var(--ink-rgb), 0.22);
+  pointer-events: none;
+  transition: background 120ms cubic-bezier(0.2, 0.8, 0.2, 1), height 120ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splitter::before,
+  .grip {
+    transition-duration: 0ms;
+  }
+}

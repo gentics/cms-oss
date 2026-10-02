@@ -1,0 +1,11 @@
+/* Topbar above the workspace; the shell fills the viewport and never scrolls as a whole (design.md §11). */
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  line-height: 1.45;
+}

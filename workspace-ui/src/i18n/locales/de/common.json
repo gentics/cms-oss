@@ -1,5 +1,17 @@
 {
     "getStarted": "Los geht's",
+    "topbar": {
+        "brand": "Gentics Workspace",
+        "hideLeftColumn": "Linke Spalte ausblenden",
+        "showLeftColumn": "Linke Spalte einblenden",
+        "darkMode": "Dunkler Modus",
+        "lightMode": "Heller Modus"
+    },
+    "workspace": {
+        "resizeLeft": "Breite der linken Spalte",
+        "resizeRight": "Breite der rechten Spalte",
+        "resizeHint": "Ziehen · Doppelklick setzt zurück"
+    },
     "errorNotifications": {
         "cmsTokenFailed": "Der CMS-Token konnte nicht abgerufen werden"
     },

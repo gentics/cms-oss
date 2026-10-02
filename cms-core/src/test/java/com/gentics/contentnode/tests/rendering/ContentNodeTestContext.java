@@ -335,6 +335,42 @@ public class ContentNodeTestContext {
 	}
 
 	/**
+	 * Dirt all pages, images, files and folders of all nodes, that have publishing not disabled.
+	 * This method must be called within a transaction
+	 * @throws NodeException
+	 */
+	public void dirtAll() throws NodeException {
+		// get ids of nodes, that have publish not disabled
+		final List<Integer> nodeIdsList = new ArrayList<Integer>();
+
+		DBUtils.executeStatement("SELECT id FROM node WHERE disable_publish = ?", new SQLExecutor() {
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				stmt.setInt(1, 0); // disable_publish = ?
+			}
+
+			@Override
+			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+				while (rs.next()) {
+					nodeIdsList.add(rs.getInt("id"));
+				}
+			}
+		});
+
+		int[] nodeIds = new int[nodeIdsList.size()];
+
+		for (int i = 0; i < nodeIdsList.size(); ++i) {
+			nodeIds[i] = nodeIdsList.get(i);
+		}
+		// dirt all pages
+		PublishQueue.dirtPublishedPages(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
+		// dirt images and files
+		PublishQueue.dirtImagesAndFiles(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
+		// dirt folders
+		PublishQueue.dirtFolders(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
+	}
+
+	/**
 	 * Run a publish process
 	 * @param dirtAll true when everything shall be dirted before, false if not
 	 * @param wait true when this thread shall wait for the publisher thread to die, false if not
@@ -344,34 +380,7 @@ public class ContentNodeTestContext {
 	 */
 	public PublishInfo publish(boolean dirtAll, boolean wait, long timestamp, boolean succeed) throws Exception {
 		if (dirtAll) {
-			// get ids of nodes, that have publish not disabled
-			final List<Integer> nodeIdsList = new ArrayList<Integer>();
-
-			DBUtils.executeStatement("SELECT id FROM node WHERE disable_publish = ?", new SQLExecutor() {
-				@Override
-				public void prepareStatement(PreparedStatement stmt) throws SQLException {
-					stmt.setInt(1, 0); // disable_publish = ?
-				}
-
-				@Override
-				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-					while (rs.next()) {
-						nodeIdsList.add(rs.getInt("id"));
-					}
-				}
-			});
-
-			int[] nodeIds = new int[nodeIdsList.size()];
-
-			for (int i = 0; i < nodeIdsList.size(); ++i) {
-				nodeIds[i] = nodeIdsList.get(i);
-			}
-			// dirt all pages
-			PublishQueue.dirtPublishedPages(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
-			// dirt images and files
-			PublishQueue.dirtImagesAndFiles(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
-			// dirt folders
-			PublishQueue.dirtFolders(nodeIds, null, 0, 0, PublishQueue.Action.DEPENDENCY);
+			dirtAll();
 			if (transaction.isOpen()) {
 				transaction.commit(false);
 			}

@@ -5,11 +5,13 @@ import static org.junit.Assert.assertEquals;
 import java.sql.ResultSet;
 import java.util.Collection;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -23,8 +25,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class FolderTemplateEditSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * This test will check if unlinking works for a template that is linked to
@@ -44,21 +51,23 @@ public class FolderTemplateEditSandboxTest {
 		final int DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID = 79;
 
 		// Create a new transaction
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_LINKED_TEMPLATES_ID);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			Transaction t = trx.getTransaction();
+			Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_LINKED_TEMPLATES_ID);
 
-		folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID);
-		t.commit(false);
+			folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID);
+			t.commit(false);
 
-		ResultSet newTemplateFolderLinks = testContext.getDBSQLUtils().executeQuery(
-				"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID + " and folder_id =" + FOLDER_WITH_LINKED_TEMPLATES_ID);
+			ResultSet newTemplateFolderLinks = testContext.getDBSQLUtils().executeQuery(
+					"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID + " and folder_id =" + FOLDER_WITH_LINKED_TEMPLATES_ID);
 
-		assertEquals(
-				"There should be only no template_folder link left for the template_id " + DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID + " and folder_id "
-				+ FOLDER_WITH_LINKED_TEMPLATES_ID,
-				0,
-				testContext.getDBSQLUtils().getSize(newTemplateFolderLinks));
-
+			assertEquals(
+					"There should be only no template_folder link left for the template_id " + DUMMY_TEMPLATE_WITH_LINKED_FOLDERS_ID + " and folder_id "
+					+ FOLDER_WITH_LINKED_TEMPLATES_ID,
+					0,
+					testContext.getDBSQLUtils().getSize(newTemplateFolderLinks));
+			trx.success();
+		}
 	}
 
 	/**
@@ -80,29 +89,32 @@ public class FolderTemplateEditSandboxTest {
 		final int DUMMY_TEMPLATE_WITH_ONE_PAGE_ID = 78;
 
 		// Create a new transaction
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			Transaction t = trx.getTransaction();
+			Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID);
 
-		folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_ONE_PAGE_ID);
-		Collection<NodeMessage> messages = t.getRenderResult().getMessages();
+			folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_ONE_PAGE_ID);
+			Collection<NodeMessage> messages = t.getRenderResult().getMessages();
 
-		t.commit(false);
+			t.commit(false);
 
-		// Check if the template folder link still exists
-		ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
-				"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_ONE_PAGE_ID + " and folder_id ="
-				+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID);
+			// Check if the template folder link still exists
+			ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
+					"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_ONE_PAGE_ID + " and folder_id ="
+					+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID);
 
-		assertEquals(
-				"There should be only one template_folder link for the template_id " + DUMMY_TEMPLATE_WITH_ONE_PAGE_ID + " and folder_id "
-				+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID,
-				1,
-				testContext.getDBSQLUtils().getSize(templateFolderLinks));
+			assertEquals(
+					"There should be only one template_folder link for the template_id " + DUMMY_TEMPLATE_WITH_ONE_PAGE_ID + " and folder_id "
+					+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_ONE_PAGE_ID,
+					1,
+					testContext.getDBSQLUtils().getSize(templateFolderLinks));
 
-		// Check for new messages
-		int nNewMessages = messages.size();
+			// Check for new messages
+			int nNewMessages = messages.size();
 
-		assertEquals("There should be exaclty one new message that indicates that the unlinking did not work.", 1, nNewMessages);
+			assertEquals("There should be exaclty one new message that indicates that the unlinking did not work.", 1, nNewMessages);
+			trx.success();
+		}
 	}
 
 	/**
@@ -123,29 +135,32 @@ public class FolderTemplateEditSandboxTest {
 		final int DUMMY_TEMPLATE_WITH_PAGES_ID = 76;
 
 		// Create a new transaction
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			Transaction t = trx.getTransaction();
+			Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID);
 
-		folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_PAGES_ID);
-		Collection<NodeMessage> messages = t.getRenderResult().getMessages();
+			folder.unlinkTemplate(DUMMY_TEMPLATE_WITH_PAGES_ID);
+			Collection<NodeMessage> messages = t.getRenderResult().getMessages();
 
-		t.commit(false);
+			t.commit(false);
 
-		// Check if the template folder link still exists
-		ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
-				"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_PAGES_ID + " and folder_id ="
-				+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID);
+			// Check if the template folder link still exists
+			ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
+					"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITH_PAGES_ID + " and folder_id ="
+					+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID);
 
-		assertEquals(
-				"There should be only one template_folder link for the template_id " + DUMMY_TEMPLATE_WITH_PAGES_ID + " and folder_id "
-				+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID,
-				1,
-				testContext.getDBSQLUtils().getSize(templateFolderLinks));
+			assertEquals(
+					"There should be only one template_folder link for the template_id " + DUMMY_TEMPLATE_WITH_PAGES_ID + " and folder_id "
+					+ FOLDER_WITH_ONLY_ONE_LINKED_TEMPLATE_AND_PAGES_ID,
+					1,
+					testContext.getDBSQLUtils().getSize(templateFolderLinks));
 
-		// Check for new messages
-		int nNewMessages = messages.size();
+			// Check for new messages
+			int nNewMessages = messages.size();
 
-		assertEquals("There should be exaclty one new message that indicates that the unlinking did not work.", 1, nNewMessages);
+			assertEquals("There should be exaclty one new message that indicates that the unlinking did not work.", 1, nNewMessages);
+			trx.success();
+		}
 	}
 
 	/**
@@ -163,20 +178,22 @@ public class FolderTemplateEditSandboxTest {
 		final int FOLDER_WITH_ONE_LINKED_TEMPLATE_ID = 35;
 		final int DUMMY_TEMPLATE_WITHOUT_PAGES_ID = 77;
 		// Create a new transaction
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONE_LINKED_TEMPLATE_ID);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			Transaction t = trx.getTransaction();
+			Folder folder = (Folder) t.getObject(Folder.class, FOLDER_WITH_ONE_LINKED_TEMPLATE_ID);
 
-		folder.unlinkTemplate(DUMMY_TEMPLATE_WITHOUT_PAGES_ID);
-		t.commit(false);
+			folder.unlinkTemplate(DUMMY_TEMPLATE_WITHOUT_PAGES_ID);
+			t.commit(false);
 
-		ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
-				"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITHOUT_PAGES_ID + " and folder_id =" + FOLDER_WITH_ONE_LINKED_TEMPLATE_ID);
+			ResultSet templateFolderLinks = testContext.getDBSQLUtils().executeQuery(
+					"SELECT * FROM template_folder WHERE template_id = " + DUMMY_TEMPLATE_WITHOUT_PAGES_ID + " and folder_id =" + FOLDER_WITH_ONE_LINKED_TEMPLATE_ID);
 
-		assertEquals(
-				"There should be no more template_folder link for the template_id " + DUMMY_TEMPLATE_WITHOUT_PAGES_ID + " and folder_id "
-				+ FOLDER_WITH_ONE_LINKED_TEMPLATE_ID,
-				0,
-				testContext.getDBSQLUtils().getSize(templateFolderLinks));
-
+			assertEquals(
+					"There should be no more template_folder link for the template_id " + DUMMY_TEMPLATE_WITHOUT_PAGES_ID + " and folder_id "
+					+ FOLDER_WITH_ONE_LINKED_TEMPLATE_ID,
+					0,
+					testContext.getDBSQLUtils().getSize(templateFolderLinks));
+			trx.success();
+		}
 	}
 }

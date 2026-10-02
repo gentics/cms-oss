@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.Builder.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.setRenderType;
 import static org.junit.Assert.assertEquals;
@@ -17,15 +18,18 @@ import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.cache.PortalCache;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.NodeFactory;
+import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.DefaultPageVersionNumberGenerator;
 import com.gentics.contentnode.factory.object.PageVersionNumberGenerator;
 import com.gentics.contentnode.log.ActionLogger;
@@ -34,6 +38,8 @@ import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.page.PageCopyOpResult;
+import com.gentics.contentnode.object.page.PageCopyOpResultInfo;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
@@ -57,10 +63,25 @@ import com.gentics.lib.etc.StringUtils;
 
 public class VersioningRestSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
-	private final int changedPageId = 60; // PageWithChangesAndDifferentFolderAfterPublishedVersion
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
+
+	private final int originalChangedPageId = 60; // PageWithChangesAndDifferentFolderAfterPublishedVersion
+
+	/**
+	 * ID of the copy of the page {@link #originalChangedPageId}, which is modified by the test
+	 */
+	private int changedPageId;
+
+	/**
+	 * IDs of the pages copied for the test
+	 */
+	private List<Integer> copiedPageIds = new ArrayList<>();
 	private final int includingPageId = 61; // PageThatIncludesPageThatHasChangesAfterBeingPublished
 	private final int nodeId = 11;
 	private final String publishedVersion = "2.0";
@@ -80,9 +101,30 @@ public class VersioningRestSandboxTest {
 	@Before
 	public void setUp() throws Exception {
 		// clean invalid versioning data for values
-		DBUtils.executeUpdate(
-				"delete value_nodeversion from value_nodeversion left join contenttag on value_nodeversion.contenttag_id = contenttag.id left join page on contenttag.content_id = page.content_id where page.cdate > value_nodeversion.nodeversiontimestamp",
-				null);
+		try (Trx trx = new Trx()) {
+			DBUtils.executeUpdate(
+					"delete value_nodeversion from value_nodeversion left join contenttag on value_nodeversion.contenttag_id = contenttag.id left join page on contenttag.content_id = page.content_id where page.cdate > value_nodeversion.nodeversiontimestamp",
+					null);
+			trx.success();
+		}
+
+		// the tests modify a copy of the page (in the same folder). The copy is created with a timestamp in the past, because saving a page
+		// in the same second as the last version was created does not create a new version
+		int copyTimestamp = (int) (System.currentTimeMillis() / 1000) - 60;
+		try (Trx trx = new Trx().at(copyTimestamp)) {
+			com.gentics.contentnode.object.Page original = trx.getTransaction().getObject(com.gentics.contentnode.object.Page.class, originalChangedPageId);
+			PageCopyOpResult result = original.copyTo(null, original.getFolder(), true, null, null);
+			for (PageCopyOpResultInfo info : result.getCopyInfos()) {
+				copiedPageIds.add(info.getCreatedPageCopy().getId());
+				if (info.getSourcePage().getId() == originalChangedPageId) {
+					changedPageId = info.getCreatedPageCopy().getId();
+				}
+			}
+			trx.success();
+		}
+
+		// publish the copy (like the original page)
+		update(Trx.supply(t -> t.getObject(com.gentics.contentnode.object.Page.class, changedPageId)), p -> {}).at(copyTimestamp).publish().unlock().build();
 	}
 
 	@After
@@ -92,67 +134,76 @@ public class VersioningRestSandboxTest {
 			testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("lock_time", (String)null);
 		}
 
+		// delete the copied pages
+		try (Trx trx = new Trx()) {
+			for (com.gentics.contentnode.object.Page copy : trx.getTransaction().getObjects(com.gentics.contentnode.object.Page.class, copiedPageIds)) {
+				copy.delete(true);
+			}
+			trx.success();
+		}
 	}
 
 	@Test
 	public void testVersionedPublishingAlwaysRendersCurrentFolderButVersionedContent() throws Exception {
-		// regenerate the logcmd entries, necessary to correctly fix the page version numbers
-		int[] publishTimes = new int[] {1322470882, 1330958743, 1331042924};
-		for (int publishTime : publishTimes) {
-			DBUtils.executeInsert("INSERT INTO logcmd (user_id, cmd_desc_id, o_type, o_id, timestamp) VALUES (?, ?, ?, ?, ?)", new Object[] {1, ActionLogger.PAGEPUB, com.gentics.contentnode.object.Page.TYPE_PAGE, changedPageId, publishTime});
-		}
-		Transaction t = TransactionManager.getCurrentTransaction();
-		// get the page versions, which will fix the page version numbers
-		t.getObject(com.gentics.contentnode.object.Page.class, changedPageId).getVersions();
-		t.commit(false);
+		try (Trx trx = new Trx()) {			// regenerate the logcmd entries, necessary to correctly fix the page version numbers
+			int[] publishTimes = new int[] {1322470882, 1330958743, 1331042924};
+			for (int publishTime : publishTimes) {
+				DBUtils.executeInsert("INSERT INTO logcmd (user_id, cmd_desc_id, o_type, o_id, timestamp) VALUES (?, ?, ?, ?, ?)", new Object[] {1, ActionLogger.PAGEPUB, com.gentics.contentnode.object.Page.TYPE_PAGE, originalChangedPageId, publishTime});
+			}
+			Transaction t = trx.getTransaction();
+			// get the page versions, which will fix the page version numbers
+			t.getObject(com.gentics.contentnode.object.Page.class, originalChangedPageId).getVersions();
+			t.commit(false);
 
-		// We set a specific version to the published version because at the time
-		// of this writing the db dump is loaded from an older GCN version that doesn't
-		// have the published column in the nodeversion table and is brought up-to-date
-		// via the executable changelog which inserts 0 as the default.
-		DBUtils.executeUpdate("UPDATE nodeversion SET published = ? WHERE o_type = ? AND o_id = ?", new Object[] {
-			0, 10007, changedPageId
-		});
-		DBUtils.executeUpdate("UPDATE nodeversion SET published = ? WHERE o_type = ? AND o_id = ? AND nodeversion = ?", new Object[] {
-			1, 10007, changedPageId, publishedVersion
-		});
+			// We set a specific version to the published version because at the time
+			// of this writing the db dump is loaded from an older GCN version that doesn't
+			// have the published column in the nodeversion table and is brought up-to-date
+			// via the executable changelog which inserts 0 as the default.
+			DBUtils.executeUpdate("UPDATE nodeversion SET published = ? WHERE o_type = ? AND o_id = ?", new Object[] {
+				0, 10007, originalChangedPageId
+			});
+			DBUtils.executeUpdate("UPDATE nodeversion SET published = ? WHERE o_type = ? AND o_id = ? AND nodeversion = ?", new Object[] {
+				1, 10007, originalChangedPageId, publishedVersion
+			});
 
-		PortalCache.getCache(NodeFactory.CACHEREGION).clear();
+			PortalCache.getCache(NodeFactory.CACHEREGION).clear();
 
-		/*
-		 TODO: The above DB acces is a hack since moving pages between folders isn't yet supported
-		 by the REST API. When the REST API supports moving pages between folders, the
-		 above should be replaced with the following code.
+			/*
+			 TODO: The above DB acces is a hack since moving pages between folders isn't yet supported
+			 by the REST API. When the REST API supports moving pages between folders, the
+			 above should be replaced with the following code.
 
-		 String publishedContent = "<node folder.name>Madagascar";
-		 String newestUnpublishedContent = "<node folder.name>Himalayas";
-		 int fromFolderId = 51; // FolderWherePageIsPublished
-		 int toFolderId = 52; // FolderWherePageIsMovedAfterPublish
+			 String publishedContent = "<node folder.name>Madagascar";
+			 String newestUnpublishedContent = "<node folder.name>Himalayas";
+			 int fromFolderId = 51; // FolderWherePageIsPublished
+			 int toFolderId = 52; // FolderWherePageIsMovedAfterPublish
 		 
-		 savePageWithNewContent(changedPageId, tag, part, publishedContent);
-		 movePage(changedPageId, fromFolderId);
-		 publishPage(changedPageId);
-		 savePageWithNewContent(changedPageId, tag, part, newestUnpublishedContent);
-		 movePage(changedPageId, toFolderId)
-		 */
+			 savePageWithNewContent(originalChangedPageId, tag, part, publishedContent);
+			 movePage(originalChangedPageId, fromFolderId);
+			 publishPage(originalChangedPageId);
+			 savePageWithNewContent(originalChangedPageId, tag, part, newestUnpublishedContent);
+			 movePage(originalChangedPageId, toFolderId)
+			 */
 
-		// Rendering the page in publish mode isn't yet supported via the REST API, so render directly
-		setRenderType(RenderType.EM_PUBLISH);
-		t.getRenderType().setHandleDependencies(false);
+			// Rendering the page in publish mode isn't yet supported via the REST API, so render directly
+			setRenderType(RenderType.EM_PUBLISH);
+			t.getRenderType().setHandleDependencies(false);
 
-		List<com.gentics.contentnode.object.Page> pages = t.getObjects(com.gentics.contentnode.object.Page.class, Collections.singleton(includingPageId));
+			List<com.gentics.contentnode.object.Page> pages = t.getObjects(com.gentics.contentnode.object.Page.class, Collections.singleton(includingPageId));
 
-		assertEquals("Check number of pages", 1, pages.size());
-		RenderResult renderResult = new RenderResult();
-		String pageContent = pages.get(0).render(renderResult);
+			assertEquals("Check number of pages", 1, pages.size());
+			RenderResult renderResult = new RenderResult();
+			String pageContent = pages.get(0).render(renderResult);
 
-		// The content of the page is now "<node folder.name>Himalayas".
-		// We expect the folder always to reflect the current folder where the page is located.
-		// The content on the other hand must come from the page version that was published, and not
-		// from the current page version.
-		// In this case the current folder is "FolderWherePageIsMovedAfterPublished" and the
-		// published content is "Madagascar".
-		assertEquals("FolderWherePageIsMovedAfterPublishMadagascar", pageContent);
+			// The content of the page is now "<node folder.name>Himalayas".
+			// We expect the folder always to reflect the current folder where the page is located.
+			// The content on the other hand must come from the page version that was published, and not
+			// from the current page version.
+			// In this case the current folder is "FolderWherePageIsMovedAfterPublished" and the
+			// published content is "Madagascar".
+			assertEquals("FolderWherePageIsMovedAfterPublishMadagascar", pageContent);
+			trx.success();
+		}
 	}
 
 	/**
@@ -248,7 +299,7 @@ public class VersioningRestSandboxTest {
 		PageVersionNumberGenerator gen = new DefaultPageVersionNumberGenerator();
 
 		// set the lock timeout to 1s
-		TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences().setProperty("lock_time", "1");
+		testContext.getContext().getNodeConfig().getDefaultPreferences().setProperty("lock_time", "1");
 
 		// get the initial page version of the page
 		Page page = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -428,10 +479,11 @@ public class VersioningRestSandboxTest {
 		// in the same second only generates a single version.
 		Thread.sleep(1000);
 
-		testContext.getContext().startTransaction();
-
-		@SuppressWarnings("unused")
-		PageLoadResponse restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+		try (Trx trx = new Trx()) {
+			@SuppressWarnings("unused")
+			PageLoadResponse restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+			trx.success();
+		}
 
 		// Verify it was correctly restored
 		Page page3 = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -456,19 +508,16 @@ public class VersioningRestSandboxTest {
 	 */
 	@Test
 	public void testRestoreVersionWithDeletedTagConstruct() throws Exception {
-		testContext.getContext().startTransaction(USER_SYSTEM_ID);
-
-		Node node = TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId);
-		int constructId = ContentNodeTestDataUtils.createConstruct(node, HTMLPartType.class, "dummyconstruct", "textpart");
+		int constructId = 0;
+		try (Trx trx = new Trx(null, USER_SYSTEM_ID)) {
+			Node node = trx.getTransaction().getObject(Node.class, nodeId);
+			constructId = ContentNodeTestDataUtils.createConstruct(node, HTMLPartType.class, "dummyconstruct", "textpart");
+			trx.success();
+		}
 		Tag dummyTag = createTag(changedPageId, USER_SYSTEM_ID, null, constructId);
 
 		// Save version 1
 		savePageWithNewContent(changedPageId, USER_SYSTEM_ID, tag, part, "Kathmandu", true, true);
-
-		// Commit transaction to make sure no tags exists with the dummy construct.
-		// Otherwise deleting the construct would throw an error.
-		Transaction transaction = TransactionManager.getCurrentTransaction();
-		transaction.commit(false);
 
 		// Determine timestamp to restore later
 		Page currentPage = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -481,14 +530,11 @@ public class VersioningRestSandboxTest {
 		// Remove the tag out of the page so we can safely delete its construct
 		deleteTag(changedPageId, USER_SYSTEM_ID, dummyTag.getName());
 
-		testContext.getContext().startTransaction(USER_SYSTEM_ID);
-		transaction = TransactionManager.getCurrentTransaction();
-
 		// Delete the construct again
-		transaction.getObject(Construct.class, constructId).delete();
-
-		// Commit transaction
-		transaction.commit(false);
+		try (Trx trx = new Trx(null, USER_SYSTEM_ID)) {
+			trx.getTransaction().getObject(Construct.class, constructId).delete();
+			trx.success();
+		}
 
 		// Save version 2
 		savePageWithNewContent(changedPageId, USER_SYSTEM_ID, tag, part, "Moscau", true, true);
@@ -498,9 +544,11 @@ public class VersioningRestSandboxTest {
 		Thread.sleep(1000);
 
 		// Restore version 1 with saved timestamp
-		testContext.getContext().startTransaction();
-
-		PageLoadResponse restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+		PageLoadResponse restoreResponse = null;
+		try (Trx trx = new Trx()) {
+			restoreResponse = getPageResource().restoreVersion(String.valueOf(changedPageId), v1Timestamp);
+			trx.success();
+		}
 		assertEquals("Restore has to be successful", ResponseCode.OK, restoreResponse.getResponseInfo().getResponseCode());
 
 		// Verify it was correctly restored
@@ -510,19 +558,21 @@ public class VersioningRestSandboxTest {
 
 		final int dummyTagId = dummyTag.getId();
 		// Get all values from the deleted tag
-		DBUtils.executeStatement("SELECT id FROM value WHERE contenttag_id = ?",
-				new SQLExecutor() {
-					@Override
-					public void prepareStatement(PreparedStatement preparedStatement) throws SQLException {
-						preparedStatement.setInt(1, dummyTagId);
-					}
+		try (Trx trx = new Trx()) {
+			DBUtils.executeStatement("SELECT id FROM value WHERE contenttag_id = ?",
+					new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement preparedStatement) throws SQLException {
+							preparedStatement.setInt(1, dummyTagId);
+						}
 
-					@Override
-					public void handleResultSet(ResultSet resultSet) throws SQLException, NodeException {
-						assertEquals("No values should have been restored for the deleted tag", 0,
-								resultSet.getFetchSize());
-					}
-		});
+						@Override
+						public void handleResultSet(ResultSet resultSet) throws SQLException, NodeException {
+							assertEquals("No values should have been restored for the deleted tag", 0,
+									resultSet.getFetchSize());
+						}
+			});
+		}
 	}
 
 	/**
@@ -570,10 +620,11 @@ public class VersioningRestSandboxTest {
 		Thread.sleep(1000);
 
 		// Restore version 1 with saved timestamp
-		testContext.getContext().startTransaction();
-
-		@SuppressWarnings("unused")
-		TagListResponse restoreResponse = getPageResource().restoreTag(String.valueOf(changedPageId), tag, v1Timestamp);
+		try (Trx trx = new Trx()) {
+			@SuppressWarnings("unused")
+			TagListResponse restoreResponse = getPageResource().restoreTag(String.valueOf(changedPageId), tag, v1Timestamp);
+			trx.success();
+		}
 
 		// Verify it was correctly restored
 		Page page3 = loadPage(changedPageId, USER_SYSTEM_ID, false, true);
@@ -596,13 +647,13 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private Page loadPage(int pageId, int userId, boolean forUpdate, boolean versionInfo) throws NodeException {
-		testContext.getContext().startTransaction(userId);
-		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
+		try (Trx trx = new Trx(null, userId); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			PageLoadResponse response = getPageResource().load(String.valueOf(pageId), forUpdate, false, false, false, false, false, false, versionInfo, false, false, 0, null);
 
-		PageLoadResponse response = getPageResource().load(String.valueOf(pageId), forUpdate, false, false, false, false, false, false, versionInfo, false, false, 0, null);
-
-		assertEquals("Check page load response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
-		return response.getPage();
+			assertEquals("Check page load response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			trx.success();
+			return response.getPage();
+		}
 	}
 
 	/**
@@ -625,14 +676,16 @@ public class VersioningRestSandboxTest {
 		html.setStringValue(newContent);
 
 		// save the page
-		testContext.getContext().startTransaction(userId);
-		PageSaveRequest saveRequest = new PageSaveRequest(page);
+		try (Trx trx = new Trx(null, userId)) {
+			PageSaveRequest saveRequest = new PageSaveRequest(page);
 
-		saveRequest.setUnlock(unlock);
-		saveRequest.setCreateVersion(createVersion);
-		GenericResponse saveResponse = getPageResource().save(String.valueOf(pageId), saveRequest);
+			saveRequest.setUnlock(unlock);
+			saveRequest.setCreateVersion(createVersion);
+			GenericResponse saveResponse = getPageResource().save(String.valueOf(pageId), saveRequest);
 
-		assertEquals(ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
+			assertEquals(ResponseCode.OK, saveResponse.getResponseInfo().getResponseCode());
+			trx.success();
+		}
 	}
 
 	/**
@@ -646,22 +699,23 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private Tag createTag(int pageId, int userId, String keyword, int constructId) throws NodeException {
-		testContext.getContext().startTransaction(userId);
+		try (Trx trx = new Trx(null, userId)) {
+			ContentTagCreateRequest request = new ContentTagCreateRequest();
 
-		ContentTagCreateRequest request = new ContentTagCreateRequest();
+			if (keyword != null && !keyword.isEmpty()) {
+				request.setKeyword(keyword);
+			}
 
-		if (keyword != null && !keyword.isEmpty()) {
-			request.setKeyword(keyword);
+			if (constructId > 0) {
+				request.setConstructId(constructId);
+			}
+
+			TagCreateResponse response = getPageResource().createTag(Integer.toString(pageId), null, null, request);
+
+			assertEquals(ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			trx.success();
+			return response.getTag();
 		}
-
-		if (constructId > 0) {
-			request.setConstructId(constructId);
-		}
-
-		TagCreateResponse response = getPageResource().createTag(Integer.toString(pageId), null, null, request);
-
-		assertEquals(ResponseCode.OK, response.getResponseInfo().getResponseCode());
-		return response.getTag();
 	}
 
 	/**
@@ -674,16 +728,17 @@ public class VersioningRestSandboxTest {
 	private void deleteTag(int pageId, int userId, String keyword) throws NodeException {
 		Page page = loadPage(pageId, userId, true, false);
 
-		testContext.getContext().startTransaction(userId);
+		try (Trx trx = new Trx(null, userId)) {
+			PageSaveRequest pageSaveRequest = new PageSaveRequest();
 
-		PageSaveRequest pageSaveRequest = new PageSaveRequest();
+			List<String> tagsToDelete = new ArrayList<String>();
+			tagsToDelete.add(keyword);
 
-		List<String> tagsToDelete = new ArrayList<String>();
-		tagsToDelete.add(keyword);
-
-		pageSaveRequest.setPage(page);
-		pageSaveRequest.setDelete(tagsToDelete);
-		getPageResource().save(Integer.toString(pageId), pageSaveRequest);
+			pageSaveRequest.setPage(page);
+			pageSaveRequest.setDelete(tagsToDelete);
+			getPageResource().save(Integer.toString(pageId), pageSaveRequest);
+			trx.success();
+		}
 	}
 
 	/**
@@ -693,12 +748,12 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private void cancelPageEdit(int pageId, int userId) throws NodeException {
-		testContext.getContext().startTransaction(userId);
-		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
+		try (Trx trx = new Trx(null, userId); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			GenericResponse response = getPageResource().cancel(pageId, null);
 
-		GenericResponse response = getPageResource().cancel(pageId, null);
-
-		assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			trx.success();
+		}
 	}
 
 	/**
@@ -708,12 +763,12 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private void publishPage(int pageId, int userId) throws NodeException {
-		testContext.getContext().startTransaction(userId);
-		TransactionManager.getCurrentTransaction().getRenderType().setEditMode(RenderType.EM_PREVIEW);
+		try (Trx trx = new Trx(null, userId); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			GenericResponse response = getPageResource().publish(Integer.toString(pageId), null, new PagePublishRequest());
 
-		GenericResponse response = getPageResource().publish(Integer.toString(pageId), null, new PagePublishRequest());
-
-		assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			assertEquals("Check page cancel response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
+			trx.success();
+		}
 	}
 
 	/**
@@ -723,9 +778,11 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private GlobalId getPageGlobalId(int pageId) throws NodeException {
-		GlobalId globalId = GlobalId.getGlobalId("page", pageId);
-		assertNotNull("Page must have a globalId", globalId);
-		return globalId;
+		try (Trx trx = new Trx()) {
+			GlobalId globalId = GlobalId.getGlobalId("page", pageId);
+			assertNotNull("Page must have a globalId", globalId);
+			return globalId;
+		}
 	}
 
 	/**
@@ -736,14 +793,16 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private GlobalId getTagGlobalId(int pageId, String tagName) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
-		assertNotNull("Could not get page " + pageId, page);
-		ContentTag contentTag = page.getContentTag(tagName);
-		assertNotNull("Could not get tag " + tagName + " for " + page, contentTag);
-		GlobalId globalId = contentTag.getGlobalId();
-		assertNotNull("Tag must have a globalId", globalId);
-		return globalId;
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
+			assertNotNull("Could not get page " + pageId, page);
+			ContentTag contentTag = page.getContentTag(tagName);
+			assertNotNull("Could not get tag " + tagName + " for " + page, contentTag);
+			GlobalId globalId = contentTag.getGlobalId();
+			assertNotNull("Tag must have a globalId", globalId);
+			return globalId;
+		}
 	}
 
 	/**
@@ -755,15 +814,17 @@ public class VersioningRestSandboxTest {
 	 * @throws NodeException
 	 */
 	private GlobalId getValueGlobalId(int pageId, String tagName, String partName) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
-		assertNotNull("Could not get page " + pageId, page);
-		ContentTag contentTag = page.getContentTag(tagName);
-		assertNotNull("Could not get tag " + tagName + " for " + page, contentTag);
-		Value value = contentTag.getValues().getByKeyname(partName);
-		assertNotNull("Could not get value " + partName + " for " + contentTag, value);
-		GlobalId globalId = value.getGlobalId();
-		assertNotNull("Value must have a globalId", globalId);
-		return globalId;
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page page = t.getObject(com.gentics.contentnode.object.Page.class, pageId);
+			assertNotNull("Could not get page " + pageId, page);
+			ContentTag contentTag = page.getContentTag(tagName);
+			assertNotNull("Could not get tag " + tagName + " for " + page, contentTag);
+			Value value = contentTag.getValues().getByKeyname(partName);
+			assertNotNull("Could not get value " + partName + " for " + contentTag, value);
+			GlobalId globalId = value.getGlobalId();
+			assertNotNull("Value must have a globalId", globalId);
+			return globalId;
+		}
 	}
 }

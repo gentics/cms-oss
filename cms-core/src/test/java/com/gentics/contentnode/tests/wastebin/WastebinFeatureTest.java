@@ -17,7 +17,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -28,8 +29,10 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.log.ActionLogger;
@@ -52,8 +55,13 @@ import com.gentics.lib.db.SQLExecutor;
  */
 @RunWith(value = Parameterized.class)
 public class WastebinFeatureTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Feature setting
@@ -88,19 +96,20 @@ public class WastebinFeatureTest {
 
 	@Before
 	public void setup() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-		node = ContentNodeTestDataUtils.createNode("testnode", "Test node", PublishTarget.BOTH);
-		switch (feature) {
-		case off:
-			prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), false);
-			break;
-		case on:
-			prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), true);
-			break;
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+			node = ContentNodeTestDataUtils.createNode("testnode", "Test node", PublishTarget.BOTH);
+			switch (feature) {
+			case off:
+				prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), false);
+				break;
+			case on:
+				prefs.setFeature(Feature.WASTEBIN.toString().toLowerCase(), true);
+				break;
+			}
+			trx.success();
 		}
-
-		t.commit(false);
 
 		testContext.getContext().stopDirtQueueWorker();
 	}
@@ -111,55 +120,60 @@ public class WastebinFeatureTest {
 	 */
 	@Test
 	public void testDeletePage() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		Page page = null;
+		int pageId = 0;
+		int contentId = 0;
 
-		// create a page
-		Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Template", "Template");
-		Page page = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Test page");
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		int pageId = page.getId();
-		int contentId = page.getContent().getId();
+			// create a page
+			Template template = ContentNodeTestDataUtils.createTemplate(node.getFolder(), "Template", "Template");
+			page = ContentNodeTestDataUtils.createPage(node.getFolder(), template, "Test page");
+			t.commit(false);
 
-		t.getObject(Page.class, pageId, true).publish();
-		t.commit(false);
+			pageId = page.getId();
+			contentId = page.getContent().getId();
+
+			t.getObject(Page.class, pageId, true).publish();
+			trx.success();
+		}
 		testContext.publish(false);
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(page, node, true);
 
-		ContentNodeTestUtils.assertPublishCR(page, node, true);
-
-		// delete the page
-		page.delete();
-		t.commit(false);
-
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		t.getRenderType().setEditMode(RenderType.EM_PREVIEW);
-
-		checkObject(Page.class, pageId);
-		switch (feature) {
-		case off:
-			// content must really be deleted
-			assertNull("Content must be deleted", t.getObject(Content.class, contentId));
-			break;
-		case on:
-			// content must not really be deleted
-			assertNotNull("Content must not be deleted", t.getObject(Content.class, contentId));
-			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
-				page = t.getObject(page);
-				assertThat(page).as("Page in wastebin").isOffline();
-			}
-			break;
+			// delete the page
+			page.delete();
+			trx.success();
 		}
 
-		t.getRenderType().setEditMode(RenderType.EM_PUBLISH);
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			Transaction t = trx.getTransaction();
+
+			checkObject(Page.class, pageId);
+			switch (feature) {
+			case off:
+				// content must really be deleted
+				assertNull("Content must be deleted", t.getObject(Content.class, contentId));
+				break;
+			case on:
+				// content must not really be deleted
+				assertNotNull("Content must not be deleted", t.getObject(Content.class, contentId));
+				try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
+					page = t.getObject(page);
+					assertThat(page).as("Page in wastebin").isOffline();
+				}
+				break;
+			}
+			trx.success();
+		}
+
 		testContext.publish(false);
 
-		testContext.getContext().startTransaction();
-		t = TransactionManager.getCurrentTransaction();
-		ContentNodeTestUtils.assertPublishCR(page, node, false);
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(page, node, false);
+		}
 	}
 
 	/**
@@ -168,38 +182,54 @@ public class WastebinFeatureTest {
 	 */
 	@Test
 	public void testDeleteFolder() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		Folder folder = null;
+		int folderId = 0;
+		int subFolderId = 0;
+		int pageId = 0;
+		int fileId = 0;
 
-		// create a folder
-		Folder folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
-		t.commit(false);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		// create objects in the folder
-		Folder subFolder = ContentNodeTestDataUtils.createFolder(folder, "Subfolder");
-		Template template = ContentNodeTestDataUtils.createTemplate(folder, "Template source", "Template");
-		Page page = ContentNodeTestDataUtils.createPage(folder, template, "Page");
-		File file = ContentNodeTestDataUtils.createFile(folder, "testfile.txt", "Testfile contents".getBytes());
-		t.commit(false);
+			// create a folder
+			folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
+			t.commit(false);
 
-		int folderId = folder.getId();
-		int subFolderId = subFolder.getId();
-		int pageId = page.getId();
-		int fileId = file.getId();
+			// create objects in the folder
+			Folder subFolder = ContentNodeTestDataUtils.createFolder(folder, "Subfolder");
+			Template template = ContentNodeTestDataUtils.createTemplate(folder, "Template source", "Template");
+			Page page = ContentNodeTestDataUtils.createPage(folder, template, "Page");
+			File file = ContentNodeTestDataUtils.createFile(folder, "testfile.txt", "Testfile contents".getBytes());
+			t.commit(false);
 
-		testContext.publish(false);
-		ContentNodeTestUtils.assertPublishCR(folder, node, true);
-
-		// delete the folder
-		folder.delete();
-		t.commit(false);
-
-		checkObject(Folder.class, folderId);
-		checkObject(Folder.class, subFolderId);
-		checkObject(Page.class, pageId);
-		checkObject(File.class, fileId);
+			folderId = folder.getId();
+			subFolderId = subFolder.getId();
+			pageId = page.getId();
+			fileId = file.getId();
+			trx.success();
+		}
 
 		testContext.publish(false);
-		ContentNodeTestUtils.assertPublishCR(folder, node, false);
+
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(folder, node, true);
+
+			// delete the folder
+			folder.delete();
+			trx.getTransaction().commit(false);
+
+			checkObject(Folder.class, folderId);
+			checkObject(Folder.class, subFolderId);
+			checkObject(Page.class, pageId);
+			checkObject(File.class, fileId);
+			trx.success();
+		}
+
+		testContext.publish(false);
+
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(folder, node, false);
+		}
 	}
 
 	/**
@@ -208,25 +238,34 @@ public class WastebinFeatureTest {
 	 */
 	@Test
 	public void testDeleteFile() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		File file = null;
+		int fileId = 0;
 
-		// create a file
-		File file = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile.txt", "File contents".getBytes());
-		t.commit(false);
-
-		int fileId = file.getId();
-		testContext.publish(false);
-
-		ContentNodeTestUtils.assertPublishCR(file, node, true);
-
-		// delete the file
-		file.delete();
-		t.commit(false);
-
-		checkObject(File.class, fileId);
+		try (Trx trx = new Trx()) {
+			// create a file
+			file = ContentNodeTestDataUtils.createFile(node.getFolder(), "testfile.txt", "File contents".getBytes());
+			fileId = file.getId();
+			trx.success();
+		}
 
 		testContext.publish(false);
-		ContentNodeTestUtils.assertPublishCR(file, node, false);
+
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(file, node, true);
+
+			// delete the file
+			file.delete();
+			trx.getTransaction().commit(false);
+
+			checkObject(File.class, fileId);
+			trx.success();
+		}
+
+		testContext.publish(false);
+
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishCR(file, node, false);
+		}
 	}
 
 	/**

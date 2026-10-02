@@ -8,10 +8,13 @@ import static org.junit.Assert.fail;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Rule;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -19,8 +22,10 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Part;
@@ -42,8 +47,13 @@ public class GetExternalLinksSandboxTest {
 
 	private static final String[] URLS_INSIDE_PAGE = new String[] {"http://www.gentics.com", "http://www.gentics.com", "", "#"};
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	private static final String URL_PARTNAME = "url";
 
@@ -55,6 +65,62 @@ public class GetExternalLinksSandboxTest {
 	private static int MAX_NUM_PAGE = 30;
 
 	private Integer subFolder1Id;
+
+	/**
+	 * Template created by the test
+	 */
+	private Template template;
+
+	/**
+	 * ID of the construct created by the test
+	 */
+	private int construct;
+
+	/**
+	 * IDs of the pages created by the test
+	 */
+	private List<Integer> createdPageIds = new ArrayList<>();
+
+	/**
+	 * Delete the objects created by the test (the tests count the pages in the folder {@link #ROOT_FOLDER_ID})
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		try (Trx trx = new Trx()) {
+			for (Page page : trx.getTransaction().getObjects(Page.class, createdPageIds)) {
+				page.delete(true);
+			}
+			trx.success();
+		}
+		if (subFolder1Id != null) {
+			try (Trx trx = new Trx()) {
+				Folder subFolder1 = trx.getTransaction().getObject(Folder.class, subFolder1Id);
+				if (subFolder1 != null) {
+					subFolder1.delete(true);
+				}
+				trx.success();
+			}
+		}
+		if (template != null) {
+			try (Trx trx = new Trx()) {
+				Template toDelete = trx.getTransaction().getObject(template);
+				if (toDelete != null) {
+					toDelete.delete(true);
+				}
+				trx.success();
+			}
+		}
+		if (construct != 0) {
+			try (Trx trx = new Trx()) {
+				Construct toDelete = trx.getTransaction().getObject(Construct.class, construct);
+				if (toDelete != null) {
+					toDelete.delete(true);
+				}
+				trx.success();
+			}
+		}
+	}
 
 	/**
 	 * Creates folders, subfolders and pages.
@@ -75,9 +141,9 @@ public class GetExternalLinksSandboxTest {
 		loadResponse = getFolderResource().create(request);
 
 		Integer subsubfolderId = loadResponse.getFolder().getId();
-		Template template = createTemplate(ROOT_FOLDER_ID);
+		template = createTemplate(ROOT_FOLDER_ID);
 
-		int construct = createConstruct(null, PageURLPartType.class, URL_PARTNAME, URL_PARTNAME);
+		construct = createConstruct(null, PageURLPartType.class, URL_PARTNAME, URL_PARTNAME);
 
 		for (int i = 0; i < numPages; i++) {
 			createUrlPage(construct, ROOT_FOLDER_ID, template, "Page number - " + i, new String[] {"http://root.com", "http://root.link.es", "", "   ", "asdf"});
@@ -94,11 +160,14 @@ public class GetExternalLinksSandboxTest {
 	 */
 	@Test
 	public void testGetExternalLinks() throws Exception {
-		boolean recursive = false;
-		createPages(MAX_NUM_PAGE);
-		FolderExternalLinksResponse response = getFolderResource().getExternalLinks(ROOT_FOLDER_ID, recursive);
+		try (Trx trx = new Trx()) {
+			boolean recursive = false;
+			createPages(MAX_NUM_PAGE);
+			FolderExternalLinksResponse response = getFolderResource().getExternalLinks(ROOT_FOLDER_ID, recursive);
 
-		assertEquals(MAX_NUM_PAGE, response.getPages().size());
+			assertEquals(MAX_NUM_PAGE, response.getPages().size());
+			trx.success();
+		}
 	}
 
 	/**
@@ -107,12 +176,15 @@ public class GetExternalLinksSandboxTest {
 	 */
 	@Test
 	public void testGetExternalLinksRecursive() throws Exception {
-		boolean recursive = true;
-		int folderPages = 2;
-		createPages(folderPages);
-		FolderExternalLinksResponse response = getFolderResource().getExternalLinks(ROOT_FOLDER_ID, recursive);
+		try (Trx trx = new Trx()) {
+			boolean recursive = true;
+			int folderPages = 2;
+			createPages(folderPages);
+			FolderExternalLinksResponse response = getFolderResource().getExternalLinks(ROOT_FOLDER_ID, recursive);
 
-		assertEquals(folderPages + 3, response.getPages().size());
+			assertEquals(folderPages + 3, response.getPages().size());
+			trx.success();
+		}
 	}
 
 	/**
@@ -121,16 +193,19 @@ public class GetExternalLinksSandboxTest {
 	 */
 	@Test
 	public void testGetExternalLinksFromSubfolder() throws Exception {
-		boolean recursive = false;
-		int folderPages = 3;
-		createPages(folderPages);
-		FolderExternalLinksResponse response = getFolderResource().getExternalLinks(subFolder1Id, recursive);
+		try (Trx trx = new Trx()) {
+			boolean recursive = false;
+			int folderPages = 3;
+			createPages(folderPages);
+			FolderExternalLinksResponse response = getFolderResource().getExternalLinks(subFolder1Id, recursive);
 
-		List<String> links = response.getPages().get(0).getLinks();
+			List<String> links = response.getPages().get(0).getLinks();
 
-		assertEquals(1, response.getPages().size());
-		assertEquals("subfolder1 one page", response.getPages().get(0).getPageName());
-		assertArrayEquals(Arrays.asList(URLS_INSIDE_PAGE), links);
+			assertEquals(1, response.getPages().size());
+			assertEquals("subfolder1 one page", response.getPages().get(0).getPageName());
+			assertArrayEquals(Arrays.asList(URLS_INSIDE_PAGE), links);
+			trx.success();
+		}
 	}
 
 	/**
@@ -169,6 +244,7 @@ public class GetExternalLinksSandboxTest {
 		page.save();
 		page.publish();
 		t.commit(false);
+		createdPageIds.add(page.getId());
 
 		return page;
 	}

@@ -7,12 +7,16 @@ import static org.junit.Assert.assertNull;
 import java.util.Arrays;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
@@ -39,8 +43,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class PageSaveSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	@Rule
 	public ExceptionChecker exceptionChecker = new ExceptionChecker();
@@ -65,15 +74,18 @@ public class PageSaveSandboxTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		node = ContentNodeTestDataUtils.createNode("pagesavesandboxtestnode",
-				"www.pagesavesandboxtestnode.at", "/test", "/testbin", false,
-				false);
+			node = ContentNodeTestDataUtils.createNode("pagesavesandboxtestnode",
+					"www.pagesavesandboxtestnode.at", "/test", "/testbin", false,
+					false);
 
-		template = Creator.createTemplate("pagesavesandboxtesttemplate", "blabla", node.getFolder());
+			template = Creator.createTemplate("pagesavesandboxtesttemplate", "blabla", node.getFolder());
 
-		t.commit(false);
+			t.commit(false);
+			trx.success();
+		}
 	}
 	/**
 	 * Create a page containing an empty overview for the testSaveWithEmptyOverview and testLoadEmptyOverview Tests
@@ -105,17 +117,20 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testSaveWithEmptyOverview() throws Exception {
-		com.gentics.contentnode.object.Page page = createPageWithEmptyOverview();
+		try (Trx trx = new Trx()) {
+			com.gentics.contentnode.object.Page page = createPageWithEmptyOverview();
 
-		// request the page via the rest api
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page restPage = pageResource.load(Integer.toString((Integer) page.getId()), false, false, false, false, false, false, false, false, false, false, (Integer) node.getId(), null).getPage();
-		// make sure the overviewpart is empty (because the page was requested with update=false and was never edited before)
-		assertNull("If page load is called with update=false the overview property of the overview tag part should be null",restPage.getTags().get("emptyOverviewTest1").getProperties().get("overviewpart").getOverview());
-		// The page save request should not throw an exception
-		PageSaveRequest pageSaveRequest = new PageSaveRequest(restPage);
-		// page save should be successful (no error should be thrown!)
-		pageResource.save(Integer.toString((Integer) page.getId()), pageSaveRequest);
+			// request the page via the rest api
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			Page restPage = pageResource.load(Integer.toString((Integer) page.getId()), false, false, false, false, false, false, false, false, false, false, (Integer) node.getId(), null).getPage();
+			// make sure the overviewpart is empty (because the page was requested with update=false and was never edited before)
+			assertNull("If page load is called with update=false the overview property of the overview tag part should be null",restPage.getTags().get("emptyOverviewTest1").getProperties().get("overviewpart").getOverview());
+			// The page save request should not throw an exception
+			PageSaveRequest pageSaveRequest = new PageSaveRequest(restPage);
+			// page save should be successful (no error should be thrown!)
+			pageResource.save(Integer.toString((Integer) page.getId()), pageSaveRequest);
+			trx.success();
+		}
 	}
 
 	/**
@@ -125,12 +140,15 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testLoadEmptyOverview() throws Exception {
-		com.gentics.contentnode.object.Page page = createPageWithEmptyOverview();
+		try (Trx trx = new Trx()) {
+			com.gentics.contentnode.object.Page page = createPageWithEmptyOverview();
 
-		// request the page via the rest api
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page restPage = pageResource.load(Integer.toString((Integer) page.getId()), true, false, false, false, false, false, false, false, false, false, (Integer) node.getId(), null).getPage();
-		assertNotNull("If page load is called with update=true the overview property of the overview tag part should not be null", restPage.getTags().get("emptyOverviewTest1").getProperties().get("overviewpart").getOverview());
+			// request the page via the rest api
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			Page restPage = pageResource.load(Integer.toString((Integer) page.getId()), true, false, false, false, false, false, false, false, false, false, (Integer) node.getId(), null).getPage();
+			assertNotNull("If page load is called with update=true the overview property of the overview tag part should not be null", restPage.getTags().get("emptyOverviewTest1").getProperties().get("overviewpart").getOverview());
+			trx.success();
+		}
 	}
 
 	/**
@@ -140,39 +158,40 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testInvalidPageData() throws Exception {
-		testContext.getContext().startTransaction();
+		try (Trx trx = new Trx()) {
+			PageCreateRequest pageCreateRequest = new PageCreateRequest();
+			pageCreateRequest.setFolderId(node.getFolder().getId().toString());
 
-		PageCreateRequest pageCreateRequest = new PageCreateRequest();
-		pageCreateRequest.setFolderId(node.getFolder().getId().toString());
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			Page testPage = pageResource.create(pageCreateRequest).getPage();
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page testPage = pageResource.create(pageCreateRequest).getPage();
+			Page invalidDataPage = new Page();
+			String description = "description was updated!";
 
-		Page invalidDataPage = new Page();
-		String description = "description was updated!";
+			invalidDataPage.setId(testPage.getId());
+			invalidDataPage.setName("");
+			invalidDataPage.setFileName("");
+			invalidDataPage.setDescription(description);
 
-		invalidDataPage.setId(testPage.getId());
-		invalidDataPage.setName("");
-		invalidDataPage.setFileName("");
-		invalidDataPage.setDescription(description);
+			PageSaveRequest pageSaveRequest = new PageSaveRequest(invalidDataPage);
+			GenericResponse saveResponse = pageResource.save(testPage.getId()
+					.toString(), pageSaveRequest);
 
-		PageSaveRequest pageSaveRequest = new PageSaveRequest(invalidDataPage);
-		GenericResponse saveResponse = pageResource.save(testPage.getId()
-				.toString(), pageSaveRequest);
+			assertEquals("Saving should be successful", saveResponse
+					.getResponseInfo().getResponseCode(), ResponseCode.OK);
 
-		assertEquals("Saving should be successful", saveResponse
-				.getResponseInfo().getResponseCode(), ResponseCode.OK);
+			Page resultPage = pageResource.load(testPage.getId().toString(), false,
+					false, false, false, false, false, false, false, false,
+					false, ObjectTransformer.getInteger(node.getId(), -1), null).getPage();
 
-		Page resultPage = pageResource.load(testPage.getId().toString(), false,
-				false, false, false, false, false, false, false, false,
-				false, ObjectTransformer.getInteger(node.getId(), -1), null).getPage();
-
-		assertEquals("Description should be updated",
-				resultPage.getDescription(), description);
-		assertEquals("Name should NOT have been updated", testPage.getName(),
-				resultPage.getName());
-		assertEquals("Filename should NOT have been updated",
-				testPage.getFileName(), resultPage.getFileName());
+			assertEquals("Description should be updated",
+					resultPage.getDescription(), description);
+			assertEquals("Name should NOT have been updated", testPage.getName(),
+					resultPage.getName());
+			assertEquals("Filename should NOT have been updated",
+					testPage.getFileName(), resultPage.getFileName());
+			trx.success();
+		}
 	}
 
 	/**
@@ -180,12 +199,13 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testNoPage() throws Exception {
-		testContext.getContext().startTransaction();
-
-		exceptionChecker.expect(EntityNotFoundException.class, "Die angegebene Seite wurde nicht gefunden.");
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		pageResource.load("-42", false, false,
-				false, false, false, false, false, false, false, false, null, null);
+		try (Trx trx = new Trx()) {
+			exceptionChecker.expect(EntityNotFoundException.class, "Die angegebene Seite wurde nicht gefunden.");
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			pageResource.load("-42", false, false,
+					false, false, false, false, false, false, false, false, null, null);
+			trx.success();
+		}
 	}
 
 	/**
@@ -195,28 +215,29 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testSuccessfulSave() throws Exception {
-		testContext.getContext().startTransaction();
+		try (Trx trx = new Trx()) {
+			PageCreateRequest pageCreateRequest = new PageCreateRequest();
+			pageCreateRequest.setFolderId(node.getFolder().getId().toString());
 
-		PageCreateRequest pageCreateRequest = new PageCreateRequest();
-		pageCreateRequest.setFolderId(node.getFolder().getId().toString());
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			Page testPage = pageResource.create(pageCreateRequest).getPage();
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		Page testPage = pageResource.create(pageCreateRequest).getPage();
+			String name = "90a8hgasfjnasldfhasdf";
+			testPage.setName(name);
 
-		String name = "90a8hgasfjnasldfhasdf";
-		testPage.setName(name);
+			GenericResponse response = pageResource.save(testPage.getId()
+					.toString(), new PageSaveRequest(testPage));
 
-		GenericResponse response = pageResource.save(testPage.getId()
-				.toString(), new PageSaveRequest(testPage));
+			assertEquals("Response code should be OK", ResponseCode.OK, response
+					.getResponseInfo().getResponseCode());
 
-		assertEquals("Response code should be OK", ResponseCode.OK, response
-				.getResponseInfo().getResponseCode());
+			Page checkPage = pageResource.load(testPage.getId().toString(), false,
+					false, false, false, false, false, false, false, false, false, null, null)
+					.getPage();
 
-		Page checkPage = pageResource.load(testPage.getId().toString(), false,
-				false, false, false, false, false, false, false, false, false, null, null)
-				.getPage();
-
-		assertEquals("Name should be updated", checkPage.getName(), name);
+			assertEquals("Name should be updated", checkPage.getName(), name);
+			trx.success();
+		}
 	}
 
 	/**
@@ -232,38 +253,41 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testDeriveFilenameWithoutFilename() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
-			node.getFolder(),
-			template);
-		Integer id = originalPage.getId();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
+				node.getFolder(),
+				template);
+			Integer id = originalPage.getId();
 
-		t.commit(false);
+			t.commit(false);
 
-		Page newPage = new Page();
+			Page newPage = new Page();
 
-		newPage.setId(id);
-		newPage.setName("New Pagename");
-		newPage.setFileName("");
+			newPage.setId(id);
+			newPage.setName("New Pagename");
+			newPage.setFileName("");
 
-		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
+			PageSaveRequest saveRequest = new PageSaveRequest(newPage);
 
-		saveRequest.setDeriveFileName(true);
+			saveRequest.setDeriveFileName(true);
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
 
-		assertEquals("Saving should be successful",
-			saveResponse.getResponseInfo().getResponseCode(),
-			ResponseCode.OK);
+			assertEquals("Saving should be successful",
+				saveResponse.getResponseInfo().getResponseCode(),
+				ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
-			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			PageLoadResponse loadResponse = pageResource.load(id.toString(),
+				false, false, false, false, false, false, false, false, false,
+				false, node.getId(), null);
 
-		assertEquals("Empty filename should have been fixed",
-			loadResponse.getPage().getFileName(),
-			"New-Pagename.html");
+			assertEquals("Empty filename should have been fixed",
+				loadResponse.getPage().getFileName(),
+				"New-Pagename.html");
+			trx.success();
+		}
 	}
 
 	/**
@@ -279,39 +303,42 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testDeriveFilenameWithFilename() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
-			node.getFolder(),
-			template);
-		Integer id = originalPage.getId();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
+				node.getFolder(),
+				template);
+			Integer id = originalPage.getId();
 
-		t.commit(false);
+			t.commit(false);
 
-		String expectedFilename = "expected-filename.en.html";
-		Page newPage = new Page();
+			String expectedFilename = "expected-filename.en.html";
+			Page newPage = new Page();
 
-		newPage.setId(id);
-		newPage.setName("New Pagename");
-		newPage.setFileName(expectedFilename);
+			newPage.setId(id);
+			newPage.setName("New Pagename");
+			newPage.setFileName(expectedFilename);
 
-		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
+			PageSaveRequest saveRequest = new PageSaveRequest(newPage);
 
-		saveRequest.setDeriveFileName(true);
+			saveRequest.setDeriveFileName(true);
 
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
 
-		assertEquals("Saving should be successful",
-			saveResponse.getResponseInfo().getResponseCode(),
-			ResponseCode.OK);
+			assertEquals("Saving should be successful",
+				saveResponse.getResponseInfo().getResponseCode(),
+				ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
-			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			PageLoadResponse loadResponse = pageResource.load(id.toString(),
+				false, false, false, false, false, false, false, false, false,
+				false, node.getId(), null);
 
-		assertEquals("Filename should have been updated normally",
-				loadResponse.getPage().getFileName(),
-				expectedFilename);
+			assertEquals("Filename should have been updated normally",
+					loadResponse.getPage().getFileName(),
+					expectedFilename);
+			trx.success();
+		}
 	}
 
 	/**
@@ -328,36 +355,39 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testNoDeriveFilenameWithoutFilename() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
-			node.getFolder(),
-			template);
-		Integer id = originalPage.getId();
-		String originalFilename = originalPage.getFilename();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
+				node.getFolder(),
+				template);
+			Integer id = originalPage.getId();
+			String originalFilename = originalPage.getFilename();
 
-		t.commit(false);
+			t.commit(false);
 
-		Page newPage = new Page();
+			Page newPage = new Page();
 
-		newPage.setId(id);
-		newPage.setName("New Pagename");
-		newPage.setFileName("");
+			newPage.setId(id);
+			newPage.setName("New Pagename");
+			newPage.setFileName("");
 
-		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+			PageSaveRequest saveRequest = new PageSaveRequest(newPage);
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
 
-		assertEquals("Saving should be successful",
-			saveResponse.getResponseInfo().getResponseCode(),
-			ResponseCode.OK);
+			assertEquals("Saving should be successful",
+				saveResponse.getResponseInfo().getResponseCode(),
+				ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
-			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			PageLoadResponse loadResponse = pageResource.load(id.toString(),
+				false, false, false, false, false, false, false, false, false,
+				false, node.getId(), null);
 
-		assertEquals("Filename should not have changed",
-				loadResponse.getPage().getFileName(),
-				originalFilename);
+			assertEquals("Filename should not have changed",
+					loadResponse.getPage().getFileName(),
+					originalFilename);
+			trx.success();
+		}
 	}
 
 	/**
@@ -374,35 +404,38 @@ public class PageSaveSandboxTest {
 	 */
 	@Test
 	public void testNoDeriveFilenameWithFilename() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
-			node.getFolder(),
-			template);
-		Integer id = originalPage.getId();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			com.gentics.contentnode.object.Page originalPage = Creator.createPage("Original Name",
+				node.getFolder(),
+				template);
+			Integer id = originalPage.getId();
 
-		t.commit(false);
+			t.commit(false);
 
-		String expectedFilename = "expected-filename.en.html";
-		Page newPage = new Page();
+			String expectedFilename = "expected-filename.en.html";
+			Page newPage = new Page();
 
-		newPage.setId(id);
-		newPage.setName("New Pagename");
-		newPage.setFileName(expectedFilename);
+			newPage.setId(id);
+			newPage.setName("New Pagename");
+			newPage.setFileName(expectedFilename);
 
-		PageSaveRequest saveRequest = new PageSaveRequest(newPage);
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
+			PageSaveRequest saveRequest = new PageSaveRequest(newPage);
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			GenericResponse saveResponse = pageResource.save(id.toString(),saveRequest);
 
-		assertEquals("Saving should be successful",
-			saveResponse.getResponseInfo().getResponseCode(),
-			ResponseCode.OK);
+			assertEquals("Saving should be successful",
+				saveResponse.getResponseInfo().getResponseCode(),
+				ResponseCode.OK);
 
-		PageLoadResponse loadResponse = pageResource.load(id.toString(),
-			false, false, false, false, false, false, false, false, false,
-			false, node.getId(), null);
+			PageLoadResponse loadResponse = pageResource.load(id.toString(),
+				false, false, false, false, false, false, false, false, false,
+				false, node.getId(), null);
 
-		assertEquals("Filename should have been updated normally",
-				loadResponse.getPage().getFileName(),
-				expectedFilename);
+			assertEquals("Filename should have been updated normally",
+					loadResponse.getPage().getFileName(),
+					expectedFilename);
+			trx.success();
+		}
 	}
 }

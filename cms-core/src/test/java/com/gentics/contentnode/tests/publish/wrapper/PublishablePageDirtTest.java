@@ -6,9 +6,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -28,8 +30,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
  * Test cases for dirting the PublishCache of pages
  */
 public class PublishablePageDirtTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void commitContextTransaction() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	public final static String CONSTRUCT_KEYWORD = "text";
 
@@ -39,7 +46,7 @@ public class PublishablePageDirtTest {
 
 	@Before
 	public void setupOnce() throws Exception {
-		TransactionManager.getCurrentTransaction().getNodeConfig().getDefaultPreferences().setFeature(Feature.PUBLISH_CACHE.toString().toLowerCase(), true);
+		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature(Feature.PUBLISH_CACHE.toString().toLowerCase(), true);
 	}
 
 	/**

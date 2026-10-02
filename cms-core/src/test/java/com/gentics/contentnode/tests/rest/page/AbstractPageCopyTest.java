@@ -1,6 +1,8 @@
 package com.gentics.contentnode.tests.rest.page;
 
 import static com.gentics.api.lib.etc.ObjectTransformer.getInteger;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.cleanUsers;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getSystemUsers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -8,15 +10,18 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -45,8 +50,24 @@ public abstract class AbstractPageCopyTest {
 	protected static final String KLINGON_FILE_EXTENSION = "." + KLINGON + ".html";
 	protected static final String GERMAN_FILE_EXTENSION = "." + GERMAN + ".html";
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext(true);
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext(true);
+
+	/**
+	 * IDs of the system users existing before the tests
+	 */
+	private static Set<Integer> staticUserIds;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+		staticUserIds = getSystemUsers();
+	}
+
+	/**
+	 * Nodes created for the test
+	 */
+	protected List<Node> createdNodes = new ArrayList<>();
 
 	protected Node nodeA;
 	protected Node nodeB;
@@ -68,28 +89,62 @@ public abstract class AbstractPageCopyTest {
 	@Before
 	public void setUp() throws Exception {
 
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		nodeA = ContentNodeTestDataUtils.createNode("testnode", "www.testnode.at", "/test", "/test", false, false);
-		template = Creator.createTemplate("testTemplate", "blabla", nodeA.getFolder());
-		nodeB = ContentNodeTestDataUtils.createNode("testnode2", "www.testnode2.at", "/test", "/test", false, false);
+			nodeA = ContentNodeTestDataUtils.createNode("testnode", "www.testnode.at", "/test", "/test", false, false);
+			template = Creator.createTemplate("testTemplate", "blabla", nodeA.getFolder());
+			nodeB = ContentNodeTestDataUtils.createNode("testnode2", "www.testnode2.at", "/test", "/test", false, false);
 
-		en = Creator.createLanguage("English", ENGLISH);
-		en.getNodes().add(nodeA);
-		en.getNodes().add(nodeB);
-		en.save();
+			en = Creator.createLanguage("English", ENGLISH);
+			en.getNodes().add(nodeA);
+			en.getNodes().add(nodeB);
+			en.save();
 
-		de = Creator.createLanguage("German", GERMAN);
-		de.getNodes().add(nodeA);
-		de.getNodes().add(nodeB);
-		de.save();
+			de = Creator.createLanguage("German", GERMAN);
+			de.getNodes().add(nodeA);
+			de.getNodes().add(nodeB);
+			de.save();
 
-		klingon = Creator.createLanguage("Klingon", KLINGON);
-		klingon.getNodes().add(nodeA);
-		klingon.getNodes().add(nodeB);
-		klingon.save();
+			klingon = Creator.createLanguage("Klingon", KLINGON);
+			klingon.getNodes().add(nodeA);
+			klingon.getNodes().add(nodeB);
+			klingon.save();
 
-		t.commit(false);
+			createdNodes.add(nodeA);
+			createdNodes.add(nodeB);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Delete the nodes and languages created for the test and the users created by the test
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		try (Trx trx = new Trx()) {
+			for (Node node : createdNodes) {
+				Node toDelete = trx.getTransaction().getObject(node);
+				if (toDelete != null) {
+					toDelete.delete(true);
+				}
+			}
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			for (ContentLanguage language : Arrays.asList(en, de, klingon)) {
+				if (language != null) {
+					ContentLanguage toDelete = trx.getTransaction().getObject(language);
+					if (toDelete != null) {
+						toDelete.delete(true);
+					}
+				}
+			}
+			trx.success();
+		}
+		cleanUsers(staticUserIds);
+		Trx.operate(Transaction::clearNodeObjectCache);
 	}
 
 	/**
@@ -244,10 +299,12 @@ public abstract class AbstractPageCopyTest {
 	 * @throws Exception
 	 */
 	protected PageCopyResponse copy(PageCopyRequest request, boolean assertResponseOk) throws Exception {
-		testContext.getContext().startTransaction();
-		PageResource pageResource = ContentNodeRESTUtils.getPageResource();
-		PageCopyResponse response = pageResource.copy(request, 0);
-		testContext.getContext().startTransaction();
+		PageCopyResponse response = null;
+		try (Trx trx = new Trx()) {
+			PageResource pageResource = ContentNodeRESTUtils.getPageResource();
+			response = pageResource.copy(request, 0);
+			trx.success();
+		}
 		if (assertResponseOk) {
 			ContentNodeRESTUtils.assertResponseOK(response);
 		}

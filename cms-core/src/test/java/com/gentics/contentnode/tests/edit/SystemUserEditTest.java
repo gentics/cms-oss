@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.edit;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.cleanUsers;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getSystemUsers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -13,8 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -26,6 +30,7 @@ import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.lib.db.SQLExecutor;
 
@@ -34,8 +39,19 @@ import com.gentics.lib.db.SQLExecutor;
  */
 public class SystemUserEditTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	/**
+	 * IDs of the system users existing before the tests
+	 */
+	private static Set<Integer> staticUserIds;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+		staticUserIds = getSystemUsers();
+	}
 
 	/**
 	 * Modified User
@@ -64,28 +80,51 @@ public class SystemUserEditTest {
 
 	@Before
 	public void setUp() throws Exception {
+		try (Trx trx = new Trx()) {
+			groupIds = new ArrayList<Integer>();
+			DBUtils.executeStatement("SELECT id FROM usergroup WHERE id NOT IN (1, 2) LIMIT 3", new SQLExecutor() {
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						groupIds.add(rs.getInt("id"));
+					}
+				}
+			});
+			assertEquals("Check # of groups to test", 3, groupIds.size());
 
-		groupIds = new ArrayList<Integer>();
-		DBUtils.executeStatement("SELECT id FROM usergroup WHERE id NOT IN (1, 2) LIMIT 3", new SQLExecutor() {
-			@Override
-			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				while (rs.next()) {
-					groupIds.add(rs.getInt("id"));
+			// create test data
+			restrictedNode = ContentNodeTestDataUtils.createNode("Restricted", "restricted", "/", null, false, false);
+			unrestrictedNode = ContentNodeTestDataUtils.createNode("Unrestricted", "unrestricted", "/", null, false, false);
+
+			Map<Integer, Set<Integer>> expectedRestrictions = new HashMap<Integer, Set<Integer>>();
+			expectedRestrictions.put(groupIds.get(0), asSet(restrictedNode));
+			modifiedUser = createUser("Modified", "User", "modified");
+			assertRestrictions(expectedRestrictions, modifiedUser.getGroupNodeRestrictions());
+			unmodifiedUser = createUser("Unmodified", "User", "unmodified");
+			assertRestrictions(expectedRestrictions, unmodifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
+	}
+
+	/**
+	 * Remove the users and nodes created in {@link #setUp()}
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		cleanUsers(staticUserIds);
+		try (Trx trx = new Trx()) {
+			for (Node node : Arrays.asList(restrictedNode, unrestrictedNode)) {
+				if (node != null) {
+					Node toDelete = trx.getTransaction().getObject(node);
+					if (toDelete != null) {
+						toDelete.delete(true);
+					}
 				}
 			}
-		});
-		assertEquals("Check # of groups to test", 3, groupIds.size());
-
-		// create test data
-		restrictedNode = ContentNodeTestDataUtils.createNode("Restricted", "restricted", "/", null, false, false);
-		unrestrictedNode = ContentNodeTestDataUtils.createNode("Unrestricted", "unrestricted", "/", null, false, false);
-
-		Map<Integer, Set<Integer>> expectedRestrictions = new HashMap<Integer, Set<Integer>>();
-		expectedRestrictions.put(groupIds.get(0), asSet(restrictedNode));
-		modifiedUser = createUser("Modified", "User", "modified");
-		assertRestrictions(expectedRestrictions, modifiedUser.getGroupNodeRestrictions());
-		unmodifiedUser = createUser("Unmodified", "User", "unmodified");
-		assertRestrictions(expectedRestrictions, unmodifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
+		Trx.operate(Transaction::clearNodeObjectCache);
 	}
 
 	/**
@@ -120,20 +159,23 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testAddNodeRestrictions() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getGroupNodeRestrictions().put(groupIds.get(1), asSet(restrictedNode));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getGroupNodeRestrictions().put(groupIds.get(1), asSet(restrictedNode));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		expected.put(groupIds.get(1), asSet(restrictedNode));
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			expected.put(groupIds.get(1), asSet(restrictedNode));
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**
@@ -142,20 +184,23 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testRemoveNodeRestrictions() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getGroupNodeRestrictions().remove(groupIds.get(0));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getGroupNodeRestrictions().remove(groupIds.get(0));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		expected.remove(groupIds.get(0));
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			expected.remove(groupIds.get(0));
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**
@@ -164,20 +209,23 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testChangeNodeRestrictions() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getGroupNodeRestrictions().get(groupIds.get(0)).add(ObjectTransformer.getInt(unrestrictedNode.getId(), 0));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getGroupNodeRestrictions().get(groupIds.get(0)).add(ObjectTransformer.getInt(unrestrictedNode.getId(), 0));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		expected.put(groupIds.get(0), asSet(restrictedNode, unrestrictedNode));
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			expected.put(groupIds.get(0), asSet(restrictedNode, unrestrictedNode));
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**
@@ -186,21 +234,24 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testAddGroupWithRestrictions() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getUserGroups().add(t.getObject(UserGroup.class, groupIds.get(2)));
-		modifiedUser.getGroupNodeRestrictions().put(groupIds.get(2), asSet(restrictedNode));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getUserGroups().add(t.getObject(UserGroup.class, groupIds.get(2)));
+			modifiedUser.getGroupNodeRestrictions().put(groupIds.get(2), asSet(restrictedNode));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		expected.put(groupIds.get(2), asSet(restrictedNode));
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			expected.put(groupIds.get(2), asSet(restrictedNode));
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**
@@ -209,20 +260,23 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testRemoveGroupWithRestrictions() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getUserGroups().remove(t.getObject(UserGroup.class, groupIds.get(0)));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getUserGroups().remove(t.getObject(UserGroup.class, groupIds.get(0)));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		expected.remove(groupIds.get(0));
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			expected.remove(groupIds.get(0));
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**
@@ -231,20 +285,23 @@ public class SystemUserEditTest {
 	 */
 	@Test
 	public void testRestrictToNonexistingNode() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
-		modifiedUser.getGroupNodeRestrictions().get(groupIds.get(0)).add(999999);
-		modifiedUser.getGroupNodeRestrictions().put(groupIds.get(1), new HashSet<Integer>(Arrays.asList(999999)));
-		modifiedUser.save();
-		t.commit(false);
-		modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId(), true);
+			modifiedUser.getGroupNodeRestrictions().get(groupIds.get(0)).add(999999);
+			modifiedUser.getGroupNodeRestrictions().put(groupIds.get(1), new HashSet<Integer>(Arrays.asList(999999)));
+			modifiedUser.save();
+			t.commit(false);
+			modifiedUser = t.getObject(SystemUser.class, modifiedUser.getId());
 
-		Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
-		expected.put(groupIds.get(0), asSet(restrictedNode));
-		assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
+			Map<Integer, Set<Integer>> expected = new HashMap<Integer, Set<Integer>>();
+			expected.put(groupIds.get(0), asSet(restrictedNode));
+			assertRestrictions(expected, unmodifiedUser.getGroupNodeRestrictions());
 
-		assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			assertRestrictions(expected, modifiedUser.getGroupNodeRestrictions());
+			trx.success();
+		}
 	}
 
 	/**

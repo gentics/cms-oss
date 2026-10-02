@@ -2,9 +2,11 @@ package com.gentics.contentnode.tests.rest;
 
 import static org.junit.Assert.*;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -19,8 +21,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
 
 public class UserSaveSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	@Test
 	public void testSaveUser() throws Exception {
@@ -45,7 +52,11 @@ public class UserSaveSandboxTest {
 		User user = new User();
 		user.setPassword("vielgeheimer");
 		request.setUser(user);
-		GenericResponse response = userResource.save(testUser.getId(), request);
+		GenericResponse response = null;
+		try (Trx trx = new Trx()) {
+			response = userResource.save(testUser.getId(), request);
+			trx.success();
+		}
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 
 		try (Trx trx = new Trx()) {
@@ -64,7 +75,10 @@ public class UserSaveSandboxTest {
 		user.setLogin("changedLogin");
 		user.setEmail("changedEmail");
 		request.setUser(user);
-		response = userResource.save(testUser.getId(), request);
+		try (Trx trx = new Trx()) {
+			response = userResource.save(testUser.getId(), request);
+			trx.success();
+		}
 		ContentNodeTestUtils.assertResponseCodeOk(response);
 
 		try (Trx trx = new Trx()) {

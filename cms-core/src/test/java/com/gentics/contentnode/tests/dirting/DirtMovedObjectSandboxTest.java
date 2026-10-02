@@ -16,8 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -34,6 +37,7 @@ import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -53,8 +57,13 @@ import com.gentics.lib.db.SQLExecutor;
 @GCNFeature(unset = { Feature.TAG_IMAGE_RESIZER })
 public class DirtMovedObjectSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Setting of the source node
@@ -107,9 +116,42 @@ public class DirtMovedObjectSandboxTest {
 		return testData;
 	}
 
+	/**
+	 * Source node created by the test case
+	 */
+	private Node source;
+
+	/**
+	 * Target node created by the test case
+	 */
+	private Node target;
+
 	@Before
 	public void setup() throws Exception {
 		PortalConnectorFactory.destroy();
+	}
+
+	/**
+	 * Delete the nodes created by the test case and their published files
+	 * @throws Exception
+	 */
+	@After
+	public void tearDown() throws Exception {
+		try (Trx trx = new Trx()) {
+			if (source != null) {
+				source.delete();
+			}
+			if (target != null) {
+				target.delete();
+			}
+			trx.success();
+		}
+		if (source != null) {
+			FileUtils.deleteDirectory(new java.io.File(testContext.getPubDir(), source.getHostname()));
+		}
+		if (target != null) {
+			FileUtils.deleteDirectory(new java.io.File(testContext.getPubDir(), target.getHostname()));
+		}
 	}
 
 	/**
@@ -139,103 +181,118 @@ public class DirtMovedObjectSandboxTest {
 	 */
 	@Test
 	public void testMovePage() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		final Page page;
 
-		// create source and target node
-		Node source = createNode("source", "Source Node", sourceNodeSetting);
-		Node target = createNode("target", "Target Node", targetNodeSetting);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		// create a template in the source node
-		Template template = t.createObject(Template.class);
+			// create source and target node
+			source = createNode("source", "Source Node", sourceNodeSetting);
+			target = createNode("target", "Target Node", targetNodeSetting);
 
-		template.setMlId(1);
-		template.setName("Template");
-		template.setSource("Dummy template");
-		template.getFolders().add(source.getFolder());
-		template.save();
-		t.commit(false);
+			// create a template in the source node
+			Template template = t.createObject(Template.class);
 
-		// create a page
-		final Page page = t.createObject(Page.class);
+			template.setMlId(1);
+			template.setName("Template");
+			template.setSource("Dummy template");
+			template.getFolders().add(source.getFolder());
+			template.save();
+			t.commit(false);
 
-		page.setFolderId(source.getFolder().getId());
-		page.setTemplateId(template.getId());
-		page.setName("Testpage");
-		page.save();
-		page.publish();
-		t.commit(false);
+			// create a page
+			page = t.createObject(Page.class);
+
+			page.setFolderId(source.getFolder().getId());
+			page.setTemplateId(template.getId());
+			page.setName("Testpage");
+			page.save();
+			page.publish();
+			trx.success();
+		}
 
 		// run the publish process
-		testContext.getContext().startTransaction();
-		assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
-		t = TransactionManager.getCurrentTransaction();
-
-		// check whether the page was published as expected
-		assertPageInFilesystem(source, page, sourceNodeSetting.isPublishFS());
-		if (sourceNodeSetting.isPublishCR()) {
-			assertPageInContentrepository(source, page, true);
-		}
-		assertPageInFilesystem(target, page, false);
-		if (targetNodeSetting.isPublishCR()) {
-			assertPageInContentrepository(target, page, false);
+		try (Trx trx = new Trx()) {
+			assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
+			trx.success();
 		}
 
 		// check that exactly one active publish table entry exists for the page
 		final List<Integer> nodeIds = new ArrayList<Integer>();
 
-		DBUtils.executeStatement("SELECT node_id FROM publish WHERE page_id = ? AND active = ?", new SQLExecutor() {
-			@Override
-			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, ObjectTransformer.getInt(page.getId(), 0));
-				stmt.setInt(2, 1);
+		try (Trx trx = new Trx()) {
+			// check whether the page was published as expected
+			assertPageInFilesystem(source, page, sourceNodeSetting.isPublishFS());
+			if (sourceNodeSetting.isPublishCR()) {
+				assertPageInContentrepository(source, page, true);
+			}
+			assertPageInFilesystem(target, page, false);
+			if (targetNodeSetting.isPublishCR()) {
+				assertPageInContentrepository(target, page, false);
 			}
 
-			@Override
-			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				while (rs.next()) {
-					nodeIds.add(rs.getInt("node_id"));
+			DBUtils.executeStatement("SELECT node_id FROM publish WHERE page_id = ? AND active = ?", new SQLExecutor() {
+				@Override
+				public void prepareStatement(PreparedStatement stmt) throws SQLException {
+					stmt.setInt(1, ObjectTransformer.getInt(page.getId(), 0));
+					stmt.setInt(2, 1);
 				}
-			}
-		});
-		assertTrue("Page must be published into source node", nodeIds.contains(source.getId()));
-		assertEquals("Check # of publish table entries", 1, nodeIds.size());
+
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						nodeIds.add(rs.getInt("node_id"));
+					}
+				}
+			});
+			assertTrue("Page must be published into source node", nodeIds.contains(source.getId()));
+			assertEquals("Check # of publish table entries", 1, nodeIds.size());
+			trx.success();
+		}
 
 		// move the page
-		movePage(page, target.getFolder());
+		try (Trx trx = new Trx()) {
+			movePage(page, target.getFolder());
+			trx.success();
+		}
 
 		// run publish process again
-		testContext.getContext().startTransaction();
-		assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
-		t = TransactionManager.getCurrentTransaction();
-
-		// check whether page was publishes as expected
-		assertPageInFilesystem(source, page, false);
-		if (sourceNodeSetting.isPublishCR()) {
-			assertPageInContentrepository(source, page, false);
-		}
-		assertPageInFilesystem(target, page, targetNodeSetting.isPublishFS());
-		if (targetNodeSetting.isPublishCR()) {
-			assertPageInContentrepository(target, page, true);
+		try (Trx trx = new Trx()) {
+			assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
+			trx.success();
 		}
 
-		// check publish table entries
-		nodeIds.clear();
-		DBUtils.executeStatement("SELECT node_id FROM publish WHERE page_id = ? AND active = ?", new SQLExecutor() {
-			@Override
-			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, ObjectTransformer.getInt(page.getId(), 0));
-				stmt.setInt(2, 1);
+		try (Trx trx = new Trx()) {
+			// check whether page was publishes as expected
+			assertPageInFilesystem(source, page, false);
+			if (sourceNodeSetting.isPublishCR()) {
+				assertPageInContentrepository(source, page, false);
+			}
+			assertPageInFilesystem(target, page, targetNodeSetting.isPublishFS());
+			if (targetNodeSetting.isPublishCR()) {
+				assertPageInContentrepository(target, page, true);
 			}
 
-			@Override
-			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				while (rs.next()) {
-					nodeIds.add(rs.getInt("node_id"));
+			// check publish table entries
+			nodeIds.clear();
+			DBUtils.executeStatement("SELECT node_id FROM publish WHERE page_id = ? AND active = ?", new SQLExecutor() {
+				@Override
+				public void prepareStatement(PreparedStatement stmt) throws SQLException {
+					stmt.setInt(1, ObjectTransformer.getInt(page.getId(), 0));
+					stmt.setInt(2, 1);
 				}
-			}
-		});
-		assertTrue("Page must be published into source node", nodeIds.contains(target.getId()));
-		assertEquals("Check # of publish table entries", 1, nodeIds.size());
+
+				@Override
+				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+					while (rs.next()) {
+						nodeIds.add(rs.getInt("node_id"));
+					}
+				}
+			});
+			assertTrue("Page must be published into source node", nodeIds.contains(target.getId()));
+			assertEquals("Check # of publish table entries", 1, nodeIds.size());
+			trx.success();
+		}
 	}
 
 	/**

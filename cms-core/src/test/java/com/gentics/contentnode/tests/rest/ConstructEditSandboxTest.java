@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -8,12 +9,16 @@ import java.util.Iterator;
 import java.util.List;
 
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
@@ -28,19 +33,24 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.contentnode.testutils.GCNFeature;
 
 /**
  * Sandbox Tests that edit constructs
  */
 public class ConstructEditSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * The valid page id to be saved
@@ -48,9 +58,9 @@ public class ConstructEditSandboxTest {
 	private static final int PAGE_ID = 1;
 
 	/**
-	 * The construct id of the created tag
+	 * The id of the node, to which the construct is assigned
 	 */
-	private static final int CONSTRUCT_ID = 4;
+	private static final int NODE_ID = 1;
 
 	/**
 	 * ID of the text parttype
@@ -82,31 +92,94 @@ public class ConstructEditSandboxTest {
 	 */
 	private String tagName;
 
+	/**
+	 * The construct id of the created tag (construct is created for the test)
+	 */
+	private Integer editedConstructId;
+
 	@Before
 	public void setUp() throws Exception {
 
+		// create a construct with two editable parts (like the construct with id 4 in the test data)
+		editedConstructId = create(Construct.class, c -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			c.setAutoEnable(true);
+			c.setKeyword("magictest");
+			c.setName("magictest", 1);
+			c.getNodes().add(t.getObject(Node.class, NODE_ID));
+			c.getParts().add(createPart(t, UNMAGIC_PART_NAME, 1));
+			c.getParts().add(createPart(t, TEXT_PART_NAME, 2));
+		}).build().getId();
+
 		// set the rendertype to "preview"
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			Transaction t = trx.getTransaction();
 
-		t.getRenderType().setEditMode(RenderType.EM_PREVIEW);
+			// create a tag in the page
+			Page page = t.getObject(Page.class, PAGE_ID, true);
+			ContentTag newTag = page.getContent().addContentTag(editedConstructId);
 
-		// create a tag in the page
-		Page page = t.getObject(Page.class, PAGE_ID, true);
-		ContentTag newTag = page.getContent().addContentTag(CONSTRUCT_ID);
+			newTag.getValues().getByKeyname(UNMAGIC_PART_NAME).setValueText("unmagic");
+			newTag.getValues().getByKeyname(TEXT_PART_NAME).setValueText("text");
+			page.save();
+			t.commit(false);
 
-		newTag.getValues().getByKeyname(UNMAGIC_PART_NAME).setValueText("unmagic");
-		newTag.getValues().getByKeyname(TEXT_PART_NAME).setValueText("text");
-		page.save();
-		t.commit(false);
+			tagId = newTag.getId();
+			tagName = newTag.getName();
 
-		tagId = newTag.getId();
-		tagName = newTag.getName();
+			// load the page and its content (make sure all is in the cache)
+			t.getObject(Page.class, PAGE_ID).getContentTags();
 
-		// load the page and its content (make sure all is in the cache)
-		t.getObject(Page.class, PAGE_ID).getContentTags();
+			// load the tag and its values (make sure all is in the cache)
+			t.getObject(ContentTag.class, tagId).getValues();
+			trx.success();
+		}
+	}
 
-		// load the tag and its values (make sure all is in the cache)
-		t.getObject(ContentTag.class, tagId).getValues();
+	/**
+	 * Remove the tag from the page and delete the construct created for the test
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		if (tagName != null) {
+			try (Trx trx = new Trx()) {
+				Page page = trx.getTransaction().getObject(Page.class, PAGE_ID, true);
+				page.getContentTags().remove(tagName);
+				page.save();
+				page.unlock();
+				trx.success();
+			}
+		}
+		if (editedConstructId != null) {
+			try (Trx trx = new Trx()) {
+				Construct construct = trx.getTransaction().getObject(Construct.class, editedConstructId);
+				if (construct != null) {
+					construct.delete(true);
+				}
+				trx.success();
+			}
+		}
+	}
+
+	/**
+	 * Create an editable short text part
+	 * @param t transaction
+	 * @param keyname part keyname
+	 * @param partOrder part order
+	 * @return part
+	 * @throws NodeException
+	 */
+	private Part createPart(Transaction t, String keyname, int partOrder) throws NodeException {
+		Part part = t.createObject(Part.class);
+		part.setEditable(1);
+		part.setHidden(false);
+		part.setKeyname(keyname);
+		part.setName(keyname, 1);
+		part.setPartOrder(partOrder);
+		part.setPartTypeId(ContentNodeTestDataUtils.getPartTypeId(ShortTextPartType.class));
+		part.setDefaultValue(t.createObject(Value.class));
+		return part;
 	}
 
 	/**
@@ -115,29 +188,32 @@ public class ConstructEditSandboxTest {
 	 */
 	@Test
 	public void addPartTest() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW)) {
+			Transaction t = trx.getTransaction();
 
-		// add a new part
-		Construct construct = t.getObject(Construct.class, CONSTRUCT_ID, true);
-		List<Part> parts = construct.getParts();
-		Part newPart = t.createObject(Part.class);
+			// add a new part
+			Construct construct = t.getObject(Construct.class, editedConstructId, true);
+			List<Part> parts = construct.getParts();
+			Part newPart = t.createObject(Part.class);
 
-		newPart.setEditable(1);
-		newPart.setHidden(false);
-		newPart.setPartTypeId(TEXT_PARTTYPE_ID);
-		newPart.setKeyname(NEW_PART_NAME);
-		parts.add(newPart);
-		construct.save();
-		t.commit(false);
+			newPart.setEditable(1);
+			newPart.setHidden(false);
+			newPart.setPartTypeId(TEXT_PARTTYPE_ID);
+			newPart.setKeyname(NEW_PART_NAME);
+			parts.add(newPart);
+			construct.save();
+			t.commit(false);
 
-		ContentTag contentTag = t.getObject(ContentTag.class, tagId);
-		ValueList values = contentTag.getValues();
+			ContentTag contentTag = t.getObject(ContentTag.class, tagId);
+			ValueList values = contentTag.getValues();
 
-		assertEquals("Check # of tag values", 2, values.size());
+			assertEquals("Check # of tag values", 2, values.size());
 
-		contentTag = t.getObject(ContentTag.class, tagId, true);
-		values = contentTag.getValues();
-		assertEquals("Check # of editable tag values", 3, values.size());
+			contentTag = t.getObject(ContentTag.class, tagId, true);
+			values = contentTag.getValues();
+			assertEquals("Check # of editable tag values", 3, values.size());
+			trx.success();
+		}
 	}
 
 	/**
@@ -165,7 +241,7 @@ public class ConstructEditSandboxTest {
 		Integer partNameId = Trx.supply(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			Construct construct   = t.getObject(Construct.class, CONSTRUCT_ID, true);
+			Construct construct   = t.getObject(Construct.class, editedConstructId, true);
 			List<Part> parts      = construct.getParts();
 			Integer partNameIdInt = null;
 
@@ -204,53 +280,54 @@ public class ConstructEditSandboxTest {
 	 * @throws Exception
 	 */
 	@Test
-	@GCNFeature(set = { Feature.PUBLISH_CACHE })
 	public void testDeletePartPublishCache() throws Exception {
-		// publish page
-		Trx.operate(() -> {
-			TransactionManager.getCurrentTransaction().getObject(Page.class, PAGE_ID, true).publish();
-		});
+		try (FeatureClosure publishCache = new FeatureClosure(Feature.PUBLISH_CACHE, true)) {
+			// publish page
+			Trx.operate(() -> {
+				TransactionManager.getCurrentTransaction().getObject(Page.class, PAGE_ID, true).publish();
+			});
 
-		// check publish cache of page
-		Trx.operate(() -> {
-			try (PublishCacheTrx pTrx = new PublishCacheTrx(true); RenderTypeTrx rtTrx = RenderTypeTrx.publish()) {
-				Transaction t = TransactionManager.getCurrentTransaction();
-				Page page = t.getObject(Page.class, PAGE_ID, -1, false);
-				assertNotNull("Check page", page);
-				ContentTag tag = page.getContentTag(tagName);
-				assertNotNull("Check tag", tag);
-				assertEquals("Check # of tag values from publish cache", 2, tag.getValues().size());
-				for (Value value : tag.getValues()) {
-					value.getPart();
+			// check publish cache of page
+			Trx.operate(() -> {
+				try (PublishCacheTrx pTrx = new PublishCacheTrx(true); RenderTypeTrx rtTrx = RenderTypeTrx.publish()) {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					Page page = t.getObject(Page.class, PAGE_ID, -1, false);
+					assertNotNull("Check page", page);
+					ContentTag tag = page.getContentTag(tagName);
+					assertNotNull("Check tag", tag);
+					assertEquals("Check # of tag values from publish cache", 2, tag.getValues().size());
+					for (Value value : tag.getValues()) {
+						value.getPart();
+					}
 				}
-			}
-		});
+			});
 
-		// delete a part
-		Trx.operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-
-			Construct construct   = t.getObject(Construct.class, CONSTRUCT_ID, true);
-			List<Part> parts      = construct.getParts();
-
-			parts.removeIf(p -> UNMAGIC_PART_NAME.equals(p.getKeyname()));
-			construct.save();
-		});
-
-		// check publish cache of page
-		Trx.operate(() -> {
-			try (PublishCacheTrx pTrx = new PublishCacheTrx(true); RenderTypeTrx rtTrx = RenderTypeTrx.publish()) {
+			// delete a part
+			Trx.operate(() -> {
 				Transaction t = TransactionManager.getCurrentTransaction();
-				Page page = t.getObject(Page.class, PAGE_ID, -1, false);
-				assertNotNull("Check page", page);
-				ContentTag tag = page.getContentTag(tagName);
-				assertNotNull("Check tag", tag);
-				assertEquals("Check # of tag values from publish cache", 1, tag.getValues().size());
-				for (Value value : tag.getValues()) {
-					value.getPart();
+
+				Construct construct   = t.getObject(Construct.class, editedConstructId, true);
+				List<Part> parts      = construct.getParts();
+
+				parts.removeIf(p -> UNMAGIC_PART_NAME.equals(p.getKeyname()));
+				construct.save();
+			});
+
+			// check publish cache of page
+			Trx.operate(() -> {
+				try (PublishCacheTrx pTrx = new PublishCacheTrx(true); RenderTypeTrx rtTrx = RenderTypeTrx.publish()) {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					Page page = t.getObject(Page.class, PAGE_ID, -1, false);
+					assertNotNull("Check page", page);
+					ContentTag tag = page.getContentTag(tagName);
+					assertNotNull("Check tag", tag);
+					assertEquals("Check # of tag values from publish cache", 1, tag.getValues().size());
+					for (Value value : tag.getValues()) {
+						value.getPart();
+					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	/**
@@ -260,25 +337,28 @@ public class ConstructEditSandboxTest {
 	 */
 	@Test
 	public void testReplaceDefaultValue() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Node node = ContentNodeTestDataUtils.createNode("test", "Test", PublishTarget.NONE);
-		int constructId = ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, "testconstruct", "part");
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			Node node = ContentNodeTestDataUtils.createNode("test", "Test", PublishTarget.NONE);
+			int constructId = ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, "testconstruct", "part");
 
-		// start to edit the construct
-		Construct construct = t.getObject(Construct.class, constructId, true);
-		// first replace the default value
-		construct.getParts().get(0).setDefaultValue(t.createObject(Value.class));
-		construct.save();
+			// start to edit the construct
+			Construct construct = t.getObject(Construct.class, constructId, true);
+			// first replace the default value
+			construct.getParts().get(0).setDefaultValue(t.createObject(Value.class));
+			construct.save();
 
-		// dirt the cache and continue editing the construct
-		t.dirtObjectCache(Construct.class, constructId);
-		construct = t.getObject(Construct.class, constructId, true);
-		construct.getParts().get(0).getDefaultValue().setValueText("Test text");
-		construct.save();
-		t.commit(false);
+			// dirt the cache and continue editing the construct
+			t.dirtObjectCache(Construct.class, constructId);
+			construct = t.getObject(Construct.class, constructId, true);
+			construct.getParts().get(0).getDefaultValue().setValueText("Test text");
+			construct.save();
+			t.commit(false);
 
-		construct = t.getObject(Construct.class, constructId);
-		assertEquals("Check value text", "Test text", construct.getParts().get(0).getDefaultValue().getValueText());
+			construct = t.getObject(Construct.class, constructId);
+			assertEquals("Check value text", "Test text", construct.getParts().get(0).getDefaultValue().getValueText());
+			trx.success();
+		}
 	}
 
 	/**
@@ -287,33 +367,40 @@ public class ConstructEditSandboxTest {
 	 */
 	@Test
 	public void testReplacePart() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		Node node = ContentNodeTestDataUtils.createNode("test", "Test", PublishTarget.NONE);
-		int constructId = ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, "testconstruct", "part");
+		int constructId = 0;
+		try (Trx trx = new Trx()) {
+			Node node = ContentNodeTestDataUtils.createNode("test", "Test", PublishTarget.NONE);
+			constructId = ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, "testconstruct", "part");
+			trx.success();
+		}
 
-		t = testContext.startSystemUserTransaction();
-		// replace the part with a new one (which should change the global ID)
-		Construct construct = t.getObject(Construct.class, constructId, true);
-		construct.getParts().clear();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			// replace the part with a new one (which should change the global ID)
+			Construct construct = t.getObject(Construct.class, constructId, true);
+			construct.getParts().clear();
 
-		Part part = t.createObject(Part.class);
-		part.setEditable(1);
-		part.setHidden(false);
-		part.setKeyname("part");
-		part.setName("part", 1);
-		part.setPartTypeId(ContentNodeTestDataUtils.getPartTypeId(LongHTMLPartType.class));
-		part.setDefaultValue(t.createObject(Value.class));
-		construct.getParts().add(part);
-		construct.save();
+			Part part = t.createObject(Part.class);
+			part.setEditable(1);
+			part.setHidden(false);
+			part.setKeyname("part");
+			part.setName("part", 1);
+			part.setPartTypeId(ContentNodeTestDataUtils.getPartTypeId(LongHTMLPartType.class));
+			part.setDefaultValue(t.createObject(Value.class));
+			construct.getParts().add(part);
+			construct.save();
 
-		// edit the part again
-		construct = t.getObject(Construct.class, constructId, true);
-		construct.getParts().get(0).getDefaultValue().setValueText("Modified Default Text");
-		construct.save();
-		t.commit(false);
+			// edit the part again
+			construct = t.getObject(Construct.class, constructId, true);
+			construct.getParts().get(0).getDefaultValue().setValueText("Modified Default Text");
+			construct.save();
+			trx.success();
+		}
 
-		t = testContext.startSystemUserTransaction();
-		construct = t.getObject(Construct.class, constructId);
-		assertEquals("Check default value", "Modified Default Text", construct.getParts().get(0).getDefaultValue().getValueText());
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			Construct construct = t.getObject(Construct.class, constructId);
+			assertEquals("Check default value", "Modified Default Text", construct.getParts().get(0).getDefaultValue().getValueText());
+		}
 	}
 }

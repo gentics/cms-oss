@@ -11,20 +11,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.datasource.Datasource;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.portalnode.connector.PortalConnectorFactory;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
@@ -42,8 +46,13 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @GCNFeature(unset = { Feature.TAG_IMAGE_RESIZER })
 public class PublishTargetTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Setting of the source node
@@ -77,6 +86,11 @@ public class PublishTargetTest {
 	protected Map<Integer, Datasource> datasources = new HashMap<Integer, Datasource>();
 
 	/**
+	 * Node created by the test
+	 */
+	protected Node node;
+
+	/**
 	 * Get the test parameters
 	 * 
 	 * @return collection of test parameter sets
@@ -99,74 +113,101 @@ public class PublishTargetTest {
 	}
 
 	/**
+	 * Delete the node created by the test and its published files
+	 * @throws Exception
+	 */
+	@After
+	public void tearDown() throws Exception {
+		if (node != null) {
+			try (Trx trx = new Trx()) {
+				Node toDelete = trx.getTransaction().getObject(node);
+				if (toDelete != null) {
+					toDelete.delete(true);
+				}
+				trx.success();
+			}
+			FileUtils.deleteDirectory(new java.io.File(testContext.getPubDir(), node.getHostname()));
+		}
+	}
+
+	/**
 	 * Test publishing different object types into the filesystem or content repository.
 	 */
 	@Test
 	public void testPublishTargets() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		Page page = null;
+		File file = null;
 
-		// Create a node
-		Node node = ContentNodeTestDataUtils.createNode("source", "Source Node", PublishTarget.BOTH);
-		datasources.put(ObjectTransformer.getInteger(node.getId(), null), node.getContentMap().getDatasource());
-		node = t.getObject(node, true);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		node.setPublishFilesystem(publishTarget.isPublishFS());
-		node.setPublishContentmap(publishTarget.isPublishCR());
+			// Create a node
+			node = ContentNodeTestDataUtils.createNode("source", "Source Node", PublishTarget.BOTH);
+			datasources.put(ObjectTransformer.getInteger(node.getId(), null), node.getContentMap().getDatasource());
+			node = t.getObject(node, true);
 
-		node.setPublishFilesystemPages(false);
-		node.setPublishContentMapPages(false);
-		node.setPublishFilesystemFiles(false);
-		node.setPublishContentMapFiles(false);
-		node.setPublishContentMapFolders(false);
+			node.setPublishFilesystem(publishTarget.isPublishFS());
+			node.setPublishContentmap(publishTarget.isPublishCR());
 
-		switch (publishType) {
-		case PAGES:
-			node.setPublishFilesystemPages(true);
-			node.setPublishContentMapPages(true);
-			break;
-		case FILES:
-			node.setPublishFilesystemFiles(true);
-			node.setPublishContentMapFiles(true);
-			break;
-		case FOLDERS:
-			node.setPublishContentMapFolders(true);
-			break;
-		case ALL:
-			node.setPublishFilesystemPages(true);
-			node.setPublishContentMapPages(true);
-			node.setPublishFilesystemFiles(true);
-			node.setPublishContentMapFiles(true);
-			node.setPublishContentMapFolders(true);
-			break;
+			node.setPublishFilesystemPages(false);
+			node.setPublishContentMapPages(false);
+			node.setPublishFilesystemFiles(false);
+			node.setPublishContentMapFiles(false);
+			node.setPublishContentMapFolders(false);
+
+			switch (publishType) {
+			case PAGES:
+				node.setPublishFilesystemPages(true);
+				node.setPublishContentMapPages(true);
+				break;
+			case FILES:
+				node.setPublishFilesystemFiles(true);
+				node.setPublishContentMapFiles(true);
+				break;
+			case FOLDERS:
+				node.setPublishContentMapFolders(true);
+				break;
+			case ALL:
+				node.setPublishFilesystemPages(true);
+				node.setPublishContentMapPages(true);
+				node.setPublishFilesystemFiles(true);
+				node.setPublishContentMapFiles(true);
+				node.setPublishContentMapFolders(true);
+				break;
+			}
+			node.save();
+			t.commit(false);
+
+			page = ContentNodeTestDataUtils.createTemplateAndPage(node.getFolder(), "page");
+			page = t.getObject(page, true);
+			page.publish();
+			t.commit(false);
+
+			// Create a file
+			file = ContentNodeTestDataUtils.createFile(node.getFolder(), "file.txt", "content".getBytes());
+			trx.success();
 		}
-		node.save();
-		t.commit(false);
-
-		Page page = ContentNodeTestDataUtils.createTemplateAndPage(node.getFolder(), "page");
-		page = t.getObject(page, true);
-		page.publish();
-		t.commit(false);
-
-		// Create a file
-		File file = ContentNodeTestDataUtils.createFile(node.getFolder(), "file.txt", "content".getBytes());
 
 		// Run the publish process
-		testContext.getContext().startTransaction();
-		assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
-		t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			assertEquals("Check publish status", PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext().publish(false).getReturnCode());
+			trx.success();
+		}
 
-		// Check whether the objects were published as expected
-		assertObjectInFilesystem(node, page.getFilename(), page.getFolder(),
-				publishTarget.isPublishFS() && (publishType == PublishType.PAGES || publishType == PublishType.ALL));
-		assertObjectInFilesystem(node, file.getFilename(), file.getFolder(),
-				publishTarget.isPublishFS() && (publishType == PublishType.FILES || publishType == PublishType.ALL));
+		try (Trx trx = new Trx()) {
+			// Check whether the objects were published as expected
+			assertObjectInFilesystem(node, page.getFilename(), page.getFolder(),
+					publishTarget.isPublishFS() && (publishType == PublishType.PAGES || publishType == PublishType.ALL));
+			assertObjectInFilesystem(node, file.getFilename(), file.getFolder(),
+					publishTarget.isPublishFS() && (publishType == PublishType.FILES || publishType == PublishType.ALL));
 
-		assertObjectInContentrepository(node, "10007." + page.getId(),
-				publishTarget.isPublishCR() && (publishType == PublishType.PAGES || publishType == PublishType.ALL));
-		assertObjectInContentrepository(node, "10008." + file.getId(),
-				publishTarget.isPublishCR() && (publishType == PublishType.FILES || publishType == PublishType.ALL));
-		assertObjectInContentrepository(node, "10002." + node.getFolder().getId(),
-				publishTarget.isPublishCR() && (publishType == PublishType.FOLDERS || publishType == PublishType.ALL));
+			assertObjectInContentrepository(node, "10007." + page.getId(),
+					publishTarget.isPublishCR() && (publishType == PublishType.PAGES || publishType == PublishType.ALL));
+			assertObjectInContentrepository(node, "10008." + file.getId(),
+					publishTarget.isPublishCR() && (publishType == PublishType.FILES || publishType == PublishType.ALL));
+			assertObjectInContentrepository(node, "10002." + node.getFolder().getId(),
+					publishTarget.isPublishCR() && (publishType == PublishType.FOLDERS || publishType == PublishType.ALL));
+		}
 	}
 
 	/**

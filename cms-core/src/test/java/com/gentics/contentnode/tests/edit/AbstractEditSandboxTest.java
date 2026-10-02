@@ -14,11 +14,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.handlebars.HandlebarsPartType;
+import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
  * Abstract base class for some editing tests that test dirting with the help of pages containing vtl tags.
@@ -32,6 +35,15 @@ public abstract class AbstractEditSandboxTest {
 	public final static int NODE_ID = 1;
 
 	public final static int VTL_CONSTRUCT_ID = 2;
+
+	/**
+	 * Create a new transaction for the user with permissions
+	 * @return transaction
+	 * @throws NodeException
+	 */
+	protected Trx trxWithPermissions() throws NodeException {
+		return new Trx(supply(t -> t.getObject(SystemUser.class, DBTestContext.USER_WITH_PERMS)));
+	}
 
 	/**
 	 * Migrate the pages to containing hbs tags

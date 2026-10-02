@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -31,7 +32,6 @@ import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.scheduler.PurgeVersionsJob;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.log.NodeLogger;
 
 public class PurgeVersionsSandboxTest extends AbstractPageVersioningTest {
@@ -44,11 +44,6 @@ public class PurgeVersionsSandboxTest extends AbstractPageVersioningTest {
 	@After
 	public void setUp() throws Exception {
 		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature(Feature.TAG_IMAGE_RESIZER.toString().toLowerCase(), false);
-
-		Transaction currentTransaction = TransactionManager.getCurrentTransactionOrNull();
-		if (currentTransaction != null) {
-			currentTransaction.commit();
-		}
 	}
 
 	/**
@@ -165,51 +160,52 @@ public class PurgeVersionsSandboxTest extends AbstractPageVersioningTest {
 	}
 
 	@Test
-	@GCNFeature(set = { Feature.WASTEBIN })
 	public void testPurgeWastebin() throws NodeException {
-		String name = "Create Page Version";
-		String filename = "create_page_version.html";
-		String content = "Name: <node page.name>, Filename: <node page.filename>, Version: <node page.version.number>";
+		try (FeatureClosure wastebin = new FeatureClosure(Feature.WASTEBIN, true)) {
+			String name = "Create Page Version";
+			String filename = "create_page_version.html";
+			String content = "Name: <node page.name>, Filename: <node page.filename>, Version: <node page.version.number>";
 
-		// 1. Create a page and check whether it has a page version with number 0.1 (timestamp 1)
-		Page page = createPage(1000, VERSIONS_TEMPLATE_ID, VERSIONS_FOLDER_ID, name, filename, content);
-		Node node = Trx.execute(p -> p.getOwningNode(), page);
-		Integer pageId = page.getId();
-		logger.debug("Created page with id {" + pageId + "}");
+			// 1. Create a page and check whether it has a page version with number 0.1 (timestamp 1)
+			Page page = createPage(1000, VERSIONS_TEMPLATE_ID, VERSIONS_FOLDER_ID, name, filename, content);
+			Node node = Trx.execute(p -> p.getOwningNode(), page);
+			Integer pageId = page.getId();
+			logger.debug("Created page with id {" + pageId + "}");
 
-		// 2. Modify and save the page (timestamp 2)
-		page = modifyContentAndSavePage(page, 2000);
-		verifyNodeVersions(page, "0.2, 0.1");
+			// 2. Modify and save the page (timestamp 2)
+			page = modifyContentAndSavePage(page, 2000);
+			verifyNodeVersions(page, "0.2, 0.1");
 
-		// 3. Modify and save the page (timestamp 3)
-		page = modifyContentAndSavePage(page, 3000);
-		verifyNodeVersions(page, "0.3, 0.2, 0.1");
+			// 3. Modify and save the page (timestamp 3)
+			page = modifyContentAndSavePage(page, 3000);
+			verifyNodeVersions(page, "0.3, 0.2, 0.1");
 
-		// 4. Publish the page (timestamp 4)
-		page = Trx.execute(p -> {
-			TransactionManager.getCurrentTransaction().setTimestamp(4000);
-			return update(p, upd -> upd.publish());
-		}, page);
-		verifyNodeVersions(page, "1.0, 0.3, 0.2, 0.1");
+			// 4. Publish the page (timestamp 4)
+			page = Trx.execute(p -> {
+				TransactionManager.getCurrentTransaction().setTimestamp(4000);
+				return update(p, upd -> upd.publish());
+			}, page);
+			verifyNodeVersions(page, "1.0, 0.3, 0.2, 0.1");
 
-		// 5. Modify and save the page (timestamp 5)
-		page = modifyContentAndSavePage(page, 5000);
-		verifyNodeVersions(page, "1.1, 1.0, 0.3, 0.2, 0.1");
+			// 5. Modify and save the page (timestamp 5)
+			page = modifyContentAndSavePage(page, 5000);
+			verifyNodeVersions(page, "1.1, 1.0, 0.3, 0.2, 0.1");
 
-		// 6. delete the page (put it into wastebin)
-		deletePage(page);
+			// 6. delete the page (put it into wastebin)
+			deletePage(page);
 
-		// 7. Execute the purgeversions job
-		Trx.operate(() -> {
-			startPurgeVersionsJob(1000);
-		});
+			// 7. Execute the purgeversions job
+			Trx.operate(() -> {
+				startPurgeVersionsJob(1000);
+			});
 
-		try (Trx trx = new Trx(); WastebinFilter filter = WastebinFilter.get(true, node)) {
-			page = trx.getTransaction().getObject(page);
-			trx.success();
+			try (Trx trx = new Trx(); WastebinFilter filter = WastebinFilter.get(true, node)) {
+				page = trx.getTransaction().getObject(page);
+				trx.success();
+			}
+
+			verifyNodeVersions(page, "1.1, 1.0");
 		}
-
-		verifyNodeVersions(page, "1.1, 1.0");
 	}
 
 	/**

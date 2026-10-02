@@ -7,10 +7,12 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.gentics.contentnode.factory.Transaction;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.migration.jobs.TemplateMigrationJob;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.TemplateMigrationEditableTagMapping;
@@ -28,8 +30,13 @@ import com.gentics.lib.log.NodeLogger;
  */
 public class TemplateMigrationTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(TemplateMigrationTest.class);
 
@@ -80,29 +87,29 @@ public class TemplateMigrationTest {
 	@Test
 	public void testPerformMigration() throws Exception {
 
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			// 1. Create a valid mapping
+			TemplateMigrationMapping mapping = getValidTemplateMigrationMapping();
 
-		// 1. Create a valid mapping
-		TemplateMigrationMapping mapping = getValidTemplateMigrationMapping();
+			// Create request object
+			TemplateMigrationRequest request = new TemplateMigrationRequest();
 
-		// Create request object
-		TemplateMigrationRequest request = new TemplateMigrationRequest();
+			request.setMapping(mapping);
 
-		request.setMapping(mapping);
+			// Set the options
+			HashMap<String, String> options = new HashMap<String, String>();
 
-		// Set the options
-		HashMap<String, String> options = new HashMap<String, String>();
+			options.put(TemplateMigrationRequest.LINK_FOLDER_OPTION, "true");
+			request.setOptions(options);
 
-		options.put(TemplateMigrationRequest.LINK_FOLDER_OPTION, "true");
-		request.setOptions(options);
+			// Create and execute job
+			TemplateMigrationJob job = new TemplateMigrationJob()
+					.setRequest(request);
 
-		// Create and execute job
-		TemplateMigrationJob job = new TemplateMigrationJob()
-				.setRequest(request);
+			AtomicBoolean foreGround = new AtomicBoolean(true);
+			job.execute(10000, TimeUnit.SECONDS, () -> foreGround.set(false));
 
-		AtomicBoolean foreGround = new AtomicBoolean(true);
-		job.execute(10000, TimeUnit.SECONDS, () -> foreGround.set(false));
-
-		assertThat(foreGround.get()).as("Job finished in foreground").isTrue();
+			assertThat(foreGround.get()).as("Job finished in foreground").isTrue();
+		}
 	}
 }

@@ -13,11 +13,13 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.job.AbstractBackgroundJob;
 import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -27,8 +29,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class BackgroundJobTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Creates a BackgroundJob that sleeps 3 seconds. The Timeout waiting for the Job is 5 Seconds. Checks if the Job finished in Foreground and if the expected result
@@ -39,7 +46,10 @@ public class BackgroundJobTest {
 		SleepBackgroundJob job = new SleepBackgroundJob(3);
 
 		AtomicBoolean foreground = new AtomicBoolean(true);
-		job.execute(4, TimeUnit.SECONDS, () -> foreground.set(false));
+		try (Trx trx = new Trx()) {
+			job.execute(4, TimeUnit.SECONDS, () -> foreground.set(false));
+			trx.success();
+		}
 
 		assertTrue("Check if job finished in foreground", foreground.get());
 		assertThat(job.finished).as("Job finished").isTrue();
@@ -54,7 +64,10 @@ public class BackgroundJobTest {
 		SleepBackgroundJob job = new SleepBackgroundJob(5);
 
 		AtomicBoolean foreground = new AtomicBoolean(true);
-		job.execute(4, TimeUnit.SECONDS, () -> foreground.set(false));
+		try (Trx trx = new Trx()) {
+			job.execute(4, TimeUnit.SECONDS, () -> foreground.set(false));
+			trx.success();
+		}
 		assertFalse("Check if job finished in background", foreground.get());
 		assertThat(job.finished).as("Job finished").isFalse();
 
@@ -90,7 +103,10 @@ public class BackgroundJobTest {
 		}.start();
 
 		AtomicBoolean foreground = new AtomicBoolean(true);
-		job.execute(8, TimeUnit.SECONDS, () -> foreground.set(false));
+		try (Trx trx = new Trx()) {
+			job.execute(8, TimeUnit.SECONDS, () -> foreground.set(false));
+			trx.success();
+		}
 		assertFalse("Check if the job did not finish in foreground", foreground.get());
 
 		try {

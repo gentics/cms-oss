@@ -8,9 +8,11 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.ThreadMXBean;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.cache.PortalCache;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.NodeFactory;
@@ -28,10 +30,15 @@ import com.gentics.lib.log.NodeLogger;
 @GCNFeature(set = { Feature.MULTITHREADED_PUBLISHING }, unset = { Feature.TAG_IMAGE_RESIZER })
 public class MultithreadedPublishingMemorySandboxTest {
 	
-	@Rule
-	public DBTestContext testContext = new DBTestContext().config(prefs -> {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext().config(prefs -> {
 		prefs.set("config.loadbalancing.threadlimit", 6);
 	});
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	private static final NodeLogger logger = NodeLogger.getNodeLogger(MultithreadedPublishingMemorySandboxTest.class);
 

@@ -17,8 +17,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,6 +39,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -64,11 +67,17 @@ import com.gentics.lib.db.SQLExecutor;
 @RunWith(value = Parameterized.class)
 public class ResumablePublishProcessTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
-	@Rule
-	public ContentRepositoryResource testCR = new ContentRepositoryResource();
+	@ClassRule
+	public static ContentRepositoryResource testCR = new ContentRepositoryResource();
+
+	@BeforeClass
+	public static void setupOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
+		testContext.updateCRReference(testCR);
+	}
 
 	/**
 	 * ID of the contentrepository to be used
@@ -144,12 +153,27 @@ public class ResumablePublishProcessTest {
 
 	@Before
 	public void setUp() throws Exception {
-		testContext.updateCRReference(testCR);
-		DBUtils.executeUpdate("UPDATE node SET disable_publish = ?", new Object[] {1});
+		try (Trx trx = new Trx()) {
+			DBUtils.executeUpdate("UPDATE node SET disable_publish = ?", new Object[] {1});
+			trx.success();
+		}
 		NodePreferences prefs = testContext.getContext().getNodeConfig().getDefaultPreferences();
 		prefs.setFeature(Feature.MULTITHREADED_PUBLISHING, multithreaded);
 		prefs.setFeature(Feature.RESUMABLE_PUBLISH_PROCESS, resumable);
 		prefs.setFeature("instant_cr_publishing", true);
+	}
+
+	/**
+	 * Remove the publish handler added by the test
+	 * @throws Exception
+	 */
+	@After
+	public void tearDown() throws Exception {
+		try (Trx trx = new Trx()) {
+			DBUtils.executeUpdate("DELETE FROM cr_publish_handler WHERE contentrepository_id = ? AND javaclass = ?", new Object[] { CR_ID,
+					TestPublishHandler.class.getName() });
+			trx.success();
+		}
 	}
 
 	/**
@@ -158,65 +182,72 @@ public class ResumablePublishProcessTest {
 	 */
 	@Test
 	public void testPublish() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		List<NodeObject> dirtedObjects = new ArrayList<NodeObject>();
+		Node testNode = null;
+		int nodeId = 0;
+		ContentMap contentMap = null;
 
-		// create a test node
-		Node testNode = ContentNodeTestDataUtils.createNode("Test Node", "testnode", "/", "/", false, false);
-		int nodeId = ObjectTransformer.getInt(testNode.getId(), 0);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		Folder root = testNode.getFolder();
-		dirtedObjects.add(root);
+			// create a test node
+			testNode = ContentNodeTestDataUtils.createNode("Test Node", "testnode", "/", "/", false, false);
+			nodeId = ObjectTransformer.getInt(testNode.getId(), 0);
 
-		// contentrepository with failing publish handler
-		ContentRepository cr = t.getObject(ContentRepository.class, CR_ID, true);
-		assertNotNull("Could not find contentrepository", cr);
-		cr.setInstantPublishing(instantPublishing);
-		cr.save();
-		t.commit(false);
+			Folder root = testNode.getFolder();
+			dirtedObjects.add(root);
 
-		DBUtils.executeUpdate("INSERT INTO cr_publish_handler (name, contentrepository_id, javaclass, properties) VALUES (?, ?, ?, ?)", new Object[] { "Test Publish Handler",
-				cr.getId(), TestPublishHandler.class.getName() , "publishError:" + publishError});
-		t.commit(false);
+			// contentrepository with failing publish handler
+			ContentRepository cr = t.getObject(ContentRepository.class, CR_ID, true);
+			assertNotNull("Could not find contentrepository", cr);
+			cr.setInstantPublishing(instantPublishing);
+			cr.save();
+			t.commit(false);
 
-		testNode = t.getObject(Node.class, testNode.getId(), true);
-		testNode.setContentrepositoryId(cr.getId());
-		testNode.setPublishContentmap(true);
-		testNode.setPublishFilesystem(false);
-		testNode.setPublishDisabled(false);
-		testNode.save();
-		t.commit(false);
+			DBUtils.executeUpdate("INSERT INTO cr_publish_handler (name, contentrepository_id, javaclass, properties) VALUES (?, ?, ?, ?)", new Object[] { "Test Publish Handler",
+					cr.getId(), TestPublishHandler.class.getName() , "publishError:" + publishError});
+			t.commit(false);
 
-		// disable instant publishing while creating the test objects
-		// we don't want them to be published before the publish process
-		t.setInstantPublishingEnabled(false);
+			testNode = t.getObject(Node.class, testNode.getId(), true);
+			testNode.setContentrepositoryId(cr.getId());
+			testNode.setPublishContentmap(true);
+			testNode.setPublishFilesystem(false);
+			testNode.setPublishDisabled(false);
+			testNode.save();
+			t.commit(false);
 
-		// create test objects
-		switch (type) {
-		case FOLDER:
-			for (int i = 1; i <= 5; i++) {
-				dirtedObjects.add(createFolder(root, "Folder " + i));
+			// disable instant publishing while creating the test objects
+			// we don't want them to be published before the publish process
+			t.setInstantPublishingEnabled(false);
+
+			// create test objects
+			switch (type) {
+			case FOLDER:
+				for (int i = 1; i <= 5; i++) {
+					dirtedObjects.add(createFolder(root, "Folder " + i));
+				}
+				break;
+			case FILE:
+				for (int i = 1; i <= 5; i++) {
+					dirtedObjects.add(createFile(root, "file-" + i + ".bin"));
+				}
+				break;
+			case PAGE:
+				Template template = createTemplate(root, "Template", "Page [<node page.name>]");
+				for (int i = 1; i <= 5; i++) {
+					dirtedObjects.add(createPage(root, template, "Page " + i));
+				}
+				break;
 			}
-			break;
-		case FILE:
-			for (int i = 1; i <= 5; i++) {
-				dirtedObjects.add(createFile(root, "file-" + i + ".bin"));
-			}
-			break;
-		case PAGE:
-			Template template = createTemplate(root, "Template", "Page [<node page.name>]");
-			for (int i = 1; i <= 5; i++) {
-				dirtedObjects.add(createPage(root, template, "Page " + i));
-			}
-			break;
+
+			// enable instant publishing
+			t.setInstantPublishingEnabled(true);
+
+			// get the contentmap
+			contentMap = testNode.getContentMap();
+			assertNotNull("Could not get the contentmap for the node", contentMap);
+			trx.success();
 		}
-
-		// enable instant publishing
-		t.setInstantPublishingEnabled(true);
-
-		// get the contentmap
-		ContentMap contentMap = testNode.getContentMap();
-		assertNotNull("Could not get the contentmap for the node", contentMap);
 
 		// reset the publish handler
 		TestPublishHandler.reset();
@@ -224,30 +255,32 @@ public class ResumablePublishProcessTest {
 		assertEquals("Check publish status", publishError ? PublishInfo.RETURN_CODE_ERROR : PublishInfo.RETURN_CODE_SUCCESS, testContext.getContext()
 				.publish(false, true, System.currentTimeMillis(), !publishError).getReturnCode());
 
-		// check publish queue
-		assertFalse("Some objects must have been published", TestPublishHandler.publishedObjects.isEmpty());
+		try (Trx trx = new Trx()) {
+			// check publish queue
+			assertFalse("Some objects must have been published", TestPublishHandler.publishedObjects.isEmpty());
 
-		for (NodeObject object : dirtedObjects) {
-			int objType = ObjectTransformer.getInt(object.getTType(), 0);
-			int objId = ObjectTransformer.getInt(object.getId(), 0);
-			String contentId = objType + "." + objId;
+			for (NodeObject object : dirtedObjects) {
+				int objType = ObjectTransformer.getInt(object.getTType(), 0);
+				int objId = ObjectTransformer.getInt(object.getId(), 0);
+				String contentId = objType + "." + objId;
 
-			// check whether object should have been published
-			boolean published = TestPublishHandler.publishedObjects.contains(contentId);
+				// check whether object should have been published
+				boolean published = TestPublishHandler.publishedObjects.contains(contentId);
 
-			// an object is expected in the cr if it was handled by the publish process AND we have instant publishing
-			assertPublishCR(contentMap.getWritableDatasource(), object, published && (!publishError || instantPublishing));
-			if (object instanceof Page && published) {
-				// objects that have been completely handled by the publish process are expected to be in the publish table
-				assertPublishTable(object, nodeId, "Page [" + ((Page) object).getName() + "]", published);
+				// an object is expected in the cr if it was handled by the publish process AND we have instant publishing
+				assertPublishCR(contentMap.getWritableDatasource(), object, published && (!publishError || instantPublishing));
+				if (object instanceof Page && published) {
+					// objects that have been completely handled by the publish process are expected to be in the publish table
+					assertPublishTable(object, nodeId, "Page [" + ((Page) object).getName() + "]", published);
+				}
+
+				// the publishqueue entry for the object must exist, if the publish process is expected to fail AND at least one of the following is true:
+				// 1. the object was not published (has to be published in the next publish run)
+				// 2. the publish process is not resumable
+				// 3. the cr does not have instant publishing, so the object cannot have been fully published
+				boolean expectPublishQueueEntries = publishError && (!published || !resumable || !instantPublishing);
+				assertPublishQueueEntry(object, nodeId, expectPublishQueueEntries);
 			}
-
-			// the publishqueue entry for the object must exist, if the publish process is expected to fail AND at least one of the following is true:
-			// 1. the object was not published (has to be published in the next publish run)
-			// 2. the publish process is not resumable
-			// 3. the cr does not have instant publishing, so the object cannot have been fully published
-			boolean expectPublishQueueEntries = publishError && (!published || !resumable || !instantPublishing);
-			assertPublishQueueEntry(object, nodeId, expectPublishQueueEntries);
 		}
 	}
 

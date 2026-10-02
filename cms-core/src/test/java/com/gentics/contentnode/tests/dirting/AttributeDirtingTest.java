@@ -6,10 +6,14 @@ import java.io.ByteArrayInputStream;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Rule;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FolderFactory;
@@ -32,12 +36,35 @@ import com.gentics.lib.content.GenticsContentAttribute;
  */
 @GCNFeature(set = { Feature.ATTRIBUTE_DIRTING })
 public class AttributeDirtingTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	/**
+	 * Node created by the test case
+	 */
+	private Node node;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
+
+	/**
+	 * Delete the node created by the test case
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		if (node != null) {
+			try (Trx trx = new Trx()) {
+				node.delete();
+				trx.success();
+			}
+		}
+	}
 
 	@Test
 	public void testDirtFolderName() throws Exception {
-		Node node = null;
 		Folder folder = null;
 
 		// create test data
@@ -74,47 +101,46 @@ public class AttributeDirtingTest {
 	}
 
 	@Test
-	@GCNFeature(unset = { Feature.ATTRIBUTE_DIRTING })
 	public void testDirtFolderNameWithoutFeature() throws Exception {
-		Node node = null;
-		Folder folder = null;
+		try (FeatureClosure attributeDirting = new FeatureClosure(Feature.ATTRIBUTE_DIRTING, false)) {
+			Folder folder = null;
 
-		// create test data
-		try (Trx trx = new Trx()) {
-			node = ContentNodeTestDataUtils.createNode("testhost", "TestNode", PublishTarget.CONTENTREPOSITORY);
-			folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
-			trx.success();
-		}
+			// create test data
+			try (Trx trx = new Trx()) {
+				node = ContentNodeTestDataUtils.createNode("testhost", "TestNode", PublishTarget.CONTENTREPOSITORY);
+				folder = ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder");
+				trx.success();
+			}
 
-		// publish into cr (creating the dependencies)
-		try (Trx trx = new Trx()) {
-			testContext.publish(false);
-			trx.success();
-		}
+			// publish into cr (creating the dependencies)
+			try (Trx trx = new Trx()) {
+				testContext.publish(false);
+				trx.success();
+			}
 
-		// change the folder name
-		try (Trx trx = new Trx()) {
-			Transaction t = trx.getTransaction();
-			folder = t.getObject(folder, true);
-			folder.setName("Changed Folder");
-			folder.save();
-			folder = t.getObject(folder);
-			trx.success();
-		}
+			// change the folder name
+			try (Trx trx = new Trx()) {
+				Transaction t = trx.getTransaction();
+				folder = t.getObject(folder, true);
+				folder.setName("Changed Folder");
+				folder.save();
+				folder = t.getObject(folder);
+				trx.success();
+			}
 
-		// wait for dirting and assert
-		try (Trx trx = new Trx()) {
-			testContext.waitForDirtqueueWorker();
+			// wait for dirting and assert
+			try (Trx trx = new Trx()) {
+				testContext.waitForDirtqueueWorker();
 
-			Map<Integer, Set<String>> dirted = PublishQueue.getDirtedObjectIdsWithAttributes(Folder.class, false, node);
-			assertThat(dirted).as("Dirted folders").containsKey(folder.getId());
-			assertThat(dirted.get(folder.getId())).as("Attributes dirted for " + folder).isNull();
+				Map<Integer, Set<String>> dirted = PublishQueue.getDirtedObjectIdsWithAttributes(Folder.class, false, node);
+				assertThat(dirted).as("Dirted folders").containsKey(folder.getId());
+				assertThat(dirted.get(folder.getId())).as("Attributes dirted for " + folder).isNull();
+			}
 		}
 	}
 
 	@Test
 	public void testDirtFolderNameAndDescription() throws Exception {
-		Node node = null;
 		Folder folder = null;
 
 		// create test data
@@ -159,7 +185,6 @@ public class AttributeDirtingTest {
 
 	@Test
 	public void testDirtFolderIndividualChanges() throws Exception {
-		Node node = null;
 		Folder folder = null;
 
 		// create test data
@@ -222,7 +247,6 @@ public class AttributeDirtingTest {
 
 	@Test
 	public void testPageDependency() throws Exception {
-		Node node = null;
 		Folder folder = null;
 		Page page = null;
 
@@ -274,7 +298,6 @@ public class AttributeDirtingTest {
 
 	@Test
 	public void testPageDependencyAndRepublish() throws Exception {
-		Node node = null;
 		Folder folder = null;
 		Page page = null;
 
@@ -347,7 +370,6 @@ public class AttributeDirtingTest {
 
 	@Test
 	public void testDirtFileBinary() throws Exception {
-		Node node = null;
 		Folder folder = null;
 		File file = null;
 
@@ -390,7 +412,6 @@ public class AttributeDirtingTest {
 
 	@Test
 	public void testDirtAttributeAndWholeObject() throws Exception {
-		Node node = null;
 
 		// create test data
 		try (Trx trx = new Trx()) {

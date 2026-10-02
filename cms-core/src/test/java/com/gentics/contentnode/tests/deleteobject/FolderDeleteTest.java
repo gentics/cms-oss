@@ -4,9 +4,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.Transaction;
@@ -28,8 +30,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
  * Test cases for deleting folder (structures)
  */
 public class FolderDeleteTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext(true);
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext(true);
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Test deleting a folder structure, where a template is only linked to the subfolder, whereas the only page using the template

@@ -12,13 +12,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.File;
@@ -28,6 +31,8 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.publish.PublishQueue;
+import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.testutils.Creator;
 import com.gentics.contentnode.testutils.DBTestContext;
@@ -53,8 +58,13 @@ public class CNGenticsImageStoreTest {
 
 	private int transactionCounter = 1;
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext(false);
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext(false);
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Test getting the edate for files.
@@ -65,29 +75,38 @@ public class CNGenticsImageStoreTest {
 	public void testEdateFromFileId() throws Exception {
 		NodeConfigRuntimeConfiguration config = NodeConfigRuntimeConfiguration.getDefault();
 		CNGenticsImageStore gis = new CNGenticsImageStore(config.getNodeConfig());
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		int origEdate;
 
-		// get the image for editing
-		ImageFile imageFile = (ImageFile) t.getObject(File.class, CONTENTFILE_ID, true);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			// get the image for editing
+			ImageFile imageFile = (ImageFile) trx.getTransaction().getObject(File.class, CONTENTFILE_ID, true);
 
-		// ensure edate > 0
-		int origEdate = gis.getEDateFromFileId(String.valueOf(CONTENTFILE_ID));
-		assertTrue("An existing Contentfile must have edate > 0", origEdate > 0);
+			// ensure edate > 0
+			origEdate = gis.getEDateFromFileId(String.valueOf(CONTENTFILE_ID));
+			assertTrue("An existing Contentfile must have edate > 0", origEdate > 0);
 
-		InputStream ins = GenericTestUtils.getPictureResource("blume.jpg");
-		imageFile.setFileStream(ins);
-		imageFile.setFiletype("image/jpg");
-		assertTrue(imageFile.save());
-		t.commit(true);
-		int newEdate= gis.getEDateFromFileId(String.valueOf(CONTENTFILE_ID));
-		assertTrue("A File must have a bigger edate after it's updated", origEdate < newEdate);
+			// the file is shared with other test methods, so make sure the update gets a later edate
+			trx.getTransaction().setTimestamp((origEdate + 1) * 1000L);
 
-		//Misc Tests for wrong input
-		assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("") <= 0);
-		assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("sdgasdh") <= 0);
-		assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("-1") <= 0);
-		assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("2352135123") <= 0);
-		assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("144.12") <= 0);
+			InputStream ins = GenericTestUtils.getPictureResource("blume.jpg");
+			imageFile.setFileStream(ins);
+			imageFile.setFiletype("image/jpg");
+			assertTrue(imageFile.save());
+			trx.success();
+		}
+
+		try (Trx trx = new Trx()) {
+			int newEdate= gis.getEDateFromFileId(String.valueOf(CONTENTFILE_ID));
+			assertTrue("A File must have a bigger edate after it's updated", origEdate < newEdate);
+
+			//Misc Tests for wrong input
+			assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("") <= 0);
+			assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("sdgasdh") <= 0);
+			assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("-1") <= 0);
+			assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("2352135123") <= 0);
+			assertTrue("A wrong input must return number <= 0", gis.getEDateFromFileId("144.12") <= 0);
+			trx.success();
+		}
 	}
 
 	/**
@@ -100,7 +119,6 @@ public class CNGenticsImageStoreTest {
 	public void testCreateCacheKeyAfterUpdate() throws Exception {
 		NodeConfigRuntimeConfiguration config = NodeConfigRuntimeConfiguration.getDefault();
 		CNGenticsImageStore gis = new CNGenticsImageStore(config.getNodeConfig());
-		Transaction t = testContext.startTransactionWithPermissions(true);
 
 		String mode ="bla";
 		String width = "320";
@@ -110,21 +128,32 @@ public class CNGenticsImageStoreTest {
 		String cwidth = "320";
 		String cheight = "320";
 		String fileId = String.valueOf(CONTENTFILE_ID);
-		// get the image for editing
-		ImageFile imageFile = (ImageFile) t.getObject(File.class, CONTENTFILE_ID, true);
-		String origCropCacheKey = (String) gis.createCropCacheKey(fileId, mode, width, height, topx, topy, cwidth, cheight);
-		String origCacheKey = (String) gis.createCacheKey(fileId, mode, cwidth, cheight);
+		String origCropCacheKey;
+		String origCacheKey;
 
-		InputStream ins = GenericTestUtils.getPictureResource("blume.jpg");
-		imageFile.setFileStream(ins);
-		imageFile.setFiletype("image/jpg");
-		assertTrue(imageFile.save());
-		t.commit(true);
+		try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+			// get the image for editing
+			ImageFile imageFile = (ImageFile) trx.getTransaction().getObject(File.class, CONTENTFILE_ID, true);
+			origCropCacheKey = (String) gis.createCropCacheKey(fileId, mode, width, height, topx, topy, cwidth, cheight);
+			origCacheKey = (String) gis.createCacheKey(fileId, mode, cwidth, cheight);
 
-		String newCropCacheKey = (String) gis.createCropCacheKey(fileId, mode, width, height, topx, topy, cwidth, cheight);
-		String newCacheKey = (String) gis.createCacheKey(fileId, mode, cwidth, cheight);
-		assertNotEquals("CacheKey must be different after the file is updated", origCacheKey, newCacheKey);
-		assertNotEquals("CacheKey must be different after the file is updated", origCropCacheKey, newCropCacheKey);
+			// the file is shared with other test methods, so make sure the update gets a later edate
+			trx.getTransaction().setTimestamp((gis.getEDateFromFileId(fileId) + 1) * 1000L);
+
+			InputStream ins = GenericTestUtils.getPictureResource("blume.jpg");
+			imageFile.setFileStream(ins);
+			imageFile.setFiletype("image/jpg");
+			assertTrue(imageFile.save());
+			trx.success();
+		}
+
+		try (Trx trx = new Trx()) {
+			String newCropCacheKey = (String) gis.createCropCacheKey(fileId, mode, width, height, topx, topy, cwidth, cheight);
+			String newCacheKey = (String) gis.createCacheKey(fileId, mode, cwidth, cheight);
+			assertNotEquals("CacheKey must be different after the file is updated", origCacheKey, newCacheKey);
+			assertNotEquals("CacheKey must be different after the file is updated", origCropCacheKey, newCropCacheKey);
+			trx.success();
+		}
 	}
 
 	/**
@@ -133,90 +162,126 @@ public class CNGenticsImageStoreTest {
 	 */
 	@Test
 	public void testChangeBinaryData() throws Exception {
-		testContext.getContext().setFeature(Feature.TAG_IMAGE_RESIZER, true);
+		try (FeatureClosure tagImageResizer = new FeatureClosure(Feature.TAG_IMAGE_RESIZER, true)) {
+			String pubDir = "/Content.Node";
+			Node node;
+			Template template;
 
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		TemplateTag tt = t.createObject(TemplateTag.class);
-		Construct construct = Creator.createConstruct(
-			TAG_NAME,
-			"img",
-			TAG_NAME,
-			Arrays.asList(Creator.createTextPartUnsaved(PART_NAME, 1, 1, "")));
+			try (Trx trx = new Trx(null, DBTestContext.USER_WITH_PERMS)) {
+				Transaction t = trx.getTransaction();
+				TemplateTag tt = t.createObject(TemplateTag.class);
+				Construct construct = Creator.createConstruct(
+					TAG_NAME,
+					"img",
+					TAG_NAME,
+					Arrays.asList(Creator.createTextPartUnsaved(PART_NAME, 1, 1, "")));
 
-		tt.setConstructId(construct.getId());
-		tt.setPublic(true);
-		tt.setEnabled(1);
-		tt.setName(TAG_NAME);
+				tt.setConstructId(construct.getId());
+				tt.setPublic(true);
+				tt.setEnabled(1);
+				tt.setName(TAG_NAME);
 
-		String pubDir = "/Content.Node";
-		Node node = Creator.createNode("testnode", "testhost", pubDir, "/", null);
-		Template template = Creator.createTemplate("imgstoretpl", "<node " + TAG_NAME + ">", node.getFolder());
+				node = Creator.createNode("testnode", "testhost", pubDir, "/", null);
+				template = Creator.createTemplate("imgstoretpl", "<node " + TAG_NAME + ">", node.getFolder());
 
-		node.setPublishFilesystem(true);
-		node.save();
-		template.getTemplateTags().put(TAG_NAME, tt);
-		template.save();
+				node.setPublishFilesystem(true);
+				node.save();
+				template.getTemplateTags().put(TAG_NAME, tt);
+				template.save();
 
-		t.commit();
+				trx.success();
+			}
 
-		t = testContext.startTransaction(++transactionCounter);
-		String imageFilename = "test.jpg";
-		ImageFile image = Creator.createImage(node.getFolder(), imageFilename, node);
+			String imageFilename = "test.jpg";
+			ImageFile image;
 
-		image.setFileStream(GenericTestUtils.getPictureResource(IMG_NAME_ORIG));
-		image.setFiletype("image/jpg");
-		image.save();
+			try (Trx trx = new Trx()) {
+				Transaction t = trx.getTransaction();
+				t.setTimestamp(++transactionCounter * 1000L);
+				image = Creator.createImage(node.getFolder(), imageFilename, node);
 
-		t.commit(false);
+				image.setFileStream(GenericTestUtils.getPictureResource(IMG_NAME_ORIG));
+				image.setFiletype("image/jpg");
+				image.save();
 
-		Page page = Creator.createPage("testpage", node.getFolder(), template);
-		ContentTag tag = page.getContentTag(TAG_NAME);
-		Value v = (Value) tag.getValues().get(PART_NAME);
+				t.commit(false);
 
-		v.setValueText("/GenticsImageStore/100/100/smart/" + pubDir + "/" + imageFilename);
+				Page page = Creator.createPage("testpage", node.getFolder(), template);
+				ContentTag tag = page.getContentTag(TAG_NAME);
+				Value v = (Value) tag.getValues().get(PART_NAME);
 
-		assertTrue("The page must have changes", page.save());
-		page.publish();
+				v.setValueText("/GenticsImageStore/100/100/smart/" + pubDir + "/" + imageFilename);
 
-		t = testContext.startTransaction(++transactionCounter);
+				assertTrue("The page must have changes", page.save());
+				page.publish();
 
-		testContext.publish(true);
+				trx.success();
+			}
 
-		Map<String, String> imagestoreData = new HashMap<>();
-		List<String> imagestoreDataFields = Arrays.asList("edate", "hash", "hash_orig");
+			try (Trx trx = new Trx()) {
+				trx.getTransaction().setTimestamp(++transactionCounter * 1000L);
+				// dirt all pages, images, files and folders of all nodes, that have publish not disabled
+				int[] nodeIds = DBUtils.select("SELECT id FROM node WHERE disable_publish = 0", DBUtils.IDS).stream()
+						.mapToInt(Integer::intValue).toArray();
+				PublishQueue.dirtPublishedPages(nodeIds, null, 0, 0, Action.DEPENDENCY);
+				PublishQueue.dirtImagesAndFiles(nodeIds, null, 0, 0, Action.DEPENDENCY);
+				PublishQueue.dirtFolders(nodeIds, null, 0, 0, Action.DEPENDENCY);
+				trx.success();
+			}
 
-		DBUtils.executeStatement(
-			"SELECT * FROM imagestoreimage WHERE contentfile_id = " + image.getId(),
-			new SQLExecutor() {
-				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-					assertTrue("Image must be in imagestoreimage table", rs.next());
+			try (Trx trx = new Trx()) {
+				testContext.publish(false);
+				trx.success();
+			}
 
-					for (String key : imagestoreDataFields) {
-						imagestoreData.put(key, rs.getString(key));
-					}
-				}
-			});
+			Map<String, String> imagestoreData = new HashMap<>();
+			List<String> imagestoreDataFields = Arrays.asList("edate", "hash", "hash_orig");
 
-		t = testContext.startTransaction(++transactionCounter);
+			try (Trx trx = new Trx()) {
+				DBUtils.executeStatement(
+					"SELECT * FROM imagestoreimage WHERE contentfile_id = " + image.getId(),
+					new SQLExecutor() {
+						public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+							assertTrue("Image must be in imagestoreimage table", rs.next());
 
-		image.setFileStream(GenericTestUtils.getPictureResource(IMG_NAME_NEW));
-		image.save();
+							for (String key : imagestoreDataFields) {
+								imagestoreData.put(key, rs.getString(key));
+							}
+						}
+					});
+				trx.success();
+			}
 
-		t = testContext.startTransaction(++transactionCounter);
-		testContext.publish(false);
+			try (Trx trx = new Trx()) {
+				trx.getTransaction().setTimestamp(++transactionCounter * 1000L);
 
-		DBUtils.executeStatement(
-			"SELECT * FROM imagestoreimage WHERE contentfile_id = " + image.getId(),
-			new SQLExecutor() {
-				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-					assertTrue("Image must still be in imagestoreimage table", rs.next());
+				image.setFileStream(GenericTestUtils.getPictureResource(IMG_NAME_NEW));
+				image.save();
+				trx.success();
+			}
 
-					for (String key : imagestoreDataFields) {
-						assertFalse(
-							"The " + key + " field must have changed",
-							imagestoreData.get(key).equals(rs.getString(key)));
-					}
-				}
-			});
+			try (Trx trx = new Trx()) {
+				trx.getTransaction().setTimestamp(++transactionCounter * 1000L);
+				testContext.publish(false);
+				trx.success();
+			}
+
+			try (Trx trx = new Trx()) {
+				DBUtils.executeStatement(
+					"SELECT * FROM imagestoreimage WHERE contentfile_id = " + image.getId(),
+					new SQLExecutor() {
+						public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+							assertTrue("Image must still be in imagestoreimage table", rs.next());
+
+							for (String key : imagestoreDataFields) {
+								assertFalse(
+									"The " + key + " field must have changed",
+									imagestoreData.get(key).equals(rs.getString(key)));
+							}
+						}
+					});
+				trx.success();
+			}
+		}
 	}
 }

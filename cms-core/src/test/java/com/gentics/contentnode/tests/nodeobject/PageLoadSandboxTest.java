@@ -8,11 +8,14 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
@@ -21,12 +24,18 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
+import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 public class PageLoadSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * ID of the page which has versions
@@ -182,36 +191,38 @@ public class PageLoadSandboxTest {
 
 		// Note: since the tests in this test case do not modify data, it is not
 		// necessary to restore a snapshot for every test case
-		Transaction t = testContext.getContext().getTransaction();
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
 
-		folder1 = (Folder) t.getObject(Folder.class, FOLDER1_ID);
-		folder2 = (Folder) t.getObject(Folder.class, FOLDER2_ID);
-		folder3 = (Folder) t.getObject(Folder.class, FOLDER3_ID);
-		page1 = (Page) t.getObject(Page.class, PAGE1_ID);
-		page2 = (Page) t.getObject(Page.class, PAGE2_ID);
-		file1 = (File) t.getObject(File.class, FILE1_ID);
-		file2 = (File) t.getObject(File.class, FILE2_ID);
-		file3 = (File) t.getObject(File.class, FILE3_ID);
-		image1 = (ImageFile) t.getObject(ImageFile.class, IMAGE1_ID);
-		image2 = (ImageFile) t.getObject(ImageFile.class, IMAGE2_ID);
-		image3 = (ImageFile) t.getObject(ImageFile.class, IMAGE3_ID);
+			folder1 = (Folder) t.getObject(Folder.class, FOLDER1_ID);
+			folder2 = (Folder) t.getObject(Folder.class, FOLDER2_ID);
+			folder3 = (Folder) t.getObject(Folder.class, FOLDER3_ID);
+			page1 = (Page) t.getObject(Page.class, PAGE1_ID);
+			page2 = (Page) t.getObject(Page.class, PAGE2_ID);
+			file1 = (File) t.getObject(File.class, FILE1_ID);
+			file2 = (File) t.getObject(File.class, FILE2_ID);
+			file3 = (File) t.getObject(File.class, FILE3_ID);
+			image1 = (ImageFile) t.getObject(ImageFile.class, IMAGE1_ID);
+			image2 = (ImageFile) t.getObject(ImageFile.class, IMAGE2_ID);
+			image3 = (ImageFile) t.getObject(ImageFile.class, IMAGE3_ID);
 
-		currentVersion = (Page) t.getObject(Page.class, PAGE_ID);
-		assertNotNull("Check whether the current version of the page could be loaded", currentVersion);
+			currentVersion = (Page) t.getObject(Page.class, PAGE_ID);
+			assertNotNull("Check whether the current version of the page could be loaded", currentVersion);
 
-		pageVersions = currentVersion.getVersions();
+			pageVersions = currentVersion.getVersions();
 
-		// there should be 9 versions
-		assertEquals("Check number of page versions", 9, pageVersions.length);
+			// there should be 9 versions
+			assertEquals("Check number of page versions", 9, pageVersions.length);
 
-		// get the overview page
-		overviewPage = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID);
-		assertNotNull("Check whether the current version of the overview page could be loaded", overviewPage);
+			// get the overview page
+			overviewPage = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID);
+			assertNotNull("Check whether the current version of the overview page could be loaded", overviewPage);
 
-		overviewPageVersions = overviewPage.getVersions();
+			overviewPageVersions = overviewPage.getVersions();
 
-		// there whould be 4 versions
-		assertEquals("Check number of overview page versions", 4, overviewPageVersions.length);
+			// there whould be 4 versions
+			assertEquals("Check number of overview page versions", 4, overviewPageVersions.length);
+		}
 	}
 
 	/**
@@ -226,9 +237,11 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testReadingCurrentPage() throws Exception {
-		// check that the current version has the expected data
-		checkPage("current version", currentVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3 }, true,
-				new Page[] { page2, page1, currentVersion });
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			// check that the current version has the expected data
+			checkPage("current version", currentVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3 }, true,
+					new Page[] { page2, page1, currentVersion });
+		}
 	}
 
 	/**
@@ -237,12 +250,14 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testFirstVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
-		// get oldest version (initial)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[8].getDate().getIntTimestamp());
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
+			// get oldest version (initial)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[8].getDate().getIntTimestamp());
 
-		// check that the oldest version has the expected data
-		checkPage("first version", oldVersion, INITIAL_PAGE_NAME, INITIAL_PAGE_CONTENT, false, null, false, null);
+			// check that the oldest version has the expected data
+			checkPage("first version", oldVersion, INITIAL_PAGE_NAME, INITIAL_PAGE_CONTENT, false, null, false, null);
+		}
 	}
 
 	/**
@@ -251,13 +266,15 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testSecondVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (modified page name and content)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[7].getDate().getIntTimestamp());
+			// next version (modified page name and content)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[7].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("second version", oldVersion, CURRENT_PAGE_NAME, MODIFIED_PAGE_CONTENT, false, null, false, null);
+			// check the page
+			checkPage("second version", oldVersion, CURRENT_PAGE_NAME, MODIFIED_PAGE_CONTENT, false, null, false, null);
+		}
 	}
 
 	/**
@@ -266,13 +283,15 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testThirdVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added new overview1 tag)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[6].getDate().getIntTimestamp());
+			// next version (added new overview1 tag)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[6].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("third version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1}, false, null);
+			// check the page
+			checkPage("third version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1}, false, null);
+		}
 	}
 
 	/**
@@ -281,13 +300,15 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testFourthVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added overview entry)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[5].getDate().getIntTimestamp());
+			// next version (added overview entry)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[5].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("fourth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder2, folder1}, false, null);
+			// check the page
+			checkPage("fourth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder2, folder1}, false, null);
+		}
 	}
 
 	/**
@@ -296,13 +317,15 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testFifthVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (modified overview sorting)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[4].getDate().getIntTimestamp());
+			// next version (modified overview sorting)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[4].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("fifth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2}, false, null);
+			// check the page
+			checkPage("fifth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2}, false, null);
+		}
 	}
 
 	/**
@@ -311,13 +334,15 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testSixthVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added overview entry)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[3].getDate().getIntTimestamp());
+			// next version (added overview entry)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[3].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("sixth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, false, null);
+			// check the page
+			checkPage("sixth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, false, null);
+		}
 	}
 
 	/**
@@ -326,14 +351,16 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testSeventhVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added new overview2 tag)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[2].getDate().getIntTimestamp());
+			// next version (added new overview2 tag)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[2].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("seventh version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
-				new Page[] { page1});
+			// check the page
+			checkPage("seventh version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
+					new Page[] { page1});
+		}
 	}
 
 	/**
@@ -342,14 +369,16 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testEighthVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added overview entry to overview2)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[1].getDate().getIntTimestamp());
+			// next version (added overview entry to overview2)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[1].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("eighth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
-				new Page[] { page1, currentVersion});
+			// check the page
+			checkPage("eighth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
+					new Page[] { page1, currentVersion});
+		}
 	}
 
 	/**
@@ -358,14 +387,16 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testNinthVersion() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// next version (added overview entry to overview2)
-		Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[0].getDate().getIntTimestamp());
+			// next version (added overview entry to overview2)
+			Page oldVersion = (Page) t.getObject(Page.class, PAGE_ID, pageVersions[0].getDate().getIntTimestamp());
 
-		// check the page
-		checkPage("ninth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
-				new Page[] { page2, page1, currentVersion});
+			// check the page
+			checkPage("ninth version", oldVersion, CURRENT_PAGE_NAME, CURRENT_PAGE_CONTENT, true, new Folder[] { folder1, folder2, folder3}, true,
+					new Page[] { page2, page1, currentVersion});
+		}
 	}
 
 	/**
@@ -374,31 +405,33 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testPageOverview() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// get oldest version
-		Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
+			// get oldest version
+			Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
 
-		// check the overview1 tag
-		checkOverviewTag(OVERVIEW1_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { page1, currentVersion, page2});
+			// check the overview1 tag
+			checkOverviewTag(OVERVIEW1_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { page1, currentVersion, page2});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
 
-		// check the overview1 tag
-		checkOverviewTag(OVERVIEW1_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { page2, currentVersion, page1});
+			// check the overview1 tag
+			checkOverviewTag(OVERVIEW1_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { page2, currentVersion, page1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
 
-		// check the overview1 tag
-		checkOverviewTag(OVERVIEW1_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { currentVersion, page2, page1});
+			// check the overview1 tag
+			checkOverviewTag(OVERVIEW1_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { currentVersion, page2, page1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
 
-		// check the overview1 tag
-		checkOverviewTag(OVERVIEW1_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { currentVersion, page1});
+			// check the overview1 tag
+			checkOverviewTag(OVERVIEW1_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW1_TAG_NAME), new Page[] { currentVersion, page1});
+		}
 	}
 
 	/**
@@ -407,31 +440,33 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testFolderOverview() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// get oldest version
-		Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
+			// get oldest version
+			Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
 
-		// check the overview2 tag
-		checkOverviewTag(OVERVIEW2_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder1, folder2, folder3});
+			// check the overview2 tag
+			checkOverviewTag(OVERVIEW2_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder1, folder2, folder3});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
 
-		// check the overview2 tag
-		checkOverviewTag(OVERVIEW2_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder3, folder2, folder1});
+			// check the overview2 tag
+			checkOverviewTag(OVERVIEW2_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder3, folder2, folder1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
 
-		// check the overview2 tag
-		checkOverviewTag(OVERVIEW2_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder2, folder3, folder1});
+			// check the overview2 tag
+			checkOverviewTag(OVERVIEW2_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder2, folder3, folder1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
 
-		// check the overview2 tag
-		checkOverviewTag(OVERVIEW2_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder2, folder1});
+			// check the overview2 tag
+			checkOverviewTag(OVERVIEW2_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW2_TAG_NAME), new Folder[] { folder2, folder1});
+		}
 	}
 
 	/**
@@ -440,31 +475,33 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testFileOverview() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// get oldest version
-		Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
+			// get oldest version
+			Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
 
-		// check the overview3 tag
-		checkOverviewTag(OVERVIEW3_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file2, file3, file1});
+			// check the overview3 tag
+			checkOverviewTag(OVERVIEW3_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file2, file3, file1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
 
-		// check the overview3 tag
-		checkOverviewTag(OVERVIEW3_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file1, file3, file2});
+			// check the overview3 tag
+			checkOverviewTag(OVERVIEW3_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file1, file3, file2});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
 
-		// check the overview3 tag
-		checkOverviewTag(OVERVIEW3_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file3, file1, file2});
+			// check the overview3 tag
+			checkOverviewTag(OVERVIEW3_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file3, file1, file2});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
 
-		// check the overview3 tag
-		checkOverviewTag(OVERVIEW3_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file3, file2});
+			// check the overview3 tag
+			checkOverviewTag(OVERVIEW3_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW3_TAG_NAME), new File[] { file3, file2});
+		}
 	}
 
 	/**
@@ -473,31 +510,33 @@ public class PageLoadSandboxTest {
 	 */
 	@Test
 	public void testImageOverview() throws Exception {
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx(); RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
+			Transaction t = trx.getTransaction();
 
-		// get oldest version
-		Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
+			// get oldest version
+			Page oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[3].getDate().getIntTimestamp());
 
-		// check the overview4 tag
-		checkOverviewTag(OVERVIEW4_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image1, image2, image3});
+			// check the overview4 tag
+			checkOverviewTag(OVERVIEW4_TAG_NAME, "first version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image1, image2, image3});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[2].getDate().getIntTimestamp());
 
-		// check the overview4 tag
-		checkOverviewTag(OVERVIEW4_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image3, image2, image1});
+			// check the overview4 tag
+			checkOverviewTag(OVERVIEW4_TAG_NAME, "second version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image3, image2, image1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[1].getDate().getIntTimestamp());
 
-		// check the overview4 tag
-		checkOverviewTag(OVERVIEW4_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image2, image3, image1});
+			// check the overview4 tag
+			checkOverviewTag(OVERVIEW4_TAG_NAME, "third version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image2, image3, image1});
 
-		// get the next version
-		oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
+			// get the next version
+			oldVersion = (Page) t.getObject(Page.class, OVERVIEW_PAGE_ID, overviewPageVersions[0].getDate().getIntTimestamp());
 
-		// check the overview4 tag
-		checkOverviewTag(OVERVIEW4_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image2, image1});
+			// check the overview4 tag
+			checkOverviewTag(OVERVIEW4_TAG_NAME, "fourth version", oldVersion.getTag(OVERVIEW4_TAG_NAME), new ImageFile[] { image2, image1});
+		}
 	}
 
 	/**

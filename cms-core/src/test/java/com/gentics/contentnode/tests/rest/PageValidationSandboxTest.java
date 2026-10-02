@@ -12,11 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.Page;
@@ -39,8 +41,13 @@ import com.gentics.testutils.GenericTestUtils;
  */
 public class PageValidationSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * The Node used for testing
@@ -63,9 +70,12 @@ public class PageValidationSandboxTest {
 	@Before
 	public void setUp() throws Exception {
 
-		node = ContentNodeTestDataUtils.createNode("validationsandboxtestnode",
-				"www.validationsandboxtestnode.at", "/test", "/testbin", false,
-				false);
+		try (Trx trx = new Trx()) {
+			node = ContentNodeTestDataUtils.createNode("validationsandboxtestnode",
+					"www.validationsandboxtestnode.at", "/test", "/testbin", false,
+					false);
+			trx.success();
+		}
 		create(Template.class, tmpl -> {
 			tmpl.setFolderId(node.getFolder().getId());
 			tmpl.setName("validationsandboxtesttemplate");
@@ -81,8 +91,6 @@ public class PageValidationSandboxTest {
 		String policyMapFilepath = "/com/gentics/testutils/resources/validation/policy-map.custom.xml";
 		java.net.URL resourcePath = GenericTestUtils.class.getResource(policyMapFilepath);
 		nodePreferences.setProperty("validation.policyMap", "file://" + resourcePath.getPath());
-
-		testContext.getContext().startTransaction();
 	}
 
 	/**
@@ -92,13 +100,16 @@ public class PageValidationSandboxTest {
 	 */
 	@Test
 	public void testSavePageWithValidProperties() throws Exception {
-		Page testPage = createTestPage();
-		testPage.setName("<span>name</span>");
-		testPage.setDescription("<span>description</span>");
-		testPage.setFileName("filename.ext");
-		testPage.setLanguage("somelang");
+		try (Trx trx = new Trx()) {
+			Page testPage = createTestPage();
+			testPage.setName("<span>name</span>");
+			testPage.setDescription("<span>description</span>");
+			testPage.setFileName("filename.ext");
+			testPage.setLanguage("somelang");
 
-		savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.OK);
+			savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.OK);
+			trx.success();
+		}
 	}
 
 	/**
@@ -108,31 +119,34 @@ public class PageValidationSandboxTest {
 	 */
 	@Test
 	public void testSavePageWithBadProperties() throws Exception {
-		Page testPage = createTestPage();
+		try (Trx trx = new Trx()) {
+			Page testPage = createTestPage();
 
-		List<String> testProperties = Arrays.asList(new String[]
-				{ "name", "description", "filename", "language" });
+			List<String> testProperties = Arrays.asList(new String[]
+					{ "name", "description", "filename", "language" });
 
-		for (String testProperty : testProperties) {
-			Page newPageData = new Page();
+			for (String testProperty : testProperties) {
+				Page newPageData = new Page();
 
-			if (testProperty.equals("name")) {
-				newPageData.setName("<script>");
-			} else if (testProperty.equals("description")) {
-				newPageData.setDescription("<script>");
-			} else if (testProperty.equals("filename")) {
-				newPageData.setFileName("<script>");
-			} else if (testProperty.equals("language")) {
-				newPageData.setLanguage("<script>");
+				if (testProperty.equals("name")) {
+					newPageData.setName("<script>");
+				} else if (testProperty.equals("description")) {
+					newPageData.setDescription("<script>");
+				} else if (testProperty.equals("filename")) {
+					newPageData.setFileName("<script>");
+				} else if (testProperty.equals("language")) {
+					newPageData.setLanguage("<script>");
+				}
+
+				try {
+					savePageAndcheckResponse(testPage.getId(), newPageData, ResponseCode.FAILURE);
+					fail("The expected NodeException was not thrown");
+				} catch (NodeException e) {
+					// this is expected
+					assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
+				}
 			}
-
-			try {
-				savePageAndcheckResponse(testPage.getId(), newPageData, ResponseCode.FAILURE);
-				fail("The expected NodeException was not thrown");
-			} catch (NodeException e) {
-				// this is expected
-				assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
-			}
+			trx.success();
 		}
 	}
 
@@ -143,33 +157,36 @@ public class PageValidationSandboxTest {
 	 */
 	@Test
 	public void testSavePageWithInvalidTags() throws Exception {
-		Page testPage = createTestPage();
-		PageSaveRequest pageSaveRequest = new PageSaveRequest(testPage);
+		try (Trx trx = new Trx()) {
+			Page testPage = createTestPage();
+			PageSaveRequest pageSaveRequest = new PageSaveRequest(testPage);
 
-		Map<String, Tag> tags = new HashMap<String, Tag>();
-		Tag tag = new Tag();
-		tag.setType(Tag.Type.CONTENTTAG);
-		tag.setName("text");
-		tag.setConstructId(CONSTRUCT_ID);
-		tag.setActive(true);
+			Map<String, Tag> tags = new HashMap<String, Tag>();
+			Tag tag = new Tag();
+			tag.setType(Tag.Type.CONTENTTAG);
+			tag.setName("text");
+			tag.setConstructId(CONSTRUCT_ID);
+			tag.setActive(true);
 
-		Map<String, Property> tagProperties = new HashMap<String, Property>();
-		Property tagProperty = new Property();
-		tagProperty.setStringValue("<script>");
-		tagProperty.setType(Property.Type.RICHTEXT);
+			Map<String, Property> tagProperties = new HashMap<String, Property>();
+			Property tagProperty = new Property();
+			tagProperty.setStringValue("<script>");
+			tagProperty.setType(Property.Type.RICHTEXT);
 
-		tagProperties.put("html", tagProperty);
-		tag.setProperties(tagProperties);
-		tags.put("text", tag);
+			tagProperties.put("html", tagProperty);
+			tag.setProperties(tagProperties);
+			tags.put("text", tag);
 
-		pageSaveRequest.getPage().setTags(tags);
+			pageSaveRequest.getPage().setTags(tags);
 
-		try {
-			savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.FAILURE);
-			fail("Exüected NodeException was not thrown");
-		} catch (NodeException e) {
-			// this is expected
-			assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
+			try {
+				savePageAndcheckResponse(testPage.getId(), testPage, ResponseCode.FAILURE);
+				fail("Exüected NodeException was not thrown");
+			} catch (NodeException e) {
+				// this is expected
+				assertThat(e.getLocalizedMessage()).contains("The script tag is not allowed");
+			}
+			trx.success();
 		}
 	}
 

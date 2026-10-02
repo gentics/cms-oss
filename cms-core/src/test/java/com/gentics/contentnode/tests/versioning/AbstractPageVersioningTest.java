@@ -2,8 +2,10 @@ package com.gentics.contentnode.tests.versioning;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentTag;
@@ -13,8 +15,13 @@ import com.gentics.contentnode.testutils.DBTestContext;
 
 public class AbstractPageVersioningTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	/**
 	 * Name of the contenttag, every page will have

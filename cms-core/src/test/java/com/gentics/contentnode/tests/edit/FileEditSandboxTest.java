@@ -29,12 +29,13 @@ import java.util.stream.Collectors;
 
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.junit.BeforeClass;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -69,8 +70,8 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
  */
 public class FileEditSandboxTest extends AbstractEditSandboxTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	/**
 	 * id of the file which is edited
@@ -88,7 +89,8 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	public final static int FOLDER_ID = 7;
 
 	@BeforeClass
-	public static void setupOnce() {
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
 		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
 	}
 
@@ -99,54 +101,57 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testEditingMetaData() throws Exception {
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		String newName = "The_edited_Name";
-		String fileType = "application/octet-stream";
-		String newDescription = "The edited description";
-		int newFilesize = 9991;
+			String newName = "The_edited_Name";
+			String fileType = "application/octet-stream";
+			String newDescription = "The edited description";
+			int newFilesize = 9991;
 
-		// get the transaction timestamp (which will be used as edate)
-		int transactionTimestamp = t.getUnixTimestamp();
+			// get the transaction timestamp (which will be used as edate)
+			int transactionTimestamp = t.getUnixTimestamp();
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
 
-		// change some metadata
-		file.setName(newName);
-		file.setFiletype(fileType);
-		file.setDescription(newDescription);
-		file.setFilesize(newFilesize);
+			// change some metadata
+			file.setName(newName);
+			file.setFiletype(fileType);
+			file.setDescription(newDescription);
+			file.setFilesize(newFilesize);
 
-		// save the file
-		file.save();
+			// save the file
+			file.save();
 
-		// commit the transaction
-		t.commit(false);
+			// commit the transaction
+			t.commit(false);
 
-		// now read the file again and check whether it has the modified meta
-		// data
-		File readFile = (File) t.getObject(File.class, CONTENTFILE_ID);
+			// now read the file again and check whether it has the modified meta
+			// data
+			File readFile = (File) t.getObject(File.class, CONTENTFILE_ID);
 
-		assertEquals("Check name of file", newName, readFile.getName());
-		assertEquals("Check description of file", newDescription, readFile.getDescription());
-		assertEquals("Check size of the file", newFilesize, readFile.getFilesize());
+			assertEquals("Check name of file", newName, readFile.getName());
+			assertEquals("Check description of file", newDescription, readFile.getDescription());
+			assertEquals("Check size of the file", newFilesize, readFile.getFilesize());
 
-		// check whether the edate and editor have been set
-		assertEquals("Check editor id of the file", DBTestContext.USER_WITH_PERMS, readFile.getEditor().getId());
-		assertEquals("Check edate of the file", transactionTimestamp, readFile.getEDate().getIntTimestamp());
+			// check whether the edate and editor have been set
+			assertEquals("Check editor id of the file", DBTestContext.USER_WITH_PERMS, readFile.getEditor().getId());
+			assertEquals("Check edate of the file", transactionTimestamp, readFile.getEDate().getIntTimestamp());
 
-		// also check the data directly in the database
-		ResultSet res = testContext.getDBSQLUtils().executeQuery("SELECT * FROM contentfile WHERE id = " + CONTENTFILE_ID);
+			// also check the data directly in the database
+			ResultSet res = testContext.getDBSQLUtils().executeQuery("SELECT * FROM contentfile WHERE id = " + CONTENTFILE_ID);
 
-		if (res.next()) {
-			assertEquals("Check name of file", newName, res.getString("name"));
-			assertEquals("Check description of file", newDescription, res.getString("description"));
-			assertEquals("Check size of the file", newFilesize, res.getInt("filesize"));
-		} else {
-			fail("Did not find the file in the database");
+			if (res.next()) {
+				assertEquals("Check name of file", newName, res.getString("name"));
+				assertEquals("Check description of file", newDescription, res.getString("description"));
+				assertEquals("Check size of the file", newFilesize, res.getInt("filesize"));
+			} else {
+				fail("Did not find the file in the database");
+			}
+			res.close();
+			trx.success();
 		}
-		res.close();
 	}
 
 	/**
@@ -156,17 +161,19 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testSuggestNewFileName()throws Exception {
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		File file = (File) t.createObject(File.class);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File file = (File) t.createObject(File.class);
 
-		file.setName("image-dpi72x72-res250x188-alpha.png");
-		file.setFiletype("image/gif");
-		file.setFolderId(FOLDER_ID);
+			file.setName("image-dpi72x72-res250x188-alpha.png");
+			file.setFiletype("image/gif");
+			file.setFolderId(FOLDER_ID);
 
-		String oldFileName = file.getName();
-		FileFactory.suggestNewFilename(file);
+			String oldFileName = file.getName();
+			FileFactory.suggestNewFilename(file);
 
-		assertFalse("Both filenames should not be the same.", file.getName().equals(oldFileName));
+			assertFalse("Both filenames should not be the same.", file.getName().equals(oldFileName));
+		}
 	}
 
 	/**
@@ -175,12 +182,14 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testSuggestNewFileName2() throws Exception {
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
-		String oldFilename = file.getName();
-		FileFactory.suggestNewFilename(file);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
+			String oldFilename = file.getName();
+			FileFactory.suggestNewFilename(file);
 
-		assertEquals("Both filenames should have the same name.", oldFilename, file.getName());
+			assertEquals("Both filenames should have the same name.", oldFilename, file.getName());
+		}
 	}
 
 	/**
@@ -191,18 +200,19 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	@Test
 	public void testSuggestNewFileName3() throws Exception {
 
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		File file = (File) t.createObject(File.class);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File file = (File) t.createObject(File.class);
 
-		file.setName("textimage1.1.gif");
-		file.setFiletype("image/gif");
-		file.setFolderId(FOLDER_ID - 2);
+			file.setName("textimage1.1.gif");
+			file.setFiletype("image/gif");
+			file.setFolderId(FOLDER_ID - 2);
 
-		String oldFileName = file.getFilename();
-		FileFactory.suggestNewFilename(file);
+			String oldFileName = file.getFilename();
+			FileFactory.suggestNewFilename(file);
 
-		assertEquals("Both filenames should be the same", oldFileName, file.getName());
-
+			assertEquals("Both filenames should be the same", oldFileName, file.getName());
+		}
 	}
 
 	/**
@@ -212,15 +222,17 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	@Test
 	public void testCopyFile() throws Exception {
 
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
-		FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
-		File newFile = fileFactory.copyFile(file);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
+			FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
+			File newFile = fileFactory.copyFile(file);
 
-		assertNull("The id should be null after creating the copy.", newFile.getId());
-		newFile.save();
-		assertNotNull("After saving the new file should contain a valid fileId.", newFile.getId());
-		assertFalse("Filenames should not be the same.", file.getName().equalsIgnoreCase(newFile.getName()));
+			assertNull("The id should be null after creating the copy.", newFile.getId());
+			newFile.save();
+			assertNotNull("After saving the new file should contain a valid fileId.", newFile.getId());
+			assertFalse("Filenames should not be the same.", file.getName().equalsIgnoreCase(newFile.getName()));
+		}
 	}
 
 	/**
@@ -231,16 +243,18 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	public void testCopyFileWithNewFilename() throws Exception {
 
 		String newFilename = "Test1234";
-		Transaction t = testContext.startTransactionWithPermissions(true);
-		File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
-		FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
-		File newFile = fileFactory.copyFile(file, newFilename);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File file = (ContentFile) t.getObject(File.class, CONTENTFILE_ID, true);
+			FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
+			File newFile = fileFactory.copyFile(file, newFilename);
 
-		assertNull("The id should be null after creating the copy.", newFile.getId());
-		newFile.save();
-		assertNotNull("After saving the new file should contain a valid fileId.", newFile.getId());
-		assertFalse("Filenames should not be the same.", file.getName().equalsIgnoreCase(newFile.getName()));
-		assertEquals("The newfile should have the filename {" + newFilename + "}", newFilename, newFile.getName());
+			assertNull("The id should be null after creating the copy.", newFile.getId());
+			newFile.save();
+			assertNotNull("After saving the new file should contain a valid fileId.", newFile.getId());
+			assertFalse("Filenames should not be the same.", file.getName().equalsIgnoreCase(newFile.getName()));
+			assertEquals("The newfile should have the filename {" + newFilename + "}", newFilename, newFile.getName());
+		}
 	}
 
 	/**
@@ -251,24 +265,39 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		migrateVtlPagesToHbsPages();
 
 		// republish everything to build dependencies
-		testContext.publish(true);
+		try (Trx trx = new Trx()) {
+			testContext.getContext().dirtAll();
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+			trx.success();
+		}
+
+		int dirtedPagesBeforeModification = 0;
 
 		// Edit and Save our file
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		int dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
+			dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
 
-		file.setName("Blablabal");
-		file.save();
-		t.commit(false);
+			file.setName("Blablabal");
+			file.save();
+			trx.success();
+		}
 
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
-		testContext.checkDirtedPages(dirtedPagesBeforeModification, new int[] { 2, 4, 7});
+
+		try (Trx trx = trxWithPermissions()) {
+			testContext.checkDirtedPages(dirtedPagesBeforeModification, new int[] { 2, 4, 7});
+			trx.success();
+		}
 	}
 
 	/**
@@ -279,28 +308,42 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		migrateVtlPagesToHbsPages();
 
 		// republish everything to build dependencies
-		testContext.publish(true);
+		try (Trx trx = new Trx()) {
+			testContext.getContext().dirtAll();
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+			trx.success();
+		}
+
+		int dirtedPagesBeforeModification = 0;
 
 		// Edit and Save our file
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		int dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
+			dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
 
-		file.setDescription("Blablabal");
-		file.save();
-		t.commit(false);
+			file.setDescription("Blablabal");
+			file.save();
+			trx.success();
+		}
 
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
 
-		// 7: Target[Garbage.data].editdate
-		int[] pageIds = {7, 9};
+		try (Trx trx = trxWithPermissions()) {
+			// 7: Target[Garbage.data].editdate
+			int[] pageIds = {7, 9};
 
-		testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			trx.success();
+		}
 	}
 
 	/**
@@ -311,30 +354,44 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		migrateVtlPagesToHbsPages();
 
 		// republish everything to build dependencies
-		testContext.publish(true);
+		try (Trx trx = new Trx()) {
+			testContext.getContext().dirtAll();
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+			trx.success();
+		}
+
+		int dirtedPagesBeforeModification = 0;
 
 		// Edit and Save our file
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		int dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
+			dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
 
-		file.setFolderId(11);
-		file.save();
-		t.commit(false);
+			file.setFolderId(11);
+			file.save();
+			trx.success();
+		}
 
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
 
-		// 6: Target[Garbage.data].folder
-		// 7: Target[Garbage.data].editdate
-		// 4: Target[Garbage.data].url
-		int[] pageIds = { 6, 7, 4};
+		try (Trx trx = trxWithPermissions()) {
+			// 6: Target[Garbage.data].folder
+			// 7: Target[Garbage.data].editdate
+			// 4: Target[Garbage.data].url
+			int[] pageIds = { 6, 7, 4};
 
-		testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			trx.success();
+		}
 	}
 
 	/**
@@ -345,30 +402,44 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		migrateVtlPagesToHbsPages();
 
 		// republish everything to build dependencies
-		testContext.publish(true);
+		try (Trx trx = new Trx()) {
+			testContext.getContext().dirtAll();
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+			trx.success();
+		}
+
+		int dirtedPagesBeforeModification = 0;
 
 		// Edit and Save our file
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		int dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
+			dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
 
-		file.setFiletype("image/png");
-		file.save();
-		t.commit(false);
+			file.setFiletype("image/png");
+			file.save();
+			trx.success();
+		}
 
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
 
-		// 7: Target[Garbage.data].editdate
-		// 5: Target[Garbage.data].type
-		// 10: Target[Garbage.data].isimage
-		int[] pageIds = { 7, 5, 10 };
+		try (Trx trx = trxWithPermissions()) {
+			// 7: Target[Garbage.data].editdate
+			// 5: Target[Garbage.data].type
+			// 10: Target[Garbage.data].isimage
+			int[] pageIds = { 7, 5, 10 };
 
-		testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			trx.success();
+		}
 	}
 
 	/**
@@ -379,29 +450,43 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		migrateVtlPagesToHbsPages();
 
 		// republish everything to build dependencies
-		testContext.publish(true);
+		try (Trx trx = new Trx()) {
+			testContext.getContext().dirtAll();
+			trx.success();
+		}
+		try (Trx trx = new Trx()) {
+			testContext.publish(false);
+			trx.success();
+		}
+
+		int dirtedPagesBeforeModification = 0;
 
 		// Edit and Save our file
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		int dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
+			dirtedPagesBeforeModification = PublishQueue.countDirtedObjects(Page.class, false, null);
 
-		// get the file for editing
-		File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
+			// get the file for editing
+			File file = (ContentFile) t.getObject(File.class, DIRTTEST_FILE_CONTENTFILE_ID, true);
 
-		file.setFilesize(99999);
-		file.save();
-		t.commit(false);
+			file.setFilesize(99999);
+			file.save();
+			trx.success();
+		}
 
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
 
-		// 3: Target[Garbage.data].size
-		// 7: Target[Garbage.data].editdate
-		int[] pageIds = { 3, 7 };
+		try (Trx trx = trxWithPermissions()) {
+			// 3: Target[Garbage.data].size
+			// 7: Target[Garbage.data].editdate
+			int[] pageIds = { 3, 7 };
 
-		testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			testContext.checkDirtedPages(dirtedPagesBeforeModification, pageIds);
+			trx.success();
+		}
 	}
 
 	/**
@@ -413,55 +498,73 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		String newName = "This_is_the_new_filename";
 
 		// start a first transaction
-		Transaction startFirstFetchLater = testContext.startTransactionWithPermissions(true);
-		Transaction preEdit = testContext.startTransactionWithPermissions(false);
-		// get the original page
-		File preEditFile = (ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID);
-		String oldName = preEditFile.getName();
+		try (Trx startFirstFetchLaterTrx = trxWithPermissions(); Trx preEditTrx = trxWithPermissions()) {
+			Transaction startFirstFetchLater = startFirstFetchLaterTrx.getTransaction();
+			Transaction preEdit = preEditTrx.getTransaction();
+			// get the original page
+			File preEditFile = (ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID);
+			String oldName = preEditFile.getName();
 
-		// start a new transaction for editing
-		Transaction edit = testContext.startTransactionWithPermissions(false);
-		// get the page for editing
-		File editFile = (ContentFile) edit.getObject(File.class, CONTENTFILE_ID, true);
+			// the concurrent transaction is started after the edit transaction, but must stay open after the edit transaction was committed
+			Trx concurrentTrx = null;
+			try {
+				// start a new transaction for editing
+				try (Trx editTrx = trxWithPermissions()) {
+					Transaction edit = editTrx.getTransaction();
+					// get the page for editing
+					File editFile = (ContentFile) edit.getObject(File.class, CONTENTFILE_ID, true);
 
-		// now start a concurrent transaction
-		Transaction concurrent = testContext.startTransactionWithPermissions(false);
-		File concurrentFile = (ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID);
+					// now start a concurrent transaction
+					concurrentTrx = trxWithPermissions();
+					Transaction concurrent = concurrentTrx.getTransaction();
+					File concurrentFile = (ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID);
 
-		assertEquals("Check file name before editing", oldName, concurrentFile.getName());
+					assertEquals("Check file name before editing", oldName, concurrentFile.getName());
 
-		// now edit the file
-		editFile.setName(newName);
+					// now edit the file
+					editFile.setName(newName);
 
-		// check names in other transactions
-		assertEquals("Check file name for preedit after editing", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
-		assertEquals("Check file name for concurrent after editing", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
+					// check names in other transactions
+					assertEquals("Check file name for preedit after editing", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
+					assertEquals("Check file name for concurrent after editing", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
 
-		// save the file
-		TransactionManager.setCurrentTransaction(edit);
-		editFile.save();
+					// save the file
+					TransactionManager.setCurrentTransaction(edit);
+					editFile.save();
 
-		// check names in other transactions
-		assertEquals("Check file name for preedit after saving", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
-		assertEquals("Check file name for concurrent after saving", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
+					// check names in other transactions
+					assertEquals("Check file name for preedit after saving", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
+					assertEquals("Check file name for concurrent after saving", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
 
-		// commit the edit transaction
-		edit.commit();
+					// commit the edit transaction
+					editTrx.success();
+				}
 
-		// start a final transaction
-		Transaction postEdit = testContext.startTransactionWithPermissions(false);
+				Transaction concurrent = concurrentTrx.getTransaction();
 
-		// check names in other transactions
-		assertEquals("Check file name for preedit after commit", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
-		assertEquals("Check file name for concurrent after commit", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
-		assertEquals("Check file name for postedit after commit", newName, ((ContentFile) postEdit.getObject(File.class, CONTENTFILE_ID)).getName());
-		assertEquals("Check file name for startFirstFetchLater after commit", newName,
-				((ContentFile) startFirstFetchLater.getObject(File.class, CONTENTFILE_ID)).getName());
+				// start a final transaction
+				try (Trx postEditTrx = trxWithPermissions()) {
+					Transaction postEdit = postEditTrx.getTransaction();
 
-		startFirstFetchLater.commit();
-		preEdit.commit();
-		concurrent.commit();
-		postEdit.commit();
+					// check names in other transactions
+					assertEquals("Check file name for preedit after commit", oldName, ((ContentFile) preEdit.getObject(File.class, CONTENTFILE_ID)).getName());
+					assertEquals("Check file name for concurrent after commit", oldName, ((ContentFile) concurrent.getObject(File.class, CONTENTFILE_ID)).getName());
+					assertEquals("Check file name for postedit after commit", newName, ((ContentFile) postEdit.getObject(File.class, CONTENTFILE_ID)).getName());
+					assertEquals("Check file name for startFirstFetchLater after commit", newName,
+							((ContentFile) startFirstFetchLater.getObject(File.class, CONTENTFILE_ID)).getName());
+
+					postEditTrx.success();
+				}
+				concurrentTrx.success();
+			} finally {
+				if (concurrentTrx != null) {
+					concurrentTrx.close();
+				}
+			}
+
+			startFirstFetchLaterTrx.success();
+			preEditTrx.success();
+		}
 	}
 
 	/**
@@ -477,8 +580,9 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 
-		Transaction t = testContext.startTransactionWithPermissions(true); // Phase #1 - Create a new file
-		{
+		// Phase #1 - Create a new file
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
 			File newFile = (File) t.createObject(File.class);
 
@@ -492,11 +596,16 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 
 			// save the file
 			newFile.save();
-			t.commit();
-		} // Phase #2 - Create the second file with the same specs as the first one
-		{
-			t = testContext.startTransactionWithPermissions(false);
-			File newFile = (File) t.createObject(File.class);
+			trx.success();
+		}
+
+		// Phase #2 - Create the second file with the same specs as the first one
+		File newFile = null;
+		String oldFileName = null;
+		String oldFileExtension = null;
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			newFile = (File) t.createObject(File.class);
 
 			newFile.setName(fileName);
 			newFile.setFiletype(fileType);
@@ -505,20 +614,18 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 			newFile.setFileStream(generateDataFile(fileContent));
 			newFile.setFolderId(FOLDER_ID);
 			assertNull("Check whether the new file has no id", newFile.getId());
-			String oldFileName = newFile.getName();
-			String oldFileExtension = newFile.getExtension();
+			oldFileName = newFile.getName();
+			oldFileExtension = newFile.getExtension();
 			assertEquals("Check if the file extension is correct", oldFileExtension, "jpg");
 
 			newFile.save();
-			t.commit();
-			String newFileName = newFile.getName();
-			String newFileExtension = newFile.getExtension();
-
-			assertFalse("Both names should be different.", newFileName.equals(oldFileName));
-			assertTrue("Both file extensions should be the same.", newFileExtension.equals(oldFileExtension) );
-
+			trx.success();
 		}
+		String newFileName = newFile.getName();
+		String newFileExtension = newFile.getExtension();
 
+		assertFalse("Both names should be different.", newFileName.equals(oldFileName));
+		assertTrue("Both file extensions should be the same.", newFileExtension.equals(oldFileExtension) );
 	}
 
 	/**
@@ -527,26 +634,29 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testCreateCaseSensitive() throws Exception {
-		Transaction t = testContext.startTransactionWithPermissions(true);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
 
-		File file1 = t.createObject(File.class);
-		file1.setFolderId(FOLDER_ID);
-		file1.setName("file.bin");
-		file1.setFileStream(new ByteArrayInputStream("content".getBytes()));
-		file1.save();
-		t.commit(false);
+			File file1 = t.createObject(File.class);
+			file1.setFolderId(FOLDER_ID);
+			file1.setName("file.bin");
+			file1.setFileStream(new ByteArrayInputStream("content".getBytes()));
+			file1.save();
+			t.commit(false);
 
-		File file2 = t.createObject(File.class);
-		file2.setFolderId(FOLDER_ID);
-		file2.setName("FILE.BIN");
-		file2.setFileStream(new ByteArrayInputStream("CONTENT".getBytes()));
-		file2.save();
-		t.commit(false);
+			File file2 = t.createObject(File.class);
+			file2.setFolderId(FOLDER_ID);
+			file2.setName("FILE.BIN");
+			file2.setFileStream(new ByteArrayInputStream("CONTENT".getBytes()));
+			file2.save();
+			t.commit(false);
 
-		file1 = t.getObject(File.class, file1.getId());
-		file2 = t.getObject(File.class, file2.getId());
+			file1 = t.getObject(File.class, file1.getId());
+			file2 = t.getObject(File.class, file2.getId());
 
-		assertFalse("Filenames of " + file1 + " and " + file2 + " must differ in more than just the case", file1.getName().equalsIgnoreCase(file2.getName()));
+			assertFalse("Filenames of " + file1 + " and " + file2 + " must differ in more than just the case", file1.getName().equalsIgnoreCase(file2.getName()));
+			trx.success();
+		}
 	}
 
 	/**
@@ -563,28 +673,37 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 		int newFileId = -1;
+		int transactionTimestamp = 0;
 
-		testContext.startTransactionWithPermissions(true);
-		Transaction t = TransactionManager.getCurrentTransaction();
-		// get the transaction timestamp (which will be used as edate)
-		int transactionTimestamp = t.getUnixTimestamp(); // Phase #1 - Create a new file
+		// the checks expect the logcmd entries of this test to be the first ones for the user, so remove entries made by other tests
+		try (Trx trx = new Trx()) {
+			DBUtils.update("DELETE FROM logcmd WHERE user_id = ?", DBTestContext.USER_WITH_PERMS);
+			trx.success();
+		}
+
+		// Phase #1 - Create a new file
 		{
+			try (Trx trx = trxWithPermissions()) {
+				Transaction t = trx.getTransaction();
+				// get the transaction timestamp (which will be used as edate)
+				transactionTimestamp = t.getUnixTimestamp();
 
-			File newFile = (File) t.createObject(File.class);
+				File newFile = (File) t.createObject(File.class);
 
-			newFile.setName(fileName);
-			newFile.setFiletype(fileType);
-			newFile.setFilesize(fileSize);
-			newFile.setDescription(fileDescription);
-			newFile.setFileStream(generateDataFile(fileContent));
-			newFile.setFolderId(FOLDER_ID);
-			assertNull("Check whether the new file has no id", newFile.getId());
+				newFile.setName(fileName);
+				newFile.setFiletype(fileType);
+				newFile.setFilesize(fileSize);
+				newFile.setDescription(fileDescription);
+				newFile.setFileStream(generateDataFile(fileContent));
+				newFile.setFolderId(FOLDER_ID);
+				assertNull("Check whether the new file has no id", newFile.getId());
 
-			// save the file
-			newFile.save();
-			t.commit();
+				// save the file
+				newFile.save();
+				trx.success();
 
-			newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
+				newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
+			}
 
 			// // Check dirtqueue
 			// ResultSet res = dbUtils.executeQuery("SELECT * FROM dirtqueue where sid = '" + t.getSessionId() +"'" );
@@ -636,21 +755,22 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 				fail("Could not find the needed Logcmd entry within database");
 			}
 			res.close();
-
 		} // Phase #2 - Get the stored file and update it
 		{
-			t = testContext.startTransactionWithPermissions(false);
-			transactionTimestamp = t.getUnixTimestamp();
-			// get the file for editing
-			File file = (ContentFile) t.getObject(File.class, newFileId, true);
+			try (Trx trx = trxWithPermissions()) {
+				Transaction t = trx.getTransaction();
+				transactionTimestamp = t.getUnixTimestamp();
+				// get the file for editing
+				File file = (ContentFile) t.getObject(File.class, newFileId, true);
 
-			System.out.println(convertStreamToString(file.getFileStream()));
+				System.out.println(convertStreamToString(file.getFileStream()));
 
-			file.setFileStream(generateDataFile(fileContent + "CHANGED"));
+				file.setFileStream(generateDataFile(fileContent + "CHANGED"));
 
-			// save the file
-			file.save();
-			t.commit();
+				// save the file
+				file.save();
+				trx.success();
+			}
 
 			assertTrue("Check whether the new file has a file id after saving", newFileId != 0);
 
@@ -680,18 +800,18 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 				fail("Could not find the needed Logcmd entry within database");
 			}
 			res.close();
-
 		} // Phase #3 - Get the file again and check its content
 		{
-			t = testContext.startTransactionWithPermissions(false);
-			File file = (File) t.getObject(File.class, newFileId);
+			try (Trx trx = trxWithPermissions()) {
+				Transaction t = trx.getTransaction();
+				File file = (File) t.getObject(File.class, newFileId);
 
-			System.out.println("Reading contents of: " + newFileId);
-			String liveFileContent = convertStreamToString(file.getFileStream());
+				System.out.println("Reading contents of: " + newFileId);
+				String liveFileContent = convertStreamToString(file.getFileStream());
 
-			assertEquals("Changed file content does not match.", fileContent + "CHANGED", liveFileContent);
+				assertEquals("Changed file content does not match.", fileContent + "CHANGED", liveFileContent);
+			}
 		}
-
 	}
 
 	/**
@@ -700,8 +820,6 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testCreateNewFile() throws Exception {
-		testContext.startTransactionWithPermissions(true);
-
 		String fileName = "newFile.jpg";
 		String fileDescription = "Some new file";
 		String fileHash = "476a5533998c2b31c81c2d56a25b83a7";
@@ -709,54 +827,60 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		File newFile = (File) t.createObject(File.class);
-		int transactionTimestamp = t.getUnixTimestamp();
+		File newFile = null;
+		int transactionTimestamp = 0;
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			newFile = (File) t.createObject(File.class);
+			transactionTimestamp = t.getUnixTimestamp();
 
-		// set some attributes
-		newFile.setName(fileName);
-		newFile.setFiletype(fileType);
-		newFile.setFilesize(fileSize);
-		newFile.setDescription(fileDescription);
-		newFile.setFileStream(generateDataFile(fileContent));
-		newFile.setFolderId(FOLDER_ID);
+			// set some attributes
+			newFile.setName(fileName);
+			newFile.setFiletype(fileType);
+			newFile.setFilesize(fileSize);
+			newFile.setDescription(fileDescription);
+			newFile.setFileStream(generateDataFile(fileContent));
+			newFile.setFolderId(FOLDER_ID);
 
-		assertNull("Check whether the new file has no id", newFile.getId());
+			assertNull("Check whether the new file has no id", newFile.getId());
 
-		// save the file
-		newFile.save();
-		t.commit();
-
-		t = testContext.startTransactionWithPermissions(false);
-
-		int newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
-
-		assertTrue("Check whether the new file has a file id after saving", newFileId != 0);
-
-		// now load the file
-		File file = (File) t.getObject(File.class, newFileId);
-
-		assertNotNull("Check that the file now really exists", file);
-		assertEquals("The md5 of the file does not match.", fileHash, file.getMd5());
-		assertEquals("The description of the file does not match", fileDescription, file.getDescription());
-
-		// check whether the edate and editor have been set
-		assertEquals("Check editor id of the file", DBTestContext.USER_WITH_PERMS, file.getEditor().getId());
-		assertEquals("Check edate of the file", transactionTimestamp, file.getEDate().getIntTimestamp());
-		assertEquals("Check creator id of the file", DBTestContext.USER_WITH_PERMS, file.getCreator().getId());
-
-		// check existence of file
-		ResultSet res = testContext.getDBSQLUtils().executeQuery("SELECT * FROM contentfile where id = " + newFileId);
-
-		if (res.next()) {
-			assertNotNull("Check id in the database", res.getObject("id"));
-			assertNotNull("Check md5 in the database", res.getObject("md5"));
-		} else {
-			fail("Could not find complete file data in the database");
+			// save the file
+			newFile.save();
+			trx.success();
 		}
 
-		// check that the channelset_id of the file was set
-		assertTrue("Channelset ID must be set", ObjectTransformer.getInt(file.getChannelSetId(), 0) != 0);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+
+			int newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
+
+			assertTrue("Check whether the new file has a file id after saving", newFileId != 0);
+
+			// now load the file
+			File file = (File) t.getObject(File.class, newFileId);
+
+			assertNotNull("Check that the file now really exists", file);
+			assertEquals("The md5 of the file does not match.", fileHash, file.getMd5());
+			assertEquals("The description of the file does not match", fileDescription, file.getDescription());
+
+			// check whether the edate and editor have been set
+			assertEquals("Check editor id of the file", DBTestContext.USER_WITH_PERMS, file.getEditor().getId());
+			assertEquals("Check edate of the file", transactionTimestamp, file.getEDate().getIntTimestamp());
+			assertEquals("Check creator id of the file", DBTestContext.USER_WITH_PERMS, file.getCreator().getId());
+
+			// check existence of file
+			ResultSet res = testContext.getDBSQLUtils().executeQuery("SELECT * FROM contentfile where id = " + newFileId);
+
+			if (res.next()) {
+				assertNotNull("Check id in the database", res.getObject("id"));
+				assertNotNull("Check md5 in the database", res.getObject("md5"));
+			} else {
+				fail("Could not find complete file data in the database");
+			}
+
+			// check that the channelset_id of the file was set
+			assertTrue("Channelset ID must be set", ObjectTransformer.getInt(file.getChannelSetId(), 0) != 0);
+		}
 	}
 
 	/**
@@ -786,34 +910,35 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 * @throws Exception
 	 */
 	private File createAndSaveFile(String fileName) throws Exception {
-		testContext.startTransactionWithPermissions(true);
-
 		String fileDescription = "Some new file";
 		String fileType = "application/octet-stream";
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		File newFile = (File) t.createObject(File.class);
+		File newFile = null;
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			newFile = (File) t.createObject(File.class);
 
-		// set some attributes
-		newFile.setName(fileName);
-		newFile.setFiletype(fileType);
-		newFile.setFilesize(fileSize);
-		newFile.setDescription(fileDescription);
-		newFile.setFileStream(generateDataFile(fileContent));
-		newFile.setFolderId(FOLDER_ID);
+			// set some attributes
+			newFile.setName(fileName);
+			newFile.setFiletype(fileType);
+			newFile.setFilesize(fileSize);
+			newFile.setDescription(fileDescription);
+			newFile.setFileStream(generateDataFile(fileContent));
+			newFile.setFolderId(FOLDER_ID);
 
-		// save the file
-		newFile.save();
-		t.commit();
-
-		t = testContext.startTransactionWithPermissions(false);
+			// save the file
+			newFile.save();
+			trx.success();
+		}
 
 		int newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
 
-		// now load the file
-		return t.getObject(File.class, newFileId);
+		try (Trx trx = trxWithPermissions()) {
+			// now load the file
+			return trx.getTransaction().getObject(File.class, newFileId);
+		}
 	}
 
 	/**
@@ -822,34 +947,34 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	 */
 	@Test
 	public void testCreateNewFileSizeLimit() throws Exception {
-		testContext.startTransactionWithPermissions(true);
-
 		String fileName = "newFile.jpg";
 		String fileDescription = "Some new file";
 		String fileType = "application/octet-stream";
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		File newFile = (File) t.createObject(File.class);
+		try (Trx trx = trxWithPermissions()) {
+			Transaction t = trx.getTransaction();
+			File newFile = (File) t.createObject(File.class);
 
-		// set some attributes
-		newFile.setName(fileName);
-		newFile.setFiletype(fileType);
-		newFile.setDescription(fileDescription);
-		newFile.setFileStream(generateDataFile(1025));
-		newFile.setFolderId(FOLDER_ID);
+			// set some attributes
+			newFile.setName(fileName);
+			newFile.setFiletype(fileType);
+			newFile.setDescription(fileDescription);
+			newFile.setFileStream(generateDataFile(1025));
+			newFile.setFolderId(FOLDER_ID);
 
-		assertNull("Check whether the new file has no id", newFile.getId());
+			assertNull("Check whether the new file has no id", newFile.getId());
 
-		// save the file
-		try {
-			newFile.save();
-		} catch (NodeException e) {
-			I18nString  i18nMessage = new CNI18nString("rest.file.upload.limit_reached");
+			// save the file
+			try {
+				newFile.save();
+			} catch (NodeException e) {
+				I18nString  i18nMessage = new CNI18nString("rest.file.upload.limit_reached");
 
-			i18nMessage.setParameter("0", "1 MB");
-			i18nMessage.setParameter("1", "1 KB");
-			assertEquals(i18nMessage.toString(), e.getMessage());
-			return;
+				i18nMessage.setParameter("0", "1 MB");
+				i18nMessage.setParameter("1", "1 KB");
+				assertEquals(i18nMessage.toString(), e.getMessage());
+				return;
+			}
 		}
 		fail("This test should fail with a specific exception.");
 	}
@@ -918,12 +1043,14 @@ public class FileEditSandboxTest extends AbstractEditSandboxTest {
 	public void testEmptyExtension() throws NodeException{
 		String fileName = "myfile";
 
-		Transaction t = TransactionManager.getCurrentTransaction();
-		File newFile = (File) t.createObject(File.class);
+		try (Trx trx = new Trx()) {
+			Transaction t = trx.getTransaction();
+			File newFile = (File) t.createObject(File.class);
 
-		newFile.setName(fileName);
-		String extension = newFile.getExtension();
-		assertEquals("Extension should be empty","",extension);
+			newFile.setName(fileName);
+			String extension = newFile.getExtension();
+			assertEquals("Extension should be empty","",extension);
+		}
 	}
 
 	/**

@@ -13,7 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -21,6 +22,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
@@ -42,20 +44,28 @@ import com.gentics.contentnode.tools.GlobalIdSync.ObjectType;
  * Test cases for the {@link GlobalIdSync} tool
  */
 public class GlobalIdSyncTest {
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+	}
 
 	@Before
 	public void setup() throws NodeException {
-		Set<Integer> constructIds = DBUtils.select("SELECT DISTINCT construct_id id FROM part LEFT JOIN type ON part.type_id = type.id WHERE type.id IS NULL", DBUtils.IDS);
-		Transaction t = TransactionManager.getCurrentTransaction();
+		try (Trx trx = new Trx()) {
+			Set<Integer> constructIds = DBUtils.select("SELECT DISTINCT construct_id id FROM part LEFT JOIN type ON part.type_id = type.id WHERE type.id IS NULL", DBUtils.IDS);
+			Transaction t = trx.getTransaction();
 
-		for (int id : constructIds) {
-			Construct construct = t.getObject(Construct.class, id);
-			if (construct != null) {
-				construct.delete();
+			for (int id : constructIds) {
+				Construct construct = t.getObject(Construct.class, id);
+				if (construct != null) {
+					construct.delete();
+				}
+				t.commit(false);
 			}
-			t.commit(false);
+			trx.success();
 		}
 	}
 
@@ -66,17 +76,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncConstruct() throws Exception {
-		new ConstructTestCase() {
-			@Override
-			protected Construct createOriginal() throws Exception {
-				return create(LongHTMLPartType.class);
-			}
+		try (Trx trx = new Trx()) {
+			new ConstructTestCase() {
+				@Override
+				protected Construct createOriginal() throws Exception {
+					return create(LongHTMLPartType.class);
+				}
 
-			@Override
-			protected Construct createCopy() throws Exception {
-				return createOriginal();
-			}
-		}.execute();
+				@Override
+				protected Construct createCopy() throws Exception {
+					return createOriginal();
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -86,17 +99,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncConstructChangedPart() throws Exception {
-		new ConstructTestCase() {
-			@Override
-			protected Construct createOriginal() throws Exception {
-				return create(LongHTMLPartType.class);
-			}
+		try (Trx trx = new Trx()) {
+			new ConstructTestCase() {
+				@Override
+				protected Construct createOriginal() throws Exception {
+					return create(LongHTMLPartType.class);
+				}
 
-			@Override
-			protected Construct createCopy() throws Exception {
-				return create(HTMLTextPartType.class);
-			}
-		}.execute();
+				@Override
+				protected Construct createCopy() throws Exception {
+					return create(HTMLTextPartType.class);
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -107,17 +123,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncConstructAddPart() throws Exception {
-		new ConstructTestCase() {
-			@Override
-			protected Construct createOriginal() throws Exception {
-				return create(LongHTMLPartType.class);
-			}
+		try (Trx trx = new Trx()) {
+			new ConstructTestCase() {
+				@Override
+				protected Construct createOriginal() throws Exception {
+					return create(LongHTMLPartType.class);
+				}
 
-			@Override
-			protected Construct createCopy() throws Exception {
-				return create(LongHTMLPartType.class, LongHTMLPartType.class);
-			}
-		}.execute();
+				@Override
+				protected Construct createCopy() throws Exception {
+					return create(LongHTMLPartType.class, LongHTMLPartType.class);
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -128,17 +147,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncConstructRemovePart() throws Exception {
-		new ConstructTestCase() {
-			@Override
-			protected Construct createOriginal() throws Exception {
-				return create(LongHTMLPartType.class, LongHTMLPartType.class);
-			}
+		try (Trx trx = new Trx()) {
+			new ConstructTestCase() {
+				@Override
+				protected Construct createOriginal() throws Exception {
+					return create(LongHTMLPartType.class, LongHTMLPartType.class);
+				}
 
-			@Override
-			protected Construct createCopy() throws Exception {
-				return create(LongHTMLPartType.class);
-			}
-		}.execute();
+				@Override
+				protected Construct createCopy() throws Exception {
+					return create(LongHTMLPartType.class);
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -148,17 +170,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncDatasource() throws Exception {
-		new DatasourceTestCase() {
-			@Override
-			protected Datasource createOriginal() throws Exception {
-				return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
-			}
+		try (Trx trx = new Trx()) {
+			new DatasourceTestCase() {
+				@Override
+				protected Datasource createOriginal() throws Exception {
+					return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
+				}
 
-			@Override
-			protected Datasource createCopy() throws Exception {
-				return createOriginal();
-			}
-		}.execute();
+				@Override
+				protected Datasource createCopy() throws Exception {
+					return createOriginal();
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -168,17 +193,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncDatasourceAddEntry() throws Exception {
-		new DatasourceTestCase() {
-			@Override
-			protected Datasource createOriginal() throws Exception {
-				return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
-			}
+		try (Trx trx = new Trx()) {
+			new DatasourceTestCase() {
+				@Override
+				protected Datasource createOriginal() throws Exception {
+					return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
+				}
 
-			@Override
-			protected Datasource createCopy() throws Exception {
-				return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("Null", "One", "Two", "Three"));
-			}
-		}.execute();
+				@Override
+				protected Datasource createCopy() throws Exception {
+					return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("Null", "One", "Two", "Three"));
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -188,17 +216,20 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncDatasourceRemoveEntry() throws Exception {
-		new DatasourceTestCase() {
-			@Override
-			protected Datasource createOriginal() throws Exception {
-				return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("Null", "One", "Two", "Three"));
-			}
+		try (Trx trx = new Trx()) {
+			new DatasourceTestCase() {
+				@Override
+				protected Datasource createOriginal() throws Exception {
+					return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("Null", "One", "Two", "Three"));
+				}
 
-			@Override
-			protected Datasource createCopy() throws Exception {
-				return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
-			}
-		}.execute();
+				@Override
+				protected Datasource createCopy() throws Exception {
+					return ContentNodeTestDataUtils.createDatasource("datasource", Arrays.asList("One", "Two", "Three"));
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**
@@ -208,26 +239,29 @@ public class GlobalIdSyncTest {
 	 */
 	@Test
 	public void testSyncObjectTagDefinition() throws Exception {
-		new ObjectTagDefinitionTestCase() {
-			protected int constructId;
+		try (Trx trx = new Trx()) {
+			new ObjectTagDefinitionTestCase() {
+				protected int constructId;
 
-			@Override
-			protected void init() throws Exception {
-				Node testNode = ContentNodeTestDataUtils.createNode();
-				constructId = ContentNodeTestDataUtils.createConstruct(testNode, LongHTMLPartType.class, "construct", "part");
-			}
+				@Override
+				protected void init() throws Exception {
+					Node testNode = ContentNodeTestDataUtils.createNode();
+					constructId = ContentNodeTestDataUtils.createConstruct(testNode, LongHTMLPartType.class, "construct", "part");
+				}
 
-			@Override
-			protected ObjectTagDefinition createOriginal() throws Exception {
-				return ContentNodeTestDataUtils.createObjectPropertyDefinition(
-						Folder.TYPE_FOLDER, constructId, "synctest", "synctest");
-			}
+				@Override
+				protected ObjectTagDefinition createOriginal() throws Exception {
+					return ContentNodeTestDataUtils.createObjectPropertyDefinition(
+							Folder.TYPE_FOLDER, constructId, "synctest", "synctest");
+				}
 
-			@Override
-			protected ObjectTagDefinition createCopy() throws Exception {
-				return createOriginal();
-			}
-		}.execute();
+				@Override
+				protected ObjectTagDefinition createCopy() throws Exception {
+					return createOriginal();
+				}
+			}.execute();
+			trx.success();
+		}
 	}
 
 	/**

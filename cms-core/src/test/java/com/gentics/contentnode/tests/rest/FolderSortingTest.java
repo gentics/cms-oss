@@ -4,6 +4,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -36,7 +37,9 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
-import org.junit.Rule;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -46,7 +49,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.cleanUsers;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getSystemUsers;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -55,8 +61,29 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class FolderSortingTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	/**
+	 * IDs of the system users existing before the tests
+	 */
+	private static Set<Integer> staticUserIds;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+		staticUserIds = getSystemUsers();
+	}
+
+	/**
+	 * Remove the users created by the test (their logins would collide with the users created by the next test)
+	 * @throws NodeException
+	 */
+	@After
+	public void tearDown() throws NodeException {
+		cleanUsers(staticUserIds);
+		Trx.operate(Transaction::clearNodeObjectCache);
+	}
 
 	int objectType;
 
@@ -130,22 +157,24 @@ public class FolderSortingTest {
 			trx.success();
 		}
 
-		// The new list endpoints use different comparators for sorting which do not support the deletedat and deletedby
-		// fields, so we test them by sorting by the name.
-		assertDeletedRestObjectsFromFolderSorting(node.getFolder(), "name", "ASC",
-			new Integer[]{ nodeObject1.getId(), nodeObject2.getId(), nodeObject3.getId() });
-		assertDeletedRestObjectsFromFolderSorting(node.getFolder(), "name", "DESC",
-			new Integer[]{ nodeObject3.getId(), nodeObject2.getId(), nodeObject1.getId() });
-
-		assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedat", "ASC",
+		try (Trx trx = new Trx()) {
+			// The new list endpoints use different comparators for sorting which do not support the deletedat and deletedby
+			// fields, so we test them by sorting by the name.
+			assertDeletedRestObjectsFromFolderSorting(node.getFolder(), "name", "ASC",
 				new Integer[]{ nodeObject1.getId(), nodeObject2.getId(), nodeObject3.getId() });
-		assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedat", "DESC",
+			assertDeletedRestObjectsFromFolderSorting(node.getFolder(), "name", "DESC",
 				new Integer[]{ nodeObject3.getId(), nodeObject2.getId(), nodeObject1.getId() });
 
-		assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedby", "ASC",
-				new Integer[]{ nodeObject1.getId(), nodeObject2.getId(), nodeObject3.getId() });
-		assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedby", "DESC",
-				new Integer[]{ nodeObject3.getId(), nodeObject2.getId(), nodeObject1.getId() });
+			assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedat", "ASC",
+					new Integer[]{ nodeObject1.getId(), nodeObject2.getId(), nodeObject3.getId() });
+			assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedat", "DESC",
+					new Integer[]{ nodeObject3.getId(), nodeObject2.getId(), nodeObject1.getId() });
+
+			assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedby", "ASC",
+					new Integer[]{ nodeObject1.getId(), nodeObject2.getId(), nodeObject3.getId() });
+			assertDeletedRestObjectsFromFolderSortingLegacy(node.getFolder(), "deletedby", "DESC",
+					new Integer[]{ nodeObject3.getId(), nodeObject2.getId(), nodeObject1.getId() });
+		}
 
 	}
 

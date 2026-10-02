@@ -11,13 +11,14 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Rule;
+import org.junit.ClassRule;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Folder;
@@ -40,8 +41,8 @@ import com.gentics.lib.db.SQLExecutor;
 
 public abstract class AbstractPageDirtingTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
 
 	protected static final String TEXT_PARTNAME = "text";
 
@@ -129,85 +130,83 @@ public abstract class AbstractPageDirtingTest {
 	protected List<Integer> pdateDependentPages;
 
 	@BeforeClass
-	public static void setupOnce() {
+	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
 		TestHelpersHandlebarsService.addHelper(LoaderHelperSource.class);
 	}
 
 	@Before
 	public void setUp() throws Exception {
+		try (Trx trx = new Trx().at(creationTime)) {
+			Transaction t = trx.getTransaction();
 
-		testContext.startTransaction(creationTime);
+			// disable publishing for all nodes
+			DBUtils.executeUpdate("UPDATE node SET disable_publish = ?", new Object[] { 1 });
 
-		Transaction t = TransactionManager.getCurrentTransaction();
+			// create a node
+			node = ContentNodeTestDataUtils.createNode("Test Node", "testnode", "/Content.Node", null, false, false);
 
-		// disable publishing for all nodes
-		DBUtils.executeUpdate("UPDATE node SET disable_publish = ?", new Object[] { 1 });
+			Folder targetFolder = t.createObject(Folder.class);
+			targetFolder.setMotherId(node.getFolder().getId());
+			targetFolder.setName("Target Folder");
+			targetFolder.setPublishDir("/");
+			targetFolder.save();
+			t.commit(false);
 
-		// create a node
-		node = ContentNodeTestDataUtils.createNode("Test Node", "testnode", "/Content.Node", null, false, false);
+			// create a test folder
+			Folder folder = t.createObject(Folder.class);
+			folder.setMotherId(node.getFolder().getId());
+			folder.setName("Test Folder");
+			folder.setPublishDir("/");
+			folder.save();
+			t.commit(false);
 
-		Folder targetFolder = t.createObject(Folder.class);
-		targetFolder.setMotherId(node.getFolder().getId());
-		targetFolder.setName("Target Folder");
-		targetFolder.setPublishDir("/");
-		targetFolder.save();
-		t.commit(false);
+			// create the template
+			Template template = t.createObject(Template.class);
+			template.getFolders().add(folder);
+			template.getFolders().add(targetFolder);
+			template.setMlId(1);
+			template.setName("Template");
+			template.setSource("<node page.name>: [<node " + CONTENT_TAGNAME + ">]");
 
-		// create a test folder
-		Folder folder = t.createObject(Folder.class);
-		folder.setMotherId(node.getFolder().getId());
-		folder.setName("Test Folder");
-		folder.setPublishDir("/");
-		folder.save();
-		t.commit(false);
+			TemplateTag tTag = t.createObject(TemplateTag.class);
+			tTag.setConstructId(ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, TEXT_PARTNAME, TEXT_PARTNAME));
+			tTag.setEnabled(true);
+			tTag.setName(CONTENT_TAGNAME);
+			tTag.setPublic(true);
 
-		// create the template
-		Template template = t.createObject(Template.class);
-		template.getFolders().add(folder);
-		template.getFolders().add(targetFolder);
-		template.setMlId(1);
-		template.setName("Template");
-		template.setSource("<node page.name>: [<node " + CONTENT_TAGNAME + ">]");
+			template.getTemplateTags().put(CONTENT_TAGNAME, tTag);
+			template.save();
+			t.commit(false);
 
-		TemplateTag tTag = t.createObject(TemplateTag.class);
-		tTag.setConstructId(ContentNodeTestDataUtils.createConstruct(node, LongHTMLPartType.class, TEXT_PARTNAME, TEXT_PARTNAME));
-		tTag.setEnabled(true);
-		tTag.setName(CONTENT_TAGNAME);
-		tTag.setPublic(true);
+			targetPageId = createTargetPage(targetFolder, template);
+			Page targetPage = t.getObject(Page.class, targetPageId);
 
-		template.getTemplateTags().put(CONTENT_TAGNAME, tTag);
-		template.save();
-		t.commit(false);
+			int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, HBS_PARTNAME, HBS_PARTNAME);
+			int overviewConstructId = ContentNodeTestDataUtils.createConstruct(node, OverviewPartType.class, OVERVIEW_PARTNAME, OVERVIEW_PARTNAME);
 
-		targetPageId = createTargetPage(targetFolder, template);
-		Page targetPage = t.getObject(Page.class, targetPageId);
+			Construct c = t.getObject(Construct.class, overviewConstructId, true);
+			c.getValues().getByKeyname(OVERVIEW_PARTNAME).setInfo(1);
+			c.save();
+			t.commit(false);
 
-		int hbsConstructId = ContentNodeTestDataUtils.createConstruct(node, HandlebarsPartType.class, HBS_PARTNAME, HBS_PARTNAME);
-		int overviewConstructId = ContentNodeTestDataUtils.createConstruct(node, OverviewPartType.class, OVERVIEW_PARTNAME, OVERVIEW_PARTNAME);
+			urlPageId = createUrlPage(folder, template, targetPage);
+			pagetagPageId = createPageTagPage(folder, template, targetPage);
+			hbsListPage = createHbsListPage(folder, template, targetPage, hbsConstructId);
+			hbsLoaderPage = createHbsLoaderPage(folder, template, targetPage, hbsConstructId);
+			hbsPdatePage = createHbsPdatePage(folder, template, targetPage, hbsConstructId);
+			manualOverviewPage = createManualOverviewPage(folder, template, targetPage, overviewConstructId);
+			folderOverviewPage = createFolderOverviewPage(folder, template, targetPage, overviewConstructId);
 
-		Construct c = t.getObject(Construct.class, overviewConstructId, true);
-		c.getValues().getByKeyname(OVERVIEW_PARTNAME).setInfo(1);
-		c.save();
-		t.commit(false);
-
-		urlPageId = createUrlPage(folder, template, targetPage);
-		pagetagPageId = createPageTagPage(folder, template, targetPage);
-		hbsListPage = createHbsListPage(folder, template, targetPage, hbsConstructId);
-		hbsLoaderPage = createHbsLoaderPage(folder, template, targetPage, hbsConstructId);
-		hbsPdatePage = createHbsPdatePage(folder, template, targetPage, hbsConstructId);
-		manualOverviewPage = createManualOverviewPage(folder, template, targetPage, overviewConstructId);
-		folderOverviewPage = createFolderOverviewPage(folder, template, targetPage, overviewConstructId);
-
-		// Note: the page rendering the page tag is not dependent on the
-		// targetpage being online
-		dependentPages = Arrays.asList(urlPageId, hbsListPage, hbsLoaderPage, hbsPdatePage, manualOverviewPage, folderOverviewPage);
-		pdateDependentPages = Arrays.asList(hbsPdatePage);
+			// Note: the page rendering the page tag is not dependent on the
+			// targetpage being online
+			dependentPages = Arrays.asList(urlPageId, hbsListPage, hbsLoaderPage, hbsPdatePage, manualOverviewPage, folderOverviewPage);
+			pdateDependentPages = Arrays.asList(hbsPdatePage);
+			trx.success();
+		}
 
 		// run the publish process
 		testContext.publish(initialPublishTime);
-
-		// start a new transaction
-		testContext.startTransaction(testStartTime);
 	}
 
 	/**

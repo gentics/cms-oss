@@ -143,7 +143,7 @@ public class TagFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_CONTENTTAG_SQL = "SELECT * FROM contenttag_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM contenttag_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
 
 	/**
 	 * SQL Params for the selection of versioned contenttag data

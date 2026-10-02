@@ -167,7 +167,7 @@ public interface PublishableNodeObject extends NodeObject {
 	 */
 	default NodeObjectVersion[] loadVersions() throws NodeException {
 		List<NodeObjectVersion> list = DBUtils.select(
-				"SELECT id, timestamp, user_id, published, nodeversion FROM nodeversion WHERE o_type = ? AND o_id = ? ORDER BY timestamp ASC",
+				"SELECT id, timestamp, user_id, published, nodeversion FROM nodeversion WHERE o_type = ? AND o_id = ? ORDER BY timestamp ASC, id ASC",
 				ps -> {
 					ps.setInt(1, getTType());
 					ps.setInt(2, getId());

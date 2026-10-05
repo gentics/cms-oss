@@ -26,3 +26,7 @@ These variables have no `VITE_` prefix, so they stay on the dev server and are n
 `src/services/apiService/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/services/apiService/genaix/types.ts`.
 
 `openapi-typescript` declares a peer dependency on TypeScript 5. The `overrides` entry in `package.json` points it at this project's TypeScript 6. With 7.13.0 this produced byte-identical output to a TypeScript 5.9.3 run. Remove the override once `openapi-typescript` supports TypeScript 6.
+
+## UI components
+
+Reusable components live in `src/components/ui/`: shadcn/ui on [Base UI](https://base-ui.com) (`@base-ui/react`), styled with Tailwind using only the design tokens from `.claude/rules/design.md` (defined in `src/index.css`), with Lucide icons. Tailwind is limited to this folder; ESLint reports Tailwind classes anywhere else. Wrap the app in `UiProvider` (`@/components/ui/provider`) before using them.

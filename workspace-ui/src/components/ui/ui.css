@@ -1,0 +1,140 @@
+/*
+ * Component layer: the only place Tailwind is used (.claude/CLAUDE.md, "Styling").
+ *
+ * - No preflight: global and app styles stay as they are. The reset below applies only to
+ *   elements of this layer (`data-slot`, set by every shadcn/ui part).
+ * - `source(none)` + `@source './'`: Tailwind generates classes from this folder only, so a
+ *   Tailwind class anywhere else in the app produces no CSS.
+ * - No cascade layers: `src/index.css` and the CSS Modules are unlayered, and unlayered rules
+ *   always beat layered ones. Reset and utilities therefore stay unlayered: the reset has class
+ *   specificity (beats element styles), and the utilities come last (beat the reset).
+ * - The theme is cleared and holds only the tokens from `.claude/rules/design.md`, defined in
+ *   `src/index.css`. There is no default Tailwind palette, radius or font size.
+ */
+@source './';
+
+@theme inline {
+  --*: initial;
+
+  /* 1 unit = 1 px, so `h-32` is 32 px and `px-12` is 12 px (design.md §7). */
+  --spacing: 1px;
+
+  /* Colours (§3.1). Alpha via `/`, e.g. `bg-azure/10` = rgba(az, .10) (§3.2). */
+  --color-ink: var(--ink);
+  --color-slate: var(--slate);
+  --color-muted: var(--muted);
+  --color-azure: var(--azure);
+  --color-akzent: var(--akzent);
+  --color-surface: var(--surface);
+  --color-canvas: var(--canvas);
+  --color-tint: var(--tint);
+  --color-solid: var(--solid);
+  --color-line: var(--line);
+  --color-line2: var(--line2);
+  --color-line-field: var(--line-field);
+  --color-err: var(--err);
+  --color-errbg: var(--errbg);
+  --color-warn: var(--warn);
+  --color-warnbg: var(--warnbg);
+  --color-ok: var(--ok);
+  --color-okbg: var(--okbg);
+  --color-white: #fff;
+  --color-transparent: transparent;
+  --color-current: currentcolor;
+
+  /* Toast icon (§12 Toast). */
+  --color-toast-icon: #7fc7ea;
+
+  /* Backdrop behind dialog and drawer (§6.3). */
+  --color-backdrop: rgba(var(--sh), 0.28);
+
+  /* Typography (§5). The font family comes from the reset below (`--font-sans`). */
+  --text-overline: var(--fs-overline);
+  --text-xs: var(--fs-xs);
+  --text-sm: var(--fs-sm);
+  --text-base: var(--fs-base);
+  --text-md: var(--fs-md);
+  --text-lg: var(--fs-lg);
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --leading-normal: 1.45;
+  --tracking-overline: 0.075em;
+
+  /* Radius (§6.1) */
+  --radius-xs: var(--r-xs);
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-2xl: var(--r-2xl);
+  --radius-3xl: var(--r-3xl);
+  --radius-full: var(--r-full);
+
+  /* Shadows (§6.3) */
+  --shadow-1: var(--sh-1);
+  --shadow-float: var(--sh-float);
+  --shadow-pop: var(--sh-pop);
+  --shadow-modal: var(--sh-modal);
+  --shadow-drawer: 0 0 40px rgba(var(--sh), 0.22);
+  --shadow-toast: var(--sh-toast);
+
+  /* Motion (§10). Popups, dialog and drawer animate via Base UI's starting/ending styles. */
+  --default-transition-duration: var(--dur-state);
+  --default-transition-timing-function: var(--ease);
+
+  --animate-rise: ui-rise var(--dur-card) var(--ease);
+  --animate-drop: ui-drop var(--dur-card) var(--ease);
+}
+
+[data-slot],
+[data-slot]::before,
+[data-slot]::after {
+  box-sizing: border-box;
+  border: 0 solid;
+  margin: 0;
+  padding: 0;
+}
+
+[data-slot] {
+  font-family: var(--font-sans);
+  letter-spacing: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-slot]:where(button) {
+  font: inherit;
+  font-family: var(--font-sans);
+  color: inherit;
+  background: transparent;
+  text-align: inherit;
+}
+
+[data-slot] :where(svg) {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Keyboard focus (§8): one ring for every interactive part of this layer. */
+[data-slot]:where(:focus-visible) {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure);
+}
+
+/* `rise`: 7 px up + fade in (§10). */
+@keyframes ui-rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}
+
+/* `drop`: 8 px down + fade in (§10). */
+@keyframes ui-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Last, so utilities win over the reset above. */
+@tailwind utilities source(none);

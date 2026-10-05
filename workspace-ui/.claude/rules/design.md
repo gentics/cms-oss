@@ -69,7 +69,7 @@ Jede Farbe, die mit Transparenz gebraucht wird, hat eine `-rgb`-Variante (`rgba(
 | Hover leicht | `.05`–`.07` | Menüeinträge, To-do-Zeilen, sekundärer Button (`.06`) |
 | Hover Icon/Ghost | `.10` | Icon-Buttons, Ghost-Buttons, Marke in der Topbar |
 | Ausgewählt | Fläche `.09` + Rand `.26` | Aktive Session, aktuelle Seite, gewählte Tabellenzeile |
-| Gedrückt / an | `.14`–`.16` | Toggle-Icon-Button, aktiver Viewport, aktiver Tab (`.12` + Rand `.28`) |
+| Gedrückt / an | `.14`–`.16` | Toggle-Icon-Button, aktiver Viewport, aktiver Tab (`.12` + Rand `.28`), sekundärer und Ghost-Button beim Drücken (`.14`) |
 | Verweis / Chip | Fläche `.13` + Rand `.30` | `@`-Token, Referenz-Chip |
 | Fokus-Halo (Felder) | `0 0 0 3px rgba(az, .16)` | Inputs, Suchfeld, Textarea |
 | Treffer-Markierung | `.26`–`.30` | `<mark>` in Suchergebnissen |
@@ -218,6 +218,7 @@ Die Oberfläche ist **kompakt**. Skala in px: `2 · 4 · 6 · 8 · 10 · 12 · 1
 | **Fokus (Tastatur)** | Jedes interaktive Element: `box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure)` bei `:focus-visible`. |
 | **Fokus (Textfeld)** | Rand `--azure` + Halo `0 0 0 3px rgba(az,.16)` statt Ring. |
 | **Hover** | Siehe §3.2. Übergang 120–140 ms auf `background`, `color`, `border-color`, `opacity`. |
+| **Gedrückt (Button)** | Solange der Button gedrückt wird (`:active`): Skalierung `--press-scale` (`.97`), Übergang 120–140 ms (§10). Sekundär und Ghost zusätzlich Fläche `rgba(az,.14)` (§3.2). Nicht bei deaktivierten Buttons. |
 | **Ausgewählt** | `rgba(az,.09)` + Rand `rgba(az,.26)`; bei Kacheln 2 px `--azure` + Häkchen-Badge. |
 | **Deaktiviert** | `opacity: .42`, `cursor: not-allowed`, kein Hover. |
 | **Nur lesen** | Fläche `--tint`, Text `--slate`, Rand `--line` (bei Eigenschafts-Feldern gestrichelt). |
@@ -280,7 +281,8 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 
 - **Kurve:** `cubic-bezier(.2, .8, .2, 1)` für alles, was erscheint oder sich bewegt.
 - **Dauer:** Zustandswechsel 120–140 ms · Popover/Menü 160 ms · Nachricht/Karte 240–260 ms · Dashboard-Einstieg 340 ms, gestaffelt um je 30–40 ms · Vorschau-Spalte ein-/ausfahren 420 ms.
-- **Muster:** `rise` (7 px nach oben + einblenden) für Nachrichten und Listen, `pop` (5 px + Skalierung .985) für Popover und Karten, `drop` (−8 px) für Sheets, die von oben fallen. Drawer: 24 px von links.
+- **Muster:** `rise` (7 px nach oben + einblenden) für Nachrichten und Listen, `pop` (5 px + Skalierung .985) für Popover und Karten, `drop` (−8 px) für Sheets, die von oben fallen, und Toasts. Drawer: 24 px von links.
+- **Drücken:** Buttons skalieren beim Drücken auf `.97` (`--press-scale`) und beim Loslassen zurück, 120–140 ms mit der Kurve oben. Kein Federn.
 - **Erfolg:** Häkchen-Marke skaliert von .6 auf 1 (`cubic-bezier(.2,1.4,.4,1)`, 500 ms). Die einzige federnde Bewegung.
 - **`prefers-reduced-motion: reduce`:** alle Animationen und Übergänge auf praktisch 0 ms.
 
@@ -295,7 +297,7 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 - **Dashboard:** eine Eingabe, sonst nichts. Oben verankert (Abstand oben `min(28vh, 280px)`), max. 660 px breit. Die Eingabe hat **keinen Kasten**: Text auf der Fläche, beim Fokus eine weiche Fläche `rgba(az,.07)`. Offene To-dos ab 1360 px als Karte oben rechts (330 px), darunter in der Spalte.
 - **Review:** links die Vorschau (flexibel, auf `--stage`), rechts ein Panel mit 400 px (340 px unter 1180 px) mit Checkliste und Veröffentlichen-Aktionen unten.
 - **Vorschau-Bühne:** Die Seite liegt als weißes Blatt (`--surface`, Rand `rgba(ink,.15)`, `--r-xl`, `--sh-1`) auf `--stage`, 12 px Rand. Mobil: 390 px breit, 6-px-Rahmen `rgba(ink,.34)`, Radius 22 px.
-- **Overlays:** Drawer links 380 px · Dialog max. 720 × 600 px · Popover 350–410 px · Toast unten mittig, max. 520 px.
+- **Overlays:** Drawer links 380 px · Dialog max. 720 × 600 px · Popover 350–410 px · Toast oben rechts, max. 520 px.
 - **Kundenseite in der Vorschau:** hat eigene Stile (u. a. Gewicht 600, Verläufe). Diese gelten **nicht** für die Workspace-UI.
 
 ---
@@ -342,7 +344,8 @@ Für Bedeutungen, die hier fehlen, gilt das nächstliegende Lucide-Icon.
 
 **Dialog / Drawer:** `--surface`, Rand `--line2`; Dialog `--r-3xl` + `--sh-modal`; Drawer ohne Radius, `--sh-modal`-Variante. Kopf mit Titel 14 px/500, Fußzeile `--tint` mit Linie oben.
 
-**Toast:** `--solid`, weißer Text, `--r-lg`, `--sh-toast`, Icon `#7FC7EA` (4.90:1 auf `--solid` hell), optional eine Aktion (z. B. „Undo“).
+**Toast:** `--solid`, weißer Text, `--r-lg`, `--sh-toast`, Icon `#7FC7EA` (4.90:1 auf `--solid` hell), optional eine Aktion (z. B. „Undo“). Höchstens 3 gleichzeitig; ältere erscheinen wieder, sobald ein neuerer geschlossen wird.
+**Fehler-Toast:** Fläche `--errbg`, Rand `rgba(err,.30)` plus **3 px** linke Kante in `--err` (wie die Prüfzeile mit Fehler, §3.3), `--r-lg`, `--sh-toast`. Icon `circle-alert` und Titel (500) in `--err`, Detail 12 px in `--slate`. Schließen in `--err`, Hover `rgba(err,.10)`; Aktion wie der Gefahr-Button. Bleibt stehen, bis er geschlossen wird.
 
 **Elemente in der Vorschau:** Hover 1.5 px gestrichelt `rgba(az,.55)`, Abstand 2 px (nur das innerste Element). Ausgewählt 2 px `--azure`. Ziel des Chats 2 px `--azure` + Halo `6px rgba(az,.12)`. Geändert: Fläche `rgba(ok,.07)` (Buttons: Ring `3px rgba(ok,.28)`). Fehler 2 px `--err`. Wird bearbeitet 2 px `--akzent`. Gesperrt: Hover-Rahmen in `rgba(warn,.55)`. Läuft: Skeleton über dem Element. Element-Label: 10 px, 500, Fläche `--ink`, Text `--surface`, `--r-xs`, oben links. Nicht betroffene Teile im Fokus-Modus: Deckkraft .24, Sättigung .3.
 

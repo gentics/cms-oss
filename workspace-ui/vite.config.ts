@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -15,7 +16,12 @@ export default defineConfig(({ mode }) => {
     const cmsProxyTarget = env.CMS_PROXY_TARGET;
 
     return {
-        plugins: [react()],
+        plugins: [
+            react(),
+
+            // Tailwind, for the component layer in src/components/ui only (see ui.css).
+            tailwindcss(),
+        ],
 
         // Same `@/` alias as `vitest.config.ts` and the `paths` in `tsconfig.app.json`.
         resolve: {

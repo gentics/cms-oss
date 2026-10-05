@@ -9,7 +9,7 @@ This repository is a React + TypeScript application using Vite, plain CSS, TanSt
 
 This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside this folder unless the task requires otherwise.
 
-- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/test/setup.ts` Vitest setup.
+- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/components/ui/` the component layer (shadcn/ui on Base UI + Tailwind; wrap the app in `UiProvider`) · `src/test/setup.ts` Vitest setup.
 - Unit/component tests sit next to the code as `src/**/*.test.{ts,tsx}`. E2E tests live in `e2e/` (for example `e2e/App.spec.ts`).
 - Import from `src/` with the `@/` alias (for example `@/services/apiService/apiService`).
 
@@ -70,10 +70,15 @@ This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside 
 ### Styling
 
 - Use plain CSS. Do not add a CSS preprocessor (Sass/SCSS, Less) or CSS-in-JS.
+- **Exception: the component layer `src/components/ui/`** is shadcn/ui on Base UI (`@base-ui/react`, not Radix) styled with Tailwind. Tailwind, `cn()` (`ui/utils.ts`), `cva`, `clsx` and `tailwind-merge` are allowed only there. `ui/ui.css` clears Tailwind's theme and maps only the `design.md` tokens (1 spacing unit = 1 px, alpha via `/`, e.g. `bg-azure/10`), and scans only that folder, so Tailwind classes elsewhere produce no CSS; ESLint (`no-restricted-syntax`, `no-restricted-imports`) reports them. Everything outside the layer uses the components and CSS Modules. Components added with `npx shadcn add` (`components.json`) must be restyled with these tokens before use.
 - Component styles use CSS Modules: `Component.module.css` next to the component, imported as `import styles from './Component.module.css';`.
 - Global styles (design tokens, base styles) live only in `src/index.css`. Do not add global class names for components.
 - Design tokens are CSS custom properties. Visual values (colors, radii, shadows, spacing, font sizes) come from `.claude/rules/design.md`.
 - Native CSS nesting, cascade layers, and container queries are allowed. `var()` does not work in `@media` conditions; write breakpoints as literal values.
+
+### Icons
+
+- Lucide via `lucide-react` (`design.md` §9). `UiProvider` sets the defaults (stroke 1.7, 18 px); pass `size` only for other sizes.
 
 ### State Management
 

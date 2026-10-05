@@ -4,5 +4,10 @@
         "label": "Fehler",
         "dismiss": "Schließen",
         "cmsTokenFailed": "Der CMS-Token konnte nicht abgerufen werden"
+    },
+    "ui": {
+        "close": "Schließen",
+        "dismiss": "Schließen",
+        "notifications": "Benachrichtigungen"
     }
 }

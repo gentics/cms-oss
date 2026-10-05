@@ -4,5 +4,10 @@
         "label": "Errors",
         "dismiss": "Dismiss",
         "cmsTokenFailed": "Getting the CMS token failed"
+    },
+    "ui": {
+        "close": "Close",
+        "dismiss": "Dismiss",
+        "notifications": "Notifications"
     }
 }

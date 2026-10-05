@@ -9,6 +9,23 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// Class names that look like Tailwind utilities: a variant (`hover:`), an arbitrary value (`[`), a
+// utility with a value (`px-12`, `bg-azure`) or a value-less utility (`flex`, `truncate`). Used
+// as an esquery regex, so it must not contain `/`.
+const tailwindClassPattern = `/${[
+    '(^|\\s)(',
+    '[\\w-]+:',
+    '|[\\w-]*\\[',
+    '|-?(p[xytrblse]?|m[xytrblse]?|gap(-[xy])?|space-[xy]|w|h|size|min-[wh]|max-[wh]|inset(-[xy])?|top|right|bottom|left|z',
+    '|text|bg|border(-[xytrbl])?|rounded(-[a-z]+)?|shadow|ring|outline|opacity|font|leading|tracking',
+    '|grid-cols|grid-rows|col|row|items|justify|self|place|content|overflow(-[xy])?|translate-[xy]|scale|rotate',
+    '|duration|ease|delay|animate|transition|fill|stroke|cursor|select|origin|order|basis|line-clamp|decoration|divide)-[\\w.%]+',
+    '|(flex|grid|block|inline|inline-flex|inline-block|inline-grid|hidden|contents|absolute|relative|fixed|sticky|static',
+    '|truncate|sr-only|uppercase|lowercase|capitalize|italic|underline|border|rounded|shadow|transition|grow|shrink',
+    '|isolate|visible|invisible|container)(?=\\s|$)',
+    ')',
+].join('')}/`;
+
 export default defineConfig([
     // Files that should never be linted.
     {
@@ -156,6 +173,44 @@ export default defineConfig([
                 'warn',
                 {
                     allow: ['warn', 'error'],
+                },
+            ],
+        },
+    },
+
+    // Tailwind only in the component layer (src/components/ui, see ui.css). Elsewhere a Tailwind
+    // class would silently produce no CSS (`@source` in ui.css), so it is reported here instead.
+    {
+        files: ['src/**/*.{ts,tsx}'],
+
+        ignores: ['src/components/ui/**'],
+
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    paths: ['clsx', 'tailwind-merge', 'class-variance-authority'].map((name) => ({
+                        name,
+                        message: 'Tailwind tooling belongs in src/components/ui. Use a CSS Module here.',
+                    })),
+                    patterns: [
+                        {
+                            group: ['**/components/ui/utils', '**/components/ui/ui.css'],
+                            message: 'Internal to the component layer. Use the components or a CSS Module here.',
+                        },
+                    ],
+                },
+            ],
+
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: `JSXAttribute[name.name='className'] Literal[value=${tailwindClassPattern}]`,
+                    message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
+                },
+                {
+                    selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=${tailwindClassPattern}]`,
+                    message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
                 },
             ],
         },

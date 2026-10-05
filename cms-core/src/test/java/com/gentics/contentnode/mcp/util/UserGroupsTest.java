@@ -13,7 +13,12 @@ import org.junit.Test;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.rest.model.Group;
+import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.response.GroupList;
+import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.model.response.UserLoadResponse;
+import com.gentics.contentnode.rest.resource.GroupResource;
 import com.gentics.contentnode.rest.resource.UserResource;
 
 /**
@@ -33,5 +38,24 @@ public class UserGroupsTest {
 		assertThat(UserGroups.refs(resource, 35)).containsExactly(new ObjectRef(Type.GROUP, 7, null, null, "Editors",
 				null, null, null, null));
 		assertThat(UserGroups.refs(resource, 36)).isEmpty();
+	}
+
+	@Test
+	public void testUserAndGroupRef() throws Exception {
+		User user = new User();
+		user.setId(35);
+		user.setLogin("mcp.test");
+		UserResource users = mock(UserResource.class);
+		when(users.get(eq("35"), any())).thenReturn(new UserLoadResponse(null, ResponseInfo.ok(""), user));
+		Group group = new Group();
+		group.setId(7);
+		group.setName("Editors");
+		GroupResource groups = mock(GroupResource.class);
+		when(groups.get(eq("7"), any())).thenReturn(new GroupLoadResponse(null, ResponseInfo.ok(""), group));
+
+		assertThat(UserGroups.userRef(users, 35)).isEqualTo(new ObjectRef(Type.USER, 35, null, null, "mcp.test", null,
+				null, null, null));
+		assertThat(UserGroups.groupRef(groups, 7)).isEqualTo(new ObjectRef(Type.GROUP, 7, null, null, "Editors",
+				null, null, null, null));
 	}
 }

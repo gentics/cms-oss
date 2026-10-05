@@ -13,16 +13,15 @@ import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.mcp.util.UserGroups;
 import com.gentics.contentnode.rest.model.perm.RoleItem;
 import com.gentics.contentnode.rest.model.perm.TypePermissionItem;
-import com.gentics.contentnode.rest.model.response.GroupLoadResponse;
 import com.gentics.contentnode.rest.model.response.NodeLoadResponse;
 import com.gentics.contentnode.rest.model.response.TypePermissionResponse;
 import com.gentics.contentnode.rest.resource.GroupResource;
 import com.gentics.contentnode.rest.resource.NodeResource;
 import com.gentics.contentnode.rest.resource.impl.GroupResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
-import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
@@ -139,8 +138,7 @@ public class GetGroupPermissionsTool extends AbstractMcpTool {
 		}
 
 		GroupResource resource = RestPermissions.guard(GroupResource.class, new GroupResourceImpl());
-		GroupLoadResponse group = resource.get(Integer.toString(groupId), new PermsParameterBean());
-		requireOk(group, "The group %d could not be loaded".formatted(groupId));
+		ObjectRef groupRef = UserGroups.groupRef(resource, groupId);
 
 		ObjectRef instanceRef = null;
 		Integer permInstanceId = instanceId;
@@ -161,7 +159,7 @@ public class GetGroupPermissionsTool extends AbstractMcpTool {
 			instanceRef = ObjectRef.of(Type.fromValue(type), instanceId);
 		}
 
-		return new Result(ObjectRef.forGroup(group.getGroup()), type, instanceRef,
+		return new Result(groupRef, type, instanceRef,
 				response.getPerms().stream().map(GroupPermission::of).toList(),
 				response.getRoles() != null ? response.getRoles().stream().map(GroupRole::of).toList() : null);
 	}

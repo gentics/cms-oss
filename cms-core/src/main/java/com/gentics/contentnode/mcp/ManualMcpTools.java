@@ -5,9 +5,11 @@ import java.util.List;
 import com.gentics.contentnode.mcp.tools.AddConstructToPackageTool;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
+import com.gentics.contentnode.mcp.tools.AssignUserToGroupTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
+import com.gentics.contentnode.mcp.tools.CreateUserTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
@@ -35,6 +37,7 @@ import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.ListUsersTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
 import com.gentics.contentnode.mcp.tools.PublishPageTool;
+import com.gentics.contentnode.mcp.tools.RemoveUserFromGroupTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
 import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
 import com.gentics.contentnode.mcp.tools.SearchContentTool;
@@ -77,7 +80,8 @@ public final class ManualMcpTools {
 			new GetConstructTool(), new EnsureConstructCategoryTool(), new CreateConstructTool(),
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
 			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
-			new GetGroupPermissionsTool());
+			new GetGroupPermissionsTool(), new CreateUserTool(), new AssignUserToGroupTool(),
+			new RemoveUserFromGroupTool());
 
 	/**
 	 * Static class, no instances

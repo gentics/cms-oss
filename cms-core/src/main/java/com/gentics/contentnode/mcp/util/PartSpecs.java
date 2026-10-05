@@ -12,7 +12,10 @@ import java.util.Set;
 import java.util.function.IntPredicate;
 import java.util.regex.Pattern;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.mcp.McpArgs;
+import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.SelectSetting;
@@ -165,6 +168,23 @@ public final class PartSpecs {
 	}
 
 	/**
+	 * Get the IDs of the datasources of the parts that exist. Must be called in a transaction.
+	 * @param parts parts
+	 * @return existing datasource IDs
+	 * @throws NodeException
+	 */
+	public static Set<Integer> existingDatasources(List<PartSpec> parts) throws NodeException {
+		Set<Integer> existing = new HashSet<>();
+		for (PartSpec part : parts) {
+			if (part.datasourceId() != null && TransactionManager.getCurrentTransaction()
+					.getObject(Datasource.class, part.datasourceId()) != null) {
+				existing.add(part.datasourceId());
+			}
+		}
+		return existing;
+	}
+
+	/**
 	 * Build the REST part
 	 * @param part part
 	 * @param defaultOrder part order if the part has none
@@ -240,8 +260,12 @@ public final class PartSpecs {
 				+ "Handlebars part.", "minimum", 1, "maximum", 100));
 		properties.put("defaultValue", Map.of("type", List.of("string", "boolean", "integer", "null"),
 				"description", "Initial value: a string for text types, a boolean for a checkbox."));
+		// select parts, and only those, need a datasource
+		Map<String, Object> datasourceRule = Map.of("if", Map.of("properties", Map.of("typeId", Map.of("enum",
+				List.copyOf(DATASOURCE_TYPES))), "required", List.of("typeId")), "then", Map.of("required",
+						List.of("datasourceId")), "else", Map.of("not", Map.of("required", List.of("datasourceId"))));
 		Map<String, Object> part = schema("object", null, "properties", properties, "required",
-				List.of("keyword", "name", "typeId"), "additionalProperties", false);
+				List.of("keyword", "name", "typeId"), "additionalProperties", false, "allOf", List.of(datasourceRule));
 		return schema("array", description, "maxItems", MAX_PARTS, "items", part);
 	}
 

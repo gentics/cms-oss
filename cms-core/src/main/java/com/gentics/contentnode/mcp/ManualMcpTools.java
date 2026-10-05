@@ -3,9 +3,12 @@ package com.gentics.contentnode.mcp;
 import java.util.List;
 
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
+import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
+import com.gentics.contentnode.mcp.tools.CreateConstructTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
+import com.gentics.contentnode.mcp.tools.EnsureConstructCategoryTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetConstructTool;
 import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
@@ -32,6 +35,7 @@ import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
 import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
 import com.gentics.contentnode.mcp.tools.TranslatePageTool;
+import com.gentics.contentnode.mcp.tools.UpdateConstructTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
 import com.gentics.contentnode.mcp.tools.UploadFileTool;
@@ -65,7 +69,8 @@ public final class ManualMcpTools {
 			new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool(), new TranslatePageTool(),
 			new DeletePageTool(), new UploadFileTool(), new ListPartTypesTool(), new ListDatasourcesTool(),
 			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),
-			new GetConstructTool());
+			new GetConstructTool(), new EnsureConstructCategoryTool(), new CreateConstructTool(),
+			new UpdateConstructTool(), new AssignConstructToNodesTool());
 
 	/**
 	 * Static class, no instances

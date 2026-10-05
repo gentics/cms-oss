@@ -19,9 +19,11 @@ import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
+import com.gentics.contentnode.mcp.tools.PublishPageTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
 import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
 import com.gentics.contentnode.mcp.tools.SearchContentTool;
+import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
 import com.gentics.contentnode.mcp.tools.WhoamiTool;
@@ -51,7 +53,7 @@ public final class ManualMcpTools {
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
 			new RenderPreviewTool(), new GetRelatedTool(), new SearchContentTool(), new CountContentTool(),
 			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(),
-			new AddPageTagTool(), new UpdatePageTagsTool());
+			new AddPageTagTool(), new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool());
 
 	/**
 	 * Static class, no instances

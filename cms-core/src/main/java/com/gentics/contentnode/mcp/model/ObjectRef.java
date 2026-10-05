@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Folder;
 import com.gentics.contentnode.rest.model.Image;
@@ -179,6 +180,16 @@ public record ObjectRef(
 	public static ObjectRef forTemplate(Template restTemplate, Integer nodeId) {
 		return new ObjectRef(Type.TEMPLATE, restTemplate.getId(), restTemplate.getGlobalId(), nodeId,
 				restTemplate.getName(), restTemplate.getPath(), null, null, null);
+	}
+
+	/**
+	 * Create the ref for a construct
+	 * @param restConstruct REST model of the construct
+	 * @return ref
+	 */
+	public static ObjectRef forConstruct(Construct restConstruct) {
+		return new ObjectRef(Type.CONSTRUCT, restConstruct.getId(), restConstruct.getGlobalId(), null,
+				restConstruct.getName(), null, null, null, null);
 	}
 
 	/**

@@ -2,6 +2,7 @@ package com.gentics.contentnode.mcp;
 
 import java.util.List;
 
+import com.gentics.contentnode.mcp.tools.AddConstructToPackageTool;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
@@ -26,6 +27,7 @@ import com.gentics.contentnode.mcp.tools.ListConstructsTool;
 import com.gentics.contentnode.mcp.tools.ListDatasourcesTool;
 import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
+import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
@@ -70,7 +72,8 @@ public final class ManualMcpTools {
 			new DeletePageTool(), new UploadFileTool(), new ListPartTypesTool(), new ListDatasourcesTool(),
 			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),
 			new GetConstructTool(), new EnsureConstructCategoryTool(), new CreateConstructTool(),
-			new UpdateConstructTool(), new AssignConstructToNodesTool());
+			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
+			new AddConstructToPackageTool());
 
 	/**
 	 * Static class, no instances

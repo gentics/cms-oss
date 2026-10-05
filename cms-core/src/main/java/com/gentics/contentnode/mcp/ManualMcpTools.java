@@ -15,6 +15,7 @@ import com.gentics.contentnode.mcp.tools.GetConstructTool;
 import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
+import com.gentics.contentnode.mcp.tools.GetGroupPermissionsTool;
 import com.gentics.contentnode.mcp.tools.GetImageTool;
 import com.gentics.contentnode.mcp.tools.GetPageTagsTool;
 import com.gentics.contentnode.mcp.tools.GetPageTool;
@@ -26,10 +27,12 @@ import com.gentics.contentnode.mcp.tools.ListConstructCategoriesTool;
 import com.gentics.contentnode.mcp.tools.ListConstructsTool;
 import com.gentics.contentnode.mcp.tools.ListDatasourcesTool;
 import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
+import com.gentics.contentnode.mcp.tools.ListGroupsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListPackagesTool;
 import com.gentics.contentnode.mcp.tools.ListPartTypesTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
+import com.gentics.contentnode.mcp.tools.ListUsersTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
 import com.gentics.contentnode.mcp.tools.PublishPageTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
@@ -73,7 +76,8 @@ public final class ManualMcpTools {
 			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),
 			new GetConstructTool(), new EnsureConstructCategoryTool(), new CreateConstructTool(),
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
-			new AddConstructToPackageTool());
+			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
+			new GetGroupPermissionsTool());
 
 	/**
 	 * Static class, no instances

@@ -12,8 +12,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.gentics.contentnode.rest.model.File;
+import com.gentics.contentnode.rest.model.Folder;
+import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.Page;
+import com.gentics.contentnode.rest.model.Template;
 
 /**
  * Shared reference to a CMS object, used by MCP tools in both directions: emitted as part of a
@@ -134,6 +138,61 @@ public record ObjectRef(
 	 */
 	public static ObjectRef forPage(Page restPage) {
 		return forPage(restPage, restPage.getFolder() != null ? restPage.getFolder().getNodeId() : null);
+	}
+
+	/**
+	 * Create the ref for a folder, with its node and folder path
+	 * @param restFolder REST model of the folder
+	 * @return ref
+	 */
+	public static ObjectRef forFolder(Folder restFolder) {
+		return new ObjectRef(Type.FOLDER, restFolder.getId(), restFolder.getGlobalId(), restFolder.getNodeId(),
+				restFolder.getName(), restFolder.getPath(), null, null, null);
+	}
+
+	/**
+	 * Create the ref for a file. {@link #url()} is the preview URL if set, otherwise the live URL.
+	 * @param restFile REST model of the file
+	 * @param nodeId ID of the node the file belongs to, may be null if unknown
+	 * @return ref
+	 */
+	public static ObjectRef forFile(File restFile, Integer nodeId) {
+		return forFileOrImage(Type.FILE, restFile, nodeId);
+	}
+
+	/**
+	 * Create the ref for an image, like {@link #forFile(File, Integer)}
+	 * @param restImage REST model of the image
+	 * @param nodeId ID of the node the image belongs to, may be null if unknown
+	 * @return ref
+	 */
+	public static ObjectRef forImage(Image restImage, Integer nodeId) {
+		return forFileOrImage(Type.IMAGE, restImage, nodeId);
+	}
+
+	/**
+	 * Create the ref for a template
+	 * @param restTemplate REST model of the template
+	 * @param nodeId ID of the node the template was loaded for, may be null
+	 * @return ref
+	 */
+	public static ObjectRef forTemplate(Template restTemplate, Integer nodeId) {
+		return new ObjectRef(Type.TEMPLATE, restTemplate.getId(), restTemplate.getGlobalId(), nodeId,
+				restTemplate.getName(), restTemplate.getPath(), null, null, null);
+	}
+
+	/**
+	 * Create the ref for a file or image
+	 * @param type {@link Type#FILE} or {@link Type#IMAGE}
+	 * @param restFile REST model of the file or image
+	 * @param nodeId node ID, may be null
+	 * @return ref
+	 */
+	private static ObjectRef forFileOrImage(Type type, File restFile, Integer nodeId) {
+		String url = restFile.getUrl() != null && !restFile.getUrl().isBlank() ? restFile.getUrl()
+				: restFile.getLiveUrl();
+		return new ObjectRef(type, restFile.getId(), restFile.getGlobalId(), nodeId, restFile.getName(),
+				restFile.getPath(), null, restFile.getNiceUrl(), url);
 	}
 
 	/**

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.mcp.util.SearchUnavailableException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
@@ -42,7 +43,7 @@ public record Problem(String type, String title, int status, String detail, Stri
 
 	/**
 	 * Build the problem for a failed tool call. The cause chain is searched for the most specific
-	 * known failure: a lock held by another user, another read-only object, missing privileges, a
+	 * known failure: an unavailable search, a lock held by another user, another read-only object, missing privileges, a
 	 * missing object, a CMS response with a response code, a rejected tool argument, in this order.
 	 * Anything else is a CMS failure.
 	 * @param tool name of the failed tool
@@ -50,6 +51,11 @@ public record Problem(String type, String title, int status, String detail, Stri
 	 * @return problem
 	 */
 	public static Problem of(String tool, Throwable cause) {
+		SearchUnavailableException unavailable = find(cause, SearchUnavailableException.class);
+		if (unavailable != null) {
+			return create(Kind.SEARCH_UNAVAILABLE, tool, unavailable.getMessage(), null);
+		}
+
 		ReadOnlyException readOnly = find(cause, ReadOnlyException.class);
 		if (readOnly != null) {
 			if (readOnly.getMessageKey() != null && readOnly.getMessageKey().endsWith(LOCKED_MESSAGE_KEY_SUFFIX)) {
@@ -167,6 +173,7 @@ public record Problem(String type, String title, int status, String detail, Stri
 		LOCKED("object-locked", "Object locked", 423, true),
 		MAINTENANCE_MODE("maintenance-mode", "Maintenance mode", 503, true),
 		NOT_LICENSED("feature-not-licensed", "Feature not licensed", 403, false),
+		SEARCH_UNAVAILABLE("search-unavailable", "Search unavailable", 503, false),
 		FAILURE("cms-failure", "CMS failure", 500, true);
 
 		private final String slug;

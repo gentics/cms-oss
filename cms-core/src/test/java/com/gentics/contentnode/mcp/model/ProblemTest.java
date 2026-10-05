@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.mcp.util.SearchUnavailableException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -43,6 +44,16 @@ public class ProblemTest {
 				423, true);
 		assertProblem(Problem.of(TOOL, new ReadOnlyException("x", "form.readonly.locked", "F")), "object-locked", 423,
 				true);
+	}
+
+	@Test
+	public void testSearchUnavailable() {
+		Problem problem = Problem.of(TOOL, new InvocationTargetException(
+				new SearchUnavailableException("The search module is not installed", new ClassNotFoundException())));
+
+		assertProblem(problem, "search-unavailable", 503, false);
+		assertThat(problem.detail()).isEqualTo("The search module is not installed");
+		assertThat(problem.cms()).isNull();
 	}
 
 	@Test

@@ -71,6 +71,11 @@ public class ModelJsonSchemaTest {
 	}
 
 	@Test
+	public void testTagInfo() {
+		assertMatches(TagInfo.class, TagInfo.jsonSchema());
+	}
+
+	@Test
 	public void testNodeInfo() {
 		assertMatches(NodeInfo.class, NodeInfo.jsonSchema());
 	}

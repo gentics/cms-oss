@@ -19,6 +19,8 @@ Maven multi-module build (root `pom.xml`, Java release 17), modules in build ord
 - `cms-oss-doc` – guides (`src/main/source`).
 - `cms-integration-tests` – docker compose setup for the Playwright UI integration tests.
 
+NB: Some functionality requires a valid Gentics License, so its unit tests are located in the CMS EE project, which is typically located in `../cms` folder. Please refer to it while looking for tests, absent in the CMS OSS project.
+
 ## 3. Tests
 
 Prefer following Test Driven Development methodology, e.g. writing a failing test first, then make the fix to make it passing, as per guidelines from `.claude/skills/` folder of a current user.

@@ -5,6 +5,7 @@ import java.util.List;
 import com.gentics.contentnode.mcp.tools.AddPageTagTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
+import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
@@ -24,8 +25,10 @@ import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
 import com.gentics.contentnode.mcp.tools.RestorePageVersionTool;
 import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.TakeOfflineTool;
+import com.gentics.contentnode.mcp.tools.TranslatePageTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.UpdatePageTagsTool;
+import com.gentics.contentnode.mcp.tools.UploadFileTool;
 import com.gentics.contentnode.mcp.tools.WhoamiTool;
 import com.gentics.lib.log.NodeLogger;
 
@@ -48,12 +51,13 @@ public final class ManualMcpTools {
 	 * Every manually implemented tool, in registration order.
 	 */
 	private static final List<McpToolProvider> TOOLS = List.of(new PageLoadTool(), new ListNodesTool(),
-			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(), new GetImageTool(),
-			new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
+			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(),
+			new GetImageTool(), new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
 			new RenderPreviewTool(), new GetRelatedTool(), new SearchContentTool(), new CountContentTool(),
-			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(),
-			new AddPageTagTool(), new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool());
+			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
+			new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool(), new TranslatePageTool(),
+			new DeletePageTool(), new UploadFileTool());
 
 	/**
 	 * Static class, no instances

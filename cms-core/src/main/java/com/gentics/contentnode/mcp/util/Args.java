@@ -59,4 +59,62 @@ public final class Args {
 		}
 		return values;
 	}
+
+	/**
+	 * Get an optional list of positive integers
+	 * @param arguments arguments
+	 * @param name argument name
+	 * @param maxItems maximum number of items
+	 * @return value, null if not supplied
+	 * @throws IllegalArgumentException if the argument is not a list of at most maxItems positive integers
+	 */
+	public static List<Integer> intList(Map<String, Object> arguments, String name, int maxItems) {
+		Object value = arguments.get(name);
+		if (value == null) {
+			return null;
+		}
+		if (!(value instanceof List<?> list) || list.size() > maxItems) {
+			throw new IllegalArgumentException(
+					"Argument '%s' must be a list of at most %d positive integers".formatted(name, maxItems));
+		}
+		List<Integer> values = new ArrayList<>();
+		for (Object item : list) {
+			if (!(item instanceof Number number) || number.doubleValue() != Math.rint(number.doubleValue())
+					|| number.longValue() < 1 || number.longValue() > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(
+						"Argument '%s' contains '%s', expected a positive integer".formatted(name, item));
+			}
+			values.add(number.intValue());
+		}
+		return values;
+	}
+
+	/**
+	 * Get an optional list of strings
+	 * @param arguments arguments
+	 * @param name argument name
+	 * @param maxItems maximum number of items
+	 * @param maxLength maximum length of an item
+	 * @return value, null if not supplied
+	 * @throws IllegalArgumentException if the argument is not a list of at most maxItems strings of at most maxLength
+	 */
+	public static List<String> stringList(Map<String, Object> arguments, String name, int maxItems, int maxLength) {
+		Object value = arguments.get(name);
+		if (value == null) {
+			return null;
+		}
+		if (!(value instanceof List<?> list) || list.size() > maxItems) {
+			throw new IllegalArgumentException(
+					"Argument '%s' must be a list of at most %d strings".formatted(name, maxItems));
+		}
+		List<String> values = new ArrayList<>();
+		for (Object item : list) {
+			if (!(item instanceof String string) || string.length() > maxLength) {
+				throw new IllegalArgumentException("Argument '%s' must contain strings of at most %d characters"
+						.formatted(name, maxLength));
+			}
+			values.add(string);
+		}
+		return values;
+	}
 }

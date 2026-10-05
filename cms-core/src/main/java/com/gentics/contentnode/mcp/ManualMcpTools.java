@@ -2,6 +2,8 @@ package com.gentics.contentnode.mcp;
 
 import java.util.List;
 
+import com.gentics.contentnode.mcp.tools.CountContentTool;
+import com.gentics.contentnode.mcp.tools.FindSimilarTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
 import com.gentics.contentnode.mcp.tools.GetImageTool;
@@ -16,6 +18,7 @@ import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.ListTemplatesTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
 import com.gentics.contentnode.mcp.tools.RenderPreviewTool;
+import com.gentics.contentnode.mcp.tools.SearchContentTool;
 import com.gentics.contentnode.mcp.tools.UpdatePagePropertiesTool;
 import com.gentics.contentnode.mcp.tools.WhoamiTool;
 import com.gentics.lib.log.NodeLogger;
@@ -42,7 +45,8 @@ public final class ManualMcpTools {
 			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(), new GetImageTool(),
 			new GetPageVersionsTool(), new GetPageTool(), new GetPageTagsTool(),
 			new ListFolderItemsTool(), new GetFolderTreeTool(), new ListTemplatesTool(), new GetTemplateTool(),
-			new RenderPreviewTool(), new GetRelatedTool());
+			new RenderPreviewTool(), new GetRelatedTool(), new SearchContentTool(), new CountContentTool(),
+			new FindSimilarTool());
 
 	/**
 	 * Static class, no instances

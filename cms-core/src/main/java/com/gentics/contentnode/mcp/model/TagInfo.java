@@ -121,7 +121,7 @@ public record TagInfo(String name, Integer constructId, String constructKeyword,
 	 * @return keywords by construct ID
 	 * @throws NodeException
 	 */
-	public static Map<Integer, String> constructKeywords(Collection<Tag> tags) throws NodeException {
+	public static Map<Integer, String> constructKeywords(Collection<? extends Tag> tags) throws NodeException {
 		Set<Integer> ids = new HashSet<>();
 		for (Tag tag : tags) {
 			if (tag.getConstructId() != null) {

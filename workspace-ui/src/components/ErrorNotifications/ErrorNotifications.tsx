@@ -1,60 +1,54 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useToast } from '@/components/ui/use-toast';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
-import styles from './ErrorNotifications.module.css';
-
-// Icons: Lucide `circle-alert` and `x` (lucide-static 1.49.0, ISC), stroke width per design.md §9.
-const iconProps = {
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.7,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    'aria-hidden': true,
-} as const;
-
-/** Shows every error in `useErrorNotificationStore` as a dismissible notification. */
-export function ErrorNotifications() {
+/** The message of an error, translated again when the language changes. */
+function ErrorMessage({ messageKey }: { messageKey: string }) {
     const { t } = useTranslation();
+
+    return t(messageKey);
+}
+
+/**
+ * Shows every error in `useErrorNotificationStore` as an error toast (`@/components/ui/toast`) that
+ * stays until it is dismissed. Dismissing the toast removes the error from the store, and an error
+ * removed from the store closes its toast. Needs `UiProvider` around it.
+ */
+export function ErrorNotifications() {
+    const toast = useToast();
     const errors = useErrorNotificationStore((state) => state.errors);
     const dismissError = useErrorNotificationStore((state) => state.dismissError);
+    const shownIds = useRef(new Set<string>());
 
-    if (errors.length === 0) {
-        return null;
-    }
+    useEffect(() => {
+        const currentIds = new Set(errors.map((error) => error.id));
 
-    return (
-        <section className={styles.region} aria-label={t('errorNotifications.label')}>
-            <ul className={styles.list}>
-                {errors.map((error) => (
-                    <li key={error.id} className={styles.item}>
-                        <div role="alert" className={styles.content}>
-                            <svg {...iconProps} className={styles.icon} width="18" height="18">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" x2="12" y1="8" y2="12" />
-                                <line x1="12" x2="12.01" y1="16" y2="16" />
-                            </svg>
-                            <div className={styles.message}>
-                                <p className={styles.text}>{t(error.messageKey)}</p>
-                                {error.detail && <p className={styles.detail}>{error.detail}</p>}
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            className={styles.dismiss}
-                            aria-label={t('errorNotifications.dismiss')}
-                            onClick={() => dismissError(error.id)}
-                        >
-                            <svg {...iconProps} width="16" height="16">
-                                <path d="M18 6 6 18" />
-                                <path d="m6 6 12 12" />
-                            </svg>
-                        </button>
-                    </li>
-                ))}
-            </ul>
-        </section>
-    );
+        for (const error of errors) {
+            if (!shownIds.current.has(error.id)) {
+                shownIds.current.add(error.id);
+                toast.add({
+                    id: error.id,
+                    type: 'error',
+                    // Announced by the toast region (`aria-live="polite"`). Not `priority: 'high'`:
+                    // Base UI then sets `aria-hidden` on the focusable toast.
+                    priority: 'low',
+                    timeout: 0,
+                    title: <ErrorMessage messageKey={error.messageKey} />,
+                    description: error.detail,
+                    onClose: () => dismissError(error.id),
+                });
+            }
+        }
+
+        for (const id of shownIds.current) {
+            if (!currentIds.has(id)) {
+                shownIds.current.delete(id);
+                toast.close(id);
+            }
+        }
+    }, [errors, toast, dismissError]);
+
+    return null;
 }

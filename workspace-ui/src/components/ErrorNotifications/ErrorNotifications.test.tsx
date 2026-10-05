@@ -1,12 +1,12 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UiProvider } from '@/components/ui/provider';
+import i18n from '@/i18n';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 import { ErrorNotifications } from './ErrorNotifications';
-
-import '@/i18n';
 
 function addError(messageKey: string, detail?: string) {
     act(() => {
@@ -14,72 +14,111 @@ function addError(messageKey: string, detail?: string) {
     });
 }
 
+function renderNotifications() {
+    return render(<ErrorNotifications />, { wrapper: UiProvider });
+}
+
+/** The toast region, a polite live region that announces what is added to it. */
+function notifications() {
+    return screen.getByRole('region', { name: 'Notifications' });
+}
+
+function errorToasts() {
+    return notifications().querySelectorAll('[data-slot="toast"][data-type="error"]');
+}
+
 describe('ErrorNotifications', () => {
     beforeEach(() => {
         useErrorNotificationStore.setState({ errors: [] });
     });
 
-    afterEach(() => {
+    afterEach(async () => {
         vi.restoreAllMocks();
+        await i18n.changeLanguage('en');
     });
 
-    it('renders nothing while there is no error', () => {
-        render(<ErrorNotifications />);
+    it('shows nothing while there is no error', () => {
+        renderNotifications();
 
-        expect(screen.queryByRole('region', { name: 'Errors' })).not.toBeInTheDocument();
+        expect(errorToasts()).toHaveLength(0);
     });
 
-    it('shows the translated message and the detail', () => {
-        render(<ErrorNotifications />);
+    it('shows the translated message and the detail in the live region', async () => {
+        renderNotifications();
 
         addError('errorNotifications.cmsTokenFailed', 'Request to /rest/admin/token failed with status 403');
 
-        const region = screen.getByRole('region', { name: 'Errors' });
-        const alert = within(region).getByRole('alert');
+        const toast = await within(notifications()).findByRole('dialog', { name: 'Getting the CMS token failed' });
 
-        expect(within(alert).getByText('Getting the CMS token failed')).toBeInTheDocument();
-        expect(within(alert).getByText('Request to /rest/admin/token failed with status 403')).toBeInTheDocument();
+        expect(notifications()).toHaveAttribute('aria-live', 'polite');
+        expect(toast).toHaveAttribute('data-type', 'error');
+        expect(toast).toHaveAccessibleDescription('Request to /rest/admin/token failed with status 403');
     });
 
-    it('stacks one notification per error, newest last', () => {
-        render(<ErrorNotifications />);
+    it('shows one error toast per error', async () => {
+        renderNotifications();
 
         addError('errorNotifications.cmsTokenFailed', 'first');
         addError('errorNotifications.cmsTokenFailed', 'second');
 
-        const alerts = screen.getAllByRole('alert');
-
-        expect(alerts).toHaveLength(2);
-        expect(alerts[0]).toHaveTextContent('first');
-        expect(alerts[1]).toHaveTextContent('second');
+        await waitFor(() => expect(errorToasts()).toHaveLength(2));
     });
 
-    it('dismisses only the notification whose close button was clicked', async () => {
+    it('dismisses only the toast whose close button was clicked and removes its error', async () => {
         const user = userEvent.setup();
 
-        render(<ErrorNotifications />);
+        renderNotifications();
 
         addError('errorNotifications.cmsTokenFailed', 'first');
         addError('errorNotifications.cmsTokenFailed', 'second');
 
-        await user.click(screen.getAllByRole('button', { name: 'Dismiss' })[0]!);
+        const first = await screen.findByText('first', { selector: '[data-slot="toast-description"]' });
+        const toast = first.closest<HTMLElement>('[data-slot="toast"]')!;
 
-        const alerts = screen.getAllByRole('alert');
+        await user.click(toast.querySelector<HTMLElement>('[data-slot="toast-close"]')!);
 
-        expect(alerts).toHaveLength(1);
-        expect(alerts[0]).toHaveTextContent('second');
+        await waitFor(() => expect(screen.queryByText('first', { selector: '[data-slot="toast-description"]' })).not.toBeInTheDocument());
+        expect(screen.getByText('second', { selector: '[data-slot="toast-description"]' })).toBeInTheDocument();
+        expect(useErrorNotificationStore.getState().errors.map((error) => error.detail)).toEqual(['second']);
+    });
+
+    it('closes the toast when its error is removed from the store', async () => {
+        renderNotifications();
+
+        addError('errorNotifications.cmsTokenFailed', 'first');
+        await screen.findByText('first');
+
+        act(() => {
+            const [error] = useErrorNotificationStore.getState().errors;
+            useErrorNotificationStore.getState().dismissError(error!.id);
+        });
+
+        await waitFor(() => expect(screen.queryByText('first')).not.toBeInTheDocument());
+    });
+
+    it('translates the message again when the language changes', async () => {
+        renderNotifications();
+
+        addError('errorNotifications.cmsTokenFailed');
+        await screen.findByText('Getting the CMS token failed');
+
+        await act(async () => {
+            await i18n.changeLanguage('de');
+        });
+
+        expect(screen.getByText('Der CMS-Token konnte nicht abgerufen werden')).toBeInTheDocument();
     });
 
     it('shows no notification for a plain console.error', async () => {
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-        render(<ErrorNotifications />);
+        renderNotifications();
 
         await act(async () => {
             console.error('unrelated error');
         });
 
         expect(errorSpy).toHaveBeenCalledWith('unrelated error');
-        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+        expect(errorToasts()).toHaveLength(0);
     });
 });

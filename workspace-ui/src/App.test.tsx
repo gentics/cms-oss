@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { UiProvider } from '@/components/ui/provider';
 import { useCmsTokenStore } from '@/store/useCmsTokenStore';
 
 import App from './App';
@@ -14,7 +15,9 @@ function renderApp() {
 
     return render(
         <QueryClientProvider client={queryClient}>
-            <App />
+            <UiProvider>
+                <App />
+            </UiProvider>
         </QueryClientProvider>,
     );
 }

@@ -35,6 +35,14 @@ public final class ManualMcpTools {
 	}
 
 	/**
+	 * Get every manually implemented tool, in registration order
+	 * @return tools
+	 */
+	static List<McpToolProvider> tools() {
+		return TOOLS;
+	}
+
+	/**
 	 * Register every tool in {@link #TOOLS} on the given server.
 	 * @param server MCP server to register the tools on
 	 */

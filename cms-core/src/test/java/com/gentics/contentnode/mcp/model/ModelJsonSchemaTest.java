@@ -71,6 +71,11 @@ public class ModelJsonSchemaTest {
 	}
 
 	@Test
+	public void testFolderItem() {
+		assertMatches(FolderItem.class, FolderItem.jsonSchema());
+	}
+
+	@Test
 	public void testFileInfo() {
 		assertMatches(FileInfo.class, FileInfo.jsonSchema(null));
 	}

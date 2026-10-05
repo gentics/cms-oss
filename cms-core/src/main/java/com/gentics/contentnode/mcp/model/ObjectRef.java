@@ -15,10 +15,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Folder;
+import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.Template;
+import com.gentics.contentnode.rest.model.User;
 
 /**
  * Shared reference to a CMS object, used by MCP tools in both directions: emitted as part of a
@@ -190,6 +192,24 @@ public record ObjectRef(
 	public static ObjectRef forConstruct(Construct restConstruct) {
 		return new ObjectRef(Type.CONSTRUCT, restConstruct.getId(), restConstruct.getGlobalId(), null,
 				restConstruct.getName(), null, null, null, null);
+	}
+
+	/**
+	 * Create the ref for a user, named by its login
+	 * @param restUser REST model of the user
+	 * @return ref
+	 */
+	public static ObjectRef forUser(User restUser) {
+		return new ObjectRef(Type.USER, restUser.getId(), null, null, restUser.getLogin(), null, null, null, null);
+	}
+
+	/**
+	 * Create the ref for a group
+	 * @param restGroup REST model of the group
+	 * @return ref
+	 */
+	public static ObjectRef forGroup(Group restGroup) {
+		return new ObjectRef(Type.GROUP, restGroup.getId(), null, null, restGroup.getName(), null, null, null, null);
 	}
 
 	/**

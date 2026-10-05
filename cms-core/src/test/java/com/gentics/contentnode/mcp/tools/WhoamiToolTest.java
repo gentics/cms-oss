@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.WhoamiUser;
 import com.gentics.contentnode.rest.model.Group;
 
@@ -75,16 +76,10 @@ public class WhoamiToolTest {
 	}
 
 	@Test
-	public void testGroupRef() {
-		assertThat(new ObjectMapper().convertValue(WhoamiTool.groupRef(group(7, "Editors")), Map.class))
-				.isEqualTo(Map.of("type", "group", "id", 7, "name", "Editors"));
-	}
-
-	@Test
 	public void testFullResultMatchesOutputSchema() {
 		WhoamiTool.Result result = new WhoamiTool.Result(
 				new WhoamiUser(42, "editor", "Edith", "Editor", "e@example.com"),
-				List.of(WhoamiTool.groupRef(group(7, "Editors"))));
+				List.of(ObjectRef.forGroup(group(7, "Editors"))));
 
 		assertValid(result);
 	}

@@ -70,19 +70,9 @@ public class WhoamiTool extends AbstractMcpTool {
 		List<ObjectRef> groups = null;
 		if (includeGroups) {
 			List<Group> restGroups = response.getUser().getGroups();
-			groups = restGroups == null ? List.of() : restGroups.stream().map(WhoamiTool::groupRef).toList();
+			groups = restGroups == null ? List.of() : restGroups.stream().map(ObjectRef::forGroup).toList();
 		}
 		return new Result(WhoamiUser.of(response.getUser()), groups);
-	}
-
-	/**
-	 * Create the ref for a group
-	 * @param group REST group
-	 * @return ref
-	 */
-	static ObjectRef groupRef(Group group) {
-		return new ObjectRef(ObjectRef.Type.GROUP, group.getId(), null, null, group.getName(), null, null, null,
-				null);
 	}
 
 	/**

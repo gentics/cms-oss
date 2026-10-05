@@ -13,10 +13,12 @@ import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.rest.model.File;
 import com.gentics.contentnode.rest.model.Folder;
+import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.Image;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.Template;
+import com.gentics.contentnode.rest.model.User;
 
 /**
  * Unit tests for {@link ObjectRef}.
@@ -204,5 +206,26 @@ public class ObjectRefTest {
 
 		assertThat(ObjectRef.forTemplate(template, 3))
 				.isEqualTo(new ObjectRef(Type.TEMPLATE, 9, "A547.9", 3, "Article", null, null, null, null));
+	}
+
+	@Test
+	public void testForUser() {
+		User user = new User();
+		user.setId(35);
+		user.setLogin("mcp.test");
+		user.setFirstName("Mia");
+
+		assertThat(ObjectRef.forUser(user))
+				.isEqualTo(new ObjectRef(Type.USER, 35, null, null, "mcp.test", null, null, null, null));
+	}
+
+	@Test
+	public void testForGroup() throws Exception {
+		Group group = new Group();
+		group.setId(7);
+		group.setName("Editors");
+
+		assertThat(new ObjectMapper().convertValue(ObjectRef.forGroup(group), Map.class))
+				.isEqualTo(Map.of("type", "group", "id", 7, "name", "Editors"));
 	}
 }

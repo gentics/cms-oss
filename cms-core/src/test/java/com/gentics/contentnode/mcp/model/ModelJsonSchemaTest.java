@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.mcp.model.TranslationStatusInfo.LatestVersionInfo;
 import com.gentics.contentnode.mcp.util.Slice;
@@ -203,6 +204,26 @@ public class ModelJsonSchemaTest {
 		assertThat(NodeInfo.of(node, languages)).isEqualTo(new NodeInfo(
 				new ObjectRef(Type.NODE, 42, "A547.12345", null, "Example Node", null, null, null, null),
 				"https://www.example.com", "/", languages, 10, null, 3));
+	}
+
+	@Test
+	public void testUserItem() {
+		assertMatches(UserItem.class, UserItem.jsonSchema(null));
+	}
+
+	@Test
+	public void testUserItemHasNoPassword() {
+		User user = new User();
+		user.setId(35);
+		user.setLogin("mcp.test");
+		user.setLastName("Test");
+		user.setPassword("secret-password");
+
+		Map<?, ?> json = new ObjectMapper().convertValue(UserItem.of(user, List.of()), Map.class);
+
+		assertThat(json).isEqualTo(Map.of("ref", Map.of("type", "user", "id", 35, "name", "mcp.test"), "login",
+				"mcp.test", "lastName", "Test", "groups", List.of()));
+		assertThat(json.toString()).doesNotContain("password", "secret");
 	}
 
 	@Test

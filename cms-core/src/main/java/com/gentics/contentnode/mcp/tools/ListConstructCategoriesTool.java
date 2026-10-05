@@ -55,10 +55,10 @@ public class ListConstructCategoriesTool extends AbstractMcpTool {
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
 		ListArgs args = ListArgs.of(arguments, LIMITS);
 
-		List<ConstructCategory> categories = ListResponses.items(RestPermissions.guard(ConstructResource.class,
-				new ConstructResourceImpl()).listCategories(new SortParameterBean(), new FilterParameterBean()
-						.setQuery(args.query()), new PagingParameterBean(), new EmbedParameterBean(),
-						new ConstructCategoryParameterBean()));
+		ConstructResource resource = RestPermissions.guard(ConstructResource.class, new ConstructResourceImpl());
+		List<ConstructCategory> categories = ListResponses.items(resource.listCategories(new SortParameterBean(),
+				new FilterParameterBean().setQuery(args.query()), new PagingParameterBean(), new EmbedParameterBean(),
+				new ConstructCategoryParameterBean()));
 		Slice slice = args.slice(categories.size());
 
 		List<Category> items = new ArrayList<>();

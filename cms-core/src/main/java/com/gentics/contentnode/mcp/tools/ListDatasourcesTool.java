@@ -106,9 +106,9 @@ public class ListDatasourcesTool extends AbstractMcpTool {
 			throw new IllegalArgumentException("Argument '%s' must be STATIC or SITEMINDER".formatted(ARG_TYPE));
 		}
 
-		List<Datasource> datasources = ListResponses.items(RestPermissions.guard(DatasourceResource.class,
-				new DatasourceResourceImpl()).list(new SortParameterBean(), new FilterParameterBean().setQuery(args
-						.query()), new PagingParameterBean()));
+		DatasourceResource resource = RestPermissions.guard(DatasourceResource.class, new DatasourceResourceImpl());
+		List<Datasource> datasources = ListResponses.items(resource.list(new SortParameterBean(),
+				new FilterParameterBean().setQuery(args.query()), new PagingParameterBean()));
 		List<Datasource> matching = datasources.stream()
 				.filter(datasource -> datasourceType == null || datasource.getType() == datasourceType).toList();
 		Slice slice = args.slice(matching.size());

@@ -121,9 +121,9 @@ public class ListPartTypesTool extends AbstractMcpTool {
 			trx.success();
 		}
 
-		List<PartType> types = ListResponses.items(RestPermissions.guard(PartTypeResource.class,
-				new PartTypeResourceImpl()).list(new FilterParameterBean().setQuery(args.query()),
-						new SortParameterBean(), new PagingParameterBean(), new PartTypeListParameterBean()));
+		PartTypeResource resource = RestPermissions.guard(PartTypeResource.class, new PartTypeResourceImpl());
+		List<PartType> types = ListResponses.items(resource.list(new FilterParameterBean().setQuery(args.query()),
+				new SortParameterBean(), new PagingParameterBean(), new PartTypeListParameterBean()));
 		return result(types, allowedOnly, args);
 	}
 

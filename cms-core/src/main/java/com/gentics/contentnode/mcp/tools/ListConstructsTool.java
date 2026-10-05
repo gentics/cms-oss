@@ -84,10 +84,10 @@ public class ListConstructsTool extends AbstractMcpTool {
 		constructFilter.changeable = arguments.containsKey(ARG_CHANGEABLE) ? booleanArg(arguments, ARG_CHANGEABLE,
 				false) : null;
 
-		List<Construct> constructs = ListResponses.items(RestPermissions.guard(ConstructResource.class,
-				new ConstructResourceImpl()).list(new FilterParameterBean().setQuery(args.query()),
-						new SortParameterBean().setSort("keyword"), new PagingParameterBean(), constructFilter,
-						new PermsParameterBean(), new EmbedParameterBean().withEmbed("category")));
+		ConstructResource resource = RestPermissions.guard(ConstructResource.class, new ConstructResourceImpl());
+		List<Construct> constructs = ListResponses.items(resource.list(new FilterParameterBean().setQuery(args.query()),
+				new SortParameterBean().setSort("keyword"), new PagingParameterBean(), constructFilter,
+				new PermsParameterBean(), new EmbedParameterBean().withEmbed("category")));
 		return result(constructs, args);
 	}
 

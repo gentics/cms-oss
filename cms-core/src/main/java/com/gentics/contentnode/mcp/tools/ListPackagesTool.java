@@ -104,9 +104,9 @@ public class ListPackagesTool extends AbstractMcpTool {
 		ListArgs args = ListArgs.of(arguments, LIMITS);
 		checkDevtools();
 
-		List<Package> packages = ListResponses.items(RestPermissions.guard(PackageResource.class,
-				new PackageResourceImpl()).list(new FilterParameterBean().setQuery(args.query()),
-						new SortParameterBean(), new PagingParameterBean()));
+		PackageResource resource = RestPermissions.guard(PackageResource.class, new PackageResourceImpl());
+		List<Package> packages = ListResponses.items(resource.list(new FilterParameterBean().setQuery(args.query()),
+				new SortParameterBean(), new PagingParameterBean()));
 		Slice slice = args.slice(packages.size());
 		return ListResult.of(slice, slice.apply(packages).stream().map(PackageInfo::of).toList());
 	}

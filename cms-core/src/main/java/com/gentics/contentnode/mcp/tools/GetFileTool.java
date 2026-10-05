@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.FileInfo;
-import com.gentics.contentnode.mcp.util.RequiredArgs;
+import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
 import com.gentics.contentnode.rest.resource.FileResource;
@@ -55,7 +55,7 @@ public class GetFileTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		int id = RequiredArgs.id(arguments, ARG_ID);
+		int id = Args.id(arguments, ARG_ID);
 		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
 
 		FileLoadResponse response = RestPermissions.guard(FileResource.class, new FileResourceImpl())

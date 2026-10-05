@@ -15,7 +15,7 @@ import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.UserRef;
 import com.gentics.contentnode.mcp.model.VersionInfo;
-import com.gentics.contentnode.mcp.util.RequiredArgs;
+import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.PageVersion;
@@ -92,7 +92,7 @@ public class GetPageVersionsTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		int id = RequiredArgs.id(arguments, ARG_ID);
+		int id = Args.id(arguments, ARG_ID);
 		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
 		int size = intArg(arguments, ARG_SIZE, 1, MAX_SIZE, DEFAULT_SIZE);
 

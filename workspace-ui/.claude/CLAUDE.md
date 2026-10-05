@@ -9,13 +9,14 @@ This repository is a React + TypeScript application using Vite, plain CSS, TanSt
 
 This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside this folder unless the task requires otherwise.
 
-- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/components/ui/` the component layer (shadcn/ui on Base UI + Tailwind; wrap the app in `UiProvider`) · `src/test/setup.ts` Vitest setup.
+- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/components/ui/` the component layer (shadcn/ui on Base UI + Tailwind; wrap the app in `UiProvider`) · `src/catalogue/` component catalogue (`index.html`, served by `npm run catalogue`) · `src/test/setup.ts` Vitest setup.
 - Unit/component tests sit next to the code as `src/**/*.test.{ts,tsx}`. E2E tests live in `e2e/` (for example `e2e/App.spec.ts`).
 - Import from `src/` with the `@/` alias (for example `@/services/apiService/apiService`).
 
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Vite dev server; proxies `/genaix/api/v1` and adds the GenAIx headers (README, "Local GenAIx API"), and `/rest` to `CMS_PROXY_TARGET` when set (`.env.example`) |
+| `npm run catalogue` | Component catalogue on its own Vite dev server, `:5174` (`vite.catalogue.config.ts`); not part of `npm run dev` or `npm run build` |
 | `npm run mock:genaix` | GenAIx mock on `:8080` from `../../../api-contract` |
 | `npm run typecheck` | `tsc -b` |
 | `npm run generate:api` | Regenerate `src/services/apiService/genaix/schema.d.ts` from `.claude/contracts/openapi.yaml` |

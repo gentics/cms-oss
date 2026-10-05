@@ -26,12 +26,20 @@ export default defineConfig({
         screenshot: 'only-on-failure',
     },
 
-    // Playwright starts Vite automatically.
-    webServer: {
-        command: 'npm run dev -- --host 127.0.0.1',
-        url: 'http://127.0.0.1:5173',
-        reuseExistingServer: !process.env.CI,
-    },
+    // Playwright starts Vite automatically: the app, and the component catalogue for
+    // `e2e/catalogue.spec.ts` (which sets its own `baseURL`).
+    webServer: [
+        {
+            command: 'npm run dev -- --host 127.0.0.1',
+            url: 'http://127.0.0.1:5173',
+            reuseExistingServer: !process.env.CI,
+        },
+        {
+            command: 'npm run catalogue -- --host 127.0.0.1',
+            url: 'http://127.0.0.1:5174',
+            reuseExistingServer: !process.env.CI,
+        },
+    ],
 
     projects: [
         {

@@ -30,3 +30,5 @@ These variables have no `VITE_` prefix, so they stay on the dev server and are n
 ## UI components
 
 Reusable components live in `src/components/ui/`: shadcn/ui on [Base UI](https://base-ui.com) (`@base-ui/react`), styled with Tailwind using only the design tokens from `.claude/rules/design.md` (defined in `src/index.css`), with Lucide icons. Tailwind is limited to this folder; ESLint reports Tailwind classes anywhere else. Wrap the app in `UiProvider` (`@/components/ui/provider`) before using them.
+
+The component catalogue is a development page of its own, separate from the app: `npm run catalogue` starts it at `http://localhost:5174` (`vite.catalogue.config.ts`). `npm run dev` and `npm run build` do not include it. It shows every component in its states, with a light/dark/system theme switch. The theme follows the OS unless `data-theme="light"` or `data-theme="dark"` is set on `<html>`.

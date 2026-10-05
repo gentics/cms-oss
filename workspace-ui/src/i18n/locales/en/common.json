@@ -7,5 +7,107 @@
         "close": "Close",
         "dismiss": "Dismiss",
         "notifications": "Notifications"
+    },
+    "catalogue": {
+        "title": "Components",
+        "language": "Language",
+        "theme": {
+            "label": "Theme",
+            "light": "Light",
+            "dark": "Dark",
+            "system": "System"
+        },
+        "states": {
+            "default": "Default",
+            "checked": "Checked",
+            "indeterminate": "Indeterminate",
+            "invalid": "Invalid",
+            "disabled": "Disabled",
+            "placeholder": "Placeholder",
+            "selected": "Selected"
+        },
+        "buttons": {
+            "title": "Buttons",
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "ghost": "Ghost",
+            "danger": "Danger",
+            "solid": "On dark surfaces",
+            "icon": "Icon buttons",
+            "save": "Save",
+            "add": "Add",
+            "edit": "Edit",
+            "send": "Send"
+        },
+        "checkbox": {
+            "title": "Checkbox",
+            "label": "Publish now"
+        },
+        "select": {
+            "title": "Select",
+            "label": "Page",
+            "placeholder": "Choose a page",
+            "home": "Home",
+            "news": "News",
+            "contact": "Contact"
+        },
+        "tabs": {
+            "title": "Tabs",
+            "preview": "Preview",
+            "history": "History",
+            "settings": "Settings",
+            "previewContent": "Preview of the page.",
+            "historyContent": "Earlier versions of the page.",
+            "settingsContent": "Page settings."
+        },
+        "tooltip": {
+            "title": "Tooltip",
+            "undo": "Undo"
+        },
+        "menu": {
+            "title": "Menu",
+            "trigger": "Options",
+            "page": "Page",
+            "rename": "Rename",
+            "save": "Save",
+            "more": "More",
+            "duplicate": "Duplicate",
+            "move": "Move",
+            "view": "View",
+            "lineNumbers": "Line numbers",
+            "tree": "Tree view",
+            "table": "Table",
+            "delete": "Delete"
+        },
+        "dialog": {
+            "title": "Dialog",
+            "open": "Open dialog",
+            "heading": "Publish page",
+            "description": "The page goes live right away.",
+            "option": "Notify editors",
+            "cancel": "Cancel",
+            "confirm": "Publish"
+        },
+        "drawer": {
+            "title": "Drawer",
+            "open": "Open drawer",
+            "heading": "Sessions",
+            "description": "Your recent sessions.",
+            "option": "Show archived",
+            "close": "Close"
+        },
+        "toast": {
+            "title": "Toast",
+            "showInfo": "Show info",
+            "showSuccess": "Show success",
+            "showError": "Show error",
+            "showAction": "Show with action",
+            "info": "Draft saved",
+            "success": "Page published",
+            "error": "Publishing failed",
+            "errorDetail": "The CMS did not respond.",
+            "deleted": "Page deleted",
+            "undo": "Undo"
+        }
     }
 }

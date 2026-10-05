@@ -220,6 +220,7 @@ export default defineConfig([
     {
         files: [
             'vite.config.{js,ts,mjs,mts}',
+            'vite.catalogue.config.{js,ts,mjs,mts}',
             'vitest.config.{js,ts,mjs,mts}',
             'playwright.config.{js,ts,mjs,mts}',
             'eslint.config.{js,ts,mjs,mts}',

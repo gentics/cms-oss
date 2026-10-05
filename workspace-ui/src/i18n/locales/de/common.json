@@ -7,5 +7,107 @@
         "close": "Schließen",
         "dismiss": "Schließen",
         "notifications": "Benachrichtigungen"
+    },
+    "catalogue": {
+        "title": "Komponenten",
+        "language": "Sprache",
+        "theme": {
+            "label": "Theme",
+            "light": "Hell",
+            "dark": "Dunkel",
+            "system": "System"
+        },
+        "states": {
+            "default": "Standard",
+            "checked": "Ausgewählt",
+            "indeterminate": "Teilweise",
+            "invalid": "Ungültig",
+            "disabled": "Deaktiviert",
+            "placeholder": "Platzhalter",
+            "selected": "Gewählt"
+        },
+        "buttons": {
+            "title": "Buttons",
+            "primary": "Primär",
+            "secondary": "Sekundär",
+            "ghost": "Ghost",
+            "danger": "Gefahr",
+            "solid": "Auf dunklen Flächen",
+            "icon": "Icon-Buttons",
+            "save": "Speichern",
+            "add": "Hinzufügen",
+            "edit": "Bearbeiten",
+            "send": "Senden"
+        },
+        "checkbox": {
+            "title": "Checkbox",
+            "label": "Sofort veröffentlichen"
+        },
+        "select": {
+            "title": "Auswahl",
+            "label": "Seite",
+            "placeholder": "Seite wählen",
+            "home": "Startseite",
+            "news": "Aktuelles",
+            "contact": "Kontakt"
+        },
+        "tabs": {
+            "title": "Tabs",
+            "preview": "Vorschau",
+            "history": "Verlauf",
+            "settings": "Einstellungen",
+            "previewContent": "Vorschau der Seite.",
+            "historyContent": "Frühere Versionen der Seite.",
+            "settingsContent": "Seiten-Einstellungen."
+        },
+        "tooltip": {
+            "title": "Tooltip",
+            "undo": "Rückgängig"
+        },
+        "menu": {
+            "title": "Menü",
+            "trigger": "Optionen",
+            "page": "Seite",
+            "rename": "Umbenennen",
+            "save": "Speichern",
+            "more": "Mehr",
+            "duplicate": "Duplizieren",
+            "move": "Verschieben",
+            "view": "Ansicht",
+            "lineNumbers": "Zeilennummern",
+            "tree": "Baumansicht",
+            "table": "Tabelle",
+            "delete": "Löschen"
+        },
+        "dialog": {
+            "title": "Dialog",
+            "open": "Dialog öffnen",
+            "heading": "Seite veröffentlichen",
+            "description": "Die Seite geht sofort live.",
+            "option": "Redaktion benachrichtigen",
+            "cancel": "Abbrechen",
+            "confirm": "Veröffentlichen"
+        },
+        "drawer": {
+            "title": "Drawer",
+            "open": "Drawer öffnen",
+            "heading": "Sessions",
+            "description": "Deine letzten Sessions.",
+            "option": "Archivierte zeigen",
+            "close": "Schließen"
+        },
+        "toast": {
+            "title": "Toast",
+            "showInfo": "Info zeigen",
+            "showSuccess": "Erfolg zeigen",
+            "showError": "Fehler zeigen",
+            "showAction": "Mit Aktion zeigen",
+            "info": "Entwurf gespeichert",
+            "success": "Seite veröffentlicht",
+            "error": "Veröffentlichen fehlgeschlagen",
+            "errorDetail": "Das CMS hat nicht geantwortet.",
+            "deleted": "Seite gelöscht",
+            "undo": "Rückgängig"
+        }
     }
 }

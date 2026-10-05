@@ -12,11 +12,13 @@ import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
+import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.response.PermBitsResponse;
 import com.gentics.contentnode.rest.model.response.PermResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.PermResource;
 import com.gentics.contentnode.rest.resource.impl.PermResourceImpl;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
@@ -131,7 +133,7 @@ public class GetPermissionsTool extends AbstractMcpTool {
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
 		Request request = Request.of(arguments);
-		PermResourceImpl permResource = new PermResourceImpl();
+		PermResource permResource = RestPermissions.guard(PermResource.class, new PermResourceImpl());
 
 		if (request.id() == null) {
 			return new Result(null, request.type(), typePermissions(permResource, request));
@@ -175,7 +177,7 @@ public class GetPermissionsTool extends AbstractMcpTool {
 	 * @throws Exception if the permissions cannot be loaded, e.g. for a type with per-instance
 	 *         permissions only
 	 */
-	private static Map<String, Boolean> typePermissions(PermResourceImpl permResource, Request request)
+	private static Map<String, Boolean> typePermissions(PermResource permResource, Request request)
 			throws Exception {
 		PermBitsResponse response = permResource.getPermissions(request.type(), true);
 		requireOk(response, "The permissions on type '%s' could not be loaded".formatted(request.type()));

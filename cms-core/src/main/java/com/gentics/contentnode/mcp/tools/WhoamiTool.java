@@ -11,8 +11,10 @@ import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.ObjectRef;
 import com.gentics.contentnode.mcp.model.WhoamiUser;
+import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
+import com.gentics.contentnode.rest.resource.UserResource;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
@@ -62,7 +64,7 @@ public class WhoamiTool extends AbstractMcpTool {
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
 		boolean includeGroups = booleanArg(arguments, ARG_INCLUDE_GROUPS, true);
 
-		UserLoadResponse response = new UserResourceImpl().getMe(includeGroups);
+		UserLoadResponse response = RestPermissions.guard(UserResource.class, new UserResourceImpl()).getMe(includeGroups);
 		requireOk(response, "The current user could not be loaded");
 
 		List<ObjectRef> groups = null;

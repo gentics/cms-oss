@@ -9,8 +9,10 @@ import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.PageInfo;
 import com.gentics.contentnode.mcp.util.ChangedFields;
+import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
+import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.lib.log.NodeLogger;
 
@@ -161,7 +163,7 @@ public class UpdatePagePropertiesTool extends AbstractMcpTool {
 					update.idempotencyKey()));
 		}
 
-		PageResourceImpl pageResource = new PageResourceImpl();
+		PageResource pageResource = RestPermissions.guard(PageResource.class, new PageResourceImpl());
 
 		// step 1: load for update, which checks the edit permission and locks the page (committed)
 		com.gentics.contentnode.rest.model.Page loaded = pageResource

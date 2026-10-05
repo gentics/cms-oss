@@ -7,6 +7,7 @@ import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
 import com.gentics.contentnode.mcp.tools.FindSimilarTool;
+import com.gentics.contentnode.mcp.tools.GetConstructTool;
 import com.gentics.contentnode.mcp.tools.GetDatasourceTool;
 import com.gentics.contentnode.mcp.tools.GetFileTool;
 import com.gentics.contentnode.mcp.tools.GetFolderTreeTool;
@@ -18,6 +19,7 @@ import com.gentics.contentnode.mcp.tools.GetPermissionsTool;
 import com.gentics.contentnode.mcp.tools.GetRelatedTool;
 import com.gentics.contentnode.mcp.tools.GetTemplateTool;
 import com.gentics.contentnode.mcp.tools.ListConstructCategoriesTool;
+import com.gentics.contentnode.mcp.tools.ListConstructsTool;
 import com.gentics.contentnode.mcp.tools.ListDatasourcesTool;
 import com.gentics.contentnode.mcp.tools.ListFolderItemsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
@@ -62,7 +64,8 @@ public final class ManualMcpTools {
 			new FindSimilarTool(), new CreatePageTool(), new RestorePageVersionTool(), new AddPageTagTool(),
 			new UpdatePageTagsTool(), new PublishPageTool(), new TakeOfflineTool(), new TranslatePageTool(),
 			new DeletePageTool(), new UploadFileTool(), new ListPartTypesTool(), new ListDatasourcesTool(),
-			new GetDatasourceTool(), new ListConstructCategoriesTool());
+			new GetDatasourceTool(), new ListConstructCategoriesTool(), new ListConstructsTool(),
+			new GetConstructTool());
 
 	/**
 	 * Static class, no instances

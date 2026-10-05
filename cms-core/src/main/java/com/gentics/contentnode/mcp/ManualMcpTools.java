@@ -2,6 +2,9 @@ package com.gentics.contentnode.mcp;
 
 import java.util.List;
 
+import com.gentics.contentnode.mcp.tools.GetFileTool;
+import com.gentics.contentnode.mcp.tools.GetImageTool;
+import com.gentics.contentnode.mcp.tools.GetPageVersionsTool;
 import com.gentics.contentnode.mcp.tools.GetPermissionsTool;
 import com.gentics.contentnode.mcp.tools.ListNodesTool;
 import com.gentics.contentnode.mcp.tools.PageLoadTool;
@@ -28,7 +31,8 @@ public final class ManualMcpTools {
 	 * Every manually implemented tool, in registration order.
 	 */
 	private static final List<McpToolProvider> TOOLS = List.of(new PageLoadTool(), new ListNodesTool(),
-			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool());
+			new UpdatePagePropertiesTool(), new WhoamiTool(), new GetPermissionsTool(), new GetFileTool(), new GetImageTool(),
+			new GetPageVersionsTool());
 
 	/**
 	 * Static class, no instances

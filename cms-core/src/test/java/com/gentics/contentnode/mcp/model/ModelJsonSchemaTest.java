@@ -66,6 +66,11 @@ public class ModelJsonSchemaTest {
 	}
 
 	@Test
+	public void testWhoamiUser() {
+		assertMatches(WhoamiUser.class, WhoamiUser.jsonSchema());
+	}
+
+	@Test
 	public void testNodeInfo() {
 		assertMatches(NodeInfo.class, NodeInfo.jsonSchema());
 	}

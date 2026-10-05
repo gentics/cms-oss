@@ -6,6 +6,7 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -42,6 +44,7 @@ import com.gentics.lib.i18n.CNI18nString;
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 import de.jkeylockmanager.manager.exception.KeyLockManagerTimeoutException;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Test cases for processing callable queues
@@ -339,5 +342,83 @@ public class OperatorTest {
 		if (exceptions[0] != null) {
 			throw exceptions[0];
 		}
+	}
+
+	/**
+	 * Test that a NodeException without exception mapper is wrapped into a RestMappedException containing the cause
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRethrowingWrapsNodeException() throws NodeException {
+		NodeException cause = new NodeException("Failed");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
+				throw cause;
+			}));
+			assertWrapped(thrown, cause);
+		});
+	}
+
+	/**
+	 * Test that an exception, which is no NodeException, is wrapped into a RestMappedException containing the cause
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRethrowingWrapsOtherException() throws NodeException {
+		IllegalStateException cause = new IllegalStateException("Failed");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
+				throw cause;
+			}));
+			assertWrapped(thrown, cause);
+		});
+	}
+
+	/**
+	 * Test that an exception with an exception mapper is rethrown unchanged
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRethrowingMappedException() throws NodeException {
+		EntityNotFoundException cause = new EntityNotFoundException("Not found");
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
+				throw cause;
+			}));
+			assertThat(thrown).as("Thrown exception").isSameAs(cause);
+		});
+	}
+
+	/**
+	 * Test that a RestMappedException is rethrown unchanged (keeping its status)
+	 * @throws NodeException
+	 */
+	@Test
+	public void testRethrowingRestMappedException() throws NodeException {
+		RestMappedException cause = new RestMappedException("Conflict").setStatus(Status.CONFLICT);
+		Trx.operate(() -> {
+			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
+				throw cause;
+			}));
+			assertThat(thrown).as("Thrown exception").isSameAs(cause);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.CONFLICT);
+		});
+	}
+
+	/**
+	 * Assert that the thrown exception is a RestMappedException with status 500, which wraps the given cause
+	 * and has a response containing the message of the cause
+	 * @param thrown thrown exception
+	 * @param cause expected cause
+	 * @throws NodeException
+	 */
+	protected void assertWrapped(Throwable thrown, Throwable cause) throws NodeException {
+		assertThat(thrown).as("Thrown exception").isInstanceOf(RestMappedException.class);
+		assertThat(thrown.getCause()).as("Cause").isSameAs(cause);
+
+		RestMappedException restMappedException = (RestMappedException) thrown;
+		assertThat(restMappedException.getStatus()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);
+		ContentNodeRESTUtils.assertResponse(restMappedException.getRestResponse(), ResponseCode.FAILURE, "Error while Job: Failed",
+				new Message(Message.Type.CRITICAL, new CNI18nString("rest.general.error").toString()));
 	}
 }

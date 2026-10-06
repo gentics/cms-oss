@@ -32,14 +32,9 @@
   letter-spacing: 0.05em;
 }
 
-/* The left column's toggle; phones switch columns with the buttons in the columns instead. */
+/* The toggles of the left and the right column, on every screen; phones show a side column instead
+   of the center (WorkspaceLayout.module.css). */
 .columnToggle {
   display: flex;
   flex: none;
-}
-
-@media (max-width: 640px) {
-  .columnToggle {
-    display: none;
-  }
 }

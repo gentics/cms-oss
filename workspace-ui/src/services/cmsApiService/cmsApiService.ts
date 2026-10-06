@@ -32,18 +32,22 @@ export interface CmsTokenInfo {
 
 /**
  * Requests a CMS API token for the current CMS user, authenticated by the browser's own CMS session
- * cookie: `POST /rest/admin/token` with `{ name }`. Returns the token and its metadata.
+ * cookie: `POST /rest/admin/token` with `{ name, expires }`, valid for 60 minutes. Returns the token
+ * and its metadata.
  */
 export async function createCmsToken(name: string): Promise<CmsTokenInfo> {
     // Relative, so it is same-origin on whichever CMS host serves the UI. In development the Vite dev
     // server forwards it (see `vite.config.ts`).
     const CMS_TOKEN_URL = '/rest/admin/token';
+    // 60 minutes from now. The CMS takes `expires` as a Unix timestamp in seconds (integration guide,
+    // `POST /rest/admin/token`), the clock gives milliseconds.
+    const expires = Math.floor((new Date().getTime() + 60 * 60 * 1000) / 1000);
 
     return httpRequest<CmsTokenInfo>(CMS_TOKEN_URL, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, expires }),
     });
 }
 

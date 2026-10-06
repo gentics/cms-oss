@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpError } from '@/services/httpService/httpService';
+import { type StubbedUpload, stubUploads } from '@/test/stubUploads';
 
 import {
     archiveSession,
@@ -203,22 +204,53 @@ describe('routes', () => {
         expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s%201');
     });
 
+    // Uploads go through XMLHttpRequest (upload progress), stubbed by `stubUploads`.
     it('uploadSessionFile posts the file and its mode as multipart and returns the stored file', async () => {
         const stored = { id: 'f-1', name: 'brief.txt', mode: 'verbatim' };
-        const fetchMock = stubFetch(Response.json(stored, { status: 201 }));
+        const uploads = stubUploads([{ status: 201, body: stored }]);
         const file = new File(['text'], 'brief.txt', { type: 'text/plain' });
 
         await expect(uploadSessionFile('s-1', file, 'verbatim')).resolves.toEqual(stored);
 
-        const [url, init] = fetchMock.mock.calls[0]!;
-        const body = init?.body as FormData;
+        const [{ url, method, headers, body }] = uploads as [StubbedUpload];
 
         expect(url).toBe('/genaix/api/v1/sessions/s-1/files');
-        expect(init?.method).toBe('POST');
-        expect(new Headers(init?.headers).has('Content-Type')).toBe(false);
+        expect(method).toBe('POST');
+        expect(new Headers(headers).has('Content-Type')).toBe(false);
         expect(body.get('file')).toBeInstanceOf(File);
         expect((body.get('file') as File).name).toBe('brief.txt');
         expect(body.get('mode')).toBe('verbatim');
+    });
+
+    it('uploadSessionFile reports the share uploaded so far', async () => {
+        stubUploads([{ status: 201, body: { id: 'f-1' }, progress: [0.25, 0.5, 1] }]);
+        const onProgress = vi.fn<(fraction: number) => void>();
+
+        await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'source', onProgress);
+
+        expect(onProgress.mock.calls).toEqual([[0.25], [0.5], [1]]);
+    });
+
+    it('uploadSessionFile throws a GenaixApiError for an error response, as other requests do', async () => {
+        stubUploads([{
+            status: 413,
+            body: { type: 't', title: 'File too large', status: 413, genaix_code: 'file_too_large', request_id: 'req-1' },
+            headers: { 'Content-Type': 'application/problem+json' },
+        }]);
+
+        const error = await uploadSessionFile('s-1', new File(['text'], 'big.pdf'), 'source').catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(GenaixApiError);
+        expect(error).toMatchObject({ status: 413, genaixCode: 'file_too_large', requestId: 'req-1' });
+    });
+
+    it('uploadSessionFile throws a TypeError without a response, as fetch does, so it counts as retryable', async () => {
+        stubUploads([{}]);
+
+        const error = await uploadSessionFile('s-1', new File(['text'], 'brief.txt'), 'source').catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(TypeError);
+        expect(isRetryableGenaixError(error)).toBe(true);
     });
 });
 

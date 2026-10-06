@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -298,85 +298,5 @@ describe('WorkspaceLayout', () => {
         expect(screen.getByTestId('right')).not.toBeVisible();
         expect(screen.queryAllByRole('separator')).toHaveLength(0);
         expect(screen.getByText('Chat')).toBeVisible();
-    });
-
-    describe('column buttons', () => {
-        function renderWithToggles(isLeftColumnVisible: boolean, isRightColumnVisible: boolean) {
-            const onToggleLeftColumn = vi.fn<() => void>();
-            const onToggleRightColumn = vi.fn<() => void>();
-
-            render(
-                <WorkspaceLayout
-                    left={<p data-testid="left">Sessions</p>}
-                    center={<p data-testid="center">Chat</p>}
-                    right={<p data-testid="right">Preview</p>}
-                    isLeftColumnVisible={isLeftColumnVisible}
-                    isRightColumnVisible={isRightColumnVisible}
-                    onToggleLeftColumn={onToggleLeftColumn}
-                    onToggleRightColumn={onToggleRightColumn}
-                />,
-            );
-
-            return { onToggleLeftColumn, onToggleRightColumn };
-        }
-
-        const column = (testId: string) => screen.getByTestId(testId).parentElement!;
-
-        it('puts the hide button at the top of each visible side column', async () => {
-            const user = userEvent.setup();
-            const { onToggleLeftColumn, onToggleRightColumn } = renderWithToggles(true, true);
-
-            expect(within(column('left')).getByRole('button', { name: 'Hide the left column' })).toBeInTheDocument();
-            expect(within(column('right')).getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
-            expect(within(column('center')).queryAllByRole('button')).toHaveLength(0);
-
-            await user.click(screen.getByRole('button', { name: 'Hide the left column' }));
-            await user.click(screen.getByRole('button', { name: 'Hide the right column' }));
-
-            expect(onToggleLeftColumn).toHaveBeenCalledTimes(1);
-            expect(onToggleRightColumn).toHaveBeenCalledTimes(1);
-        });
-
-        it('puts the show button of a hidden side column at the top of the center', () => {
-            renderWithToggles(false, false);
-
-            expect(within(column('center')).getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
-            expect(within(column('center')).getByRole('button', { name: 'Show the right column' })).toBeInTheDocument();
-            expect(screen.queryByRole('button', { name: /^Hide/ })).not.toBeInTheDocument();
-        });
-
-        it('has no buttons without the toggles', () => {
-            renderLayout(false, false);
-
-            expect(screen.queryAllByRole('button')).toHaveLength(0);
-        });
-
-        // The phone set is shown only by the media query, which jsdom does not apply; hence `hidden: true`
-        // and `fireEvent`. Which set shows is tested in e2e/SessionMobile.spec.ts.
-        it('has phone buttons that open a side column instead of the center and go back', () => {
-            const onPhoneColumnChange = vi.fn<(column: string) => void>();
-
-            render(
-                <WorkspaceLayout
-                    left={<p data-testid="left">Sessions</p>}
-                    center={<p data-testid="center">Chat</p>}
-                    right={<p data-testid="right">Preview</p>}
-                    onToggleLeftColumn={() => {}}
-                    onToggleRightColumn={() => {}}
-                    onPhoneColumnChange={onPhoneColumnChange}
-                />,
-            );
-
-            const phoneButton = (name: string, testId: string) => within(column(testId))
-                .getAllByRole('button', { name, hidden: true })
-                .find((button) => button.parentElement!.className.includes('phoneOnly'))!;
-
-            fireEvent.click(phoneButton('Show the left column', 'center'));
-            fireEvent.click(phoneButton('Show the right column', 'center'));
-            fireEvent.click(phoneButton('Hide the left column', 'left'));
-            fireEvent.click(phoneButton('Hide the right column', 'right'));
-
-            expect(onPhoneColumnChange.mock.calls).toEqual([['left'], ['right'], ['center'], ['center']]);
-        });
     });
 });

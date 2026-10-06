@@ -9,6 +9,7 @@ import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
+import { stubUploads } from '@/test/stubUploads';
 
 import '@/i18n';
 
@@ -114,9 +115,20 @@ describe('SessionPage', () => {
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     });
 
+    // The upload goes through XMLHttpRequest (`stubUploads`), the message through fetch; both write to
+    // `log`, so their order can be checked.
     it('uploads an attached file before the message and drops the chip after sending', async () => {
         const user = userEvent.setup();
-        const fetchMock = stubFetch(Response.json({ id: 'f-1' }, { status: 201 }), accepted());
+        const log: string[] = [];
+        const fetchMock = stubFetch(accepted());
+
+        // The session list of the left column is answered as `stubFetch` does, and not logged.
+        vi.stubGlobal('fetch', withEmptySessionList(vi.fn<typeof fetch>((url, init) => {
+            log.push(`${init?.method} ${String(url)}`);
+
+            return fetchMock(url, init);
+        })));
+        stubUploads([{ status: 201, body: { id: 'f-1' } }], log);
 
         await renderComposer();
 
@@ -127,13 +139,38 @@ describe('SessionPage', () => {
         await user.click(screen.getByRole('button', { name: 'Send' }));
 
         await waitFor(() => expect(screen.queryByText('brief.pdf')).not.toBeInTheDocument());
-        expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+        expect(log.map((entry) => entry.split(' ')[1])).toEqual([
             '/genaix/api/v1/sessions/s-1/files',
             '/genaix/api/v1/sessions/s-1/messages',
         ]);
-        expect(JSON.parse(fetchMock.mock.calls[1]![1]!.body as string)).toEqual({
+        expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
             parts: [{ type: 'file_ref', file_id: 'f-1', mode: 'source' }],
         });
+    });
+
+    it('shows each file\'s upload progress on its chip while the message is sent', async () => {
+        const user = userEvent.setup();
+        let release = () => {};
+        const hold = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+
+        stubFetch(accepted());
+        stubUploads([{ status: 201, body: { id: 'f-1' }, progress: [0.4], hold }, { status: 201, body: { id: 'f-2' } }]);
+
+        await renderComposer();
+
+        await user.upload(screen.getByLabelText('File', { selector: 'input' }), [new File(['a'], 'brief.pdf'), new File(['b'], 'notes.txt')]);
+        await user.click(screen.getByRole('button', { name: 'Send' }));
+
+        // The first file is on its way, the second waits its turn.
+        expect(await screen.findByText('40 %')).toBeInTheDocument();
+        expect(screen.getByRole('progressbar', { name: 'brief.pdf' })).toHaveAttribute('aria-valuenow', '40');
+        expect(screen.getByText('waiting')).toBeInTheDocument();
+
+        act(() => release());
+
+        await waitFor(() => expect(screen.queryByText('brief.pdf')).not.toBeInTheDocument());
     });
 
     it('keeps the input and shows an error when sending fails', async () => {

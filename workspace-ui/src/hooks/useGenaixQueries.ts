@@ -126,6 +126,8 @@ export interface StartFile {
 export interface StartSessionInput {
     parts: UserMessagePart[];
     files: StartFile[];
+    /** Upload progress of `files[index]`, 0 to 1, while the files are uploaded on sending. */
+    onFileProgress?: (index: number, fraction: number) => void;
 }
 
 // Without files, one call creates the session with its first message. Files are per session, so
@@ -133,11 +135,11 @@ export interface StartSessionInput {
 // with a `file_ref` part per file (contract, `SessionCreate`).
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
-async function uploadFileParts(sessionId: string, files: StartFile[]): Promise<UserFileRefPart[]> {
+async function uploadFileParts(sessionId: string, files: StartFile[], onFileProgress?: StartSessionInput['onFileProgress']): Promise<UserFileRefPart[]> {
     const fileParts: UserFileRefPart[] = [];
 
-    for (const { file, mode } of files) {
-        const stored = await uploadSessionFile(sessionId, file, mode);
+    for (const [index, { file, mode }] of files.entries()) {
+        const stored = await uploadSessionFile(sessionId, file, mode, (fraction) => onFileProgress?.(index, fraction));
 
         fileParts.push({ type: 'file_ref', file_id: stored.id, mode });
     }
@@ -145,13 +147,13 @@ async function uploadFileParts(sessionId: string, files: StartFile[]): Promise<U
     return fileParts;
 }
 
-async function startSession({ parts, files }: StartSessionInput): Promise<Session> {
+async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
     if (files.length === 0) {
         return createSession({ workflow: START_WORKFLOW, message: { parts } });
     }
 
     const session = await createSession({ workflow: START_WORKFLOW });
-    const fileParts = await uploadFileParts(session.id, files);
+    const fileParts = await uploadFileParts(session.id, files, onFileProgress);
 
     await postMessage(session.id, { parts: [...parts, ...fileParts] });
 
@@ -184,8 +186,8 @@ export function useSendTurn(sessionId: string) {
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
-        mutationFn: async ({ parts, files }: StartSessionInput) => {
-            const fileParts = await uploadFileParts(sessionId, files);
+        mutationFn: async ({ parts, files, onFileProgress }: StartSessionInput) => {
+            const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
 
             return sendMessage({ parts: [...parts, ...fileParts] });
         },

@@ -76,17 +76,24 @@ test.describe('Session chat on a phone', () => {
         await expect(page.getByRole('button', { name: 'Show the left column' })).toHaveCount(1);
     });
 
-    test('swaps the chat for the left column with the buttons in the columns', async ({ page }) => {
+    test('swaps the chat for the left column with the button in the topbar', async ({ page }) => {
         await withSpeechRecognition(page, false);
         await page.goto('/sessions/abc');
 
         const field = page.getByRole('textbox', { name: 'What should happen?' });
+        const topbar = page.getByRole('banner');
 
-        await page.getByRole('button', { name: 'Show the left column' }).click();
+        await topbar.getByRole('button', { name: 'Show the left column' }).click();
 
         await expect(field).toBeHidden();
 
-        await page.getByRole('button', { name: 'Hide the left column' }).click();
+        // In the chat's place, across the 390 px viewport.
+        const box = (await page.getByRole('region', { name: 'Sessions' }).boundingBox())!;
+
+        expect(box.x).toBeLessThan(10);
+        expect(box.width).toBeGreaterThan(370);
+
+        await topbar.getByRole('button', { name: 'Hide the left column' }).click();
 
         await expect(field).toBeVisible();
     });
@@ -100,7 +107,7 @@ test.describe('Session chat on a phone', () => {
 
         const field = page.getByRole('textbox', { name: 'What should happen?' });
 
-        await page.getByRole('button', { name: 'Show the left column' }).click();
+        await page.getByRole('banner').getByRole('button', { name: 'Show the left column' }).click();
         await expect(field).toBeHidden();
 
         await page.getByRole('link', { name: /Careers page/ }).click();

@@ -2,9 +2,16 @@ import { useRouterState } from '@tanstack/react-router';
 import { type ReactNode, useState } from 'react';
 
 import { Topbar } from '@/components/Topbar/Topbar';
-import { type PhoneColumn, WorkspaceLayout } from '@/components/WorkspaceLayout/WorkspaceLayout';
+import { WorkspaceLayout } from '@/components/WorkspaceLayout/WorkspaceLayout';
 
 import styles from './AppShell.module.css';
+
+/** Phones: the breakpoint of the phone rules in WorkspaceLayout.module.css. */
+const PHONE_QUERY = '(max-width: 640px)';
+
+function isPhone() {
+    return window.matchMedia(PHONE_QUERY).matches;
+}
 
 interface AppShellProps {
     left: ReactNode;
@@ -17,26 +24,50 @@ interface AppShellProps {
 /**
  * The main application shell: topbar above the resizable three-column workspace. The left column is
  * hidden and shown again with the button at the far left of the topbar; the right one, only while
- * there is a preview, with the buttons at the top of the columns (`WorkspaceLayout`). Phones
- * (≤ 640 px, a media query in `WorkspaceLayout`) show one column at a time: the center, or a side
- * column instead of it with buttons of their own in the columns.
+ * there is a preview, with the button at the far right. Phones (≤ 640 px, a media query in
+ * `WorkspaceLayout`) show a side column instead of the center: there both start hidden, only one is
+ * shown at a time, and following a link, e.g. a session in the left column, shows the center again.
  */
 export function AppShell({ left, center, right, isRightColumnVisible = true }: AppShellProps) {
-    const [isLeftColumnHidden, setIsLeftColumnHidden] = useState(false);
-    const [isRightColumnHidden, setIsRightColumnHidden] = useState(false);
+    const [isLeftColumnHidden, setIsLeftColumnHidden] = useState(isPhone);
+    const [isRightColumnHidden, setIsRightColumnHidden] = useState(isPhone);
     const pathname = useRouterState({ select: (state) => state.location.pathname });
-    // A phone's column holds for the page it was chosen on: following a link, e.g. a session in the
-    // left column, shows the center again.
-    const [phoneColumnChoice, setPhoneColumnChoice] = useState<{ column: PhoneColumn; pathname: string }>({ column: 'center', pathname });
-    const chosenColumn = phoneColumnChoice.pathname === pathname ? phoneColumnChoice.column : 'center';
-    // Without a preview, a phone that showed it is back at the center.
-    const phoneColumn = chosenColumn === 'right' && !isRightColumnVisible ? 'center' : chosenColumn;
+    const [shownPathname, setShownPathname] = useState(pathname);
+
+    // A new page on a phone: back to the center, adjusted while rendering rather than in an effect.
+    if (pathname !== shownPathname) {
+        setShownPathname(pathname);
+
+        if (isPhone()) {
+            setIsLeftColumnHidden(true);
+            setIsRightColumnHidden(true);
+        }
+    }
+
+    function toggleLeftColumn() {
+        // Shown on a phone, it takes the place of the other side column too.
+        if (isLeftColumnHidden && isPhone()) {
+            setIsRightColumnHidden(true);
+        }
+
+        setIsLeftColumnHidden((hidden) => !hidden);
+    }
+
+    function toggleRightColumn() {
+        if (isRightColumnHidden && isPhone()) {
+            setIsLeftColumnHidden(true);
+        }
+
+        setIsRightColumnHidden((hidden) => !hidden);
+    }
 
     return (
         <div className={styles.shell}>
             <Topbar
                 isLeftColumnVisible={!isLeftColumnHidden}
-                onToggleLeftColumn={() => setIsLeftColumnHidden((hidden) => !hidden)}
+                onToggleLeftColumn={toggleLeftColumn}
+                isRightColumnVisible={!isRightColumnHidden}
+                onToggleRightColumn={isRightColumnVisible ? toggleRightColumn : undefined}
             />
             <WorkspaceLayout
                 left={left}
@@ -44,9 +75,6 @@ export function AppShell({ left, center, right, isRightColumnVisible = true }: A
                 right={right}
                 isLeftColumnVisible={!isLeftColumnHidden}
                 isRightColumnVisible={isRightColumnVisible && !isRightColumnHidden}
-                onToggleRightColumn={isRightColumnVisible ? () => setIsRightColumnHidden((hidden) => !hidden) : undefined}
-                phoneColumn={phoneColumn}
-                onPhoneColumnChange={(column) => setPhoneColumnChoice({ column, pathname })}
             />
         </div>
     );

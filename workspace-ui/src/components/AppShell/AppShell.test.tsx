@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -80,7 +80,7 @@ describe('AppShell', () => {
         expect(screen.getByRole('separator', { name: 'Width of the left column' })).toBeInTheDocument();
     });
 
-    it('hides and shows the right column with the buttons in the columns', async () => {
+    it('hides and shows the right column with the button in the topbar', async () => {
         const user = userEvent.setup();
 
         await renderShell();
@@ -110,5 +110,80 @@ describe('AppShell', () => {
         expect(screen.getByText('Preview')).not.toBeVisible();
         expect(screen.getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Show the right column' })).toBeInTheDocument();
+    });
+
+    // The topbar's are the only buttons for the side columns; the columns have none of their own.
+    it('toggles both side columns from the topbar', async () => {
+        await renderShell();
+
+        const topbar = screen.getByRole('banner');
+
+        expect(within(topbar).getByRole('button', { name: 'Hide the left column' })).toBeInTheDocument();
+        expect(within(topbar).getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: /(left|right) column/ })).toHaveLength(2);
+    });
+
+    // jsdom applies no media queries, so these see the state, not the phone layout (one column at a
+    // time, e2e/SessionMobile.spec.ts): which side columns are hidden, and the toggles' labels.
+    describe('on a phone', () => {
+        beforeEach(() => {
+            vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(max-width: 640px)', media: query }));
+        });
+
+        it('starts with both side columns hidden, so the chat comes first', async () => {
+            await renderShell();
+
+            expect(screen.getByText('Sessions')).not.toBeVisible();
+            expect(screen.getByText('Preview')).not.toBeVisible();
+            expect(screen.getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Show the right column' })).toBeInTheDocument();
+        });
+
+        it('shows one side column at a time', async () => {
+            const user = userEvent.setup();
+
+            await renderShell();
+
+            await user.click(screen.getByRole('button', { name: 'Show the left column' }));
+
+            expect(screen.getByText('Sessions')).toBeVisible();
+            expect(screen.getByText('Preview')).not.toBeVisible();
+
+            await user.click(screen.getByRole('button', { name: 'Show the right column' }));
+
+            expect(screen.getByText('Preview')).toBeVisible();
+            expect(screen.getByText('Sessions')).not.toBeVisible();
+            expect(screen.getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Hide the right column' }));
+
+            expect(screen.getByText('Sessions')).not.toBeVisible();
+            expect(screen.getByText('Preview')).not.toBeVisible();
+        });
+
+        it('hides the side columns on a new page, e.g. a session chosen in the left column', async () => {
+            const user = userEvent.setup();
+            const { router } = await renderShell();
+
+            await user.click(screen.getByRole('button', { name: 'Show the left column' }));
+
+            expect(screen.getByText('Sessions')).toBeVisible();
+
+            await act(() => router.navigate({ to: '/sessions/$id', params: { id: 's-1' } }));
+
+            expect(screen.getByText('Sessions')).not.toBeVisible();
+            expect(screen.getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
+        });
+    });
+
+    it('keeps the side columns on a new page on a wider screen', async () => {
+        const user = userEvent.setup();
+        const { router } = await renderShell();
+
+        await user.click(screen.getByRole('button', { name: 'Hide the right column' }));
+        await act(() => router.navigate({ to: '/sessions/$id', params: { id: 's-1' } }));
+
+        expect(screen.getByText('Sessions')).toBeVisible();
+        expect(screen.getByText('Preview')).not.toBeVisible();
     });
 });

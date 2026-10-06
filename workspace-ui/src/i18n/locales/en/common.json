@@ -41,7 +41,12 @@
             "source": "as a source",
             "verbatim": "verbatim",
             "toggleMode": "verbatim / as a source",
-            "remove": "Remove"
+            "remove": "Remove",
+            "notAdded": "{{name}} was not attached",
+            "tooLarge": "It is {{size}}; files can be up to {{limit}}.",
+            "typeNotAccepted": "This file type is not supported: {{type}}",
+            "waiting": "waiting",
+            "progress": "{{percent}} %"
         }
     },
     "chat": {

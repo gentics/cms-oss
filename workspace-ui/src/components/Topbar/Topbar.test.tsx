@@ -69,6 +69,34 @@ describe('Topbar', () => {
         expect(await screen.findByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
     });
 
+    it('has no right column toggle without a right column', async () => {
+        renderWithProviders(<Topbar onToggleLeftColumn={() => {}} />);
+
+        expect(await screen.findByRole('button', { name: 'Hide the left column' })).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /right column/ })).not.toBeInTheDocument();
+    });
+
+    it('hides and shows the right column from the button at its far right', async () => {
+        const user = userEvent.setup();
+
+        function WithRightColumn() {
+            const [isVisible, setIsVisible] = useState(true);
+
+            return <Topbar isRightColumnVisible={isVisible} onToggleRightColumn={() => setIsVisible((visible) => !visible)} />;
+        }
+
+        renderWithProviders(<WithRightColumn />);
+
+        const hide = await screen.findByRole('button', { name: 'Hide the right column' });
+
+        // After the light/dark toggle, the last control in the bar.
+        expect(screen.getByRole('banner').lastElementChild).toContainElement(hide);
+
+        await user.click(hide);
+
+        expect(await screen.findByRole('button', { name: 'Show the right column' })).toBeInTheDocument();
+    });
+
     it('switches between English and German', async () => {
         const user = userEvent.setup();
 

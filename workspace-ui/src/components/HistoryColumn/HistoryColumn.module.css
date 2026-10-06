@@ -17,14 +17,6 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Phones: room for the button that goes back to the chat, which WorkspaceLayout puts over the top
-   right corner (28 px, 12 px from the edge). */
-@media (max-width: 640px) {
-  .head {
-    padding-right: 48px;
-  }
-}
-
 .title {
   margin: 0;
   color: var(--fg-primary);

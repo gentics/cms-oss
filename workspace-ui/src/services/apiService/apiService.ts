@@ -166,15 +166,62 @@ export function getSession(sessionId: string): Promise<Session> {
     return genaixRequest<Session>(`/sessions/${encodeURIComponent(sessionId)}`);
 }
 
+// The headers of an XHR response, for the `Response` its error is read from.
+function responseHeaders(request: XMLHttpRequest): Headers {
+    const headers = new Headers();
+
+    for (const line of request.getAllResponseHeaders().trim().split(/[\r\n]+/)) {
+        const separator = line.indexOf(':');
+
+        if (separator > 0) {
+            headers.append(line.slice(0, separator).trim(), line.slice(separator + 1).trim());
+        }
+    }
+
+    return headers;
+}
+
 // POST /sessions/{session_id}/files as multipart: `201` with the stored file. No `Content-Type` is
-// set, so the browser adds the multipart boundary.
-export function uploadSessionFile(sessionId: string, file: File, mode: FileMode): Promise<SessionFile> {
+// set, so the browser adds the multipart boundary. An `XMLHttpRequest`, not `fetch`, because only it
+// reports upload progress: `onProgress` gets the share sent so far, 0 to 1. Errors are thrown as
+// `genaixRequest` throws them: a `GenaixApiError` for a response, a `TypeError` without one.
+export function uploadSessionFile(sessionId: string, file: File, mode: FileMode, onProgress?: (fraction: number) => void): Promise<SessionFile> {
+    const url = `${GENAIX_API_BASE}/sessions/${encodeURIComponent(sessionId)}/files`;
     const body = new FormData();
 
     body.append('file', file);
     body.append('mode', mode);
 
-    return genaixRequest<SessionFile>(`/sessions/${encodeURIComponent(sessionId)}/files`, { method: 'POST', body });
+    return new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+
+        request.open('POST', url);
+        request.setRequestHeader('Accept', 'application/json');
+        request.upload.onprogress = (event) => {
+            if (event.lengthComputable && event.total > 0) {
+                onProgress?.(event.loaded / event.total);
+            }
+        };
+        request.onload = () => {
+            if (request.status >= 200 && request.status < 300) {
+                try {
+                    resolve(JSON.parse(request.responseText) as SessionFile);
+                } catch (error) {
+                    reject(error);
+                }
+
+                return;
+            }
+
+            // Through a `Response`, so the error is read exactly as for every other GenAIx request.
+            const response = new Response(request.responseText || null, { status: request.status, headers: responseHeaders(request) });
+
+            void toGenaixApiError(url, response).then(reject, reject);
+        };
+        request.onerror = () => reject(new TypeError(`Upload to ${url} failed`));
+        request.onabort = () => reject(new TypeError(`Upload to ${url} was aborted`));
+        request.send(body);
+    });
 }
 
 // DELETE /sessions/{session_id}: archives the session (soft delete, `204`). Idempotent; an active

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GenaixApiError } from '@/services/apiService/apiService';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { stubUploads } from '@/test/stubUploads';
 
 import { useArchiveSession,
     useMe,
@@ -181,13 +182,22 @@ describe('GenAIx query hooks', () => {
             expect(result.current.data).toMatchObject({ id: 's-1' });
         });
 
+        // The uploads go through XMLHttpRequest (`stubUploads`), the other requests through fetch; both
+        // write to `log`, so the order of all four can be checked.
         it('with files creates the session, uploads each file, then posts the message with a file_ref per file', async () => {
+            const log: string[] = [];
             const fetchMock = stubFetch(
                 Response.json({ id: 's-1', status: 'active' }, { status: 201 }),
-                Response.json({ id: 'f-1' }, { status: 201 }),
-                Response.json({ id: 'f-2' }, { status: 201 }),
                 Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }),
             );
+
+            vi.stubGlobal('fetch', vi.fn<typeof fetch>((url, init) => {
+                log.push(`${init?.method} ${String(url)}`);
+
+                return fetchMock(url, init);
+            }));
+
+            const uploads = stubUploads([{ status: 201, body: { id: 'f-1' } }, { status: 201, body: { id: 'f-2' } }], log);
             const files = [
                 { file: new File(['a'], 'brief.pdf'), mode: 'verbatim' as const },
                 { file: new File(['b'], 'notes.txt'), mode: 'source' as const },
@@ -198,16 +208,16 @@ describe('GenAIx query hooks', () => {
             act(() => result.current.mutate({ parts, files }));
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
-            expect(fetchMock.mock.calls.map((_call, index) => `${requestOf(fetchMock, index).method} ${requestOf(fetchMock, index).url}`)).toEqual([
+            expect(log).toEqual([
                 'POST /genaix/api/v1/sessions',
                 'POST /genaix/api/v1/sessions/s-1/files',
                 'POST /genaix/api/v1/sessions/s-1/files',
                 'POST /genaix/api/v1/sessions/s-1/messages',
             ]);
             expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research' });
-            expect((requestOf(fetchMock, 1).body as FormData).get('mode')).toBe('verbatim');
-            expect(((requestOf(fetchMock, 2).body as FormData).get('file') as File).name).toBe('notes.txt');
-            expect(JSON.parse(requestOf(fetchMock, 3).body as string)).toEqual({
+            expect(uploads[0]!.body.get('mode')).toBe('verbatim');
+            expect((uploads[1]!.body.get('file') as File).name).toBe('notes.txt');
+            expect(JSON.parse(requestOf(fetchMock, 1).body as string)).toEqual({
                 parts: [
                     ...parts,
                     { type: 'file_ref', file_id: 'f-1', mode: 'verbatim' },
@@ -263,36 +273,62 @@ describe('GenAIx query hooks', () => {
         });
 
         it('uploads the files first, then posts the message with a file_ref per file', async () => {
-            const fetchMock = stubFetch(
-                Response.json({ id: 'f-1' }, { status: 201 }),
-                Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }),
-            );
+            const log: string[] = [];
+            const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+
+            vi.stubGlobal('fetch', vi.fn<typeof fetch>((url, init) => {
+                log.push(`${init?.method} ${String(url)}`);
+
+                return fetchMock(url, init);
+            }));
+
+            stubUploads([{ status: 201, body: { id: 'f-1' } }], log);
 
             const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
 
             act(() => result.current.mutate({ parts, files: [{ file: new File(['a'], 'brief.pdf'), mode: 'verbatim' }] }));
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
-            expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+            // In the order they were made, across fetch and the upload.
+            expect(log.map((entry) => entry.split(' ')[1])).toEqual([
                 '/genaix/api/v1/sessions/s-1/files',
                 '/genaix/api/v1/sessions/s-1/messages',
             ]);
-            expect(JSON.parse(fetchMock.mock.calls[1]![1]!.body as string)).toEqual({
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
                 parts: [...parts, { type: 'file_ref', file_id: 'f-1', mode: 'verbatim' }],
             });
         });
 
         it('exposes a failed upload and sends nothing', async () => {
-            const fetchMock = stubFetch(problem(413, 'file_too_large'));
+            const fetchMock = stubFetch();
+            const uploads = stubUploads([{ status: 413, body: { type: 't', title: 't', status: 413, genaix_code: 'file_too_large' } }]);
 
             const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
 
             act(() => result.current.mutate({ parts, files: [{ file: new File(['a'], 'big.pdf'), mode: 'source' }] }));
 
             await waitFor(() => expect(result.current.isError).toBe(true));
-            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(uploads).toHaveLength(1);
+            expect(fetchMock).not.toHaveBeenCalled();
             expect((result.current.error as GenaixApiError).genaixCode).toBe('file_too_large');
             expect(selectSession('s-1')(useWorkspaceEventStore.getState()).messages).toEqual([]);
+        });
+
+        it('reports the upload progress of each file by its position', async () => {
+            stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+            stubUploads([{ status: 201, body: { id: 'f-1' }, progress: [0.5, 1] }, { status: 201, body: { id: 'f-2' }, progress: [0.4] }]);
+            const onFileProgress = vi.fn<(index: number, fraction: number) => void>();
+            const files = [
+                { file: new File(['a'], 'brief.pdf'), mode: 'source' as const },
+                { file: new File(['b'], 'notes.txt'), mode: 'source' as const },
+            ];
+
+            const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
+
+            act(() => result.current.mutate({ parts, files, onFileProgress }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(onFileProgress.mock.calls).toEqual([[0, 0.5], [0, 1], [1, 0.4]]);
         });
     });
 

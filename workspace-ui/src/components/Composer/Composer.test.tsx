@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -168,6 +168,74 @@ describe('Composer', () => {
     });
 
     describe('files', () => {
+        // A file of `size` bytes without allocating them.
+        function fileOfSize(name: string, type: string, size: number): File {
+            const file = new File([''], name, { type });
+
+            Object.defineProperty(file, 'size', { value: size });
+
+            return file;
+        }
+
+        it('does not attach a file over 25 MB and says so, naming the file and the limit', async () => {
+            const user = userEvent.setup();
+
+            renderComposer();
+
+            await user.upload(screen.getByLabelText('File'), [
+                fileOfSize('huge.pdf', 'application/pdf', 32_715_571),
+                fileOfSize('brief.pdf', 'application/pdf', 1000),
+            ]);
+
+            expect(await screen.findByText('huge.pdf was not attached')).toBeInTheDocument();
+            expect(screen.getByText('It is 31.2 MB; files can be up to 25 MB.')).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Remove: huge.pdf' })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Remove: brief.pdf' })).toBeInTheDocument();
+        });
+
+        it('does not attach a file of a type GenAIx does not accept, but one of an unknown type', () => {
+            renderComposer();
+
+            // `fireEvent`: `user.upload` would already filter by the input's `accept`.
+            fireEvent.change(screen.getByLabelText('File'), {
+                target: { files: [fileOfSize('setup.exe', 'application/x-msdownload', 10), fileOfSize('notes.md', '', 10)] },
+            });
+
+            expect(screen.getByText('setup.exe was not attached')).toBeInTheDocument();
+            expect(screen.getByText('This file type is not supported: application/x-msdownload')).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Remove: notes.md' })).toBeInTheDocument();
+        });
+
+        it('offers only accepted types in the file picker', () => {
+            renderComposer();
+
+            expect(screen.getByLabelText('File')).toHaveAttribute('accept', expect.stringContaining('application/pdf'));
+            expect(screen.getByLabelText('File')).toHaveAttribute('accept', expect.stringContaining('.md'));
+        });
+
+        it('attaches files dropped onto the composer, and checks them like picked ones', () => {
+            const { field } = renderComposer();
+
+            fireEvent.drop(field, {
+                dataTransfer: {
+                    types: ['Files'],
+                    files: [fileOfSize('dropped.pdf', 'application/pdf', 10), fileOfSize('huge.pdf', 'application/pdf', 32_715_571)],
+                },
+            });
+
+            expect(screen.getByRole('button', { name: 'Remove: dropped.pdf' })).toBeInTheDocument();
+            expect(screen.getByText('huge.pdf was not attached')).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Remove: huge.pdf' })).not.toBeInTheDocument();
+        });
+
+        it('ignores dragged text', () => {
+            const { field } = renderComposer();
+
+            fireEvent.drop(field, { dataTransfer: { types: ['text/plain'], files: [] } });
+
+            expect(screen.queryByRole('button', { name: /^Remove:/ })).not.toBeInTheDocument();
+        });
+
         it('attaches files as a source, switches one to verbatim and submits both', async () => {
             const user = userEvent.setup();
             const { onSubmit } = renderComposer();

@@ -1,8 +1,6 @@
-@import '../../../styles/base-import';
-
 :host {
     font-size: 1rem;
-    --gtx-active-color: #{$gtx-color-primary};
+    --gtx-active-color: var(--gtx-primary);
 
     input {
         display: none !important;
@@ -72,7 +70,7 @@
     }
 
     &.ng-touched.ng-invalid {
-        --gtx-active-color: #{$gtx-color-alert};
+        --gtx-active-color: var(--gtx-alert);
 
         .label-content {
             color: var(--gtx-active-color);
@@ -80,15 +78,15 @@
     }
 
     label.disabled {
-        --gtx-active-color: #{$gtx-color-mid-gray};
+        --gtx-active-color: var(--gtx-mid-gray);
         cursor: not-allowed;
 
         .indicator.state-false {
-            background-color: $gtx-color-light-gray;
+            background-color: var(--gtx-light-gray);
         }
 
         .label-content {
-            color: $gtx-color-dark-gray;
+            color: var(--gtx-dark-gray);
         }
     }
 }

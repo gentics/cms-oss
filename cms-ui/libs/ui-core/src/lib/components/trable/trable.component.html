@@ -23,7 +23,7 @@
                 [class.sort-active]="sortBy === column.id"
                 [ngClass]="column.align ? 'align-' + column.align : ''"
                 [attr.data-id]="column.id"
-                (click)="preventClick($event)"
+                (click)="cancelEvent($event)"
             >
                 <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
                 @if (column.sortable) {
@@ -39,7 +39,7 @@
         @if (!hideActions && hasActions) {
             <div
                 class="grid-cell action-column"
-                (click)="preventClick($event)"
+                (click)="cancelEvent($event)"
             >
                 @for (action of multiActions; track trackElement($index, action)) {
                     <gtx-button
@@ -67,17 +67,17 @@
         <ng-template #rowSelectionTemplate>
             <div class="row-selection-wrapper">
                 @if (row.selectable) {
-                <gtx-checkbox
-                    class="selection-checkbox"
-                    [value]="rowSelected"
-                    (valueChange)="updateRowSelection(row)"
-                ></gtx-checkbox>
+                    <gtx-checkbox
+                        class="selection-checkbox"
+                        [value]="rowSelected"
+                        (valueChange)="updateRowSelection(row, $event)"
+                    ></gtx-checkbox>
                 }
             </div>
         </ng-template>
 
         <ng-template #rowExpansionTemplate>
-            <button class="row-expansion" (click)="expandRow(row)">
+            <button class="row-expansion" (click)="expandRow(row, $event)">
                 @if (row.hasChildren || !row.loaded) {
                     <icon>chevron_right</icon>
                 }
@@ -100,17 +100,17 @@
         >
             @if (selectable && !inlineSelection) {
                 <div
-                class="grid-cell select-column"
-                (click)="preventClick($event)"
+                    class="grid-cell select-column"
+                    (click)="cancelEvent($event)"
                 >
-                <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
+                    <ng-container [ngTemplateOutlet]="rowSelectionTemplate"></ng-container>
                 </div>
             }
 
             @if (!inlineExpansion) {
                 <div
                     class="grid-cell expand-column"
-                    (click)="cancel($event)"
+                    (click)="cancelEvent($event)"
                 >
                     <ng-container [ngTemplateOutlet]="rowExpansionTemplate"></ng-container>
                 </div>
@@ -190,7 +190,7 @@
             @if (!hideActions && hasActions) {
                 <div
                     class="grid-cell action-column"
-                    (click)="preventClick($event)"
+                    (click)="cancelEvent($event)"
                 >
                     @for (action of singleActions; track trackElement($index, action)) {
                         <gtx-button

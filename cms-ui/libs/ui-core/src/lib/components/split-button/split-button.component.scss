@@ -3,6 +3,7 @@
 .split-button-wrapper {
     display: inline-flex;
     line-height: 1;
+    padding-top: 1px;
 
     gtx-button.has-secondary-actions::ng-deep button {
         border-top-right-radius: 0;

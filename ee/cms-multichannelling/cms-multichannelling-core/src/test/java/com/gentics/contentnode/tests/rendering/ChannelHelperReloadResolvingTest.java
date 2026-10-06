@@ -159,8 +159,9 @@ public class ChannelHelperReloadResolvingTest {
 	@Before
 	public void setup() throws NodeException {
 		masterPage = update(masterPage, p -> {
-			getPartType(HandlebarsPartType.class, p.getContentTag(TAG_NAME), HBS_PART_NAME)
-					.setText("{{#gtx_channel %d}}{{#with (gtx_load \"%s\" %s)}}{{ %s }}{{/with}}{{/gtx_channel}}".formatted(inChannel ? channel.getId() : node.getId(), type, id, resolve));
+			getPartType(HandlebarsPartType.class, p.getContentTag(TAG_NAME), HBS_PART_NAME).setText(
+					"{{#gtx_channel %d}}{{#with (gtx_load \"%s\" %s) as | loaded | }}{{ loaded.%s }}{{/with}}{{/gtx_channel}}"
+							.formatted(inChannel ? channel.getId() : node.getId(), type, id, resolve));
 		}).unlock().build();
 
 		PropertyResolver resolver = new PropertyResolver(new Resolvable() {

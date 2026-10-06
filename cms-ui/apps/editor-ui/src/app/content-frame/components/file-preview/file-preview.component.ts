@@ -17,7 +17,7 @@ import {
     RotateParameters,
 } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
+import { of, Subscription } from 'rxjs';
 import { publishReplay, refCount, switchMap, tap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -223,6 +223,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             && (getFileExtension(this.file.name, true).toLowerCase() !== getFileExtension(files[0].name, true).toLowerCase())
         ) {
             this.notification.show({
+                id: `file-replace-type-changed:${this.file.id}`,
                 message: 'message.file_type_changed_warning',
                 translationParams: {
                     fileName: this.file.name,
@@ -251,7 +252,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                     ]).then(() => null);
                 }
 
-                return res.response.file || res.response.image;
+                return of(res.response.file || res.response.image);
             }),
             tap((loadedFile: FileModel | ImageModel) => {
                 if (loadedFile == null) {
@@ -268,6 +269,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
                 if (!this.keepFileName) {
                     this.notification.show({
+                        id: `file-replace-success:${this.file.id}`,
                         message: 'message.file_replaced_with_success',
                         translationParams: {
                             fileName: this.file.name,
@@ -278,6 +280,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                     });
                 } else {
                     this.notification.show({
+                        id: `file-replace-success:${this.file.id}`,
                         message: 'message.file_replaced_success',
                         translationParams: {
                             fileName: this.file.name,
@@ -294,6 +297,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
 
                 this.errorHandler.catch(err, { notification: false });
                 this.notification.show({
+                    id: `file-replace-error:${this.file.id}`,
                     message: 'message.file_uploads_error',
                     translationParams: {
                         _type: this.file.type,

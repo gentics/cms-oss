@@ -274,6 +274,12 @@ export const FIXTURE_IMAGE_JPEG2: FixtureFile = {
     type: 'image/jpeg',
 };
 
+/** Same as `FIXTURE_IMAGE_JPEG2`, but with the `.jpeg` extension */
+export const FIXTURE_IMAGE_JPEG3: FixtureFile = {
+    fixturePath: 'fixtures/ivan-tsaregorodtsev-bx0e0iHWnlI-unsplash.jpeg',
+    type: 'image/jpeg',
+};
+
 export const FIXTURE_IMAGE_PNG1: FixtureFile = {
     fixturePath: 'fixtures/honbike-R1iV6Vi14vA-unsplash.png',
     type: 'image/png',

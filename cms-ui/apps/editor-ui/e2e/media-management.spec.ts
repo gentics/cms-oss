@@ -1,11 +1,17 @@
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     clickModalAction,
+    dismissNotifications,
     EntityImporter,
     FILE_ONE,
+    FIXTURE_FILE_PDF1,
     FIXTURE_FILE_TXT1,
     FIXTURE_IMAGE_JPEG1,
     FIXTURE_IMAGE_JPEG2,
+    FIXTURE_IMAGE_JPEG3,
+    FixtureFile,
+    findNotification,
+    getFileName,
     GroupImportData,
     IMAGE_ONE,
     IMPORT_ID,
@@ -26,7 +32,7 @@ import {
     waitForResponseFrom,
 } from '@gentics/e2e-utils';
 import { cloneWithSymbols } from '@gentics/ui-core/utils/clone-with-symbols';
-import { expect, Page, test } from '@playwright/test';
+import { expect, Locator, Page, test } from '@playwright/test';
 import {
     closeObjectPropertyEditor,
     editorAction,
@@ -116,6 +122,72 @@ test.describe('Media Management', () => {
             await loginWithForm(page, TEST_USER);
             await selectNode(page, IMPORTER.get(NODE_MINIMAL).id);
         });
+    }
+
+    /**
+     * Uploads the fixture as the specified type, and opens the properties of it.
+     * @returns The uploaded entity and the file-preview element.
+     */
+    async function setupForReplace(
+        page: Page,
+        type: 'file' | 'image',
+        fixture: FixtureFile,
+    ): Promise<{ entity: { id: number; name: string }; preview: Locator }> {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                subObjects: true,
+                perms: [
+                    { type: GcmsPermission.READ, value: true },
+                    { type: GcmsPermission.READ_ITEMS, value: true },
+                    { type: GcmsPermission.UPDATE_ITEMS, value: true },
+                    { type: GcmsPermission.CREATE_ITEMS, value: true },
+                ],
+            },
+        ]);
+
+        const uploadedFiles = await uploadFiles(page, type, [fixture]);
+        const entity = uploadedFiles[fixture.fixturePath];
+
+        const list = findList(page, type);
+        const item = type === ITEM_TYPE_IMAGE
+            ? await findImage(list, entity.id)
+            : findItem(list, entity.id);
+        await itemAction(item, 'properties');
+
+        const preview = page.locator('content-frame gtx-file-preview');
+        await preview.waitFor({ state: 'visible' });
+
+        // Remove the notifications from the upload, to not interfere with the replace notifications
+        await dismissNotifications(page);
+        await expect(findNotification(page)).toHaveCount(0);
+
+        return { entity, preview };
+    }
+
+    /**
+     * Selects the fixture in the replace file-picker and waits for the upload to finish.
+     */
+    async function replaceWith(page: Page, preview: Locator, id: number, fixture: FixtureFile): Promise<void> {
+        const replaceReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${id}`, {
+            timeout: 20_000,
+        });
+        await preview.locator('[data-action="replace"] input[type="file"]').setInputFiles(fixture.fixturePath);
+        await replaceReq;
+    }
+
+    async function setKeepFileName(preview: Locator, keep: boolean): Promise<void> {
+        const checkbox = preview.locator('.keep-filename gtx-checkbox');
+        const input = checkbox.locator('input[type="checkbox"]');
+        if ((await input.isChecked()) !== keep) {
+            await checkbox.locator('label').click();
+        }
+        if (keep) {
+            await expect(input).toBeChecked();
+        } else {
+            await expect(input).not.toBeChecked();
+        }
     }
 
     test('should not be possible to edit the file properties without permissions', {
@@ -477,5 +549,83 @@ test.describe('Media Management', () => {
         await item.locator('list-item-details detail-chip.usage').click();
 
         await expect(page.locator('gtx-usage-modal')).toBeVisible();
+    });
+
+    test('should show a warning when replacing a file with a different file extension', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20269',
+        }],
+    }, async ({ page }) => {
+        const { entity, preview } = await setupForReplace(page, ITEM_TYPE_FILE, FIXTURE_FILE_TXT1);
+        await setKeepFileName(preview, true);
+
+        await replaceWith(page, preview, entity.id, FIXTURE_FILE_PDF1);
+
+        const warning = findNotification(page, `file-replace-type-changed:${entity.id}`);
+        await expect(warning).toBeVisible();
+        await expect(warning.locator('.message')).toContainText(entity.name);
+        await expect(warning.locator('.message')).toContainText(getFileName(FIXTURE_FILE_PDF1));
+    });
+
+    test('should not show a warning when replacing an image with an equivalent file extension', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20269',
+        }],
+    }, async ({ page }) => {
+        const { entity, preview } = await setupForReplace(page, ITEM_TYPE_IMAGE, FIXTURE_IMAGE_JPEG1);
+        await setKeepFileName(preview, true);
+
+        // `.jpg` -> `.jpeg` should be considered the same extension
+        await replaceWith(page, preview, entity.id, FIXTURE_IMAGE_JPEG3);
+
+        // The warning would be shown before the success notification, so once the success is visible
+        // we can safely check that no warning has been shown.
+        await expect(findNotification(page, `file-replace-success:${entity.id}`)).toBeVisible();
+        await expect(findNotification(page, `file-replace-type-changed:${entity.id}`)).toHaveCount(0);
+        await expect(findNotification(page, `file-replace-error:${entity.id}`)).toHaveCount(0);
+    });
+
+    test('should switch to the image view when replacing a file with an image', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20269',
+        }],
+    }, async ({ page }) => {
+        const { entity, preview } = await setupForReplace(page, ITEM_TYPE_FILE, FIXTURE_FILE_TXT1);
+        await setKeepFileName(preview, false);
+
+        await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/file/${entity.id}/`));
+        await expect(preview.locator('.preview-pane.file')).toBeVisible();
+
+        await replaceWith(page, preview, entity.id, FIXTURE_IMAGE_JPEG1);
+
+        await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/image/${entity.id}/editProperties`));
+        await expect(preview.locator('.preview-pane.image')).toBeVisible();
+
+        await expect(findItem(findList(page, ITEM_TYPE_FILE), entity.id)).toHaveCount(0);
+        await expect(findItem(findList(page, ITEM_TYPE_IMAGE), entity.id)).toBeVisible();
+    });
+
+    test('should switch to the file view when replacing an image with a file', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-20269',
+        }],
+    }, async ({ page }) => {
+        const { entity, preview } = await setupForReplace(page, ITEM_TYPE_IMAGE, FIXTURE_IMAGE_JPEG1);
+        await setKeepFileName(preview, false);
+
+        await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/image/${entity.id}/`));
+        await expect(preview.locator('.preview-pane.image')).toBeVisible();
+
+        await replaceWith(page, preview, entity.id, FIXTURE_FILE_TXT1);
+
+        await expect(page).toHaveURL(new RegExp(`detail:node/\\d+/file/${entity.id}/editProperties`));
+        await expect(preview.locator('.preview-pane.file')).toBeVisible();
+
+        await expect(findItem(findList(page, ITEM_TYPE_IMAGE), entity.id)).toHaveCount(0);
+        await expect(findItem(findList(page, ITEM_TYPE_FILE), entity.id)).toBeVisible();
     });
 });

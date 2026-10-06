@@ -591,7 +591,7 @@ export interface AbstractFileAPI extends BasicAPI {
     get: (id: number | string, options?: ItemRequestOptions) => FileResponse;
     getMultiple: (body: MultiObjectLoadRequest) => FileListResponse;
     update: (id: number | string, body: FileSaveRequest) => Response;
-    uploadTo: (id: number | string, file: File | Blob, fileName?: string, options?: FileReplaceOptions) => Response;
+    uploadTo: (id: number | string, file: File | Blob, fileName?: string, options?: FileReplaceOptions) => FileUploadResponse;
     delete: (id: number | string, options?: FileDeleteOptions) => void;
 
     copy: (body: FileCopyRequest) => FileUploadResponse;

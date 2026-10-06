@@ -36,6 +36,7 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  position: relative;
   margin-inline: -4px;
   overflow: hidden;
   background: var(--bg-canvas);
@@ -43,6 +44,28 @@
   &[hidden] {
     display: none;
   }
+}
+
+/* The button that hides a side column (at its top) or shows it again (at the top of the center), over
+   the column's content. 12 px from the edge: 8 px inside the 4 px the column reaches under a splitter. */
+.toggleStart,
+.toggleEnd {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
+}
+
+.toggleStart {
+  left: 12px;
+}
+
+.toggleEnd {
+  right: 12px;
+}
+
+/* Each toggle exists for wider screens and for phones; the phone rules at the end swap the sets. */
+.phoneOnly {
+  display: none;
 }
 
 .left {
@@ -101,5 +124,55 @@
 
   .layout.leftHidden.rightHidden {
     grid-template-columns: 0 0 minmax(240px, 1fr) 0 0;
+  }
+}
+
+/* Phones: one column at a time, the center or the side column the phone buttons chose (`phoneColumn`:
+   `.phoneLeft`, `.phoneRight`); the hidden states of wider screens do not apply. The breakpoint of the
+   composer's voice first (Composer.module.css). Listed with every combination of the wider rules, so
+   these come later with at least their specificity. */
+@media (max-width: 640px) {
+  .layout,
+  .layout.leftHidden,
+  .layout.rightHidden,
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 1fr 0 0;
+  }
+
+  .layout.phoneLeft,
+  .layout.phoneLeft.leftHidden,
+  .layout.phoneLeft.rightHidden,
+  .layout.phoneLeft.leftHidden.rightHidden {
+    grid-template-columns: 1fr 0 0 0 0;
+  }
+
+  .layout.phoneRight,
+  .layout.phoneRight.leftHidden,
+  .layout.phoneRight.rightHidden,
+  .layout.phoneRight.leftHidden.rightHidden {
+    grid-template-columns: 0 0 0 0 1fr;
+  }
+
+  .layout .left,
+  .layout .right,
+  .layout .splitterLeft,
+  .layout .splitterRight,
+  .layout.phoneLeft .center,
+  .layout.phoneRight .center {
+    display: none;
+  }
+
+  /* Also over `[hidden]`: hidden on a wider screen, chosen on the phone. */
+  .layout.phoneLeft .left,
+  .layout.phoneRight .right {
+    display: flex;
+  }
+
+  .wideOnly {
+    display: none;
+  }
+
+  .phoneOnly {
+    display: block;
   }
 }

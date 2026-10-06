@@ -1,8 +1,12 @@
-/* The text field of both composers. A locked verbatim passage is DOM inside it (composerParts), so
-   it is styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
-.field {
+/* Tiptap's wrapper around the editor: the item that fills the composer's line. */
+.wrapper {
   flex: 1;
   min-width: 0;
+}
+
+/* The text field of both composers: the editor's element. A locked verbatim passage is a node view
+   inside it (`ComposerTextInput`), styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
+.field {
   overflow-y: auto;
   outline: none;
   color: var(--fg-primary);

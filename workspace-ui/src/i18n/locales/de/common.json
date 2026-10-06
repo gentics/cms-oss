@@ -1,15 +1,17 @@
 {
     "topbar": {
         "brand": "Gentics Workspace",
-        "hideLeftColumn": "Linke Spalte ausblenden",
-        "showLeftColumn": "Linke Spalte einblenden",
         "darkMode": "Dunkler Modus",
         "lightMode": "Heller Modus"
     },
     "workspace": {
         "resizeLeft": "Breite der linken Spalte",
         "resizeRight": "Breite der rechten Spalte",
-        "resizeHint": "Ziehen · Doppelklick setzt zurück"
+        "resizeHint": "Ziehen · Doppelklick setzt zurück",
+        "hideLeftColumn": "Linke Spalte ausblenden",
+        "showLeftColumn": "Linke Spalte einblenden",
+        "hideRightColumn": "Rechte Spalte ausblenden",
+        "showRightColumn": "Rechte Spalte einblenden"
     },
     "dashboard": {
         "greeting": {
@@ -20,11 +22,6 @@
         },
         "placeholder": "Was möchten Sie tun?",
         "send": "Session starten",
-        "starters": {
-            "shortenIntro": "Kürze das Intro auf „Produkte – Übersicht“ auf zwei Sätze, behalte den förmlichen Ton bei",
-            "landingPage": "Erstelle eine neue Landingpage für das Partnerprogramm",
-            "untouchedPages": "Welche Seiten wurden seit einem halben Jahr nicht geändert?"
-        },
         "startFailed": "Die Session konnte nicht gestartet werden"
     },
     "composer": {

@@ -15,10 +15,9 @@ test.describe.skip('Dashboard', () => {
         await field.press('Enter');
 
         await expect(page).toHaveURL(/\/sessions\/[0-9a-f-]{36}$/);
-        // The session page is, for now, the workspace; without a preview yet, it has no
-        // left-column toggle.
+        // The session page is, for now, the workspace: its left column has a toggle, even without a preview.
         await expect(page.getByRole('separator', { name: 'Width of the left column' })).toBeVisible();
-        await expect(page.getByRole('button', { name: /left column/ })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Hide the left column' })).toBeVisible();
     });
 
     test('creates the session, uploads the file and posts the prompt', async ({ page }) => {

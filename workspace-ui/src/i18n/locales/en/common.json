@@ -1,15 +1,17 @@
 {
     "topbar": {
         "brand": "Gentics Workspace",
-        "hideLeftColumn": "Hide the left column",
-        "showLeftColumn": "Show the left column",
         "darkMode": "Dark mode",
         "lightMode": "Light mode"
     },
     "workspace": {
         "resizeLeft": "Width of the left column",
         "resizeRight": "Width of the right column",
-        "resizeHint": "Drag · double-click resets"
+        "resizeHint": "Drag · double-click resets",
+        "hideLeftColumn": "Hide the left column",
+        "showLeftColumn": "Show the left column",
+        "hideRightColumn": "Hide the right column",
+        "showRightColumn": "Show the right column"
     },
     "dashboard": {
         "greeting": {
@@ -20,11 +22,6 @@
         },
         "placeholder": "What would you like to do?",
         "send": "Start a session",
-        "starters": {
-            "shortenIntro": "Shorten the intro on “Products – Overview” to two sentences, keep the formal voice",
-            "landingPage": "Create a new landing page for the partner programme",
-            "untouchedPages": "Which pages have not been changed for half a year?"
-        },
         "startFailed": "The session could not be started"
     },
     "composer": {

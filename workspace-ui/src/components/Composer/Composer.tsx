@@ -1,5 +1,5 @@
 import { ArrowUpIcon, KeyboardIcon, PaperclipIcon, QuoteIcon } from 'lucide-react';
-import { type KeyboardEvent, type Ref, useImperativeHandle, useState } from 'react';
+import { type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -15,7 +15,7 @@ import { useSpeechDictation } from '@/hooks/useSpeechDictation';
 import styles from './Composer.module.css';
 
 export interface ComposerHandle {
-    /** Replaces the field's content with `text`, for a starter suggestion. */
+    /** Replaces the field's content with `text` and opens the text prompt. */
     setText: (text: string) => void;
     /** Empties the field and drops the attachments, after a message was sent. */
     reset: () => void;
@@ -45,17 +45,15 @@ const TEXT_KEYS = {
 export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
-        textInputRef,
+        editor,
         fileInputRef,
         isEmpty,
         hasSelection,
         attachments,
-        syncEmpty,
         setText,
         readInput,
         reset,
         markSelectionVerbatim,
-        handleFieldClick,
         openFilePicker,
         addFiles,
         toggleMode,
@@ -68,7 +66,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
     const isChat = variant === 'chat';
 
     function textInput() {
-        return textInputRef.current!;
+        return editor.view.dom;
     }
 
     // Opens the collapsed text prompt (mobile) synchronously, so the field can take the focus.
@@ -86,7 +84,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
     }));
 
     // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
-    const dictation = useSpeechDictation({ onText: setText, onEnd: () => textInputRef.current?.focus() });
+    const dictation = useSpeechDictation({ onText: setText, onEnd: () => textInput().focus() });
 
     function cancelDictation() {
         setText('');
@@ -104,7 +102,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
     }
 
     // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them.
-    function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    function handleKeyDown(event: KeyboardEvent) {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
             submit();
@@ -172,13 +170,11 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
 
                 <div className={styles.line}>
                     <ComposerTextInput
-                        ref={textInputRef}
+                        editor={editor}
                         label={t(texts.placeholder)}
                         isEmpty={isEmpty}
                         size={isChat ? 'base' : 'lg'}
-                        onInput={syncEmpty}
                         onKeyDown={handleKeyDown}
-                        onClick={handleFieldClick}
                         onFocus={() => setHasFocus(true)}
                         onBlur={() => setHasFocus(false)}
                     />

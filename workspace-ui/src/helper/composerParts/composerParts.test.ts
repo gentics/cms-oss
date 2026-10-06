@@ -1,11 +1,20 @@
+import { getSchema, type JSONContent } from '@tiptap/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { markVerbatim, readParts, selectedRange, unmarkVerbatim } from './composerParts';
+import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
 
-const spanOptions = {
-    iconMarkup: '<i data-icon></i>',
-    removeButtonMarkup: '<button type="button" aria-label="Remove verbatim"></button>',
-};
+import { readParts, selectedRange, textContent, touchesVerbatim } from './composerParts';
+
+const schema = getSchema(composerExtensions);
+
+// A field's document with `content`.
+function doc(...content: JSONContent[]) {
+    return schema.nodeFromJSON({ type: 'doc', content });
+}
+
+const text = (value: string): JSONContent => ({ type: 'text', text: value });
+const lineBreak: JSONContent = { type: 'hardBreak' };
+const verbatim = (value: string): JSONContent => ({ type: 'verbatim', attrs: { text: value } });
 
 function field(html: string): HTMLElement {
     const element = document.createElement('div');
@@ -29,74 +38,47 @@ function select(node: Node, start: number, length: number): Range {
 }
 
 describe('readParts', () => {
-    afterEach(() => {
-        document.body.innerHTML = '';
-    });
-
     it('gives no parts for an empty or blank field', () => {
-        expect(readParts(field(''))).toEqual([]);
-        expect(readParts(field('  <br>'))).toEqual([]);
+        expect(readParts(doc())).toEqual([]);
+        expect(readParts(doc(text('  '), lineBreak))).toEqual([]);
     });
 
     it('reads typed text as one text part, collapsing spaces and trimming the ends', () => {
-        expect(readParts(field('  Which   pages are offline? '))).toEqual([{ type: 'text', text: 'Which pages are offline?' }]);
+        expect(readParts(doc(text('  Which   pages are offline? ')))).toEqual([{ type: 'text', text: 'Which pages are offline?' }]);
     });
 
-    it('keeps line breaks from <br> and from the blocks a browser inserts', () => {
-        expect(readParts(field('First<br>second<div>third</div>'))).toEqual([{ type: 'text', text: 'First\nsecond\nthird' }]);
+    it('keeps line breaks', () => {
+        expect(readParts(doc(text('First'), lineBreak, text('second'), lineBreak, text('third')))).toEqual([{ type: 'text', text: 'First\nsecond\nthird' }]);
     });
 
     it('reads a locked passage as a verbatim part with its text unchanged', () => {
-        const element = field('Use exactly this title: Review  now');
-
-        markVerbatim(select(element.firstChild!, 24, 11), spanOptions);
-
-        expect(readParts(element)).toEqual([
+        expect(readParts(doc(text('Use exactly this title: '), verbatim('Review  now')))).toEqual([
             { type: 'text', text: 'Use exactly this title: ' },
             { type: 'verbatim', text: 'Review  now', source: 'user' },
         ]);
     });
 });
 
-describe('markVerbatim', () => {
+describe('textContent', () => {
+    it('takes the text literally, with line breaks and without empty text nodes', () => {
+        expect(readParts(doc(...textContent('a <b>x</b>\n\nend')))).toEqual([{ type: 'text', text: 'a <b>x</b>\n\nend' }]);
+        expect(textContent('')).toEqual([]);
+    });
+});
+
+describe('touchesVerbatim', () => {
     afterEach(() => {
         document.body.innerHTML = '';
     });
 
-    it('wraps the selection in a non-editable passage with a remove button', () => {
-        const element = field('Keep this as it is');
-
-        expect(markVerbatim(select(element.firstChild!, 5, 4), spanOptions)).toBe(true);
-
-        const span = element.querySelector('[data-verbatim]')!;
-
-        expect(span.getAttribute('contenteditable')).toBe('false');
-        expect(span.querySelector('[data-verbatim-text]')?.textContent).toBe('this');
-        expect(span.querySelector('button')?.getAttribute('aria-label')).toBe('Remove verbatim');
-        expect(readParts(element).map((part) => part.type)).toEqual(['text', 'verbatim', 'text']);
-    });
-
     it('refuses a selection that already holds a passage', () => {
-        const element = field('Keep this as it is');
-
-        markVerbatim(select(element.firstChild!, 5, 4), spanOptions);
-
+        const element = field('Keep <span data-verbatim=""><span data-verbatim-text="">this</span></span> as it is');
         const range = document.createRange();
 
         range.selectNodeContents(element);
 
-        expect(markVerbatim(range, spanOptions)).toBe(false);
-        expect(element.querySelectorAll('[data-verbatim]')).toHaveLength(1);
-    });
-
-    it('unmarkVerbatim turns the passage back into plain text', () => {
-        const element = field('Keep this as it is');
-
-        markVerbatim(select(element.firstChild!, 5, 4), spanOptions);
-        unmarkVerbatim(element.querySelector<HTMLElement>('[data-verbatim]')!);
-
-        expect(element.querySelector('[data-verbatim]')).toBeNull();
-        expect(readParts(element)).toEqual([{ type: 'text', text: 'Keep this as it is' }]);
+        expect(touchesVerbatim(range)).toBe(true);
+        expect(touchesVerbatim(select(element.firstChild!, 0, 4))).toBe(false);
     });
 });
 

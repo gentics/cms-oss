@@ -37,25 +37,3 @@
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
-
-.starters {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* A starter is a ghost Button (design.md §12); the item only lines its text up with the field. */
-.starter {
-  max-width: 100%;
-  margin-left: -12px;
-}
-
-.starterLabel {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}

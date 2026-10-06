@@ -1,11 +1,11 @@
-import { LockIcon, XIcon } from 'lucide-react';
-import { createElement, type MouseEvent, useEffect, useRef, useState } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { TextSelection } from '@tiptap/pm/state';
+import { useEditor } from '@tiptap/react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button';
+import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
 import { useToast } from '@/components/ui/use-toast';
-import { closestVerbatim, markVerbatim, readParts, selectedRange, unmarkVerbatim } from '@/helper/composerParts/composerParts';
+import { readParts, selectedRange, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
 import type { StartFile, StartSessionInput } from '@/hooks/useGenaixQueries';
 
 /** A file attached in a composer, before it is uploaded. */
@@ -14,44 +14,46 @@ export interface Attachment extends StartFile {
 }
 
 /**
- * The state of the `Composer` (dashboard and session chat): the field with its verbatim passages
- * (`composerParts`), and the attached files. The caller decides what a submit does.
+ * The state of the `Composer` (dashboard and session chat): the field, a Tiptap editor with its
+ * verbatim passages (`composerParts`), and the attached files. The caller decides what a submit does.
  */
 export function useComposer() {
     const { t } = useTranslation();
     const toast = useToast();
-    const textInputRef = useRef<HTMLDivElement>(null);
+    const editor = useEditor({ extensions: composerExtensions });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isEmpty, setIsEmpty] = useState(true);
     const [hasSelection, setHasSelection] = useState(false);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
 
-    function textInput() {
-        return textInputRef.current!;
-    }
+    // Typing, dictation, a passage locked or unlocked: every change of the text.
+    useEffect(() => {
+        function onUpdate() {
+            setIsEmpty(readParts(editor.state.doc).length === 0);
+        }
 
-    function syncEmpty() {
-        setIsEmpty(readParts(textInput()).length === 0);
-    }
+        editor.on('update', onUpdate);
+
+        return () => {
+            editor.off('update', onUpdate);
+        };
+    }, [editor]);
 
     /** Replaces the field's content with `text`, caret at the end so it can be continued. */
     function setText(text: string) {
-        const element = textInput();
+        editor.chain()
+            .setContent({ type: 'doc', content: textContent(text) })
+            .command(({ tr }) => {
+                tr.setSelection(TextSelection.atEnd(tr.doc));
 
-        element.textContent = text;
-        syncEmpty();
-
-        const caret = document.createRange();
-
-        caret.selectNodeContents(element);
-        caret.collapse(false);
-        document.getSelection()?.removeAllRanges();
-        document.getSelection()?.addRange(caret);
+                return true;
+            })
+            .run();
     }
 
     /** The message parts and files to send, or `null` while there is nothing to send. */
     function readInput(): StartSessionInput | null {
-        const parts = readParts(textInput());
+        const parts = readParts(editor.state.doc);
 
         if (parts.length === 0 && attachments.length === 0) {
             return null;
@@ -62,7 +64,7 @@ export function useComposer() {
 
     /** Empties the field and drops the attachments, after a message was sent. */
     function reset() {
-        textInput().replaceChildren();
+        editor.commands.clearContent();
         setIsEmpty(true);
         setAttachments([]);
     }
@@ -70,19 +72,20 @@ export function useComposer() {
     // The verbatim button is pressed while there is a selection in the field it would lock.
     useEffect(() => {
         function onSelectionChange() {
-            setHasSelection(textInputRef.current !== null && selectedRange(textInputRef.current) !== null);
+            setHasSelection(selectedRange(editor.view.dom) !== null);
         }
 
         document.addEventListener('selectionchange', onSelectionChange);
 
         return () => document.removeEventListener('selectionchange', onSelectionChange);
-    }, []);
+    }, [editor]);
 
     /** Locks the selected text as verbatim; without a selection, or inside a passage, says why not. */
     function markSelectionVerbatim() {
-        const range = selectedRange(textInput());
+        const { view } = editor;
+        const range = selectedRange(view.dom);
 
-        textInput().focus();
+        view.dom.focus();
 
         if (!range) {
             toast.add({ title: t('composer.verbatimHint') });
@@ -90,32 +93,19 @@ export function useComposer() {
             return;
         }
 
-        const removeLabel = t('composer.removeVerbatim');
-        // The passage is DOM inside the field, not React: its icon and button are rendered to markup.
-        const marked = markVerbatim(range, {
-            iconMarkup: renderToStaticMarkup(createElement(LockIcon, { size: 13, 'aria-hidden': true })),
-            removeButtonMarkup: renderToStaticMarkup(createElement(
-                Button,
-                { variant: 'ghost', size: 'icon-xs', 'aria-label': removeLabel, title: removeLabel },
-                createElement(XIcon, { size: 12, 'aria-hidden': true }),
-            )),
-        });
-
-        if (!marked) {
+        if (touchesVerbatim(range)) {
             toast.add({ title: t('composer.verbatimNested') });
+
+            return;
         }
 
-        syncEmpty();
-    }
+        // The selection as the user sees it, in document positions.
+        const from = view.posAtDOM(range.startContainer, range.startOffset);
+        const to = view.posAtDOM(range.endContainer, range.endOffset);
+        // The caret needs text behind the passage to land in.
+        const tail = editor.state.doc.resolve(to).nodeAfter?.isText ? [] : [{ type: 'text', text: ' ' }];
 
-    /** The field's click handler: the × of a passage turns it back into text. */
-    function handleFieldClick(event: MouseEvent<HTMLDivElement>) {
-        const passage = closestVerbatim(event.target);
-
-        if (passage && (event.target as Element).closest('button')) {
-            unmarkVerbatim(passage);
-            syncEmpty();
-        }
+        editor.chain().insertContentAt({ from, to }, [{ type: VERBATIM_NODE, attrs: { text: range.toString() } }, ...tail]).run();
     }
 
     /** Opens the browser's file picker (the hidden `<input type="file">` behind `fileInputRef`). */
@@ -143,17 +133,15 @@ export function useComposer() {
     }
 
     return {
-        textInputRef,
+        editor,
         fileInputRef,
         isEmpty,
         hasSelection,
         attachments,
-        syncEmpty,
         setText,
         readInput,
         reset,
         markSelectionVerbatim,
-        handleFieldClick,
         openFilePicker,
         addFiles,
         toggleMode,

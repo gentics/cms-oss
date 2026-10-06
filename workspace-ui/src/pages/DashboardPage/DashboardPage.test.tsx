@@ -54,16 +54,6 @@ describe('DashboardPage', () => {
         expect(await screen.findByRole('heading', { name: 'Good morning, Dominik' })).toBeInTheDocument();
     });
 
-    it('fills the field with a starter suggestion', async () => {
-        const user = userEvent.setup();
-
-        renderDashboard();
-
-        await user.click(await screen.findByRole('button', { name: 'Create a new landing page for the partner programme' }));
-
-        expect(screen.getByRole('textbox')).toHaveTextContent('Create a new landing page for the partner programme');
-    });
-
     it('creates the session with the prompt, caches it and opens its page', async () => {
         const user = userEvent.setup();
         const session = { id: 's-1', status: 'active', workflow: 'content_research', run_id: 'r-1', message_id: 'm-1' };
@@ -86,10 +76,9 @@ describe('DashboardPage', () => {
             message: { parts: [{ type: 'text', text: 'Which pages are offline?' }] },
         });
         expect(queryClient.getQueryData(['genaix', 'sessions', 's-1'])).toEqual(session);
-        // The session page is, for now, the workspace; without a preview yet, it has no
-        // left-column toggle.
+        // The session page is, for now, the workspace: its left column has a toggle, even without a preview.
         expect(await screen.findByRole('separator', { name: 'Width of the left column' })).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: /left column/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Hide the left column' })).toBeInTheDocument();
     });
 
     it('shows an error and stays on the dashboard with the input kept when starting fails', async () => {

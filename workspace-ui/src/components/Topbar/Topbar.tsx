@@ -1,3 +1,4 @@
+import { MoonIcon, SunIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useThemeStore } from '@/store/useThemeStore';
@@ -18,18 +19,11 @@ const iconProps = {
     'aria-hidden': true,
 } as const;
 
-interface TopbarProps {
-    isLeftColumnVisible?: boolean;
-    /** Without it there is no left-column toggle, as on the dashboard, which has no columns. */
-    onToggleLeftColumn?: () => void;
-}
-
-/** The bar above the workspace: left-column toggle, brand, light/dark toggle. */
-export function Topbar({ isLeftColumnVisible = true, onToggleLeftColumn }: TopbarProps) {
+/** The bar above the workspace: brand, light/dark toggle. */
+export function Topbar() {
     const { t } = useTranslation();
     const theme = useThemeStore((state) => state.theme);
     const toggleTheme = useThemeStore((state) => state.toggleTheme);
-    const leftColumnLabel = t(isLeftColumnVisible ? 'topbar.hideLeftColumn' : 'topbar.showLeftColumn');
     const themeLabel = t(theme === 'dark' ? 'topbar.lightMode' : 'topbar.darkMode');
 
     return (

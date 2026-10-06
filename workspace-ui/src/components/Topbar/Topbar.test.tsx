@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { useThemeStore } from '@/store/useThemeStore';
 
@@ -19,27 +19,13 @@ describe('Topbar', () => {
     });
 
     it('shows the brand', () => {
-        render(<Topbar isLeftColumnVisible onToggleLeftColumn={() => undefined} />);
+        render(<Topbar />);
 
         expect(screen.getByRole('banner')).toHaveTextContent('Gentics Workspace');
     });
 
-    it('offers to hide the left column while it is visible, and to show it while it is hidden', async () => {
-        const user = userEvent.setup();
-        const onToggleLeftColumn = vi.fn<() => void>();
-        const { rerender } = render(<Topbar isLeftColumnVisible onToggleLeftColumn={onToggleLeftColumn} />);
-
-        await user.click(screen.getByRole('button', { name: 'Hide the left column' }));
-
-        expect(onToggleLeftColumn).toHaveBeenCalledTimes(1);
-
-        rerender(<Topbar isLeftColumnVisible={false} onToggleLeftColumn={onToggleLeftColumn} />);
-
-        expect(screen.getByRole('button', { name: 'Show the left column' })).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: 'Hide the left column' })).not.toBeInTheDocument();
-    });
-
-    it('has no left-column toggle without onToggleLeftColumn', () => {
+    // The column toggles sit in the columns (WorkspaceLayout), not in the topbar.
+    it('has no column toggle', () => {
         render(<Topbar />);
 
         expect(screen.queryByRole('button', { name: /left column/ })).not.toBeInTheDocument();
@@ -49,7 +35,7 @@ describe('Topbar', () => {
     it('switches between light and dark', async () => {
         const user = userEvent.setup();
 
-        render(<Topbar isLeftColumnVisible onToggleLeftColumn={() => undefined} />);
+        render(<Topbar />);
 
         await user.click(screen.getByRole('button', { name: 'Dark mode' }));
 

@@ -1,0 +1,1 @@
+Core: Now when a localized page is published for the first time, all its variants are dirtied, to be correctly resolved as dependencies. 

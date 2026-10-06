@@ -1,74 +1,64 @@
-import { MoonIcon, SunIcon } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { MoonIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, SunIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { useThemeStore } from '@/store/useThemeStore';
 
 import styles from './Topbar.module.css';
 
-// Icons: the inline paths of maybe_final_draft.html (`left_panel_close/open`, `dark_mode`, `light_mode`);
-// stroke width per design.md §9.
-const iconProps = {
-    viewBox: '0 0 24 24',
-    width: 20,
-    height: 20,
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.7,
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
-    'aria-hidden': true,
-} as const;
+interface TopbarProps {
+    /** Whether the left column (the sessions) is shown, for the toggle's icon and label. Default `true`. */
+    isLeftColumnVisible?: boolean;
+    /** Without it there is no toggle: the far left button that hides and shows the left column. */
+    onToggleLeftColumn?: () => void;
+}
 
-/** The bar above the workspace: brand, light/dark toggle. */
-export function Topbar() {
-    const { t } = useTranslation();
+/**
+ * The bar above the workspace: at the far left the toggle of the left column (pages with one), the
+ * brand, which leads home to the dashboard, the language switch (final_draft.html `#langBtn`) and
+ * the light/dark toggle (icons per design.md §9). Phones (≤ 640 px) have no column toggle here; they
+ * switch columns with the buttons in the columns (`WorkspaceLayout`).
+ */
+export function Topbar({ isLeftColumnVisible = true, onToggleLeftColumn }: TopbarProps) {
+    const { t, i18n } = useTranslation();
     const theme = useThemeStore((state) => state.theme);
     const toggleTheme = useThemeStore((state) => state.toggleTheme);
     const themeLabel = t(theme === 'dark' ? 'topbar.lightMode' : 'topbar.darkMode');
+    const leftColumnLabel = t(isLeftColumnVisible ? 'workspace.hideLeftColumn' : 'workspace.showLeftColumn');
+    // The app is in English and German: the button shows the current one and switches to the other.
+    const nextLanguage = i18n.language === 'de' ? 'en' : 'de';
+    const languageLabel = t('topbar.switchLanguage', { language: t(`topbar.languages.${nextLanguage}`) });
+
+    function switchLanguage() {
+        document.documentElement.lang = nextLanguage;
+        void i18n.changeLanguage(nextLanguage);
+    }
 
     return (
         <header className={styles.topbar}>
             {onToggleLeftColumn && (
-                <button
-                type="button"
-                className={styles.iconButton}
-                aria-label={leftColumnLabel}
-                title={leftColumnLabel}
-                onClick={onToggleLeftColumn}
-            >
-                    <svg {...iconProps}>
-                    {isLeftColumnVisible
-                        ? <path d="M4 5h16v14H4zM9.8 5v14M15 9.6L12.6 12l2.4 2.4" />
-                        : <path d="M4 5h16v14H4zM9.8 5v14M12.6 9.6L15 12l-2.4 2.4" />}
-                    </svg>
-            </button>
+                <span className={styles.columnToggle}>
+                    <Button variant="ghost" size="icon" aria-label={leftColumnLabel} title={leftColumnLabel} onClick={onToggleLeftColumn}>
+                        {isLeftColumnVisible ? <PanelLeftCloseIcon size={20} /> : <PanelLeftOpenIcon size={20} />}
+                    </Button>
+                </span>
             )}
-
-            <div className={styles.brand}>
+            {/* A link in the look of a ghost button: `nativeButton={false}` for the `<a>`, and no
+                `role="button"`, which Base UI gives every other element. */}
+            <Button variant="ghost" size="brand" nativeButton={false} role={undefined} render={<Link to="/" />} title={t('topbar.home')}>
                 <i className={styles.logo} aria-hidden="true" />
-                <span>{t('topbar.brand')}</span>
-            </div>
+                {t('topbar.brand')}
+            </Button>
 
             <div className={styles.spacer} />
 
-            <button
-                type="button"
-                className={styles.iconButton}
-                aria-label={themeLabel}
-                title={themeLabel}
-                onClick={toggleTheme}
-            >
-                <svg {...iconProps}>
-                    {theme === 'dark'
-                        ? (
-                            <>
-                                <circle cx="12" cy="12" r="4" />
-                                <path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6" />
-                            </>
-                        )
-                        : <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />}
-                </svg>
-            </button>
+            <Button variant="ghost" size="icon" aria-label={languageLabel} title={languageLabel} onClick={switchLanguage}>
+                <span className={styles.language}>{i18n.language.toUpperCase()}</span>
+            </Button>
+
+            <Button variant="ghost" size="icon" aria-label={themeLabel} title={themeLabel} onClick={toggleTheme}>
+                {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+            </Button>
         </header>
     );
 }

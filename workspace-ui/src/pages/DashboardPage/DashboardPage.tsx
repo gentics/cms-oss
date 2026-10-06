@@ -2,6 +2,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
+import { RecentSessions } from '@/components/RecentSessions/RecentSessions';
+import { SessionTodos } from '@/components/SessionTodos/SessionTodos';
 import { Topbar } from '@/components/Topbar/Topbar';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type StartSessionInput, useStartSession } from '@/hooks/useGenaixQueries';
@@ -26,8 +28,8 @@ function greetingKey(hour: number): string {
 }
 
 /**
- * The page at `/`: the prompt that starts a session. Once the session exists, and its files are
- * uploaded, the session's page opens.
+ * The page at `/`: the prompt that starts a session, the open to-dos and the recent sessions. Once
+ * the session exists, and its files are uploaded, the session's page opens.
  */
 export function DashboardPage() {
     const { t } = useTranslation();
@@ -48,13 +50,21 @@ export function DashboardPage() {
     return (
         <div className={styles.page}>
             <Topbar />
-            <main className={styles.scroll}>
-                <div className={styles.content}>
-                    <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: GREETING_NAME })}</h1>
+            <div className={styles.body}>
+                <main className={styles.scroll}>
+                    <div className={styles.content}>
+                        <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: GREETING_NAME })}</h1>
 
-                    <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} />
-                </div>
-            </main>
+                        <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} />
+
+                        <div className={styles.todos}>
+                            <SessionTodos />
+                        </div>
+
+                        <RecentSessions />
+                    </div>
+                </main>
+            </div>
         </div>
     );
 }

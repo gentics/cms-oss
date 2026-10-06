@@ -47,6 +47,30 @@ describe('Button', () => {
         expect(screen.getByRole('button', { name: 'Publish' })).toHaveAttribute('data-variant', 'primary');
     });
 
+    it('has a ghost-danger variant for deleting in a list row', () => {
+        render(<Button variant="ghost-danger" size="icon" aria-label="Delete" />, { wrapper: UiProvider });
+
+        expect(screen.getByRole('button', { name: 'Delete' })).toHaveAttribute('data-variant', 'ghost-danger');
+    });
+
+    it('renders a link in its look, which stays a link', () => {
+        render(
+            <Button variant="ghost" nativeButton={false} role={undefined} render={<a href="/" />}>
+                Home
+            </Button>,
+            { wrapper: UiProvider },
+        );
+
+        expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('data-variant', 'ghost');
+        expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('has a brand size for the logo and name in the topbar', () => {
+        render(<Button variant="ghost" size="brand">Gentics Workspace</Button>, { wrapper: UiProvider });
+
+        expect(screen.getByRole('button', { name: 'Gentics Workspace' })).toHaveAttribute('data-size', 'brand');
+    });
+
     it('has a mini icon size for chips and passages', () => {
         render(<Button variant="ghost" size="icon-xs" aria-label="Remove">×</Button>, { wrapper: UiProvider });
 

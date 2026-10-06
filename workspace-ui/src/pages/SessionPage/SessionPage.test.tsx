@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +8,7 @@ import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 
 import '@/i18n';
 
@@ -43,11 +44,13 @@ class FakeRecognizer {
     }
 }
 
+// The left column lists the sessions; `withEmptySessionList` answers that, so `fetchMock` sees only
+// the calls of sending.
 function stubFetch(...responses: Response[]) {
     const fetchMock = vi.fn<typeof fetch>();
 
     responses.forEach((response) => fetchMock.mockResolvedValueOnce(response));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', withEmptySessionList(fetchMock));
 
     return fetchMock;
 }
@@ -162,6 +165,39 @@ describe('SessionPage', () => {
 
         expect(field).toHaveTextContent('Shorten the intro');
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('starts another session with an empty composer, without the draft of the one before', async () => {
+        const user = userEvent.setup();
+        const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/sessions/s-1'] }) });
+
+        stubFetch();
+        render(
+            <QueryClientProvider client={new QueryClient()}>
+                <UiProvider>
+                    <RouterProvider router={router} />
+                </UiProvider>
+            </QueryClientProvider>,
+        );
+
+        await user.click(await screen.findByRole('textbox', { name: 'What should happen?' }));
+        await user.keyboard('Shorten the intro');
+
+        expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveTextContent('Shorten the intro');
+
+        await act(() => router.navigate({ to: '/sessions/$id', params: { id: 's-2' } }));
+
+        await waitFor(() => expect(screen.getByRole('textbox', { name: 'What should happen?' }).textContent).toBe(''));
+    });
+
+    it('lists the sessions, searchable, in the left column', async () => {
+        stubSessionRoutes(() => ({ items: [sessionFixture({ id: 's-2', title: 'Careers page' })], next_cursor: null }));
+        await renderComposer();
+
+        const column = screen.getByRole('region', { name: 'Sessions' });
+
+        expect(within(column).getByRole('searchbox', { name: 'Find a session' })).toBeInTheDocument();
+        expect(await within(column).findByRole('link', { name: /Careers page/ })).toHaveAttribute('href', '/sessions/s-2');
     });
 
     it('shows a disabled mic without speech recognition, saying why', async () => {

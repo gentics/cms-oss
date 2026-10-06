@@ -160,6 +160,18 @@ export function Catalogue() {
                                 <TrashIcon size={16} />
                             </Button>
                         </State>
+                        <State label={t('catalogue.buttons.link')}>
+                            <Button variant="ghost" nativeButton={false} role={undefined} render={<a href="#catalogue-buttons" />}>
+                                {t('catalogue.buttons.linkText')}
+                            </Button>
+                            <Button variant="ghost" size="brand" nativeButton={false} role={undefined} render={<a href="#catalogue-buttons" />}>
+                                {t('topbar.brand')}
+                            </Button>
+                            <Button size="sm" nativeButton={false} role={undefined} render={<a href="#catalogue-buttons" />}>
+                                <PlusIcon size={14} />
+                                {t('catalogue.buttons.linkText')}
+                            </Button>
+                        </State>
                         <State label={t('catalogue.buttons.iconXl')}>
                             <Button variant="primary" size="icon-xl" aria-label={t('catalogue.buttons.speak')}>
                                 <MicIcon size={28} />

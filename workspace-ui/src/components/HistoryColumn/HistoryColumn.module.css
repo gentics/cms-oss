@@ -10,14 +10,24 @@
   display: flex;
   flex: none;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--line);
+  padding: 0 9px 0 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Phones: room for the button that goes back to the chat, which WorkspaceLayout puts over the top
+   right corner (28 px, 12 px from the edge). */
+@media (max-width: 640px) {
+  .head {
+    padding-right: 48px;
+  }
 }
 
 .title {
   margin: 0;
-  color: var(--ink);
-  font-size: var(--fs-md);
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
   font-weight: 500;
 }

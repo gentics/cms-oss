@@ -90,61 +90,84 @@ test.describe('Session chat on a phone', () => {
 
         await expect(field).toBeVisible();
     });
+
+    test('shows the chat of a session chosen in the left column', async ({ page }) => {
+        await withSpeechRecognition(page, false);
+        await page.route((url) => url.pathname === '/genaix/api/v1/sessions', (route) => route.fulfill({
+            json: { items: [{ id: 'def', title: 'Careers page', status: 'active', created_at: '2026-10-05T10:00:00Z', last_activity_at: '2026-10-05T10:00:00Z' }], next_cursor: null },
+        }));
+        await page.goto('/sessions/abc');
+
+        const field = page.getByRole('textbox', { name: 'What should happen?' });
+
+        await page.getByRole('button', { name: 'Show the left column' }).click();
+        await expect(field).toBeHidden();
+
+        await page.getByRole('link', { name: /Careers page/ }).click();
+
+        await expect(page).toHaveURL(/\/sessions\/def$/);
+        await expect(field).toBeVisible();
+    });
 });
 
 test.describe('Session chat on a wide screen', () => {
     test.use({ viewport: { width: 1280, height: 800 } });
 
-    test('hides the left column from its top and shows it again from the top of the chat', async ({ page }) => {
+    test('hides and shows the left column with the button at the far left of the topbar', async ({ page }) => {
         await withSpeechRecognition(page, false);
         await page.goto('/sessions/abc');
 
         const field = page.getByRole('textbox', { name: 'What should happen?' });
         const separator = page.getByRole('separator', { name: 'Width of the left column' });
+        const brand = page.getByRole('link', { name: 'Gentics Workspace' });
         const hide = page.getByRole('button', { name: 'Hide the left column' });
 
         await expect(separator).toBeVisible();
+        // The only one: none in the columns.
+        await expect(hide).toHaveCount(1);
 
-        // At the top of the left column, left of its splitter.
+        // In the topbar, left of the brand.
         const hideBox = (await hide.boundingBox())!;
-        const separatorBox = (await separator.boundingBox())!;
+        const brandBox = (await brand.boundingBox())!;
 
-        expect(hideBox.x + hideBox.width).toBeLessThanOrEqual(separatorBox.x);
-        expect(hideBox.y).toBeLessThan(120);
+        expect(hideBox.x).toBeLessThan(40);
+        expect(hideBox.y + hideBox.height).toBeLessThanOrEqual(48);
+        expect(hideBox.x + hideBox.width).toBeLessThanOrEqual(brandBox.x);
 
         await hide.click();
 
         await expect(separator).toBeHidden();
-
-        // At the top left of the chat, which now starts at the window's edge.
-        const show = page.getByRole('button', { name: 'Show the left column' });
-        const showBox = (await show.boundingBox())!;
-
-        expect(showBox.x).toBeLessThan(40);
-        expect(showBox.y).toBeLessThan(120);
         await expect(field).toBeVisible();
+
+        const show = page.getByRole('button', { name: 'Show the left column' });
+
+        await expect(show).toHaveCount(1);
+        expect((await show.boundingBox())!.x).toBe(hideBox.x);
 
         await show.click();
 
         await expect(separator).toBeVisible();
     });
 
-    test('keeps the text prompt with the mic between the field and send', async ({ page }) => {
+    test('keeps mic and send in the bottom right corner of the text prompt', async ({ page }) => {
         await withSpeechRecognition(page, true);
         await page.goto('/sessions/abc');
 
         const field = page.getByRole('textbox', { name: 'What should happen?' });
+        const file = page.getByRole('button', { name: 'File' });
         const mic = page.getByRole('button', { name: 'Dictate' });
         const send = page.getByRole('button', { name: 'Send' });
 
         await expect(field).toBeVisible();
         await expect(page.getByRole('button', { name: 'Tap to speak' })).toBeHidden();
 
-        const [fieldBox, micBox, sendBox] = await Promise.all([field.boundingBox(), mic.boundingBox(), send.boundingBox()]);
+        const [fieldBox, fileBox, micBox, sendBox] = await Promise.all([field.boundingBox(), file.boundingBox(), mic.boundingBox(), send.boundingBox()]);
 
-        // One line: field, then mic, then send.
-        expect(micBox!.x).toBeGreaterThan(fieldBox!.x + fieldBox!.width - 1);
+        // Below the field, in the row of the actions: file on the left, then mic, then send at the right end.
+        expect(micBox!.y).toBeGreaterThan(fieldBox!.y + fieldBox!.height - 1);
+        expect(Math.abs(micBox!.y + micBox!.height / 2 - (fileBox!.y + fileBox!.height / 2))).toBeLessThan(4);
+        expect(micBox!.x).toBeGreaterThan(fileBox!.x + fileBox!.width);
         expect(sendBox!.x).toBeGreaterThan(micBox!.x + micBox!.width - 1);
-        expect(Math.abs(micBox!.y + micBox!.height - (sendBox!.y + sendBox!.height))).toBeLessThan(6);
+        expect(Math.abs(sendBox!.x + sendBox!.width - (fieldBox!.x + fieldBox!.width))).toBeLessThan(6);
     });
 });

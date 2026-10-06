@@ -19,19 +19,19 @@
   gap: 1px;
   padding: 7px 36px 7px 9px;
   border: 1px solid transparent;
-  border-radius: var(--r-lg);
-  color: var(--ink);
-  font-size: var(--fs-base);
+  border-radius: var(--corner-lg);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
   text-decoration: none;
-  transition: background-color var(--dur-state) var(--ease);
+  transition: background-color var(--duration-state) var(--easing);
 
   &:hover {
-    background: var(--tint);
+    background: var(--bg-subtle);
   }
 
   &[aria-current='page'] {
-    border-color: rgba(var(--az-rgb), .26);
-    background: rgba(var(--az-rgb), .09);
+    border-color: rgba(var(--interactive-rgb), .26);
+    background: rgba(var(--interactive-rgb), .09);
   }
 }
 
@@ -43,8 +43,8 @@
 }
 
 .meta {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
 }
 
 /* Appears on hover or focus of its row. */
@@ -54,7 +54,7 @@
   right: 6px;
   opacity: 0;
   transform: translateY(-50%);
-  transition: opacity var(--dur-state) var(--ease);
+  transition: opacity var(--duration-state) var(--easing);
 
   .item:hover &,
   .item:focus-within & {
@@ -74,8 +74,8 @@
   gap: 8px;
   margin: 0;
   padding: 12px 9px;
-  color: var(--slate);
-  font-size: var(--fs-sm);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
 
   & p {
     margin: 0;

@@ -1,21 +1,30 @@
-/* Tiptap's wrapper around the editor: the item that fills the composer's line. */
+/* Tiptap's wrapper around the editor: the item that fills the composer's line. The editor's element
+   stays a block: Chrome draws no caret in an empty editable flex container. */
 .wrapper {
   flex: 1;
   min-width: 0;
+
+  > div {
+    align-items: center;
+  }
 }
 
 /* The text field of both composers: the editor's element. A locked verbatim passage is a node view
    inside it (`ComposerTextInput`), styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
 .field {
+  position: relative;
   overflow-y: auto;
   outline: none;
   color: var(--fg-primary);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 
+  /* Out of the flow, where the text starts, so the caret stands at the start and not after it;
+     paler than muted text (draft `.input:empty:before`). */
   &.empty::before {
+    position: absolute;
     content: attr(data-placeholder);
-    color: var(--fg-muted);
+    color: rgba(var(--fg-secondary-rgb), 0.5);
     pointer-events: none;
   }
 
@@ -42,16 +51,14 @@
 
 /* Dashboard: one large line of text on the surface (design.md §5.1, §11). */
 .lg {
-  min-height: 30px;
   max-height: 150px;
   padding: 2px 0;
   font-size: var(--font-size-lg);
   line-height: 1.5;
 }
 
-/* Chat: the draft's `.input`, 36–150 px high. */
+/* Chat: the draft's `.input`, at most 150 px high, without its minimum height. */
 .base {
-  min-height: 36px;
   max-height: 150px;
   padding: 5px 2px;
   font-size: var(--font-size-base);

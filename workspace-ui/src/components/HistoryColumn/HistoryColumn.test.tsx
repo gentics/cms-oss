@@ -33,6 +33,22 @@ describe('HistoryColumn', () => {
         expect(screen.getByRole('link', { name: /Careers page/ })).toBeInTheDocument();
     });
 
+    it('goes back to the dashboard\'s prompt from "New"', async () => {
+        const user = userEvent.setup();
+
+        stubSearch();
+
+        const { router } = renderWithProviders(<HistoryColumn />, { path: '/sessions/s-1' });
+        const newSession = await screen.findByRole('link', { name: 'New' });
+
+        expect(newSession).toHaveAttribute('href', '/');
+        expect(newSession).toHaveAttribute('title', 'New session — back to the start prompt');
+
+        await user.click(newSession);
+
+        await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    });
+
     it('searches on the server once typing pauses', async () => {
         const user = userEvent.setup();
         const fetchMock = stubSearch();

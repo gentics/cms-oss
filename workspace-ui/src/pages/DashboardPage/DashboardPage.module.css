@@ -11,6 +11,15 @@
   text-align: left;
 }
 
+/* Below the topbar; places the to-dos card on wide screens (`.todos`). */
+.body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* Anchored to the top, not centred, so a growing field does not push the column upwards. */
 .scroll {
   flex: 1;
@@ -36,4 +45,23 @@
   font-weight: 500;
   letter-spacing: -0.01em;
   line-height: 1.3;
+}
+
+/* Open to-dos: under the prompt; from 1360 px a card top right (design.md §11 "Dashboard",
+   final_draft.html `.todos`). Placed against `.body`, not the scrolling column, so it stays put
+   while the column scrolls. */
+.todos:empty {
+  display: none;
+}
+
+@media (min-width: 1360px) {
+  .todos {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+    width: 330px;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+  }
 }

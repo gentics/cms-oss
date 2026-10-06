@@ -8,7 +8,7 @@
 
 .chevron {
   display: inline-flex;
-  transition: transform var(--dur-pop) var(--ease);
+  transition: transform var(--duration-popover) var(--easing);
 
   &[data-open] {
     transform: rotate(180deg);

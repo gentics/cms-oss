@@ -113,6 +113,26 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
 
+    // Voice input and send: on the dashboard at the end of the field's line, in the chat in the
+    // bottom right corner of the box, after the actions (draft `.comrow`).
+    const submitButtons = (
+        <>
+            <span className={styles.inlineVoice}>
+                <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
+            </span>
+
+            <IconButton
+                variant="primary"
+                size={isChat ? 'icon' : 'icon-lg'}
+                label={t(texts.send)}
+                disabled={!canSubmit}
+                onClick={submit}
+            >
+                <ArrowUpIcon size={isChat ? 16 : undefined} />
+            </IconButton>
+        </>
+    );
+
     const actions = (
         <div className={styles.actions}>
             <Button variant="ghost" size="sm" onClick={openFilePicker}>
@@ -139,6 +159,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
                 <QuoteIcon size={16} />
                 {t('composer.verbatim')}
             </Button>
+            {isChat && <span className={styles.submit}>{submitButtons}</span>}
         </div>
     );
 
@@ -179,19 +200,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
                         onBlur={() => setHasFocus(false)}
                     />
 
-                    <span className={styles.inlineVoice}>
-                        <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
-                    </span>
-
-                    <IconButton
-                        variant="primary"
-                        size={isChat ? 'icon' : 'icon-lg'}
-                        label={t(texts.send)}
-                        disabled={!canSubmit}
-                        onClick={submit}
-                    >
-                        <ArrowUpIcon size={isChat ? 16 : undefined} />
-                    </IconButton>
+                    {!isChat && submitButtons}
                 </div>
 
                 {/* In the chat the actions sit inside the box; on the dashboard below the prompt. */}

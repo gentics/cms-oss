@@ -1,6 +1,12 @@
 {
     "topbar": {
         "brand": "Gentics Workspace",
+        "home": "Zurück zum Dashboard",
+        "switchLanguage": "Zu {{language}} wechseln",
+        "languages": {
+            "en": "English",
+            "de": "Deutsch"
+        },
         "darkMode": "Dunkler Modus",
         "lightMode": "Heller Modus"
     },
@@ -57,6 +63,8 @@
     },
     "sessions": {
         "title": "Sitzungen",
+        "new": "Neu",
+        "newTitle": "Neue Sitzung – zurück zur Startseite",
         "find": "Sitzung suchen",
         "all": "Alle Sitzungen",
         "recent": "Letzte Sitzungen",
@@ -121,7 +129,9 @@
             "remove": "Entfernen",
             "verbatim": "Verbatim",
             "iconXl": "Großer runder Icon-Button",
-            "speak": "Sprechen"
+            "speak": "Sprechen",
+            "link": "Als Link",
+            "linkText": "Zu den Buttons"
         },
         "checkbox": {
             "title": "Checkbox",

@@ -13,17 +13,17 @@
   align-items: center;
   gap: 7px;
   height: 32px;
-  margin: 9px 9px 6px;
+  margin: 9px 9px 6px 12px;
   padding: 0 9px;
-  border: 1px solid var(--line-field);
-  border-radius: var(--r-md);
-  background: var(--surface);
-  color: var(--muted);
-  transition: border-color var(--dur-state) var(--ease), box-shadow var(--dur-state) var(--ease);
+  border: 1px solid var(--border-field);
+  border-radius: var(--corner-md);
+  background: var(--bg-surface);
+  color: var(--fg-muted);
+  transition: border-color var(--duration-state) var(--easing), box-shadow var(--duration-state) var(--easing);
 
   &:focus-within {
-    border-color: var(--azure);
-    box-shadow: 0 0 0 3px rgba(var(--az-rgb), .16);
+    border-color: var(--interactive);
+    box-shadow: 0 0 0 3px rgba(var(--interactive-rgb), .16);
   }
 
   & input {
@@ -32,12 +32,12 @@
     border: 0;
     outline: none;
     background: transparent;
-    color: var(--ink);
+    color: var(--fg-primary);
     font: inherit;
-    font-size: var(--fs-base);
+    font-size: var(--font-size-base);
 
     &::placeholder {
-      color: var(--muted);
+      color: var(--fg-muted);
     }
   }
 }
@@ -45,6 +45,6 @@
 .results {
   flex: 1;
   min-height: 0;
-  padding: 0 9px 12px;
+  padding: 0 9px 12px 12px;
   overflow-y: auto;
 }

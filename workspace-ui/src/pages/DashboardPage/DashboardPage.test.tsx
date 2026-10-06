@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +8,7 @@ import { ErrorNotifications } from '@/components/ErrorNotifications/ErrorNotific
 import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 
 import '@/i18n';
 
@@ -54,12 +55,31 @@ describe('DashboardPage', () => {
         expect(await screen.findByRole('heading', { name: 'Good morning, Dominik' })).toBeInTheDocument();
     });
 
+    it('shows the open to-dos and folds out the recent sessions', async () => {
+        const user = userEvent.setup();
+        const todo = sessionFixture({ id: 's-1', title: 'Prices 2026', status: 'review_requested' });
+        const recent = sessionFixture({ id: 's-2', title: 'Careers page' });
+
+        stubSessionRoutes((url) => ({ items: url.searchParams.has('status') ? [todo] : [recent, todo], next_cursor: null }));
+        renderDashboard();
+
+        const todos = await screen.findByRole('region', { name: 'Open to-dos' });
+
+        expect(await within(todos).findByRole('link', { name: /Prices 2026/ })).toBeInTheDocument();
+        expect(within(todos).getByRole('heading', { name: 'Waiting for review' })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Recent sessions' }));
+
+        expect(await screen.findByRole('link', { name: /Careers page/ })).toBeInTheDocument();
+    });
+
     it('creates the session with the prompt, caches it and opens its page', async () => {
         const user = userEvent.setup();
         const session = { id: 's-1', status: 'active', workflow: 'content_research', run_id: 'r-1', message_id: 'm-1' };
         const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(session, { status: 201 }));
 
-        vi.stubGlobal('fetch', fetchMock);
+        // The to-dos and recent sessions list sessions; `fetchMock` sees only the start.
+        vi.stubGlobal('fetch', withEmptySessionList(fetchMock));
 
         const { router, queryClient } = renderDashboard();
 
@@ -84,10 +104,10 @@ describe('DashboardPage', () => {
     it('shows an error and stays on the dashboard with the input kept when starting fails', async () => {
         const user = userEvent.setup();
 
-        vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(Response.json(
+        vi.stubGlobal('fetch', withEmptySessionList(vi.fn<typeof fetch>().mockResolvedValue(Response.json(
             { type: 't', title: 't', status: 503, genaix_code: 'service_unavailable' },
             { status: 503 },
-        )));
+        ))));
 
         const { router } = renderDashboard();
 

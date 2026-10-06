@@ -5,20 +5,12 @@
   align-items: center;
   gap: 10px;
   height: 48px;
-  padding: 0 12px;
+  /* Left: 4 px less, so the logo in the brand's padding sits where the draft has it. */
+  padding: 0 12px 0 8px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   color: var(--fg-primary);
   font-size: var(--font-size-base);
-}
-
-.brand {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px 4px 4px;
-  font-weight: 500;
 }
 
 /* Gentics logomark as a mask in `--interactive`, 218:256, 20 × 24 px (design.md §9). */
@@ -32,6 +24,24 @@
 
 .spacer {
   flex: 1;
+}
+
+/* The language code in its button (final_draft.html `.langbtn`). */
+.language {
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.05em;
+}
+
+/* The left column's toggle; phones switch columns with the buttons in the columns instead. */
+.columnToggle {
+  display: flex;
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  .columnToggle {
+    display: none;
+  }
 }
 
 .iconButton {

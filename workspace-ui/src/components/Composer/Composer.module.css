@@ -23,7 +23,7 @@
 
 .line {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
 }
 
@@ -77,6 +77,16 @@
   & .actions {
     margin: 3px -6px 0;
   }
+}
+
+/* Chat: voice input and send in the box's bottom right corner; the margin undoes the actions'
+   negative one on the right, so send sits at the box's padding. */
+.submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 6px;
 }
 
 /* Mobile, voice first: the big mic is the main input; hidden on wider screens. */

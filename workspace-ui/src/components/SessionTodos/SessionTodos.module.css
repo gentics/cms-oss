@@ -4,16 +4,16 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--r-xl);
-  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
 }
 
 .title,
 .groupTitle {
   margin: 0;
-  color: var(--slate);
-  font-size: var(--fs-overline);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-overline);
   font-weight: 500;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -21,16 +21,16 @@
 
 .title {
   padding: 12px 14px 9px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .group + .group {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .groupTitle {
   padding: 9px 14px 3px;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .list {
@@ -39,7 +39,7 @@
   list-style: none;
 
   & li + li {
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--border-subtle);
   }
 }
 
@@ -48,31 +48,31 @@
   flex-direction: column;
   gap: 1px;
   padding: 9px 14px;
-  color: var(--ink);
+  color: var(--fg-primary);
   text-decoration: none;
-  transition: background-color var(--dur-state) var(--ease);
+  transition: background-color var(--duration-state) var(--easing);
 
   &:hover {
-    background: rgba(var(--az-rgb), .05);
+    background: rgba(var(--interactive-rgb), .05);
   }
 }
 
 .name {
   overflow: hidden;
-  font-size: var(--fs-base);
+  font-size: var(--font-size-base);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
 .meta {
-  color: var(--muted);
-  font-size: var(--fs-xs);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
 }
 
 .more {
   display: flex;
   padding: 4px 8px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .state {
@@ -81,8 +81,8 @@
   align-items: flex-start;
   gap: 8px;
   padding: 12px 14px;
-  color: var(--slate);
-  font-size: var(--fs-sm);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
 
   & p {
     margin: 0;

@@ -52,6 +52,22 @@ export function stubSessionRoutes(
     return fetchMock;
 }
 
+/**
+ * Wraps `fetchMock` for a page that lists sessions: `GET /sessions` gets an empty list, every other
+ * call goes to `fetchMock`, which so sees only the calls a test is about.
+ */
+export function withEmptySessionList(fetchMock: typeof fetch): typeof fetch {
+    return async (input, init) => {
+        const url = new URL(String(input), 'http://localhost');
+
+        if ((init?.method ?? 'GET') === 'GET' && url.pathname === '/genaix/api/v1/sessions') {
+            return Response.json({ items: [], next_cursor: null } satisfies SessionPage);
+        }
+
+        return fetchMock(input, init);
+    };
+}
+
 /** The `GET /sessions` query strings `fetchMock` was called with, in order. */
 export function listQueries(fetchMock: ReturnType<typeof stubSessionRoutes>): string[] {
     return fetchMock.mock.calls

@@ -34,3 +34,17 @@ The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/g
 Reusable components live in `src/components/ui/`: shadcn/ui on [Base UI](https://base-ui.com) (`@base-ui/react`), styled with Tailwind using only the design tokens from `.claude/rules/design.md` (defined in `src/index.css`), with Lucide icons. Tailwind is limited to this folder; ESLint reports Tailwind classes anywhere else. Wrap the app in `UiProvider` (`@/components/ui/provider`) before using them.
 
 The component catalogue is a development page of its own, separate from the app: `npm run catalogue` starts it at `http://localhost:5174` (`vite.catalogue.config.ts`). `npm run dev` and `npm run build` do not include it. It shows every component in its states, with a light/dark/system theme switch. The theme follows the OS unless `data-theme="light"` or `data-theme="dark"` is set on `<html>`.
+
+## Serving the build from the CMS
+
+The CMS serves this app at `/workspace/`, next to `/editor/` and `/admin/`. The trailing `/` is part of the URL: the asset URLs are relative to it.
+
+- `npm run build` writes `dist/`. The Maven module in this folder (`pom.xml`, `assembly/workspace-ui.xml`) only packages that `dist/` into the `workspace-ui` zip under `workspace/`; it does not run npm. Build `dist/` first, as the "Build UI" stage of the `Jenkinsfile` does.
+- `cms-oss-server` unpacks the zip into its `webroot`, and `OSSRunner` maps `/workspace/*` to it.
+
+The build works under any path, without rebuilding for it:
+
+- Asset URLs are relative (`base: './'` in `vite.config.ts`). In `index.html`, files from `public/` keep a leading `/` (`/favicon.png`); Vite rewrites them to relative URLs in the build. In code, reference them through `import.meta.env.BASE_URL`.
+- Routing uses hash history (`src/router.tsx`), like the CMS's own UIs: a session is at `<app path>/#/sessions/<id>`, so the CMS only ever has to serve `index.html` at the app's own path.
+
+`/rest` and `/genaix/api/v1` stay absolute: both are same-origin paths on the CMS host. The CMS REST calls send no `sid`, only the browser's CMS session cookie; the CMS accepts that, and offers `POST /rest/admin/token`, from the `hotfix-6.6.x` line of `cms-oss` on.

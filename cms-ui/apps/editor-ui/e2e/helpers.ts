@@ -743,10 +743,9 @@ export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, targe
         return containerEl.locator('> .form-item');
     }
 
-    return containerEl.locator('> .form-item')
-        .filter({
-            hasNot: containerEl.locator(entries.map((ent) => `> .form-item[data-element-id="${ent.id}"]`).join(',')),
-        });
+    // Exclude the elements which were already present, so only the newly added one remains.
+    // Note: `filter({ hasNot })` can't be used for this, as it only checks descendants, not the element itself.
+    return containerEl.locator(`> .form-item${entries.map((ent) => `:not([data-element-id="${ent.id}"])`).join('')}`);
 }
 
 export async function fgAddControl(grid: Locator, controlId: string, target?: FGDropTarget): Promise<Locator> {
@@ -786,14 +785,31 @@ export async function fgMoveElement(grid: Locator, source: Locator, target?: FGD
  * to move it to that page.
  */
 export async function fgMoveElementToPage(grid: Locator, source: Locator, pageIndex: number): Promise<void> {
-    const pageTab = grid.locator(`gtx-form-page-manager .page-tab[data-page-index="${pageIndex}"]`);
-    await source.dragTo(pageTab, {
-        // The source element's bounding box includes all of its own nested elements (if it is a
-        // container/aggregate), so its center may actually be located over a NESTED child rather
-        // than over the element itself. Grab it near its own header instead.
-        sourcePosition: { x: 20, y: 20 },
-        force: true,
-    });
+    // Target the label of the tab instead of the tab itself: The children of the page tab are treated as
+    // sortable items, and SortableJS only inserts the dragged item when hovering one of them.
+    // The center of the tab itself may be a gap between them, in which case the drop is ignored.
+    const pageTabLabel = grid.locator(`gtx-form-page-manager .page-tab[data-page-index="${pageIndex}"] .page-tab-label`);
+    const page = grid.page();
+
+    // The source element's bounding box includes all of its own nested elements (if it is a
+    // container/aggregate), so its center may actually be located over a NESTED child rather
+    // than over the element itself. Grab it near its own header instead.
+    const sourceBox = await source.boundingBox();
+
+    // `dragTo` jumps straight to the target and drops, which only emits a `dragenter` and `drop`.
+    // SortableJS however only moves the item into the target list on `dragover`, so without it the
+    // drop onto the page tab is ignored. Therefore, move the mouse manually in steps over the tab.
+    await page.mouse.move(sourceBox.x + 20, sourceBox.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(sourceBox.x + 20 + (DRAG_THRESHOLD * 5), sourceBox.y + 20, { steps: 5 });
+
+    // The page tabs change their styling once a drag has started, so only measure the tab afterwards.
+    const targetBox = await pageTabLabel.boundingBox();
+    await page.mouse.move(targetBox.x + (targetBox.width / 2), targetBox.y + (targetBox.height / 2), { steps: 10 });
+    await page.mouse.move(targetBox.x + (targetBox.width / 2) + DRAG_THRESHOLD, targetBox.y + (targetBox.height / 2), { steps: 5 });
+    // SortableJS animates the insertion (and ignores events while doing so), so give it a moment before dropping.
+    await page.waitForTimeout(200);
+    await page.mouse.up();
 }
 
 export async function fgAddBlock(grid: Locator, blockId: string, target: FGDropTarget): Promise<Locator> {

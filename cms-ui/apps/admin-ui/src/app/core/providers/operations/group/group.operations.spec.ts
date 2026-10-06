@@ -13,7 +13,6 @@ import {
     GroupUpdateRequest,
     GroupUserCreateRequest,
     GroupUserCreateResponse,
-    GroupUsersListOptions,
     IndexById,
     IS_NORMALIZED,
     Normalized,
@@ -25,9 +24,10 @@ import {
     RecursivePartial,
     ResponseCode,
     User,
+    UserListOptions,
 } from '@gentics/cms-models';
 import { getExampleEntityStore, getExampleFolderData } from '@gentics/cms-models/testing';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -91,22 +91,22 @@ function createSpy(name: string): jasmine.Spy {
     return jasmine.createSpy(name).and.stub();
 }
 
-class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
+class MockClient implements RecursivePartial<InterfaceOf<GCMSRestClientService>> {
     group = {
-        getGroupsTree: createSpy('getGroupsTree'),
-        createSubgroup: createSpy('createSubgroup'),
-        moveSubgroup: createSpy('moveSubgroup'),
-        deleteGroup: createSpy('deleteGroup'),
-        updateGroup: createSpy('updateGroup'),
-        getGroupUsers: createSpy('getGroupUsers'),
+        tree: createSpy('tree'),
+        create: createSpy('create'),
+        move: createSpy('move'),
+        delete: createSpy('delete'),
+        update: createSpy('update'),
+        listUsers: createSpy('listUsers'),
         createUser: createSpy('createUser'),
-        addUserToGroup: createSpy('addUserToGroup'),
-        removeUserFromGroup: createSpy('removeUserFromGroup'),
-        getGroupPermissions: createSpy('getGroupPermissions'),
-        getGroupTypePermissions: createSpy('getGroupTypePermissions'),
-        getGroupInstancePermissions: createSpy('getGroupInstancePermissions'),
-        setGroupTypePermissions: createSpy('setGroupTypePermissions'),
-        setGroupInstancePermissions: createSpy('setGroupInstancePermissions'),
+        assignUser: createSpy('assignUser'),
+        unassignUser: createSpy('unassignUser'),
+        listPermissions: createSpy('listPermissions'),
+        getPermission: createSpy('getPermission'),
+        getInstancePermission: createSpy('getInstancePermission'),
+        setPermission: createSpy('setPermission'),
+        setInstancePermission: createSpy('setInstancePermission'),
     };
 }
 
@@ -116,10 +116,11 @@ class MockPermissionsService implements Partial<PermissionsService> {
 
 const MOCKED_GROUPS_COUNT = 10;
 const TEST_GROUP_ID = 2;
+const TEST_GROUP_NAME = 'Test Group';
 
 describe('GroupOperations', () => {
 
-    let api: MockApi;
+    let client: MockClient;
     let appState: TestAppState;
     let entityManager: MockEntityManagerService;
     let errorHandler: MockErrorHandler;
@@ -148,13 +149,13 @@ describe('GroupOperations', () => {
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
-                { provide: GcmsApi, useClass: MockApi },
+                { provide: GCMSRestClientService, useClass: MockClient },
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
                 { provide: I18nService, useClass: MockI18nService },
             ],
         });
 
-        api = TestBed.inject(GcmsApi) as any;
+        client = TestBed.inject(GCMSRestClientService) as any;
         appState = TestBed.inject(AppStateService) as any;
         entityManager = TestBed.inject(EntityManagerService) as any;
         errorHandler = TestBed.inject(ErrorHandler) as any;
@@ -240,18 +241,18 @@ describe('GroupOperations', () => {
     describe('getGroups()', () => {
 
         it('calls the correct API endpoint and adds the group to the entity state', fakeAsync(() => {
-            api.group.getGroupsTree.and.returnValue(createDelayedObservable({ groups: mockGroups }));
+            client.group.tree.and.returnValue(createDelayedObservable({ groups: mockGroups }));
             const result$ = groupOperations.getAll();
 
             const result = tickAndGetEmission(result$);
-            expect(api.group.getGroupsTree).toHaveBeenCalledTimes(1);
+            expect(client.group.tree).toHaveBeenCalledTimes(1);
             expect(result).toBe(mockGroups);
             expect(entityManager.addEntities).toHaveBeenCalledTimes(1);
             expect(entityManager.addEntities).toHaveBeenCalledWith('group', mockGroups);
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.getAll(), api.group.getGroupsTree);
+            assertErrorHandlingWorks(() => groupOperations.getAll(), client.group.tree);
         }));
 
     });
@@ -275,7 +276,7 @@ describe('GroupOperations', () => {
         });
 
         function runCreateSubgroupTest(expectedGroupEntityState: IndexById<Group<Normalized>>): void {
-            api.group.createSubgroup.and.returnValue(createDelayedObservable({ group: newGroup }));
+            client.group.create.and.returnValue(createDelayedObservable({ group: newGroup }));
 
             const result$ = groupOperations.createSubgroup(PARENT_GROUP_ID, createReq);
             const result = tickAndGetEmission(result$);
@@ -311,7 +312,7 @@ describe('GroupOperations', () => {
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.createSubgroup(PARENT_GROUP_ID, createReq), api.group.createSubgroup);
+            assertErrorHandlingWorks(() => groupOperations.createSubgroup(PARENT_GROUP_ID, createReq), client.group.create);
         }));
 
     });
@@ -322,21 +323,21 @@ describe('GroupOperations', () => {
             const movedGroupId = 4;
             const parentGroupId = 2;
             const expectedGroup = mockGroups[movedGroupId];
-            api.group.moveSubgroup.and.returnValue(createDelayedObservable({ group: expectedGroup }));
+            client.group.move.and.returnValue(createDelayedObservable({ group: expectedGroup }));
             const getGroupsSpy = spyOn(groupOperations, 'getAll').and.returnValue(createDelayedObservable(null));
 
             const result$ = groupOperations.moveSubgroup(movedGroupId, parentGroupId);
             const result = tickAndGetEmission(result$);
 
             expect(result).toBe(expectedGroup);
-            expect(api.group.moveSubgroup).toHaveBeenCalledTimes(1);
-            expect(api.group.moveSubgroup).toHaveBeenCalledWith(movedGroupId, parentGroupId);
+            expect(client.group.move).toHaveBeenCalledTimes(1);
+            expect(client.group.move).toHaveBeenCalledWith(movedGroupId, parentGroupId);
             expect(getGroupsSpy.calls.count()).toBe(1, 'Groups were not refreshed');
             assertNotificationWasShown({ message: 'shared.item_moved' });
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.moveSubgroup(2, 1), api.group.moveSubgroup);
+            assertErrorHandlingWorks(() => groupOperations.moveSubgroup(2, 1), client.group.move);
         }));
 
     });
@@ -359,13 +360,13 @@ describe('GroupOperations', () => {
             expectedGroupEntities[PARENT_GROUP_A].children = [CHILD_A2];
             delete expectedGroupEntities[CHILD_A1];
 
-            api.group.deleteGroup.and.returnValue(createDelayedObservable(null));
+            client.group.delete.and.returnValue(createDelayedObservable(null));
 
             const result$ = groupOperations.delete(CHILD_A1);
             tickAndGetEmission(result$);
 
-            expect(api.group.deleteGroup).toHaveBeenCalledTimes(1);
-            expect(api.group.deleteGroup).toHaveBeenCalledWith(CHILD_A1);
+            expect(client.group.delete).toHaveBeenCalledTimes(1);
+            expect(client.group.delete).toHaveBeenCalledWith(CHILD_A1);
             expect(appState.now.entity.group).toEqual(expectedGroupEntities);
             assertNotificationWasShown({
                 type: 'success',
@@ -375,7 +376,7 @@ describe('GroupOperations', () => {
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.delete(CHILD_A1), api.group.deleteGroup);
+            assertErrorHandlingWorks(() => groupOperations.delete(CHILD_A1), client.group.delete);
         }));
 
     });
@@ -396,20 +397,20 @@ describe('GroupOperations', () => {
 
         it('calls the correct API and updates the entity state', fakeAsync(() => {
             expect(updatedGroup).toBeTruthy();
-            api.group.updateGroup.and.returnValue(createDelayedObservable({ group: updatedGroup }));
+            client.group.update.and.returnValue(createDelayedObservable({ group: updatedGroup }));
 
             const result$ = groupOperations.update(TEST_GROUP_ID, update);
             const result = tickAndGetEmission(result$);
 
             expect(result).toBe(updatedGroup);
-            expect(api.group.updateGroup).toHaveBeenCalledTimes(1);
-            expect(api.group.updateGroup).toHaveBeenCalledWith(TEST_GROUP_ID, update);
+            expect(client.group.update).toHaveBeenCalledTimes(1);
+            expect(client.group.update).toHaveBeenCalledWith(TEST_GROUP_ID, update);
             expect(entityManager.addEntity).toHaveBeenCalledWith('group', updatedGroup);
             assertNotificationWasShown({ message: 'shared.item_updated' });
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.update(TEST_GROUP_ID, update), api.group.updateGroup);
+            assertErrorHandlingWorks(() => groupOperations.update(TEST_GROUP_ID, update), client.group.update);
         }));
 
     });
@@ -417,23 +418,23 @@ describe('GroupOperations', () => {
     describe('getGroupUsers()', () => {
 
         it('calls the correct API and adds users to the entity state', fakeAsync(() => {
-            const options: GroupUsersListOptions = { sort: { attribute: 'lastName', sortOrder: PagingSortOrder.Asc } };
+            const options: UserListOptions = { sort: { attribute: 'lastName', sortOrder: PagingSortOrder.Asc } };
             const expectedUsers = createUsers(10);
-            api.group.getGroupUsers.and.returnValue(createDelayedObservable({ items: expectedUsers }));
+            client.group.listUsers.and.returnValue(createDelayedObservable({ items: expectedUsers }));
 
             const result$ = groupOperations.getGroupUsers(TEST_GROUP_ID, options);
             const result = tickAndGetEmission(result$);
 
             expect(result).toBe(expectedUsers);
-            expect(api.group.getGroupUsers).toHaveBeenCalledTimes(1);
-            expect(api.group.getGroupUsers.calls.argsFor(0)[0]).toBe(TEST_GROUP_ID);
+            expect(client.group.listUsers).toHaveBeenCalledTimes(1);
+            expect(client.group.listUsers.calls.argsFor(0)[0]).toBe(TEST_GROUP_ID);
             // Make sure that the options object has been passed on directly.
-            expect(api.group.getGroupUsers.calls.argsFor(0)[1]).toBe(options);
+            expect(client.group.listUsers.calls.argsFor(0)[1]).toBe(options);
             expect(entityManager.addEntities).toHaveBeenCalledWith('user', result);
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.getGroupUsers(TEST_GROUP_ID), api.group.getGroupUsers);
+            assertErrorHandlingWorks(() => groupOperations.getGroupUsers(TEST_GROUP_ID), client.group.listUsers);
         }));
 
     });
@@ -462,10 +463,10 @@ describe('GroupOperations', () => {
                 .reduce((result, current) => ({ ...result, [current]: mockUserRaw[current] }), {});
             payload.password = 'testPassword';
             const USER_CREATE_PAYLOAD: GroupUserCreateRequest = payload;
-            api.group.createUser.and.returnValue(observableOf(mockResponse));
+            client.group.createUser.and.returnValue(observableOf(mockResponse));
 
             const response$ = groupOperations.createUser(creatingUserGroup.id, USER_CREATE_PAYLOAD);
-            expect(api.group.createUser).toHaveBeenCalledWith(creatingUserGroup.id, USER_CREATE_PAYLOAD);
+            expect(client.group.createUser).toHaveBeenCalledWith(creatingUserGroup.id, USER_CREATE_PAYLOAD);
 
             // check if correct response
             let loadedUser: User<Raw>;
@@ -482,7 +483,7 @@ describe('GroupOperations', () => {
         });
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.createUser(2, mockUserRaw[0]), api.group.createUser);
+            assertErrorHandlingWorks(() => groupOperations.createUser(2, mockUserRaw[0]), client.group.createUser);
         }));
 
     });
@@ -491,21 +492,21 @@ describe('GroupOperations', () => {
 
         it('calls the correct API and adds the user to the user to the entity state', fakeAsync(() => {
             const expectedUser = createUsers(1)[0];
-            api.group.addUserToGroup.and.returnValue(createDelayedObservable({ user: expectedUser }));
+            client.group.assignUser.and.returnValue(createDelayedObservable({ user: expectedUser }));
 
             const result$ = groupOperations.addUserToGroup(TEST_GROUP_ID, expectedUser.id);
             const result = tickAndGetEmission(result$);
 
             expect(result).toBe(expectedUser);
-            expect(api.group.addUserToGroup).toHaveBeenCalledTimes(1);
-            expect(api.group.addUserToGroup).toHaveBeenCalledWith(TEST_GROUP_ID, expectedUser.id);
+            expect(client.group.assignUser).toHaveBeenCalledTimes(1);
+            expect(client.group.assignUser).toHaveBeenCalledWith(TEST_GROUP_ID, expectedUser.id);
             expect(entityManager.addEntity).toHaveBeenCalledWith('user', result);
 
             assertNotificationWasShown({ message: 'group.user_added_to_group' });
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.addUserToGroup(TEST_GROUP_ID, 4711), api.group.addUserToGroup);
+            assertErrorHandlingWorks(() => groupOperations.addUserToGroup(TEST_GROUP_ID, 4711), client.group.assignUser);
         }));
 
     });
@@ -514,7 +515,7 @@ describe('GroupOperations', () => {
 
         it('calls the correct API and updates the entity state', fakeAsync(() => {
             const users = mockStateWithUsersAndGroups(mockGroups, 10);
-            api.group.removeUserFromGroup.and.returnValue(createDelayedObservable({}));
+            client.group.unassignUser.and.returnValue(createDelayedObservable({}));
 
             // Set up the expected state after removing the last user from the first group.
             const removeFromGroupId = mockGroups[0].id;
@@ -526,15 +527,15 @@ describe('GroupOperations', () => {
             const result$ = groupOperations.removeUserFromGroup(removeFromGroupId, targetUser.id);
             tickAndGetEmission(result$);
 
-            expect(api.group.removeUserFromGroup).toHaveBeenCalledTimes(1);
-            expect(api.group.removeUserFromGroup).toHaveBeenCalledWith(removeFromGroupId, targetUser.id);
+            expect(client.group.unassignUser).toHaveBeenCalledTimes(1);
+            expect(client.group.unassignUser).toHaveBeenCalledWith(removeFromGroupId, targetUser.id);
             expect(expectedEntityState).toEqual(appState.now.entity);
 
             assertNotificationWasShown({ message: 'group.user_removed_from_group' });
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.removeUserFromGroup(TEST_GROUP_ID, 4711), api.group.removeUserFromGroup);
+            assertErrorHandlingWorks(() => groupOperations.removeUserFromGroup(TEST_GROUP_ID, 4711), client.group.unassignUser);
         }));
 
     });
@@ -552,19 +553,19 @@ describe('GroupOperations', () => {
                     perms: [createPermissionInfo(GcmsPermission.READ)],
                 },
             ];
-            api.group.getGroupPermissions.and.returnValue(createDelayedObservable({ items: expectedResult }));
+            client.group.listPermissions.and.returnValue(createDelayedObservable({ items: expectedResult }));
 
             const options: GroupPermissionsListOptions = { parentId: 4711 };
             const result$ = groupOperations.getPermissionsSets(TEST_GROUP_ID, options);
             const result = tickAndGetEmission(result$);
 
-            expect(api.group.getGroupPermissions).toHaveBeenCalledTimes(1);
-            expect(api.group.getGroupPermissions).toHaveBeenCalledWith(TEST_GROUP_ID, options);
+            expect(client.group.listPermissions).toHaveBeenCalledTimes(1);
+            expect(client.group.listPermissions).toHaveBeenCalledWith(TEST_GROUP_ID, options);
             expect(result).toBe(expectedResult as any);
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.getPermissionsSets(TEST_GROUP_ID), api.group.getGroupPermissions);
+            assertErrorHandlingWorks(() => groupOperations.getPermissionsSets(TEST_GROUP_ID), client.group.listPermissions);
         }));
 
     });
@@ -578,18 +579,18 @@ describe('GroupOperations', () => {
                 createPermissionInfo(GcmsPermission.READ),
                 createPermissionInfo(GcmsPermission.UPDATE),
             ];
-            api.group.getGroupTypePermissions.and.returnValue(createDelayedObservable({ perms: expectedResult }));
+            client.group.getPermission.and.returnValue(createDelayedObservable({ perms: expectedResult }));
 
             const result$ = groupOperations.getGroupTypePermissions(TEST_GROUP_ID, TYPE);
             const result = tickAndGetEmission(result$);
 
-            expect(api.group.getGroupTypePermissions).toHaveBeenCalledTimes(1);
-            expect(api.group.getGroupTypePermissions).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE);
+            expect(client.group.getPermission).toHaveBeenCalledTimes(1);
+            expect(client.group.getPermission).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE);
             expect(result).toBe(expectedResult as any);
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.getGroupTypePermissions(TEST_GROUP_ID, TYPE), api.group.getGroupTypePermissions);
+            assertErrorHandlingWorks(() => groupOperations.getGroupTypePermissions(TEST_GROUP_ID, TYPE), client.group.getPermission);
         }));
 
     });
@@ -604,20 +605,20 @@ describe('GroupOperations', () => {
                 createPermissionInfo(GcmsPermission.READ),
                 createPermissionInfo(GcmsPermission.UPDATE),
             ];
-            api.group.getGroupInstancePermissions.and.returnValue(createDelayedObservable({ perms: expectedResult }));
+            client.group.getInstancePermission.and.returnValue(createDelayedObservable({ perms: expectedResult }));
 
             const result$ = groupOperations.getGroupInstancePermissions(TEST_GROUP_ID, TYPE, INSTANCE_ID);
             const result = tickAndGetEmission(result$);
 
-            expect(api.group.getGroupInstancePermissions).toHaveBeenCalledTimes(1);
-            expect(api.group.getGroupInstancePermissions).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, INSTANCE_ID);
+            expect(client.group.getInstancePermission).toHaveBeenCalledTimes(1);
+            expect(client.group.getInstancePermission).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, INSTANCE_ID);
             expect(result).toBe(expectedResult as any);
         }));
 
         it('handles errors properly', fakeAsync(() => {
             assertErrorHandlingWorks(
                 () => groupOperations.getGroupInstancePermissions(TEST_GROUP_ID, TYPE, INSTANCE_ID),
-                api.group.getGroupInstancePermissions,
+                client.group.getInstancePermission,
             );
         }));
 
@@ -638,17 +639,23 @@ describe('GroupOperations', () => {
                 subGroups: true,
                 subObjects: false,
             };
-            api.group.setGroupTypePermissions.and.returnValue(createDelayedObservable({}));
+            client.group.setPermission.and.returnValue(createDelayedObservable({}));
 
-            const result$ = groupOperations.setGroupTypePermissions(TEST_GROUP_ID, TYPE, request);
+            const result$ = groupOperations.setGroupTypePermissions(TEST_GROUP_ID, TEST_GROUP_NAME, TYPE, request);
             tickAndGetEmission(result$);
 
-            expect(api.group.setGroupTypePermissions).toHaveBeenCalledTimes(1);
-            expect(api.group.setGroupTypePermissions).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, request);
+            expect(client.group.setPermission).toHaveBeenCalledTimes(1);
+            expect(client.group.setPermission).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, request);
+            assertNotificationWasShown({
+                type: 'success',
+                message: 'shared.item_updated',
+                translationParams: { name: TEST_GROUP_NAME },
+                id: `group.type-permission-change.${TEST_GROUP_ID}`,
+            });
         }));
 
         it('handles errors properly', fakeAsync(() => {
-            assertErrorHandlingWorks(() => groupOperations.setGroupTypePermissions(TEST_GROUP_ID, TYPE, {} as any), api.group.setGroupTypePermissions);
+            assertErrorHandlingWorks(() => groupOperations.setGroupTypePermissions(TEST_GROUP_ID, TEST_GROUP_NAME, TYPE, {} as any), client.group.setPermission);
         }));
 
     });
@@ -669,19 +676,25 @@ describe('GroupOperations', () => {
                 subGroups: true,
                 subObjects: false,
             };
-            api.group.setGroupInstancePermissions.and.returnValue(createDelayedObservable({}));
+            client.group.setInstancePermission.and.returnValue(createDelayedObservable({}));
 
-            const result$ = groupOperations.setGroupInstancePermissions(TEST_GROUP_ID, TYPE, INSTANCE_ID, request);
+            const result$ = groupOperations.setGroupInstancePermissions(TEST_GROUP_ID, TEST_GROUP_NAME, TYPE, INSTANCE_ID, request);
             tickAndGetEmission(result$);
 
-            expect(api.group.setGroupInstancePermissions).toHaveBeenCalledTimes(1);
-            expect(api.group.setGroupInstancePermissions).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, INSTANCE_ID, request);
+            expect(client.group.setInstancePermission).toHaveBeenCalledTimes(1);
+            expect(client.group.setInstancePermission).toHaveBeenCalledWith(TEST_GROUP_ID, TYPE, INSTANCE_ID, request);
+            assertNotificationWasShown({
+                type: 'success',
+                message: 'shared.item_updated',
+                translationParams: { name: TEST_GROUP_NAME },
+                id: `group.instance-permission-change.${TEST_GROUP_ID}`,
+            });
         }));
 
         it('handles errors properly', fakeAsync(() => {
             assertErrorHandlingWorks(
-                () => groupOperations.setGroupInstancePermissions(TEST_GROUP_ID, TYPE, INSTANCE_ID, {} as any),
-                api.group.setGroupInstancePermissions,
+                () => groupOperations.setGroupInstancePermissions(TEST_GROUP_ID, TEST_GROUP_NAME, TYPE, INSTANCE_ID, {} as any),
+                client.group.setInstancePermission,
             );
         }));
 

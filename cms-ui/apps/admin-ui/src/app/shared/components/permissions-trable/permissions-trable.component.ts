@@ -1,10 +1,10 @@
-import { CategoryInfo, PermissionsCategorizer, PermissionsSetBO, PermissionsUtils } from '@admin-ui/common';
-import { PermissionsTrableLoaderOptions, PermissionsTrableLoaderService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AccessControlledType, Group, PermissionsSet } from '@gentics/cms-models';
 import { TableColumn, TrableRow } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
+import { CategoryInfo, PermissionsCategorizer, PermissionsSetBO, PermissionsUtils } from '../../../common';
+import { PermissionsTrableLoaderOptions, PermissionsTrableLoaderService } from '../../../core';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
@@ -42,7 +42,7 @@ export class PermissionsTrableComponent
 
     public categorizer: PermissionsCategorizer;
 
-    protected oldCagegories: CategoryInfo[] = [];
+    protected oldCategories: CategoryInfo[] = [];
 
     public rawColumns: TableColumn<PermissionsSetBO>[] = [
         {
@@ -74,11 +74,11 @@ export class PermissionsTrableComponent
         }
     }
 
-    protected setupCategorizer(rebuid: boolean = false): void {
+    protected setupCategorizer(rebuild: boolean = false): void {
         this.categorizer = this.groupPermissionsByCategory
             ? PermissionsUtils.createCategorizerByCategoryId()
             : PermissionsUtils.createCategorizerByPermType();
-        if (rebuid) {
+        if (rebuild) {
             this.rebuildColumns();
         }
     }
@@ -106,7 +106,7 @@ export class PermissionsTrableComponent
     }
 
     protected override onLoad(): void {
-        if (!isEqual(this.oldCagegories, this.categorizer.getKnownCategories())) {
+        if (!isEqual(this.oldCategories, this.categorizer.getKnownCategories())) {
             this.rebuildColumns();
         }
     }

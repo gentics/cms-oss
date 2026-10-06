@@ -1,7 +1,7 @@
-import { BO_ID, BusinessObject, TrableRowReloadOptions } from '@admin-ui/common';
 import { TrableRow } from '@gentics/ui-core';
 import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
 import { map, skip, switchMap } from 'rxjs/operators';
+import { BO_ID, BusinessObject, TrableRowReloadOptions } from '../../../common';
 
 /**
  * Base class for entity/type specific implementations to load and manage trable-components.
@@ -21,7 +21,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
     /**
      * Function to load the children of the specified entity.
-     *
      * @param parent The parent of which the children should be loaded from. May be null, which indicates it should load the root elements.
      * @param options The options which are to be used when loading.
      */
@@ -30,7 +29,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     /**
      * Function to load the specified entity (usually for reloading).
      * Does not have to include the children information, as they are already fetched via `loadEntityChildren`.
-     *
      * @param id The ID (`BO_ID`) of the entity to load.
      * @param options The options which are to be used when loading.
      */
@@ -40,7 +38,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
      * Basic hook to create a hash for a entity when it's loaded to determine it's state.
      * Used for trable updates to determine if the row changed or not.
      * Returns `null` without any actual implementation/override from the entity-specific loader.
-     *
      * @param entity The entity for which the hash should be created.
      * @returns A hash of the entity or `null` if it isn't needed/supported.
      */
@@ -50,7 +47,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
     /**
      * Hook to determine if a entity (can) have children or not.
-     *
      * @param entity Entity to check if it has children or not.
      * @param options The options which were used to load this entity.
      * @returns If the entity has children to load.
@@ -61,7 +57,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
     /**
      * Hook to determine if a entity can be selected or not.
-     *
      * @param entity Entity to check if it can be selected in the trable.
      * @param options The options which were used to load this entity.
      * @returns If the entity is supposed to be selectable in the trable.
@@ -72,7 +67,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
     /**
      * Reloads the specified row by updating the row state and updating the item on success.
-     *
      * @param row The row to reload.
      * @param options The options which will be forwarded to `loadEntityRow` as parameters.
      * @param reloadOptions Options for how to reload the row.
@@ -81,7 +75,7 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     public reloadRow(row: TrableRow<O>, options?: A, reloadOptions?: TrableRowReloadOptions): Observable<TrableRow<O>> {
         return of(null).pipe(
             switchMap(() => this.loadEntityRow(row.item, options)),
-            switchMap(loadedEntity => {
+            switchMap((loadedEntity) => {
                 const newRow = this.mapToTrableRow(loadedEntity, row.parent, options);
                 // Copy state from original row
                 newRow.expanded = row.expanded;
@@ -107,10 +101,10 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
         return of(null).pipe(
             switchMap(() => this.loadEntityChildren(row.item, options)),
-            switchMap(newChildren => {
+            switchMap((newChildren) => {
                 const newRow = this.mapToTrableRow(row.item, row.parent, options);
-                const newChildRows = newChildren.map(child => this.mapToTrableRow(child, row, options));
-                const newChildIds = new Set(newChildRows.map(child => child.id));
+                const newChildRows = newChildren.map((child) => this.mapToTrableRow(child, row, options));
+                const newChildIds = new Set(newChildRows.map((child) => child.id));
                 const oldChildMap: Record<string, TrableRow<O>> = {};
 
                 if (row.children) {
@@ -122,7 +116,7 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
                 }
 
                 const toLoad: TrableRow<O>[] = [];
-                newRow.children = newChildRows.map(childRow => {
+                newRow.children = newChildRows.map((childRow) => {
                     const old = oldChildMap[childRow.id];
                     if (old) {
                         // Restore the state of the old row
@@ -149,13 +143,13 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
                 }
 
                 // Recursively load the descendant data otherwise
-                return forkJoin(toLoad.map(child => this.reloadDescendants(child, options))).pipe(
-                    map(refreshedChildren => {
+                return forkJoin(toLoad.map((child) => this.reloadDescendants(child, options))).pipe(
+                    map((refreshedChildren) => {
                         const map = refreshedChildren.reduce((acc, child) => {
                             acc[child.id] = child;
                             return acc;
                         }, {});
-                        newRow.children = newRow.children.map(child => map[child.id] ? map[child.id] : child);
+                        newRow.children = newRow.children.map((child) => map[child.id] ? map[child.id] : child);
 
                         return newRow;
                     }),
@@ -167,7 +161,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     /**
      * Loads the children of a row and sets them correctly into the row.
      * Also updates the state of the row an properly manages the relationship.
-     *
      * @param row The row from which the children should be loaded from.
      * @param options The options which are forwarded to `loadEntityChildren` when loading the children.
      * @returns An Observable which emits one or multiple children which have been loaded.
@@ -175,7 +168,7 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     public loadRowChildren(row: TrableRow<O> | null, options?: A): Observable<TrableRow<O>[]> {
         return of(null).pipe(
             switchMap(() => this.loadEntityChildren(row?.item, options)),
-            map(children => children.map(child => this.mapToTrableRow(child, row, options))),
+            map((children) => children.map((child) => this.mapToTrableRow(child, row, options))),
         );
     }
 
@@ -188,7 +181,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
 
     /**
      * Maps the provided entity to a TrableRow to be displayed in a trable component.
-     *
      * @param entity The entity/item to map to a row
      * @param parent The parent of the row, or absent when it's a root element.
      * @param options The additional options used to load this entity
@@ -207,6 +199,6 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
             loaded: false,
             children: [],
             parent,
-        }
+        };
     }
 }

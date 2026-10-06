@@ -98,7 +98,7 @@ export type ConstructBO = TagType & BusinessObject;
 export type ConstructCategoryBO = ConstructCategory & SortableBusinessObject;
 export type FolderBO = Folder & BusinessObject;
 export type PermissionsSetBO = PermissionsSet & BusinessObject & {
-    group: Group,
+    group: Group;
     categorized: IndexByKey<PermissionInfo[]>;
 };
 export type ContentPackageBO = ContentPackage & BusinessObject;

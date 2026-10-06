@@ -1,10 +1,10 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, PermissionsCategorizer, PermissionsSetBO } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { AccessControlledType, Group, GroupPermissionsListOptions, PermissionsSet } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { AccessControlledType, Group, GroupPermissionsListOptions, GroupTypeOrInstancePermissionsResponse, PermissionsSet } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, PermissionsCategorizer, PermissionsSetBO } from '../../../common';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 
 export interface PermissionsTrableLoaderOptions {
@@ -22,20 +22,27 @@ export interface PermissionsTrableLoaderOptions {
 export class PermissionsTrableLoaderService extends BaseTrableLoaderService<PermissionsSet, PermissionsSetBO, PermissionsTrableLoaderOptions> {
 
     constructor(
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
     ) {
         super();
     }
 
     protected loadEntityRow(entity: PermissionsSetBO, options?: PermissionsTrableLoaderOptions): Observable<PermissionsSetBO> {
-        return this.api.group.getGroupInstancePermissions(options.group.id, entity.type, entity.id).pipe(
-            map(res => {
+        let loader: Observable<GroupTypeOrInstancePermissionsResponse>;
+        if (entity.id) {
+            loader = this.client.group.getInstancePermission(options.group.id, entity.type, entity.id);
+        } else {
+            loader = this.client.group.getPermission(options.group.id, entity.type);
+        }
+
+        return loader.pipe(
+            map((res) => {
                 entity.perms = res.perms;
                 entity.categorized = options.categorizer.categorizePermissions(res.perms);
                 entity.roles = res.roles;
                 return entity;
             }),
-        )
+        );
     }
 
     protected loadEntityChildren(parent: PermissionsSetBO | null, options?: PermissionsTrableLoaderOptions): Observable<PermissionsSetBO[]> {
@@ -71,8 +78,8 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
             }
         }
 
-        return this.api.group.getGroupPermissions(options.group.id, loadOptions).pipe(
-            map(res => res.items.map(perm => this.mapToBusinessObject(perm, options))),
+        return this.client.group.listPermissions(options.group.id, loadOptions).pipe(
+            map((res) => res.items.map((perm) => this.mapToBusinessObject(perm, options))),
         );
     }
 
@@ -95,7 +102,7 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
     public mapToBusinessObject(perms: PermissionsSet, context: PermissionsTrableLoaderOptions): PermissionsSetBO {
         return {
             ...perms,
-            [BO_ID]: `${perms.type}_${perms.id}`,
+            [BO_ID]: `${perms.type}${perms.id ? '_' + perms.id : ''}`,
             [BO_PERMISSIONS]: [],
             [BO_DISPLAY_NAME]: perms.label,
             group: context.group,

@@ -9,9 +9,9 @@
     "npm": ">=11"
   },
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "catalogue": "vite --config vite.catalogue.config.ts",
+    "start": "vite --open",
+    "dev": "vite --open",
+    "catalogue": "vite --config vite.catalogue.config.ts --open",
     "mock:genaix": "../../../api-contract/mocks/genaix-mock/run.sh",
     "build": "tsc -b && vite build",
     "preview": "vite preview",

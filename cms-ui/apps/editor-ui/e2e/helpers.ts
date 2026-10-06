@@ -743,10 +743,9 @@ export async function fgAddPaletteItemToGrid(grid: Locator, item: Locator, targe
         return containerEl.locator('> .form-item');
     }
 
-    return containerEl.locator('> .form-item')
-        .filter({
-            hasNot: containerEl.locator(entries.map((ent) => `> .form-item[data-element-id="${ent.id}"]`).join(',')),
-        });
+    // Exclude the elements which were already present, so only the newly added one remains.
+    // Note: `filter({ hasNot })` can't be used for this, as it only checks descendants, not the element itself.
+    return containerEl.locator(`> .form-item${entries.map((ent) => `:not([data-element-id="${ent.id}"])`).join('')}`);
 }
 
 export async function fgAddControl(grid: Locator, controlId: string, target?: FGDropTarget): Promise<Locator> {

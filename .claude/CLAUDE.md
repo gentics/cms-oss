@@ -47,7 +47,7 @@ If following TDD is not possible according to the task investigation results, pr
       - db
  ```
 - JUnit 4 (`org.junit.Test`, `@RunWith(Parameterized.class)` is common) with AssertJ (`assertThat`, preferred in new tests) and the classic `org.junit.Assert` methods.
-- Tests needing a database use a `DBTestContext`, usually as `@ClassRule` (156×, `@Rule` 41× in `cms-core` tests; `new DBTestContext().config(…)`); the database comes from the testdb docker containers (MariaDB + `gcn-testdb-manager`) started by the build (see `testdb.*`  properties in the root `pom.xml`). Docker must be available.
+- Tests needing a database use a `DBTestContext`, usually as `@ClassRule` (`@Rule` in `cms-core` tests; `new DBTestContext().config(…)`); the database comes from the testdb docker containers (MariaDB + `gcn-testdb-manager`) started by the build (see `testdb.*`  properties in the root `pom.xml`). Docker must be available.
 - Tests needing Gentics Mesh are tagged `@Category(MeshTest.class)`.
 - Surefire reruns failing tests once (`surefire.rerunFailingTestsCount=1`) – a test that only passes on rerun is flaky and must be reported, not ignored.
 - Run a single test the way CI does:

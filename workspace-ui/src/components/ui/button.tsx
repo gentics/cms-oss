@@ -13,6 +13,7 @@ const buttonVariants = cva(
                 secondary: 'border-line2 bg-surface text-ink not-data-disabled:hover:border-azure not-data-disabled:hover:bg-azure/6 not-data-disabled:active:bg-azure/14',
                 ghost: 'text-ink not-data-disabled:hover:bg-azure/10 not-data-disabled:active:bg-azure/14',
                 danger: 'border-err/30 bg-surface text-err not-data-disabled:hover:border-err not-data-disabled:hover:bg-errbg',
+                'ghost-danger': 'text-slate not-data-disabled:hover:bg-errbg not-data-disabled:hover:text-err',
                 solid: 'bg-solid text-white',
             },
             size: {

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GenaixApiError } from '@/services/apiService/apiService';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
-import { useMe, useSendMessage, useSessionMessages, useSessions, useWorkflows } from './useGenaixQueries';
+import { useArchiveSession, useMe, useSendMessage, useSessionMessages, useSessions, useWorkflows } from './useGenaixQueries';
 
 function wrapper({ children }: { children: ReactNode }) {
     // The hooks' own retry settings apply; the client adds none.
@@ -87,6 +87,27 @@ describe('GenAIx query hooks', () => {
         ]);
         expect(result.current.data?.pages.flatMap((page) => page.items)).toEqual([{ id: 's-1' }, { id: 's-2' }]);
         expect(result.current.hasNextPage).toBe(false);
+    });
+
+    it('useArchiveSession sends DELETE and refetches the session lists, which no longer hold the session', async () => {
+        const fetchMock = stubFetch(
+            Response.json({ items: [{ id: 's-1' }, { id: 's-2' }], next_cursor: null }),
+            new Response(null, { status: 204 }),
+            Response.json({ items: [{ id: 's-2' }], next_cursor: null }),
+        );
+
+        const { result } = renderHook(() => ({ sessions: useSessions(), archive: useArchiveSession() }), { wrapper });
+
+        await waitFor(() => expect(result.current.sessions.isSuccess).toBe(true));
+
+        await act(() => result.current.archive.mutateAsync('s-1'));
+
+        expect(fetchMock.mock.calls.map(([url, init]) => [init?.method ?? 'GET', url])).toEqual([
+            ['GET', '/genaix/api/v1/sessions'],
+            ['DELETE', '/genaix/api/v1/sessions/s-1'],
+            ['GET', '/genaix/api/v1/sessions'],
+        ]);
+        await waitFor(() => expect(result.current.sessions.data?.pages.flatMap((page) => page.items)).toEqual([{ id: 's-2' }]));
     });
 
     describe('useSendMessage', () => {

@@ -31,14 +31,18 @@ export async function toHttpError(url: string, response: Response): Promise<Http
     return new HttpError(url, response.status, body, response.headers);
 }
 
-// Sends a request and returns its JSON body. The body is typed by the caller and not
-// validated at runtime. A response that is not successful is thrown as `toError` builds it, by
-// default an `HttpError`.
+// Sends a request and returns its JSON body, or `undefined` for a `204 No Content`. The body is
+// typed by the caller and not validated at runtime. A response that is not successful is thrown as
+// `toError` builds it, by default an `HttpError`.
 export async function httpRequest<T>(url: string, init?: RequestInit, toError: ToHttpError = toHttpError): Promise<T> {
     const response = await fetch(url, init);
 
     if (!response.ok) {
         throw await toError(url, response);
+    }
+
+    if (response.status === 204) {
+        return undefined as T;
     }
 
     return response.json() as Promise<T>;

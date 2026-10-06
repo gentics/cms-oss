@@ -146,6 +146,12 @@ export function listSessions(filters: SessionFilters = {}, page: PageParams = {}
     return genaixRequest<SessionPage>(`/sessions${queryString({ ...filters, ...page })}`);
 }
 
+// DELETE /sessions/{session_id}: archives the session (soft delete, `204`). Idempotent; an active
+// run is cancelled first. Archived sessions drop out of the default `GET /sessions`.
+export function archiveSession(sessionId: string): Promise<void> {
+    return genaixRequest<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
+}
+
 // GET /sessions/{session_id}/messages: oldest first, paged by `next_cursor`.
 export function listMessages(sessionId: string, page: PageParams = {}): Promise<MessagePage> {
     return genaixRequest<MessagePage>(`/sessions/${encodeURIComponent(sessionId)}/messages${queryString({ ...page })}`);

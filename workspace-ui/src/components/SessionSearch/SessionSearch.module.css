@@ -1,0 +1,50 @@
+/* Search field above the session rows (design.md §12 "Eingabefelder", §3.2 focus halo;
+   final_draft.html `.sfind`). Only the rows scroll. */
+.search {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.field {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  margin: 9px 9px 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line-field);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--muted);
+  transition: border-color var(--dur-state) var(--ease), box-shadow var(--dur-state) var(--ease);
+
+  &:focus-within {
+    border-color: var(--azure);
+    box-shadow: 0 0 0 3px rgba(var(--az-rgb), .16);
+  }
+
+  & input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-base);
+
+    &::placeholder {
+      color: var(--muted);
+    }
+  }
+}
+
+.results {
+  flex: 1;
+  min-height: 0;
+  padding: 0 9px 12px;
+  overflow-y: auto;
+}

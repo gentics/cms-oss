@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpError } from '@/services/httpService/httpService';
 
 import {
+    archiveSession,
     GenaixApiError,
     genaixRetry,
     genaixRetryDelay,
@@ -141,6 +142,17 @@ describe('routes', () => {
         await listSessions();
 
         expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions');
+    });
+
+    it('archiveSession sends DELETE /sessions/{session_id} and resolves on 204', async () => {
+        const fetchMock = stubFetch(new Response(null, { status: 204 }));
+
+        await expect(archiveSession('s 1')).resolves.toBeUndefined();
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/genaix/api/v1/sessions/s%201');
+        expect(init?.method).toBe('DELETE');
     });
 
     it('listMessages pages the messages of one session', async () => {

@@ -1,6 +1,7 @@
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+    archiveSession,
     genaixRetry,
     genaixRetryDelay,
     getMe,
@@ -18,6 +19,8 @@ export const genaixKeys = {
     all: ['genaix'] as const,
     me: () => ['genaix', 'me'] as const,
     workflows: () => ['genaix', 'workflows'] as const,
+    /** Prefix of every session list, whatever its filters. */
+    sessionLists: () => ['genaix', 'sessions', 'list'] as const,
     sessionList: (filters: SessionFilters = {}) => ['genaix', 'sessions', 'list', filters] as const,
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
 };
@@ -42,6 +45,20 @@ export function useSessions(filters: SessionFilters = {}) {
         queryFn: ({ pageParam }) => listSessions(filters, { cursor: pageParam }),
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+        ...retryOptions,
+    });
+}
+
+/**
+ * DELETE /sessions/{session_id}: archives the session, then refetches every session list, which no
+ * longer contains it. Retried like a query: the call is idempotent.
+ */
+export function useArchiveSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (sessionId: string) => archiveSession(sessionId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
         ...retryOptions,
     });
 }

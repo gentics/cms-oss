@@ -156,6 +156,9 @@ export function Catalogue() {
                             <Button variant="primary" size="icon-lg" aria-label={t('catalogue.buttons.send')}>
                                 <ArrowUpIcon />
                             </Button>
+                            <Button variant="ghost-danger" size="icon" aria-label={t('catalogue.buttons.delete')}>
+                                <TrashIcon size={16} />
+                            </Button>
                         </State>
                     </div>
                 </Section>

@@ -13,6 +13,12 @@ describe('httpRequest', () => {
         await expect(httpRequest('/genaix/api/v1/me')).resolves.toEqual({ ok: true });
     });
 
+    it('returns undefined for a 204 without reading a body', async () => {
+        vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 204 })));
+
+        await expect(httpRequest('/genaix/api/v1/sessions/s-1', { method: 'DELETE' })).resolves.toBeUndefined();
+    });
+
     it('rejects when the response is not successful', async () => {
         vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 401 })));
 

@@ -1,0 +1,83 @@
+/* Session rows (design.md §12 "Listenzeile", §3.2; final_draft.html `.srow`, `.sdel`). */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+}
+
+/* Room on the right for the delete button. */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 36px 7px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  color: var(--ink);
+  font-size: var(--fs-base);
+  text-decoration: none;
+  transition: background-color var(--dur-state) var(--ease);
+
+  &:hover {
+    background: var(--tint);
+  }
+
+  &[aria-current='page'] {
+    border-color: rgba(var(--az-rgb), .26);
+    background: rgba(var(--az-rgb), .09);
+  }
+}
+
+.name {
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+/* Appears on hover or focus of its row. */
+.delete {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity var(--dur-state) var(--ease);
+
+  .item:hover &,
+  .item:focus-within & {
+    opacity: 1;
+  }
+}
+
+.more {
+  display: flex;
+  padding: 4px 0;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 9px;
+  color: var(--slate);
+  font-size: var(--fs-sm);
+
+  & p {
+    margin: 0;
+  }
+}

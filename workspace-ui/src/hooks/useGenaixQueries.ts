@@ -1,8 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
-    createSession,
     archiveSession,
+    createSession,
     genaixRetry,
     genaixRetryDelay,
     getMe,
@@ -58,7 +58,6 @@ export function useSessions(filters: SessionFilters = {}) {
         ...retryOptions,
     });
 }
-
 /** GET /sessions/{session_id}: the session, its `status` included. */
 export function useSession(sessionId: string) {
     return useQuery({ queryKey: genaixKeys.session(sessionId), queryFn: () => getSession(sessionId), ...retryOptions });

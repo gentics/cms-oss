@@ -43,34 +43,3 @@
     display: none;
   }
 }
-
-.iconButton {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--r-md);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background 130ms cubic-bezier(0.2, 0.8, 0.2, 1), color 130ms cubic-bezier(0.2, 0.8, 0.2, 1);
-
-  &:hover {
-    background: rgba(var(--az-rgb), 0.1);
-    color: var(--ink);
-  }
-
-  &:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .iconButton {
-    transition-duration: 0ms;
-  }
-}

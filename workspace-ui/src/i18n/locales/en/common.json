@@ -203,5 +203,63 @@
             "deleted": "Page deleted",
             "undo": "Undo"
         }
+    },
+    "errors": {
+        "genaix": {
+            "malformed_request": "The request was not valid.",
+            "invalid_cursor": "The list position is no longer valid. Please reload the list.",
+            "subject_missing": "Your user could not be identified.",
+            "identity_invalid": "Your identity could not be verified.",
+            "unsupported_accept": "The server cannot send the requested format.",
+            "invalid_installation_token": "The connection to the AI service is not set up correctly.",
+            "session_forbidden": "You don't have access to this session.",
+            "session_not_found": "The session was not found.",
+            "run_not_found": "The run was not found.",
+            "file_not_found": "The file was not found.",
+            "interaction_not_found": "The question was not found.",
+            "unknown_workflow": "The workflow is not known.",
+            "run_already_active": "A run is already in progress in this session.",
+            "session_released": "The session has been closed.",
+            "workflow_transition_invalid": "This step is not possible in the workflow right now.",
+            "interaction_already_answered": "This question has already been answered.",
+            "interaction_expired": "This question has expired.",
+            "events_pruned": "Older updates are no longer available. The session is being reloaded.",
+            "file_too_large": "The file is too large.",
+            "unsupported_media_type": "This file type is not supported.",
+            "validation_failed": "Some of the entered data is not valid.",
+            "quality_gate_failed": "The result did not pass the quality check.",
+            "cms_object_locked": "The CMS object is locked by someone else.",
+            "mcp_connection_not_found": "The connection was not found.",
+            "mcp_connection_limit": "The maximum number of connections has been reached.",
+            "mcp_authorization_required": "The connection needs to be authorized.",
+            "mcp_authorization_rejected": "The authorization of the connection was rejected.",
+            "mcp_unreachable": "The connected service cannot be reached.",
+            "cms_request_failed": "The request to the CMS failed.",
+            "model_error": "The AI model returned an error.",
+            "model_rate_limited": "The AI model is busy. Please try again shortly.",
+            "rate_limited": "Too many requests. Please try again shortly.",
+            "service_unavailable": "The AI service is currently unavailable."
+        },
+        "cms": {
+            "AUTHREQUIRED": "Please log in to the CMS.",
+            "PERMISSION": "You don't have permission for this in the CMS.",
+            "NOTFOUND": "The CMS object was not found.",
+            "INVALIDDATA": "The CMS rejected the data as invalid.",
+            "LOCKED": "The CMS object is locked by someone else.",
+            "MAINTENANCEMODE": "The CMS is in maintenance mode.",
+            "NOTLICENSED": "This CMS feature is not licensed.",
+            "FAILURE": "An unexpected error occurred in the CMS."
+        },
+        "http": {
+            "unauthorized": "You are not logged in.",
+            "forbidden": "You don't have permission for this.",
+            "notFound": "The requested resource was not found.",
+            "tooManyRequests": "Too many requests. Please try again shortly.",
+            "server": "The server ran into an error.",
+            "failed": "The request failed."
+        },
+        "network": "The server could not be reached. Please check your connection.",
+        "invalidResponse": "The server sent a response that could not be read.",
+        "unknown": "An unexpected error occurred."
     }
 }

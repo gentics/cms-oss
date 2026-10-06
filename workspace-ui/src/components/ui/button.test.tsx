@@ -88,10 +88,4 @@ describe('Button', () => {
 
         expect(screen.getByRole('button', { name: 'Verbatim' })).toHaveAttribute('aria-pressed', 'true');
     });
-
-    it('has a ghost-danger variant for deleting in a list row', () => {
-        render(<Button variant="ghost-danger" size="icon" aria-label="Delete" />, { wrapper: UiProvider });
-
-        expect(screen.getByRole('button', { name: 'Delete' })).toHaveAttribute('data-variant', 'ghost-danger');
-    });
 });

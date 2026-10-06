@@ -26,6 +26,27 @@ const tailwindClassPattern = `/${[
     ')',
 ].join('')}/`;
 
+// Outside the component layer: no Tailwind classes (they produce no CSS, see ui.css).
+const tailwindRestrictions = [
+    {
+        selector: `JSXAttribute[name.name='className'] Literal[value=${tailwindClassPattern}]`,
+        message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
+    },
+    {
+        selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=${tailwindClassPattern}]`,
+        message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
+    },
+];
+
+// Outside the component layer: no native elements the layer already provides, and no hand-drawn
+// icons (design.md §9: Lucide). A missing variant is added in src/components/ui instead.
+const componentRestrictions = [
+    ['button', 'Use Button from @/components/ui/button. Add a variant there if one is missing.'],
+    ['select', 'Use Select from @/components/ui/select.'],
+    ['dialog', 'Use Dialog or Drawer from @/components/ui.'],
+    ['svg', 'Use a Lucide icon from lucide-react (design.md §9), not an inline <svg>.'],
+].map(([element, message]) => ({ selector: `JSXOpeningElement[name.name='${element}']`, message }));
+
 export default defineConfig([
     // Files that should never be linted.
     {
@@ -178,8 +199,9 @@ export default defineConfig([
         },
     },
 
-    // Tailwind only in the component layer (src/components/ui, see ui.css). Elsewhere a Tailwind
-    // class would silently produce no CSS (`@source` in ui.css), so it is reported here instead.
+    // Tailwind and native controls only in the component layer (src/components/ui, see ui.css).
+    // Elsewhere a Tailwind class would silently produce no CSS (`@source` in ui.css), and a native
+    // control would bypass the design of the layer, so both are reported here instead.
     {
         files: ['src/**/*.{ts,tsx}'],
 
@@ -202,17 +224,7 @@ export default defineConfig([
                 },
             ],
 
-            'no-restricted-syntax': [
-                'error',
-                {
-                    selector: `JSXAttribute[name.name='className'] Literal[value=${tailwindClassPattern}]`,
-                    message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
-                },
-                {
-                    selector: `JSXAttribute[name.name='className'] TemplateElement[value.raw=${tailwindClassPattern}]`,
-                    message: 'Tailwind classes are only allowed in src/components/ui. Use a CSS Module here.',
-                },
-            ],
+            'no-restricted-syntax': ['error', ...tailwindRestrictions, ...componentRestrictions],
         },
     },
 

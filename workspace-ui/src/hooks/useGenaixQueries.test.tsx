@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GenaixApiError } from '@/services/apiService/apiService';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
-import {
-    useArchiveSession, useMe,
+import { useArchiveSession,
+    useMe,
     useSendMessage,
     useSendTurn,
     useSession,

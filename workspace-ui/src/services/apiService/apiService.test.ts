@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpError } from '@/services/httpService/httpService';
 
 import {
-    createSession,
     archiveSession,
+    createSession,
     GenaixApiError,
     genaixRetry,
     genaixRetryDelay,

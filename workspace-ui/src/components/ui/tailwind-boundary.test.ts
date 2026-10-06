@@ -60,3 +60,27 @@ describe('Tailwind boundary (eslint.config.js)', () => {
         expect(await lintRules(code, 'src/components/ui/a.tsx')).toEqual([]);
     });
 });
+
+describe('Component boundary (eslint.config.js)', () => {
+    it('reports native controls and inline icons outside src/components/ui', async () => {
+        const code = [
+            'export function A() {',
+            '    return <div><button type="button" /><select /><dialog /><svg /></div>;',
+            '}',
+            '',
+        ].join('\n');
+
+        expect(await lintRules(code, 'src/feature/A.tsx')).toEqual(Array(4).fill('no-restricted-syntax'));
+    });
+
+    it('allows them inside src/components/ui', async () => {
+        const code = [
+            'export function A() {',
+            '    return <div><button type="button" /><svg /></div>;',
+            '}',
+            '',
+        ].join('\n');
+
+        expect(await lintRules(code, 'src/components/ui/a.tsx')).toEqual([]);
+    });
+});

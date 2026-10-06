@@ -85,13 +85,14 @@ function measure() {
     });
 }
 
-function renderLayout(isLeftColumnVisible = true) {
+function renderLayout(isLeftColumnVisible = true, isRightColumnVisible = true) {
     const result = render(
         <WorkspaceLayout
             left={<p data-testid="left">Sessions</p>}
             center={<p data-testid="center">Chat</p>}
             right={<p data-testid="right">Preview</p>}
             isLeftColumnVisible={isLeftColumnVisible}
+            isRightColumnVisible={isRightColumnVisible}
         />,
     );
 
@@ -277,5 +278,25 @@ describe('WorkspaceLayout', () => {
         expect(screen.getByTestId('left')).not.toBeVisible();
         expect(screen.queryByRole('separator', { name: 'Width of the left column' })).not.toBeInTheDocument();
         expect(rightSplitter()).toHaveAttribute('aria-valuemax', String(1200 - 9 - 320));
+    });
+
+    it('hides the right column and its splitter while there is no preview, but keeps the content mounted', () => {
+        renderLayout(true, false);
+
+        expect(screen.getByTestId('right')).not.toBeVisible();
+        expect(screen.queryByRole('separator', { name: 'Width of the right column' })).not.toBeInTheDocument();
+        expect(screen.getByText('Sessions')).toBeVisible();
+        expect(screen.getByText('Chat')).toBeVisible();
+        // The left column may take the room of the hidden right column and its splitter.
+        expect(leftSplitter()).toHaveAttribute('aria-valuemax', String(1200 - 9 - 320));
+    });
+
+    it('can hide both side columns, leaving only the center', () => {
+        renderLayout(false, false);
+
+        expect(screen.getByTestId('left')).not.toBeVisible();
+        expect(screen.getByTestId('right')).not.toBeVisible();
+        expect(screen.queryAllByRole('separator')).toHaveLength(0);
+        expect(screen.getByText('Chat')).toBeVisible();
     });
 });

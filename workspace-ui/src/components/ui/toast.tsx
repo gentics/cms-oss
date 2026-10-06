@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import { cn } from './utils';
 
-// design.md §12 "Toast": `--solid`, white text, `--r-lg`, `--sh-toast`, icon `#7FC7EA`, optional
-// action `rgba(255,255,255,.14)` / hover `.26`. Error toast: `--errbg`, edge and text in `--err`.
+// design.md §12 "Toast": `--bg-solid`, white text, `--corner-lg`, `--elevation-toast`, icon `#7FC7EA`, optional
+// action `rgba(255,255,255,.14)` / hover `.26`. Error toast: `--error-bg`, edge and text in `--error`.
 // §11: top right, max. 520 px. §10: `drop`.
 
 /** Toast types. Status is never shown by colour alone (§3.3): each type has its own icon. */
@@ -36,7 +36,7 @@ function ToastList() {
                 data-slot="toast"
                 className={cn(
                     'flex w-full items-start gap-10 rounded-lg py-8 pr-8 pl-12 text-base leading-normal shadow-toast',
-                    'animate-drop transition-opacity duration-(--dur-pop) data-ending-style:opacity-0',
+                    'animate-drop transition-opacity duration-(--duration-popover) data-ending-style:opacity-0',
                     // Over the provider's limit Base UI makes the oldest toasts inert; they come back
                     // once a newer one closes.
                     'data-limited:hidden',

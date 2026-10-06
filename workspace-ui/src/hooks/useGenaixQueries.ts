@@ -1,17 +1,26 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+    createSession,
     archiveSession,
     genaixRetry,
     genaixRetryDelay,
     getMe,
+    getSession,
     listMessages,
     listSessions,
     listWorkflows,
     postMessage,
     type SessionFilters,
+    uploadSessionFile,
 } from '@/services/apiService/apiService';
-import type { MessageCreateBody } from '@/services/apiService/genaix/types';
+import type {
+    FileMode,
+    MessageCreateBody,
+    Session,
+    UserFileRefPart,
+    UserMessagePart,
+} from '@/services/apiService/genaix/types';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /** Query keys of the GenAIx server state. */
@@ -22,6 +31,7 @@ export const genaixKeys = {
     /** Prefix of every session list, whatever its filters. */
     sessionLists: () => ['genaix', 'sessions', 'list'] as const,
     sessionList: (filters: SessionFilters = {}) => ['genaix', 'sessions', 'list', filters] as const,
+    session: (sessionId: string) => ['genaix', 'sessions', sessionId] as const,
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
 };
 
@@ -47,6 +57,11 @@ export function useSessions(filters: SessionFilters = {}) {
         getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
         ...retryOptions,
     });
+}
+
+/** GET /sessions/{session_id}: the session, its `status` included. */
+export function useSession(sessionId: string) {
+    return useQuery({ queryKey: genaixKeys.session(sessionId), queryFn: () => getSession(sessionId), ...retryOptions });
 }
 
 /**
@@ -95,6 +110,85 @@ export function useSendMessage(sessionId: string) {
             if (context) {
                 useWorkspaceEventStore.getState().markSendFailed(sessionId, context.localId, error);
             }
+        },
+        retry: false,
+    });
+}
+
+/** The workflow a session started from the dashboard runs. */
+export const START_WORKFLOW = 'content_research';
+
+/** A file attached to the first message, and how its wording is treated. */
+export interface StartFile {
+    file: File;
+    mode: FileMode;
+}
+
+export interface StartSessionInput {
+    parts: UserMessagePart[];
+    files: StartFile[];
+}
+
+// Without files, one call creates the session with its first message. Files are per session, so
+// with files the session is created first, then the files are uploaded, then the message is posted
+// with a `file_ref` part per file (contract, `SessionCreate`).
+// Uploads the files into the session, one after the other, and returns a `file_ref` part per file
+// for the message that refers to them.
+async function uploadFileParts(sessionId: string, files: StartFile[]): Promise<UserFileRefPart[]> {
+    const fileParts: UserFileRefPart[] = [];
+
+    for (const { file, mode } of files) {
+        const stored = await uploadSessionFile(sessionId, file, mode);
+
+        fileParts.push({ type: 'file_ref', file_id: stored.id, mode });
+    }
+
+    return fileParts;
+}
+
+async function startSession({ parts, files }: StartSessionInput): Promise<Session> {
+    if (files.length === 0) {
+        return createSession({ workflow: START_WORKFLOW, message: { parts } });
+    }
+
+    const session = await createSession({ workflow: START_WORKFLOW });
+    const fileParts = await uploadFileParts(session.id, files);
+
+    await postMessage(session.id, { parts: [...parts, ...fileParts] });
+
+    return session;
+}
+
+/**
+ * Starts a session from the dashboard and puts it into the `genaixKeys.session` cache, so the
+ * session view has it, its `status` included, without another request. Never retried: a repeat
+ * would create a second session.
+ */
+export function useStartSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: startSession,
+        onSuccess: (session) => {
+            queryClient.setQueryData(genaixKeys.session(session.id), session);
+        },
+        retry: false,
+    });
+}
+
+/**
+ * Sends a turn from the session's chat composer: uploads its files, then posts the message through
+ * `useSendMessage`, which records the turn in `useWorkspaceEventStore`. Never retried, like
+ * `useSendMessage`: a repeat would upload and send twice.
+ */
+export function useSendTurn(sessionId: string) {
+    const { mutateAsync: sendMessage } = useSendMessage(sessionId);
+
+    return useMutation({
+        mutationFn: async ({ parts, files }: StartSessionInput) => {
+            const fileParts = await uploadFileParts(sessionId, files);
+
+            return sendMessage({ parts: [...parts, ...fileParts] });
         },
         retry: false,
     });

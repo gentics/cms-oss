@@ -1,0 +1,35 @@
+/* The middle column: the stream scrolls, the composer floats over its bottom with a fade to the
+   canvas behind it (draft `.composerwrap`; design.md §11 "Chat": max. 760 px). */
+.chat {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Room for the composer floating over the end of the stream. */
+  padding-bottom: 140px;
+}
+
+.dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  padding: 26px 18px 14px;
+  background: linear-gradient(transparent, var(--bg-canvas) 42%);
+  pointer-events: none;
+}
+
+/* Not nested: jsdom (tests) ignores nested rules, and the composer would stay unclickable there. */
+.dock > * {
+  max-width: 760px;
+  margin: 0 auto;
+  pointer-events: auto;
+}

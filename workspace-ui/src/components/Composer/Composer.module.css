@@ -1,0 +1,112 @@
+/* The prompt of the dashboard (draft `.prompt`, `.startacts`; design.md §11 "Dashboard", §12 "Senden /
+   Mikrofon") and, as `.chat`, of a session's chat (draft `.composer`). The buttons are the layer's
+   `Button`, the voice input is `VoiceInput`; this module styles only what is around them. */
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* No box: text on the surface, a soft tinted area on focus and while dictating. */
+.prompt {
+  margin: 0 -10px;
+  padding: 6px 10px;
+  border-radius: var(--corner-xl);
+  background: transparent;
+  transition: background var(--duration-popover) var(--easing);
+
+  &.focus,
+  &.listening {
+    background: rgba(var(--interactive-rgb), 0.07);
+  }
+}
+
+.line {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Wrapper of the AttachmentList, so the mobile rules below can collapse it. */
+.attachments {
+  display: contents;
+}
+
+/* Wrapper of the inline VoiceInput, so the mobile rules below can hide it. */
+.inlineVoice {
+  display: inline-flex;
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: -4px -9px 0;
+}
+
+.fileInput {
+  display: none;
+}
+
+/* The chat composer as a box (draft `.composer`; design.md §12: `--corner-2xl`, `--border-strong`,
+   `--elevation-float` while it floats over the stream, §8 focus of a text field). */
+.chat {
+  & .prompt {
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--corner-2xl);
+    background: var(--bg-surface);
+    box-shadow: var(--elevation-float);
+    /* Text starts at the left, whatever the page around it centres. */
+    text-align: left;
+    transition: border-color var(--duration-state) var(--easing), box-shadow var(--duration-state) var(--easing);
+
+    &.focus {
+      border-color: var(--interactive);
+      box-shadow: var(--elevation-float), 0 0 0 3px rgba(var(--interactive-rgb), 0.16);
+    }
+
+    &.focus,
+    &.listening {
+      background: var(--bg-surface);
+    }
+  }
+
+  & .actions {
+    margin: 3px -6px 0;
+  }
+}
+
+/* Mobile, voice first: the big mic is the main input; hidden on wider screens. */
+.voiceStart {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 4px;
+}
+
+@media (max-width: 640px) {
+  .voiceStart {
+    display: flex;
+  }
+
+  /* The big mic takes its place; one mic is enough. */
+  .inlineVoice {
+    display: none;
+  }
+
+  /* Collapsed until the user asks for it with "Type instead" (or dictates into it). */
+  .voiceFirst .line,
+  .voiceFirst .attachments,
+  .voiceFirst .actions {
+    display: none;
+  }
+
+  /* The chat's box would stay as an empty frame. */
+  .voiceFirst.chat .prompt {
+    display: none;
+  }
+}

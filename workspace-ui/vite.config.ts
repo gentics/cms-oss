@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     // they never reach the browser bundle. The GenAIx defaults are the local GenAIx mock
     // (`npm run mock:genaix`) and its fixture credentials; see `.env.example`.
     const env = loadEnv(mode, import.meta.dirname, ['GENAIX_', 'CMS_']);
-    const genaixApiUrl = env.GENAIX_API_URL || 'http://localhost:8080/api/v1';
+    const genaixApiUrl = env.GENAIX_API_URL || 'http://localhost:8123/api/v1';
     const genaixApiToken = env.GENAIX_API_TOKEN || 'sk_gnx_mock';
     const genaixSubject = env.GENAIX_SUBJECT || 'sub_workspace_dev';
     const cmsProxyTarget = env.CMS_PROXY_TARGET;

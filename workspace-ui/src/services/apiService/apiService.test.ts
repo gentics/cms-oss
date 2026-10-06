@@ -3,16 +3,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpError } from '@/services/httpService/httpService';
 
 import {
+    createSession,
     archiveSession,
     GenaixApiError,
     genaixRetry,
     genaixRetryDelay,
     getMe,
+    getSession,
     isRetryableGenaixError,
     listMessages,
     listSessions,
     listWorkflows,
     postMessage,
+    uploadSessionFile,
 } from './apiService';
 
 function stubFetch(response: Response) {
@@ -176,6 +179,46 @@ describe('routes', () => {
         expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
         expect(new Headers(init?.headers).get('Accept')).toBe('application/json');
         expect(JSON.parse(init?.body as string)).toEqual({ content: 'Hello' });
+    });
+
+    it('createSession posts the session with its first message as JSON and returns the created session', async () => {
+        const created = { id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' };
+        const fetchMock = stubFetch(Response.json(created, { status: 201 }));
+        const body = { workflow: 'content_research', message: { parts: [{ type: 'text' as const, text: 'Hello' }] } };
+
+        await expect(createSession(body)).resolves.toEqual(created);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/genaix/api/v1/sessions');
+        expect(init?.method).toBe('POST');
+        expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual(body);
+    });
+
+    it('getSession loads one session', async () => {
+        const fetchMock = stubFetch(Response.json({ id: 's 1', status: 'published' }));
+
+        await expect(getSession('s 1')).resolves.toEqual({ id: 's 1', status: 'published' });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s%201');
+    });
+
+    it('uploadSessionFile posts the file and its mode as multipart and returns the stored file', async () => {
+        const stored = { id: 'f-1', name: 'brief.txt', mode: 'verbatim' };
+        const fetchMock = stubFetch(Response.json(stored, { status: 201 }));
+        const file = new File(['text'], 'brief.txt', { type: 'text/plain' });
+
+        await expect(uploadSessionFile('s-1', file, 'verbatim')).resolves.toEqual(stored);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+        const body = init?.body as FormData;
+
+        expect(url).toBe('/genaix/api/v1/sessions/s-1/files');
+        expect(init?.method).toBe('POST');
+        expect(new Headers(init?.headers).has('Content-Type')).toBe(false);
+        expect(body.get('file')).toBeInstanceOf(File);
+        expect((body.get('file') as File).name).toBe('brief.txt');
+        expect(body.get('mode')).toBe('verbatim');
     });
 });
 

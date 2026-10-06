@@ -11,7 +11,9 @@ const buttonVariants = cva(
             variant: {
                 primary: 'border-akzent bg-akzent text-white not-data-disabled:hover:border-azure not-data-disabled:hover:bg-azure',
                 secondary: 'border-line2 bg-surface text-ink not-data-disabled:hover:border-azure not-data-disabled:hover:bg-azure/6 not-data-disabled:active:bg-azure/14',
-                ghost: 'text-ink not-data-disabled:hover:bg-azure/10 not-data-disabled:active:bg-azure/14',
+                // `aria-pressed`: a toggle that is on (design.md §3.2 "Gedrückt / an"). Not on
+                // `secondary`, which marks the active segment of a switcher (§12 "Segment-Umschalter").
+                ghost: 'text-ink not-data-disabled:hover:bg-azure/10 not-data-disabled:active:bg-azure/14 aria-pressed:bg-azure/14',
                 danger: 'border-err/30 bg-surface text-err not-data-disabled:hover:border-err not-data-disabled:hover:bg-errbg',
                 'ghost-danger': 'text-slate not-data-disabled:hover:bg-errbg not-data-disabled:hover:text-err',
                 solid: 'bg-solid text-white',
@@ -20,8 +22,12 @@ const buttonVariants = cva(
                 default: 'px-12 py-8',
                 sm: 'rounded-md px-10 py-4 text-sm',
                 icon: 'size-28 rounded-md p-0',
+                // Mini buttons inside chips and passages (design.md §6.1 "Mini-Schließen-Buttons").
+                'icon-xs': 'size-18 rounded-xs p-0',
                 // Send on the dashboard (design.md §12 "Senden / Mikrofon").
                 'icon-lg': 'size-34 rounded-lg p-0',
+                // The main voice action on the mobile dashboard.
+                'icon-xl': 'size-72 rounded-full p-0',
             },
         },
         defaultVariants: {

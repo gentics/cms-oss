@@ -1,0 +1,55 @@
+/* The text field of both composers. A locked verbatim passage is DOM inside it (composerParts), so
+   it is styled by its attributes (design.md §12 "Verbatim-Textstelle"). */
+.field {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  outline: none;
+  color: var(--fg-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  &.empty::before {
+    content: attr(data-placeholder);
+    color: var(--fg-muted);
+    pointer-events: none;
+  }
+
+  & [data-verbatim] {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 2px 0 3px;
+    border-bottom: 1px solid var(--interactive);
+    border-radius: var(--corner-xs);
+    background: rgba(var(--interactive-rgb), 0.14);
+    color: var(--fg-primary);
+
+    & > svg {
+      flex: none;
+      color: var(--interactive);
+    }
+  }
+
+  & [data-verbatim-text] {
+    white-space: pre-wrap;
+  }
+}
+
+/* Dashboard: one large line of text on the surface (design.md §5.1, §11). */
+.lg {
+  min-height: 30px;
+  max-height: 150px;
+  padding: 2px 0;
+  font-size: var(--font-size-lg);
+  line-height: 1.5;
+}
+
+/* Chat: the draft's `.input`, 36–150 px high. */
+.base {
+  min-height: 36px;
+  max-height: 150px;
+  padding: 5px 2px;
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}

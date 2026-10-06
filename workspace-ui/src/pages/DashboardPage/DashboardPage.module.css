@@ -1,0 +1,61 @@
+/* The dashboard under the topbar: one prompt, anchored to the top, max. 660 px (design.md §11). */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Anchored to the top, not centred, so a growing field does not push the column upwards. */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: min(28vh, 280px) 28px 60px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.greeting {
+  margin: 0;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: var(--font-size-xl);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.starters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A starter is a ghost Button (design.md §12); the item only lines its text up with the field. */
+.starter {
+  max-width: 100%;
+  margin-left: -12px;
+}
+
+.starterLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

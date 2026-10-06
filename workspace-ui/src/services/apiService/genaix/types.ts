@@ -31,6 +31,9 @@ export type ContextReference = GenaixSchema<'ContextReference'>;
 export type InteractionAnswer = GenaixSchema<'InteractionAnswer'>;
 export type MessagePart = GenaixSchema<'MessagePart'>;
 export type UserMessagePart = GenaixSchema<'UserMessagePart'>;
+export type UserTextPart = GenaixSchema<'UserTextPart'>;
+export type UserVerbatimPart = GenaixSchema<'UserVerbatimPart'>;
+export type UserFileRefPart = GenaixSchema<'UserFileRefPart'>;
 // Prefixed so it does not shadow the DOM `Event` type.
 export type GenaixEvent = GenaixSchema<'Event'>;
 export type GenaixEventType = GenaixSchema<'EventType'>;
@@ -59,6 +62,13 @@ interface MessageCreateFields {
 }
 
 export type MessageCreateBody = MessageCreateFields & ({ parts: UserMessagePart[] } | { content: string });
+
+// `SessionCreate` with its `message` typed as `MessageCreateBody` instead of the generated `unknown`.
+export type SessionCreateBody = Omit<SessionCreate, 'message'> & { message?: MessageCreateBody };
+
+// Files (POST /sessions/{session_id}/files). Prefixed so it does not shadow the DOM `File` type.
+export type SessionFile = GenaixSchema<'File'>;
+export type FileMode = GenaixSchema<'FileMode'>;
 
 // Workflows
 export type Workflow = GenaixSchema<'Workflow'>;

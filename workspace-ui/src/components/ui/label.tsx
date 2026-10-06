@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 
 import { cn } from './utils';
 
-/** Visible field label (design.md §4.2, §5.1: 12 px, 500, `--ink`, above the field). */
+/** Visible field label (design.md §4.2, §5.1: 12 px, 500, `--fg-primary`, above the field). */
 function Label({ className, ...props }: ComponentProps<'label'>) {
     return (
         <label

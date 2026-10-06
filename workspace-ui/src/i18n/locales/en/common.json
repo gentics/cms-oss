@@ -1,5 +1,4 @@
 {
-    "getStarted": "Get started",
     "topbar": {
         "brand": "Gentics Workspace",
         "hideLeftColumn": "Hide the left column",
@@ -11,6 +10,50 @@
         "resizeLeft": "Width of the left column",
         "resizeRight": "Width of the right column",
         "resizeHint": "Drag · double-click resets"
+    },
+    "dashboard": {
+        "greeting": {
+            "night": "Still up, {{name}}",
+            "morning": "Good morning, {{name}}",
+            "afternoon": "Good afternoon, {{name}}",
+            "evening": "Good evening, {{name}}"
+        },
+        "placeholder": "What would you like to do?",
+        "send": "Start a session",
+        "starters": {
+            "shortenIntro": "Shorten the intro on “Products – Overview” to two sentences, keep the formal voice",
+            "landingPage": "Create a new landing page for the partner programme",
+            "untouchedPages": "Which pages have not been changed for half a year?"
+        },
+        "startFailed": "The session could not be started"
+    },
+    "composer": {
+        "file": "File",
+        "verbatim": "Verbatim",
+        "typeInstead": "Type instead",
+        "verbatimHint": "Select the passage that should stay unchanged first.",
+        "verbatimNested": "The selection already contains a locked passage.",
+        "removeVerbatim": "Remove verbatim",
+        "attachment": {
+            "source": "as a source",
+            "verbatim": "verbatim",
+            "toggleMode": "verbatim / as a source",
+            "remove": "Remove"
+        }
+    },
+    "chat": {
+        "placeholder": "What should happen?",
+        "send": "Send",
+        "sendFailed": "The message could not be sent"
+    },
+    "voice": {
+        "start": "Dictate",
+        "stop": "Stop dictating",
+        "unsupported": "Voice input is not available in this browser",
+        "listening": "Listening",
+        "cancel": "Cancel",
+        "tapToSpeak": "Tap to speak",
+        "tapToStop": "Tap to stop"
     },
     "errorNotifications": {
         "cmsTokenFailed": "Getting the CMS token failed"
@@ -75,7 +118,13 @@
             "add": "Add",
             "edit": "Edit",
             "send": "Send",
-            "delete": "Delete"
+            "delete": "Delete",
+            "iconXs": "Mini icon buttons",
+            "pressed": "Pressed (toggle on)",
+            "remove": "Remove",
+            "verbatim": "Verbatim",
+            "iconXl": "Large round icon button",
+            "speak": "Speak"
         },
         "checkbox": {
             "title": "Checkbox",

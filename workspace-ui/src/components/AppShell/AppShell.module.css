@@ -4,8 +4,8 @@
   flex-direction: column;
   height: 100svh;
   overflow: hidden;
-  background: var(--canvas);
-  color: var(--ink);
-  font-size: var(--fs-base);
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
   line-height: 1.45;
 }

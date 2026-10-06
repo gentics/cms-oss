@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
@@ -41,24 +40,10 @@ describe('App', () => {
     });
 
     // The router resolves the route asynchronously, so the page is awaited with findByRole.
-    it('renders the main content', async () => {
+    it('renders the dashboard at /', async () => {
         renderApp();
 
-        expect(await screen.findByRole('heading', { name: 'Get started' })).toBeInTheDocument();
-    });
-
-    it('increments the counter when clicked', async () => {
-        const user = userEvent.setup();
-
-        renderApp();
-
-        const counter = await screen.findByRole('button', { name: 'Count is 0' });
-
-        expect(counter).toBeInTheDocument();
-
-        await user.click(counter);
-
-        expect(screen.getByRole('button', { name: 'Count is 1' })).toBeInTheDocument();
+        expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
     });
 
     // Skipped while useCmsToken() is commented out in App.tsx.

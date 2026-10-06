@@ -33,14 +33,14 @@ function DrawerContent({
         <DrawerPrimitive.Portal>
             <DrawerPrimitive.Backdrop
                 data-slot="drawer-overlay"
-                className="fixed inset-0 z-50 bg-backdrop transition-opacity duration-(--dur-card) data-ending-style:opacity-0 data-starting-style:opacity-0"
+                className="fixed inset-0 z-50 bg-backdrop transition-opacity duration-(--duration-card) data-ending-style:opacity-0 data-starting-style:opacity-0"
             />
             <DrawerPrimitive.Viewport data-slot="drawer-viewport" className="fixed inset-0 z-50 pointer-events-none">
                 <DrawerPrimitive.Popup
                     data-slot="drawer-content"
                     className={cn(
                         'pointer-events-auto fixed inset-y-0 left-0 flex w-[min(380px,calc(100vw-32px))] flex-col border-r border-line2 bg-surface text-base leading-normal text-ink shadow-drawer',
-                        '[transform:translateX(var(--drawer-swipe-movement-x,0px))] transition-[opacity,translate] duration-(--dur-card) data-swiping:duration-0',
+                        '[transform:translateX(var(--drawer-swipe-movement-x,0px))] transition-[opacity,translate] duration-(--duration-card) data-swiping:duration-0',
                         'data-ending-style:-translate-x-24 data-ending-style:opacity-0 data-starting-style:-translate-x-24 data-starting-style:opacity-0',
                         className,
                     )}

@@ -17,7 +17,7 @@
 ## Local mock
 `INDEX.md` says the mock source is not included here. It is in the hand-out repo instead:
 - `git@git.gentics.com:psc/genaix/api-contract.git`, checked out next to `cmp`, so `../../../api-contract` from this app. The GenAIx mock is `mocks/genaix-mock/`, its transcripts are `examples/*.sse` and `mocks/genaix-mock/scripts/*.sse`.
-- Start it with `./run.sh` in `mocks/genaix-mock/` (Python 3.11+, creates `.venv` on first run). It serves `http://localhost:8080/api/v1`.
+- Start it with `npm run mock:genaix` (`GENAIX_MOCK_PORT=8123 ./run.sh` in `mocks/genaix-mock/`; Python 3.11+, creates `.venv` on first run). It serves `http://localhost:8123/api/v1`, the same port as the docker compose stack of the hand-out (`deploy-README.md`). `run.sh` alone defaults to `8080`, which the docs under `contracts/` still name.
 - Fixture credentials only: `Authorization: Bearer sk_gnx_mock` (any `sk_gnx_` token works) and any `X-GCMS-Subject`.
 - Only the GenAIx mock is needed. The CMS MCP mock (`mocks/cms-mcp-mock/`) is not, because the UI never calls the MCP and the GenAIx mock never contacts an MCP server.
 - The mock implements `1.0.0-rc.2` (`genaix_mock/config.py`, `API_VERSION`), although its README still says `1.0.0-draft.3`.

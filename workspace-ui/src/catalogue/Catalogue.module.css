@@ -1,10 +1,10 @@
 /* Catalogue page: plain CSS with the design.md tokens, no Tailwind. */
 .page {
   min-height: 100svh;
-  background: var(--canvas);
-  color: var(--ink);
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
   font-family: var(--font-sans);
-  font-size: var(--fs-base);
+  font-size: var(--font-size-base);
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
@@ -20,16 +20,16 @@
   gap: 12px;
   min-height: 48px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--line);
-  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
 
 .title {
   margin: 0;
-  font-size: var(--fs-md);
+  font-size: var(--font-size-md);
   font-weight: 500;
   letter-spacing: normal;
-  color: var(--ink);
+  color: var(--fg-primary);
 }
 
 .headerControls {
@@ -43,8 +43,8 @@
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border-radius: var(--r-lg);
-  background: var(--tint);
+  border-radius: var(--corner-lg);
+  background: var(--bg-subtle);
 }
 
 .main {
@@ -61,20 +61,20 @@
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-2xl);
-  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-2xl);
+  background: var(--bg-surface);
 }
 
 .sectionTitle {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: var(--fs-overline);
+  font-size: var(--font-size-overline);
   font-weight: 500;
   line-height: 1.45;
   letter-spacing: 0.075em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .grid {
@@ -90,8 +90,8 @@
 }
 
 .stateLabel {
-  font-size: var(--fs-xs);
-  color: var(--muted);
+  font-size: var(--font-size-xs);
+  color: var(--fg-muted);
 }
 
 .stateDemo,

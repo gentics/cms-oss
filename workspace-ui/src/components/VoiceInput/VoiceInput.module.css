@@ -1,0 +1,118 @@
+/* Voice input of both composers (draft `.vmic`, `.vwave`, `.vclock`; design.md §12 "Senden /
+   Mikrofon": pulse while listening, wave bars 3 px, time in tabular-nums). */
+.voice {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.pulse {
+  display: inline-flex;
+  flex: none;
+
+  &.pulsing {
+    animation: pulse var(--duration-attention) var(--easing) infinite;
+  }
+}
+
+.roundMd {
+  border-radius: var(--corner-md);
+}
+
+.roundLg {
+  border-radius: var(--corner-lg);
+}
+
+.round {
+  border-radius: var(--corner-full);
+}
+
+.wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+  padding: 0 2px;
+
+  & i {
+    width: 3px;
+    height: var(--wave-bar-height);
+    border-radius: var(--corner-xs);
+    background: var(--interactive);
+    animation: wave var(--duration-attention) ease-in-out infinite;
+  }
+}
+
+.clock {
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The red dot of a running recording, blinking (draft `.vbar .lv`). */
+.listening {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-primary);
+  font-weight: 500;
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: var(--corner-full);
+    background: var(--error);
+    animation: blink var(--duration-cursor-blink) steps(1) infinite;
+  }
+}
+
+.kbd {
+  padding: 0 3px;
+  border-radius: var(--corner-xs);
+  background: var(--bg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-overline);
+}
+
+/* The big mic of the mobile dashboard and its label. */
+.big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.bigLabel {
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    height: 5px;
+  }
+
+  50% {
+    height: var(--wave-bar-height);
+  }
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(var(--interactive-rgb), 0.45);
+  }
+
+  to {
+    box-shadow: 0 0 0 12px rgba(var(--interactive-rgb), 0);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

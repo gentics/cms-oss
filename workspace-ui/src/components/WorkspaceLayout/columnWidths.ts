@@ -17,6 +17,8 @@ export interface ColumnWidthInput {
     /** Width of the whole workspace grid in px. */
     total: number;
     isLeftVisible: boolean;
+    /** `false` while there is no preview: the right column and its splitter take no room. Default `true`. */
+    isRightVisible?: boolean;
     /** Widths asked for by dragging or the keyboard. */
     requested: ColumnWidths;
     /** Widths the columns are rendered with right now. */
@@ -33,10 +35,10 @@ export interface ClampedColumnWidths extends ColumnWidths {
  * leave the center column at least `MIN_CENTER_WIDTH`. A column without a requested width counts
  * with its rendered width.
  */
-export function clampColumnWidths({ total, isLeftVisible, requested, rendered }: ColumnWidthInput): ClampedColumnWidths {
-    const splitters = (isLeftVisible ? SPLITTER_WIDTH : 0) + SPLITTER_WIDTH;
+export function clampColumnWidths({ total, isLeftVisible, isRightVisible = true, requested, rendered }: ColumnWidthInput): ClampedColumnWidths {
+    const splitters = (isLeftVisible ? SPLITTER_WIDTH : 0) + (isRightVisible ? SPLITTER_WIDTH : 0);
     const free = total - splitters - MIN_CENTER_WIDTH;
-    const maxLeft = Math.max(MIN_LEFT_WIDTH, free - (requested.right ?? rendered.right));
+    const maxLeft = Math.max(MIN_LEFT_WIDTH, free - (isRightVisible ? (requested.right ?? rendered.right) : 0));
     const maxRight = Math.max(MIN_RIGHT_WIDTH, free - (isLeftVisible ? (requested.left ?? rendered.left) : 0));
 
     return {

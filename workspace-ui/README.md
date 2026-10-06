@@ -7,7 +7,7 @@ The Workspace calls GenAIx only through the CMS proxy, at the same-origin path `
 In development the Vite dev server plays the proxy (`server.proxy` in `vite.config.ts`). It forwards `/genaix/api/v1/*` to `GENAIX_API_URL`, removes the browser's `Cookie`, and overwrites `Authorization` and `X-GCMS-Subject`.
 
 1. Check out `git@git.gentics.com:psc/genaix/api-contract.git` next to `cmp`, so that it is at `../../../api-contract` from this folder.
-2. Start the GenAIx mock (Python 3.11+; creates `.venv` on first run): `npm run mock:genaix`. It serves `http://localhost:8080/api/v1`.
+2. Start the GenAIx mock (Python 3.11+; creates `.venv` on first run): `npm run mock:genaix`. It serves `http://localhost:8123/api/v1`, the port of the hand-out's docker compose stack (`.claude/contracts/genaix-docs/deploy-README.md`), so either one can be used.
 3. Start the app in a second terminal: `npm run dev`.
 4. Call `http://localhost:5173/genaix/api/v1/me` from the browser or with `curl`.
 
@@ -15,7 +15,7 @@ Configuration is read from `.env.local` (see `.env.example`). All three variable
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `GENAIX_API_URL` | `http://localhost:8080/api/v1` | GenAIx base URL the proxy forwards to |
+| `GENAIX_API_URL` | `http://localhost:8123/api/v1` | GenAIx base URL the proxy forwards to |
 | `GENAIX_API_TOKEN` | `sk_gnx_mock` | Installation token (mock fixture) |
 | `GENAIX_SUBJECT` | `sub_workspace_dev` | `X-GCMS-Subject` sent for every request |
 

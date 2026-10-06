@@ -8,12 +8,12 @@ import { cn } from './utils';
 
 const popupClassName = cn(
     'max-h-(--available-height) min-w-[180px] origin-(--transform-origin) overflow-y-auto rounded-xl border border-line2 bg-surface p-4 text-base leading-normal text-ink shadow-pop outline-none',
-    'transition-[opacity,scale,translate] duration-(--dur-pop) data-ending-style:opacity-0 data-starting-style:translate-y-5 data-starting-style:scale-[.985] data-starting-style:opacity-0',
+    'transition-[opacity,scale,translate] duration-(--duration-popover) data-ending-style:opacity-0 data-starting-style:translate-y-5 data-starting-style:scale-[.985] data-starting-style:opacity-0',
 );
 
 const itemClassName = cn(
     'relative flex cursor-default items-center gap-8 rounded-md px-8 py-6 outline-none select-none',
-    'data-highlighted:bg-azure/7 focus-visible:bg-azure/15 focus-visible:shadow-[inset_0_0_0_1px_rgba(var(--az-rgb),.55)]',
+    'data-highlighted:bg-azure/7 focus-visible:bg-azure/15 focus-visible:shadow-[inset_0_0_0_1px_rgba(var(--interactive-rgb),.55)]',
     'data-disabled:cursor-not-allowed data-disabled:opacity-42',
     '[&_svg]:text-slate',
 );
@@ -67,7 +67,7 @@ function DropdownMenuItem({
             data-variant={variant}
             className={cn(
                 itemClassName,
-                variant === 'danger' && 'text-err data-highlighted:bg-errbg focus-visible:bg-errbg focus-visible:shadow-[inset_0_0_0_1px_var(--err)] [&_svg]:text-err',
+                variant === 'danger' && 'text-err data-highlighted:bg-errbg focus-visible:bg-errbg focus-visible:shadow-[inset_0_0_0_1px_var(--error)] [&_svg]:text-err',
                 className,
             )}
             {...props}

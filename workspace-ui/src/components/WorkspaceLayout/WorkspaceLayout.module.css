@@ -8,11 +8,20 @@
   min-height: 0;
   overflow: clip;
   isolation: isolate;
-  background: var(--canvas);
+  background: var(--bg-canvas);
 }
 
 .layout.leftHidden {
   grid-template-columns: 0 0 minmax(320px, 1fr) 9px var(--w-right, 46%);
+}
+
+/* No preview yet: the right column and its splitter take no room (draft `.layout.nopv`). */
+.layout.rightHidden {
+  grid-template-columns: var(--w-left, 292px) 9px minmax(320px, 1fr) 0 0;
+}
+
+.layout.leftHidden.rightHidden {
+  grid-template-columns: 0 0 minmax(320px, 1fr) 0 0;
 }
 
 .layout.resizing {
@@ -29,7 +38,7 @@
   min-height: 0;
   margin-inline: -4px;
   overflow: hidden;
-  background: var(--canvas);
+  background: var(--bg-canvas);
 
   &[hidden] {
     display: none;
@@ -38,7 +47,7 @@
 
 .left {
   grid-column: 1;
-  background: var(--surface);
+  background: var(--bg-surface);
 }
 
 .splitterLeft {
@@ -55,7 +64,7 @@
 
 .right {
   grid-column: 5;
-  background: var(--surface);
+  background: var(--bg-surface);
 }
 
 /* Narrow windows: the columns get tighter, nothing becomes an overlay. */
@@ -67,6 +76,14 @@
   .layout.leftHidden {
     grid-template-columns: 0 0 minmax(280px, 1fr) 9px var(--w-right, 42%);
   }
+
+  .layout.rightHidden {
+    grid-template-columns: var(--w-left, 228px) 9px minmax(280px, 1fr) 0 0;
+  }
+
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 minmax(280px, 1fr) 0 0;
+  }
 }
 
 @media (max-width: 900px) {
@@ -76,5 +93,13 @@
 
   .layout.leftHidden {
     grid-template-columns: 0 0 minmax(240px, 1fr) 9px var(--w-right, 40%);
+  }
+
+  .layout.rightHidden {
+    grid-template-columns: var(--w-left, 200px) 9px minmax(240px, 1fr) 0 0;
+  }
+
+  .layout.leftHidden.rightHidden {
+    grid-template-columns: 0 0 minmax(240px, 1fr) 0 0;
   }
 }

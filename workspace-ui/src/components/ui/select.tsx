@@ -3,8 +3,8 @@ import { CheckIcon } from 'lucide-react';
 
 import { cn } from './utils';
 
-// design.md §12 "Eingabefelder": surface, `--line-field` border, `--r-md`, 32 px high, own chevron
-// (two 5 px triangles). Focus like a text field (§8): `--azure` border + halo. Invalid: §3.3.
+// design.md §12 "Eingabefelder": surface, `--border-field` border, `--corner-md`, 32 px high, own chevron
+// (two 5 px triangles). Focus like a text field (§8): `--interactive` border + halo. Invalid: §3.3.
 
 /** Select. Pass `items` (value → label) so the trigger shows the label of the chosen value. */
 function Select<Value, Multiple extends boolean | undefined = false>(props: SelectPrimitive.Root.Props<Value, Multiple>) {
@@ -17,7 +17,7 @@ function SelectTrigger({ className, children, ...props }: SelectPrimitive.Trigge
             data-slot="select-trigger"
             className={cn(
                 'inline-flex h-32 min-w-[160px] cursor-pointer items-center justify-between gap-8 rounded-md border border-line-field bg-surface px-8 py-6 text-base leading-normal text-ink transition-colors',
-                'focus-visible:border-azure focus-visible:shadow-[0_0_0_3px_rgba(var(--az-rgb),.16)] data-popup-open:border-azure',
+                'focus-visible:border-azure focus-visible:shadow-[0_0_0_3px_rgba(var(--interactive-rgb),.16)] data-popup-open:border-azure',
                 'aria-invalid:border-err/55 aria-invalid:bg-errbg data-invalid:border-err/55 data-invalid:bg-errbg',
                 'data-disabled:cursor-not-allowed data-disabled:opacity-42',
                 className,
@@ -53,7 +53,7 @@ function SelectContent({ className, children, ...props }: SelectPrimitive.Popup.
                     data-slot="select-content"
                     className={cn(
                         'max-h-(--available-height) min-w-(--anchor-width) origin-(--transform-origin) overflow-y-auto rounded-xl border border-line2 bg-surface p-4 text-base leading-normal text-ink shadow-pop outline-none',
-                        'transition-[opacity,scale,translate] duration-(--dur-pop) data-ending-style:opacity-0 data-starting-style:translate-y-5 data-starting-style:scale-[.985] data-starting-style:opacity-0',
+                        'transition-[opacity,scale,translate] duration-(--duration-popover) data-ending-style:opacity-0 data-starting-style:translate-y-5 data-starting-style:scale-[.985] data-starting-style:opacity-0',
                         className,
                     )}
                     {...props}
@@ -71,7 +71,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
             data-slot="select-item"
             className={cn(
                 'relative flex cursor-default items-center gap-8 rounded-md py-6 pr-32 pl-8 outline-none select-none',
-                'data-highlighted:bg-tint focus-visible:bg-azure/15 focus-visible:shadow-[inset_0_0_0_1px_rgba(var(--az-rgb),.55)]',
+                'data-highlighted:bg-tint focus-visible:bg-azure/15 focus-visible:shadow-[inset_0_0_0_1px_rgba(var(--interactive-rgb),.55)]',
                 'data-selected:font-medium data-disabled:cursor-not-allowed data-disabled:opacity-42',
                 className,
             )}

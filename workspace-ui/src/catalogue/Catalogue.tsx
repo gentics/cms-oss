@@ -1,4 +1,4 @@
-import { ArrowUpIcon, PencilIcon, PlusIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon } from 'lucide-react';
+import { ArrowUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -158,6 +158,22 @@ export function Catalogue() {
                             </Button>
                             <Button variant="ghost-danger" size="icon" aria-label={t('catalogue.buttons.delete')}>
                                 <TrashIcon size={16} />
+                            </Button>
+                        </State>
+                        <State label={t('catalogue.buttons.iconXl')}>
+                            <Button variant="primary" size="icon-xl" aria-label={t('catalogue.buttons.speak')}>
+                                <MicIcon size={28} />
+                            </Button>
+                        </State>
+                        <State label={t('catalogue.buttons.iconXs')}>
+                            <Button variant="ghost" size="icon-xs" aria-label={t('catalogue.buttons.remove')}>
+                                <XIcon size={12} />
+                            </Button>
+                        </State>
+                        <State label={t('catalogue.buttons.pressed')}>
+                            <Button variant="ghost" size="sm" aria-pressed>
+                                <QuoteIcon size={16} />
+                                {t('catalogue.buttons.verbatim')}
                             </Button>
                         </State>
                     </div>

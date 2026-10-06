@@ -19,12 +19,13 @@ const iconProps = {
 } as const;
 
 interface TopbarProps {
-    isLeftColumnVisible: boolean;
-    onToggleLeftColumn: () => void;
+    isLeftColumnVisible?: boolean;
+    /** Without it there is no left-column toggle, as on the dashboard, which has no columns. */
+    onToggleLeftColumn?: () => void;
 }
 
 /** The bar above the workspace: left-column toggle, brand, light/dark toggle. */
-export function Topbar({ isLeftColumnVisible, onToggleLeftColumn }: TopbarProps) {
+export function Topbar({ isLeftColumnVisible = true, onToggleLeftColumn }: TopbarProps) {
     const { t } = useTranslation();
     const theme = useThemeStore((state) => state.theme);
     const toggleTheme = useThemeStore((state) => state.toggleTheme);
@@ -33,19 +34,21 @@ export function Topbar({ isLeftColumnVisible, onToggleLeftColumn }: TopbarProps)
 
     return (
         <header className={styles.topbar}>
-            <button
+            {onToggleLeftColumn && (
+                <button
                 type="button"
                 className={styles.iconButton}
                 aria-label={leftColumnLabel}
                 title={leftColumnLabel}
                 onClick={onToggleLeftColumn}
             >
-                <svg {...iconProps}>
+                    <svg {...iconProps}>
                     {isLeftColumnVisible
                         ? <path d="M4 5h16v14H4zM9.8 5v14M15 9.6L12.6 12l2.4 2.4" />
                         : <path d="M4 5h16v14H4zM9.8 5v14M12.6 9.6L15 12l-2.4 2.4" />}
-                </svg>
+                    </svg>
             </button>
+            )}
 
             <div className={styles.brand}>
                 <i className={styles.logo} aria-hidden="true" />

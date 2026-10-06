@@ -21,6 +21,11 @@ interface WorkspaceLayoutProps {
     right: ReactNode;
     /** Hides the left column and its splitter; the content stays mounted. Default `true`. */
     isLeftColumnVisible?: boolean;
+    /**
+     * Hides the right column (the preview) and its splitter while there is nothing to preview; the
+     * content stays mounted (draft `hidePreview`). Default `true`.
+     */
+    isRightColumnVisible?: boolean;
 }
 
 /**
@@ -28,7 +33,7 @@ interface WorkspaceLayoutProps {
  * the arrow keys resize the side columns; double-click or Home resets one to its default width.
  * The center column takes the rest.
  */
-export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = true }: WorkspaceLayoutProps) {
+export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = true, isRightColumnVisible = true }: WorkspaceLayoutProps) {
     const { t } = useTranslation();
     const gridRef = useRef<HTMLDivElement>(null);
     const leftRef = useRef<HTMLDivElement>(null);
@@ -65,6 +70,7 @@ export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = tru
     const widths = clampColumnWidths({
         total: measured.total,
         isLeftVisible: isLeftColumnVisible,
+        isRightVisible: isRightColumnVisible,
         requested,
         rendered: measured,
     });
@@ -98,6 +104,7 @@ export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = tru
             className={[
                 styles.layout,
                 isLeftColumnVisible ? '' : styles.leftHidden,
+                isRightColumnVisible ? '' : styles.rightHidden,
                 dragging ? styles.resizing : '',
             ].filter(Boolean).join(' ')}
             style={style}
@@ -124,6 +131,7 @@ export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = tru
             <Splitter
                 className={styles.splitterRight}
                 label={t('workspace.resizeRight')}
+                hidden={!isRightColumnVisible}
                 isDragging={dragging === 'right'}
                 value={measured.right}
                 min={MIN_RIGHT_WIDTH}
@@ -133,7 +141,7 @@ export function WorkspaceLayout({ left, center, right, isLeftColumnVisible = tru
                 onStep={(delta) => handleStep('right', delta)}
                 onReset={() => setWidth('right', null)}
             />
-            <div ref={rightRef} className={`${styles.column} ${styles.right}`}>
+            <div ref={rightRef} className={`${styles.column} ${styles.right}`} hidden={!isRightColumnVisible}>
                 {right}
             </div>
         </div>

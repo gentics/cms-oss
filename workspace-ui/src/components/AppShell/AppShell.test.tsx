@@ -58,4 +58,26 @@ describe('AppShell', () => {
         expect(screen.getByText('Sessions')).toBeVisible();
         expect(screen.getAllByRole('separator')).toHaveLength(2);
     });
+
+    it('has no preview column and no left-column toggle while there is nothing to preview', () => {
+        render(<AppShell left={<p>Sessions</p>} center={<p>Chat</p>} right={<p>Preview</p>} isRightColumnVisible={false} />);
+
+        expect(screen.getByText('Sessions')).toBeVisible();
+        expect(screen.getByText('Chat')).toBeVisible();
+        expect(screen.getByText('Preview')).not.toBeVisible();
+        expect(screen.queryByRole('button', { name: /left column/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('separator', { name: 'Width of the left column' })).toBeInTheDocument();
+    });
+
+    it('shows the left column again when the preview goes away while it was hidden', async () => {
+        const user = userEvent.setup();
+        const { rerender } = renderShell();
+
+        await user.click(screen.getByRole('button', { name: 'Hide the left column' }));
+
+        rerender(<AppShell left={<p>Sessions</p>} center={<p>Chat</p>} right={<p>Preview</p>} isRightColumnVisible={false} />);
+
+        expect(screen.getByText('Sessions')).toBeVisible();
+        expect(screen.queryByRole('button', { name: /left column/ })).not.toBeInTheDocument();
+    });
 });

@@ -39,6 +39,13 @@ describe('Topbar', () => {
         expect(screen.queryByRole('button', { name: 'Hide the left column' })).not.toBeInTheDocument();
     });
 
+    it('has no left-column toggle without onToggleLeftColumn', () => {
+        render(<Topbar />);
+
+        expect(screen.queryByRole('button', { name: /left column/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Dark mode' })).toBeInTheDocument();
+    });
+
     it('switches between light and dark', async () => {
         const user = userEvent.setup();
 

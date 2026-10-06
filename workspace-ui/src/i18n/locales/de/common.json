@@ -1,5 +1,4 @@
 {
-    "getStarted": "Los geht's",
     "topbar": {
         "brand": "Gentics Workspace",
         "hideLeftColumn": "Linke Spalte ausblenden",
@@ -11,6 +10,50 @@
         "resizeLeft": "Breite der linken Spalte",
         "resizeRight": "Breite der rechten Spalte",
         "resizeHint": "Ziehen · Doppelklick setzt zurück"
+    },
+    "dashboard": {
+        "greeting": {
+            "night": "Noch wach, {{name}}",
+            "morning": "Guten Morgen, {{name}}",
+            "afternoon": "Guten Tag, {{name}}",
+            "evening": "Guten Abend, {{name}}"
+        },
+        "placeholder": "Was möchten Sie tun?",
+        "send": "Session starten",
+        "starters": {
+            "shortenIntro": "Kürze das Intro auf „Produkte – Übersicht“ auf zwei Sätze, behalte den förmlichen Ton bei",
+            "landingPage": "Erstelle eine neue Landingpage für das Partnerprogramm",
+            "untouchedPages": "Welche Seiten wurden seit einem halben Jahr nicht geändert?"
+        },
+        "startFailed": "Die Session konnte nicht gestartet werden"
+    },
+    "composer": {
+        "file": "Datei",
+        "verbatim": "Verbatim",
+        "typeInstead": "Stattdessen tippen",
+        "verbatimHint": "Markieren Sie zuerst die Stelle, die unverändert bleiben soll.",
+        "verbatimNested": "Die Auswahl enthält bereits eine gesperrte Stelle.",
+        "removeVerbatim": "Verbatim entfernen",
+        "attachment": {
+            "source": "als Quelle",
+            "verbatim": "verbatim",
+            "toggleMode": "verbatim / als Quelle",
+            "remove": "Entfernen"
+        }
+    },
+    "chat": {
+        "placeholder": "Was soll passieren?",
+        "send": "Senden",
+        "sendFailed": "Die Nachricht konnte nicht gesendet werden"
+    },
+    "voice": {
+        "start": "Diktieren",
+        "stop": "Diktat beenden",
+        "unsupported": "Spracheingabe ist in diesem Browser nicht verfügbar",
+        "listening": "Hört zu",
+        "cancel": "Abbrechen",
+        "tapToSpeak": "Zum Sprechen tippen",
+        "tapToStop": "Zum Beenden tippen"
     },
     "errorNotifications": {
         "cmsTokenFailed": "Der CMS-Token konnte nicht abgerufen werden"
@@ -75,7 +118,13 @@
             "add": "Hinzufügen",
             "edit": "Bearbeiten",
             "send": "Senden",
-            "delete": "Löschen"
+            "delete": "Löschen",
+            "iconXs": "Mini-Icon-Buttons",
+            "pressed": "Gedrückt (Schalter an)",
+            "remove": "Entfernen",
+            "verbatim": "Verbatim",
+            "iconXl": "Großer runder Icon-Button",
+            "speak": "Sprechen"
         },
         "checkbox": {
             "title": "Checkbox",

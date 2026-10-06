@@ -20,24 +20,24 @@
   --spacing: 1px;
 
   /* Colours (§3.1). Alpha via `/`, e.g. `bg-azure/10` = rgba(az, .10) (§3.2). */
-  --color-ink: var(--ink);
-  --color-slate: var(--slate);
-  --color-muted: var(--muted);
-  --color-azure: var(--azure);
-  --color-akzent: var(--akzent);
-  --color-surface: var(--surface);
-  --color-canvas: var(--canvas);
-  --color-tint: var(--tint);
-  --color-solid: var(--solid);
-  --color-line: var(--line);
-  --color-line2: var(--line2);
-  --color-line-field: var(--line-field);
-  --color-err: var(--err);
-  --color-errbg: var(--errbg);
-  --color-warn: var(--warn);
-  --color-warnbg: var(--warnbg);
-  --color-ok: var(--ok);
-  --color-okbg: var(--okbg);
+  --color-ink: var(--fg-primary);
+  --color-slate: var(--fg-secondary);
+  --color-muted: var(--fg-muted);
+  --color-azure: var(--interactive);
+  --color-akzent: var(--interactive-fill);
+  --color-surface: var(--bg-surface);
+  --color-canvas: var(--bg-canvas);
+  --color-tint: var(--bg-subtle);
+  --color-solid: var(--bg-solid);
+  --color-line: var(--border-subtle);
+  --color-line2: var(--border-strong);
+  --color-line-field: var(--border-field);
+  --color-err: var(--error);
+  --color-errbg: var(--error-bg);
+  --color-warn: var(--warning);
+  --color-warnbg: var(--warning-bg);
+  --color-ok: var(--success);
+  --color-okbg: var(--success-bg);
   --color-white: #fff;
   --color-transparent: transparent;
   --color-current: currentcolor;
@@ -46,44 +46,44 @@
   --color-toast-icon: #7fc7ea;
 
   /* Backdrop behind dialog and drawer (§6.3). */
-  --color-backdrop: rgba(var(--sh), 0.28);
+  --color-backdrop: rgba(var(--shadow-tone-rgb), 0.28);
 
   /* Typography (§5). The font family comes from the reset below (`--font-sans`). */
-  --text-overline: var(--fs-overline);
-  --text-xs: var(--fs-xs);
-  --text-sm: var(--fs-sm);
-  --text-base: var(--fs-base);
-  --text-md: var(--fs-md);
-  --text-lg: var(--fs-lg);
+  --text-overline: var(--font-size-overline);
+  --text-xs: var(--font-size-xs);
+  --text-sm: var(--font-size-sm);
+  --text-base: var(--font-size-base);
+  --text-md: var(--font-size-md);
+  --text-lg: var(--font-size-lg);
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --leading-normal: 1.45;
   --tracking-overline: 0.075em;
 
   /* Radius (§6.1) */
-  --radius-xs: var(--r-xs);
-  --radius-sm: var(--r-sm);
-  --radius-md: var(--r-md);
-  --radius-lg: var(--r-lg);
-  --radius-xl: var(--r-xl);
-  --radius-2xl: var(--r-2xl);
-  --radius-3xl: var(--r-3xl);
-  --radius-full: var(--r-full);
+  --radius-xs: var(--corner-xs);
+  --radius-sm: var(--corner-sm);
+  --radius-md: var(--corner-md);
+  --radius-lg: var(--corner-lg);
+  --radius-xl: var(--corner-xl);
+  --radius-2xl: var(--corner-2xl);
+  --radius-3xl: var(--corner-3xl);
+  --radius-full: var(--corner-full);
 
   /* Shadows (§6.3) */
-  --shadow-1: var(--sh-1);
-  --shadow-float: var(--sh-float);
-  --shadow-pop: var(--sh-pop);
-  --shadow-modal: var(--sh-modal);
-  --shadow-drawer: 0 0 40px rgba(var(--sh), 0.22);
-  --shadow-toast: var(--sh-toast);
+  --shadow-1: var(--elevation-1);
+  --shadow-float: var(--elevation-float);
+  --shadow-pop: var(--elevation-pop);
+  --shadow-modal: var(--elevation-modal);
+  --shadow-drawer: 0 0 40px rgba(var(--shadow-tone-rgb), 0.22);
+  --shadow-toast: var(--elevation-toast);
 
   /* Motion (§10). Popups, dialog and drawer animate via Base UI's starting/ending styles. */
-  --default-transition-duration: var(--dur-state);
-  --default-transition-timing-function: var(--ease);
+  --default-transition-duration: var(--duration-state);
+  --default-transition-timing-function: var(--easing);
 
-  --animate-rise: ui-rise var(--dur-card) var(--ease);
-  --animate-drop: ui-drop var(--dur-card) var(--ease);
+  --animate-rise: ui-rise var(--duration-card) var(--easing);
+  --animate-drop: ui-drop var(--duration-card) var(--easing);
 }
 
 [data-slot],
@@ -117,7 +117,7 @@
 /* Keyboard focus (§8): one ring for every interactive part of this layer. */
 [data-slot]:where(:focus-visible) {
   outline: none;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--azure);
+  box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--interactive);
 }
 
 /* `rise`: 7 px up + fade in (§10). */

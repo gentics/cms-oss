@@ -11,7 +11,7 @@ This app lives in `apps/workspace-ui` of the `cmp` repository. Work only inside 
 
 Changelog Folder: changelog
 
-- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/helper/<name>/` app-wide helpers, test next to them: `queryClient/queryClient.ts` the app's TanStack Query client (`createQueryClient`, error notifications after the last retry) · `errorMapper/errorMapper.ts` error to i18n key (`errorMessageKey`) · `src/pages/<Name>/` one folder per page shown by a route (e.g. `HomePage`); the routes are declared in `src/router.tsx` · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/components/ui/` the component layer (shadcn/ui on Base UI + Tailwind; wrap the app in `UiProvider`) · `src/catalogue/` component catalogue (`index.html`, served by `npm run catalogue`) · `src/test/setup.ts` Vitest setup.
+- `src/services/<name>Service/` one folder per service, test next to it: `apiService/apiService.ts` GenAIx API client (`genaix/`: GenAIx types, `schema.d.ts` generated, aliases in `types.ts`) · `cmsApiService/cmsApiService.ts` CMS REST client · `httpService/httpService.ts` minimal JSON request helper (`httpRequest`, `HttpError`) · `src/helper/<name>/` app-wide helpers, test next to them: `queryClient/queryClient.ts` the app's TanStack Query client (`createQueryClient`, error notifications after the last retry) · `errorMapper/errorMapper.ts` error to i18n key (`errorMessageKey`) · `composerParts/composerParts.ts` a composer's field to message parts, verbatim passages · `src/pages/<Name>/` one folder per page shown by a route (e.g. `DashboardPage`, `SessionPage`); the routes are declared in `src/router.tsx` · `src/hooks/` React hooks (e.g. `useCmsToken`) · `src/store/` Zustand stores · `src/i18n/` i18next setup and `locales/{en,de}/common.json` · `src/components/ui/` the component layer (shadcn/ui on Base UI + Tailwind; wrap the app in `UiProvider`) · `src/catalogue/` component catalogue (`index.html`, served by `npm run catalogue`) · `src/test/setup.ts` Vitest setup.
 - Unit/component tests sit next to the code as `src/**/*.test.{ts,tsx}`. E2E tests live in `e2e/` (for example `e2e/App.spec.ts`).
 - Import from `src/` with the `@/` alias (for example `@/services/apiService/apiService`).
 
@@ -19,7 +19,7 @@ Changelog Folder: changelog
 | --- | --- |
 | `npm run dev` | Vite dev server; proxies `/genaix/api/v1` and adds the GenAIx headers (README, "Local GenAIx API"), and `/rest` to `CMS_PROXY_TARGET` when set (`.env.example`) |
 | `npm run catalogue` | Component catalogue on its own Vite dev server, `:5174` (`vite.catalogue.config.ts`); not part of `npm run dev` or `npm run build` |
-| `npm run mock:genaix` | GenAIx mock on `:8080` from `../../../api-contract` |
+| `npm run mock:genaix` | GenAIx mock on `:8123` from `../../../api-contract` (`GENAIX_MOCK_PORT=8123`, the port of its docker compose stack) |
 | `npm run typecheck` | `tsc -b` |
 | `npm run generate:api` | Regenerate `src/services/apiService/genaix/schema.d.ts` from `.claude/contracts/openapi.yaml` |
 | `npm run lint` | ESLint; warnings fail |
@@ -82,6 +82,18 @@ Changelog Folder: changelog
 ### Icons
 
 - Lucide via `lucide-react` (`design.md` §9). `UiProvider` sets the defaults (stroke 1.7, 18 px); pass `size` only for other sizes.
+- Never draw icons as inline `<svg>` paths, not even copied from a design draft. Use the Lucide icon named in `design.md` §9, or the nearest one.
+
+### UI Components
+
+- Check `src/components/ui/` and the catalogue (`npm run catalogue`, `src/catalogue/Catalogue.tsx`) before building UI; the catalogue shows every component in every variant and state. The layer has Button (variants `primary`, `secondary`, `ghost`, `danger`, `solid`; sizes `default`, `sm`, `icon`, `icon-lg`), Checkbox, Label, Select, Tabs, Tooltip, DropdownMenu (with checkbox and radio items), Dialog, Drawer, and toasts (`useToast()` from `ui/use-toast`).
+- Do not rebuild what the layer has. Outside it, native `<button>`, `<select>`, `<dialog>` and inline `<svg>` are ESLint errors (`no-restricted-syntax`). If a variant or size is missing, add it to the component in the layer and to the catalogue. Do not restyle a layer component from outside: a CSS Module class on it competes with its Tailwind utilities.
+- Base UI, not Radix: compose with the `render` prop (`<DropdownMenuTrigger render={<Button variant="ghost" />}>`), not `asChild`. Checkbox and radio items keep a menu open unless they get `closeOnClick`; `finalFocus` on `DropdownMenuContent` sets where focus goes when the menu closes.
+- A new or changed layer component or variant goes into the catalogue (texts under `catalogue.*` in both locales) and gets a test next to it.
+- Tests that render layer components wrap them like the tests in `src/components/ui/`: `render(<X />, { wrapper: UiProvider })` and `import '@/i18n'`. `useToast()` throws without `UiProvider`.
+- App components: one folder per component, `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css` and `<Name>.test.tsx`. Pages: `src/pages/<Name>/`.
+- CSS Modules take every visual value from the tokens in `src/index.css`: no hex or literal `rgb()`/`hsl()` colours (alpha via `rgba(var(--interactive-rgb), .1)`), no durations or `cubic-bezier()` (use `--duration-state`, `--duration-popover`, `--duration-card`, `--easing`), no font weight above 500. `src/test/designTokens.test.ts` checks every `*.module.css`.
+- Theme: `index.html` pins `data-theme="light"`; `useThemeStore` switches it. Every component must work in both themes (`design.md` §1).
 
 ### State Management
 

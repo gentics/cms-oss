@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
 
-import { HomePage } from '@/pages/HomePage/HomePage';
+import { DashboardPage } from '@/pages/DashboardPage/DashboardPage';
+import { SessionPage } from '@/pages/SessionPage/SessionPage';
 
 const rootRoute = createRootRoute({
     component: Outlet,
@@ -9,21 +10,21 @@ const rootRoute = createRootRoute({
 const homeRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: HomePage,
+    component: DashboardPage,
 });
 
-// For now every route shows the HomePage. The session routes are siblings, not nested: the review
-// page takes the place of the session workspace instead of sitting inside it.
+// The session routes show the SessionPage, the three-column workspace. They are siblings, not
+// nested: the review page takes the place of the session workspace instead of sitting inside it.
 const sessionRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/sessions/$id',
-    component: HomePage,
+    component: SessionPage,
 });
 
 const sessionReviewRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/sessions/$id/review',
-    component: HomePage,
+    component: SessionPage,
 });
 
 export const routeTree = rootRoute.addChildren([homeRoute, sessionRoute, sessionReviewRoute]);

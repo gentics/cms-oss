@@ -1,0 +1,38 @@
+/* The attached files of a composer (draft `.attachrow`; design.md §6.1: `--corner-lg` for attachments). */
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 4px 3px 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+  background: var(--bg-subtle);
+  color: var(--fg-primary);
+  font-size: var(--font-size-xs);
+}
+
+.verbatim {
+  border-color: rgba(var(--interactive-rgb), 0.35);
+  background: rgba(var(--interactive-rgb), 0.13);
+}
+
+.name {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mode {
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+}

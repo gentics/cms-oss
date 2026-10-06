@@ -12,7 +12,7 @@
     "start": "vite --open",
     "dev": "vite --open",
     "catalogue": "vite --config vite.catalogue.config.ts --open",
-    "mock:genaix": "../../../api-contract/mocks/genaix-mock/run.sh",
+    "mock:genaix": "GENAIX_MOCK_PORT=8123 ../../../api-contract/mocks/genaix-mock/run.sh",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",

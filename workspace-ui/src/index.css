@@ -2,79 +2,82 @@
   /* Design tokens from .claude/rules/design.md. Only the colour block changes per theme. */
 
   /* Colours (§3.1) */
-  --ink: #004c77;
-  --ink-rgb: 0, 76, 119;
-  --slate: #3e4850;
-  --slate-rgb: 62, 72, 80;
-  --muted: #697278;
-  --azure: #029ddd;
-  --akzent: #1aa4de;
-  --az-rgb: 2, 157, 221;
-  --surface: #fff;
-  --canvas: #fff;
-  --tint: #f3f6f8;
-  --stage: #eaf4fc;
-  --solid: #004c77;
-  --aibg: #f2f8fd;
-  --ailine: rgba(var(--az-rgb), 0.18);
-  --line: rgba(var(--ink-rgb), 0.12);
-  --line2: rgba(var(--ink-rgb), 0.2);
-  --line-field: rgba(var(--slate-rgb), 0.4);
-  --sh: 0, 76, 119;
-  --err: #b3261e;
-  --err-rgb: 179, 38, 30;
-  --errbg: #fdecea;
-  --warn: #8a5a00;
-  --warn-rgb: 138, 90, 0;
-  --warnbg: #fff6e5;
-  --ok: #1b6b4a;
-  --ok-rgb: 27, 107, 74;
-  --okbg: #eaf6f0;
+  --fg-primary: #004c77;
+  --fg-primary-rgb: 0, 76, 119;
+  --fg-secondary: #3e4850;
+  --fg-secondary-rgb: 62, 72, 80;
+  --fg-muted: #697278;
+  --interactive: #029ddd;
+  --interactive-fill: #1aa4de;
+  --interactive-rgb: 2, 157, 221;
+  --bg-surface: #fff;
+  --bg-canvas: #fff;
+  --bg-subtle: #f3f6f8;
+  --bg-preview-stage: #eaf4fc;
+  --bg-solid: #004c77;
+  --agent-message-bg: #f2f8fd;
+  --agent-message-border: rgba(var(--interactive-rgb), 0.18);
+  --border-subtle: rgba(var(--fg-primary-rgb), 0.12);
+  --border-strong: rgba(var(--fg-primary-rgb), 0.2);
+  --border-field: rgba(var(--fg-secondary-rgb), 0.4);
+  --shadow-tone-rgb: 0, 76, 119;
+  --error: #b3261e;
+  --error-rgb: 179, 38, 30;
+  --error-bg: #fdecea;
+  --warning: #8a5a00;
+  --warning-rgb: 138, 90, 0;
+  --warning-bg: #fff6e5;
+  --success: #1b6b4a;
+  --success-rgb: 27, 107, 74;
+  --success-bg: #eaf6f0;
 
   /* Font families (§5) */
   --font-sans: 'TWK Everett', system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Font sizes (§5.1) */
-  --fs-overline: 10px;
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-base: 13px;
-  --fs-md: 14px;
-  --fs-lg: 17px;
-  --fs-xl: 23px;
-  --fs-2xl: 30px;
+  --font-size-overline: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 17px;
+  --font-size-xl: 23px;
+  --font-size-2xl: 30px;
 
   /* Radii (§6.1) */
-  --r-xs: 4px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 10px;
-  --r-xl: 12px;
-  --r-2xl: 14px;
-  --r-3xl: 16px;
-  --r-full: 999px;
+  --corner-xs: 4px;
+  --corner-sm: 6px;
+  --corner-md: 8px;
+  --corner-lg: 10px;
+  --corner-xl: 12px;
+  --corner-2xl: 14px;
+  --corner-3xl: 16px;
+  --corner-full: 999px;
 
   /* Shadows (§6.3) */
-  --sh-1: 0 1px 2px rgba(var(--sh), 0.06);
-  --sh-float: 0 6px 22px rgba(var(--sh), 0.13), 0 1px 2px rgba(var(--sh), 0.08);
-  --sh-pop: 0 12px 34px rgba(var(--sh), 0.18);
-  --sh-sheet: 0 18px 40px rgba(var(--sh), 0.18);
-  --sh-modal: 0 18px 60px rgba(var(--sh), 0.28);
-  --sh-toast: 0 12px 32px rgba(var(--sh), 0.32);
+  --elevation-1: 0 1px 2px rgba(var(--shadow-tone-rgb), 0.06);
+  --elevation-float: 0 6px 22px rgba(var(--shadow-tone-rgb), 0.13), 0 1px 2px rgba(var(--shadow-tone-rgb), 0.08);
+  --elevation-pop: 0 12px 34px rgba(var(--shadow-tone-rgb), 0.18);
+  --elevation-sheet: 0 18px 40px rgba(var(--shadow-tone-rgb), 0.18);
+  --elevation-modal: 0 18px 60px rgba(var(--shadow-tone-rgb), 0.28);
+  --elevation-toast: 0 12px 32px rgba(var(--shadow-tone-rgb), 0.32);
 
   /* Motion (§10) */
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --dur-state: 130ms;
-  --dur-pop: 160ms;
-  --dur-card: 250ms;
+  --easing: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-state: 130ms;
+  --duration-popover: 160ms;
+  --duration-card: 250ms;
+  /* §8: the attention pulse and the blink of the streaming cursor, also the voice input's. */
+  --duration-attention: 1s;
+  --duration-cursor-blink: 1s;
   --press-scale: 0.97;
 
   /* Base text (§5): 13 px, line height 1.45 */
-  font: var(--fs-base) / 1.45 var(--font-sans);
+  font: var(--font-size-base) / 1.45 var(--font-sans);
   color-scheme: light dark;
-  color: var(--ink);
-  background: var(--canvas);
+  color: var(--fg-primary);
+  background: var(--bg-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -104,78 +107,76 @@
     --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
 
     /* Design tokens, dark theme (.claude/rules/design.md §3.1) */
-    --ink: #ecedee;
-    --ink-rgb: 152, 157, 162;
-    --slate: #c7cacd;
-    --slate-rgb: 172, 177, 182;
-    --muted: #979a9c;
-    --azure: #45b4e8;
-    --akzent: #45b4e8;
-    --az-rgb: 69, 180, 232;
-    --surface: #1b1d1f;
-    --canvas: #0f1112;
-    --tint: #0f1112;
-    --stage: #0a0c0d;
-    --solid: #2b2e31;
-    --aibg: var(--surface);
-    --ailine: var(--line);
-    --line-field: rgba(var(--slate-rgb), 0.34);
-    --sh: 0, 0, 0;
-    --err: #f2b5b1;
-    --err-rgb: 242, 181, 177;
-    --errbg: #331a18;
-    --warn: #efc470;
-    --warn-rgb: 239, 196, 112;
-    --warnbg: #2e2610;
-    --ok: #8ad6b2;
-    --ok-rgb: 138, 214, 178;
-    --okbg: #15291f;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    --fg-primary: #ecedee;
+    --fg-primary-rgb: 152, 157, 162;
+    --fg-secondary: #c7cacd;
+    --fg-secondary-rgb: 172, 177, 182;
+    --fg-muted: #979a9c;
+    --interactive: #45b4e8;
+    --interactive-fill: #45b4e8;
+    --interactive-rgb: 69, 180, 232;
+    --bg-surface: #1b1d1f;
+    --bg-canvas: #0f1112;
+    --bg-subtle: #0f1112;
+    --bg-preview-stage: #0a0c0d;
+    --bg-solid: #2b2e31;
+    --agent-message-bg: var(--bg-surface);
+    --agent-message-border: var(--border-subtle);
+    --border-field: rgba(var(--fg-secondary-rgb), 0.34);
+    --shadow-tone-rgb: 0, 0, 0;
+    --error: #f2b5b1;
+    --error-rgb: 242, 181, 177;
+    --error-bg: #331a18;
+    --warning: #efc470;
+    --warning-rgb: 239, 196, 112;
+    --warning-bg: #2e2610;
+    --success: #8ad6b2;
+    --success-rgb: 138, 214, 178;
+    --success-bg: #15291f;
+    color-scheme: dark;
   }
 }
 
 /* Dark theme picked in the topbar: the same design-token block as above, whatever the system says. */
 :root[data-theme='dark'] {
+  /* Same dark tokens as above, for a forced dark theme. */
+  --fg-primary: #ecedee;
+  --fg-primary-rgb: 152, 157, 162;
+  --fg-secondary: #c7cacd;
+  --fg-secondary-rgb: 172, 177, 182;
+  --fg-muted: #979a9c;
+  --interactive: #45b4e8;
+  --interactive-fill: #45b4e8;
+  --interactive-rgb: 69, 180, 232;
+  --bg-surface: #1b1d1f;
+  --bg-canvas: #0f1112;
+  --bg-subtle: #0f1112;
+  --bg-preview-stage: #0a0c0d;
+  --bg-solid: #2b2e31;
+  --agent-message-bg: var(--bg-surface);
+  --agent-message-border: var(--border-subtle);
+  --border-field: rgba(var(--fg-secondary-rgb), 0.34);
+  --shadow-tone-rgb: 0, 0, 0;
+  --error: #f2b5b1;
+  --error-rgb: 242, 181, 177;
+  --error-bg: #331a18;
+  --warning: #efc470;
+  --warning-rgb: 239, 196, 112;
+  --warning-bg: #2e2610;
+  --success: #8ad6b2;
+  --success-rgb: 138, 214, 178;
+  --success-bg: #15291f;
   color-scheme: dark;
-  --ink: #ecedee;
-  --ink-rgb: 152, 157, 162;
-  --slate: #c7cacd;
-  --slate-rgb: 172, 177, 182;
-  --muted: #979a9c;
-  --azure: #45b4e8;
-  --akzent: #45b4e8;
-  --az-rgb: 69, 180, 232;
-  --surface: #1b1d1f;
-  --canvas: #0f1112;
-  --tint: #0f1112;
-  --stage: #0a0c0d;
-  --solid: #2b2e31;
-  --aibg: var(--surface);
-  --ailine: var(--line);
-  --line-field: rgba(var(--slate-rgb), 0.34);
-  --sh: 0, 0, 0;
-  --err: #f2b5b1;
-  --err-rgb: 242, 181, 177;
-  --errbg: #331a18;
-  --warn: #efc470;
-  --warnbg: #2e2610;
-  --ok: #8ad6b2;
-  --okbg: #15291f;
 }
 
-/* TEMPORARY: full width (was 1126px with a border) while App.tsx mounts the AppShell for a preview. */
-#root {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {

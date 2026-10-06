@@ -41,6 +41,11 @@ describe('clampColumnWidths', () => {
             .toEqual({ left: 210, right: 320, maxLeft: 210, maxRight: 320 });
     });
 
+    it('gives the left column the room of the hidden right column and its splitter', () => {
+        expect(clampColumnWidths({ ...base, isRightVisible: false, requested: { left: 1000, right: 500 } }))
+            .toMatchObject({ left: 1200 - 9 - 320, maxLeft: 1200 - 9 - 320 });
+    });
+
     it('gives the right column the room of the hidden left column and its splitter', () => {
         expect(clampColumnWidths({ ...base, isLeftVisible: false, requested: { left: 250, right: 1000 } }))
             .toMatchObject({ right: 1200 - 9 - 320, maxRight: 1200 - 9 - 320 });

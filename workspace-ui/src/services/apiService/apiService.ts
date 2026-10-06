@@ -1,10 +1,15 @@
 import type {
+    FileMode,
     GenaixCode,
     Me,
     MessageAccepted,
     MessageCreateBody,
     MessagePage,
     Problem,
+    Session,
+    SessionCreateBody,
+    SessionCreated,
+    SessionFile,
     SessionPage,
     SessionStatus,
     Workflow,
@@ -144,6 +149,32 @@ export async function listWorkflows(): Promise<Workflow[]> {
 // GET /sessions: newest `last_activity_at` first, paged by `next_cursor`.
 export function listSessions(filters: SessionFilters = {}, page: PageParams = {}): Promise<SessionPage> {
     return genaixRequest<SessionPage>(`/sessions${queryString({ ...filters, ...page })}`);
+}
+
+// POST /sessions: `201` with the new session. With a `message` it also carries the ids of that
+// message and of its run, whose events arrive on the session's event stream.
+export function createSession(body: SessionCreateBody): Promise<SessionCreated> {
+    return genaixRequest<SessionCreated>('/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+}
+
+// GET /sessions/{session_id}
+export function getSession(sessionId: string): Promise<Session> {
+    return genaixRequest<Session>(`/sessions/${encodeURIComponent(sessionId)}`);
+}
+
+// POST /sessions/{session_id}/files as multipart: `201` with the stored file. No `Content-Type` is
+// set, so the browser adds the multipart boundary.
+export function uploadSessionFile(sessionId: string, file: File, mode: FileMode): Promise<SessionFile> {
+    const body = new FormData();
+
+    body.append('file', file);
+    body.append('mode', mode);
+
+    return genaixRequest<SessionFile>(`/sessions/${encodeURIComponent(sessionId)}/files`, { method: 'POST', body });
 }
 
 // DELETE /sessions/{session_id}: archives the session (soft delete, `204`). Idempotent; an active

@@ -5,17 +5,20 @@
 <div class="modal-content">
   <div class="flex-container">
     <gtx-checkbox
+      data-id="all-perms"
       [(ngModel)]="allPermsGranted"
       (change)="onAllPermsToggle($event)"
       [label]="'group.all_perms'| gtxI18n"
       [disabled]="!hasEditPermissionRight()"
     ></gtx-checkbox>
     <gtx-checkbox
+      data-id="apply-to-sub-objects"
       [(ngModel)]="applyToSubObjects"
       [label]="(permSet.type === AccessControlledType.FOLDER ? 'group.apply_to_subfolders' : 'group.apply_to_subobjects') | gtxI18n"
       [disabled]="!hasEditPermissionRight()"
     ></gtx-checkbox>
     <gtx-checkbox
+      data-id="apply-to-sub-groups"
       [(ngModel)]="applyToSubGroups"
       [label]="'group.apply_to_subgroups'| gtxI18n"
       [disabled]="!hasEditPermissionRight()"
@@ -24,12 +27,14 @@
 
   <div class="row small-up-1 medium-up-2 large-up-4">
     @for (category of permissionCategories; track category.id) {
-      <div class="column gtx-perm-category-block">
+      <div class="column gtx-perm-category-block" [attr.data-id]="category.id">
         <h6>{{ category.label | gtxI18n }}</h6>
         @if (categorizedPerms[category.id]; as permissions) {
           <div>
             @for (perm of permissions; track perm.label) {
               <gtx-checkbox
+                class="permission-checkbox"
+                [attr.data-id]="perm.type"
                 [(ngModel)]="perm.value"
                 (change)="onPermToggle()"
                 [label]="perm.label | gtxI18n"
@@ -49,6 +54,8 @@
           <div>
             @for (role of permSet.roles; track role.label) {
               <gtx-checkbox
+                class="role-checkbox"
+                [attr.data-id]="role.id"
                 [(ngModel)]="role.value"
                 [label]="role.label"
                 [disabled]="!role.editable"
@@ -66,6 +73,7 @@
 <div class="modal-footer">
   <gtx-button
     type="primary"
+    data-action="confirm"
     gtxActionAllowed="group.editPermissions"
     [disabled]="!hasEditPermissionRight()"
     (click)="onSaveClick()"
@@ -76,6 +84,7 @@
   <gtx-button
     type="secondary"
     flat
+    data-action="cancel"
     (click)="cancelFn()"
     >
     {{ 'common.cancel_button' | gtxI18n }}

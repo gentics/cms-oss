@@ -1,7 +1,5 @@
-import { removeEntries, removeEntryIfPresent } from '@admin-ui/common/utils/list-utils/list-utils';
-import { AppStateService, UpdateEntities } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
-import { I18nNotificationService } from '@gentics/cms-components';
+import { discard, I18nNotificationService } from '@gentics/cms-components';
 import {
     AccessControlledType,
     EntityIdType,
@@ -14,20 +12,22 @@ import {
     GroupUpdateRequest,
     GroupUserCreateRequest,
     GroupUserCreateResponse,
-    GroupUsersListOptions,
     Normalized,
     PermissionInfo,
     PermissionsSet,
     Raw,
     RecursivePartial,
     User,
+    UserListOptions,
 } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { combineLatest, Observable, of as observableOf } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { removeEntries, removeEntryIfPresent } from '../../../../common/utils/list-utils/list-utils';
+import { AppStateService, UpdateEntities } from '../../../../state';
 import { EntityManagerService } from '../../entity-manager';
-import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 import { PermissionsService } from '../../permissions';
+import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 
 /**
  * Operations on Groups.
@@ -40,7 +40,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
 
     constructor(
         injector: Injector,
-        private api: GcmsApi,
+        private client: GCMSRestClientService,
         private entities: EntityManagerService,
         private permissions: PermissionsService,
         private appState: AppStateService,
@@ -53,7 +53,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the nested list of all groups that are visible to the current user.
      */
     getAll(): Observable<Group<Raw>[]> {
-        return this.api.group.getGroupsTree().pipe(
+        return this.client.group.tree().pipe(
             map((response) => response.groups),
             tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
@@ -64,7 +64,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the flat list of all groups that are visible to the current user.
      */
     getFlattned(): Observable<Group<Raw>[]> {
-        return this.api.group.listGroups().pipe(
+        return this.client.group.list().pipe(
             map((response) => response.items),
             tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
@@ -75,7 +75,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the list of all permissions of groups.
      */
     getGroupPermissions(): Observable<{ [key: number]: string[] }> {
-        return this.api.group.listGroups().pipe(
+        return this.client.group.list().pipe(
             map((response) => response.perms),
             this.catchAndRethrowError(),
         );
@@ -85,7 +85,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the nested list of all groups that are visible to the current user.
      */
     getSubgroups(parentId: number): Observable<Group<Raw>[]> {
-        return this.api.group.getSubgroups(parentId).pipe(
+        return this.client.group.subGroups(parentId).pipe(
             map((response) => response.items),
             tap((groups) => this.entities.addEntities(this.entityIdentifier, groups)),
             this.catchAndRethrowError(),
@@ -96,7 +96,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Get a single group and add it to the AppState.
      */
     get(userId: number): Observable<Group<Raw>> {
-        return this.api.group.getGroup(userId, { perms: true }).pipe(
+        return this.client.group.get(userId, { perms: true }).pipe(
             tap((res: GroupResponse) => this.permissions.storePermissions(AccessControlledType.GROUP_ADMIN, res.group.id, res.perms || GcmsPermission.VIEW)),
             map((res: GroupResponse) => res.group),
             // update state with server response
@@ -111,7 +111,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Groups can only be created as subgroups. There is always one root group in the CMS instance.
      */
     createSubgroup(parentId: number, subgroup: GroupCreateRequest): Observable<Group<Raw>> {
-        return this.api.group.createSubgroup(parentId, subgroup).pipe(
+        return this.client.group.create(parentId, subgroup).pipe(
             map((response) => response.group),
             switchMap((group) => {
                 this.entities.addEntity(this.entityIdentifier, group);
@@ -139,7 +139,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * @param parentTargetId The ID of the `Group` that should be the new parent group.
      */
     moveSubgroup(id: string | number, parentTargetId: number): Observable<Group<Raw>> {
-        return this.api.group.moveSubgroup(id, parentTargetId).pipe(
+        return this.client.group.move(id, parentTargetId).pipe(
             map((response) => response.group),
             switchMap((movedGroup) =>
                 this.getAll().pipe(
@@ -161,7 +161,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
     delete(id: number): Observable<void> {
         const groupToBeDeleted = this.appState.now.entity.group[id];
 
-        return this.api.group.deleteGroup(id).pipe(
+        return this.client.group.delete(id).pipe(
             switchMap(() => this.removeGroupFromAppState(id)),
             tap(() => this.notification.show({
                 type: 'success',
@@ -176,7 +176,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Updates the `Group` with the specified `id`
      */
     update(id: number, update: GroupUpdateRequest): Observable<Group<Raw>> {
-        return this.api.group.updateGroup(id, update).pipe(
+        return this.client.group.update(id, update).pipe(
             map((response) => response.group),
             tap((group) => {
                 this.entities.addEntity(this.entityIdentifier, group);
@@ -193,8 +193,8 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
     /**
      * Gets the users of the `Group` with the specified `id`.
      */
-    getGroupUsers(id: number, options?: GroupUsersListOptions): Observable<User<Raw>[]> {
-        return this.api.group.getGroupUsers(id, options).pipe(
+    getGroupUsers(id: number, options?: UserListOptions): Observable<User<Raw>[]> {
+        return this.client.group.listUsers(id, options).pipe(
             map((response) => response.items),
             switchMap((users) => combineLatest([
                 observableOf(users),
@@ -209,7 +209,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Create a new user in group with id {groupId}
      */
     createUser(groupId: number, payload: GroupUserCreateRequest): Observable<User<Raw>> {
-        return this.api.group.createUser(groupId, payload).pipe(
+        return this.client.group.createUser(groupId, payload).pipe(
             // get user from response
             map((res: GroupUserCreateResponse) => res.user),
             // get group of created user to assemble raw user (presume that group user has been created in is already in app state)
@@ -234,7 +234,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
     addUserToGroup(groupId: number, userId: number): Observable<User<Raw>> {
         const group = this.appState.now.entity.group[groupId];
 
-        return this.api.group.addUserToGroup(groupId, userId).pipe(
+        return this.client.group.assignUser(groupId, userId).pipe(
             map((response) => response.user),
             tap((user) => {
                 this.entities.addEntity('user', user);
@@ -255,7 +255,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
         const group = this.appState.now.entity.group[groupId];
         const user = this.appState.now.entity.user[userId];
 
-        return this.api.group.removeUserFromGroup(groupId, userId).pipe(
+        return this.client.group.unassignUser(groupId, userId).pipe(
             tap(() => {
                 if (user) {
                     const newGroups = removeEntries(user.groups, [groupId]);
@@ -283,7 +283,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Otherwise, the permissions on child types/instances of the given parentType/parentId will be returned.
      */
     getPermissionsSets(groupId: number, options: GroupPermissionsListOptions = {}): Observable<PermissionsSet[]> {
-        return this.api.group.getGroupPermissions(groupId, options).pipe(
+        return this.client.group.listPermissions(groupId, options).pipe(
             map((response) => response.items),
             this.catchAndRethrowError(),
         );
@@ -293,7 +293,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the permissions of the group with the specified `groupId` on a particular `type`.
      */
     getGroupTypePermissions(groupId: number, type: AccessControlledType): Observable<PermissionInfo[]> {
-        return this.api.group.getGroupTypePermissions(groupId, type).pipe(
+        return this.client.group.getPermission(groupId, type).pipe(
             map((response) => response.perms),
             this.catchAndRethrowError(),
         );
@@ -303,7 +303,7 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      * Gets the permissions of the group with the specified `groupId` on a particular instance of a `type`.
      */
     getGroupInstancePermissions(groupId: number, type: AccessControlledType, instanceId: number): Observable<PermissionInfo[]> {
-        return this.api.group.getGroupInstancePermissions(groupId, type, instanceId).pipe(
+        return this.client.group.getInstancePermission(groupId, type, instanceId).pipe(
             map((response) => response.perms),
             this.catchAndRethrowError(),
         );
@@ -312,14 +312,19 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
     /**
      * Sets the permissions of the group indicated by `groupId` on the specified `type`.
      */
-    setGroupTypePermissions(groupId: number, type: AccessControlledType, request: GroupSetPermissionsRequest): Observable<Group<Normalized>> {
-        return this.api.group.setGroupTypePermissions(groupId, type, request).pipe(
-            map(() => this.appState.now.entity.group[groupId]),
-            tap((group: Group<Normalized>) => {
+    setGroupTypePermissions(
+        groupId: number,
+        groupName: string,
+        type: AccessControlledType,
+        request: GroupSetPermissionsRequest,
+    ): Observable<void> {
+        return this.client.group.setPermission(groupId, type, request).pipe(
+            discard(() => {
                 this.notification.show({
                     type: 'success',
                     message: 'shared.item_updated',
-                    translationParams: { name: group.name },
+                    translationParams: { name: groupName },
+                    id: `group.type-permission-change.${groupId}`,
                 });
             }),
             this.catchAndRethrowError(),
@@ -331,17 +336,18 @@ export class GroupOperations extends ExtendedEntityOperationsBase<'group'> {
      */
     setGroupInstancePermissions(
         groupId: number,
+        groupName: string,
         type: AccessControlledType,
         instanceId: number | string,
         request: GroupSetPermissionsRequest,
-    ): Observable<Group<Normalized>> {
-        return this.api.group.setGroupInstancePermissions(groupId, type, instanceId, request).pipe(
-            map(() => this.appState.now.entity.group[groupId]),
-            tap((group: Group<Normalized>) => {
+    ): Observable<void> {
+        return this.client.group.setInstancePermission(groupId, type, instanceId, request).pipe(
+            discard(() => {
                 this.notification.show({
                     type: 'success',
                     message: 'shared.item_updated',
-                    translationParams: { name: group.name },
+                    translationParams: { name: groupName },
+                    id: `group.instance-permission-change.${groupId}`,
                 });
             }),
             this.catchAndRethrowError(),

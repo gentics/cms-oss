@@ -1,0 +1,2 @@
+Editor User Interface: Fixed the warning when replacing an existing file or image, with a new uploaded file/image, if it has a different format/extension.
+Additionally fixed the handling when replacing a file with a image and vice versa.

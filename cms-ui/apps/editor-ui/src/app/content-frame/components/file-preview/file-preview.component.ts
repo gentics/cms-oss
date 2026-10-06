@@ -9,6 +9,7 @@ import {
     Output,
 } from '@angular/core';
 import { getImageType, I18nNotificationService } from '@gentics/cms-components';
+import { EditMode } from '@gentics/cms-integration-api-models';
 import {
     File as FileModel,
     Image as ImageModel,
@@ -17,9 +18,10 @@ import {
 } from '@gentics/cms-models';
 import { ChangesOf } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { publishReplay, refCount, switchMap } from 'rxjs/operators';
+import { publishReplay, refCount, switchMap, tap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
+import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
@@ -71,6 +73,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         private overlay: EditorOverlayService,
         private errorHandler: ErrorHandler,
         private notification: I18nNotificationService,
+        private nav: NavigationService,
     ) {}
 
     ngOnChanges(changes: ChangesOf<this>): void {
@@ -215,14 +218,17 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             refCount(),
         );
 
-        if (this.keepFileName && (this.file.fileType !== files[0].type)) {
+        if (
+            this.keepFileName
+            && (getFileExtension(this.file.name, true).toLowerCase() !== getFileExtension(files[0].name, true).toLowerCase())
+        ) {
             this.notification.show({
                 message: 'message.file_type_changed_warning',
                 translationParams: {
                     fileName: this.file.name,
                     newFileName: files[0].name,
                 },
-                type: 'alert',
+                type: 'warning',
                 delay: 0,
             });
         }
@@ -231,15 +237,27 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
         this.changeDetector.markForCheck();
 
         this.modifySubscription = upload.pipe(
-            switchMap(() => {
-                if (this.file.type === 'file') {
-                    return this.folderActions.getFile(this.file.id, { nodeId: this.nodeId });
-                } else {
-                    return this.folderActions.getImage(this.file.id, { nodeId: this.nodeId });
+            switchMap((res) => {
+                const resFile = res.item;
+                const newItemType = resFile.type;
+
+                // Edge-case: Files and Images are pretty much the same thing in the CMS,
+                // but have different ui-views n stuff.
+                if (newItemType !== this.file.type) {
+                    return Promise.all([
+                        this.folderActions.refreshList('file'),
+                        this.folderActions.refreshList('image'),
+                        this.nav.detail(this.nodeId, newItemType, resFile.id, EditMode.EDIT_PROPERTIES).navigate(),
+                    ]).then(() => null);
                 }
+
+                return res.response.file || res.response.image;
             }),
-        ).subscribe({
-            next: (loadedFile) => {
+            tap((loadedFile: FileModel | ImageModel) => {
+                if (loadedFile == null) {
+                    return;
+                }
+
                 this.fileChange.emit(loadedFile);
 
                 this.file = loadedFile;
@@ -268,7 +286,8 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
                         delay: 5000,
                     });
                 }
-            },
+            }),
+        ).subscribe({
             error: (err) => {
                 this.loading = false;
                 this.changeDetector.markForCheck();

@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.mcp.AbstractMcpTool;
+import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
@@ -65,7 +67,7 @@ public class PageLoadTool extends AbstractMcpTool {
 		Object rawNodeId = arguments.get(ARG_NODE_ID);
 		Integer nodeId = rawNodeId != null ? Integer.valueOf(String.valueOf(rawNodeId)) : null;
 
-		PageResourceImpl pageResource = new PageResourceImpl();
+		PageResource pageResource = RestPermissions.guard(PageResource.class, new PageResourceImpl());
 
 		return pageResource.load(id, false, false, false, false, false, false, false, false, false, false, nodeId,
 				null);

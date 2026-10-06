@@ -12,8 +12,10 @@ import com.gentics.contentnode.mcp.model.ListResult;
 import com.gentics.contentnode.mcp.model.NodeInfo;
 import com.gentics.contentnode.mcp.util.ListArgs;
 import com.gentics.contentnode.mcp.util.ListResponses;
+import com.gentics.contentnode.mcp.util.RestPermissions;
 import com.gentics.contentnode.mcp.util.Slice;
 import com.gentics.contentnode.rest.model.Node;
+import com.gentics.contentnode.rest.resource.NodeResource;
 import com.gentics.contentnode.rest.resource.impl.NodeResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
@@ -86,7 +88,7 @@ public class ListNodesTool extends AbstractMcpTool {
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
 		ListArgs args = ListArgs.of(arguments, LIMITS);
 
-		NodeResourceImpl nodeResource = new NodeResourceImpl();
+		NodeResource nodeResource = RestPermissions.guard(NodeResource.class, new NodeResourceImpl());
 
 		// fetch all matching nodes unpaged (the default PagingParameterBean has pageSize -1), sorted
 		// by the resource's own default ("name"), then slice

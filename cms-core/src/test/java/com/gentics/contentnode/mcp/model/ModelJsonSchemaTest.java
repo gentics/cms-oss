@@ -9,13 +9,19 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.contentnode.mcp.model.ObjectRef.Type;
 import com.gentics.contentnode.mcp.model.TranslationStatusInfo.LatestVersionInfo;
 import com.gentics.contentnode.mcp.util.Slice;
+import com.gentics.contentnode.rest.model.Construct;
+import com.gentics.contentnode.rest.model.ConstructCategory;
 import com.gentics.contentnode.rest.model.ContentLanguage;
 import com.gentics.contentnode.rest.model.ItemVersion;
 import com.gentics.contentnode.rest.model.Node;
 import com.gentics.contentnode.rest.model.PageVersion;
+import com.gentics.contentnode.rest.model.Part;
+import com.gentics.contentnode.rest.model.Property;
+import com.gentics.contentnode.rest.model.SelectSetting;
 import com.gentics.contentnode.rest.model.User;
 
 import io.modelcontextprotocol.json.schema.JsonSchemaValidator.ValidationResponse;
@@ -66,8 +72,91 @@ public class ModelJsonSchemaTest {
 	}
 
 	@Test
+	public void testWhoamiUser() {
+		assertMatches(WhoamiUser.class, WhoamiUser.jsonSchema());
+	}
+
+	@Test
+	public void testSearchHit() {
+		assertMatches(SearchHit.class, SearchHit.jsonSchema());
+	}
+
+	@Test
+	public void testFolderItem() {
+		assertMatches(FolderItem.class, FolderItem.jsonSchema());
+	}
+
+	@Test
+	public void testFileInfo() {
+		assertMatches(FileInfo.class, FileInfo.jsonSchema(null));
+	}
+
+	@Test
+	public void testTagInfo() {
+		assertMatches(TagInfo.class, TagInfo.jsonSchema());
+	}
+
+	@Test
 	public void testNodeInfo() {
 		assertMatches(NodeInfo.class, NodeInfo.jsonSchema());
+	}
+
+	@Test
+	public void testConstructInfo() {
+		assertMatches(ConstructInfo.class, ConstructInfo.jsonSchema(null));
+		assertMatches(ConstructInfo.Category.class, ConstructInfo.Category.jsonSchema());
+		assertMatches(ConstructInfo.Template.class, ConstructInfo.Template.jsonSchema());
+		assertMatches(ConstructInfo.PartInfo.class, ConstructInfo.PartInfo.jsonSchema());
+		assertMatches(ConstructInfo.Summary.class, ConstructInfo.Summary.jsonSchema());
+	}
+
+	@Test
+	public void testConstructInfoOf() {
+		Property template = new Property();
+		template.setType(Property.Type.RICHTEXT);
+		template.setStringValue("<b>{{cms.tag.parts.text}}</b>");
+		Property text = new Property();
+		text.setType(Property.Type.STRING);
+		text.setStringValue("Hi");
+		SelectSetting select = new SelectSetting();
+		select.setDatasourceId(7);
+		ConstructCategory category = new ConstructCategory();
+		category.setId(5);
+		category.setNameI18n(Map.of("en", "Teasers"));
+
+		Construct construct = new Construct();
+		construct.setId(12);
+		construct.setGlobalId("A547.12");
+		construct.setName("Teaser");
+		construct.setKeyword("teaser");
+		construct.setCategoryId(5);
+		construct.setCategory(category);
+		construct.setCdate(1000);
+		construct.setParts(List.of(
+				new Part().setKeyword("text").setTypeId(1).setType(Property.Type.STRING).setPartOrder(2)
+						.setEditable(true).setDefaultProperty(text),
+				new Part().setKeyword("handlebars").setTypeId(43).setType(Property.Type.RICHTEXT).setPartOrder(1)
+						.setDefaultProperty(template),
+				new Part().setKeyword("choice").setTypeId(29).setType(Property.Type.SELECT).setPartOrder(3)
+						.setSelectSettings(select)));
+
+		ConstructInfo info = ConstructInfo.of(construct);
+
+		assertThat(info.ref()).isEqualTo(new ObjectRef(Type.CONSTRUCT, 12, "A547.12", null, "Teaser", null, null,
+				null, null));
+		assertThat(info.template()).isEqualTo(new ConstructInfo.Template("handlebars",
+				"<b>{{cms.tag.parts.text}}</b>", 43, "RICHTEXT"));
+		assertThat(info.parts()).extracting(ConstructInfo.PartInfo::keyword).containsExactly("text", "choice");
+		assertThat(info.parts().get(0).defaultValue()).isEqualTo("Hi");
+		assertThat(info.parts().get(1).datasourceId()).isEqualTo(7);
+		assertThat(info.category()).isEqualTo(new ConstructInfo.Category(5, null, Map.of("en", "Teasers"), null,
+				null));
+		assertThat(info.created()).isEqualTo(1000);
+		assertThat(info.edited()).isNull();
+
+		ConstructInfo.Summary summary = ConstructInfo.Summary.of(construct);
+		assertThat(summary.partKeywords()).containsExactly("text", "choice");
+		assertThat(summary.hasHandlebarsPart()).isTrue();
 	}
 
 	@Test
@@ -115,6 +204,26 @@ public class ModelJsonSchemaTest {
 		assertThat(NodeInfo.of(node, languages)).isEqualTo(new NodeInfo(
 				new ObjectRef(Type.NODE, 42, "A547.12345", null, "Example Node", null, null, null, null),
 				"https://www.example.com", "/", languages, 10, null, 3));
+	}
+
+	@Test
+	public void testUserItem() {
+		assertMatches(UserItem.class, UserItem.jsonSchema(null));
+	}
+
+	@Test
+	public void testUserItemHasNoPassword() {
+		User user = new User();
+		user.setId(35);
+		user.setLogin("mcp.test");
+		user.setLastName("Test");
+		user.setPassword("secret-password");
+
+		Map<?, ?> json = new ObjectMapper().convertValue(UserItem.of(user, List.of()), Map.class);
+
+		assertThat(json).isEqualTo(Map.of("ref", Map.of("type", "user", "id", 35, "name", "mcp.test"), "login",
+				"mcp.test", "lastName", "Test", "groups", List.of()));
+		assertThat(json.toString()).doesNotContain("password", "secret");
 	}
 
 	@Test

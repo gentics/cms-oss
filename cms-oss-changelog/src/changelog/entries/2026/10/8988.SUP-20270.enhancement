@@ -1,0 +1,2 @@
+The new handlebars helper @gtx_load@ can be used to load an object with specified type and id.
+See the the guides about "Additional Helpers":https://www.gentics.com/Content.Node/cmp8/guides/handlebars.html#additional-helpers for details.

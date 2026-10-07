@@ -46,6 +46,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueueMigration;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.DirtQueueEntry;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.datasource.mccr.WritableMCCRDatasource;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
@@ -879,7 +880,7 @@ public class QueueEntry {
 
 				if (eventLogging.isLogEventAnalysis()) {
 					try {
-						File tmpFile = new File(System.getProperty("java.io.tmpdir"), "tmp_analysis_" + sid + ".xml");
+						File tmpFile = new File(ConfigurationValue.TMP_PATH.get(), "tmp_analysis_" + sid + ".xml");
 
 						// when the event is the logging start, we do not append to the tmp file, but start a new one
 						out = new PrintWriter(new FileOutputStream(tmpFile, Events.isEvent(eventMask, Events.LOGGING_START) ? false : true));

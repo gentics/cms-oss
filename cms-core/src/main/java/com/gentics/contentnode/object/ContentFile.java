@@ -22,7 +22,6 @@ import org.apache.commons.collections4.SetUtils;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -728,7 +727,7 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		// the file was moved
 		if (Events.isEvent(eventMask, Events.MOVE)) {
 			// the property "folder_id" changed
-			List modProps = getModifiedProperties(new String[] { "folder_id"});
+			List<String> modProps = getModifiedProperties(new String[] { "folder_id"});
 
 			triggerEvent(object, (String[]) modProps.toArray(new String[modProps.size()]), Events.UPDATE, depth + 1, channelId);
 		}
@@ -741,7 +740,7 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 			for (File channelVariant : t.getObjects(File.class, getChannelSet().values())) {
 				if (!channelVariant.equals(this)) {
-					channelVariant.triggerEvent(new DependencyObject(channelVariant, (NodeObject) null), null, Events.DELETE, depth + 1, 0);
+					channelVariant.triggerEvent(new DependencyObject(channelVariant, (NodeObject) null), null, Events.UPDATE, depth + 1, 0);
 				}
 			}
 		}

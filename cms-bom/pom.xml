@@ -177,6 +177,11 @@
 				<artifactId>cms-translation-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.jsoup</groupId>
+				<artifactId>jsoup</artifactId>
+				<version>${jsoup.version}</version>
+			</dependency>
 
 			<!-- FormGen -->
 			<dependency>

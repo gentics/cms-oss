@@ -37,4 +37,24 @@ describe('AttachmentList', () => {
         expect(onToggleMode).toHaveBeenCalledWith('a');
         expect(onRemove).toHaveBeenCalledWith('b');
     });
+
+    it('shows no progress while not sending', () => {
+        render(<AttachmentList attachments={attachments} onToggleMode={vi.fn()} onRemove={vi.fn()} progress={{ a: 0.5 }} />, { wrapper: UiProvider });
+
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+        expect(screen.queryByText('50 %')).not.toBeInTheDocument();
+        expect(screen.queryByText('waiting')).not.toBeInTheDocument();
+    });
+
+    it('shows each file\'s progress while sending, and keeps the files as they are', () => {
+        render(<AttachmentList attachments={attachments} onToggleMode={vi.fn()} onRemove={vi.fn()} isSending progress={{ a: 0.623 }} />, { wrapper: UiProvider });
+
+        expect(screen.getByText('62 %')).toBeInTheDocument();
+        expect(screen.getByRole('progressbar', { name: 'brief.pdf' })).toHaveAttribute('aria-valuenow', '62');
+        // The second file has not started yet.
+        expect(screen.getByText('waiting')).toBeInTheDocument();
+        expect(screen.queryByRole('progressbar', { name: 'terms.txt' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Remove: brief.pdf' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'verbatim / as a source: terms.txt' })).toBeDisabled();
+    });
 });

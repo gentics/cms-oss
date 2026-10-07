@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import { AppShell } from '@/components/AppShell/AppShell';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
@@ -19,11 +19,24 @@ import styles from './SessionPage.module.css';
 function SessionComposer({ sessionId }: { sessionId: string }) {
     const composerRef = useRef<ComposerHandle>(null);
     const sendTurn = useSendTurn(sessionId);
+    // Upload progress of the files sent, by their position, for the composer's attachment list.
+    const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+
+    function reportUploadProgress(index: number, fraction: number) {
+        setUploadProgress((current) => {
+            const next = [...current];
+
+            next[index] = fraction;
+
+            return next;
+        });
+    }
 
     function handleSubmit(input: StartSessionInput) {
+        setUploadProgress([]);
         // The promise, not `mutate` callbacks: those are dropped once the user has gone on to another
         // session, and a failed send would go unreported.
-        sendTurn.mutateAsync(input).then(
+        sendTurn.mutateAsync({ ...input, onFileProgress: reportUploadProgress }).then(
             () => composerRef.current?.reset(),
             (error: unknown) => {
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
@@ -31,7 +44,15 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
         );
     }
 
-    return <Composer ref={composerRef} variant="chat" onSubmit={handleSubmit} isSubmitting={sendTurn.isPending} />;
+    return (
+        <Composer
+            ref={composerRef}
+            variant="chat"
+            onSubmit={handleSubmit}
+            isSubmitting={sendTurn.isPending}
+            uploadProgress={uploadProgress}
+        />
+    );
 }
 
 /**

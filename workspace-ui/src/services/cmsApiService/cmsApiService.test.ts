@@ -35,9 +35,13 @@ function postedBody(fetchMock: ReturnType<typeof stubFetchSequence>, call = 0): 
 describe('createCmsToken', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.useRealTimers();
     });
 
-    it('posts the name with the CMS session cookie and returns the created token', async () => {
+    it('posts the name and an expiry 60 minutes ahead, in seconds, with the CMS session cookie and returns the created token', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW_S * 1000);
+
         const fetchMock = stubFetchSequence(createdResponse());
 
         await expect(createCmsToken('genaix-workspace-1'))
@@ -48,7 +52,7 @@ describe('createCmsToken', () => {
         expect(url).toBe('/rest/admin/token');
         expect(init?.method).toBe('POST');
         expect(init?.credentials).toBe('same-origin');
-        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-workspace-1' });
+        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-workspace-1', expires: NOW_S + 3600 });
     });
 
     it('throws an HttpError with the status when the CMS refuses', async () => {
@@ -72,6 +76,7 @@ describe('getCmsToken', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
+        vi.useRealTimers();
     });
 
     it('returns the token from the store without a request', async () => {
@@ -93,6 +98,9 @@ describe('getCmsToken', () => {
     });
 
     it('posts for a token when the store is empty and stores the token from the response', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW_S * 1000);
+
         const fetchMock = stubFetchSequence(createdResponse());
 
         await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual(fromResponse);
@@ -100,7 +108,7 @@ describe('getCmsToken', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/admin/token');
         expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
-        expect(postedBody(fetchMock)).toEqual({ name: expect.stringMatching(/^genaix-workspace-/) });
+        expect(postedBody(fetchMock)).toEqual({ name: expect.stringMatching(/^genaix-workspace-/), expires: NOW_S + 3600 });
         expect(useCmsTokenStore.getState().cmsToken).toEqual(fromResponse);
     });
 

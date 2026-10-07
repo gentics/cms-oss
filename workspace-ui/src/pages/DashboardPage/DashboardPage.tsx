@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Composer } from '@/components/Composer/Composer';
@@ -36,8 +37,22 @@ export function DashboardPage() {
     const navigate = useNavigate();
     const startSession = useStartSession();
 
+    // Upload progress of the files sent, by their position, for the composer's attachment list.
+    const [uploadProgress, setUploadProgress] = useState<number[]>([]);
+
+    function reportUploadProgress(index: number, fraction: number) {
+        setUploadProgress((current) => {
+            const next = [...current];
+
+            next[index] = fraction;
+
+            return next;
+        });
+    }
+
     function handleSubmit(input: StartSessionInput) {
-        startSession.mutate(input, {
+        setUploadProgress([]);
+        startSession.mutate({ ...input, onFileProgress: reportUploadProgress }, {
             onSuccess: (session) => {
                 void navigate({ to: '/sessions/$id', params: { id: session.id } });
             },
@@ -55,7 +70,7 @@ export function DashboardPage() {
                     <div className={styles.content}>
                         <h1 className={styles.greeting}>{t(greetingKey(new Date().getHours()), { name: GREETING_NAME })}</h1>
 
-                        <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} />
+                        <Composer variant="start" onSubmit={handleSubmit} isSubmitting={startSession.isPending} uploadProgress={uploadProgress} />
 
                         <div className={styles.todos}>
                             <SessionTodos />

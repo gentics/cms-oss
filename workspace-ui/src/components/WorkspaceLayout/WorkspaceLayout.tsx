@@ -1,9 +1,7 @@
-import { PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Splitter } from '@/components/Splitter/Splitter';
-import { Button } from '@/components/ui/button';
 
 import {
     clampColumnWidths,
@@ -17,9 +15,6 @@ import styles from './WorkspaceLayout.module.css';
 
 type Side = keyof ColumnWidths;
 
-/** The one column a phone shows (≤ 640 px, `WorkspaceLayout.module.css`). */
-export type PhoneColumn = 'left' | 'center' | 'right';
-
 interface WorkspaceLayoutProps {
     left: ReactNode;
     center: ReactNode;
@@ -31,26 +26,13 @@ interface WorkspaceLayoutProps {
      * content stays mounted (draft `hidePreview`). Default `true`.
      */
     isRightColumnVisible?: boolean;
-    /** Without it there is no button for the left column: "hide" at the top of it, "show" at the top of the center while it is hidden. */
-    onToggleLeftColumn?: () => void;
-    /** As `onToggleLeftColumn`, for the right column. */
-    onToggleRightColumn?: () => void;
-    /** Phones show only this column; the visibility props above apply to wider screens. Default `center`. */
-    phoneColumn?: PhoneColumn;
-    /**
-     * The buttons on phones: "show" at the top of the center opens a side column instead of it, "hide"
-     * at the top of that column goes back. Without it there are none; for the right column only with
-     * `onToggleRightColumn`.
-     */
-    onPhoneColumnChange?: (column: PhoneColumn) => void;
 }
 
 /**
  * The three-column workspace: left · center · right, with a splitter between each pair. Dragging or
  * the arrow keys resize the side columns; double-click or Home resets one to its default width.
- * The center column takes the rest. A side column with a toggle has a button at its top that hides
- * it; while it is hidden, the button that shows it sits at the top of the center on its side. Phones
- * (≤ 640 px) show one column at a time, `phoneColumn`, with buttons of their own; CSS shows either set.
+ * The center column takes the rest; wider screens hide and show the side columns from the topbar
+ * (`AppShell`). Phones (≤ 640 px) show a shown side column instead of the center, without splitters.
  */
 export function WorkspaceLayout({
     left,
@@ -58,10 +40,6 @@ export function WorkspaceLayout({
     right,
     isLeftColumnVisible = true,
     isRightColumnVisible = true,
-    onToggleLeftColumn,
-    onToggleRightColumn,
-    phoneColumn = 'center',
-    onPhoneColumnChange,
 }: WorkspaceLayoutProps) {
     const { t } = useTranslation();
     const gridRef = useRef<HTMLDivElement>(null);
@@ -110,18 +88,6 @@ export function WorkspaceLayout({
         '--w-right': measured.total > 0 && widths.right !== null ? `${widths.right}px` : undefined,
     };
 
-    // A toggle at the top of a column, on its `edge`, for wider screens or for phones; the wrapper
-    // places it and is shown by the CSS for its screen, the Button keeps its look.
-    function toggleButton(screen: 'wide' | 'phone', edge: 'start' | 'end', label: string, icon: ReactNode, onToggle: () => void) {
-        return (
-            <span className={`${edge === 'start' ? styles.toggleStart : styles.toggleEnd} ${screen === 'wide' ? styles.wideOnly : styles.phoneOnly}`}>
-                <Button variant="ghost" size="icon" aria-label={label} title={label} onClick={onToggle}>
-                    {icon}
-                </Button>
-            </span>
-        );
-    }
-
     function setWidth(side: Side, width: number | null) {
         setRequested((current) => ({ ...current, [side]: width }));
     }
@@ -146,16 +112,11 @@ export function WorkspaceLayout({
                 styles.layout,
                 isLeftColumnVisible ? '' : styles.leftHidden,
                 isRightColumnVisible ? '' : styles.rightHidden,
-                phoneColumn === 'left' ? styles.phoneLeft : '',
-                phoneColumn === 'right' ? styles.phoneRight : '',
                 dragging ? styles.resizing : '',
             ].filter(Boolean).join(' ')}
             style={style}
         >
             <div ref={leftRef} className={`${styles.column} ${styles.left}`} hidden={!isLeftColumnVisible}>
-                {onToggleLeftColumn && toggleButton('wide', 'end', t('workspace.hideLeftColumn'), <PanelLeftCloseIcon size={20} />, onToggleLeftColumn)}
-                {onPhoneColumnChange
-                    && toggleButton('phone', 'end', t('workspace.hideLeftColumn'), <PanelLeftCloseIcon size={20} />, () => onPhoneColumnChange('center'))}
                 {left}
             </div>
             <Splitter
@@ -172,14 +133,6 @@ export function WorkspaceLayout({
                 onReset={() => setWidth('left', null)}
             />
             <div className={`${styles.column} ${styles.center}`}>
-                {onToggleLeftColumn && !isLeftColumnVisible
-                    && toggleButton('wide', 'start', t('workspace.showLeftColumn'), <PanelLeftOpenIcon size={20} />, onToggleLeftColumn)}
-                {onToggleRightColumn && !isRightColumnVisible
-                    && toggleButton('wide', 'end', t('workspace.showRightColumn'), <PanelRightOpenIcon size={20} />, onToggleRightColumn)}
-                {onPhoneColumnChange
-                    && toggleButton('phone', 'start', t('workspace.showLeftColumn'), <PanelLeftOpenIcon size={20} />, () => onPhoneColumnChange('left'))}
-                {onPhoneColumnChange && onToggleRightColumn
-                    && toggleButton('phone', 'end', t('workspace.showRightColumn'), <PanelRightOpenIcon size={20} />, () => onPhoneColumnChange('right'))}
                 {center}
             </div>
             <Splitter
@@ -196,9 +149,6 @@ export function WorkspaceLayout({
                 onReset={() => setWidth('right', null)}
             />
             <div ref={rightRef} className={`${styles.column} ${styles.right}`} hidden={!isRightColumnVisible}>
-                {onToggleRightColumn && toggleButton('wide', 'start', t('workspace.hideRightColumn'), <PanelRightCloseIcon size={20} />, onToggleRightColumn)}
-                {onPhoneColumnChange && onToggleRightColumn
-                    && toggleButton('phone', 'start', t('workspace.hideRightColumn'), <PanelRightCloseIcon size={20} />, () => onPhoneColumnChange('center'))}
                 {right}
             </div>
         </div>

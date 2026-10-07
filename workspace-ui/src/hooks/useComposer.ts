@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
 import { useToast } from '@/components/ui/use-toast';
 import { readParts, selectedRange, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
+import { checkUploadFile, formatMegabytes, UPLOAD_MAX_BYTES } from '@/helper/uploadLimits/uploadLimits';
 import type { StartFile, StartSessionInput } from '@/hooks/useGenaixQueries';
 
 /** A file attached in a composer, before it is uploaded. */
@@ -15,10 +16,11 @@ export interface Attachment extends StartFile {
 
 /**
  * The state of the `Composer` (dashboard and session chat): the field, a Tiptap editor with its
- * verbatim passages (`composerParts`), and the attached files. The caller decides what a submit does.
+ * verbatim passages (`composerParts`), and the attached files within the upload limits
+ * (`uploadLimits`). The caller decides what a submit does.
  */
 export function useComposer() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const toast = useToast();
     const editor = useEditor({ extensions: composerExtensions });
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -113,13 +115,46 @@ export function useComposer() {
         fileInputRef.current!.click();
     }
 
-    /** The file input's change handler: new files are attached as a source. */
+    // An error toast for a file that cannot be attached, naming it and the limit it breaks. Stays
+    // until it is closed, like the app's other error toasts (`ErrorNotifications`).
+    function rejectFile(file: File, problem: NonNullable<ReturnType<typeof checkUploadFile>>) {
+        toast.add({
+            type: 'error',
+            priority: 'low',
+            timeout: 0,
+            title: t('composer.attachment.notAdded', { name: file.name }),
+            description: problem.reason === 'tooLarge'
+                ? t('composer.attachment.tooLarge', {
+                    size: formatMegabytes(file.size, i18n.language),
+                    limit: formatMegabytes(UPLOAD_MAX_BYTES, i18n.language),
+                })
+                : t('composer.attachment.typeNotAccepted', { type: problem.type }),
+        });
+    }
+
+    /**
+     * Attaches picked or dropped files as a source; one over the limits is not attached, and an
+     * error toast says why.
+     */
     function addFiles(files: FileList | null) {
-        const added = Array.from(files ?? [], (file): Attachment => ({ id: crypto.randomUUID(), file, mode: 'source' }));
+        const added: Attachment[] = [];
+
+        for (const file of Array.from(files ?? [])) {
+            const problem = checkUploadFile(file);
+
+            if (problem) {
+                rejectFile(file, problem);
+            } else {
+                added.push({ id: crypto.randomUUID(), file, mode: 'source' });
+            }
+        }
 
         setAttachments((current) => [...current, ...added]);
+
         // The same file can be picked again after it was removed.
-        fileInputRef.current!.value = '';
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
 
     function toggleMode(id: string) {

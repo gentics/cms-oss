@@ -1,5 +1,5 @@
 import { ArrowUpIcon, KeyboardIcon, PaperclipIcon, QuoteIcon } from 'lucide-react';
-import { type Ref, useImperativeHandle, useState } from 'react';
+import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -8,6 +8,7 @@ import { ComposerTextInput } from '@/components/ComposerTextInput/ComposerTextIn
 import { IconButton } from '@/components/IconButton/IconButton';
 import { Button } from '@/components/ui/button';
 import { VoiceInput } from '@/components/VoiceInput/VoiceInput';
+import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
 import { useComposer } from '@/hooks/useComposer';
 import type { StartSessionInput } from '@/hooks/useGenaixQueries';
 import { useSpeechDictation } from '@/hooks/useSpeechDictation';
@@ -27,6 +28,11 @@ interface ComposerProps {
     onSubmit: (input: StartSessionInput) => void;
     /** While the input is being sent: the send button is disabled and nothing is submitted twice. */
     isSubmitting: boolean;
+    /**
+     * While sending: the share uploaded of each submitted file, 0 to 1, by its position in the
+     * submitted `files` (`StartSessionInput.onFileProgress`); a file without one is still waiting.
+     */
+    uploadProgress?: number[];
     ref?: Ref<ComposerHandle>;
 }
 
@@ -42,7 +48,7 @@ const TEXT_KEYS = {
  * Enter or the send button submits the message parts and the files; a dictation only fills the
  * field. On phones it puts voice first. Sending is the caller's.
  */
-export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -60,6 +66,8 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
         removeAttachment,
     } = useComposer();
     const [hasFocus, setHasFocus] = useState(false);
+    // While files are dragged over the composer, it looks as when it has the focus.
+    const [isDraggingFiles, setIsDraggingFiles] = useState(false);
     // Mobile: the text prompt stays collapsed behind the big mic until the user asks for it.
     const [isTyping, setIsTyping] = useState(false);
     const texts = TEXT_KEYS[variant];
@@ -112,6 +120,13 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
     const canSubmit = !isSubmitting && (!isEmpty || attachments.length > 0);
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
+    // The submitted files are the attachments in their order: while sending they cannot be removed,
+    // and new ones only come after them, so the position still names the same attachment.
+    const progress = Object.fromEntries(attachments.flatMap(({ id }, index) => {
+        const share = uploadProgress[index];
+
+        return share === undefined ? [] : [[id, share]];
+    }));
 
     // Voice input and send: on the dashboard at the end of the field's line, in the chat in the
     // bottom right corner of the box, after the actions (draft `.comrow`).
@@ -144,6 +159,7 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
                 className={styles.fileInput}
                 type="file"
                 multiple
+                accept={UPLOAD_ACCEPT}
                 tabIndex={-1}
                 aria-label={t('composer.file')}
                 onChange={(event) => addFiles(event.target.files)}
@@ -163,8 +179,35 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
         </div>
     );
 
+    // Only files are dropped here; dragged text is left to the field.
+    function dragsFiles(event: DragEvent) {
+        return Array.from(event.dataTransfer.types).includes('Files');
+    }
+
     return (
-        <div className={[styles.composer, isChat ? styles.chat : '', isVoiceFirst ? styles.voiceFirst : ''].filter(Boolean).join(' ')}>
+        <div
+            className={[styles.composer, isChat ? styles.chat : '', isVoiceFirst ? styles.voiceFirst : ''].filter(Boolean).join(' ')}
+            onDragOver={(event) => {
+                if (dragsFiles(event)) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'copy';
+                    setIsDraggingFiles(true);
+                }
+            }}
+            onDragLeave={(event) => {
+                // Moving onto a child is not leaving.
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setIsDraggingFiles(false);
+                }
+            }}
+            onDrop={(event) => {
+                if (dragsFiles(event)) {
+                    event.preventDefault();
+                    setIsDraggingFiles(false);
+                    addFiles(event.dataTransfer.files);
+                }
+            }}
+        >
             {/* The main input on phones (≤ 640 px, see the module); hidden on wider screens. */}
             {dictation.isSupported && (
                 <div className={styles.voiceStart}>
@@ -181,12 +224,18 @@ export function Composer({ variant, onSubmit, isSubmitting, ref }: ComposerProps
             <div
                 className={[
                     styles.prompt,
-                    hasFocus ? styles.focus : '',
+                    hasFocus || isDraggingFiles ? styles.focus : '',
                     dictation.isListening ? styles.listening : '',
                 ].filter(Boolean).join(' ')}
             >
                 <div className={styles.attachments}>
-                    <AttachmentList attachments={attachments} onToggleMode={toggleMode} onRemove={removeAttachment} />
+                    <AttachmentList
+                        attachments={attachments}
+                        onToggleMode={toggleMode}
+                        onRemove={removeAttachment}
+                        isSending={isSubmitting}
+                        progress={progress}
+                    />
                 </div>
 
                 <div className={styles.line}>

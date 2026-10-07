@@ -3,7 +3,7 @@ export const MIN_LEFT_WIDTH = 210;
 /** Smallest width of the right column in px. */
 export const MIN_RIGHT_WIDTH = 320;
 /** Width the center column always keeps free in px (design.md §11; the draft's script used 300). */
-export const MIN_CENTER_WIDTH = 320;
+const MIN_CENTER_WIDTH = 320;
 /** Width of one splitter track in px (design.md §6.2). */
 export const SPLITTER_WIDTH = 9;
 
@@ -13,7 +13,7 @@ export interface ColumnWidths {
     right: number | null;
 }
 
-export interface ColumnWidthInput {
+interface ColumnWidthInput {
     /** Width of the whole workspace grid in px. */
     total: number;
     isLeftVisible: boolean;
@@ -25,7 +25,7 @@ export interface ColumnWidthInput {
     rendered: { left: number; right: number };
 }
 
-export interface ClampedColumnWidths extends ColumnWidths {
+interface ClampedColumnWidths extends ColumnWidths {
     maxLeft: number;
     maxRight: number;
 }

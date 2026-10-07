@@ -1156,4 +1156,92 @@ test.describe('Page Management', () => {
         await expect(buttons).toHaveCount(1);
         await expect(buttons).toHaveAttribute('data-action', 'close');
     });
+
+    test('should put a page into the queue when no publish permission', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19583',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.READ_ITEMS,
+                    GcmsPermission.UPDATE_ITEMS,
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+        await itemAction(item, 'publish');
+
+        await test.step('Publish modal', async () => {
+            const modal = page.locator('gtx-publish-pages-modal');
+
+            const row = modal.locator(`.modal-content table .page[data-id="${TEST_PAGE.id}"]`);
+            const lang = row.locator('[data-control="language"]');
+            await lang.locator('[data-action="select-all"] button').click();
+
+            const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+            const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+            await clickModalAction(modal, 'confirm');
+            const pubRes = await pubReq;
+            const pubData = await pubRes.json() as CMSResponse;
+            expect(pubData.responseInfo.responseCode).toEqual(ResponseCode.OK);
+            // This text is not getting translated luckily, so we can identify that the page was put into the queue properly
+            expect(pubData.responseInfo.responseMessage).toContain('publish workflow');
+
+            // Wait for the list to be reloaded
+            await pageListReq;
+        });
+
+        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        await expect(itemIndicator).toHaveCount(1);
+        await expect(itemIndicator).toContainClass('indicator-in-queue');
+    });
+
+    test('should put a published page into the queue when no publish permission', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19583',
+        }],
+    }, async ({ page }) => {
+        // Page needs to be published first
+        await IMPORTER.client.page.publish(TEST_PAGE.id, {
+            alllang: true,
+        }).send();
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.READ_ITEMS,
+                    GcmsPermission.UPDATE_ITEMS,
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        const takeOfflineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+        const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+        await itemAction(item, 'take-offline');
+        await takeOfflineReq;
+        // Compares to the publish request, we can't determine this request state based on the response
+        await pageListReq;
+
+        // Now should be marked as in queue for taking it offline
+        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        await expect(itemIndicator).toHaveCount(1);
+        await expect(itemIndicator).toContainClass('indicator-in-queue');
+    });
 });

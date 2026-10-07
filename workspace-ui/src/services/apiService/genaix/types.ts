@@ -14,6 +14,8 @@ export type GenaixCode = GenaixSchema<'GenaixCode'>;
 export type Me = GenaixSchema<'Me'>;
 export type Capabilities = GenaixSchema<'Capabilities'>;
 export type McpConnectionSummary = GenaixSchema<'McpConnectionSummary'>;
+export type McpConnection = GenaixSchema<'McpConnection'>;
+export type SessionAuthorizationCreate = GenaixSchema<'SessionAuthorizationCreate'>;
 export type McpAuthorizationStatus = GenaixSchema<'McpAuthorizationStatus'>;
 
 // Sessions, messages and events
@@ -68,6 +70,7 @@ export type SessionCreateBody = Omit<SessionCreate, 'message'> & { message?: Mes
 
 // Files (POST /sessions/{session_id}/files). Prefixed so it does not shadow the DOM `File` type.
 export type SessionFile = GenaixSchema<'File'>;
+export type FilePage = GenaixSchema<'FilePage'>;
 export type FileMode = GenaixSchema<'FileMode'>;
 
 // Workflows

@@ -51,6 +51,7 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
             onSubmit={handleSubmit}
             isSubmitting={sendTurn.isPending}
             uploadProgress={uploadProgress}
+            sessionId={sessionId}
         />
     );
 }

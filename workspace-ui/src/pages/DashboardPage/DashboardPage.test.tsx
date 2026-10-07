@@ -9,6 +9,7 @@ import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
+import { sessionAuthorizations, withSessionAuthorization } from '@/test/sessionAuthorization';
 
 import '@/i18n';
 
@@ -79,7 +80,7 @@ describe('DashboardPage', () => {
         const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(Response.json(session, { status: 201 }));
 
         // The to-dos and recent sessions list sessions; `fetchMock` sees only the start.
-        vi.stubGlobal('fetch', withEmptySessionList(fetchMock));
+        vi.stubGlobal('fetch', withEmptySessionList(withSessionAuthorization(fetchMock)));
 
         const { router, queryClient } = renderDashboard();
 
@@ -94,6 +95,7 @@ describe('DashboardPage', () => {
         expect(JSON.parse(init?.body as string)).toEqual({
             workflow: 'content_research',
             message: { parts: [{ type: 'text', text: 'Which pages are offline?' }] },
+            authorizations: sessionAuthorizations,
         });
         expect(queryClient.getQueryData(['genaix', 'sessions', 's-1'])).toEqual(session);
         // The session page is, for now, the workspace: its left column has a toggle, even without a preview.

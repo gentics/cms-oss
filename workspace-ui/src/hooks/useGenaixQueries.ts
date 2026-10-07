@@ -1,5 +1,6 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
 import {
     archiveSession,
     createSession,
@@ -7,9 +8,12 @@ import {
     genaixRetryDelay,
     getMe,
     getSession,
+    listMcpConnections,
     listMessages,
     listSessions,
+    listSessionUploads,
     listWorkflows,
+    NoCmsConnectionError,
     postMessage,
     type SessionFilters,
     uploadSessionFile,
@@ -18,9 +22,12 @@ import type {
     FileMode,
     MessageCreateBody,
     Session,
+    SessionCreateBody,
+    SessionCreated,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
+import { createCmsToken } from '@/services/cmsApiService/cmsApiService';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /** Query keys of the GenAIx server state. */
@@ -33,6 +40,7 @@ export const genaixKeys = {
     sessionList: (filters: SessionFilters = {}) => ['genaix', 'sessions', 'list', filters] as const,
     session: (sessionId: string) => ['genaix', 'sessions', sessionId] as const,
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
+    uploads: (sessionId: string) => ['genaix', 'sessions', sessionId, 'uploads'] as const,
 };
 
 // Retries only what is worth retrying (`isRetryableGenaixError`), honouring `Retry-After`.
@@ -46,6 +54,16 @@ export function useMe() {
 /** GET /workflows, "once, cached" (session lifecycle, §1a). */
 export function useWorkflows() {
     return useQuery({ queryKey: genaixKeys.workflows(), queryFn: listWorkflows, staleTime: Infinity, ...retryOptions });
+}
+
+/** The files uploaded into a session (`listSessionUploads`); off without a session. */
+export function useSessionUploads(sessionId: string | undefined) {
+    return useQuery({
+        queryKey: genaixKeys.uploads(sessionId ?? ''),
+        queryFn: sessionId === undefined ? skipToken : () => listSessionUploads(sessionId),
+        select: (page) => page.items,
+        ...retryOptions,
+    });
 }
 
 /** GET /sessions, newest first; `fetchNextPage` follows `next_cursor`. */
@@ -147,15 +165,46 @@ async function uploadFileParts(sessionId: string, files: StartFile[], onFileProg
     return fileParts;
 }
 
-async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
-    if (files.length === 0) {
-        return createSession({ workflow: START_WORKFLOW, message: { parts } });
+/**
+ * POST /sessions with the session's own CMS authorization (09-integration-guide.md, section 4): the
+ * user's `cms` connection (the default one, else the first), and a new CMS API token for this session
+ * alone, never one reused from another. GenAIx verifies the token before it creates anything, so a
+ * rejected token means no session (`422 mcp_authorization_rejected`). The token is not kept here:
+ * GenAIx stores it for the session's runs and cleans it up, and the CMS prunes it once it expires.
+ */
+async function createAuthorizedSession(body: SessionCreateBody): Promise<SessionCreated> {
+    // The connection first: without one, no token is created for nothing.
+    const connections = await listMcpConnections('cms');
+    const connection = connections.find((candidate) => candidate.default) ?? connections[0];
+
+    if (!connection) {
+        throw new NoCmsConnectionError();
     }
 
-    const session = await createSession({ workflow: START_WORKFLOW });
-    const fileParts = await uploadFileParts(session.id, files, onFileProgress);
+    const { token, name, expires } = await createCmsToken(`genaix-workspace-${crypto.randomUUID()}`);
 
-    await postMessage(session.id, { parts: [...parts, ...fileParts] });
+    return createSession({
+        ...body,
+        authorizations: [{
+            connection_id: connection.id,
+            auth_type: 'bearer',
+            token,
+            token_name: name,
+            expires_at: new Date(expires * 1000).toISOString(),
+        }],
+    });
+}
+
+async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
+    if (files.length === 0) {
+        return createAuthorizedSession({ workflow: START_WORKFLOW, message: { parts } });
+    }
+
+    const session = await createAuthorizedSession({ workflow: START_WORKFLOW });
+    const fileParts = await uploadFileParts(session.id, files, onFileProgress);
+    const fileIds = fileParts.map((part) => part.file_id);
+
+    await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
 
     return session;
 }
@@ -183,13 +232,20 @@ export function useStartSession() {
  * `useSendMessage`: a repeat would upload and send twice.
  */
 export function useSendTurn(sessionId: string) {
+    const queryClient = useQueryClient();
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
         mutationFn: async ({ parts, files, onFileProgress }: StartSessionInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
+            const fileIds = fileParts.map((part) => part.file_id);
 
-            return sendMessage({ parts: [...parts, ...fileParts] });
+            // The new uploads can be the source of a verbatim passage in the next turn.
+            if (fileParts.length > 0) {
+                void queryClient.invalidateQueries({ queryKey: genaixKeys.uploads(sessionId) });
+            }
+
+            return sendMessage({ parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
         },
         retry: false,
     });

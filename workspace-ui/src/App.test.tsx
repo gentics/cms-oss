@@ -1,9 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
-import { useCmsTokenStore } from '@/store/useCmsTokenStore';
 
 import App from './App';
 
@@ -30,7 +29,6 @@ function renderApp() {
 
 describe('App', () => {
     beforeEach(() => {
-        useCmsTokenStore.getState().clearCmsToken();
         vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation(() => Promise.resolve(Response.json(tokenCreated))));
         vi.stubGlobal('ResizeObserver', ResizeObserverStub);
     });
@@ -44,19 +42,5 @@ describe('App', () => {
         renderApp();
 
         expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
-    });
-
-    // Skipped while useCmsToken() is commented out in App.tsx.
-    it.skip('posts for the CMS token when the app starts', async () => {
-        renderApp();
-
-        await waitFor(() => expect(useCmsTokenStore.getState().cmsToken?.token).toBe('cmstok_app'));
-
-        const [url, init] = vi.mocked(fetch).mock.calls[0]!;
-
-        expect(fetch).toHaveBeenCalledTimes(1);
-        expect(url).toBe('/rest/admin/token');
-        expect(init?.method).toBe('POST');
-        expect(JSON.parse(init?.body as string)).toEqual({ name: expect.stringMatching(/^genaix-workspace-/) });
     });
 });

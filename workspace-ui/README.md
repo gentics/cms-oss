@@ -11,15 +11,18 @@ In development the Vite dev server plays the proxy (`server.proxy` in `vite.conf
 3. Start the app in a second terminal: `npm run dev`.
 4. Call `http://localhost:5173/genaix/api/v1/me` from the browser or with `curl`.
 
-Configuration is read from `.env.local` (see `.env.example`). All three variables are optional, and their defaults target the mock:
+Configuration is read from `.env.local` (see `.env.example`); `.env.example` itself is not loaded. All variables are optional. The GenAIx defaults target the mock:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `GENAIX_API_URL` | `http://localhost:8123/api/v1` | GenAIx base URL the proxy forwards to |
 | `GENAIX_API_TOKEN` | `sk_gnx_mock` | Installation token (mock fixture) |
 | `GENAIX_SUBJECT` | `sub_workspace_dev` | `X-GCMS-Subject` sent for every request |
+| `CMS_PROXY_TARGET` | none | CMS that `/rest` is forwarded to, e.g. `https://cms.example.com`. Without it the dev server answers the CMS API token request (`POST /rest/admin/token`) itself with a test token, so sessions start against the GenAIx mock; every other CMS call (e.g. the @-menu search) has no CMS |
 
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
+
+In production the UI is served from the CMS host, so `/rest` is same-origin and needs no proxy. In development the proxy keeps the CMS cookies on `localhost` (`cookieDomainRewrite`); the CMS calls are authenticated by the CMS session cookie, so they need a session on that CMS.
 
 The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/genaix/api/v1`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/genaix/api/v1`, so a different value in development needs a matching `server.proxy` entry.
 

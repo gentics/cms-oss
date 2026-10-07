@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
 import { useToast } from '@/components/ui/use-toast';
-import { readParts, selectedRange, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
+import { holdsToken, pendingFileSource, readParts, selectedRange, sourceAttachmentId, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
 import { checkUploadFile, formatMegabytes, UPLOAD_MAX_BYTES } from '@/helper/uploadLimits/uploadLimits';
 import type { StartFile, StartSessionInput } from '@/hooks/useGenaixQueries';
 
@@ -53,9 +53,23 @@ export function useComposer() {
             .run();
     }
 
-    /** The message parts and files to send, or `null` while there is nothing to send. */
+    /**
+     * The message parts and files to send, or `null` while there is nothing to send. A passage
+     * quoting an attachment names it by its place in `files` (`pendingFileSource`), filled in with
+     * the file's id after the upload; one whose attachment was removed counts as typed.
+     */
     function readInput(): StartSessionInput | null {
-        const parts = readParts(editor.state.doc);
+        const parts = readParts(editor.state.doc).map((part) => {
+            const attachmentId = part.type === 'verbatim' ? sourceAttachmentId(part.source) : null;
+
+            if (part.type !== 'verbatim' || attachmentId === null) {
+                return part;
+            }
+
+            const index = attachments.findIndex((attachment) => attachment.id === attachmentId);
+
+            return { ...part, source: index === -1 ? 'user' : pendingFileSource(index) };
+        });
 
         if (parts.length === 0 && attachments.length === 0) {
             return null;
@@ -101,6 +115,13 @@ export function useComposer() {
             return;
         }
 
+        // A passage holds text only; locking a token into it would lose the token.
+        if (holdsToken(range)) {
+            toast.add({ title: t('composer.verbatimHasToken') });
+
+            return;
+        }
+
         // The selection as the user sees it, in document positions.
         const from = view.posAtDOM(range.startContainer, range.startOffset);
         const to = view.posAtDOM(range.endContainer, range.endOffset);
@@ -108,6 +129,17 @@ export function useComposer() {
         const tail = editor.state.doc.resolve(to).nodeAfter?.isText ? [] : [{ type: 'text', text: ' ' }];
 
         editor.chain().insertContentAt({ from, to }, [{ type: VERBATIM_NODE, attrs: { text: range.toString() } }, ...tail]).run();
+    }
+
+    /**
+     * Opens the @-menu at the caret: types `@`, after a space where the caret follows a word (the
+     * menu opens only for an `@` that starts a word, `composerExtensions`).
+     */
+    function openReferenceMenu() {
+        const before = editor.state.selection.$from.nodeBefore;
+        const needsSpace = before?.isText === true && !/\s$/.test(before.text ?? '');
+
+        editor.chain().focus().insertContent(needsSpace ? ' @' : '@').run();
     }
 
     /** Opens the browser's file picker (the hidden `<input type="file">` behind `fileInputRef`). */
@@ -177,6 +209,7 @@ export function useComposer() {
         readInput,
         reset,
         markSelectionVerbatim,
+        openReferenceMenu,
         openFilePicker,
         addFiles,
         toggleMode,

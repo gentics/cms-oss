@@ -46,9 +46,9 @@ describe('ErrorNotifications', () => {
     it('shows the translated message and the detail in the live region', async () => {
         renderNotifications();
 
-        addError('errorNotifications.cmsTokenFailed', 'Request to /rest/admin/token failed with status 403');
+        addError('dashboard.startFailed', 'Request to /rest/admin/token failed with status 403');
 
-        const toast = await within(notifications()).findByRole('dialog', { name: 'Getting the CMS token failed' });
+        const toast = await within(notifications()).findByRole('dialog', { name: 'The session could not be started' });
 
         expect(notifications()).toHaveAttribute('aria-live', 'polite');
         expect(toast).toHaveAttribute('data-type', 'error');
@@ -60,12 +60,12 @@ describe('ErrorNotifications', () => {
 
         act(() => {
             useErrorNotificationStore.getState().addError({
-                messageKey: 'errorNotifications.cmsTokenFailed',
+                messageKey: 'dashboard.startFailed',
                 detailKey: 'errors.cms.PERMISSION',
             });
         });
 
-        const toast = await within(notifications()).findByRole('dialog', { name: 'Getting the CMS token failed' });
+        const toast = await within(notifications()).findByRole('dialog', { name: 'The session could not be started' });
 
         expect(toast).toHaveAccessibleDescription('You don\'t have permission for this in the CMS.');
     });
@@ -73,8 +73,8 @@ describe('ErrorNotifications', () => {
     it('shows one error toast per error', async () => {
         renderNotifications();
 
-        addError('errorNotifications.cmsTokenFailed', 'first');
-        addError('errorNotifications.cmsTokenFailed', 'second');
+        addError('dashboard.startFailed', 'first');
+        addError('dashboard.startFailed', 'second');
 
         await waitFor(() => expect(errorToasts()).toHaveLength(2));
     });
@@ -84,8 +84,8 @@ describe('ErrorNotifications', () => {
 
         renderNotifications();
 
-        addError('errorNotifications.cmsTokenFailed', 'first');
-        addError('errorNotifications.cmsTokenFailed', 'second');
+        addError('dashboard.startFailed', 'first');
+        addError('dashboard.startFailed', 'second');
 
         const first = await screen.findByText('first', { selector: '[data-slot="toast-description"]' });
         const toast = first.closest<HTMLElement>('[data-slot="toast"]')!;
@@ -100,7 +100,7 @@ describe('ErrorNotifications', () => {
     it('closes the toast when its error is removed from the store', async () => {
         renderNotifications();
 
-        addError('errorNotifications.cmsTokenFailed', 'first');
+        addError('dashboard.startFailed', 'first');
         await screen.findByText('first');
 
         act(() => {
@@ -114,14 +114,14 @@ describe('ErrorNotifications', () => {
     it('translates the message again when the language changes', async () => {
         renderNotifications();
 
-        addError('errorNotifications.cmsTokenFailed');
-        await screen.findByText('Getting the CMS token failed');
+        addError('dashboard.startFailed');
+        await screen.findByText('The session could not be started');
 
         await act(async () => {
             await i18n.changeLanguage('de');
         });
 
-        expect(screen.getByText('Der CMS-Token konnte nicht abgerufen werden')).toBeInTheDocument();
+        expect(screen.getByText('Die Session konnte nicht gestartet werden')).toBeInTheDocument();
     });
 
     it('shows no notification for a plain console.error', async () => {

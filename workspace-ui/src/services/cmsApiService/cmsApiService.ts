@@ -1,5 +1,4 @@
 import { httpRequest } from '@/services/httpService/httpService';
-import { type CmsToken, useCmsTokenStore } from '@/store/useCmsTokenStore';
 
 /**
  * `responseInfo.responseCode` of a CMS REST response, which CMS REST responses carry alongside the
@@ -30,55 +29,77 @@ export interface CmsTokenInfo {
     valid: boolean;
 }
 
+// How long a CMS API token is valid: 24 hours, the guide's default for a session token
+// (09-integration-guide.md, "Creating the CMS API token for a session").
+const CMS_TOKEN_LIFETIME_S = 24 * 60 * 60;
+
 /**
  * Requests a CMS API token for the current CMS user, authenticated by the browser's own CMS session
- * cookie: `POST /rest/admin/token` with `{ name, expires }`, valid for 60 minutes. Returns the token
- * and its metadata.
+ * cookie: `POST /rest/admin/token` with `{ name, expires, pruneOnExpiry: true }`, valid for 24 hours;
+ * with `pruneOnExpiry` the CMS deletes the token itself once it has expired (09-integration-guide.md,
+ * "Creating the CMS API token for a session"). Returns the token and its metadata, `expires` being
+ * the value sent (a Unix timestamp in seconds), so a caller can register the token until exactly then.
  */
 export async function createCmsToken(name: string): Promise<CmsTokenInfo> {
     // Relative, so it is same-origin on whichever CMS host serves the UI. In development the Vite dev
     // server forwards it (see `vite.config.ts`).
     const CMS_TOKEN_URL = '/rest/admin/token';
-    // 60 minutes from now. The CMS takes `expires` as a Unix timestamp in seconds (integration guide,
-    // `POST /rest/admin/token`), the clock gives milliseconds.
-    const expires = Math.floor((new Date().getTime() + 60 * 60 * 1000) / 1000);
-
-    return httpRequest<CmsTokenInfo>(CMS_TOKEN_URL, {
+    // The CMS takes `expires` as a Unix timestamp in seconds, the clock gives milliseconds.
+    const expires = Math.floor(Date.now() / 1000) + CMS_TOKEN_LIFETIME_S;
+    const created = await httpRequest<CmsTokenInfo>(CMS_TOKEN_URL, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, expires }),
+        body: JSON.stringify({ name, expires, pruneOnExpiry: true }),
     });
+
+    return { ...created, expires };
 }
 
-/** Valid while `expires` is `0` (never) or in the future. */
-function isUnexpired(expires: number, nowSeconds: number): boolean {
-    return expires === 0 || expires > nowSeconds;
+/** A CMS node (`GET /rest/node`), as far as the composer needs it. `folderId` is its root folder. */
+export interface CmsNode {
+    id: number;
+    name: string;
+    folderId: number;
 }
 
-// Shared by concurrent callers while a token is being requested, so they send one POST, not several.
-let pendingCmsToken: Promise<CmsToken> | null = null;
+/** The CMS object types the composer's @-menu searches. */
+export type CmsItemType = 'page' | 'folder' | 'image';
+
+/** A page, folder or image found by `searchCmsItems`, as far as the composer needs it. */
+export interface CmsItem {
+    id: number;
+    name: string;
+    type: CmsItemType;
+    /** The folder path, e.g. `/Campaigns/`; not every type carries it. */
+    path?: string;
+}
+
+// The same-origin request the CMS REST API answers with the browser's own CMS session cookie.
+const CMS_GET: RequestInit = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
+
+/** The nodes the current CMS user can see: `GET /rest/node`. */
+export async function listCmsNodes(): Promise<CmsNode[]> {
+    const { items } = await httpRequest<{ items?: CmsNode[] }>('/rest/node', CMS_GET);
+
+    return items ?? [];
+}
+
+/** How many objects one node returns for one search. */
+export const CMS_SEARCH_MAX_ITEMS = 20;
 
 /**
- * The CMS API token for later API calls: the one in `useCmsTokenStore` while it has not expired,
- * otherwise a new one from `createCmsToken` (`POST /rest/admin/token`), which is then stored.
+ * Pages, folders and images in `node` whose id, name or description matches `query`: `GET
+ * /rest/folder/getItems/{root folder}` with `search`, recursive, at most `CMS_SEARCH_MAX_ITEMS`.
  */
-export function getCmsToken(now: number = Date.now()): Promise<CmsToken> {
-    const stored = useCmsTokenStore.getState().cmsToken;
+export async function searchCmsItems(node: CmsNode, query: string, signal?: AbortSignal): Promise<CmsItem[]> {
+    const params = new URLSearchParams({ nodeId: String(node.id), search: query, recursive: 'true', maxItems: String(CMS_SEARCH_MAX_ITEMS) });
 
-    if (stored && isUnexpired(stored.expires, now / 1000)) {
-        return Promise.resolve(stored);
+    for (const type of ['page', 'folder', 'image'] satisfies CmsItemType[]) {
+        params.append('type', type);
     }
 
-    pendingCmsToken ??= createCmsToken(`genaix-workspace-${crypto.randomUUID()}`).then((created) => {
-        const cmsToken = { token: created.token, id: created.id, name: created.name, expires: created.expires };
+    const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
 
-        useCmsTokenStore.getState().setCmsToken(cmsToken);
-
-        return cmsToken;
-    }).finally(() => {
-        pendingCmsToken = null;
-    });
-
-    return pendingCmsToken;
+    return items ?? [];
 }

@@ -1,0 +1,152 @@
+/* The @-menu (draft `.pop`): a popover (design.md §12 "Popover / Menü") that the editor places at
+   the `@` (`ReferenceTriggerExtension`); its element is the one positioned, this is its content. */
+.menu {
+  position: relative;
+  z-index: 300;
+  width: 376px;
+  max-width: calc(100vw - 20px);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--elevation-pop);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+}
+
+/* Head and foot on `--bg-subtle`: what is searched, and the group it is narrowed to. */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+
+  & > svg {
+    color: var(--interactive);
+  }
+}
+
+.scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 2px 1px 6px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), .13);
+  color: var(--fg-primary);
+}
+
+.query {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list {
+  max-height: 264px;
+  overflow-y: auto;
+  padding: 4px;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.groupHead {
+  padding: 8px 8px 2px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* An entry: icon chip (design.md §9, "Eintragsarten im @-Menü"), name and detail. */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--corner-md);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(var(--interactive-rgb), .07);
+  }
+
+  &[aria-selected='true'] {
+    background: rgba(var(--interactive-rgb), .15);
+    box-shadow: inset 0 0 0 1.5px rgba(var(--interactive-rgb), .55);
+  }
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), .11);
+  color: var(--interactive);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name,
+.detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name {
+  font-weight: 500;
+
+  & mark {
+    border-radius: var(--corner-xs);
+    background: rgba(var(--interactive-rgb), .28);
+    color: inherit;
+  }
+}
+
+.detail {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* Loading: one skeleton row (design.md §8); without the shimmer, which has no duration token. */
+.loading {
+  height: 30px;
+  margin: 4px 7px 8px;
+  border-radius: var(--corner-md);
+  background: rgba(var(--fg-primary-rgb), .08);
+}
+
+.failed {
+  padding: 6px 10px 8px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Nothing found (design.md §8 "Leer"): centered muted text, the way out below it. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 20px 12px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

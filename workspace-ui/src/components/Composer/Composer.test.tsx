@@ -1,9 +1,11 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
+import { createWrapper } from '@/test/renderWithProviders';
 
 import { Composer, type ComposerHandle } from './Composer';
 
@@ -153,6 +155,129 @@ describe('Composer', () => {
             expect(await screen.findByText('Select the passage that should stay unchanged first.')).toBeInTheDocument();
         });
 
+        it('does not lock a selection that contains a token, and keeps the token', async () => {
+            const user = userEvent.setup();
+            const { field, onSubmit } = renderComposer();
+            const ref = { type: 'folder', id: '42', node_id: 3, label: 'Campaigns' };
+            const html = `Put it under <span data-token="reference" data-attrs='${JSON.stringify({ ref })}'>Campaigns</span> now`;
+
+            // A pasted token keeps its part (`parseHTML`).
+            fireEvent.paste(field, { clipboardData: { types: ['text/html'], getData: (type: string) => (type === 'text/html' ? html : '') } });
+            await screen.findByText('Campaigns');
+
+            const range = document.createRange();
+
+            range.selectNodeContents(field);
+            document.getSelection()!.removeAllRanges();
+            document.getSelection()!.addRange(range);
+            await user.click(screen.getByRole('button', { name: 'Verbatim' }));
+
+            expect(await screen.findByText('The selection contains a reference — mark plain text only.')).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Start a session' }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Put it under ' },
+                    { type: 'reference', ref },
+                    { type: 'text', text: ' now' },
+                ],
+                files: [],
+            });
+        });
+
+        it('sends a passage quoted from an attached file with that file as its source', async () => {
+            const user = userEvent.setup();
+            const { field, ref, onSubmit } = renderComposer();
+            const brief = new File(['a'], 'brief.pdf', { type: 'application/pdf' });
+
+            await user.upload(screen.getByLabelText('File'), [brief]);
+            act(() => ref.current!.setText('Use this title: Review now'));
+            select(field, 16, 10);
+            await user.click(screen.getByRole('button', { name: 'Verbatim' }));
+            await user.click(await screen.findByRole('button', { name: 'Source: Typed by me' }));
+            await user.click(await screen.findByRole('menuitemradio', { name: 'brief.pdf' }));
+
+            expect(await screen.findByRole('button', { name: 'Source: brief.pdf' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Start a session' }));
+
+            // The file's place among the submitted files; its id follows the upload (`useGenaixQueries`).
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Use this title: ' },
+                    { type: 'verbatim', text: 'Review now', source: 'pending-file:0' },
+                ],
+                files: [{ file: brief, mode: 'source' }],
+            });
+        });
+
+        it('offers the session\'s uploaded files in the chat, loaded only when the menu opens', async () => {
+            const fetchMock = vi.fn<typeof fetch>(async () => Response.json({
+                items: [{ id: '6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02', name: 'terms.pdf', mode: 'source' }],
+                next_cursor: null,
+            }));
+
+            vi.stubGlobal('fetch', fetchMock);
+
+            const user = userEvent.setup();
+            const onSubmit = vi.fn();
+            const ref = createRef<ComposerHandle>();
+            const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+            render(<Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} sessionId="s-1" ref={ref} />, { wrapper: Wrapper });
+
+            const field = screen.getByRole('textbox', { name: 'What should happen?' });
+
+            act(() => ref.current!.setText('Keep this'));
+            select(field, 5, 4);
+            await user.click(screen.getByRole('button', { name: 'Verbatim' }));
+
+            expect(fetchMock).not.toHaveBeenCalled();
+
+            await user.click(await screen.findByRole('button', { name: 'Source: Typed by me' }));
+            await user.click(await screen.findByRole('menuitemradio', { name: 'terms.pdf' }));
+
+            expect(String(fetchMock.mock.calls[0]![0])).toContain('/sessions/s-1/files');
+            expect(await screen.findByRole('button', { name: 'Source: terms.pdf' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Send' }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Keep ' },
+                    { type: 'verbatim', text: 'this', source: '6b0d9e31-44a8-4c57-9f2e-8d1a3c7b5e02' },
+                ],
+                files: [],
+            });
+        });
+
+        it('counts a passage as typed once the file it was quoted from is removed', async () => {
+            const user = userEvent.setup();
+            const { field, ref, onSubmit } = renderComposer();
+            const brief = new File(['a'], 'brief.pdf', { type: 'application/pdf' });
+
+            await user.upload(screen.getByLabelText('File'), [brief]);
+            act(() => ref.current!.setText('Keep this'));
+            select(field, 5, 4);
+            await user.click(screen.getByRole('button', { name: 'Verbatim' }));
+            await user.click(await screen.findByRole('button', { name: 'Source: Typed by me' }));
+            await user.click(await screen.findByRole('menuitemradio', { name: 'brief.pdf' }));
+            await user.click(await screen.findByRole('button', { name: 'Remove: brief.pdf' }));
+
+            expect(await screen.findByRole('button', { name: 'Source: Typed by me' })).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Start a session' }));
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Keep ' },
+                    { type: 'verbatim', text: 'this', source: 'user' },
+                ],
+                files: [],
+            });
+        });
+
         it('turns a passage back into text with its remove button', async () => {
             const user = userEvent.setup();
             const { field, ref, onSubmit } = renderComposer();
@@ -164,6 +289,60 @@ describe('Composer', () => {
             await user.click(screen.getByRole('button', { name: 'Start a session' }));
 
             expect(onSubmit).toHaveBeenCalledWith({ parts: [{ type: 'text', text: 'Keep this' }], files: [] });
+        });
+    });
+
+    describe('@-menu', () => {
+        // The CMS has one node, and its search finds the folder "Campaigns".
+        function stubCms() {
+            vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input) => {
+                const url = new URL(String(input), 'http://app.test');
+
+                if (url.pathname === '/rest/node') {
+                    return Response.json({ items: [{ id: 3, name: 'Corporate Website', folderId: 7 }] });
+                }
+
+                return Response.json({ items: [{ id: 42, name: 'Campaigns', type: 'folder' }] });
+            }));
+        }
+
+        function renderWithQueries() {
+            const onSubmit = vi.fn();
+            const Wrapper = createWrapper(new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+
+            render(<Composer variant="start" onSubmit={onSubmit} isSubmitting={false} />, { wrapper: Wrapper });
+
+            return { onSubmit, field: screen.getByRole('textbox', { name: 'What would you like to do?' }) };
+        }
+
+        it('opens from the Context button; Enter picks the entry instead of sending, then sends', async () => {
+            stubCms();
+
+            const user = userEvent.setup();
+            const { field, onSubmit } = renderWithQueries();
+
+            await user.click(field);
+            await user.keyboard('Put it under');
+            await user.click(screen.getByRole('button', { name: 'Context' }));
+            await user.keyboard('Camp');
+
+            const list = await screen.findByRole('listbox', { name: 'Context' });
+
+            await within(list).findByRole('option', { name: /Campaigns/ });
+            await user.keyboard('{Enter}');
+
+            expect(onSubmit).not.toHaveBeenCalled();
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+            await user.keyboard('{Enter}');
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Put it under ' },
+                    { type: 'reference', ref: { type: 'folder', id: '42', node_id: 3, label: 'Campaigns' } },
+                ],
+                files: [],
+            });
         });
     });
 

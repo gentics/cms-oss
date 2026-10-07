@@ -15,6 +15,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -257,7 +258,7 @@ public class EventLogging {
 	public void finalizeAnalysis(String sid, int timestamp) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 
-		File loggingFile = new File(System.getProperty("java.io.tmpdir"), "tmp_analysis_" + sid + ".xml");
+		File loggingFile = new File(ConfigurationValue.TMP_PATH.get(), "tmp_analysis_" + sid + ".xml");
 		File transformedLoggingFile = null;
 
 		PreparedStatement pst = null;
@@ -273,7 +274,7 @@ public class EventLogging {
 				// check whether the threshold was reached
 				if (res.getInt("dirted") >= dirtThreshold) {
 					// this is the temporary logging file
-					transformedLoggingFile = new File(System.getProperty("java.io.tmpdir"), "tmp_jstree_analysis_" + sid + ".xml");
+					transformedLoggingFile = new File(ConfigurationValue.TMP_PATH.get(), "tmp_jstree_analysis_" + sid + ".xml");
 
 					// transform the analysis into jstree
 					EventLogging.transformAnalysisFile(loggingFile, transformedLoggingFile);

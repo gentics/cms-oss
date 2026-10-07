@@ -1,0 +1,2 @@
+All CMS components will now use the configured @com.gentics.contentnode.tmp_path@/@TMP_PATH@ value for all temporary files.
+The default value is the same as it previously was, and doesn't cause any change.

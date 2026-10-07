@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
+import { createHashHistory, createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
 
 import { DashboardPage } from '@/pages/DashboardPage/DashboardPage';
 import { SessionPage } from '@/pages/SessionPage/SessionPage';
@@ -29,7 +29,9 @@ const sessionReviewRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([homeRoute, sessionRoute, sessionReviewRoute]);
 
-export const router = createRouter({ routeTree });
+// Hash history, like the CMS's own UIs: the route lives after `#`, so the app works under whatever
+// path the CMS serves it from, and a reload never asks the CMS for a path it has no file for.
+export const router = createRouter({ routeTree, history: createHashHistory() });
 
 declare module '@tanstack/react-router' {
     interface Register {

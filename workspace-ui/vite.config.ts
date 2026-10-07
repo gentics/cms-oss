@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
     const cmsProxyTarget = env.CMS_PROXY_TARGET;
 
     return {
+        // Relative asset URLs in the build, so the CMS can serve `dist/` under any path (for example
+        // `/tools/workspace/`), like its own UIs. The dev server keeps `/`.
+        base: './',
         plugins: [
             react(),
 

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
 
-import { routeTree } from './router';
+import { router, routeTree } from './router';
 
 import '@/i18n';
 
@@ -55,5 +55,17 @@ describe('router', () => {
         renderAt('/sessions/abc/review');
 
         expect(await screen.findByRole('textbox', { name: 'What should happen?' })).toBeInTheDocument();
+    });
+
+    // The CMS serves the app under a path of its own, for example /tools/workspace/.
+    it('keeps the route in the URL hash and leaves the page path alone', async () => {
+        const pathname = window.location.pathname;
+
+        await router.navigate({ to: '/sessions/$id', params: { id: 'abc' } });
+
+        expect(window.location.hash).toBe('#/sessions/abc');
+        expect(window.location.pathname).toBe(pathname);
+
+        await router.navigate({ to: '/' });
     });
 });

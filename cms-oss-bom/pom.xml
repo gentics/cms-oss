@@ -165,6 +165,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>workspace-ui</artifactId>
+				<version>${project.version}</version>
+				<type>zip</type>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>base-lib</artifactId>
 				<version>${project.version}</version>
 			</dependency>

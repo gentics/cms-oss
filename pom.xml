@@ -35,6 +35,7 @@
 		<module>cms-aloha-plugins</module>
 		<module>cms-aloha-bundle</module>
 		<module>cms-ui</module>
+		<module>workspace-ui</module>
 		<module>cms-cache</module>
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>

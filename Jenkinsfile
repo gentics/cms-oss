@@ -194,6 +194,12 @@ spec:
                         sh "npm run report:list"
                         sh "npm run report:outdated"
                     }
+
+                    dir(path: 'workspace-ui') {
+                        // Install the dependencies and build dist/, which the workspace-ui Maven module packages
+                        sh "npm ci --no-audit --no-fund"
+                        sh "npm run build"
+                    }
                 }
             }
 

@@ -1,1 +1,1 @@
-Core: Now when a localized page is published for the first time, all its variants are dirtied, to be correctly resolved as dependencies. 
+Core: Now when a localized page is published for the first time, all its variants are dirtied, to be correctly resolved as dependencies. Likewise, when a localized copy of a file or image is created, pages depending on its other channel variants (e.g. by rendering it in a #gtx_channel block) are now dirtied in all channels.

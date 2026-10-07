@@ -732,6 +732,19 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 			triggerEvent(object, (String[]) modProps.toArray(new String[modProps.size()]), Events.UPDATE, depth + 1, channelId);
 		}
+
+		// when a localized copy is created, the other channel variants are no longer resolved in its channel.
+		// dependencies are stored for the channel of the rendered page (which may differ from the channel, in which
+		// the file was resolved, e.g. in a #gtx_channel block), so trigger the dependencies on the other variants for all channels
+		if (Events.isEvent(eventMask, Events.CREATE) && !isMaster()) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			for (File channelVariant : t.getObjects(File.class, getChannelSet().values())) {
+				if (!channelVariant.equals(this)) {
+					channelVariant.triggerEvent(new DependencyObject(channelVariant, (NodeObject) null), null, Events.DELETE, depth + 1, 0);
+				}
+			}
+		}
 	}
 
 	/**

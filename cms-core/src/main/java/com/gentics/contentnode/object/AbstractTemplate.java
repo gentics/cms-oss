@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.collections4.SetUtils;
@@ -84,7 +85,12 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 		resolvableProperties.put("node", new Property(null) {
 			public Object get(AbstractTemplate tmpl, String key) {
 				try {
-					return tmpl.getCurrentFolder().getNode();
+					Folder currentFolder = tmpl.getCurrentFolder();
+					if (currentFolder != null) {
+						return currentFolder.getNode();
+					} else {
+						return null;
+					}
 				} catch (Exception e) {
 					tmpl.logger.error("Could not retrieve property node from current folder.", e);
 					return null;
@@ -257,6 +263,11 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 		} else {
 			return super.get(key);
 		}
+	}
+
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
 	}
 
 	/**

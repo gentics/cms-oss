@@ -1,0 +1,2 @@
+Resolving @meshUuid@ for objects, that do not have a global ID (like users, for example)
+will no longer fail with a NullPointerException, but return null instead.

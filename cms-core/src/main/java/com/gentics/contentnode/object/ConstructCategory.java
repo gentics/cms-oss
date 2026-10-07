@@ -181,6 +181,11 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * get the name of the construct category.
 	 * @return the name of the construct category.

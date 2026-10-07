@@ -336,6 +336,11 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * Get the name
 	 * @return name

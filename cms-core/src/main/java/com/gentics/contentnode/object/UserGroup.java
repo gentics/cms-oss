@@ -225,6 +225,11 @@ public abstract class UserGroup extends AbstractContentObject implements NamedNo
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * Get group name
 	 * @return group name

@@ -1,5 +1,8 @@
 package com.gentics.contentnode.utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.tools.GroovyClass;
@@ -94,5 +97,21 @@ public final class GroovyUtils {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Find all groovy classes with the given prefix in the compilation unit
+	 * @param unit compilation unit to search
+	 * @param prefix name prefix
+	 * @return set of groovy classes
+	 */
+	public static Set<GroovyClass> findGroovyClasses(CompilationUnit unit, String prefix) {
+		Set<GroovyClass> classes = new HashSet<>();
+		for (GroovyClass groovyClass : unit.getClasses()) {
+			if (Strings.CI.startsWith(groovyClass.getName(), prefix)) {
+				classes.add(groovyClass);
+			}
+		}
+		return classes;
 	}
 }

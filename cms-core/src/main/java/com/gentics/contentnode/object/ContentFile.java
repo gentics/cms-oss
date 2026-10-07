@@ -626,6 +626,11 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see com.gentics.lib.base.StackResolvable#getKeywordResolvable(java.lang.String)

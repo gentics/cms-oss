@@ -1,0 +1,79 @@
+@import 'variables';
+
+label {
+    font-size: 0.8rem;
+    display: block;
+    color: $gtx-color-dark-gray;
+    transition: color 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    user-select: none;
+    margin-bottom: 0.5rem;
+}
+
+.item-list {
+    margin-bottom: 0.5rem;
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &.failed .item-name {
+            color: $gtx-color-alert;
+        }
+    }
+
+    .type-icon {
+        flex: 0 0 auto;
+        font-size: 2em;
+
+        &::ng-deep .gtx-icon {
+            font-size: inherit;
+        }
+    }
+
+    .item-primary {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .item-name {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .item-breadcrumbs {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        font-size: 0.8rem;
+        color: $gtx-color-dark-gray;
+
+        .crumb-separator {
+            font-size: 1rem;
+        }
+    }
+
+    .remove-button {
+        flex: 0 0 auto;
+    }
+}
+
+.no-items,
+.clear-notice,
+.settings-requirement {
+    color: $gtx-color-dark-gray;
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.add-button {
+    margin-bottom: 1rem;
+}

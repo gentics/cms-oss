@@ -1,8 +1,4 @@
 import {
-    createBlacklistValidator,
-    createI18nRequiredValidator,
-} from '@admin-ui/common';
-import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -13,7 +9,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, I18nService } from '@gentics/cms-components';
 import {
     CmsI18nValue,
     DataSource,
@@ -31,7 +27,10 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
+import {
+    createBlacklistValidator,
+    createI18nRequiredValidator,
+} from '../../../../common';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -44,11 +43,11 @@ export interface TagPartPropertiesFormData {
     /** Name in the current language */
     nameI18n?: CmsI18nValue;
 
-    /** Order index of part (legacy/ portentially to be deprecated) */
+    /** Order index of part (legacy/ potentially to be deprecated) */
     partOrder: number;
     /** Part type ID */
     typeId: TagPartType;
-    /** Markup languag edientifier */
+    /** Markup language identifier */
     markupLanguageId: number;
 
     /** True if the part is editable */
@@ -65,7 +64,7 @@ export interface TagPartPropertiesFormData {
     /** External editor URL */
     externalEditorUrl: string;
 
-    /** Regular expression definition for validation of text parttypes */
+    /** Regular expression definition for validation of text part-types */
     regex?: TagPartValidatorId;
     /** Overview settings (if type is OVERVIEW) */
     overviewSettings?: OverviewSetting;
@@ -183,7 +182,7 @@ export class ConstructPartPropertiesComponent
         super(changeDetector);
 
         this.SORTED_VALIDATOR_CONFIGS = Object.values(TagPartValidatorConfigs)
-        // Translate the name once, so we don't have to do it everytime while sorting and then in the template as well.
+            // Translate the name once, so we don't have to do it every time while sorting and then in the template as well.
             .map((config) => ({
                 ...config,
                 [TRANSLATED_NAME_PROP]: i18n.instant('construct.' + config.name),

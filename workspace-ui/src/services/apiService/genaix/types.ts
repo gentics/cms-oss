@@ -100,6 +100,7 @@ export type SessionCreateBody = Omit<SessionCreate, 'message'> & { message?: Mes
 
 // Files (POST /sessions/{session_id}/files). Prefixed so it does not shadow the DOM `File` type.
 export type SessionFile = GenaixSchema<'File'>;
+export type FilePage = GenaixSchema<'FilePage'>;
 export type FileMode = GenaixSchema<'FileMode'>;
 
 // Workflows

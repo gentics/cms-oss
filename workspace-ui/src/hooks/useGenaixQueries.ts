@@ -1,5 +1,6 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import { guessWorkflow } from '@/helper/workflowGuess/workflowGuess';
 import {
@@ -13,6 +14,7 @@ import {
     getSession,
     listMessages,
     listSessions,
+    listSessionUploads,
     listWorkflows,
     postMessage,
     type SessionFilters,
@@ -38,6 +40,7 @@ export const genaixKeys = {
     sessionList: (filters: SessionFilters = {}) => ['genaix', 'sessions', 'list', filters] as const,
     session: (sessionId: string) => ['genaix', 'sessions', sessionId] as const,
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
+    uploads: (sessionId: string) => ['genaix', 'sessions', sessionId, 'uploads'] as const,
 };
 
 // Retries only what is worth retrying (`isRetryableGenaixError`), honouring `Retry-After`.
@@ -51,6 +54,16 @@ export function useMe() {
 /** GET /workflows, "once, cached" (session lifecycle, §1a). */
 export function useWorkflows() {
     return useQuery({ queryKey: genaixKeys.workflows(), queryFn: listWorkflows, staleTime: Infinity, ...retryOptions });
+}
+
+/** The files uploaded into a session (`listSessionUploads`); off without a session. */
+export function useSessionUploads(sessionId: string | undefined) {
+    return useQuery({
+        queryKey: genaixKeys.uploads(sessionId ?? ''),
+        queryFn: sessionId === undefined ? skipToken : () => listSessionUploads(sessionId),
+        select: (page) => page.items,
+        ...retryOptions,
+    });
 }
 
 /** GET /sessions, newest first; `fetchNextPage` follows `next_cursor`. */
@@ -166,8 +179,9 @@ async function startSession({ parts, files, onFileProgress }: StartSessionInput)
 
     const session = await createSession({ workflow, authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
+    const fileIds = fileParts.map((part) => part.file_id);
 
-    await postMessage(session.id, { parts: [...parts, ...fileParts] });
+    await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
 
     return session;
 }
@@ -202,13 +216,23 @@ export interface SendTurnInput extends StartSessionInput {
  * retried, like `useSendMessage`: a repeat would upload and send twice.
  */
 export function useSendTurn(sessionId: string) {
+    const queryClient = useQueryClient();
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
         mutationFn: async ({ parts, files, onFileProgress, replyTo }: SendTurnInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
+            const fileIds = fileParts.map((part) => part.file_id);
 
-            return sendMessage({ parts: [...parts, ...fileParts], ...(replyTo && { reply_to_interaction: replyTo }) });
+            // The new uploads can be the source of a verbatim passage in the next turn.
+            if (fileParts.length > 0) {
+                void queryClient.invalidateQueries({ queryKey: genaixKeys.uploads(sessionId) });
+            }
+
+            return sendMessage({
+                parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts],
+                ...(replyTo && { reply_to_interaction: replyTo }),
+            });
         },
         retry: false,
     });

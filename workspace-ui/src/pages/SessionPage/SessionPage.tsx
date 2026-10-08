@@ -95,6 +95,7 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
             onSubmit={handleSubmit}
             isSubmitting={sendTurn.isPending}
             uploadProgress={uploadProgress}
+            sessionId={sessionId}
             isRunning={Boolean(run) && !isWaiting}
             isStopping={run?.status === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}

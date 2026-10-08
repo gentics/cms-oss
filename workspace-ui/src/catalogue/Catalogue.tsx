@@ -22,6 +22,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Radio, RadioGroup } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,6 +37,13 @@ import styles from './Catalogue.module.css';
 type Theme = 'light' | 'dark' | 'system';
 
 const variants = ['primary', 'secondary', 'ghost', 'danger', 'solid'] as const;
+
+const inputStates: { state: string; defaultValue: string; invalid?: boolean; disabled?: boolean }[] = [
+    { state: 'placeholder', defaultValue: '' },
+    { state: 'filled', defaultValue: 'editor' },
+    { state: 'invalid', defaultValue: 'editor', invalid: true },
+    { state: 'disabled', defaultValue: 'editor', disabled: true },
+];
 
 const selectStates: { state: string; defaultValue: string | null; invalid?: boolean; disabled?: boolean }[] = [
     { state: 'placeholder', defaultValue: null },
@@ -263,6 +271,25 @@ export function Catalogue() {
                                 </Label>
                             </RadioGroup>
                         </State>
+                    </div>
+                </Section>
+
+                <Section id="catalogue-input" title={t('catalogue.input.title')}>
+                    <div className={styles.grid}>
+                        {inputStates.map(({ state, defaultValue, invalid, disabled }) => (
+                            <State key={state} label={t(`catalogue.states.${state}`)}>
+                                <div className={styles.field}>
+                                    <Label htmlFor={`catalogue-input-${state}`}>{t('catalogue.input.label')}</Label>
+                                    <Input
+                                        id={`catalogue-input-${state}`}
+                                        defaultValue={defaultValue}
+                                        placeholder={t('catalogue.input.placeholder')}
+                                        aria-invalid={invalid}
+                                        disabled={disabled}
+                                    />
+                                </div>
+                            </State>
+                        ))}
                     </div>
                 </Section>
 

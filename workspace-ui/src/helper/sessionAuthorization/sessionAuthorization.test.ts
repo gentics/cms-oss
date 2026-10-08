@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ensureSessionCmsAuthorization, newSessionCmsAuthorization, NoCmsConnectionError } from './sessionAuthorization';
+import { NoCmsConnectionError } from '@/services/apiService/apiService';
+
+import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from './sessionAuthorization';
 
 const NOW = Date.parse('2026-10-07T08:00:00Z');
 
@@ -9,10 +11,24 @@ const connections = [
     { id: 'c-default', connector: 'cms', default: true },
 ];
 
-// Answers each GenAIx route from `routes`, by method and path; anything else is a test error.
+const TOKEN_ROUTE = 'POST /rest/admin/token';
+
+// The CMS's answer to `POST /rest/admin/token`: a new token with the name it was asked for.
+function createdToken(init?: RequestInit) {
+    const { name } = JSON.parse(init?.body as string) as { name: string };
+
+    return { token: `cmstok_${name}`, id: 9, userId: 3, name, cdate: 0, expires: 0, lastUsed: 0, valid: true };
+}
+
+// Answers each GenAIx and CMS route from `routes`, by method and path, and `POST /rest/admin/token`
+// with a new token; anything else is a test error.
 function stubRoutes(routes: Record<string, unknown>) {
     const fetchMock = vi.fn<typeof fetch>((url, init) => {
         const key = `${init?.method ?? 'GET'} ${String(url)}`;
+
+        if (key === TOKEN_ROUTE) {
+            return Promise.resolve(Response.json(createdToken(init)));
+        }
 
         if (!(key in routes)) {
             throw new Error(`Unexpected request ${key}`);
@@ -30,39 +46,46 @@ function requests(fetchMock: ReturnType<typeof stubRoutes>) {
     return fetchMock.mock.calls.map(([url, init]) => `${init?.method ?? 'GET'} ${String(url)}`);
 }
 
-// The tests run with `import.meta.env.DEV`, so the CMS token is the development fake and no request
-// goes to `/rest/admin/token` (`createSessionCmsToken`).
 describe('session CMS authorization', () => {
     beforeEach(() => {
-        vi.stubEnv('DEV', true);
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(NOW);
     });
 
     afterEach(() => {
         vi.unstubAllGlobals();
-        vi.unstubAllEnvs();
         vi.useRealTimers();
     });
 
     describe('newSessionCmsAuthorization', () => {
-        it('returns a new token for the default cms connection', async () => {
+        it('returns a new CMS token, valid for 24 hours, for the default cms connection', async () => {
             const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: connections } });
 
             await expect(newSessionCmsAuthorization()).resolves.toEqual({
                 connection_id: 'c-default',
                 auth_type: 'bearer',
-                token: expect.stringMatching(/^cmstok_dev_/),
+                token: expect.stringMatching(/^cmstok_genaix-pending-/),
                 token_name: expect.stringMatching(/^genaix-pending-/),
                 expires_at: '2026-10-08T08:00:00.000Z',
             });
-            expect(requests(fetchMock)).toEqual(['GET /genaix/api/v1/mcp/connections?connector=cms']);
+            expect(requests(fetchMock)).toEqual(['GET /genaix/api/v1/mcp/connections?connector=cms', TOKEN_ROUTE]);
         });
 
-        it('throws NoCmsConnectionError when the user has no cms connection', async () => {
-            stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: [] } });
+        it('creates a new token for every session, never reusing one', async () => {
+            const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: connections } });
+
+            const first = await newSessionCmsAuthorization();
+            const second = await newSessionCmsAuthorization();
+
+            expect(requests(fetchMock).filter((request) => request === TOKEN_ROUTE)).toHaveLength(2);
+            expect(second.token).not.toBe(first.token);
+        });
+
+        it('throws NoCmsConnectionError when the user has no cms connection, before creating a token', async () => {
+            const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: [] } });
 
             await expect(newSessionCmsAuthorization()).rejects.toBeInstanceOf(NoCmsConnectionError);
+            expect(requests(fetchMock)).not.toContain(TOKEN_ROUTE);
         });
     });
 
@@ -102,7 +125,7 @@ describe('session CMS authorization', () => {
 
             expect(JSON.parse(init?.body as string)).toEqual({
                 auth_type: 'bearer',
-                token: expect.stringMatching(/^cmstok_dev_/),
+                token: expect.stringMatching(/^cmstok_genaix-s-1-/),
                 token_name: expect.stringMatching(/^genaix-s-1-/),
                 expires_at: '2026-10-08T08:00:00.000Z',
             });

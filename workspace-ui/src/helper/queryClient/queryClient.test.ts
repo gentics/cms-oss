@@ -3,9 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useCmsToken } from '@/hooks/useCmsToken';
-import { HttpError } from '@/services/httpService/httpService';
-import { useCmsTokenStore } from '@/store/useCmsTokenStore';
+import { HttpError, httpRequest } from '@/services/httpService/httpService';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
 import { createQueryClient } from './queryClient';
@@ -19,6 +17,17 @@ function permissionDenied() {
     );
 }
 
+// A query that opts into the notification: one CMS request, retried after a failed response up to
+// three times.
+function useNotifyingQuery() {
+    return useQuery({
+        queryKey: ['notifying'],
+        queryFn: () => httpRequest('/rest/admin/token'),
+        retry: (failureCount, error) => error instanceof HttpError && failureCount < 3,
+        meta: { errorMessageKey: 'test.queryFailed' },
+    });
+}
+
 function wrapper({ children }: { children: ReactNode }) {
     // No delay between retries keeps the tests fast; the hooks keep their own `retry`.
     const queryClient = createQueryClient({ defaultOptions: { queries: { retryDelay: 0 } } });
@@ -28,7 +37,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe('createQueryClient error notifications', () => {
     beforeEach(() => {
-        useCmsTokenStore.getState().clearCmsToken();
         useErrorNotificationStore.setState({ errors: [] });
     });
 
@@ -41,14 +49,14 @@ describe('createQueryClient error notifications', () => {
 
         vi.stubGlobal('fetch', fetchMock);
 
-        const { result } = renderHook(() => useCmsToken(), { wrapper });
+        const { result } = renderHook(() => useNotifyingQuery(), { wrapper });
 
         await waitFor(() => expect(result.current.isError).toBe(true));
 
         expect(fetchMock).toHaveBeenCalledTimes(4);
         expect(useErrorNotificationStore.getState().errors).toEqual([{
             id: expect.any(String),
-            messageKey: 'errorNotifications.cmsTokenFailed',
+            messageKey: 'test.queryFailed',
             detailKey: 'errors.cms.PERMISSION',
         }]);
     });
@@ -58,7 +66,7 @@ describe('createQueryClient error notifications', () => {
             .mockResolvedValueOnce(permissionDenied())
             .mockResolvedValueOnce(Response.json(created)));
 
-        const { result } = renderHook(() => useCmsToken(), { wrapper });
+        const { result } = renderHook(() => useNotifyingQuery(), { wrapper });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

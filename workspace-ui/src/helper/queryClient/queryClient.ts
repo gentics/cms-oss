@@ -7,8 +7,8 @@ declare module '@tanstack/react-query' {
     interface Register {
         queryMeta: {
             /**
-             * Opts the query into an error notification: the i18n key of its message, for example
-             * `errorNotifications.cmsTokenFailed`. The detail is the error mapped by `errorMessageKey`.
+             * Opts the query into an error notification: the i18n key of its message. The detail is
+             * the error mapped by `errorMessageKey`.
              */
             errorMessageKey?: string;
         };

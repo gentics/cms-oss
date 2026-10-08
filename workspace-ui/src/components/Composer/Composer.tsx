@@ -1,13 +1,17 @@
-import { ArrowUpIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
+import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
 import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { AttachmentList } from '@/components/AttachmentList/AttachmentList';
+import { isReferenceMenuOpen } from '@/components/ComposerTextInput/composerExtensions';
 import { ComposerTextInput } from '@/components/ComposerTextInput/ComposerTextInput';
+import { type VerbatimSources, VerbatimSourcesContext } from '@/components/ComposerTextInput/verbatimSources';
 import { IconButton } from '@/components/IconButton/IconButton';
+import { ReferenceMenu } from '@/components/ReferenceMenu/ReferenceMenu';
 import { Button } from '@/components/ui/button';
 import { VoiceInput } from '@/components/VoiceInput/VoiceInput';
+import { attachmentSource } from '@/helper/composerParts/composerParts';
 import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
 import { useComposer } from '@/hooks/useComposer';
 import type { StartSessionInput } from '@/hooks/useGenaixQueries';
@@ -41,6 +45,8 @@ interface ComposerProps {
     /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
     isStopping?: boolean;
     onStop?: () => void;
+    /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
+    sessionId?: string;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -57,7 +63,7 @@ const TEXT_KEYS = {
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
  * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -69,6 +75,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         readInput,
         reset,
         markSelectionVerbatim,
+        openReferenceMenu,
         openFilePicker,
         addFiles,
         toggleMode,
@@ -118,14 +125,21 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         onSubmit(input);
     }
 
-    // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them.
+    // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them, and
+    // while the @-menu is open, Enter is the menu's.
     function handleKeyDown(event: KeyboardEvent) {
-        if (event.key === 'Enter' && !event.shiftKey) {
+        if (event.key === 'Enter' && !event.shiftKey && !isReferenceMenuOpen(editor.state)) {
             event.preventDefault();
             submit();
         }
     }
 
+    // What a verbatim passage can be quoted from, besides typed text: the attached files, and in the
+    // chat the files already uploaded to the session.
+    const verbatimSources: VerbatimSources = {
+        attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
+        sessionId,
+    };
     const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
@@ -181,6 +195,16 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 aria-label={t('composer.file')}
                 onChange={(event) => addFiles(event.target.files)}
             />
+            <Button
+                variant="ghost"
+                size="sm"
+                // Keeps the caret where the `@` goes.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={openReferenceMenu}
+            >
+                <AtSignIcon size={16} />
+                {t('composer.context')}
+            </Button>
             <Button
                 variant="ghost"
                 size="sm"
@@ -256,18 +280,22 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 </div>
 
                 <div className={styles.line}>
-                    <ComposerTextInput
-                        editor={editor}
-                        label={t(texts.placeholder)}
-                        isEmpty={isEmpty}
-                        size={isChat ? 'base' : 'lg'}
-                        onKeyDown={handleKeyDown}
-                        onFocus={() => setHasFocus(true)}
-                        onBlur={() => setHasFocus(false)}
-                    />
+                    <VerbatimSourcesContext value={verbatimSources}>
+                        <ComposerTextInput
+                            editor={editor}
+                            label={t(texts.placeholder)}
+                            isEmpty={isEmpty}
+                            size={isChat ? 'base' : 'lg'}
+                            onKeyDown={handleKeyDown}
+                            onFocus={() => setHasFocus(true)}
+                            onBlur={() => setHasFocus(false)}
+                        />
+                    </VerbatimSourcesContext>
 
                     {!isChat && submitButtons}
                 </div>
+
+                <ReferenceMenu editor={editor} sessionId={sessionId} />
 
                 {/* In the chat the actions sit inside the box; on the dashboard below the prompt. */}
                 {isChat && actions}

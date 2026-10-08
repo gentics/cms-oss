@@ -1,10 +1,20 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpError } from '@/services/httpService/httpService';
-import { useCmsTokenStore } from '@/store/useCmsTokenStore';
-import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
-import { type CmsTokenInfo, createCmsToken, createSessionCmsToken, getCmsToken, SESSION_CMS_TOKEN_LIFETIME_SECONDS } from './cmsApiService';
+import {
+    CMS_SEARCH_MAX_ITEMS,
+    CmsLoginError,
+    type CmsTokenInfo,
+    createCmsToken,
+    getCmsKeycloakConfig,
+    getCmsUser,
+    listCmsNodes,
+    loginToCms,
+    logoutFromCms,
+    searchCmsItems,
+    ssoLoginToCms,
+} from './cmsApiService';
 
 const NOW_S = 1_790_800_000;
 
@@ -38,32 +48,21 @@ describe('createCmsToken', () => {
         vi.useRealTimers();
     });
 
-    it('posts the name and an expiry 60 minutes ahead, in seconds, with the CMS session cookie and returns the created token', async () => {
+    it('posts the name, an expiry 24 hours ahead and pruneOnExpiry with the CMS session cookie and returns the created token with that expiry', async () => {
         vi.useFakeTimers({ toFake: ['Date'] });
         vi.setSystemTime(NOW_S * 1000);
 
         const fetchMock = stubFetchSequence(createdResponse());
 
         await expect(createCmsToken('genaix-workspace-1'))
-            .resolves.toEqual({ token: 'cmstok_secret', ...tokenInfo({ id: 4, name: 'genaix-workspace-1' }) });
+            .resolves.toEqual({ token: 'cmstok_secret', ...tokenInfo({ id: 4, name: 'genaix-workspace-1', expires: NOW_S + 86_400 }) });
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
         expect(url).toBe('/rest/admin/token');
         expect(init?.method).toBe('POST');
         expect(init?.credentials).toBe('same-origin');
-        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-workspace-1', expires: NOW_S + 3600 });
-    });
-
-    it('posts the given lifetime and pruneOnExpiry', async () => {
-        vi.useFakeTimers({ toFake: ['Date'] });
-        vi.setSystemTime(NOW_S * 1000);
-
-        const fetchMock = stubFetchSequence(createdResponse());
-
-        await createCmsToken('genaix-s-1', { lifetimeSeconds: 600, pruneOnExpiry: true });
-
-        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-s-1', expires: NOW_S + 600, pruneOnExpiry: true });
+        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-workspace-1', expires: NOW_S + 86_400, pruneOnExpiry: true });
     });
 
     it('throws an HttpError with the status when the CMS refuses', async () => {
@@ -76,165 +75,114 @@ describe('createCmsToken', () => {
     });
 });
 
-describe('getCmsToken', () => {
-    const stored = { token: 'cmstok_stored', id: 7, name: 'genaix-workspace-stored', expires: NOW_S + 60 };
-    const fromResponse = { token: 'cmstok_secret', id: 4, name: 'genaix-workspace-1', expires: NOW_S + 3600 };
-
-    beforeEach(() => {
-        useCmsTokenStore.getState().clearCmsToken();
-    });
-
+describe('listCmsNodes', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
-        vi.restoreAllMocks();
-        vi.useRealTimers();
     });
 
-    it('returns the token from the store without a request', async () => {
-        const fetchMock = stubFetchSequence();
+    it('lists the nodes with the CMS session cookie', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 3, name: 'Corporate Website', folderId: 7 }] }));
 
-        useCmsTokenStore.getState().setCmsToken(stored);
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual(stored);
-        expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it('returns a stored token that never expires', async () => {
-        const fetchMock = stubFetchSequence();
-
-        useCmsTokenStore.getState().setCmsToken({ ...stored, expires: 0 });
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual({ ...stored, expires: 0 });
-        expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it('posts for a token when the store is empty and stores the token from the response', async () => {
-        vi.useFakeTimers({ toFake: ['Date'] });
-        vi.setSystemTime(NOW_S * 1000);
-
-        const fetchMock = stubFetchSequence(createdResponse());
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual(fromResponse);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/admin/token');
-        expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
-        expect(postedBody(fetchMock)).toEqual({ name: expect.stringMatching(/^genaix-workspace-/), expires: NOW_S + 3600 });
-        expect(useCmsTokenStore.getState().cmsToken).toEqual(fromResponse);
-    });
-
-    it('never reads the token list', async () => {
-        const fetchMock = stubFetchSequence(createdResponse());
-
-        await getCmsToken(NOW_S * 1000);
-
-        expect(fetchMock.mock.calls.map(([, init]) => init?.method)).toEqual(['POST']);
-    });
-
-    it('posts again when the stored token has expired', async () => {
-        const fetchMock = stubFetchSequence(createdResponse());
-
-        useCmsTokenStore.getState().setCmsToken({ ...stored, expires: NOW_S });
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual(fromResponse);
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-    });
-
-    it('posts again once the store has been cleared', async () => {
-        const fetchMock = stubFetchSequence(createdResponse(), createdResponse({ token: 'cmstok_second', id: 5 }));
-
-        await getCmsToken(NOW_S * 1000);
-        useCmsTokenStore.getState().clearCmsToken();
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toMatchObject({ token: 'cmstok_second', id: 5 });
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    it('sends one POST for parallel calls on an empty store', async () => {
-        const fetchMock = stubFetchSequence(createdResponse(), createdResponse({ token: 'cmstok_second' }));
-
-        const [first, second] = await Promise.all([getCmsToken(NOW_S * 1000), getCmsToken(NOW_S * 1000)]);
-
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-        expect(second).toEqual(first);
-    });
-
-    it('rejects when the POST fails, leaves the store empty and tries again on the next call', async () => {
-        vi.spyOn(console, 'error').mockImplementation(() => undefined);
-        const fetchMock = stubFetchSequence(new Response('Forbidden', { status: 403 }), createdResponse());
-
-        await expect(getCmsToken(NOW_S * 1000)).rejects.toBeInstanceOf(HttpError);
-        expect(useCmsTokenStore.getState().cmsToken).toBeNull();
-
-        await expect(getCmsToken(NOW_S * 1000)).resolves.toEqual(fromResponse);
-        expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
-
-    describe('error notification', () => {
-        beforeEach(() => {
-            useErrorNotificationStore.setState({ errors: [] });
-        });
-
-        // The query shows it, once after its last retry (`createQueryClient`), not every attempt.
-        it('shows no notification itself for a failed POST, and logs nothing', async () => {
-            const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-
-            stubFetchSequence(new Response('Forbidden', { status: 403 }));
-
-            await getCmsToken(NOW_S * 1000).catch(() => undefined);
-
-            expect(useErrorNotificationStore.getState().errors).toEqual([]);
-            expect(errorSpy).not.toHaveBeenCalled();
-        });
-
-        it('shows no notification when a token is stored or created', async () => {
-            stubFetchSequence(createdResponse());
-
-            await getCmsToken(NOW_S * 1000);
-            await getCmsToken(NOW_S * 1000);
-
-            expect(useErrorNotificationStore.getState().errors).toEqual([]);
-        });
+        await expect(listCmsNodes()).resolves.toEqual([{ id: 3, name: 'Corporate Website', folderId: 7 }]);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/node', expect.objectContaining({ credentials: 'same-origin' }));
     });
 });
 
-describe('createSessionCmsToken', () => {
+describe('searchCmsItems', () => {
     afterEach(() => {
         vi.unstubAllGlobals();
-        vi.unstubAllEnvs();
-        vi.useRealTimers();
     });
 
-    it('in development returns a fake token valid for 24 hours and sends no request to the CMS', async () => {
-        vi.stubEnv('DEV', true);
-        vi.useFakeTimers({ toFake: ['Date'] });
-        vi.setSystemTime(NOW_S * 1000);
+    it('searches pages, folders and images below the node root folder, recursively and capped', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 42, name: 'Campaigns', type: 'folder' }] }));
 
-        const fetchMock = stubFetchSequence();
-        const created = await createSessionCmsToken('genaix-pending-1');
+        await expect(searchCmsItems({ id: 3, name: 'Corporate Website', folderId: 7 }, 'Camp')).resolves.toEqual([{ id: 42, name: 'Campaigns', type: 'folder' }]);
 
-        expect(fetchMock).not.toHaveBeenCalled();
-        expect(created).toEqual({
-            token: expect.stringMatching(/^cmstok_dev_/),
-            name: 'genaix-pending-1',
-            expiresAt: new Date((NOW_S + SESSION_CMS_TOKEN_LIFETIME_SECONDS) * 1000).toISOString(),
-        });
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.pathname).toBe('/rest/folder/getItems/7');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.get('search')).toBe('Camp');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(url.searchParams.get('maxItems')).toBe(String(CMS_SEARCH_MAX_ITEMS));
+        expect(url.searchParams.getAll('type')).toEqual(['page', 'folder', 'image']);
+        expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
+    });
+});
+
+describe('CMS login', () => {
+    const user = { id: 3, login: 'editor', firstName: 'Eddie', lastName: 'Tor' };
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
     });
 
-    it('otherwise creates a CMS token valid for 24 hours that the CMS prunes once it has expired', async () => {
-        vi.stubEnv('DEV', false);
-        vi.useFakeTimers({ toFake: ['Date'] });
-        vi.setSystemTime(NOW_S * 1000);
+    it('getCmsUser returns the user of the session cookie, and null for 401', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ user }), new Response('', { status: 401 }));
 
-        const expires = NOW_S + SESSION_CMS_TOKEN_LIFETIME_SECONDS;
-        const fetchMock = stubFetchSequence(createdResponse({ name: 'genaix-pending-1', expires }));
+        await expect(getCmsUser()).resolves.toEqual(user);
+        await expect(getCmsUser()).resolves.toBeNull();
+        expect(fetchMock).toHaveBeenCalledWith('/rest/user/me', expect.objectContaining({ credentials: 'same-origin' }));
+    });
 
-        await expect(createSessionCmsToken('genaix-pending-1')).resolves.toEqual({
-            token: 'cmstok_secret',
-            name: 'genaix-pending-1',
-            expiresAt: new Date(expires * 1000).toISOString(),
-        });
-        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/admin/token');
-        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-pending-1', expires, pruneOnExpiry: true });
+    it('getCmsUser throws other errors', async () => {
+        stubFetchSequence(new Response('', { status: 500 }));
+
+        await expect(getCmsUser()).rejects.toBeInstanceOf(HttpError);
+    });
+
+    it('loginToCms posts the credentials and returns the user', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' }, user }));
+
+        await expect(loginToCms('editor', 'secret')).resolves.toEqual(user);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/auth/login');
+        expect(init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+        expect(postedBody(fetchMock)).toEqual({ login: 'editor', password: 'secret' });
+    });
+
+    it('loginToCms throws the response code of a refused login, which the CMS answers with 200', async () => {
+        stubFetchSequence(Response.json({ responseInfo: { responseCode: 'NOTFOUND' } }));
+
+        const error = await loginToCms('editor', 'wrong').catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(CmsLoginError);
+        expect(error).toMatchObject({ responseCode: 'NOTFOUND' });
+    });
+
+    it('logoutFromCms posts the logout', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' } }));
+
+        await logoutFromCms();
+
+        expect(fetchMock).toHaveBeenCalledWith('/rest/auth/logout', expect.objectContaining({ method: 'POST', credentials: 'same-origin' }));
+    });
+
+    it('getCmsKeycloakConfig returns the settings, and null for 404', async () => {
+        const config = { 'auth-server-url': 'https://sso.example.com', realm: 'cms', resource: 'cms-ui', showSSOButton: true };
+
+        stubFetchSequence(Response.json(config), new Response('', { status: 404 }));
+
+        await expect(getCmsKeycloakConfig()).resolves.toEqual(config);
+        await expect(getCmsKeycloakConfig()).resolves.toBeNull();
+    });
+
+    it('ssoLoginToCms sends the access token and accepts the session id it gets back', async () => {
+        const fetchMock = stubFetchSequence(new Response('1234'));
+
+        await expect(ssoLoginToCms('kc-token')).resolves.toBeUndefined();
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/auth/ssologin');
+        expect(init?.headers).toMatchObject({ Authorization: 'Bearer kc-token' });
+    });
+
+    it('ssoLoginToCms throws the response code it gets instead of a session id', async () => {
+        stubFetchSequence(new Response('MAINTENANCEMODE'));
+
+        await expect(ssoLoginToCms('kc-token')).rejects.toMatchObject({ name: 'CmsLoginError', responseCode: 'MAINTENANCEMODE' });
     });
 });

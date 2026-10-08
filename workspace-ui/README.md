@@ -11,15 +11,27 @@ In development the Vite dev server plays the proxy (`server.proxy` in `vite.conf
 3. Start the app in a second terminal: `npm run dev`.
 4. Call `http://localhost:5173/genaix/api/v1/me` from the browser or with `curl`.
 
-Configuration is read from `.env.local` (see `.env.example`). All three variables are optional, and their defaults target the mock:
+Configuration is read from `.env.local` (see `.env.example`); `.env.example` itself is not loaded. All variables are optional. The GenAIx defaults target the mock:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `GENAIX_API_URL` | `http://localhost:8123/api/v1` | GenAIx base URL the proxy forwards to |
 | `GENAIX_API_TOKEN` | `sk_gnx_mock` | Installation token (mock fixture) |
 | `GENAIX_SUBJECT` | `sub_workspace_dev` | `X-GCMS-Subject` sent for every request |
+| `CMS_PROXY_TARGET` | none | CMS that `/rest` is forwarded to, e.g. `https://cms.example.com`. Without it the dev server answers the logged-in user (`GET /rest/user/me`, a fixed dev user, so there is no login) and the CMS API token request (`POST /rest/admin/token`, a test token) itself, so sessions start against the GenAIx mock; every other CMS call (e.g. the @-menu search) has no CMS |
 
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
+
+In production the UI is served from the CMS host, so `/rest` is same-origin and needs no proxy. In development the proxy keeps the CMS cookies on `localhost` (`cookieDomainRewrite`); the CMS calls are authenticated by the CMS session cookie, so they need a session on that CMS.
+
+## Login
+
+The app is shown only with a CMS session, as the editor and admin UI do (`src/components/LoginGate/`). It asks the CMS for the user of the session cookie (`GET /rest/user/me`); a session from the editor or admin UI on the same host counts, since the cookie is set for `/`. Without one:
+
+- If the CMS has Keycloak (`GET /rest/keycloak`, the `cms-keycloak` module with the feature `keycloak`), the app logs in through Keycloak with `keycloak-js` and turns its token into a CMS session (`GET /rest/auth/ssologin`, `src/helper/keycloak/keycloak.ts`). Without `keycloak.show_sso_button` it redirects to the Keycloak login at once; with it the login form offers "Log in with SSO". The Keycloak client must accept the workspace URL (e.g. `https://cms.example.com/workspace/*`) as a redirect URI. `?skip-sso` in the URL skips Keycloak, as in the editor.
+- Otherwise the login form logs in with user name and password (`POST /rest/auth/login`).
+
+The logout in the topbar ends the CMS session (`POST /rest/auth/logout`) and, whenever the CMS has Keycloak and `?skip-sso` is not set, the Keycloak session too, so Keycloak does not log the user straight back in; then the page starts fresh. If the Keycloak logout fails, the CMS session is gone already: the login form appears with a notification. With `CMS_PROXY_TARGET` the login runs against that CMS; without it the dev server's fixed dev user is always logged in.
 
 The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/genaix/api/v1`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/genaix/api/v1`, so a different value in development needs a matching `server.proxy` entry.
 

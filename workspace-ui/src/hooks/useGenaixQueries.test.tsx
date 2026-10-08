@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { pendingFileSource } from '@/helper/composerParts/composerParts';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import { GenaixApiError } from '@/services/apiService/apiService';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -226,6 +227,8 @@ describe('GenAIx query hooks', () => {
         it('without files creates the session with its first message in one call', async () => {
             const fetchMock = stubFetch(Response.json({ id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' }, { status: 201 }));
 
+            vi.stubGlobal('fetch', fetchMock);
+
             const { result } = renderHook(() => useStartSession(), { wrapper });
 
             act(() => result.current.mutate({ parts, files: [] }));
@@ -378,6 +381,28 @@ describe('GenAIx query hooks', () => {
             ]);
             expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
                 parts: [...parts, { type: 'file_ref', file_id: 'f-1', mode: 'verbatim' }],
+            });
+        });
+
+        it('gives a passage quoted from a submitted file that file\'s uploaded id as its source', async () => {
+            const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+
+            stubUploads([{ status: 201, body: { id: 'f-1' } }, { status: 201, body: { id: 'f-2' } }]);
+
+            const { result } = renderHook(() => useSendTurn('s-1'), { wrapper });
+
+            act(() => result.current.mutate({
+                parts: [{ type: 'verbatim', text: 'Review now', source: pendingFileSource(1) }],
+                files: [{ file: new File(['a'], 'brief.pdf'), mode: 'source' }, { file: new File(['b'], 'terms.pdf'), mode: 'source' }],
+            }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
+                parts: [
+                    { type: 'verbatim', text: 'Review now', source: 'f-2' },
+                    { type: 'file_ref', file_id: 'f-1', mode: 'source' },
+                    { type: 'file_ref', file_id: 'f-2', mode: 'source' },
+                ],
             });
         });
 

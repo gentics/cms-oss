@@ -8,7 +8,22 @@
             "de": "Deutsch"
         },
         "darkMode": "Dunkler Modus",
-        "lightMode": "Heller Modus"
+        "lightMode": "Heller Modus",
+        "logout": "Abmelden"
+    },
+    "login": {
+        "username": "Benutzername",
+        "password": "Passwort",
+        "submit": "Anmelden",
+        "singleSignOn": "Mit SSO anmelden",
+        "errors": {
+            "invalidCredentials": "Benutzername oder Passwort ist falsch.",
+            "maintenance": "Das CMS ist im Wartungsmodus. Anmelden ist gerade nicht möglich.",
+            "failed": "Die Anmeldung ist fehlgeschlagen.",
+            "singleSignOn": "Single Sign-on ist nicht verfügbar.",
+            "logout": "Das Abmelden ist fehlgeschlagen.",
+            "singleSignOnLogout": "Sie sind vom CMS abgemeldet, aber noch per Single Sign-on angemeldet."
+        }
     },
     "workspace": {
         "resizeLeft": "Breite der linken Spalte",
@@ -37,6 +52,30 @@
         "verbatimHint": "Markieren Sie zuerst die Stelle, die unverändert bleiben soll.",
         "verbatimNested": "Die Auswahl enthält bereits eine gesperrte Stelle.",
         "removeVerbatim": "Verbatim entfernen",
+        "verbatimSource": {
+            "user": "Selbst geschrieben",
+            "label": "Quelle: {{source}}"
+        },
+        "verbatimHasToken": "Die Auswahl enthält einen Verweis – markieren Sie nur Text.",
+        "removeToken": "{{label}} entfernen",
+        "context": "Kontext",
+        "mention": {
+            "label": "Kontext",
+            "search": "Kontext suchen…",
+            "groups": {
+                "page": "Seiten",
+                "folder": "Ordner",
+                "image": "Bilder",
+                "file": "Dateien",
+                "project": "Projekt"
+            },
+            "clearScope": "Filter entfernen",
+            "loading": "Suche läuft",
+            "failed": "Die Suche konnte nicht abgeschlossen werden.",
+            "empty": "Kein Kontext für „{{query}}“ gefunden.",
+            "emptyNoQuery": "Kein Kontext gefunden.",
+            "asText": "„{{query}}“ als Text"
+        },
         "attachment": {
             "source": "als Quelle",
             "verbatim": "verbatim",
@@ -211,9 +250,6 @@
         "tapToSpeak": "Zum Sprechen tippen",
         "tapToStop": "Zum Beenden tippen"
     },
-    "errorNotifications": {
-        "cmsTokenFailed": "Der CMS-Token konnte nicht abgerufen werden"
-    },
     "sessions": {
         "title": "Sitzungen",
         "new": "Neu",
@@ -262,7 +298,8 @@
             "invalid": "Ungültig",
             "disabled": "Deaktiviert",
             "placeholder": "Platzhalter",
-            "selected": "Gewählt"
+            "selected": "Gewählt",
+            "filled": "Ausgefüllt"
         },
         "buttons": {
             "title": "Buttons",
@@ -294,6 +331,11 @@
             "title": "Radio",
             "campaign": "Kampagnen-Landingpage",
             "topic": "Themenseite"
+        },
+        "input": {
+            "title": "Eingabefeld",
+            "label": "Benutzername",
+            "placeholder": "Benutzernamen eingeben"
         },
         "select": {
             "title": "Auswahl",
@@ -418,6 +460,7 @@
             "file_too_large": "Die Datei ist zu groß.",
             "unsupported_media_type": "Dieser Dateityp wird nicht unterstützt.",
             "validation_failed": "Einige der eingegebenen Daten sind ungültig.",
+            "passage_not_found": "Eine als Zitat aus einer Datei markierte Stelle kommt in dieser Datei nicht vor.",
             "quality_gate_failed": "Das Ergebnis hat die Qualitätsprüfung nicht bestanden.",
             "cms_object_locked": "Das CMS-Objekt ist von jemand anderem gesperrt.",
             "mcp_connection_not_found": "Die Verbindung wurde nicht gefunden.",
@@ -450,6 +493,7 @@
             "failed": "Die Anfrage ist fehlgeschlagen."
         },
         "network": "Der Server ist nicht erreichbar. Bitte prüfen Sie Ihre Verbindung.",
+        "noCmsConnection": "Es gibt keine CMS-Verbindung, mit der gearbeitet werden kann.",
         "invalidResponse": "Der Server hat eine unlesbare Antwort gesendet.",
         "unknown": "Ein unerwarteter Fehler ist aufgetreten."
     }

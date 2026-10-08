@@ -8,7 +8,22 @@
             "de": "Deutsch"
         },
         "darkMode": "Dark mode",
-        "lightMode": "Light mode"
+        "lightMode": "Light mode",
+        "logout": "Log out"
+    },
+    "login": {
+        "username": "User name",
+        "password": "Password",
+        "submit": "Log in",
+        "singleSignOn": "Log in with SSO",
+        "errors": {
+            "invalidCredentials": "The user name or the password is wrong.",
+            "maintenance": "The CMS is in maintenance mode. Logging in is not possible right now.",
+            "failed": "The login failed.",
+            "singleSignOn": "Single sign-on is not available.",
+            "logout": "Logging out failed.",
+            "singleSignOnLogout": "You are logged out of the CMS, but still logged in with single sign-on."
+        }
     },
     "workspace": {
         "resizeLeft": "Width of the left column",
@@ -37,6 +52,30 @@
         "verbatimHint": "Select the passage that should stay unchanged first.",
         "verbatimNested": "The selection already contains a locked passage.",
         "removeVerbatim": "Remove verbatim",
+        "verbatimSource": {
+            "user": "Typed by me",
+            "label": "Source: {{source}}"
+        },
+        "verbatimHasToken": "The selection contains a reference — mark plain text only.",
+        "removeToken": "Remove {{label}}",
+        "context": "Context",
+        "mention": {
+            "label": "Context",
+            "search": "Search context…",
+            "groups": {
+                "page": "Pages",
+                "folder": "Folders",
+                "image": "Images",
+                "file": "Files",
+                "project": "Project"
+            },
+            "clearScope": "Remove filter",
+            "loading": "Searching",
+            "failed": "The search could not be completed.",
+            "empty": "No context found for “{{query}}”.",
+            "emptyNoQuery": "No context found.",
+            "asText": "“{{query}}” as plain text"
+        },
         "attachment": {
             "source": "as a source",
             "verbatim": "verbatim",
@@ -211,9 +250,6 @@
         "tapToSpeak": "Tap to speak",
         "tapToStop": "Tap to stop"
     },
-    "errorNotifications": {
-        "cmsTokenFailed": "Getting the CMS token failed"
-    },
     "sessions": {
         "title": "Sessions",
         "new": "New",
@@ -262,7 +298,8 @@
             "invalid": "Invalid",
             "disabled": "Disabled",
             "placeholder": "Placeholder",
-            "selected": "Selected"
+            "selected": "Selected",
+            "filled": "Filled"
         },
         "buttons": {
             "title": "Buttons",
@@ -294,6 +331,11 @@
             "title": "Radio",
             "campaign": "Campaign landing page",
             "topic": "Topic page"
+        },
+        "input": {
+            "title": "Input",
+            "label": "User name",
+            "placeholder": "Enter a user name"
         },
         "select": {
             "title": "Select",
@@ -418,6 +460,7 @@
             "file_too_large": "The file is too large.",
             "unsupported_media_type": "This file type is not supported.",
             "validation_failed": "Some of the entered data is not valid.",
+            "passage_not_found": "A passage marked as quoted from a file does not occur in that file.",
             "quality_gate_failed": "The result did not pass the quality check.",
             "cms_object_locked": "The CMS object is locked by someone else.",
             "mcp_connection_not_found": "The connection was not found.",
@@ -450,6 +493,7 @@
             "failed": "The request failed."
         },
         "network": "The server could not be reached. Please check your connection.",
+        "noCmsConnection": "There is no CMS connection to work with.",
         "invalidResponse": "The server sent a response that could not be read.",
         "unknown": "An unexpected error occurred."
     }

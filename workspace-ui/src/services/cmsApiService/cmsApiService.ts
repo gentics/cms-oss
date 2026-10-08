@@ -1,5 +1,4 @@
-import { httpRequest } from '@/services/httpService/httpService';
-import { type CmsToken, useCmsTokenStore } from '@/store/useCmsTokenStore';
+import { HttpError, httpRequest, toHttpError } from '@/services/httpService/httpService';
 
 /**
  * `responseInfo.responseCode` of a CMS REST response, which CMS REST responses carry alongside the
@@ -30,97 +29,190 @@ export interface CmsTokenInfo {
     valid: boolean;
 }
 
-export interface CmsTokenOptions {
-    /** How long the token is valid, in seconds. Default: 60 minutes. */
-    lifetimeSeconds?: number;
-    /** Lets the CMS delete the token itself once it has expired (`02-auth-and-context-flow.md`). */
-    pruneOnExpiry?: boolean;
-}
+// How long a CMS API token is valid: 24 hours, the guide's default for a session token
+// (09-integration-guide.md, "Creating the CMS API token for a session").
+const CMS_TOKEN_LIFETIME_S = 24 * 60 * 60;
 
 /**
  * Requests a CMS API token for the current CMS user, authenticated by the browser's own CMS session
- * cookie: `POST /rest/admin/token` with `{ name, expires }`, valid for 60 minutes unless
- * `lifetimeSeconds` says otherwise, and `pruneOnExpiry` when given. Returns the token and its metadata.
+ * cookie: `POST /rest/admin/token` with `{ name, expires, pruneOnExpiry: true }`, valid for 24 hours;
+ * with `pruneOnExpiry` the CMS deletes the token itself once it has expired (09-integration-guide.md,
+ * "Creating the CMS API token for a session"). Returns the token and its metadata, `expires` being
+ * the value sent (a Unix timestamp in seconds), so a caller can register the token until exactly then.
  */
-export async function createCmsToken(name: string, { lifetimeSeconds = 60 * 60, pruneOnExpiry }: CmsTokenOptions = {}): Promise<CmsTokenInfo> {
+export async function createCmsToken(name: string): Promise<CmsTokenInfo> {
     // Relative, so it is same-origin on whichever CMS host serves the UI. In development the Vite dev
     // server forwards it (see `vite.config.ts`).
     const CMS_TOKEN_URL = '/rest/admin/token';
-    // The CMS takes `expires` as a Unix timestamp in seconds (integration guide,
-    // `POST /rest/admin/token`), the clock gives milliseconds.
-    const expires = Math.floor(new Date().getTime() / 1000) + lifetimeSeconds;
-
-    return httpRequest<CmsTokenInfo>(CMS_TOKEN_URL, {
+    // The CMS takes `expires` as a Unix timestamp in seconds, the clock gives milliseconds.
+    const expires = Math.floor(Date.now() / 1000) + CMS_TOKEN_LIFETIME_S;
+    const created = await httpRequest<CmsTokenInfo>(CMS_TOKEN_URL, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, expires, pruneOnExpiry }),
+        body: JSON.stringify({ name, expires, pruneOnExpiry: true }),
     });
+
+    return { ...created, expires };
+}
+
+// The same-origin request the CMS REST API answers with the browser's own CMS session cookie.
+const CMS_GET: RequestInit = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
+
+/** The logged-in CMS user (`GET /rest/user/me`), as far as the workspace needs it. */
+export interface CmsUser {
+    id: number;
+    login: string;
+    firstName: string;
+    lastName: string;
 }
 
 /**
- * Lifetime of the CMS token of one GenAIx session: 24 hours, as in the integration guide ("The whole
- * sequence with curl") and the GenAIx mock's default for a session authorization.
+ * A CMS login that did not succeed: `POST /rest/auth/login` answered with a `responseInfo.responseCode`
+ * other than `OK` (`NOTFOUND` for wrong credentials, `MAINTENANCEMODE`, `FAILURE`), or
+ * `GET /rest/auth/ssologin` answered with such a code instead of a session id.
  */
-export const SESSION_CMS_TOKEN_LIFETIME_SECONDS = 24 * 60 * 60;
+export class CmsLoginError extends Error {
+    readonly responseCode: string;
 
-/** A CMS API token for one GenAIx session: the secret, its name on the CMS and when it expires. */
-export interface SessionCmsToken {
-    token: string;
+    constructor(responseCode: string) {
+        super(`CMS login failed: ${responseCode}`);
+        this.name = 'CmsLoginError';
+        this.responseCode = responseCode;
+    }
+}
+
+/**
+ * The CMS user of the browser's CMS session cookie: `GET /rest/user/me`. `null` while there is no
+ * valid session: the CMS answers `401` for a missing or expired cookie.
+ */
+export async function getCmsUser(): Promise<CmsUser | null> {
+    try {
+        const { user } = await httpRequest<{ user?: CmsUser }>('/rest/user/me', CMS_GET);
+
+        return user ?? null;
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 401) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Logs in with user name and password, as the editor and admin UI do: `POST /rest/auth/login`. The
+ * CMS sets the session cookie itself. It answers `200` for a refused login too, with the reason in
+ * `responseInfo.responseCode`, which is thrown as a `CmsLoginError`.
+ */
+export async function loginToCms(login: string, password: string): Promise<CmsUser> {
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; user?: CmsUser }>('/rest/auth/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password }),
+    });
+    const responseCode = response.responseInfo?.responseCode ?? 'FAILURE';
+
+    if (responseCode !== 'OK' || !response.user) {
+        throw new CmsLoginError(responseCode);
+    }
+
+    return response.user;
+}
+
+/** Ends the CMS session: `POST /rest/auth/logout`, which also deletes the session cookie. */
+export async function logoutFromCms(): Promise<void> {
+    await httpRequest<unknown>('/rest/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } });
+}
+
+/** The Keycloak settings the CMS offers its UIs (`GET /rest/keycloak`, the `cms-keycloak` module). */
+export interface CmsKeycloakConfig {
+    'auth-server-url': string;
+    realm: string;
+    resource: string;
+    /** `keycloak.show_sso_button`: offer SSO as a button next to the login form instead of redirecting at once. */
+    showSSOButton?: boolean;
+}
+
+/** The CMS's Keycloak settings, or `null` when it has none: `404` while the feature is off or not installed. */
+export async function getCmsKeycloakConfig(): Promise<CmsKeycloakConfig | null> {
+    try {
+        return await httpRequest<CmsKeycloakConfig>('/rest/keycloak', CMS_GET);
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 404) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Turns a Keycloak access token into a CMS session, as the editor and admin UI do:
+ * `GET /rest/auth/ssologin` with `Authorization: Bearer`. The CMS sets the session cookie and answers
+ * the session id as plain text; anything else is the response code of a refused login, thrown as a
+ * `CmsLoginError`.
+ */
+export async function ssoLoginToCms(accessToken: string): Promise<void> {
+    const url = '/rest/auth/ssologin';
+    const response = await fetch(url, {
+        credentials: 'same-origin',
+        headers: { Accept: 'text/plain', Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+        throw await toHttpError(url, response);
+    }
+
+    const result = (await response.text()).trim();
+
+    if (!/^\d+$/.test(result)) {
+        throw new CmsLoginError(result || 'FAILURE');
+    }
+}
+
+/** A CMS node (`GET /rest/node`), as far as the composer needs it. `folderId` is its root folder. */
+export interface CmsNode {
+    id: number;
     name: string;
-    /** ISO 8601, for `expires_at` of the session authorization. */
-    expiresAt: string;
+    folderId: number;
 }
+
+/** The CMS object types the composer's @-menu searches. */
+export type CmsItemType = 'page' | 'folder' | 'image';
+
+/** A page, folder or image found by `searchCmsItems`, as far as the composer needs it. */
+export interface CmsItem {
+    id: number;
+    name: string;
+    type: CmsItemType;
+    /** The folder path, e.g. `/Campaigns/`; not every type carries it. */
+    path?: string;
+}
+
+/** The nodes the current CMS user can see: `GET /rest/node`. */
+export async function listCmsNodes(): Promise<CmsNode[]> {
+    const { items } = await httpRequest<{ items?: CmsNode[] }>('/rest/node', CMS_GET);
+
+    return items ?? [];
+}
+
+/** How many objects one node returns for one search. */
+export const CMS_SEARCH_MAX_ITEMS = 20;
 
 /**
- * Creates the CMS API token a GenAIx session acts on the CMS with (`02-auth-and-context-flow.md`,
- * "Session-scoped authorization"): `POST /rest/admin/token`, valid for
- * `SESSION_CMS_TOKEN_LIFETIME_SECONDS`, pruned by the CMS once it has expired.
- *
- * In development (`import.meta.env.DEV`) no request goes to the CMS: the token is a fake. The GenAIx
- * mock contacts no CMS and accepts any token without one of its test prefixes (its README, "MCP
- * connections"); a real GenAIx refuses it with `422` `mcp_authorization_rejected`.
+ * Pages, folders and images in `node` whose id, name or description matches `query`: `GET
+ * /rest/folder/getItems/{root folder}` with `search`, recursive, at most `CMS_SEARCH_MAX_ITEMS`.
  */
-export async function createSessionCmsToken(name: string): Promise<SessionCmsToken> {
-    if (import.meta.env.DEV) {
-        const expires = Math.floor(Date.now() / 1000) + SESSION_CMS_TOKEN_LIFETIME_SECONDS;
+export async function searchCmsItems(node: CmsNode, query: string, signal?: AbortSignal): Promise<CmsItem[]> {
+    const params = new URLSearchParams({ nodeId: String(node.id), search: query, recursive: 'true', maxItems: String(CMS_SEARCH_MAX_ITEMS) });
 
-        return { token: `cmstok_dev_${crypto.randomUUID()}`, name, expiresAt: new Date(expires * 1000).toISOString() };
+    for (const type of ['page', 'folder', 'image'] satisfies CmsItemType[]) {
+        params.append('type', type);
     }
 
-    const created = await createCmsToken(name, { lifetimeSeconds: SESSION_CMS_TOKEN_LIFETIME_SECONDS, pruneOnExpiry: true });
+    const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
 
-    return { token: created.token, name: created.name, expiresAt: new Date(created.expires * 1000).toISOString() };
-}
-
-/** Valid while `expires` is `0` (never) or in the future. */
-function isUnexpired(expires: number, nowSeconds: number): boolean {
-    return expires === 0 || expires > nowSeconds;
-}
-
-// Shared by concurrent callers while a token is being requested, so they send one POST, not several.
-let pendingCmsToken: Promise<CmsToken> | null = null;
-
-/**
- * The CMS API token for later API calls: the one in `useCmsTokenStore` while it has not expired,
- * otherwise a new one from `createCmsToken` (`POST /rest/admin/token`), which is then stored.
- */
-export function getCmsToken(now: number = Date.now()): Promise<CmsToken> {
-    const stored = useCmsTokenStore.getState().cmsToken;
-
-    if (stored && isUnexpired(stored.expires, now / 1000)) {
-        return Promise.resolve(stored);
-    }
-
-    pendingCmsToken ??= createCmsToken(`genaix-workspace-${crypto.randomUUID()}`).then((created) => {
-        const cmsToken = { token: created.token, id: created.id, name: created.name, expires: created.expires };
-
-        useCmsTokenStore.getState().setCmsToken(cmsToken);
-
-        return cmsToken;
-    }).finally(() => {
-        pendingCmsToken = null;
-    });
-
-    return pendingCmsToken;
+    return items ?? [];
 }

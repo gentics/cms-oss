@@ -1,5 +1,6 @@
 import type {
     FileMode,
+    FilePage,
     GenaixCode,
     Interaction,
     InteractionAnswer,
@@ -153,6 +154,14 @@ export async function listMcpConnections(connector?: string): Promise<McpConnect
     return items;
 }
 
+/** The user holds no `cms` connection, so a session could not reach the CMS. */
+export class NoCmsConnectionError extends Error {
+    constructor() {
+        super('No cms connection');
+        this.name = 'NoCmsConnectionError';
+    }
+}
+
 // GET /workflows: the workflow modules, read once and cached.
 export async function listWorkflows(): Promise<Workflow[]> {
     const { items } = await genaixRequest<{ items: Workflow[] }>('/workflows');
@@ -247,6 +256,12 @@ export function uploadSessionFile(sessionId: string, file: File, mode: FileMode,
         request.onabort = () => reject(new TypeError(`Upload to ${url} was aborted`));
         request.send(body);
     });
+}
+
+// GET /sessions/{session_id}/files?kind=upload: the files uploaded into the session, newest first.
+// One page of up to 100 (the most the contract allows), which is what the composer offers.
+export function listSessionUploads(sessionId: string): Promise<FilePage> {
+    return genaixRequest<FilePage>(`/sessions/${encodeURIComponent(sessionId)}/files${queryString({ kind: ['upload'], limit: 100 })}`);
 }
 
 // DELETE /sessions/{session_id}: archives the session (soft delete, `204`). Idempotent; an active

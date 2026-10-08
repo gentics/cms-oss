@@ -30,7 +30,7 @@ public class JSONPartType extends TextPartType {
 	protected ObjectNode objectNode;
 
 	public JSONPartType(Value value) throws NodeException {
-		super(value, TextPartType.REPLACENL_EXTENDEDNL2BR);
+		super(value, TextPartType.REPLACENL_NONE);
 	}
 
 	@Override

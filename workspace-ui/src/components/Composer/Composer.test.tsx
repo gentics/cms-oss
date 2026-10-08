@@ -344,6 +344,37 @@ describe('Composer', () => {
                 files: [],
             });
         });
+
+        it('sends a reference picked with the keyboard alone: Tab, @, Enter, Enter', async () => {
+            stubCms();
+
+            const user = userEvent.setup();
+            const { field, onSubmit } = renderWithQueries();
+
+            await user.tab();
+
+            expect(field).toHaveFocus();
+
+            await user.keyboard('Put it under @Camp');
+
+            const list = await screen.findByRole('listbox', { name: 'Context' });
+
+            await within(list).findByRole('option', { name: /Campaigns/, selected: true });
+            await user.keyboard('{Enter}');
+
+            expect(onSubmit).not.toHaveBeenCalled();
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+            await user.keyboard('{Enter}');
+
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [
+                    { type: 'text', text: 'Put it under ' },
+                    { type: 'reference', ref: { type: 'folder', id: '42', node_id: 3, label: 'Campaigns' } },
+                ],
+                files: [],
+            });
+        });
     });
 
     describe('files', () => {

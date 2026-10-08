@@ -26,7 +26,7 @@ import { HttpError, httpRequest } from '@/services/httpService/httpService';
 // Same-origin path of the CMS proxy, which adds the installation token and X-GCMS-Subject. Never
 // GenAIx itself: that would need the installation token in the browser. In development the Vite dev
 // server plays the proxy (see `vite.config.ts`). Set `VITE_GENAIX_API_BASE` to override (`.env.example`).
-export const GENAIX_API_BASE = import.meta.env.VITE_GENAIX_API_BASE || '/genaix/api/v1';
+export const GENAIX_API_BASE = import.meta.env.VITE_GENAIX_API_BASE || '/rest/proxy/genaix';
 
 /** How many times a retryable GenAIx request is retried (queries and the event stream). */
 export const GENAIX_MAX_RETRIES = 3;

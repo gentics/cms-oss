@@ -100,7 +100,7 @@ test.describe('Session chat on a phone', () => {
 
     test('shows the chat of a session chosen in the left column', async ({ page }) => {
         await withSpeechRecognition(page, false);
-        await page.route((url) => url.pathname === '/genaix/api/v1/sessions', (route) => route.fulfill({
+        await page.route((url) => url.pathname === '/rest/proxy/genaix/sessions', (route) => route.fulfill({
             json: { items: [{ id: 'def', title: 'Careers page', status: 'active', created_at: '2026-10-05T10:00:00Z', last_activity_at: '2026-10-05T10:00:00Z' }], next_cursor: null },
         }));
         await page.goto('/sessions/abc');

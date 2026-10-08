@@ -103,7 +103,7 @@ describe('SessionPage', () => {
         await user.keyboard('Shorten the intro{Enter}');
 
         await waitFor(() => expect(field).toHaveTextContent(''));
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/messages');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/messages');
         expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({ parts: [{ type: 'text', text: 'Shorten the intro' }] });
         expect(selectSession('s-1')(useWorkspaceEventStore.getState()).messages).toMatchObject([
             { kind: 'sent', messageId: 'm-1', status: 'sent' },
@@ -150,8 +150,8 @@ describe('SessionPage', () => {
 
         await waitFor(() => expect(screen.queryByText('brief.pdf')).not.toBeInTheDocument());
         expect(log.map((entry) => entry.split(' ')[1])).toEqual([
-            '/genaix/api/v1/sessions/s-1/files',
-            '/genaix/api/v1/sessions/s-1/messages',
+            '/rest/proxy/genaix/sessions/s-1/files',
+            '/rest/proxy/genaix/sessions/s-1/messages',
         ]);
         expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
             parts: [{ type: 'file_ref', file_id: 'f-1', mode: 'source' }],
@@ -312,7 +312,7 @@ describe('SessionPage', () => {
         await user.click(screen.getByRole('button', { name: 'Stop' }));
 
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
         expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
         await waitFor(() => expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled());
 

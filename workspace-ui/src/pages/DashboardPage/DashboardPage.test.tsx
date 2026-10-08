@@ -100,7 +100,7 @@ describe('DashboardPage', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions');
+        expect(url).toBe('/rest/proxy/genaix/sessions');
         expect(JSON.parse(init?.body as string)).toEqual({
             workflow: 'content_research',
             message: { parts: [{ type: 'text', text: 'Which pages are offline?' }] },

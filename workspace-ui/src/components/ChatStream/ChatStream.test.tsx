@@ -343,7 +343,7 @@ describe('ChatStream', () => {
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
 
             await screen.findByText('Hi.');
-            await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/genaix/api/v1/workflows'));
+            await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/proxy/genaix/workflows'));
 
             expect(chatItems()).toEqual(['YouHello', 'Assistant', 'Hi.']);
         });

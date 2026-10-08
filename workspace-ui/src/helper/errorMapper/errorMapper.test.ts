@@ -10,7 +10,7 @@ import { errorMessageKey, problemMessageKey } from './errorMapper';
 function genaixError(status: number, genaixCode: string): GenaixApiError {
     const problem = { type: 'https://genaix.gentics.com/problems/x', title: 'x', status, genaix_code: genaixCode } as Problem;
 
-    return new GenaixApiError('/genaix/api/v1/x', status, problem, new Headers());
+    return new GenaixApiError('/rest/proxy/genaix/x', status, problem, new Headers());
 }
 
 function cmsError(status: number, responseCode: string): HttpError {
@@ -36,7 +36,7 @@ describe('errorMessageKey', () => {
             errors: [{ pointer: '/parts/1/text', detail: 'not in the file', code: 'passage_not_found' }],
         } as Problem;
 
-        expect(errorMessageKey(new GenaixApiError('/genaix/api/v1/x', 422, problem, new Headers()))).toBe('errors.genaix.passage_not_found');
+        expect(errorMessageKey(new GenaixApiError('/rest/proxy/genaix/x', 422, problem, new Headers()))).toBe('errors.genaix.passage_not_found');
         expect(translation('errors.genaix.passage_not_found')).toEqual(expect.any(String));
         expect(errorMessageKey(genaixError(422, 'validation_failed'))).toBe('errors.genaix.validation_failed');
     });

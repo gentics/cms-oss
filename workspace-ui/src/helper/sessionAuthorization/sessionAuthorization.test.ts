@@ -59,7 +59,7 @@ describe('session CMS authorization', () => {
 
     describe('newSessionCmsAuthorization', () => {
         it('returns a new CMS token, valid for 24 hours, for the default cms connection', async () => {
-            const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: connections } });
+            const fetchMock = stubRoutes({ 'GET /rest/proxy/genaix/mcp/connections?connector=cms': { items: connections } });
 
             await expect(newSessionCmsAuthorization()).resolves.toEqual({
                 connection_id: 'c-default',
@@ -68,11 +68,11 @@ describe('session CMS authorization', () => {
                 token_name: expect.stringMatching(/^genaix-pending-/),
                 expires_at: '2026-10-08T08:00:00.000Z',
             });
-            expect(requests(fetchMock)).toEqual(['GET /genaix/api/v1/mcp/connections?connector=cms', TOKEN_ROUTE]);
+            expect(requests(fetchMock)).toEqual(['GET /rest/proxy/genaix/mcp/connections?connector=cms', TOKEN_ROUTE]);
         });
 
         it('creates a new token for every session, never reusing one', async () => {
-            const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: connections } });
+            const fetchMock = stubRoutes({ 'GET /rest/proxy/genaix/mcp/connections?connector=cms': { items: connections } });
 
             const first = await newSessionCmsAuthorization();
             const second = await newSessionCmsAuthorization();
@@ -82,7 +82,7 @@ describe('session CMS authorization', () => {
         });
 
         it('throws NoCmsConnectionError when the user has no cms connection, before creating a token', async () => {
-            const fetchMock = stubRoutes({ 'GET /genaix/api/v1/mcp/connections?connector=cms': { items: [] } });
+            const fetchMock = stubRoutes({ 'GET /rest/proxy/genaix/mcp/connections?connector=cms': { items: [] } });
 
             await expect(newSessionCmsAuthorization()).rejects.toBeInstanceOf(NoCmsConnectionError);
             expect(requests(fetchMock)).not.toContain(TOKEN_ROUTE);
@@ -90,12 +90,12 @@ describe('session CMS authorization', () => {
     });
 
     describe('ensureSessionCmsAuthorization', () => {
-        const put = 'PUT /genaix/api/v1/sessions/s-1/authorizations/c-default';
+        const put = 'PUT /rest/proxy/genaix/sessions/s-1/authorizations/c-default';
 
         function routes(authorizations: unknown[]) {
             return {
-                'GET /genaix/api/v1/mcp/connections?connector=cms': { items: connections },
-                'GET /genaix/api/v1/sessions/s-1': { id: 's-1', authorizations },
+                'GET /rest/proxy/genaix/mcp/connections?connector=cms': { items: connections },
+                'GET /rest/proxy/genaix/sessions/s-1': { id: 's-1', authorizations },
                 [put]: { connection_id: 'c-default', status: 'authorized' },
             };
         }

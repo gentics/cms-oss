@@ -110,12 +110,13 @@ export default defineConfig(({ mode }) => {
         server: {
             proxy: {
                 // Stands in for the CMS proxy (09-integration-guide.md, section 3): forward all
-                // of /genaix/api/v1, drop the browser's credentials and identity, and set the
-                // installation token and X-GCMS-Subject server-side.
-                '/genaix/api/v1/': {
+                // of /rest/proxy/genaix, drop the browser's credentials and identity, and set the
+                // installation token and X-GCMS-Subject server-side. Listed before /rest, so it
+                // wins over the CMS forward below.
+                '/rest/proxy/genaix/': {
                     target: genaixApiUrl,
                     changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/genaix\/api\/v1/, ''),
+                    rewrite: (path) => path.replace(/^\/rest\/proxy\/genaix/, ''),
                     configure: (proxy) => {
                         proxy.on('proxyReq', (proxyReq) => {
                             proxyReq.removeHeader('Cookie');

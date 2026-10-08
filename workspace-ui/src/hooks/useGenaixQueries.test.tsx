@@ -113,8 +113,8 @@ describe('GenAIx query hooks', () => {
         await waitFor(() => expect(result.current.data?.pages).toHaveLength(2));
 
         expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-            '/genaix/api/v1/sessions?status=active',
-            '/genaix/api/v1/sessions?status=active&cursor=c2',
+            '/rest/proxy/genaix/sessions?status=active',
+            '/rest/proxy/genaix/sessions?status=active&cursor=c2',
         ]);
         expect(result.current.data?.pages.flatMap((page) => page.items)).toEqual([{ id: 's-1' }, { id: 's-2' }]);
         expect(result.current.hasNextPage).toBe(false);
@@ -134,9 +134,9 @@ describe('GenAIx query hooks', () => {
         await act(() => result.current.archive.mutateAsync('s-1'));
 
         expect(fetchMock.mock.calls.map(([url, init]) => [init?.method ?? 'GET', url])).toEqual([
-            ['GET', '/genaix/api/v1/sessions'],
-            ['DELETE', '/genaix/api/v1/sessions/s-1'],
-            ['GET', '/genaix/api/v1/sessions'],
+            ['GET', '/rest/proxy/genaix/sessions'],
+            ['DELETE', '/rest/proxy/genaix/sessions/s-1'],
+            ['GET', '/rest/proxy/genaix/sessions'],
         ]);
         await waitFor(() => expect(result.current.sessions.data?.pages.flatMap((page) => page.items)).toEqual([{ id: 's-2' }]));
     });
@@ -199,7 +199,7 @@ describe('GenAIx query hooks', () => {
 
         it('marks the turn send_failed and posts nothing when no CMS credential can be registered', async () => {
             const fetchMock = stubFetch();
-            const refused = new GenaixApiError('/genaix/api/v1/sessions/s-1/authorizations/c-1', 422, undefined, new Headers());
+            const refused = new GenaixApiError('/rest/proxy/genaix/sessions/s-1/authorizations/c-1', 422, undefined, new Headers());
 
             vi.mocked(ensureSessionCmsAuthorization).mockRejectedValue(refused);
 
@@ -235,7 +235,7 @@ describe('GenAIx query hooks', () => {
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             expect(fetchMock).toHaveBeenCalledTimes(1);
-            expect(requestOf(fetchMock, 0).url).toBe('/genaix/api/v1/sessions');
+            expect(requestOf(fetchMock, 0).url).toBe('/rest/proxy/genaix/sessions');
             expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', message: { parts }, authorizations: [AUTHORIZATION] });
             expect(result.current.data).toMatchObject({ id: 's-1' });
         });
@@ -279,10 +279,10 @@ describe('GenAIx query hooks', () => {
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             expect(log).toEqual([
-                'POST /genaix/api/v1/sessions',
-                'POST /genaix/api/v1/sessions/s-1/files',
-                'POST /genaix/api/v1/sessions/s-1/files',
-                'POST /genaix/api/v1/sessions/s-1/messages',
+                'POST /rest/proxy/genaix/sessions',
+                'POST /rest/proxy/genaix/sessions/s-1/files',
+                'POST /rest/proxy/genaix/sessions/s-1/files',
+                'POST /rest/proxy/genaix/sessions/s-1/messages',
             ]);
             expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', authorizations: [AUTHORIZATION] });
             expect(uploads[0]!.body.get('mode')).toBe('verbatim');
@@ -350,7 +350,7 @@ describe('GenAIx query hooks', () => {
 
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             expect(fetchMock).toHaveBeenCalledTimes(1);
-            expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/messages');
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/messages');
             expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({ parts });
             expect(selectSession('s-1')(useWorkspaceEventStore.getState()).messages).toMatchObject([
                 { kind: 'sent', messageId: 'm-1', request: { parts }, status: 'sent' },
@@ -376,8 +376,8 @@ describe('GenAIx query hooks', () => {
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             // In the order they were made, across fetch and the upload.
             expect(log.map((entry) => entry.split(' ')[1])).toEqual([
-                '/genaix/api/v1/sessions/s-1/files',
-                '/genaix/api/v1/sessions/s-1/messages',
+                '/rest/proxy/genaix/sessions/s-1/files',
+                '/rest/proxy/genaix/sessions/s-1/messages',
             ]);
             expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
                 parts: [...parts, { type: 'file_ref', file_id: 'f-1', mode: 'verbatim' }],
@@ -449,7 +449,7 @@ describe('GenAIx query hooks', () => {
         act(() => result.current.mutate('r-1'));
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
         expect(selectSession('s-1')(useWorkspaceEventStore.getState()).run).toMatchObject({ id: 'r-1', status: 'cancelling' });
     });
 
@@ -471,7 +471,7 @@ describe('GenAIx query hooks', () => {
         const { result } = renderHook(() => useSession('s-1'), { wrapper });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1');
         expect(result.current.data).toEqual({ id: 's-1', status: 'review_requested' });
     });
 });

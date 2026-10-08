@@ -34,13 +34,13 @@ export function stubSessionRoutes(
 ) {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
         const url = new URL(String(input), 'http://localhost');
-        const sessionId = /^\/genaix\/api\/v1\/sessions\/([^/]+)$/.exec(url.pathname)?.[1];
+        const sessionId = /^\/rest\/proxy\/genaix\/sessions\/([^/]+)$/.exec(url.pathname)?.[1];
 
         if (init?.method === 'DELETE' && sessionId) {
             return archive(decodeURIComponent(sessionId));
         }
 
-        if (url.pathname === '/genaix/api/v1/sessions') {
+        if (url.pathname === '/rest/proxy/genaix/sessions') {
             return Response.json(listSessions(url));
         }
 
@@ -60,7 +60,7 @@ export function withEmptySessionList(fetchMock: typeof fetch): typeof fetch {
     return async (input, init) => {
         const url = new URL(String(input), 'http://localhost');
 
-        if ((init?.method ?? 'GET') === 'GET' && url.pathname === '/genaix/api/v1/sessions') {
+        if ((init?.method ?? 'GET') === 'GET' && url.pathname === '/rest/proxy/genaix/sessions') {
             return Response.json({ items: [], next_cursor: null } satisfies SessionPage);
         }
 

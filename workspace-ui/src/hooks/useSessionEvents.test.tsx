@@ -109,7 +109,7 @@ describe('useSessionEvents', () => {
         renderHook(() => useSessionEvents(SESSION), { wrapper });
 
         await waitFor(() => expect(genaix.calls('/events')).toHaveLength(1));
-        expect(genaix.calls('/events')[0]![0]).toBe('/genaix/api/v1/sessions/s-1/events?after=12');
+        expect(genaix.calls('/events')[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/events?after=12');
     });
 
     it('on 410 events_pruned resets the live state, refetches the history and reconnects from 0', async () => {
@@ -135,9 +135,9 @@ describe('useSessionEvents', () => {
         await waitFor(() => expect(genaix.calls('/events')).toHaveLength(3), { timeout: 3000 });
 
         expect(genaix.calls('/events').map(([url]) => url)).toEqual([
-            '/genaix/api/v1/sessions/s-1/events?after=40',
-            '/genaix/api/v1/sessions/s-1/events?after=41',
-            '/genaix/api/v1/sessions/s-1/events?after=0',
+            '/rest/proxy/genaix/sessions/s-1/events?after=40',
+            '/rest/proxy/genaix/sessions/s-1/events?after=41',
+            '/rest/proxy/genaix/sessions/s-1/events?after=0',
         ]);
         expect(session()).toMatchObject({ lastSeq: 0, messages: [] });
         expect(genaix.calls('/messages')).toHaveLength(2);

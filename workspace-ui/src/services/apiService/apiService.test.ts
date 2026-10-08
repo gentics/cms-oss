@@ -37,7 +37,7 @@ function problemResponse(status: number, problem: Record<string, unknown>, heade
 }
 
 function apiError(status: number, problem?: Record<string, unknown>, headers: Record<string, string> = {}) {
-    return new GenaixApiError('/genaix/api/v1/x', status, problem as never, new Headers(headers));
+    return new GenaixApiError('/rest/proxy/genaix/x', status, problem as never, new Headers(headers));
 }
 
 describe('getMe', () => {
@@ -51,7 +51,7 @@ describe('getMe', () => {
         vi.stubGlobal('fetch', fetchMock);
 
         await expect(getMe()).resolves.toEqual({ user: { subject: 'sub_test' } });
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/me');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/me');
     });
 });
 
@@ -134,7 +134,7 @@ describe('routes', () => {
         const fetchMock = stubFetch(Response.json({ items: [{ id: 'free_chat' }] }));
 
         await expect(listWorkflows()).resolves.toEqual([{ id: 'free_chat' }]);
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/workflows');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/workflows');
     });
 
     it('listSessions repeats array filters and passes the cursor', async () => {
@@ -142,7 +142,7 @@ describe('routes', () => {
 
         await listSessions({ status: ['active', 'waiting_for_input'], q: 'terms' }, { limit: 25, cursor: 'c2' });
 
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions?status=active&status=waiting_for_input&q=terms&limit=25&cursor=c2');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions?status=active&status=waiting_for_input&q=terms&limit=25&cursor=c2');
     });
 
     it('listSessions without filters has no query string', async () => {
@@ -150,7 +150,7 @@ describe('routes', () => {
 
         await listSessions();
 
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions');
     });
 
     it('archiveSession sends DELETE /sessions/{session_id} and resolves on 204', async () => {
@@ -160,7 +160,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions/s%201');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s%201');
         expect(init?.method).toBe('DELETE');
     });
 
@@ -169,7 +169,7 @@ describe('routes', () => {
 
         await listMessages('s 1', { cursor: 'c2' });
 
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s%201/messages?cursor=c2');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s%201/messages?cursor=c2');
     });
 
     it('postMessage posts the turn as JSON and returns the accepted ids', async () => {
@@ -180,7 +180,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions/s-1/messages');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/messages');
         expect(init?.method).toBe('POST');
         expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
         expect(new Headers(init?.headers).get('Accept')).toBe('application/json');
@@ -196,7 +196,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions');
+        expect(url).toBe('/rest/proxy/genaix/sessions');
         expect(init?.method).toBe('POST');
         expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
         expect(JSON.parse(init?.body as string)).toEqual(body);
@@ -207,7 +207,7 @@ describe('routes', () => {
         const fetchMock = stubFetch(Response.json({ items }));
 
         await expect(listMcpConnections('cms')).resolves.toEqual(items);
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/mcp/connections?connector=cms');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/mcp/connections?connector=cms');
     });
 
     it('putSessionAuthorization puts the credential as JSON and returns the authorization', async () => {
@@ -219,7 +219,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions/s-1/authorizations/c-1');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/authorizations/c-1');
         expect(init?.method).toBe('PUT');
         expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
         expect(JSON.parse(init?.body as string)).toEqual(body);
@@ -229,7 +229,7 @@ describe('routes', () => {
         const fetchMock = stubFetch(Response.json({ id: 's 1', status: 'published' }));
 
         await expect(getSession('s 1')).resolves.toEqual({ id: 's 1', status: 'published' });
-        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s%201');
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s%201');
     });
 
     // Uploads go through XMLHttpRequest (upload progress), stubbed by `stubUploads`.
@@ -242,7 +242,7 @@ describe('routes', () => {
 
         const [{ url, method, headers, body }] = uploads as [StubbedUpload];
 
-        expect(url).toBe('/genaix/api/v1/sessions/s-1/files');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/files');
         expect(method).toBe('POST');
         expect(new Headers(headers).has('Content-Type')).toBe(false);
         expect(body.get('file')).toBeInstanceOf(File);
@@ -289,7 +289,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/runs/r-1/cancel');
         expect(init?.method).toBe('POST');
         expect(JSON.parse(init?.body as string)).toEqual({ reason: 'User pressed Stop.' });
     });
@@ -302,7 +302,7 @@ describe('routes', () => {
 
         const [url, init] = fetchMock.mock.calls[0]!;
 
-        expect(url).toBe('/genaix/api/v1/sessions/s-1/interactions/i-1');
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/interactions/i-1');
         expect(init?.method).toBe('POST');
         expect(JSON.parse(init?.body as string)).toEqual({ answer: { approved: true } });
     });
@@ -314,7 +314,7 @@ describe('routes', () => {
     });
 
     it('sessionFileContentUrl points at the content route of a session file', () => {
-        expect(sessionFileContentUrl('s-1', 'f 1')).toBe('/genaix/api/v1/sessions/s-1/files/f%201/content');
+        expect(sessionFileContentUrl('s-1', 'f 1')).toBe('/rest/proxy/genaix/sessions/s-1/files/f%201/content');
     });
 });
 

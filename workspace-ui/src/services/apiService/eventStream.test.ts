@@ -154,7 +154,7 @@ describe('connectSessionEvents', () => {
         connect(5);
         await vi.advanceTimersByTimeAsync(0);
 
-        expect(requestOf(fetchMock, 0)).toEqual({ url: '/genaix/api/v1/sessions/s-1/events?after=5', lastEventId: '5' });
+        expect(requestOf(fetchMock, 0)).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/events?after=5', lastEventId: '5' });
 
         stream.push(frame(5) + frame(6, 'run.started') + frame(6) + frame(7));
         await vi.advanceTimersByTimeAsync(0);
@@ -170,7 +170,7 @@ describe('connectSessionEvents', () => {
         connect();
         await vi.advanceTimersByTimeAsync(0);
 
-        expect(requestOf(fetchMock, 0)).toEqual({ url: '/genaix/api/v1/sessions/s-1/events?after=0', lastEventId: null });
+        expect(requestOf(fetchMock, 0)).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/events?after=0', lastEventId: null });
     });
 
     it('reconnects 1 s after the stream ends, from the last seq seen', async () => {
@@ -188,7 +188,7 @@ describe('connectSessionEvents', () => {
         await vi.advanceTimersByTimeAsync(1);
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(requestOf(fetchMock, 1)).toEqual({ url: '/genaix/api/v1/sessions/s-1/events?after=2', lastEventId: '2' });
+        expect(requestOf(fetchMock, 1)).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/events?after=2', lastEventId: '2' });
         expect(statuses).toEqual(['connecting', 'open', 'reconnecting', 'open']);
     });
 
@@ -265,7 +265,7 @@ describe('connectSessionEvents', () => {
 
         expect(onPruned).toHaveBeenCalledTimes(1);
         expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(requestOf(fetchMock, 1)).toEqual({ url: '/genaix/api/v1/sessions/s-1/events?after=0', lastEventId: null });
+        expect(requestOf(fetchMock, 1)).toEqual({ url: '/rest/proxy/genaix/sessions/s-1/events?after=0', lastEventId: null });
 
         stream.push(frame(1));
         await vi.advanceTimersByTimeAsync(0);

@@ -34,7 +34,7 @@ async function sentAnswer(fetchMock: ReturnType<typeof stubAnswer>) {
 
     const [url, init] = fetchMock.mock.calls[0]!;
 
-    expect(url).toBe('/genaix/api/v1/sessions/s-1/interactions/i-1');
+    expect(url).toBe('/rest/proxy/genaix/sessions/s-1/interactions/i-1');
     expect(init?.method).toBe('POST');
 
     return (JSON.parse(init?.body as string) as { answer: unknown }).answer;

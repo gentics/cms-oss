@@ -140,7 +140,7 @@ describe('PartRenderer', () => {
     it('renders a file reference as a download link into the session', () => {
         renderPart({ type: 'file_ref', file_id: 'f-1', name: 'page-draft-9142.json' });
 
-        expect(screen.getByRole('link', { name: /page-draft-9142\.json/ })).toHaveAttribute('href', '/genaix/api/v1/sessions/s-1/files/f-1/content');
+        expect(screen.getByRole('link', { name: /page-draft-9142\.json/ })).toHaveAttribute('href', '/rest/proxy/genaix/sessions/s-1/files/f-1/content');
     });
 
     describe('a part type outside the registry (contract `UnknownPart`)', () => {

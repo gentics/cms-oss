@@ -2,14 +2,14 @@
 
 ## Local GenAIx API
 
-The Workspace calls GenAIx only through the CMS proxy, at the same-origin path `/genaix/api/v1`. The proxy adds the installation token (`Authorization: Bearer sk_gnx_...`) and the user's `X-GCMS-Subject`, so the browser never holds either (`.claude/contracts/genaix-docs/09-integration-guide.md`, section 3).
+The Workspace calls GenAIx only through the CMS proxy, at the same-origin path `/rest/proxy/genaix`. The proxy adds the installation token (`Authorization: Bearer sk_gnx_...`) and the user's `X-GCMS-Subject`, so the browser never holds either (`.claude/contracts/genaix-docs/09-integration-guide.md`, section 3).
 
-In development the Vite dev server plays the proxy (`server.proxy` in `vite.config.ts`). It forwards `/genaix/api/v1/*` to `GENAIX_API_URL`, removes the browser's `Cookie`, and overwrites `Authorization` and `X-GCMS-Subject`.
+In development the Vite dev server plays the proxy (`server.proxy` in `vite.config.ts`). It forwards `/rest/proxy/genaix/*` to `GENAIX_API_URL`, removes the browser's `Cookie`, and overwrites `Authorization` and `X-GCMS-Subject`.
 
 1. Check out `git@git.gentics.com:psc/genaix/api-contract.git` next to `cmp`, so that it is at `../../../api-contract` from this folder.
 2. Start the GenAIx mock (Python 3.11+; creates `.venv` on first run): `npm run mock:genaix`. It serves `http://localhost:8123/api/v1`, the port of the hand-out's docker compose stack (`.claude/contracts/genaix-docs/deploy-README.md`), so either one can be used.
 3. Start the app in a second terminal: `npm run dev`.
-4. Call `http://localhost:5173/genaix/api/v1/me` from the browser or with `curl`.
+4. Call `http://localhost:5173/rest/proxy/genaix/me` from the browser or with `curl`.
 
 Configuration is read from `.env.local` (see `.env.example`); `.env.example` itself is not loaded. All variables are optional. The GenAIx defaults target the mock:
 
@@ -33,7 +33,7 @@ The app is shown only with a CMS session, as the editor and admin UI do (`src/co
 
 The logout in the topbar ends the CMS session (`POST /rest/auth/logout`) and, whenever the CMS has Keycloak and `?skip-sso` is not set, the Keycloak session too, so Keycloak does not log the user straight back in; then the page starts fresh. If the Keycloak logout fails, the CMS session is gone already: the login form appears with a notification. With `CMS_PROXY_TARGET` the login runs against that CMS; without it the dev server's fixed dev user is always logged in.
 
-The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/genaix/api/v1`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/genaix/api/v1`, so a different value in development needs a matching `server.proxy` entry.
+The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/rest/proxy/genaix`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/rest/proxy/genaix`, so a different value in development needs a matching `server.proxy` entry.
 
 ### CMS credential of a session
 
@@ -68,4 +68,4 @@ The build works under any path, without rebuilding for it:
 - Asset URLs are relative (`base: './'` in `vite.config.ts`). In `index.html`, files from `public/` keep a leading `/` (`/favicon.png`); Vite rewrites them to relative URLs in the build. In code, reference them through `import.meta.env.BASE_URL`.
 - Routing uses hash history (`src/router.tsx`), like the CMS's own UIs: a session is at `<app path>/#/sessions/<id>`, so the CMS only ever has to serve `index.html` at the app's own path.
 
-`/rest` and `/genaix/api/v1` stay absolute: both are same-origin paths on the CMS host. The CMS REST calls send no `sid`, only the browser's CMS session cookie; the CMS accepts that, and offers `POST /rest/admin/token`, from the `hotfix-6.6.x` line of `cms-oss` on.
+`/rest` and `/rest/proxy/genaix` stay absolute: both are same-origin paths on the CMS host. The CMS REST calls send no `sid`, only the browser's CMS session cookie; the CMS accepts that, and offers `POST /rest/admin/token`, from the `hotfix-6.6.x` line of `cms-oss` on.

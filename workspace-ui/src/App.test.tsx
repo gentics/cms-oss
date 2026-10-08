@@ -35,7 +35,7 @@ function stubCms({ me }: { me?: typeof cmsUser } = {}) {
         }
 
         // GenAIx lists (the dashboard's to-dos) are empty.
-        if (url.startsWith('/genaix/')) {
+        if (url.startsWith('/rest/proxy/genaix/')) {
             return Promise.resolve(Response.json({ items: [] }));
         }
 

@@ -1,179 +1,180 @@
 
 @switch (type) {
-  @case (TagPropertyType.PAGE) {
-    <gtx-page-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-page-part-fill>
-  }
-  @case (TagPropertyType.IMAGE) {
-    <gtx-generic-url-part-fill
-      [type]="type"
-      [selectType]="SelectableTypes.IMAGE"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-generic-url-part-fill>
-  }
-  @case (TagPropertyType.FILE) {
-    <gtx-generic-url-part-fill
-      [type]="type"
-      [selectType]="SelectableTypes.FILE"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-generic-url-part-fill>
-  }
-  @case (TagPropertyType.FOLDER) {
-    <gtx-generic-url-part-fill
-      [type]="type"
-      [selectType]="SelectableTypes.FOLDER"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-generic-url-part-fill>
-  }
-  @case (TagPropertyType.CMSFORM) {
-    <gtx-generic-url-part-fill
-      [type]="type"
-      [selectType]="SelectableTypes.FORM"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-generic-url-part-fill>
-  }
-  @case (TagPropertyType.NODE) {
-    <gtx-node-url-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-node-url-part-fill>
-  }
-  @case (TagPropertyType.BOOLEAN) {
-    <gtx-boolean-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-boolean-part-fill>
-  }
-  @case (TagPropertyType.SELECT) {
-    <gtx-select-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [clearable]="true"
-      [entries]="selectOptions"
-      [multiple]="false"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-select-part-fill>
-  }
-  @case (TagPropertyType.MULTISELECT) {
-    <gtx-select-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [clearable]="true"
-      [entries]="selectOptions"
-      [multiple]="true"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-select-part-fill>
-  }
-  @case (TagPropertyType.STRING) {
-    <gtx-string-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [type]="type"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-string-part-fill>
-  }
-  @case (TagPropertyType.RICHTEXT) {
-    <gtx-string-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [type]="type"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-string-part-fill>
-  }
-  @case (TagPropertyType.DATASOURCE) {
-    <gtx-data-source-part-fill
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-data-source-part-fill>
-  }
-  @case (TagPropertyType.LIST) {
-    <gtx-list-part-fill
-      [type]="type"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-list-part-fill>
-  }
-  @case (TagPropertyType.ORDEREDLIST) {
-    <gtx-list-part-fill
-      [type]="type"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-list-part-fill>
-  }
-  @case (TagPropertyType.UNORDEREDLIST) {
-    <gtx-list-part-fill
-      [type]="type"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-list-part-fill>
-  }
-  @case (TagPropertyType.OVERVIEW) {
-    <!-- Nothing, as Overviews are only to be filled in the Editor -->
-  }
-  @case (TagPropertyType.VELOCITY) {
-    <!-- Nothing, as Velocity is rendered by the CMS at publish time -->
-  }
-  @default {
-    <gtx-json-part-fill
-      [type]="type"
-      [label]="label"
-      [disabled]="disabled"
-      [required]="required"
-      [value]="value"
-      (valueChange)="triggerChange($event)"
-    ></gtx-json-part-fill>
-  }
-  <!-- <gtx-textarea
-  *ngSwitchDefault
-  [label]="label"
-  [value]="value"
-  (change)="triggerChange($value)"
-></gtx-textarea> -->
+    @case (TagPropertyType.PAGE) {
+        <gtx-page-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.IMAGE) {
+        <gtx-generic-url-part-fill
+            [type]="type"
+            [selectType]="SelectableTypes.IMAGE"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.FILE) {
+        <gtx-generic-url-part-fill
+            [type]="type"
+            [selectType]="SelectableTypes.FILE"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.FOLDER) {
+        <gtx-generic-url-part-fill
+            [type]="type"
+            [selectType]="SelectableTypes.FOLDER"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.CMSFORM) {
+        <gtx-generic-url-part-fill
+            [type]="type"
+            [selectType]="SelectableTypes.FORM"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.NODE) {
+        <gtx-node-url-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.BOOLEAN) {
+        <gtx-boolean-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.SELECT) {
+        <gtx-select-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [clearable]="true"
+            [entries]="selectOptions"
+            [multiple]="false"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.MULTISELECT) {
+        <gtx-select-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [clearable]="true"
+            [entries]="selectOptions"
+            [multiple]="true"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.STRING) {
+        <gtx-string-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [type]="type"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.RICHTEXT) {
+        <gtx-string-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [type]="type"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.DATASOURCE) {
+        <gtx-data-source-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.LIST) {
+        <gtx-list-part-fill
+            [type]="type"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.ORDEREDLIST) {
+        <gtx-list-part-fill
+            [type]="type"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.UNORDEREDLIST) {
+        <gtx-list-part-fill
+            [type]="type"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.OVERVIEW) {
+        <gtx-overview-part-fill
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [settings]="overviewSettings"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
+    @case (TagPropertyType.VELOCITY) {
+        <!-- Nothing, as Velocity is rendered by the CMS at publish time -->
+    }
+    @default {
+        <gtx-json-part-fill
+            [type]="type"
+            [label]="label"
+            [disabled]="disabled"
+            [required]="required"
+            [value]="value"
+            (valueChange)="triggerChange($event)"
+        />
+    }
 }

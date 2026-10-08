@@ -1,0 +1,67 @@
+@if (label) {
+    <label>{{ label }}</label>
+}
+
+@if (selectionAvailable) {
+    @if (items.length > 0) {
+        <div class="item-list">
+            @for (item of items; track item.key; let index = $index) {
+                <gtx-contents-list-item class="list-item" [class.failed]="item.failed">
+                    <gtx-icon class="gtx-type-icon type-icon" [name]="item.type"></gtx-icon>
+
+                    <div class="item-primary">
+                        <div class="item-name">
+                            @if (item.entity) {
+                                {{ item.entity | entityName }}
+                            } @else if (item.failed) {
+                                {{ 'construct.overview_item_load_error' | gtxI18n:{ id: item.ref.objectId } }}
+                            } @else {
+                                {{ 'construct.overview_item_loading' | gtxI18n }}
+                            }
+                        </div>
+
+                        @if (item.breadcrumbs.length > 0) {
+                            <div class="item-breadcrumbs">
+                                @for (crumb of item.breadcrumbs; track $index; let last = $last) {
+                                    <span class="crumb">{{ crumb }}</span>
+                                    @if (!last) {
+                                        <icon class="crumb-separator">chevron_right</icon>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <gtx-button
+                        class="remove-button"
+                        icon
+                        type="alert"
+                        [disabled]="disabled"
+                        (click)="removeItem(index)"
+                    >
+                        <icon>delete</icon>
+                    </gtx-button>
+                </gtx-contents-list-item>
+            }
+        </div>
+    } @else {
+        <div class="no-items">{{ 'construct.overview_no_items' | gtxI18n }}</div>
+    }
+
+    <gtx-button
+        size="small"
+        type="primary"
+        class="add-button"
+        flat="true"
+        [disabled]="disabled || !itemType"
+        (click)="addItems()"
+    >
+        <icon left>add</icon>{{ 'shared.add' | gtxI18n }}
+    </gtx-button>
+
+    @if (items.length > 0) {
+        <div class="clear-notice">{{ 'construct.overview_fill_clear_notice' | gtxI18n }}</div>
+    }
+} @else {
+    <div class="settings-requirement">{{ 'construct.overview_fill_requirements' | gtxI18n }}</div>
+}

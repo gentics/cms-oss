@@ -22,6 +22,7 @@ export * from './generic-url-part-fill/generic-url-part-fill.component';
 export * from './json-part-fill/json-part-fill.component';
 export * from './list-part-fill/list-part-fill.component';
 export * from './node-url-part-fill/node-url-part-fill.component';
+export * from './overview-part-fill/overview-part-fill.component';
 export * from './overview-part-settings/overview-part-settings.component';
 export * from './page-part-fill/page-part-fill.component';
 export * from './select-option-input/select-option-input.component';

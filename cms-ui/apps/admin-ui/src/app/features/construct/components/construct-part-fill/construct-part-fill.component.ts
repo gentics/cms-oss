@@ -1,7 +1,7 @@
-import { SelectableType } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import {
     ListTagPartPropertyBase,
+    OverviewSetting,
     SelectOption,
     SelectTagPartProperty,
     StringTagPartProperty,
@@ -9,7 +9,8 @@ import {
     TagPropertyType,
 } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from'lodash-es'
+import { pick } from 'lodash-es';
+import { SelectableType } from '../../../../common';
 
 const STRING_TYPES = [TagPropertyType.RICHTEXT, TagPropertyType.STRING];
 const LIST_TYPES = [TagPropertyType.LIST, TagPropertyType.ORDEREDLIST, TagPropertyType.UNORDEREDLIST];
@@ -21,7 +22,7 @@ const SELECT_TYPES = [TagPropertyType.SELECT, TagPropertyType.MULTISELECT];
     styleUrls: ['./construct-part-fill.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(ConstructPartFillComponent)],
-    standalone: false
+    standalone: false,
 })
 export class ConstructPartFillComponent extends BaseFormElementComponent<TagPartProperty> implements OnChanges {
 
@@ -36,6 +37,9 @@ export class ConstructPartFillComponent extends BaseFormElementComponent<TagPart
 
     @Input()
     public selectOptions: SelectOption[] = [];
+
+    @Input()
+    public overviewSettings: OverviewSetting | null = null;
 
     private oldType: TagPropertyType;
 

@@ -1,0 +1,21 @@
+/* The conversation of a session (draft `.stream`; design.md §7: 12 px between messages; §11 "Chat":
+   content max. 760 px, centred). The column scrolls; the composer floats over its end. */
+.stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reserve the scrollbar's space from the start, so the messages do not shift once the stream overflows. */
+  scrollbar-gutter: stable;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  /* `ChatMessage.module.css` `.agentSender` pulls what follows the agent's head closer against it. */
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+  list-style: none;
+  /* Room for the composer floating over the end of the stream. */
+  padding: 16px 20px 140px;
+}

@@ -2,6 +2,7 @@ import { ArrowUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, Slider
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PartRenderer } from '@/components/MessageParts/MessageParts';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogBody, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -23,10 +24,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Radio, RadioGroup } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
+
+import { partSampleGroups } from './partSamples';
 
 import styles from './Catalogue.module.css';
 
@@ -76,7 +80,10 @@ function State({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-/** Shows every component of `src/components/ui` in its states, in the light and dark theme. */
+/**
+ * Shows every component of `src/components/ui` in its states, and every message part type with mock
+ * data in its variants (`partSamples`), in the light and dark theme.
+ */
 export function Catalogue() {
     const { t, i18n } = useTranslation();
     const toast = useToast();
@@ -234,6 +241,35 @@ export function Catalogue() {
                                 <Checkbox disabled defaultChecked />
                                 {t('catalogue.checkbox.label')}
                             </Label>
+                        </State>
+                    </div>
+                </Section>
+
+                <Section id="catalogue-radio" title={t('catalogue.radio.title')}>
+                    <div className={styles.grid}>
+                        <State label={t('catalogue.states.default')}>
+                            <RadioGroup aria-label={t('catalogue.radio.title')} defaultValue="17">
+                                <Label>
+                                    <Radio value="17" />
+                                    {t('catalogue.radio.campaign')}
+                                </Label>
+                                <Label>
+                                    <Radio value="21" />
+                                    {t('catalogue.radio.topic')}
+                                </Label>
+                            </RadioGroup>
+                        </State>
+                        <State label={t('catalogue.states.disabled')}>
+                            <RadioGroup aria-label={t('catalogue.radio.title')} defaultValue="17" disabled>
+                                <Label>
+                                    <Radio value="17" />
+                                    {t('catalogue.radio.campaign')}
+                                </Label>
+                                <Label>
+                                    <Radio value="21" />
+                                    {t('catalogue.radio.topic')}
+                                </Label>
+                            </RadioGroup>
                         </State>
                     </div>
                 </Section>
@@ -426,6 +462,22 @@ export function Catalogue() {
                             {t('catalogue.toast.showAction')}
                         </Button>
                     </div>
+                </Section>
+
+                {/* Every part type of the registry with mock data, through the chat's own dispatcher. */}
+                <Section id="catalogue-parts" title={t('catalogue.parts.title')}>
+                    {partSampleGroups.map(({ type, samples }) => (
+                        <div key={type} className={styles.parts}>
+                            <h3 className={styles.partType}>{type === 'fallback' ? t('catalogue.parts.fallback') : type}</h3>
+                            {samples.map(({ id, part }) => (
+                                <State key={id} label={t(`catalogue.parts.variants.${id}`)}>
+                                    <div className={styles.partDemo}>
+                                        <PartRenderer part={part} sessionId="catalogue" />
+                                    </div>
+                                </State>
+                            ))}
+                        </div>
+                    ))}
                 </Section>
             </main>
         </div>

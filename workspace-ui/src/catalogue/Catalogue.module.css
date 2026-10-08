@@ -107,3 +107,25 @@
   flex-direction: column;
   gap: 6px;
 }
+
+/* Message parts: one column at the chat's width (design.md §11, max. 740 px), wide enough for tables
+   and image grids; the part type as a code name. */
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 740px;
+}
+
+.partType {
+  margin: 8px 0 0;
+  color: var(--fg-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.partDemo {
+  width: 100%;
+  min-width: 0;
+}

@@ -1,4 +1,4 @@
-import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon } from 'lucide-react';
+import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
 import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,14 @@ interface ComposerProps {
      * submitted `files` (`StartSessionInput.onFileProgress`); a file without one is still waiting.
      */
     uploadProgress?: number[];
+    /**
+     * Chat: the session's run is working. The Stop button takes the place of send, and nothing is
+     * submitted meanwhile (a second message would be `409 run_already_active`).
+     */
+    isRunning?: boolean;
+    /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
+    isStopping?: boolean;
+    onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
     sessionId?: string;
     ref?: Ref<ComposerHandle>;
@@ -52,9 +60,10 @@ const TEXT_KEYS = {
  * The prompt of the dashboard and of a session's chat: a field that takes typed or dictated text
  * with passages locked as verbatim, files attached as a source or verbatim, and the send button.
  * Enter or the send button submits the message parts and the files; a dictation only fills the
- * field. On phones it puts voice first. Sending is the caller's.
+ * field. On phones it puts voice first. Sending is the caller's. While a run is working
+ * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], sessionId, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -109,7 +118,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
     function submit() {
         const input = readInput();
 
-        if (isSubmitting || !input) {
+        if (isSubmitting || isRunning || !input) {
             return;
         }
 
@@ -131,7 +140,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
         sessionId,
     };
-    const canSubmit = !isSubmitting && (!isEmpty || attachments.length > 0);
+    const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
     // The submitted files are the attachments in their order: while sending they cannot be removed,
@@ -150,15 +159,23 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
             </span>
 
-            <IconButton
-                variant="primary"
-                size={isChat ? 'icon' : 'icon-lg'}
-                label={t(texts.send)}
-                disabled={!canSubmit}
-                onClick={submit}
-            >
-                <ArrowUpIcon size={isChat ? 16 : undefined} />
-            </IconButton>
+            {isRunning && onStop
+                ? (
+                    <IconButton variant="primary" size={isChat ? 'icon' : 'icon-lg'} label={t('chat.stop')} disabled={isStopping} onClick={onStop}>
+                        <SquareIcon size={isChat ? 14 : undefined} />
+                    </IconButton>
+                )
+                : (
+                    <IconButton
+                        variant="primary"
+                        size={isChat ? 'icon' : 'icon-lg'}
+                        label={t(texts.send)}
+                        disabled={!canSubmit}
+                        onClick={submit}
+                    >
+                        <ArrowUpIcon size={isChat ? 16 : undefined} />
+                    </IconButton>
+                )}
         </>
     );
 

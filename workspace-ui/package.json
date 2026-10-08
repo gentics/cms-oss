@@ -59,6 +59,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-i18next": "^17.0.15",
+    "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.7.0",
     "zustand": "^5.0.15"
   },

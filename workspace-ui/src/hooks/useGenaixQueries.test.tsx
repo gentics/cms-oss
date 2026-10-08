@@ -4,12 +4,14 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { pendingFileSource } from '@/helper/composerParts/composerParts';
-import { GenaixApiError, NoCmsConnectionError } from '@/services/apiService/apiService';
+import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
+import { GenaixApiError } from '@/services/apiService/apiService';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
-import { sessionAuthorizations, withSessionAuthorization } from '@/test/sessionAuthorization';
 import { stubUploads } from '@/test/stubUploads';
 
-import { useArchiveSession,
+import { useAnswerInteraction,
+    useArchiveSession,
+    useCancelRun,
     useMe,
     useSendMessage,
     useSendTurn,
@@ -19,6 +21,20 @@ import { useArchiveSession,
     useStartSession,
     useWorkflows,
 } from './useGenaixQueries';
+
+// The CMS credential has tests of its own (`sessionAuthorization.test.ts`); here only where it goes.
+vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
+    newSessionCmsAuthorization: vi.fn(),
+    ensureSessionCmsAuthorization: vi.fn(),
+}));
+
+const AUTHORIZATION = {
+    connection_id: 'c-1',
+    auth_type: 'bearer' as const,
+    token: 'cmstok_dev_1',
+    token_name: 'genaix-pending-1',
+    expires_at: '2026-10-08T08:00:00.000Z',
+};
 
 function wrapper({ children }: { children: ReactNode }) {
     // The hooks' own retry settings apply; the client adds none.
@@ -43,10 +59,13 @@ function stubFetch(...responses: Response[]) {
 describe('GenAIx query hooks', () => {
     beforeEach(() => {
         useWorkspaceEventStore.setState({ sessions: {} });
+        vi.mocked(newSessionCmsAuthorization).mockResolvedValue(AUTHORIZATION);
+        vi.mocked(ensureSessionCmsAuthorization).mockResolvedValue();
     });
 
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.clearAllMocks();
     });
 
     it('useMe loads GET /me', async () => {
@@ -159,6 +178,41 @@ describe('GenAIx query hooks', () => {
                 { kind: 'sent', status: 'send_failed', error: expect.any(GenaixApiError) },
             ]);
         });
+
+        it('makes sure the session holds a CMS credential before it posts the turn', async () => {
+            const fetchMock = stubFetch(Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }));
+
+            vi.mocked(ensureSessionCmsAuthorization).mockImplementation(() => {
+                expect(fetchMock).not.toHaveBeenCalled();
+
+                return Promise.resolve();
+            });
+
+            const { result } = renderHook(() => useSendMessage('s-1'), { wrapper });
+
+            act(() => result.current.mutate({ content: 'Hello' }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(ensureSessionCmsAuthorization).toHaveBeenCalledWith('s-1');
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('marks the turn send_failed and posts nothing when no CMS credential can be registered', async () => {
+            const fetchMock = stubFetch();
+            const refused = new GenaixApiError('/genaix/api/v1/sessions/s-1/authorizations/c-1', 422, undefined, new Headers());
+
+            vi.mocked(ensureSessionCmsAuthorization).mockRejectedValue(refused);
+
+            const { result } = renderHook(() => useSendMessage('s-1'), { wrapper });
+
+            act(() => result.current.mutate({ content: 'Hello' }));
+
+            await waitFor(() => expect(result.current.isError).toBe(true));
+            expect(fetchMock).not.toHaveBeenCalled();
+            expect(selectSession('s-1')(useWorkspaceEventStore.getState()).messages).toMatchObject([
+                { kind: 'sent', status: 'send_failed', error: refused },
+            ]);
+        });
     });
 
     describe('useStartSession', () => {
@@ -173,7 +227,7 @@ describe('GenAIx query hooks', () => {
         it('without files creates the session with its first message in one call', async () => {
             const fetchMock = stubFetch(Response.json({ id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' }, { status: 201 }));
 
-            vi.stubGlobal('fetch', withSessionAuthorization(fetchMock));
+            vi.stubGlobal('fetch', fetchMock);
 
             const { result } = renderHook(() => useStartSession(), { wrapper });
 
@@ -182,8 +236,20 @@ describe('GenAIx query hooks', () => {
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             expect(fetchMock).toHaveBeenCalledTimes(1);
             expect(requestOf(fetchMock, 0).url).toBe('/genaix/api/v1/sessions');
-            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', message: { parts }, authorizations: sessionAuthorizations });
+            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', message: { parts }, authorizations: [AUTHORIZATION] });
             expect(result.current.data).toMatchObject({ id: 's-1' });
+        });
+
+        it('starts the workflow the first message suggests (TEMPORARY keyword guess)', async () => {
+            const fetchMock = stubFetch(Response.json({ id: 's-1', status: 'active' }, { status: 201 }));
+            const createParts = [{ type: 'text' as const, text: 'Create a landing page about the new terms' }];
+
+            const { result } = renderHook(() => useStartSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts: createParts, files: [] }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toMatchObject({ workflow: 'content_create' });
         });
 
         // The uploads go through XMLHttpRequest (`stubUploads`), the other requests through fetch; both
@@ -195,11 +261,11 @@ describe('GenAIx query hooks', () => {
                 Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 }),
             );
 
-            vi.stubGlobal('fetch', withSessionAuthorization(vi.fn<typeof fetch>((url, init) => {
+            vi.stubGlobal('fetch', vi.fn<typeof fetch>((url, init) => {
                 log.push(`${init?.method} ${String(url)}`);
 
                 return fetchMock(url, init);
-            })));
+            }));
 
             const uploads = stubUploads([{ status: 201, body: { id: 'f-1' } }, { status: 201, body: { id: 'f-2' } }], log);
             const files = [
@@ -218,7 +284,7 @@ describe('GenAIx query hooks', () => {
                 'POST /genaix/api/v1/sessions/s-1/files',
                 'POST /genaix/api/v1/sessions/s-1/messages',
             ]);
-            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', authorizations: sessionAuthorizations });
+            expect(JSON.parse(requestOf(fetchMock, 0).body as string)).toEqual({ workflow: 'content_research', authorizations: [AUTHORIZATION] });
             expect(uploads[0]!.body.get('mode')).toBe('verbatim');
             expect((uploads[1]!.body.get('file') as File).name).toBe('notes.txt');
             expect(JSON.parse(requestOf(fetchMock, 1).body as string)).toEqual({
@@ -230,79 +296,33 @@ describe('GenAIx query hooks', () => {
             });
         });
 
-        it('creates a new CMS token for every session and registers it for the default cms connection', async () => {
-            vi.useFakeTimers({ toFake: ['Date'] });
-            vi.setSystemTime(1_790_800_000_000);
-
-            const requests: { method: string; path: string; body: unknown }[] = [];
-            let tokens = 0;
-
-            vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input, init) => {
-                const path = new URL(String(input), 'http://localhost').pathname;
-
-                requests.push({ method: init?.method ?? 'GET', path, body: init?.body ? JSON.parse(init.body as string) : undefined });
-
-                if (path === '/genaix/api/v1/mcp/connections') {
-                    return Response.json({ items: [{ id: 'conn-other', connector: 'cms', default: false }, { id: 'conn-default', connector: 'cms', default: true }] });
-                }
-
-                if (path === '/rest/admin/token') {
-                    tokens += 1;
-
-                    return Response.json({ token: `cmstok_${tokens}`, id: tokens, name: `genaix-workspace-${tokens}`, expires: 0 });
-                }
-
-                return Response.json({ id: `s-${tokens}`, status: 'active' }, { status: 201 });
-            }));
-
-            const { result } = renderHook(() => useStartSession(), { wrapper });
-
-            await act(() => result.current.mutateAsync({ parts, files: [] }));
-            await act(() => result.current.mutateAsync({ parts, files: [] }));
-
-            const tokenPosts = requests.filter(({ path }) => path === '/rest/admin/token');
-            const sessionPosts = requests.filter(({ path }) => path === '/genaix/api/v1/sessions');
-
-            // 24 hours from now, in seconds, and pruned by the CMS once expired.
-            expect(tokenPosts.map(({ body }) => body)).toEqual([
-                { name: expect.stringMatching(/^genaix-workspace-/), expires: 1_790_886_400, pruneOnExpiry: true },
-                { name: expect.stringMatching(/^genaix-workspace-/), expires: 1_790_886_400, pruneOnExpiry: true },
-            ]);
-            expect(sessionPosts.map(({ body }) => (body as { authorizations: unknown }).authorizations)).toEqual([1, 2].map((n) => [{
-                connection_id: 'conn-default',
-                auth_type: 'bearer',
-                token: `cmstok_${n}`,
-                token_name: `genaix-workspace-${n}`,
-                // The same instant as the posted `expires`.
-                expires_at: new Date(1_790_886_400 * 1000).toISOString(),
-            }]));
-            vi.useRealTimers();
-        });
-
-        it('fails with NoCmsConnectionError without a cms connection, before creating a token or a session', async () => {
-            const fetchMock = stubFetch(Response.json({ items: [] }));
-
-            const { result } = renderHook(() => useStartSession(), { wrapper });
-
-            act(() => result.current.mutate({ parts, files: [] }));
-
-            await waitFor(() => expect(result.current.error).toBeInstanceOf(NoCmsConnectionError));
-            expect(fetchMock).toHaveBeenCalledTimes(1);
-            expect(requestOf(fetchMock, 0).url).toBe('/genaix/api/v1/mcp/connections?connector=cms');
-        });
-
         it('puts the created session into the cache that useSession reads', async () => {
             // Only the POST is answered: useSession's own GET stays pending, so its data can only come
             // from the cache entry the mutation writes.
-            vi.stubGlobal('fetch', withSessionAuthorization(vi.fn<typeof fetch>().mockImplementation((_url, init) => (init?.method === 'POST'
+            vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockImplementation((_url, init) => (init?.method === 'POST'
                 ? Promise.resolve(Response.json({ id: 's-1', status: 'active', run_id: 'r-1', message_id: 'm-1' }, { status: 201 }))
-                : new Promise(() => {})))));
+                : new Promise(() => {}))));
 
             const { result } = renderHook(() => ({ start: useStartSession(), session: useSession('s-1') }), { wrapper });
 
             act(() => result.current.start.mutate({ parts, files: [] }));
 
             await waitFor(() => expect(result.current.session.data).toMatchObject({ id: 's-1', status: 'active' }));
+        });
+
+        it('creates no session when no CMS credential can be obtained', async () => {
+            const fetchMock = stubFetch();
+            const refused = new Error('CMS refused');
+
+            vi.mocked(newSessionCmsAuthorization).mockRejectedValue(refused);
+
+            const { result } = renderHook(() => useStartSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts, files: [] }));
+
+            await waitFor(() => expect(result.current.isError).toBe(true));
+            expect(result.current.error).toBe(refused);
+            expect(fetchMock).not.toHaveBeenCalled();
         });
 
         it('exposes the error and does not retry', async () => {
@@ -417,6 +437,32 @@ describe('GenAIx query hooks', () => {
             await waitFor(() => expect(result.current.isSuccess).toBe(true));
             expect(onFileProgress.mock.calls).toEqual([[0, 0.5], [0, 1], [1, 0.4]]);
         });
+    });
+
+    it('useCancelRun cancels the run and shows it as cancelling until run.cancelled', async () => {
+        const fetchMock = stubFetch(Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+        useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-07T09:00:00Z', session_id: 's-1', type: 'run.started', run: { id: 'r-1', status: 'running', started_at: '2026-10-07T09:00:00Z', step_count: 0 } });
+
+        const { result } = renderHook(() => useCancelRun('s-1'), { wrapper });
+
+        act(() => result.current.mutate('r-1'));
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(selectSession('s-1')(useWorkspaceEventStore.getState()).run).toMatchObject({ id: 'r-1', status: 'cancelling' });
+    });
+
+    it('useAnswerInteraction posts the answer once and does not retry a refusal', async () => {
+        const fetchMock = stubFetch(problem(409, 'interaction_already_answered'));
+
+        const { result } = renderHook(() => useAnswerInteraction('s-1'), { wrapper });
+
+        act(() => result.current.mutate({ interactionId: 'i-1', answer: { approved: true } }));
+
+        await waitFor(() => expect(result.current.isError).toBe(true));
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(result.current.error).toMatchObject({ genaixCode: 'interaction_already_answered' });
     });
 
     it('useSession loads GET /sessions/{session_id}', async () => {

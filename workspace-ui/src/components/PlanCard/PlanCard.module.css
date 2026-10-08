@@ -1,0 +1,166 @@
+/* The work plan in the chat, aligned with the agent's text (avatar 26 px + 9 px gap). Items as
+   design.md §12 "Plan-Schritte": 18 px round number in `rgba(interactive,.13)`; done
+   `--success-bg`/`--success`; running `--interactive-fill` with pulse (§8: at most twice). The
+   other states in their status colours (§3.3), always with icon and word. */
+.plan {
+  max-width: 600px;
+  margin-left: var(--chat-indent);
+}
+
+.summary {
+  margin: 0 0 8px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 2px;
+}
+
+.marker {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), 0.13);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  overflow-wrap: anywhere;
+}
+
+.detail,
+.status {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.status {
+  flex: none;
+  margin-top: 2px;
+}
+
+.running .marker {
+  background: var(--interactive-fill);
+  color: var(--fg-on-solid);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  animation: pulse var(--duration-attention) var(--easing) 2;
+}
+
+.running .label {
+  font-weight: 500;
+}
+
+.running .status {
+  color: var(--fg-primary);
+}
+
+.done .marker {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.skipped .marker {
+  background: var(--bg-subtle);
+  color: var(--fg-muted);
+}
+
+.skipped .label {
+  color: var(--fg-muted);
+}
+
+.failed .marker {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.failed .status {
+  color: var(--error);
+}
+
+/* The caption on the left of the foot, the actions pushed right (§12 "Chat-Karte": "Beschriftung
+   links, Aktionen rechts"). */
+.caption {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Adjusting: the step is a field right in its row (§12 "Plan-Schritte": border `--border-strong`,
+   focus as a text field, §8). */
+.editing {
+  align-items: center;
+  padding: 3px 0;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  padding: 4px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--corner-md);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font: inherit;
+  transition: border-color var(--duration-state) var(--easing), box-shadow var(--duration-state) var(--easing);
+}
+
+.input::placeholder {
+  color: var(--fg-muted);
+}
+
+.input:hover {
+  border-color: rgba(var(--interactive-rgb), 0.5);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--interactive);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--interactive-rgb), 0.16);
+}
+
+.rowActions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.add {
+  margin-top: 4px;
+}
+
+@keyframes pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(var(--interactive-rgb), 0.45);
+  }
+
+  to {
+    box-shadow: 0 0 0 12px rgba(var(--interactive-rgb), 0);
+  }
+}

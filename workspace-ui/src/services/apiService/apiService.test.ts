@@ -4,7 +4,9 @@ import { HttpError } from '@/services/httpService/httpService';
 import { type StubbedUpload, stubUploads } from '@/test/stubUploads';
 
 import {
+    answerInteraction,
     archiveSession,
+    cancelRun,
     createSession,
     GenaixApiError,
     genaixRetry,
@@ -12,10 +14,13 @@ import {
     getMe,
     getSession,
     isRetryableGenaixError,
+    listMcpConnections,
     listMessages,
     listSessions,
     listWorkflows,
     postMessage,
+    putSessionAuthorization,
+    sessionFileContentUrl,
     uploadSessionFile,
 } from './apiService';
 
@@ -197,6 +202,29 @@ describe('routes', () => {
         expect(JSON.parse(init?.body as string)).toEqual(body);
     });
 
+    it('listMcpConnections loads the connections of one connector type', async () => {
+        const items = [{ id: 'c-1', connector: 'cms', default: true }];
+        const fetchMock = stubFetch(Response.json({ items }));
+
+        await expect(listMcpConnections('cms')).resolves.toEqual(items);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/mcp/connections?connector=cms');
+    });
+
+    it('putSessionAuthorization puts the credential as JSON and returns the authorization', async () => {
+        const authorization = { connection_id: 'c-1', connector: 'cms', session_id: 's-1', status: 'authorized' };
+        const fetchMock = stubFetch(Response.json(authorization));
+        const body = { auth_type: 'bearer' as const, token: 'cmstok_secret', token_name: 'genaix-s-1', expires_at: '2026-10-08T09:00:00.000Z' };
+
+        await expect(putSessionAuthorization('s-1', 'c-1', body)).resolves.toEqual(authorization);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/genaix/api/v1/sessions/s-1/authorizations/c-1');
+        expect(init?.method).toBe('PUT');
+        expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+        expect(JSON.parse(init?.body as string)).toEqual(body);
+    });
+
     it('getSession loads one session', async () => {
         const fetchMock = stubFetch(Response.json({ id: 's 1', status: 'published' }));
 
@@ -251,6 +279,42 @@ describe('routes', () => {
 
         expect(error).toBeInstanceOf(TypeError);
         expect(isRetryableGenaixError(error)).toBe(true);
+    });
+
+    it('cancelRun posts the cancel request of one run and returns the run', async () => {
+        const run = { id: 'r-1', status: 'cancelling', started_at: '2026-10-07T09:22:48Z', step_count: 2 };
+        const fetchMock = stubFetch(Response.json(run, { status: 202 }));
+
+        await expect(cancelRun('s-1', 'r-1', 'User pressed Stop.')).resolves.toEqual(run);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ reason: 'User pressed Stop.' });
+    });
+
+    it('answerInteraction posts the answer wrapped as InteractionAnswerRequest', async () => {
+        const interaction = { id: 'i-1', kind: 'confirm', status: 'answered' };
+        const fetchMock = stubFetch(Response.json(interaction));
+
+        await expect(answerInteraction('s-1', 'i-1', { approved: true })).resolves.toEqual(interaction);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/genaix/api/v1/sessions/s-1/interactions/i-1');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ answer: { approved: true } });
+    });
+
+    it('answerInteraction throws the 410 of an expired interaction as GenaixApiError', async () => {
+        stubFetch(problemResponse(410, { type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }));
+
+        await expect(answerInteraction('s-1', 'i-1', { text: 'Yes' })).rejects.toMatchObject({ status: 410, genaixCode: 'interaction_expired' });
+    });
+
+    it('sessionFileContentUrl points at the content route of a session file', () => {
+        expect(sessionFileContentUrl('s-1', 'f 1')).toBe('/genaix/api/v1/sessions/s-1/files/f%201/content');
     });
 });
 

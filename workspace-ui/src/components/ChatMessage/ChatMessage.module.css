@@ -1,0 +1,160 @@
+/* One turn of the chat (draft `.msg`, `.av`, `.bubble`, `.who`; design.md §11 "Chat": max. 740 px,
+   agent left, own message right; §12 "Chat-Blasen"; §10 `rise` for messages). */
+.message {
+  display: flex;
+  gap: 9px;
+  max-width: 740px;
+  min-width: 0;
+  animation: rise var(--duration-card) var(--easing);
+}
+
+.own {
+  flex-direction: row-reverse;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A message whose sender stands above it (`AgentSender`), in the agent's column like the steps, the
+   plan and the thinking indicator. */
+.indented {
+  margin-left: var(--chat-indent);
+}
+
+/* The agent's avatar and name at the top of its turn; 4 px to what follows instead of the 12 px gap of
+   the stream's list (`ChatStream.module.css` `.list`), as between the name and the text of a message. */
+.agentSender {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: -8px;
+  animation: rise var(--duration-card) var(--easing);
+
+  & .avatar {
+    margin-top: 0;
+  }
+
+  & .sender {
+    margin-bottom: 0;
+  }
+}
+
+/* Avatar 26 px round with the Gentics logomark (design.md §9 "Icon-Chip", "Logo"). */
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: var(--corner-full);
+  background: rgba(var(--interactive-rgb), 0.11);
+}
+
+.avatar::before {
+  content: '';
+  width: 13px;
+  height: 15px;
+  background: var(--interactive);
+  mask: url('../../assets/gentics-logomark.png') center / contain no-repeat;
+}
+
+/* The agent's message stands on the canvas without a bubble (user decision, departs from design.md
+   §12 "Chat-Blasen"); only the own message is a bubble. */
+.bubble {
+  min-width: 0;
+  padding-top: 4px;
+  color: var(--fg-primary);
+}
+
+/* One spacing between the agent's parts, whatever margin a part brings (two classes beat the part's own). */
+.parts > :first-child {
+  margin-top: 0;
+}
+
+.parts > :not(:first-child) {
+  margin-top: 14px;
+}
+
+.own .bubble {
+  padding: 10px 12px;
+  border: 1px solid var(--bg-solid);
+  border-radius: var(--corner-2xl) var(--corner-2xl) 5px var(--corner-2xl);
+  background: var(--bg-solid);
+  color: var(--fg-on-solid);
+}
+
+.pending .bubble {
+  opacity: 0.72;
+}
+
+.failed .bubble {
+  border-color: var(--error);
+}
+
+.sender {
+  margin-bottom: 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.own .sender {
+  color: rgba(var(--fg-on-solid-rgb), 0.72);
+  text-align: right;
+}
+
+/* The parts of a user turn: text, verbatim passage, tokens (design.md §12 "`@`-Token", "Verbatim"). */
+.userText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.verbatim {
+  display: block;
+  margin: 4px 0;
+  padding: 6px 9px;
+  border-left: 2px solid var(--interactive-fill);
+  border-radius: 0 var(--corner-md) var(--corner-md) 0;
+  background: rgba(var(--fg-on-solid-rgb), 0.14);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 270px;
+  margin: 0 2px;
+  padding: 0 5px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--fg-on-solid-rgb), 0.2);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  vertical-align: baseline;
+}
+
+.tokenText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  margin-top: 4px;
+  color: var(--error);
+  font-size: var(--font-size-xs);
+  text-align: right;
+}

@@ -1,5 +1,5 @@
 import { GenaixApiError, NoCmsConnectionError } from '@/services/apiService/apiService';
-import type { GenaixCode } from '@/services/apiService/genaix/types';
+import type { GenaixCode, Problem } from '@/services/apiService/genaix/types';
 import type { CmsResponseCode } from '@/services/cmsApiService/cmsApiService';
 import { HttpError } from '@/services/httpService/httpService';
 
@@ -124,4 +124,12 @@ export function errorMessageKey(error: unknown): string {
     }
 
     return 'errors.unknown';
+}
+
+/**
+ * The i18n key for a `Problem` that arrived on the event stream rather than as a response (`run.failed`,
+ * `error`): by `genaix_code`, else by `status`, as `errorMessageKey` does for a response.
+ */
+export function problemMessageKey(problem: Problem): string {
+    return isKnown(GENAIX_CODES, problem.genaix_code) ? `errors.genaix.${problem.genaix_code}` : statusMessageKey(problem.status);
 }

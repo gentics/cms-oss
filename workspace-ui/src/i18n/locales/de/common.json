@@ -91,7 +91,155 @@
     "chat": {
         "placeholder": "Was soll passieren?",
         "send": "Senden",
-        "sendFailed": "Die Nachricht konnte nicht gesendet werden"
+        "sendFailed": "Die Nachricht konnte nicht gesendet werden",
+        "sender": {
+            "user": "Sie",
+            "assistant": "Assistent",
+            "system": "System"
+        },
+        "thinking": "Denkt nach",
+        "stop": "Stoppen",
+        "stopFailed": "Der Lauf konnte nicht gestoppt werden",
+        "steps": {
+            "title": "Schritte",
+            "current": "Schritt {{number}} von {{total}}: {{label}}",
+            "progress": "{{done}} von {{total}} Schritten erledigt",
+            "collapse": "Schritte ausblenden",
+            "expand": "Schritte einblenden",
+            "status": {
+                "pending": "Ausstehend",
+                "running": "Läuft",
+                "waiting": "Wartet auf Sie",
+                "done": "Erledigt",
+                "skipped": "Übersprungen",
+                "failed": "Fehlgeschlagen"
+            }
+        },
+        "file": "Datei",
+        "fileVerbatim": "Datei, wortgetreu",
+        "notice": {
+            "cancelled": "Gestoppt",
+            "failed": "Der Lauf ist fehlgeschlagen",
+            "error": "Etwas ist schiefgegangen, der Lauf geht weiter",
+            "auth": "Kein Zugriff auf die Verbindung {{connector}}"
+        },
+        "interaction": {
+            "title": {
+                "ask_user": "Frage",
+                "choice": "Auswahl",
+                "confirm": "Bestätigen",
+                "form": "Angaben",
+                "settings_review": "Einstellungen prüfen"
+            },
+            "answer": "Ihre Antwort",
+            "comment": "Kommentar",
+            "choose": "Auswählen…",
+            "send": "Senden",
+            "confirm": "Bestätigen",
+            "confirmed": "Bestätigt",
+            "approve": "Ja",
+            "reject": "Nein",
+            "answerFailed": "Die Antwort konnte nicht gesendet werden",
+            "answerFirst": "Beantworten Sie zuerst die Frage oben",
+            "setting": {
+                "node": "Website",
+                "folder": "Ordner",
+                "template": "Template",
+                "language": "Sprache",
+                "filename": "Dateiname",
+                "publish_at": "Veröffentlichen am"
+            },
+            "source": {
+                "text": "Aus Ihrem Text",
+                "context": "Aus der Sitzung",
+                "default": "Standard"
+            }
+        }
+    },
+    "parts": {
+        "selectedCount": "{{count}} ausgewählt",
+        "statusNote": {
+            "info": "Hinweis",
+            "warning": "Warnung",
+            "skipped": "Übersprungen"
+        },
+        "file": {
+            "unnamed": "Datei",
+            "download": "Herunterladen"
+        },
+        "tree": {
+            "title": "Struktur",
+            "expand": "{{label}} aufklappen",
+            "collapse": "{{label}} zuklappen"
+        },
+        "list": {
+            "title": "Auswahl"
+        },
+        "properties": {
+            "title": "Eigenschaften"
+        },
+        "images": {
+            "title": "Bilder",
+            "image": "Bild {{number}}"
+        },
+        "table": {
+            "title": "Tabelle",
+            "yes": "Ja",
+            "no": "Nein",
+            "shown": "{{shown}} von {{total}}"
+        },
+        "pageStructure": {
+            "title": "Seitenstruktur",
+            "verbatim": "Wortgetreu",
+            "status": {
+                "planned": "Geplant",
+                "created": "Angelegt",
+                "updated": "Aktualisiert",
+                "locked": "Gesperrt",
+                "failed": "Fehlgeschlagen"
+            }
+        },
+        "construct": {
+            "parts": "Teile",
+            "mandatory": "Pflicht",
+            "template": "Template",
+            "validation": "Prüfung",
+            "valid": "Das Template ist gültig",
+            "line": "Zeile {{line}}",
+            "severity": {
+                "error": "Fehler",
+                "warning": "Warnung",
+                "info": "Info"
+            }
+        },
+        "apiCalls": {
+            "title": "CMS-Aufrufe",
+            "call": "Aufruf",
+            "status": "Status",
+            "summary": "Was er tat"
+        },
+        "plan": {
+            "title": "Plan",
+            "proposed": "Vorgeschlagener Plan",
+            "adjusted": "Plan · angepasst",
+            "adjustedByYou": "Von Ihnen angepasst",
+            "adjust": "Anpassen",
+            "accept": "Plan annehmen",
+            "acceptText": "Den Plan bitte wie vorgeschlagen umsetzen.",
+            "adjustedIntro": "Diesen Plan umsetzen:",
+            "step": "Schritt {{number}}",
+            "placeholder": "Schritt beschreiben",
+            "moveUp": "Schritt nach oben",
+            "moveDown": "Schritt nach unten",
+            "remove": "Schritt entfernen",
+            "add": "Schritt hinzufügen",
+            "keys": "Enter fügt einen Schritt hinzu · Esc bricht ab",
+            "cancel": "Abbrechen",
+            "done": "Fertig"
+        },
+        "citation": {
+            "title": "Quellen"
+        }
     },
     "voice": {
         "start": "Diktieren",
@@ -179,6 +327,11 @@
             "title": "Checkbox",
             "label": "Sofort veröffentlichen"
         },
+        "radio": {
+            "title": "Radio",
+            "campaign": "Kampagnen-Landingpage",
+            "topic": "Themenseite"
+        },
         "input": {
             "title": "Eingabefeld",
             "label": "Benutzername",
@@ -249,6 +402,39 @@
             "errorDetail": "Das CMS hat nicht geantwortet.",
             "deleted": "Seite gelöscht",
             "undo": "Rückgängig"
+        },
+        "parts": {
+            "title": "Nachrichtenteile",
+            "fallback": "Fallback",
+            "variants": {
+                "textMarkdown": "Markdown",
+                "textPlain": "Reiner Text",
+                "noteInfo": "Info",
+                "noteWarning": "Warnung",
+                "noteSkipped": "Übersprungen",
+                "treeNested": "Verschachtelt, mit Auswahl",
+                "treeFlat": "Flach, ohne Titel",
+                "listSingle": "Einzelauswahl, mit Beschreibung und Verweis",
+                "listMulti": "Mehrfachauswahl, vorausgewählt",
+                "properties": "Werte, Verweise, leer",
+                "imagesSingle": "Einzelauswahl",
+                "imagesMulti": "Mehrfachauswahl, vorausgewählt, ohne Alternativtext",
+                "tableFull": "Alle Spaltentypen, mit Gesamtzahl und Quelle",
+                "tableSmall": "Klein, ohne Fußzeile",
+                "structureDone": "Alle Status, wortgleich, mit Seite",
+                "structurePlanned": "Geplant, ohne Seite",
+                "draftValid": "Gültig",
+                "draftIssues": "Mit Fehler, Warnung und Info",
+                "draftMinimal": "Minimal",
+                "apiCalls": "Erfolgreiche und fehlgeschlagene Aufrufe",
+                "citations": "Mit Markern und Auszügen",
+                "citationsBare": "Ohne Marker und Auszüge",
+                "fileNamed": "Mit Namen",
+                "fileUnnamed": "Ohne Namen",
+                "unknownWithText": "Unbekannter Typ, mit Text",
+                "unknownWithoutText": "Unbekannter Typ, ohne Text (zeigt nichts)",
+                "brokenTable": "Bekannter Typ, der nicht dargestellt werden kann"
+            }
         }
     },
     "errors": {

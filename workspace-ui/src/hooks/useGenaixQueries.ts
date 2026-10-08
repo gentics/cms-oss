@@ -1,33 +1,33 @@
 import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
+import { guessWorkflow } from '@/helper/workflowGuess/workflowGuess';
 import {
+    answerInteraction,
     archiveSession,
+    cancelRun,
     createSession,
     genaixRetry,
     genaixRetryDelay,
     getMe,
     getSession,
-    listMcpConnections,
     listMessages,
     listSessions,
     listSessionUploads,
     listWorkflows,
-    NoCmsConnectionError,
     postMessage,
     type SessionFilters,
     uploadSessionFile,
 } from '@/services/apiService/apiService';
 import type {
     FileMode,
+    InteractionAnswer,
     MessageCreateBody,
     Session,
-    SessionCreateBody,
-    SessionCreated,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
-import { createCmsToken } from '@/services/cmsApiService/cmsApiService';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /** Query keys of the GenAIx server state. */
@@ -107,12 +107,17 @@ export function useSessionMessages(sessionId: string) {
 }
 
 /**
- * POST /sessions/{session_id}/messages. The turn appears in `useWorkspaceEventStore` at once as
+ * POST /sessions/{session_id}/messages, after making sure the session holds a CMS credential
+ * (`ensureSessionCmsAuthorization`). The turn appears in `useWorkspaceEventStore` at once as
  * `sending`, then `sent` or `send_failed`. Never retried: a repeat would send the turn twice.
  */
 export function useSendMessage(sessionId: string) {
     return useMutation({
-        mutationFn: (body: MessageCreateBody) => postMessage(sessionId, body),
+        mutationFn: async (body: MessageCreateBody) => {
+            await ensureSessionCmsAuthorization(sessionId);
+
+            return postMessage(sessionId, body);
+        },
         onMutate: (body) => {
             const localId = crypto.randomUUID();
 
@@ -132,9 +137,6 @@ export function useSendMessage(sessionId: string) {
     });
 }
 
-/** The workflow a session started from the dashboard runs. */
-export const START_WORKFLOW = 'content_research';
-
 /** A file attached to the first message, and how its wording is treated. */
 export interface StartFile {
     file: File;
@@ -150,7 +152,9 @@ export interface StartSessionInput {
 
 // Without files, one call creates the session with its first message. Files are per session, so
 // with files the session is created first, then the files are uploaded, then the message is posted
-// with a `file_ref` part per file (contract, `SessionCreate`).
+// with a `file_ref` part per file (contract, `SessionCreate`). Either way the session is created with
+// its CMS credential (`newSessionCmsAuthorization`), which GenAIx verifies before creating anything,
+// and with the workflow its first message suggests (`guessWorkflow`, TEMPORARY).
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
 async function uploadFileParts(sessionId: string, files: StartFile[], onFileProgress?: StartSessionInput['onFileProgress']): Promise<UserFileRefPart[]> {
@@ -165,42 +169,15 @@ async function uploadFileParts(sessionId: string, files: StartFile[], onFileProg
     return fileParts;
 }
 
-/**
- * POST /sessions with the session's own CMS authorization (09-integration-guide.md, section 4): the
- * user's `cms` connection (the default one, else the first), and a new CMS API token for this session
- * alone, never one reused from another. GenAIx verifies the token before it creates anything, so a
- * rejected token means no session (`422 mcp_authorization_rejected`). The token is not kept here:
- * GenAIx stores it for the session's runs and cleans it up, and the CMS prunes it once it expires.
- */
-async function createAuthorizedSession(body: SessionCreateBody): Promise<SessionCreated> {
-    // The connection first: without one, no token is created for nothing.
-    const connections = await listMcpConnections('cms');
-    const connection = connections.find((candidate) => candidate.default) ?? connections[0];
-
-    if (!connection) {
-        throw new NoCmsConnectionError();
-    }
-
-    const { token, name, expires } = await createCmsToken(`genaix-workspace-${crypto.randomUUID()}`);
-
-    return createSession({
-        ...body,
-        authorizations: [{
-            connection_id: connection.id,
-            auth_type: 'bearer',
-            token,
-            token_name: name,
-            expires_at: new Date(expires * 1000).toISOString(),
-        }],
-    });
-}
-
 async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
+    const authorizations = [await newSessionCmsAuthorization()];
+    const workflow = guessWorkflow(parts);
+
     if (files.length === 0) {
-        return createAuthorizedSession({ workflow: START_WORKFLOW, message: { parts } });
+        return createSession({ workflow, message: { parts }, authorizations });
     }
 
-    const session = await createAuthorizedSession({ workflow: START_WORKFLOW });
+    const session = await createSession({ workflow, authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
 
@@ -226,17 +203,24 @@ export function useStartSession() {
     });
 }
 
+/** A turn from the chat composer; `replyTo` answers the run's pending interaction with it. */
+export interface SendTurnInput extends StartSessionInput {
+    replyTo?: { interaction_id: string; answer: InteractionAnswer };
+}
+
 /**
  * Sends a turn from the session's chat composer: uploads its files, then posts the message through
- * `useSendMessage`, which records the turn in `useWorkspaceEventStore`. Never retried, like
- * `useSendMessage`: a repeat would upload and send twice.
+ * `useSendMessage`, which records the turn in `useWorkspaceEventStore`. With `replyTo` the message
+ * carries `reply_to_interaction`: it answers the question the run waits on and joins that run, the one
+ * message accepted while a run is active (contract, `MessageCreate.reply_to_interaction`). Never
+ * retried, like `useSendMessage`: a repeat would upload and send twice.
  */
 export function useSendTurn(sessionId: string) {
     const queryClient = useQueryClient();
     const { mutateAsync: sendMessage } = useSendMessage(sessionId);
 
     return useMutation({
-        mutationFn: async ({ parts, files, onFileProgress }: StartSessionInput) => {
+        mutationFn: async ({ parts, files, onFileProgress, replyTo }: SendTurnInput) => {
             const fileParts = await uploadFileParts(sessionId, files, onFileProgress);
             const fileIds = fileParts.map((part) => part.file_id);
 
@@ -245,8 +229,38 @@ export function useSendTurn(sessionId: string) {
                 void queryClient.invalidateQueries({ queryKey: genaixKeys.uploads(sessionId) });
             }
 
-            return sendMessage({ parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
+            return sendMessage({
+                parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts],
+                ...(replyTo && { reply_to_interaction: replyTo }),
+            });
         },
+        retry: false,
+    });
+}
+
+/**
+ * POST /sessions/{session_id}/runs/{run_id}/cancel: Stop. Once accepted the run shows as
+ * `cancelling` in `useWorkspaceEventStore` until `run.cancelled` arrives. Retried like a query: the
+ * call is idempotent.
+ */
+export function useCancelRun(sessionId: string) {
+    return useMutation({
+        mutationFn: (runId: string) => cancelRun(sessionId, runId, 'User pressed Stop.'),
+        onSuccess: (_run, runId) => useWorkspaceEventStore.getState().markRunCancelling(sessionId, runId),
+        ...retryOptions,
+    });
+}
+
+/**
+ * POST /sessions/{session_id}/interactions/{interaction_id}: answers a pending interaction; the run
+ * continues with `interaction.resolved` on the event stream. Never retried: a second answer is
+ * `409 interaction_already_answered`.
+ */
+export function useAnswerInteraction(sessionId: string) {
+    return useMutation({
+        mutationFn: ({ interactionId, answer }: { interactionId: string; answer: InteractionAnswer }) => (
+            answerInteraction(sessionId, interactionId, answer)
+        ),
         retry: false,
     });
 }

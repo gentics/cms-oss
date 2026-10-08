@@ -17,6 +17,16 @@ import '@/i18n';
 // take the stubbed fetch responses meant for sending.
 vi.mock('@/hooks/useSessionEvents', () => ({ useSessionEvents: () => {} }));
 
+// The conversation is tested in ChatStream.test.tsx; here its history request (`GET …/messages`)
+// would take the stubbed fetch responses meant for sending.
+vi.mock('@/components/ChatStream/ChatStream', () => ({ ChatStream: () => null }));
+
+// Making sure the session holds a CMS credential before a turn is tested in
+// sessionAuthorization.test.ts; here it would take the stubbed fetch responses meant for sending.
+vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
+    ensureSessionCmsAuthorization: () => Promise.resolve(),
+}));
+
 // jsdom has no ResizeObserver; the page's AppShell measures its columns with one.
 class ResizeObserverStub {
     observe() {}
@@ -291,5 +301,23 @@ describe('SessionPage', () => {
             expect(screen.queryByRole('button', { name: 'Type instead', hidden: true })).not.toBeInTheDocument();
             expect(screen.getByRole('button', { name: 'Tap to speak', hidden: true })).toBeInTheDocument();
         });
+    });
+    it('stops the working run with Stop', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubFetch(Response.json({ id: 'r-1', status: 'cancelling' }, { status: 202 }));
+
+        useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 1, ts: '2026-10-07T09:00:00Z', session_id: 's-1', type: 'run.started', run: { id: 'r-1', status: 'running', started_at: '2026-10-07T09:00:00Z', step_count: 0 } });
+        await renderComposer();
+
+        await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+        expect(fetchMock.mock.calls[0]![0]).toBe('/genaix/api/v1/sessions/s-1/runs/r-1/cancel');
+        expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled());
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 2, ts: '2026-10-07T09:00:01Z', session_id: 's-1', type: 'run.cancelled', run: { id: 'r-1', status: 'cancelled', started_at: '2026-10-07T09:00:00Z', step_count: 0 } }));
+
+        expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
     });
 });

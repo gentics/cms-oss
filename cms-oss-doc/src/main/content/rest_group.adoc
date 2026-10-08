@@ -1,0 +1,14 @@
+---
+title: "Group Resource"
+---
+= Group Resource
+
+[#group-load]
+== Group Load
+
+Load the groups of the user, including child groups.
+
+[source,javascript]
+----
+GET /rest/group/load
+----

@@ -1,0 +1,18 @@
+---
+title: "Partial localization"
+---
+= Partial localization
+
+Bei der Lokalisierung von Seiten kann wahlweise die komplette Seite lokalisiert werden, oder nur ausgewählte Root-Tags.
+
+[#feature-activation]
+== Feature activation
+
+If you want to use this feature, you first have to enable it
+
+.conf/features.yml
+[source,javascript]
+----
+feature:
+    partial_multichannelling: true
+----

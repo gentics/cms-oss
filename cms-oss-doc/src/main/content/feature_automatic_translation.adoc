@@ -1,0 +1,18 @@
+---
+title: "Translate Pages"
+---
+= Translate Pages
+
+This option allows pages to be automatically translated using a translation tool.
+
+[#feature-activation]
+== Feature activation
+
+If you want to use this feature, you first have to enable it
+
+.conf/features.yml
+[source,javascript]
+----
+feature:
+    automatic_translation: true
+----

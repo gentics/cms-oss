@@ -1,0 +1,62 @@
+---
+title: "System Requirements"
+description: "Gentics CMS System Requirements."
+---
+= System Requirements
+
+These System requirements are examples and must be adapted for each project and the existing IT infrastructure
+
+The continuously updated list of compatible components like OSs, Browsers, Databases can be found xref:gcn_compatibility_list.adoc[here].
+
+[#server-requirements]
+== Server Requirements
+
+[#minimum-hardware-requirements]
+=== Minimum Hardware Requirements
+
+* x86 Dual Core 2+ GHz CPU
+* 4 GB Memory
+* 15 GB Disk space
+
+[#recommended-hardware-requirements]
+=== Recommended Hardware Requirements
+
+* x86 Quad Core 2+ GHz CPU
+* 8 GB Memory
+* 100 GB Disk space
+
+[#cms-server-operation-system]
+=== CMS Server - Operation System
+
+* xref:gcn_compatibility_list.adoc[One of the supported 64 Bit Linux Distributions]
+* xref:gcn_compatibility_list.adoc[One of the supported CMS Databases,title="MySQL,MariaDB"]
+
+NOTE: We suggest the use of 64Bit systems because a 64Bit system can address more memory (RAM). This proved to be future-proof in many cases.
+
+[#client-requirements]
+== Client Requirements
+
+[#client-browser]
+=== Client Browser
+
+* Screen resolution of at least 1024x768
+* Recommended screen resolution 1280x1024 or higher
+* enabled JavaScript
+
+[#client-systems]
+=== Client Systems
+
+* Microsoft Windows
+* Linux
+* MacOS
+
+[#supported-repositories]
+== Supported Repositories
+
+* Oracle MySQL
+* MariaDB
+* Microsoft SQL Server
+* Oracle Database Server
+* Gentics Mesh
+
+Keywords: Requirements, Anforderungen, Systemvorraussetzungen, Mindestvoraussetzungen, Kombatibilität

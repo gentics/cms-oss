@@ -1,0 +1,17 @@
+---
+title: "Usage of OpenAPI v3.0 specification for Gentics CMS REST API"
+description: "Describes the details of the usage of OpenAPI specification files"
+---
+= Usage of OpenAPI v3.0 specification for Gentics CMS REST API
+
+It is now possible to generate REST clients for Gentics CMS REST API using the https://github.com/OAI/OpenAPI-Specification[OpenAPI] specification. As the specification is generated directly from the API provided by Gentics CMS, the possibilities of the clients, generated upon the specification, are identical to the ones from the https://www.gentics.com/Content.Node/cmp8/guides/restapi/index.html[REST API].
+
+[#specification-location]
+== Specification location
+
+The specification can be found at http://yourcmshost/openapi/openapi.yaml or http://yourcmshost/openapi/openapi.json, in the YAML and JSON formats, respectively.
+
+[#client-code-generation]
+== Client code generation
+
+In addition to the official https://github.com/OpenAPITools/openapi-generator[OpenAPI client generator], it is possible to use any other generator of your favor. Please follow the generation instructions of the selected generator. The instruction for the official OpenAPI client generator can be found https://github.com/OpenAPITools/openapi-generator#2---getting-started[here] .

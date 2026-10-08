@@ -1,0 +1,151 @@
+---
+title: "Sanitizing file names"
+---
+= Sanitizing file names
+
+Gentics CMS offers central translation table that allows you to configure sanitizing of file names.
+
+[#overview]
+== Overview
+
+Gentics CMS will use the `+sanitize_character+` array from the .yml files in /cms/conf to transform special characters from filenames of pages, images and files and folder paths. This configuration is also used with the Aloha Editor headerids plugin to generate header ids from text contents.
+
+The purpose of this feature is to transform special characters to characters that are allowed in a filename in a meaningful way.
+
+For example: the character "è" is used in many languages, so it makes sense to replace it with "e" in the filename, because it would be lost otherwise.
+The default settings for sanitizing characters are:
+
+[source,shell]
+----
+		'é' => 'e',
+		'è' => 'e',
+		'ë' => 'e',
+		'ê' => 'e',
+		'à' => 'a',
+		'ä' => 'ae',
+		'â' => 'a',
+		'Ä' => 'Ae',
+		'ù' => 'u',
+		'ü' => 'ue',
+		'û' => 'u',
+		'Ü' => 'Ue',
+		'ö' => 'oe',
+		'ô' => 'o',
+		'Ö' => 'Oe',
+		'ï' => 'i',
+		'î' => 'i',
+		'ß' => 'ss'
+----
+
+This will transform strings as follows:
+
+[source,shell]
+----
+	"äöï 23.jpg" => "aeoei_23.jpg"
+	"ia 23$%.html" => "ia_23__.html"
+----
+
+[#standard-behavior]
+== Standard behavior
+
+If the configuration is not changed, the standard behavior of sanitizing filenames and paths will be the following
+
+. Replace all characters listed in the map above by their specific replacement.
+. Replace all characters, that are not allowed with the standard replacement character (see https://gentics.com/Content.Node/guides/feature_sanitize_name.html#setting-the-standard-replacement-character[Setting the standard replacement character]). By default all alphanumeric characters, including "_", and all of ".-()[]{}$/" are allowed and will not be replaced.
+
+Further Rules:
+
+* All leading and trailing whitespace will be removed
+* If the name is empty, then the resulting filename will begin with "1"
+* If the name starts with a dot "." then the sanitizing will put a "1" before the dot. (This is because certain apache installations would interpret the filename as a hidden file, if it starts with a dot.)
+
+[#configuration]
+== Configuration
+
+WARNING: If you do any modifications, then the form validation for the page properties is turned off, but the input will be sanitized as specified.
+
+[#sanitize-characters-list]
+=== Sanitize characters list
+
+You can redefined the pre-defined set of replacements or just add new ones in "node.conf" file like this:
+
+.conf/*.yml
+[source,shell]
+----
+sanitize_character:
+  "ï": "i"
+  "ä": "ae"
+----
+
+NOTE: Do not replace any character by "/" or "\", since those are separators for path names.
+
+WARNING: Make sure to use UTF-8 encoding for the configuration.
+
+WARNING: When using replacement characters other than alphanumeric (including "_") and all of ".-()[]{}$/",
+make sure that the replacement characters are also listed as allowed characters (see below).
+
+[#allowing-other-characters]
+=== Allowing other characters
+
+You can specifically allow other characters, so that they will not be replaced.
+
+WARNING: Use this at your own risk. Also do not add more than 9216 characters.
+
+.conf/*.yml
+[source,shell]
+----
+sanitize_allowed_characters:
+  # allow , and µ in filenames
+  - ","
+  - "µ"
+----
+
+[#setting-the-standard-replacement-character]
+=== Setting the standard replacement character
+
+All characters that are not allowed in filenames are replaced with an hyphen by default. You can however redefine the standard replacement character like this:
+
+.conf/*.yml
+[source,shell]
+----
+sanitize_replacement_character: "-";
+----
+
+WARNING: Use a "safe" character. The character should be safe for use in Urls and on the filesystem (not the path separator). Good replacement characters are "_" or "-".
+
+[#examples]
+== Examples
+
+[#replacing-with-special-characters]
+=== Replacing with special characters
+
+You can also use the sanitize characters list together with the list of allowed characters like this:
+
+.conf/*.yml
+[source,shell]
+----
+sanitize_character:
+  "(c)":  "©"
+sanitize_allowed_characters:
+  - "©"
+----
+
+This would do
+
+[source,shell]
+----
+	"(c) 2014 Gentics.jpg" => "©_2014_Gentics.jpg"
+----
+
+[#replacing-a-character-that-is-allowed-by-default]
+=== Replacing a character that is allowed by default
+
+If you want to replace e.g. ( and ) with the default replacement character, you need to list them in the sanitize characters.
+
+./Node/etc/node.conf
+[source,shell]
+----
+sanitize_character:
+  "(": "-"
+  ")": "-"
+----

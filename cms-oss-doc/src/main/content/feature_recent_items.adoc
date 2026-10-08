@@ -1,0 +1,23 @@
+---
+title: "Recent Items"
+---
+= Recent Items
+
+Allows the user to view a list of recently opened folders, pages, images, and files.
+
+[#overview]
+== Overview
+
+When enabled, shows a list of recently opened folders, pages, images, and files after clicking the corresponding button in the search bar of the editor UI.
+
+image:{width:696px}images/gcmsui/feature_recent_items.png[]
+
+[#configuration]
+== Configuration
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	recent_items: true
+----

@@ -1,0 +1,94 @@
+---
+title: "PubSub"
+description: "A list of all pub/sub message and how to use them"
+---
+= PubSub
+
+Gentics CMS JS API event channels, and how to subscribe for their messages.
+
+[#deprecated-channels]
+== Deprecated Channels
+
+WARNING: The following channels are still available for backwards compatibility,
+but you are discouraged from using them, as they are superseded and will
+eventually be phased out.
+
+[%header]
+|===
+| Deprecated channels | Superseded by
+
+| `+content-inserted+` | `+tag.inserted+`
+| `+content-rendered+` | `+tag.rendered+`
+| `+authentication-required+` | `+session.authentication-required+`
+| `+authenticated+` | `+session.authenticated+`
+| `+settion-set+` | `+session.sid-set+`
+|===
+
+[#general-channels]
+== General Channels
+
+[%header]
+|===
+| General channels | Description | Arguments
+
+| `+error-encountered+` | When an uncaught error occures from within the library. | link:gcnjsapi/jsdoc/symbols/GCNError.html[`+GCNError+`]
+|===
+
+[#session-channels]
+== Session Channels
+
+[%header]
+|===
+| Session channels | Description | Arguments
+
+| `+session.authentication-required+` | When an operation that requires authentication credentials (eg: link:gcnjsapi/jsdoc/symbols/PageAPI.html#.createTag[`+PageAPI.createTag()+`]) cannot proceed because credentials are missing. | proceed, cancel
+| `+session.authenticated+` | When a link:gcnjsapi/jsdoc/symbols/GCN.html#.login[`+GCN.login()+`] call to the backend attempt is successfully authenticated. | Server response object with the property 'user' that contains user the authenticated user's data.
+| `+session.sid-set+` | Whenever the session SID is set or updated. | Session ID string.
+|===
+
+[#tag-channels]
+== Tag Channels
+
+[%header]
+|===
+| Tag channels | Description | Arguments
+
+| `+tag.inserted+` | Triggered at the point immediately after link:gcnjsapi/jsdoc/symbols/TagAPI.html#.render[`+TagAPI.render()+`] or link:gcnjsapi/jsdoc/symbols/TagAPI.html#.edit[`+TagAPI.edit()+`] is invoked, a|
+. jQuery unit set containing the element onto which the tag was rendered.
+. The rendered HTML.
+| `+tag.rendered+` | When a tag has been rendered, either with link:gcnjsapi/jsdoc/symbols/TagAPI.html#.render[`+TagAPI.render()+`] or link:gcnjsapi/jsdoc/symbols/TagAPI.html#.edit[`+TagAPI.edit()+`]. Note that when modifying the HTML, at least the root tag of the original HTML must be left untouched. a|
+. HTML string of rendered tag.
+. The rendered link:gcnjsapi/jsdoc/symbols/TagAPI.html[`+Tag+`].
+. A function that must be invoked, and that must received the (optionally) modified HTML that was passed as the first argument.
+| `+tag.rendered-for-editing+` | When a tag is rendered for editing with link:gcnjsapi/jsdoc/symbols/TagAPI.html#.edit[`+TagAPI.edit()+`]. a| Object containing the properties:
+
+* link:gcnjsapi/jsdoc/symbols/TagAPI.html[`+tag+`] : The rendered tag.
+* `+data+`: The raw server response data object.
+* `+callback+`: The success callback that was passed to the link:gcnjsapi/jsdoc/symbols/TagAPI.html#.edit[`+TagAPI.edit()+`] invocation that triggered this event.
+| `+tag.before-deleted+` | When link:gcnjsapi/jsdoc/symbols/TagAPI.html#.remove[`+TagAPI.remove()+`] is invoked, before the tag is placed in the list of tags to be deleted. | The link:gcnjsapi/jsdoc/symbols/TagAPI.html[`+tag+`] to be deleted.
+|===
+
+[#page-channels]
+== Page Channels
+
+[%header]
+|===
+| Page channels | Description | Arguments
+
+| `+page.rendered+` | When link:gcnjsapi/jsdoc/symbols/PageAPI.html#.preview[`+PageAPI.preview()+`] is called. a|
+. HTML string of rendered page.
+. The rendered link:gcnjsapi/jsdoc/symbols/PageAPI.html[`+Page+`].
+. A function that must be invoked, and that must received the (optionally) modified HTML that was passed as the first argument.
+| `+page.before-saved+` | When link:gcnjsapi/jsdoc/symbols/PageAPI.html#.save[`+PageAPI.save()+`] is called, before local changes to the object are committed to the server. | The link:gcnjsapi/jsdoc/symbols/PageAPI.html[`+page+`] to be saved.
+| `+page.before-published+` | When link:gcnjsapi/jsdoc/symbols/PageAPI.html#.publish[`+PageAPI.publish()+`] is called, before request is sent to the server. | The link:gcnjsapi/jsdoc/symbols/PageAPI.html[`+page+`] to be publish.
+|===
+
+[#folder-channels]
+== Folder Channels
+
+[%header]
+|===
+| Folder channels | Description | Arguments
+
+| `+folder.before-saved+` | When link:gcnjsapi/jsdoc/symbols/FolderAPI.html#.save[`+FolderAPI.save()+`] is called, before local changes to the object are committed to the server. | The link:gcnjsapi/jsdoc/symbols/FolderAPI.html[`+folder+`] to be saved.
+|===

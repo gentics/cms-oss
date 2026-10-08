@@ -1,0 +1,648 @@
+---
+title: "Gentics CMS Feature Overview"
+description: "Overview of Gentics CMS features"
+---
+= Gentics CMS Feature Overview
+
+This overview contains a list of Gentics CMS features.
+
+TIP: Features are by default activated by setting them to boolean `+true+`
+and deactivated by setting them to `+false+`. These are the allowed settings
+for all features, if not documented otherwise.
+
+Discontinued features can be found on our xref:features_discontinued.adoc[list of discontinued features]
+
+[#aloha-editor]
+== Aloha Editor
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	aloha: true
+----
+
+Will enable xref:aloha_gcn_overview.adoc[Aloha Editor] for Gentics CMS.
+
+[#always-localize]
+== Always localize
+
+See xref:feature_always_localize.adoc[Always localize]
+
+[#annotating-aloha-editables]
+== Annotating Aloha Editables
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+  aloha_annotate_editables: true
+----
+
+For details, read continue reading about xref:aloha_gcn_overview.adoc#annotating-editables[Annotating Editables]
+
+[#asset-management]
+== Asset Management
+
+With the xref:feature_asset_management.adoc[Gentics CMS Asset Management] it is possible to insert files from asset stores directly.
+
+[#attribute-dirting]
+== Attribute Dirting
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	attribute_dirting: true
+----
+
+Enables attribute specific dirting and publishing of objects into Content Repositories.
+For details, read the xref:feature_attribute_dirting.adoc[Feature description]
+
+[#autocomplete-folder-paths]
+== Autocomplete Folder Paths
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	autocomplete_folder_path: true
+----
+
+`+autocomplete_folder_path+` will automatically generate meaningful folder path name as you type the folder name.
+
+[#construct-autoenable]
+== Construct Autoenable
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	construct_autoenable: true
+----
+
+This feature will add a flag "autoenable" to the Tagtype properties dialog. Activating
+this flag will autoenable a Tag that has been placed in a page, so that the editor
+does not have to click on it in order to render its contents.
+
+[#copy-tags]
+== Copy Tags
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	copy_tags: true
+----
+
+This feature allows copy & paste of tags. Find further information in the section about xref:feature_copy_tags.adoc[Copy Tags]
+
+[#devtools]
+== Devtools
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	devtools: true
+----
+
+This enables the xref:devtools_overview.adoc[Devtools] on the system.
+
+[#disable-instant-delete]
+== Disable instant delete
+
+See xref:feature_disable_instant_delete.adoc[Disable instant delete]
+
+[#filesystem-attributes]
+== Filesystem Attributes
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	cr_filesystem_attributes: true
+----
+
+With this feature, it is possible to store attributes in contentrepositories in the filesystem instead of the database.
+
+See xref:cr_filesystem_attributes.adoc[Filesystem Attributes]
+
+[#file-publish-dependencies]
+== File publish dependencies
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	contentfile_auto_offline: true
+----
+
+With this feature, it is possible to configure nodes, for which images and files, that are not used by other objects (pages or folders) will not be published into the filesystem and contentrepository.
+
+See xref:feature_file_publish_dependencies.adoc[File publish dependencies]
+
+[#folder-based-template-selection]
+== Folder Based Template Selection
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	folder_based_template_selection: true
+----
+
+When this feature is enabled, the behavior of the editor UI changes when linking templates: a user has to select a folder, and only the templates in the selected folder are available for linking. When the feature is disabled, a user can link any template from a node which is already linked to a folder where the user has the appropriate permissions.
+
+[#gcms-ui-object]
+== GCMS UI Object
+
+See xref:feature_gcmsui_object.adoc[GCMS UI Object Overview]
+
+[#genticsimagestore]
+== GenticsImageStore
+
+See xref:feature_genticsimagestore.adoc[GenticsImageStore]
+
+[#hardlink-files]
+== Hardlink Files
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	hardlink_files: true
+----
+
+Use hardlinks for files and images instead of softlinks when publishing to the filesystem.
+
+[#hide-manual-link]
+== Hide Manual Link
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	hide_manual: true
+----
+
+Will hide the link to the manual in the editor UI.
+
+[#image-cropping-custom-aspect-ratios]
+== Image Cropping Custom Aspect Ratios
+
+See xref:feature_image_crop_ar.adoc[Image Cropping Custom Aspect Ratios]
+
+[#image-focal-point-modification]
+== Image Focal Point Modification
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+  focal_point_editing: true
+----
+
+This allows setting the focal point of an image in the image editor of the editor UI.
+
+[#image-manipulation-2]
+== Image Manipulation 2
+
+See xref:feature_imagemanipulation2.adoc[Image Manipulation 2]
+
+[#image-uploads-in-tag-editor]
+== Image Uploads in Tag Editor
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	enable_image_upload_in_tagfill: true
+----
+
+This enables the "New Image" button in the tagfill dialog for "URL (image)" tag parts. This feature is enabled by default.
+
+Disabling this feature is useful e.g., when users should only select images through the xref:feature_asset_management.adoc[Asset Management Feature] and uploading of new images to the CMS
+should be disabled (the image upload button in the list view of the editor UI needs to be overridden separately).
+
+[#inbox-to-email]
+== Inbox to eMail
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	inbox_to_email: true
+----
+
+When this feature is enabled, inbox messages are also sent as eMails. Find further information in the section about xref:email_sending.adoc[eMail sending]
+
+[#insecure-scheduler-command]
+== Insecure Scheduler Command
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	insecure_scheduler_command: true
+----
+
+Whether to allow custom scheduler tasks to execute commands outside of `+/cms/scheduler-commands+`. This is disabled by default, and it is highly recommended not to activate this feature on production environments. Instead create shell scripts in `+/cms/scheduler-commands+` which execute the desired commands. See the https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#custom-tasks[scheduler documentation] for more information.
+
+[#instant-publishing]
+== Instant Publishing
+
+This feature allows enabling the immediate writing of published objects into a ContentRepository.
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	instant_cr_publishing: true
+----
+
+For details, continue reading at xref:feature_instant_publishing.adoc[Instant Publishing]
+
+[#invalid-page-url-message]
+== Invalid Page URL Message
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	invalidpageurlmsg: true
+----
+
+If internal links resolve to objects that are not online anymore, the system will send a message to the editor who last published the page.
+
+[#language-code-in-filename]
+== Language Code in Filename
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	contentgroup3_pagefilename: true
+----
+
+Page file names will include an abbreviation of the page language.
+
+Example: When the page "Testpage" is created in English, with an HTML template,
+the filename will be "testpage.en.html" (or e.g. "testpage1.en.html", if the
+former filename already exists). When the page properties are modified and
+the filename set to empty, this will also include the language code into
+the filename.
+
+[#live-urls]
+== Live URLs
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	live_urls: true
+----
+
+See xref:feature_liveurls.adoc[Live URLs]
+
+[#live-urls-per-node]
+== Live URLs per Node
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	live_urls_per_node: true
+----
+
+See xref:feature_liveurls.adoc[Live URLs]
+
+[#magic-value]
+== Magic Value
+
+See xref:feature_magicvalue.adoc[Magic Value]
+
+[#maintenance-mode]
+== Maintenance Mode
+
+.conf/features.yml
+[source,shell]
+----
+feaure:
+	maintenance_mode: true
+----
+
+Allows you to switch the system into maintenance mode if you need to do larger scale maintenance. In maintenance mode no other users may login except for the user who triggered maintenance mode.
+
+[#mandatory-tags]
+== Mandatory Tags
+
+xref:gcn_mandatory_tags.adoc[How to use mandatory tags to prevent publishing of incomplete pages]
+
+[#mesh-contentrepository]
+== Mesh ContentRepository
+
+This feature allows publishing into instances of https://getmesh.io/[Mesh]
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	mesh_contentrepository: true
+----
+
+See xref:feature_mesh_contentrepository.adoc[detailed description]
+
+[#multithreaded-publishing]
+== Multithreaded Publishing
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	multithreaded_publishing: true
+----
+
+See xref:feature_multithreaded_publishing.adoc[Multithreaded Publishing]
+
+[#manage-link-urls]
+== Manage Link URLs
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	managelinkurl: true
+----
+
+Internal links to pages or files that are not online anymore are replaced with "#", thus disabling the link.
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	managelinkurl_onlyforpublish: true
+----
+
+Whether to manage link URLs only when publishing, not for editing.
+
+[#nice-urls]
+== Nice URLs
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	nice_urls: true
+----
+
+This enables the setting of xref:nice_urls.adoc[Nice URLs] and alternate URLs for pages, files and images.
+
+[#nodecopy]
+== Nodecopy
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+  nodecopy: true
+  nodecopy_files: true
+----
+
+`+nodecopy+` will allow you to copy whole Nodes. `+nodecopy_files+` will also give you an option to duplicate the files - otherwise pages etc. would just reference files and images from the original nodes.
+
+[#omit-writing-to-the-publish-table]
+== Omit Writing to the Publish Table
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	omit_publish_table: true
+----
+
+By activating this feature, pages in nodes that do not publish into the filesystem (only into a contentrepository) will not be written into the publish table in the backend.
+This reduces the size of the backend database and increases publish performance.
+
+NOTE: When this feature is activated and nodes that were not published into the filesystem are reconfigured to publish into the filesystem, all pages in that node need to be republished using the maintenance dialog.
+
+[#publish-directory-segment]
+== Publish Directory Segment
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	pub_dir_segment: true
+----
+
+With this xref:feature_pub_dir_segment.adoc[feature] it is possible to change the way, the publish directories for nodes are constructed.
+
+[#publish-folder-startpage]
+== Publish Folder Startpage
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	publish_folder_startpage: true
+----
+
+An additional checkbox will be shown in the node feature view which allows the activation of an additional instant publishing feature. When enabled the folder startpage of the published pages parent folder will additionally be published when an instant publishing process is invoked.
+
+[#publish-cache]
+== Publish Cache
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+  publish_cache: true
+----
+
+If set to true, the publish process will use an additional cache to improve the performance for rendering pages.
+
+See xref:feature_publish_cache.adoc[Publish Cache]
+
+[#reusing-inherited-page-source]
+== Reusing inherited page source
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	publish_inherited_source: true
+----
+
+If set to true, the publish process will first check, whether the rendered page source of a master page can be reused when rendering the inherited page in a channel.
+The master page source can safely be reused, if no dependency of the page (i.e. no other object, that was used to render the page source) is different (localized) between the master and channel.
+Using this feature might improve the publish performance, if checking the dependencies is faster than actually rendering the page.
+
+NOTE: The feature requires that the published master page source is written into the publish table of the backend db. If the feature omit_publish_table is used, this might not always be the case.
+If the master page source is not written into the publish table, the inherited page is always re-rendered for the channel.
+
+[#recent-items]
+== Recent Items
+
+See xref:feature_recent_items.adoc[Recent Items]
+
+[#resumable-publish-process]
+== Resumable Publish Process
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	resumable_publish_process: true
+----
+
+See xref:feature_resumable_publish_process.adoc[Resumable Publish Process] for details.
+
+[#roles]
+== Roles
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	roles: true
+----
+
+Enables you to use roles for language-specific permissions.
+
+[#sanitize-names]
+== Sanitize names
+
+Replaces characters in filenames and headerid names (Aloha Plugin) with a predefined set of characters replacement.
+
+See xref:feature_sanitize_name.adoc[Sanitize names]
+
+[#secure-session-cookies]
+== Secure session cookies
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	secure_cookie: true
+----
+
+This sets the "Secure" flag in the session cookie. This may only be enabled if all access to the backend and REST-API is done via HTTPS <em>only</em>.
+
+[#suspend-scheduler]
+== Suspend Scheduler
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	suspend_scheduler: true
+----
+
+Enables suspension of the scheduler for maintenance.
+
+[#synchronized-object-properties]
+== Synchronized Object Properties
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	objtag_sync: true
+----
+
+This feature allows object properties to be synchronized between language variants of pages, page variants or the master object and its localized copies.
+See xref:feature_objtag_sync.adoc[Synchronized Object Properties] for details.
+
+[#symlink-files]
+== Symlink Files
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	symlink_files: true
+----
+
+Write symlinks when publishing to the disk rather than writing the whole binary information.
+
+[#tagmap-use-expression-parser]
+== Tagmap Use Expression Parser
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	tagmap_useexpressionparser: true
+----
+
+To enable the Expression Parser for the column "tagname" of the Tagmap set this feature to `+true+`.
+
+See xref:tagmap_expression_parser.adoc[ExpressionParser for Tagmap Entries]
+
+[#tagtype-categories]
+== Tagtype Categories
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	construct_categories: true
+----
+
+See xref:feature_construct_categories.adoc[Tagtype Categories feature]
+
+[#usersnap-integration]
+== Usersnap integration
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	usersnap: true
+----
+
+Enables the xref:feature_usersnap.adoc[Usersnap] integration.
+
+[#validation]
+== Validation
+
+See xref:feature_validation.adoc[Validation]
+
+[#view-perms]
+== View Perms
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	view_perms: true
+----
+
+Adds an extra entry to the tree that is intended for chief editors to enable them to inspect the permission settings for each group he is able to see. However, permissions can not be changed from this dialog.
+
+[#wastebin]
+== Wastebin
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	wastebin: true
+----
+
+Enables the xref:feature_wastebin.adoc[wastebin functionality].
+
+[#webp-conversion]
+== WebP Conversion
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	webp_conversion: true
+----
+
+NOTE: Publishing WebP images to a https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#mesh-contentrepository[Mesh ContentRepository], requires a version of Mesh that also supports WebP for https://getmesh.io/docs/image-manipulation/[image manipulation].
+
+When active the CMS will automatically convert uploaded images to WebP format for nodes which have the feature enabled. Only newly uploaded images will be converted automatically. The internal https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#convertimages[image conversion] scheduler job is available to convert images that were uploaded when the feature was not active.

@@ -1,0 +1,191 @@
+---
+title: "Configuration of Aloha Settings"
+description: "Explains how to set plugin configurations within the node.conf"
+---
+= Configuration of Aloha Settings
+
+This page describes bundle configuration and how to setup custom plugins
+
+[#configuration-example]
+== Configuration Example
+
+Aloha Settings can be configured in a .yml file in /cms/conf using the aloha_settings setting. Those settings will be mapped to a corresponding JavaScript array for use with Aloha Editor.
+You may also define an exclusive per-node configuration by using aloha_settings."KEY", where "key" is either the local id or the global id or the name of the node you want to configure (eg. 1, "3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f" or "Gentics CMS Demo").
+
+NOTE: Configuration per local ID, global ID and name cannot be mixed. The CMS will first look for a configuration by global ID, if that is not found, by node name and if that is not found by local ID.
+
+Per node configuration example:
+
+.conf/*.yml
+[source,javascript]
+----
+# configure bundle path for node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f
+aloha_settings_node:
+ '3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f':
+   bundles:
+     custom: '/customplugins'
+----
+
+Global configuration example:
+
+.conf/*.yml
+[source,javascript]
+----
+# Table Plugin
+aloha_settings:
+  plugins:
+    table:
+      config: [ "table" ]
+      tableConfig:
+        - name: "table-style-minimalist"
+          icon: "border_clear"
+          iconHollow: false,
+          label: "Minimalist"
+        - name: "table-style-box"
+          icon: "border_all"
+          iconHollow: false
+          label: "Box"
+        - name: "table-style-zebra"
+          icon: "table_rows_narrow"
+          iconHollow: false
+          label: "Zebra"
+      columnConfig:
+        - name: "column-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "column-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
+      rowConfig:
+        - name: "row-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "row-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
+      cellConfig:
+        - name: "cell-style-align-left"
+          icon: "format_align_left"
+          iconHollow: false
+          label: "Align left"
+        - name: "cell-style-align-right"
+          icon: "format_align_right"
+          iconHollow: false
+          label: "Align right"
+    # Image Plugin
+    image:
+      maxWidth: 1024
+      maxHeight: 786
+      minWidth: 5
+      minHeight: 5
+----
+
+[#configuration-of-plugin-bundles]
+== Configuration of Plugin Bundles
+
+In order for the plugin to be loaded, two settings must be made in the node.conf:
+
+* Set the path of the bundle
+* Add the plugin to the list of plugins to be loaded
+* Define bundle path
+
+The bundle path for the bundle custom must be configured like this:
+
+.conf/*.yml
+[source,shell]
+----
+aloha_settings:
+  bundles:
+    custom: "/customplugins"
+----
+
+[#configure-aloha-editor-in-a-template]
+== Configure Aloha Editor in a template
+
+See xref:aloha_gcn_conf_inside_template.adoc[Configure Aloha Editor in a template]
+
+[#adding-custom-plugins]
+== Adding custom plugins
+
+Starting with Aloha 0.10, the mechanism for loading plugins was completely changed. It uses require.js now.
+
+[#-placing-the-plugin-bundle]
+=== 1. Placing the plugin bundle
+
+Plugins are now organized in bundles. We place the custom bundle in a static directory of the CMS installation and add a simple helloworld plugin:
+
+Set the environment variable STATIC_SERVE_LIST=/tmp/customplugins and place the helloworld plugin in the directory:
+
+[source,shell]
+----
+/tmp/customplugins/helloworld/lib/helloworld-plugin.js
+----
+
+[#-example-demo-helloworld-plugin]
+=== 2. Example Demo Helloworld Plugin
+
+This is a demo plugin (which just logs 'Hello World!' to the JavaScript Console when loaded).
+
+.helloworld-plugin.js
+[source,javascript]
+----
+define(['aloha/plugin', 'aloha/jquery'], function(Plugin,jQuery) {
+  "use strict";
+   var $ = jQuery;
+
+   return Plugin.create('helloworld', {
+      init: function() {
+        // Executed on plugin initialization
+        if (console && console.log) {
+           console.log('Hello World!');
+        }
+      },
+      destroy: function() {
+        // Executed when this plugin is unloaded
+      }
+   });
+});
+----
+
+[#changing-the-toolbar-settings]
+== Changing the toolbar settings
+
+The toolbar settings contain all components of common and extra plugins, but if custom plugins are added that need to adopt components
+into the toolbar, the toolbar settings need to be extended.
+
+The default configuration in the GCMS is
+
+.conf/*.yml
+[source,shell]
+----
+aloha_settings:
+  toolbar:
+    tabs:
+      - label: "tab.format.label"
+      - label: "tab.insert.label"
+        components: ["gcnArena"]
+      - label: "tab.link.label"
+        components: ["editLink", "removeLink", "linkBrowser", "gcnLinkBrowser", "gcnFileUpload"]
+----
+
+This can e.g. be extended to add buttons _increase_ and _decrease_ (for the community fontsize plugin) like that:
+
+.conf/*.yml
+[source,shell]
+----
+aloha_settings:
+  toolbar:
+    tabs:
+      - label: "tab.format.label"
+        components: [["increase", "decrease"]]
+      - label: "tab.insert.label"
+        components: [["gcnArena"]]
+      - label: "tab.link.label"
+        components: ["editLink", "removeLink", "linkBrowser", "gcnLinkBrowser", "gcnFileUpload"]
+----
+
+Note that `+aloha_jqueryui_settings+` can also be used. However `+aloha_jqueryui_settings+` will always be global (for the whole CMS). `+aloha_settings+` is its equivalent and `+aloha_settings_node."<NODE_GLOBAL_ID>"+` can be used to specifiy settings for a specific Node.

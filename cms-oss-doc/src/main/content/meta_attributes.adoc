@@ -1,0 +1,403 @@
+---
+title: "List of meta attributes"
+description: "List of meta attributes that can be used in tagtypes and templates"
+---
+= List of meta attributes
+
+A comprehensive list of all meta attributes available in the CMS.
+
+NOTE: If you're looking for detailed description on how meta attributes are used
+head over to xref:using_meta_attributes.adoc[using meta attributes].
+
+[#baseobjects]
+== Baseobjects
+
+[#page]
+=== Page
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the actual page
+| url | address of the actual page
+| xref:meta_attributes.adoc#template[template] | template of the actual page
+| name | name of the actual page
+| filename | filename of the actual page
+| description | description of the actual page
+| priority | priority of the actual page
+| xref:meta_attributes.adoc#tag[tags] | tags of the actual page
+| publishtimestamp | UNIX timestamp of the last time a user clicked "publish"
+| publishdate | date of the last time a user clicked "publish"
+| creationtimestamp | UNIX timestamp of the creationdate (taken from customCdate, if set, or the cdate)
+| creationdate | date of the page creation (taken from customCdate, if set, or the cdate)
+| edittimestamp | UNIX timestamp of last page update (taken from customEdate, if set, or the edate)
+| editdate | date of last page update (taken from customEdate, if set, or the edate)
+| xref:meta_attributes.adoc#folder[folder] | reference to pages folder
+| xref:meta_attributes.adoc#user[creator] | reference to pages creator
+| xref:meta_attributes.adoc#user[editor] | reference to last editor of the page
+| xref:meta_attributes.adoc#user[publisher] | reference to the last publisher of the page
+| xref:meta_attributes.adoc#language[language] | reference to the language of the page
+| languageset.id | id of the pages languageset. A languageset is a collection that groups pages of the same contents but with different translations together. So an English version and a German version of a page have the same `+languageset.id+`
+| languageset.xref:meta_attributes.adoc#page[pages] | reference to other language layouts of the page
+| online | true, in case page is online, else false
+| ispage | returns true
+| versions | version history of the page (see 'version' attribute)
+| version | last version of the page
+| version.number | version (e.g. 3.0)
+| version.date | creationdate of the page
+| version.editor | editor of the version
+| version.major | true, if its major version
+| xref:using_meta_attributes.adoc#object[object] | object properties of the page
+| pagevariants | returns all page layouts (independent of the page status
+| ismaster | true, if its a master page, false if the page is a localized copy
+| inherited | true, if the page is inherited from a master node, false if not
+|===
+
+[#template]
+=== Template
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the template
+| name | name of the template
+| xref:meta_attributes.adoc#tag[tags] | list of all available tags of the template
+| ml | markup language of the template (e.g. php3, php4, etc.)
+|===
+
+[#folder]
+=== Folder
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the folder
+| name | name of the folder
+| description | description of the folder
+| xref:meta_attributes.adoc#node[node] | reference to the folders node
+| xref:meta_attributes.adoc#folder[parent] | reference to parent folder or NULL on top level
+| path | publish path of the folder
+| <<user,creator>> | the folders creator
+| <<user,editor>> | the last user who edited the folder
+| creationtimestamp | see <<file,file.createtimestamp>>
+| creationdate | see <<file,file.createdate>>
+| edittimestamp | see <<file,file.edittimestamp>>
+| editdate | see <<file,file.editdate>>
+| folders | list of all <<folder,subfolders>> or NULL
+| pages | list of <<page,pages>> in this folder or NULL
+| files | list of <<file,files>> of files in this folder or NULL
+| images | list of <<file,images>> in this folder or NULL
+| filesandimages | list of all <<file,files and images>> in this folder or NULL
+| children | list of all subfolders, images and files or NULL
+| isfolder | true
+| folders | list of all <<folder,subfolders>> or NULL
+| xref:meta_attributes.adoc#object[object] | prefix to access object properties of this folder
+| ismaster | true, if its a master folder, false if the folder is a localized copy
+| inherited | true, if the folder is inherited from a master node, false if not
+|===
+
+[#file]
+=== File
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of this file
+| name | filename
+| description | description of the file
+| size | size in bytes (int). same as `+sizeb+`
+| sizeb | size in bytes (int)
+| sizekb | size in kb (double)
+| sizemb | size in mb (double)
+| xref:meta_attributes.adoc#folder[folder] | reference to the files folder
+| extension | file extension (eg. "jpg")
+| <<user,creator>> | the user who created the file
+| <<user,editor>> | last user who edited the file
+| createtimestamp | UNIX timestamp of creation time
+| createdate | creation date
+| edittimestamp | UNIX timestamp of last edit
+| editdate | last editdate
+| type | MIME-type of the file
+| url | link to file
+| width* | image width (int)
+| height* | image height (int)
+| dpix* | horizontal dpi resolution (int)
+| dpiy* | vertical dpi resolution (int)
+| dpi* | dpi resolution (int)
+| fpx* | Focal Point position, relative to the width (float, between 0. and 1.)
+| fpy* | Focal Point position, relative to the height (float, between 0. and 1.)
+| isfile | `+true+`, in case its a file, `+false+` (e.g. file is an image). The system will check the MIME-type of the file. If it starts with "image" `+isfile+` will return `+false+`.
+| isimage | analog to `+isfile+` only for images. If the MIME-type of the file starts with "image" `+isimage+` will return `+true+`.
+| object | object properties of the file
+| ismaster | true, if its a master file, false if the file is a localized copy
+| inherited | true, if the file is inherited from a master node, false if not
+|===
+
+_* these properties are only available for images_
+
+[#node]
+=== Node
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the node
+| https | Whether https is enabled (true) for the node or not (false)
+| host | hostname of the node
+| <<folder,folder>> | the nodes root folder
+| path | path of the node (alias for _pub_dir_)
+| pub_dir | Publish directory for pages
+| pub_dir_bin | Publish directory for binary files and images
+| master | The master node of the current node, if it is a channel or null if the current node is not a channel
+| utf8 | True if utf8 encoding is enabled, false otherwise
+| alohaeditor | True if Aloha Editor is enabled for editing, false otherwise
+| <<language,languages>> | list of references of languages of the node
+|===
+
+[#tag]
+=== Tag
+
+[%header]
+|===
+| Property name | Description
+
+| TAGNAME | references to the tag
+| tag | references to the current tag
+| id | id of the tag
+| name | name of the tag
+| parts | list of parts of the tag
+| parts.PARTNAME | references a single part of a tag
+| empty | `+1+` in case the tag does not render any output, `+0+` otherwise
+| visible | `+1+` if the tag is active, else `+0+`
+| istag (since Gentics CMS 5.1.3) | will always return `+true+` for tags
+|===
+
+[#rendermode]
+=== Rendermode
+
+[%header]
+|===
+| Property name | Description
+
+| publish | `+true+` if the page is rendered during a publish process
+| live | `+true+` in case of using the Live Preview
+| edit | `+true+` in case of using the Edit Mode
+| preview | `+true+` in case of using the Preview Mode
+| real | `+true+` in case of using the Real Edit Mode
+| frontend | `+true+` when rendering in frontend mode. The return value is valid in edit mode only.
+| backend | `+true+` when rendering in backend mode. The return value is valid in edit mode only.
+|===
+
+[#childobjects]
+== Childobjects
+
+[#language]
+=== Language
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of current language
+| code | code of current language (e.g. "de")
+| name | name of current language (e.g. "Deutsch")
+|===
+
+[#pagetag-templatetag-parttype]
+=== Pagetag/Templatetag Parttype
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the pagetag
+| <<tag,tag>> | reference to the tag itself
+| container | page or template the tag is referencing to
+|===
+
+[#markuplanguage]
+=== Markuplanguage
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the markuplanguage
+| extension | fileextension for this markuplanguage
+| name | name of the markuplanguage
+| contenttype | MIME type of the content
+| feature | Optional feature, the markuplanguage is bound to
+| excludeFromPublishing | true if pages using templates with this markuplanguage are excluded from publishing
+|===
+
+[#user]
+=== User
+
+[%header]
+|===
+| Property name | Description
+
+| id | id number of the user
+| firstname | the users first name
+| lastname | the users last name
+| login | login name of the user
+| email | mail address of the user
+| active | true, in case user is active now
+| <<user,creator>> | creator of the user
+| creationdate | date of the creation of the user
+| creationtimestamp | timestamp (time in seconds since 1.1.1970) of the creation of the user
+| <<user,editor>> | editor of the user
+| editdate | date where the user was edited last time
+| edittimestamp | timestamp (time in seconds since 1.1.1970) where the user was edited last time
+| description | description of the user
+|===
+
+[#parttypes]
+== Parttypes
+
+[#overview-parttype]
+=== Overview Parttype
+
+[#handlebars-properties]
+==== Handlebars Properties
+
+Properties available when rendering an overview using Handlebars:
+
+[%header]
+|===
+| Property name | Description
+
+| items | Collection, viewable objects of the overview
+| listType | Type of objects listed in the overview. One of PAGE, FOLDER, IMAGE, FILE, UNDEFINED
+| selectType | Object selection type. One of FOLDER, AUTO, MANUAL, UNDEFINED
+| orderBy | Ordered attribute. One of CDATE, EDATE, FILESIZE, ALPHABETICALLY, PDATE, PRIORITY, SELF, UNDEFINED
+| orderDirection | Order direction. One of ASC, DESC, UNDEFINED
+| maxItems | Maximum number of listed items
+| recursive | True to select items recursively (when selectType is either FOLDER or AUTO)
+|===
+
+.Example: iterating an overview using Handlebars
+[source,shell]
+----
+{{#each cms.page.tags.iverviewtag.parts.overviewpart.items}}
+{{key}} {{value}}
+{{/each}}
+----
+
+[#lt-node-gt-template-properties]
+==== &lt;node&gt; Template Properties
+
+These placeholders are available in overview templates (when the overview part is rendered directly, without the use of Handlebars):
+
+[%header]
+|===
+| Property name | Description
+
+| &lt;node ds.nr&gt; | iteration counter
+| &lt;node ds.count&gt; | item count for this overview
+| &lt;node ds.container&gt; | container object of the overview (eg. a page)
+|===
+
+[#datasource-select-single-select-multiple-parttype]
+=== Datasource/Select (Single)/Select (Multiple) Parttype
+
+[#handlebars-properties-2]
+==== Handlebars Properties
+
+[%header]
+|===
+| Property name | Description
+
+| items | Collection of all entries in the database
+| selection | Collection of all selected entries in the database
+| nr | id of the entry
+| key | entry name
+| value | value of the entry
+| keys | name of the dataset in the database
+| values | values of the database
+| dsid | internal id of the element
+|===
+
+.Example: list items of a multiselect part
+[source,shell]
+----
+{{#each cms.tag.parts.multiselect.items}}
+{{key}} - {{value}}
+{{/each}}
+----
+
+[#lt-node-gt-template-properties-2]
+==== &lt;node&gt; Template Properties
+
+These placeholders are available in datasource templates (when the part is rendered directly, without the use of Handlebars).
+
+[%header]
+|===
+| Property name | Description
+
+| &lt;ds value&gt; | the selected value
+| &lt;ds name&gt; | name of the selected value
+| &lt;ds nr&gt; | id of the selected value
+| &lt;ds dsid&gt; | internal id of the element
+|===
+
+[#pageurl-fileurl-imageurl-folderurl-parttype]
+=== Pageurl/Fileurl/Imageurl/Folderurl Parttype
+
+[%header]
+|===
+| Property name | Description
+
+| id | id of the parttype
+| internal | `+true+` if an internal link, `+false+` otherwise. Only available for Pageurl Parttype.
+| target | reference to the target object
+| size | Get the formatted size (in KB or MB) of the target file. Only available for Fileurl or Imageurl Parttypes
+| url | url of the target, only available for internal links
+| node | node for which the target was selected, only available for internal links (may be empty)
+| nodeId | ID of the node for which the target was selected, may be 0 but never empty
+|===
+
+.Example: Output of the id of the url parttype
+[source,shell]
+----
+Node-Style: <node page.tags.tlink1.href.id>
+VTL-Style: $cms.page.tags.tlink1.href.id
+----
+
+[#checkbox-parttype]
+=== Checkbox Parttype
+
+[%header]
+|===
+| Property name | Description
+
+| checked | true, in case checkbox was checked, else false
+|===
+
+[#text-parttypes]
+=== Text Parttypes
+
+[%header]
+|===
+| Property name | Description
+
+| text | textual contents of the part
+|===
+
+[#node-parttype]
+=== Node Parttype
+
+In addition to the properties exposed by <<node,nodes>> in general the parttype can resolve the
+name of the node directly.
+
+[%header]
+|===
+| Property name | Description
+
+| name | The name of the node
+|===

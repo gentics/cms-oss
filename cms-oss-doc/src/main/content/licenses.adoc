@@ -1,0 +1,9 @@
+---
+title: "Third party licenses"
+description: "List of used licenses"
+---
+= Third party licenses
+
+Third party licenses used in the CMS.
+
+* link:files/licenses/TwelveMonkeys-ImageIO.txt[TwelveMonkeys ImageIO]

@@ -1,0 +1,437 @@
+---
+title: "Aloha Page Link Tag Description"
+description: "How the Aloha Editor Page Link Tag should look like"
+---
+= Aloha Page Link Tag Description
+
+A special tag-type may be defined, which will be used by Aloha to create internal link tags.
+
+[#default-implementation-of-the-aloha-editor-page-link-tag]
+== Default implementation of the Aloha Editor Page Link Tag
+
+The tag-type must have the keyword "gtxalohapagelink". Also, the internal definition must be equivalent to the one found in the screen-shot below - in particular, the part-keywords "url", "fileurl", "anchor", "text" and "class" must be identical.
+
+image:images/gcn_dialogs/aloha_pagelink.png[]
+
+Contents of the part "Handlebars":
+
+[source,linenums]
+----
+{{#gtx_alohalink cms.tag cms.rendermode ~}}
+<a{{{title}}}{{{target}}}{{{class}}}{{{data}}} href="{{{href}}}">{{cms.tag.parts.text.text}}</a>
+{{~/gtx_alohalink}}
+----
+
+The default implementation of the used `+gtx_alohalink+` helper is as follows:
+
+[source,linenums]
+----
+function gtx_alohalink(tag, renderMode, options) {
+    let ctx = {};
+    let parts = tag.parts;
+
+    if (parts.target.text) {
+        ctx['target'] = ' target="' + parts.target.text + '"';
+
+        if (parts.target.text.trim() === '_blank') {
+            ctx['target'] += ' rel="noopener noreferrer"';
+        }
+    } else {
+        if (parts.url.isinternal) {
+            ctx['target'] = ' target="_self"';
+        } else {
+            ctx['target'] = ' target="_blank" rel="noopener noreferrer"'
+        }
+
+    }
+
+    // Determine title.
+    if (parts.title.text) {
+        ctx['title'] = ' title="' + encodeURIComponent(parts.title.text) + '"';
+    }
+
+    if (parts.class.text) {
+        ctx['class'] = ' class="' + parts.class.text + '"';
+    }
+
+    let url = parts.url;
+    let href = '';
+
+    if (url.target && url.target.id) {
+        ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.Page" data-gentics-aloha-object-id="10007.' + url.target.id + '" data-gentics-aloha-object-online="' + url.target.online + '"';
+        href = url.target.url;
+    } else {
+        if (!/^https?:\/\/$/.test(url.externalurl)) {
+            ctx['data'] = ' data-gentics-gcn-url="' + encodeURIComponent(url.externalurl) + '"';
+            href = url.externalurl;
+        }
+    }
+
+    // If href is not set here, there is no page URL set, so check for a file URL.
+    if (!href && parts.fileurl.target && parts.fileurl.target.id) {
+        ctx['data'] = ' data-gentics-aloha-repository="com.gentics.aloha.GCN.File" data-gentics-aloha-object-id="' + parts.fileurl.target.ttype + '.' + parts.fileurl.target.id + '"';
+        href = parts.fileurl.target.url;
+        ctx['target']  = ' target="_blank"';
+    }
+
+    if (!href) {
+        ctx['data'] = ' data-gentics-gcn-url="#"';
+        href = '#';
+    }
+
+    if (href.startsWith('<plink') && renderMode.edit) {
+        href = '#';
+    }
+
+    if (parts.anchor.text) {
+        if (href.endsWith('#')) {
+            href += parts.anchor.text;
+        } else {
+            href += '#' + parts.anchor.text;
+        }
+
+        if (!renderMode.publish) {
+            ctx['data'] += ' data-gentics-gcn-anchor="' + parts.anchor.text + '"';
+        }
+    }
+
+    if (href.startsWith('#')) {
+        ctx['target'] = ' ';
+    }
+
+    ctx['href'] = href.trim();
+
+    return options.fn(ctx);
+}
+----
+
+This tag-type must be linked to each node (root-folder) that has Aloha enabled.
+
+A user can then create an internal link by inserting a link with the Aloha floating menu, and by beginning to type the name of the page/file he wants to link to. A number of suggestions will be displayed that match the typed text. Selecting one of the suggestions with the cursors-keys and confirming the selection with the enter-key will create the link tag once the page is saved.
+
+[#customizing-the-aloha-editor-page-link-tag]
+=== Customizing the Aloha Editor Page Link Tag
+
+Changing the "Handlebars" part of the default implementation requires no additional actions, but to customize the fields provided by the `+gtx_alohalink+` helper a new helper implementation must be placed in a package along with the `+gtxalohapagelink+` tagtype. The reason that a package is required, is because custom Handlebars helpers are always prefixed with the respective package name (see the https://www.gentics.com/Content.Node/guides/handlebars.html#custom-helpers[Custom Helpers] section in the Handlebars guide).
+
+For example the helper in the package "custom_package":
+
+./cms/packages/custom_package/handlebars/helpers/gtx_alohalink.js
+[source,shell]
+----
+function gtx_alohalink(link, options) {
+    let ctx = { /* Set properties in context JSON */ };
+
+    return options.fn(ctx);
+}
+----
+
+can be used in a "Handlebars" part as follows:
+
+[source,shell]
+----
+{{#custom_package.gtx_alohalink cms.tag ~}}
+<!-- Render link with the context provided by the helper -->
+{{~/custom_package.gtx_alohalink}}
+----
+
+[#aloha-link-anchors]
+== Aloha Link Anchors
+
+If the link implementation contains an anchor part, an additional button and text field will be added to the Aloha UI to edit link anchors. This will also enable users to set anchors for internal links.
+
+WARNING: Do not overwrite the http://www.alohaeditor.org/guides/plugin_link.html#configuration[anchorLinks setting] in the Aloha Editor configuration. This setting will be enabled automatically if the anchor part is found, so you should leave it unconfigured.
+
+[#aloha-page-link-language-set]
+== Aloha Page Link Language set
+
+_Starting from CMS 6.3, the language support in Aloha Page links is already built-in and needs no additional changes. As this change cannot be applied to the older CMS installations, below are the instructions for those to achieve this functionality._
+
+A special part-type may be defined, which will be used by Aloha to add language to link tags.
+
+NOTE: For external links the user can choose the language in the link sidebar menu. For internal links, the language of the page will be used instead.
+
+[#aloha-editor-link-part-type-language]
+=== Aloha Editor Link Part-type language
+
+A part-type name 'Language' must be created. The following image shows the settings for this part-type:
+
+image:images/gcn_dialogs/aloha_part_type_language.png[]
+
+[#aloha-editor-link-template]
+=== Aloha Editor Link Template
+
+The part 'Template' of the link tag must be updated with the following changes:
+
+[source,linenums,highlight="24;25;26;27;30;64"]
+----
+#set($parts = $cms.tag.parts)#*
+##
+*##if("$!parts.target" == "")#*
+    *##if("$!parts.url" != "")#*
+        *##if("$parts.url.isinternal" == "1")#*
+            *##set($target = " target='_self'")#*
+        *##else#*
+            *##set($target = " target='_blank' rel='noopener noreferrer'")#*
+        *##end#*
+    *##end#*
+*##else#*
+    *##set($target = " target='$parts.target'")#*
+    *##if("$!parts.target" == "_blank")#*
+      *##set($target = "$target rel='noopener noreferrer'")#*
+    *##end#
+*##end#*
+##
+*##if("$!parts.title" != "")#*
+    *##set($escapedTitle = $cms.imps.velocitytools.esc.xml($parts.title))#*
+    *##set($title = " title='$escapedTitle'")#*
+*##end#*
+##
+*##if("$!parts.class" != "")#*
+    *##set($class = " class='$parts.get('class')'")#*
+*##end#*
+##
+*##if("$!parts.language" != "")#*
+    *##set($language = " hreflang='$parts.language'")#*
+*##end#*
+##
+*##if("$!parts.url" != "")#*
+    *##if("$!parts.url.target.id" != "")#*
+        *##set($language = " hreflang='$parts.url.target.language.code'")#*
+        *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.$parts.url.target.id' data-gentics-aloha-object-online='$parts.url.target.online'")#*
+    *##else#*
+        *##set($data = " data-gentics-gcn-url='$cms.imps.velocitytools.esc.xml($parts.url)'")#*
+    *##end#*
+    *##set($href = $parts.url)#*
+*##elseif("$!parts.fileurl.target.id" != "")#*
+    *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='${parts.fileurl.target.ttype}.${parts.fileurl.target.id}'")#*
+    *##set($href = $parts.fileurl)#*
+    *##set($target = " target='_blank'")#*
+*##end#*
+*##if("$!href" == "")#*
+    *##set($data = " data-gentics-gcn-url='#'")#*
+    *##set($href = "#")#*
+*##end#*
+*##if(!$href.toString().startsWith("<plink"))#*
+    *##set($href = $cms.imps.velocitytools.esc.xml("$href"))#*
+*##elseif($cms.rendermode.edit)#*
+    *##set($href = "")#*
+*##end#*
+*##set($anchor = "$!parts.anchor")#*
+*##if($anchor != "")#*
+    *##if($href.endsWith("#"))#*
+        *##set($href = "$href$anchor")#*
+    *##else#*
+        *##set($href= "$href#$anchor")#*
+    *##end#*
+*##end#*
+*##if(!$cms.rendermode.publish)#*
+    *##set($data = "$!data data-gentics-gcn-anchor='$anchor'")#*
+*##end#*
+*##if($href.toString().startsWith("#"))#*
+    *##set($target = " ")#*
+*##end#*
+*#<a$!title$!target$!class$!language$!data href="$!href.toString().trim()">$!parts.text</a>##
+----
+
+If the part-type language is set, we fill the 'hreflang' attribute with the value of the Language Part-type.
+Add the following lines at line 24:
+
+[source,shell]
+----
+#if("$!parts.language" != "")#*
+    *##set($language = " hreflang='$parts.language'")#*
+*##end##
+##
+----
+
+If the link references to an internal page, get the language of the referenced page.
+Add the following line at line 30 (including the changes above):
+
+[source,shell]
+----
+#set($language = " hreflang='$parts.url.target.language.code'")##
+----
+
+Set the hreflang into the link.  Change line 64 (including the changes above) to:
+
+[source,shell]
+----
+<a$!title$!target$!class$!language$!data href="$!href.toString().trim()">$!cms.tag.parts.text</a>##
+----
+
+[#cross-channel-links]
+== Cross Channel Links
+
+By default, when setting links in a multichannelling environment, the links will always stick to the channel of the source page.
+
+Starting with Gentics CMS 5.23.5 it is possible to change the implementation of the Aloha Page Link Tagtype so that links will
+always be directed into the channel from where the target object was selected.
+
+NOTE: When the implementation is changed like described below, links will *always* be directed into the exact channel from which
+the target object was selected. Even if the page containing the link is rendered in an inherited channel. When for example
+creating a link in a master page to another page in the master and rendering the page in a channel, the link will still
+be directed to the *master* node and not to the channel.
+
+[#variant-with-additional-part]
+=== Variant with additional part
+
+[#part]
+==== Part
+
+The Tagtype must contain an extra part of type *Node* with Identification *channel*, the part must be *editable* and *hidden*.
+
+[#template]
+==== Template
+
+Template with modifications to the original template highlighted:
+
+[source,linenums,highlight="3;56;62"]
+----
+#set($parts = $cms.tag.parts)##
+##
+#gtx_channel($parts.channel)##
+#if("$!parts.target" == "")#*
+    *##if("$!parts.url" != "")#*
+        *##if("$parts.url.isinternal" == "1")#*
+            *##set($target = " target='_self'")#*
+        *##else#*
+            *##set($target = " target='_blank' rel='noopener noreferrer'")#*
+        *##end#*
+    *##end#*
+*##else#*
+    *##set($target = " target='$parts.target'")#*
+    *##if("$!parts.target" == "_blank")#*
+      *##set($target = "$target rel='noopener noreferrer'")#*
+    *##end#*
+*##end#*
+##
+*##if("$!parts.title" != "")#*
+    *##set($escapedTitle = $cms.imps.velocitytools.esc.xml($parts.title))#*
+    *##set($title = " title='$escapedTitle'")#*
+*##end#*
+##
+*##if("$!parts.class" != "")#*
+    *##set($class = " class='$parts.get('class')'")#*
+*##end#*
+##
+*##if("$!parts.url" != "")#*
+    *##if("$!parts.url.target.id" != "")#*
+        *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.$parts.url.target.id' data-gentics-aloha-object-online='$parts.url.target.online'")#*
+    *##else#*
+        *##set($data = " data-gentics-gcn-url='$cms.imps.velocitytools.esc.xml($parts.url)'")#*
+    *##end#*
+    *##set($href = $parts.url)#*
+*##elseif("$!parts.fileurl.target.id" != "")#*
+    *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='${parts.fileurl.target.ttype}.${parts.fileurl.target.id}'")#*
+    *##set($href = $parts.fileurl)#*
+    *##set($target = " target='_blank'")#*
+*##end#*
+*##if("$!href" == "")#*
+    *##set($data = " data-gentics-gcn-url='#'")#*
+    *##set($href = "#")#*
+*##end#*
+*##if(!$href.toString().startsWith("<plink"))#*
+    *##set($href = $cms.imps.velocitytools.esc.xml("$href"))#*
+*##elseif($cms.rendermode.edit)#*
+    *##set($href = "")#*
+*##end#*
+*##set($anchor = "$!parts.anchor")#*
+*##if($anchor != "")#*
+    *##if($href.endsWith("#"))#*
+        *##set($href = "$href$anchor")#*
+    *##else#*
+        *##set($href= "$href#$anchor")#*
+    *##end#*
+*##end#*
+*##if(!$cms.rendermode.publish)#*
+    *##set($data = "$!data data-gentics-gcn-anchor='$anchor'")#*
+    *##set($data = "$!data data-gcn-channelid='$!parts.channel'")#*
+*##end#*
+*##if($href.toString().startsWith("#"))#*
+    *##set($target = " ")#*
+*##end#*
+*#<a$!title$!target$!class$!data href="$!href.toString().trim()">$!parts.text</a>#*
+*##end## END gtx_channel
+----
+
+[#variant-with-internally-stored-node-since-gentics-cms-5-25-0]
+=== Variant with internally stored node (since Gentics CMS 5.25.0)
+
+Since Gentics CMS 5.25.0, the `+URL+` parts will also internally store the node, from which the target object was selected.
+In order to maintain and use this data in the Aloha Editor Page Link Tag, the template needs to be modified like this:
+
+[source,linenums,highlight="3;4;5;6;7;8;9;62;68"]
+----
+#set($parts = $cms.tag.parts)##
+##
+#set($channel = 0)##
+#if("$!parts.url" != "" && "$parts.url.isinternal" == "1")#*
+    *##set($channel = $!parts.url.nodeId)#*
+*##elseif("$!parts.fileurl" != "")#*
+    *##set($channel = $!parts.fileurl.nodeId)#*
+*##end##
+#gtx_channel($channel)##
+#if("$!parts.target" == "")#*
+    *##if("$!parts.url" != "")#*
+        *##if("$parts.url.isinternal" == "1")#*
+            *##set($target = " target='_self'")#*
+        *##else#*
+            *##set($target = " target='_blank' rel='noopener noreferrer'")#*
+        *##end#*
+    *##end#*
+*##else#*
+    *##set($target = " target='$parts.target'")#*
+    *##if("$!parts.target" == "_blank")#*
+      *##set($target = "$target rel='noopener noreferrer'")#*
+    *##end#*
+*##end#*
+##
+*##if("$!parts.title" != "")#*
+    *##set($escapedTitle = $cms.imps.velocitytools.esc.xml($parts.title))#*
+    *##set($title = " title='$escapedTitle'")#*
+*##end#*
+##
+*##if("$!parts.class" != "")#*
+    *##set($class = " class='$parts.get('class')'")#*
+*##end#*
+##
+*##if("$!parts.url" != "")#*
+    *##if("$!parts.url.target.id" != "")#*
+        *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='10007.$parts.url.target.id' data-gentics-aloha-object-online='$parts.url.target.online'")#*
+    *##else#*
+        *##set($data = " data-gentics-gcn-url='$cms.imps.velocitytools.esc.xml($parts.url)'")#*
+    *##end#*
+    *##set($href = $parts.url)#*
+*##elseif("$!parts.fileurl.target.id" != "")#*
+    *##set($data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='${parts.fileurl.target.ttype}.${parts.fileurl.target.id}'")#*
+    *##set($href = $parts.fileurl)#*
+    *##set($target = " target='_blank'")#*
+*##end#*
+*##if("$!href" == "")#*
+    *##set($data = " data-gentics-gcn-url='#'")#*
+    *##set($href = "#")#*
+*##end#*
+*##if(!$href.toString().startsWith("<plink"))#*
+    *##set($href = $cms.imps.velocitytools.esc.xml("$href"))#*
+*##elseif($cms.rendermode.edit)#*
+    *##set($href = "")#*
+*##end#*
+*##set($anchor = "$!parts.anchor")#*
+*##if($anchor != "")#*
+    *##if($href.endsWith("#"))#*
+        *##set($href = "$href$anchor")#*
+    *##else#*
+        *##set($href= "$href#$anchor")#*
+    *##end#*
+*##end#*
+*##if(!$cms.rendermode.publish)#*
+    *##set($data = "$!data data-gentics-gcn-anchor='$anchor'")#*
+    *##set($data = "$!data data-gcn-channelid='$!parts.channel'")#*
+*##end#*
+*##if($href.toString().startsWith("#"))#*
+    *##set($target = " ")#*
+*##end#*
+*#<a$!title$!target$!class$!data href="$!href.toString().trim()">$!parts.text</a>#*
+*##end## END gtx_channel
+----

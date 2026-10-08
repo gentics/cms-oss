@@ -1,0 +1,91 @@
+---
+title: "Devtools synchronization details"
+description: "Details of the synchronization mechanism"
+---
+= Devtools synchronization details
+
+This guide explains how objects are synchronized between the CMS and the filesystem with the help of the Devtools feature.
+
+[#adding-objects-to-packages]
+== Adding objects to packages
+
+Objects, that are added to a package will immediately be written to the filesystem (regardless of whether automatic synchronization is enabled or not).
+
+[#automatic-synchronization]
+== Automatic synchronization
+
+Initially, after the CMS is started, the automatic synchronization is disabled.
+This means that changes of objects in the CMS will not be reflected in the filesystem and changes in the filesystem will not be reflected in the CMS.
+
+The automatic synchonization can be enabled in the UI by checking the checkbox `+Automatic synchronization+` in the packages list.
+
+Automatic synchronization is enabled for the current user, which means that when the automatic synchronization mechanism changes objects in the CMS, this will
+be done on behalf that user (regarding edit locks, permissions and log entries). Automatic synchronization is always enabled/disabled for _all_ packages.
+
+The following table shows the relationship between _initiating actions_, _triggered actions_ and _automatic synchronization_:
+
+[%header]
+|===
+| _Initiating action_ | _Triggered action_ | _Depends on autosync_
+
+h| Create package in CMS | Create package directory in fs | No
+h| Delete package in CMS | Delete package directory structure in fs | No
+h| Add object to package | Write object to fs | No
+h| Remove object from package | Delete object directory in fs | No
+h| Change object¹ in CMS | Write object to fs | Yes
+h| Delete object¹ in CMS | Delete object directory in fs | Yes
+h| Update file in fs | Modify object in the CMS | Yes
+h| Create (consistent) file structure for object | Modify/create object in the CMS | Yes
+h| Remove object files/directory in fs | No triggered action | No
+h| Remove package directory structure in fs | No triggered action | No
+|===
+
+NOTE: Initiating actions marked with ¹ only trigger actions, if the object acted upon is already part of a main package
+(but not, if the object is only part of a sub package).
+
+[#objects-in-multiple-packages]
+== Objects in multiple packages
+
+It is possible to add the same object to multiple packages. When automatic synchronization is enabled and the object is changed in the CMS, the object will
+be synchronized with _all_ packages it is part of.
+
+[#trigger-chain-reactions]
+== Trigger chain reactions
+
+With the automatic synchronization enabled, some actions might trigger other actions which then become the "initiating" actions and trigger other actions themselves.
+
+Examples:
+
+* An object is changed in one package, automatically synchronized into the CMS and then automatically synchronized to other packages.
+* The `+gentics_structure.json+` file of a datasource is changed to contain a new entry (without specification of a global ID). The datasource is automatically synchronized into the CMS,
+which will create a global ID for the new entry. Then the datasource is automatically synchronized back into the filesystem, which will change the `+gentics_structure.json+` file to contain
+the global ID.
+
+[#manual-synchronization]
+== Manual synchronization
+
+Besides the automatic synchronization it is also possible to synchronize a single package manually either from the filesystem into the CMS or the other direction.
+
+[#exceptions-from-synchronization]
+== Exceptions from synchronization
+
+Some objects have attributes, which are partially or completely excepted from synchronization.
+
+[%header]
+|===
+| _Attribute_ | _Description_
+
+| contentrepository.username | The _username_ of a contentrepository will not be synchronized, unless it is set via a property (e.g. `+${env:CR_USERNAME}+`).
+| contentrepository.password | The _password_ will never be synchronized, but the _passwordProperty_ will be synchronized.
+| contentrepository.url | The _url_ of a contentreporitory will not be synchronized, unless it is set via a property (e.g. `+${env:CR_URL}+`).
+|===
+
+[#referenced-objects]
+== Referenced objects
+
+References to other objects (e.g. default value for a "URL (image)" tagpart) will be stored as the global ID of the referenced objects. When syncing from the filesystem to the CMS the references will work immediatelly if the object already exists in the CMS. Otherwise the reference will be set as soon as the target object becomes available via https://www.gentics.com/Content.Node/cmp8/guides/feature_content_staging.html[Content Staging].
+
+[#object-property-node-restriction]
+== Object property node restriction
+
+The nodes to which an object property is restricted are also synchronized via the nodes global IDs. When syncing an object property from the filesystem to the CMS, it will be restricted to the same nodes (if they exist in the target system). If the package containing a restricted object property is assigned to a node, the object property will also be restricted to that node.

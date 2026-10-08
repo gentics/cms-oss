@@ -1,0 +1,307 @@
+---
+title: "Gentics CMS GenticsImageStore"
+description: "Learn how to use the GenticsImageStore"
+---
+= Gentics CMS GenticsImageStore
+
+The GenticsImageStore is a feature that can be used to embed resized images in pages and overviews.
+
+TIP: JPEG CMYK images are supported by the GenticsImageStore. However, because a generic CMYK color profile is used, the image colors
+might change slightly after the image was manipulated.
+
+[#usage]
+== Usage
+
+[source,shell]
+----
+/GenticsImageStore/[width]/[height]/[mode]/[imageurl]
+----
+
+Example:
+
+[source,shell]
+----
+<img src="/GenticsImageStore/<node width>/auto/prop/<node bild>">
+----
+
+[#resize-modes]
+=== Resize modes
+
+[source,shell]
+----
+/GenticsImageStore/[width]/[height]/[mode]/[imageurl]
+----
+
+[%header]
+|===
+| Parameter | Description
+
+| width | Image width
+| height | Image height
+| mode | Resizing Mode
+| imageurl | Image url
+|===
+
+The following modes are available:
+
+* __prop__ used for proportional resizing. The aspect ratio of the image will be preserved. When target width and height do not match the original image proportions, the lower value (height, width) will be used for resizing.
+* __force__ used for forced resizing. The aspect ratio of the original image will not be preserved when this mode is used. If the original aspect ratio of the image is different than the resized aspect ratio, the image will be distorted.
+* __smart__ used for automatic resizing and cropping of images.
+
+[#crop-and-resize-mode]
+=== Crop and resize mode
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+Additionally the special 'cropandresize' mode can be used to crop images.
+
+[source,shell]
+----
+/GenticsImageStore/[width]/[height]/cropandresize/[mode]/[topleft_x]/[topleft_y]/[cropwidth]/[cropheight]/[imageurl]
+----
+
+Parameter:
+
+[%header]
+|===
+| Name | Description
+
+| width | Image width
+| height | Image height
+| mode | Resizing Mode (see prop,force,smart)
+| topleft_x | Start X coordinate of the image area (from the top left corner)
+| topleft_y | Start Y coordinate of the image area (from the top left corner)
+| cropwidth | Image area width
+| cropheight | Image area height
+| imageurl | Imageurl
+|===
+
+[#degree-of-compression]
+=== Degree of compression
+
+The compression value for JPEG is a value from 0.0 (max compression) to 1.0 (min compression). By default this value is set to 0.9
+and can be configured inside your node.conf like following:
+
+.conf/*.yml
+[source,shell]
+----
+image_resizer_jpeg_quality: "1.0"
+----
+
+[#gentics-cms]
+== Gentics CMS
+
+[#handlebars-helper]
+=== Handlebars Helper
+
+See xref:handlebars.adoc#gtx_gis[gtx_gis Helper] for details of how to include a resized image into a handlebars tag.
+
+[#publishing]
+=== Publishing
+
+Resized images will be written to the file system when the GenticsImageStore was used within the project. The usage will be determined by examining the final page content. All GenticsImageStore URLs will be processed.
+The GenticsImageStore will invoke the resizing of a page when the GenticsImageStore finds a resize call within a published page. The resized image will be written to a folder called __GenticsImageStore__ within the pub directory of that particular node.
+Please note that this directory has to be synced with the target webserver as well.
+
+[#restricting-parallel-resize-requests]
+=== Restricting parallel resize requests
+
+Requests to the CMS for resizing images might consume large amounts of memory. If too many requests are handled at the same time, this might even cause OutOfMemory situations.
+Therefore, the maximum number of actual resize operations is per default limited to 10.
+
+This can be configured in the CMS configuration files:
+
+.conf/*.yml
+[source,javascript]
+----
+gis_requests: 5
+----
+
+NOTE: When this setting is changed, the CMS must be restarted.
+
+[#servlet-parameters]
+== Servlet Parameters
+
+The GenticsImageStore can be used within Portal implementations. The configuration is performed using the following servlet parameters.
+
+[#cachekeyqueryparameters]
+=== cacheKeyQueryParameters
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+This parameter can be used to modify the internally used cache key for cached images. It is possible to specify certain get parameters. These parameters will then be used (if available) to enhance the cache.key. Normally all other query parameters will not be used for generating the cache key.
+The parameters can be specified in a comma-separated list. This parameter is useful when the images will be retrieved using a servlet that uses query parameters to identify the image that should be loaded.
+
+Example:
+
+[source,javascript]
+----
+	<init-param>
+			<param-name>cacheKeyQueryParameters</param-name>
+			<param-value>contentid,type,mycustomparam</param-value>
+	</init-param>
+----
+
+[#portalbasepath]
+=== portalBasePath
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+The portal base path is used to identify the image url within a GenticsImageStore url. The default value is "/Portal.Node".
+The used prefix can be adapted using this parameter. This is useful of images will not be delivered by Portal.Node.
+
+[source,javascript]
+----
+	<init-param>
+			<param-name>portalBasePath</param-name>
+			<param-value>/MyWebapp</param-value>
+	</init-param>
+----
+
+[#portalbasepathregex]
+=== portalBasePathRegEx
+
+NOTE: Available after Gentics Portal.Node Update Update 11779 2011-11-29
+
+This parameter has the same functionality as the portalBasePath. It is possible to configure multiple basepaths by using a regular expression. When set, this parameter has priority over portalBasePath.
+
+[source,javascript]
+----
+	<init-param>
+		<param-name>portalBasePathRegEx</param-name>
+		<param-value>(\/Portal\.Node.*)|(\/GCN5_Portal.*)</param-value>
+	</init-param>
+----
+
+[#urlprefix]
+=== urlPrefix
+
+By default the image will be loaded from the host that received the initial GenticsImageStore request.
+The __urlPrefix__ setting can be used when the image should be loaded from a different host.
+
+[source,javascript]
+----
+	<init-param>
+		<param-name>urlPrefix</param-name>
+		<param-value>http://localhost:8080/</param-value>
+	</init-param>
+----
+
+[#urimapper]
+=== uriMapper
+
+An addition to the uriPrefix is the uriMapper parameter. This parameter allows specifying a custom implementation that is able to modify the image uri.
+It is therefore possible to customize the uri according to set uri parameters or hostnames.
+
+To achieve this, one has to implement the interface __com.gentics.api.imagestore.ImageUriMapper__. The name of the implemented class has to be set as value for the "uriMapper" parameter. Please note that the full package name has to be specified.
+The implemented class must be able to be loaded by the Servlet ClassLoader.
+
+Interface:
+
+[source,javascript]
+----
+public interface ImageUriMapper {
+
+	/**
+	 * Maps a request for an image to an URI where the image can be fetched from.
+	 *
+	 * This method should have no side effects and should always return the same URI
+	 * for the given imageUri and the parameters in the given servletRequest.
+	 *
+	 * Further, this method should be idempotent such that passing back the returned URI
+	 * to this method again returns the given URI unchanged.
+	 *
+	 * @param servletRequest
+	 * 		  The request that fetches the image.
+	 * @param imageUri
+	 * 		  The URI of the image to fetch.
+	 * @return
+	 * 		  May either return the given URI unchanged, or an alternate URI
+	 * 		  where the image will be fetched from instead.
+	 */
+
+
+	URI mapImageUri(HttpServletRequest servletRequest, URI imageUri);
+
+}
+----
+
+[source,javascript]
+----
+	<init-param>
+		<param-name>uriMapper</param-name>
+		<param-value>com.example.ImageUriMapperImpl</param-value>
+	</init-param>
+----
+
+[#request-decorators]
+=== Request Decorators
+
+This parameter allows a custom implementation to be specified that will intercept requests to the GenticsImageStore and modify them as desired.
+
+For this to be done, an implementation of the interface __com.gentics.api.imagestore.RequestDecorator__ has to be specified in the configuration. The name of the implemented class (including the full package name) has to be set as value for the "requestDecorator" parameter. As with the uriMapper, the implemented class must be able to be loaded by the Servlet ClassLoader.
+
+Interface:
+
+[source,javascript]
+----
+public interface RequestDecorator {
+
+	/**
+	 * Provides the ability to alter parameters of requests sent to the GenticsImageStore
+	 *
+	 * @param gisRequest
+	 * 		  The GenticsImageStoreRequest Bean containing request information
+	 * @param request
+	 * 		  The HttpServletRequest object containing request information
+	 */
+	void decorateRequest(GenticsImageStoreRequest gisRequest, HttpServletRequest request);
+
+}
+----
+
+[source,javascript]
+----
+	<init-param>
+		<param-name>requestDecorator</param-name>
+		<param-value>com.example.RequestDecoratorImpl</param-value>
+	</init-param>
+----
+
+For use in Gentics CMS, the RequestDecorator class must be configured in the node.conf with the setting gis_request_decorator, for example:
+
+.conf/*.yml
+[source,javascript]
+----
+gis_request_decorator: "com.example.RequestDecoratorImpl"
+----
+
+[#loadtimeout]
+=== loadTimeout
+
+NOTE: Available since https://gentics.com/Portal.Node/changelog/4.8.0/4.8.7.html[Gentics Portal.Node 4.8.7]
+
+This parameter defines the timeout used for loading the original image for resizing in milliseconds. The default is 60000 ms (= 1 minute).
+
+[source,javascript]
+----
+	<init-param>
+		<param-name>loadTimeout</param-name>
+		<param-value>5000</param-value>
+	</init-param>
+----
+
+[#caching]
+== Caching
+
+The GenticsImageStore uses the JCS Cache which can be configured using the __cache.ccf__ file.
+
+Example Cache Region Configuration:
+
+.cache.ccf
+[source,javascript]
+----
+jcs.region.gentics-content-imagestorecache=DC
+jcs.region.gentics-content-imagestorecache.cacheattributes.MaxObjects=0
+jcs.region.gentics-content-imagestorecache.elementattributes.MaxLifeSeconds=86400
+----

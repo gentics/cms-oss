@@ -1,0 +1,54 @@
+---
+title: "Usersnap Integration"
+---
+= Usersnap Integration
+
+This feature enables the https://usersnap.com/[Usersnap] integration.
+
+Usersnap is a visual feedback tool that allows collecting user feedback, browser screenshots and visual bug reports complete with additional browser information in the Usersnap dashboard or your existing bug tracking and project management tools.
+While you can integrate the Usersnap feedback widget in your public-facing website, this feature integrates Usersnap with the editor and administrator interfaces of Gentics CMS.
+
+image:{width:696px}images/gcmsui/feature-usersnap-integration-genticscms.png[Usersnap integration into Gentics CMS]
+
+NOTE: Please not that Usersnap does not support all browsers that are supported by Gentics CMS.
+Consult the https://help.usersnap.com/docs/track-general-topics#section-what-browsers-are-supported-by-usersnap[Usersnap documentation] for details.
+
+[#configuration]
+== Configuration
+
+The feature has to be activated generally in the configuration
+
+.conf/features.yml
+[source,shell]
+----
+feature:
+	usersnap: true
+----
+
+and the Usersnap key has to be configured:
+
+.conf/*.yml
+[source,shell]
+----
+usersnap:
+  key: "YOUR-API-KEY"
+----
+
+[#possible-use-cases]
+== Possible Use Cases
+
+*Get feedback and bug reports from your content managers on your web projects backend implementation*
+You can use Usersnap not only to collect feedback from users of your web project, but also to collect feedback from your content managers who create and manage the content of that web project.
+By configuring your Usersnap account in Gentics CMS, all feedback and error reports on the CMS backend implementation of the project can be collected and processed efficiently.
+
+*Provide visual feedback and bug reports to Gentics Support*
+Users of Gentics CMS traditionally can send feedback and bug reports via email and our https://jira.gentics.com/servicedesk[Jira Servicedesk] .
+The Usersnap integration can be configured in a way to forward any feedback and bug reports of the standard Gentics CMS user interfaces to the Gentics Support Jira Servicedesk.
+If you want Usersnap to be integrated with the Gentics Support Jira Servicedesk, please contact your account manager.
+
+[#data-protection]
+== Data Protection
+
+Before enabling this feature, please take notice:
+Depending on where your business is located, you might be required by law to extend your privacy policy to inform users that by using this feature, data is shared with third parties.
+Please consult the https://usersnap.com/gdpr-data-protection[Usersnap documentation] for further information.

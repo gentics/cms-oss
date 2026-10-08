@@ -1,0 +1,442 @@
+---
+title: "Configuration of the CMS"
+description: "How to set configuration values"
+---
+= Configuration of the CMS
+
+Basically, the CMS can be configured in the following ways:
+
+* Environment variables
+* System properties
+* Configuration files in YAML format
+* Configuration files in JSON format (for the UI)
+
+[#backend-configuration-files]
+== Backend configuration files
+
+Depending on the environment variables <<conf_path,CONF_PATH>> and <<conf_files,CONF_FILES>>, the CMS will read the specified configuration files.
+`+CONF_FILES+` must be set to a comma separated list of directories and/or files, relative to the path configured via `+CONF_PATH+` (which defaults to `+conf+` relative to the home directory of the CMS).
+
+Example configuration (with the CMS home directory being `+/cms+`):
+
+[source,shell]
+----
+export CONF_PATH=conf
+export CONF_FILES=basic.yml,features,custom/overrides.yml
+----
+
+With the following files:
+
+[source,shell]
+----
+/cms/conf/basic.yml
+/cms/conf/custom/overrides.yml
+/cms/conf/features/devtools.yml
+/cms/conf/features/gis.yml
+/cms/conf/features/other.yml
+----
+
+The CMS will read the following configuration files (in the given order):
+
+. `+/cms/conf/basic.yml+`
+. `+/cms/conf/features/devtools.yml+`
+. `+/cms/conf/features/gis.yml+`
+. `+/cms/conf/features/other.yml+`
+. `+/cms/conf/custom/overrides.yml+`
+
+NOTE: With the default value of `+CONF_FILES+` (which is empty), the CMS will not read any configuration files (a warning will be logged in that case).
+
+NOTE: Configuration settings from "later" files will overwrite the settings from "earlier" files.
+
+[#property-substitution]
+=== Property substitution
+
+The configuration files support property substitution in string values.
+
+The general format for property substitution is `+${key:property}+` where `+key+` defines substitution type, and `+property+` the property to be substituted:
+
+[%header]
+|===
+| Key | Description | Example | Replacement
+
+| base64Encoder | Replace with base64 encoded string | `+${base64Encoder:Hello World}+` | `+SGVsbG8gV29ybGQ=+`
+| base64Decoder | Replace with base64 decoded string | `+${base64Decoder:SGVsbG8gV29ybGQ=}+` | `+Hello World+`
+| date | Replace with current date | `+${date:yyyy-mm-dd}+` | `+2023-04-01+`
+| env | Replace with value of environment variable | `+${env:USER}+` | `+node+`
+| sys | Replace with value of system property | `+${sys:user.name}+` | `+node+`
+| urlEncoder | Replace with URL encoded string | `+${urlEncoder:path with spaces}+` | `+path+with+spaces+`
+| urlDecoder | Replace with URL decoded string | `+${urlDecoder:path+with+spaces}+` | `+path with spaces+`
+|===
+
+NOTE: Since the format for properties contains curly brackets and colons (characters, which are used to format JSON), it is strongly recommended to quote all strings containing properties, which should be substituted.
+
+Example configuration:
+
+.conf/*.yml
+[source,shell]
+----
+maxfilesize: "${env:CMS_MAX_FILESIZE}"
+----
+
+[#ui-configuration-files]
+== UI Configuration files
+
+UI Configuration files must be located in the directory which is defined with the environment variable <<ui_conf_path,UI_CONF_PATH>>.
+Those files will be available over http and will be read by the UI.
+
+[#environment-variables-system-properties]
+== Environment variables/System properties
+
+The CMS supports the following environment variables (some settings can also be set over Java System properties or in the CMS configuration):
+
+[#http_port]
+=== HTTP_PORT
+
+|===
+h| Description | Http Port of the CMS
+h| Env | `+HTTP_PORT+`
+h| System Property | `+com.gentics.contentnode.http.port+`
+h| Configuration | `+server.port+`
+h| Default | 8080
+|===
+
+[#http2]
+=== HTTP2
+
+|===
+h| Description | Use HTTP/2 protocol version
+h| Env | `+HTTP2+`
+h| System Property | `+com.gentics.contentnode.http2+`
+h| Configuration | `+server.http2+`
+h| Default | false
+|===
+
+[#conf_path]
+=== CONF_PATH
+
+|===
+h| Description | Path to configuration files
+h| Env | `+CONF_PATH+`
+h| System Property | `+com.gentics.contentnode.config.path+`
+h| Configuration | -
+h| Default | `+conf+`
+|===
+
+[#dbfiles_path]
+=== DBFILES_PATH
+
+|===
+h| Description | Path to binary files
+h| Env | `+DBFILES_PATH+`
+h| System Property | `+com.gentics.contentnode.dbfiles.path+`
+h| Configuration | `+config.dbfiles+`
+h| Default | `+data/dbfiles+`
+|===
+
+[#conf_files]
+=== CONF_FILES
+
+|===
+h| Description | Comma separated list of configuration files or folders containing configuration files (relative to <<conf_path,CONF_PATH>>)
+h| Env | `+CONF_FILES+`
+h| System Property | `+com.gentics.contentnode.config.files+`
+h| Configuration | -
+h| Default |
+|===
+
+[#licensekey]
+=== LICENSEKEY
+
+|===
+h| Description | License Key
+h| Env | `+LICENSEKEY+`
+h| System Property | `+com.gentics.contentnode.license-key+`
+h| Configuration | -
+h| Default |
+|===
+
+[#keys_path]
+=== KEYS_PATH
+
+|===
+h| Description | Path to keys directory
+h| Env | `+KEYS_PATH+`
+h| System Property | `+com.gentics.contentnode.keys.path+`
+h| Configuration | -
+h| Default | `+keys+`
+|===
+
+[#cache_config_path]
+=== CACHE_CONFIG_PATH
+
+|===
+h| Description | Path to cache.ccf
+h| Env | `+CACHE_CONFIG_PATH+`
+h| System Property | `+com.gentics.contentnode.cache.config.path+`
+h| Configuration | -
+h| Default | [<<conf_path]/,CONF_PATH>>``+cache.ccf+``
+|===
+
+[#cache_path]
+=== CACHE_PATH
+
+|===
+h| Description | Path to cache files
+h| Env | `+CACHE_PATH+`
+h| System Property | `+com.gentics.contentnode.cache.path+`
+h| Configuration | -
+h| Default | `+cache+`
+|===
+
+[#logs_path]
+=== LOGS_PATH
+
+|===
+h| Description | Path to logs
+h| Env | `+LOGS_PATH+`
+h| System Property | `+com.gentics.contentnode.logs.path+`
+h| Configuration | -
+h| Default | `+logs+`
+|===
+
+[#access_log]
+=== ACCESS_LOG
+
+|===
+h| Description | Access Log Format, see https://javadoc.jetty.org/jetty-9/org/eclipse/jetty/server/CustomRequestLog.html[Jetty Custom Request Log]
+h| Env | `+ACCESS_LOG+`
+h| System Property | `+com.gentics.contentnode.access_log+`
+h| Configuration | -
+h| Default | `+%{client}a - %u %t \"%r\" %s %O+`
+|===
+
+[#publish_path]
+=== PUBLISH_PATH
+
+|===
+h| Description | Path to statically published files
+h| Env | `+PUBLISH_PATH+`
+h| System Property | `+com.gentics.contentnode.publish.path+`
+h| Configuration | -
+h| Default | `+publish+`
+|===
+
+[#gis_path]
+=== GIS_PATH
+
+|===
+h| Description | Path to statically published GIS files
+h| Env | `+GIS_PATH+`
+h| System Property | `+com.gentics.contentnode.gis.path+`
+h| Configuration | -
+h| Default | [<<publish_path]/,PUBLISH_PATH>>``+gis+``
+|===
+
+[#packages_path]
+=== PACKAGES_PATH
+
+|===
+h| Description | Path to the directory containing the devtool packages
+h| Env | `+PACKAGES_PATH+`
+h| System Property | `+com.gentics.contentnode.packages.path+`
+h| Configuration | -
+h| Default | `+packages+`
+|===
+
+[#content_packages_path]
+=== CONTENT_PACKAGES_PATH
+
+|===
+h| Description | Path to the directory containing the content packages
+h| Env | `+CONTENT_PACKAGES_PATH+`
+h| System Property | `+com.gentics.contentnode.content_packages.path+`
+h| Configuration | -
+h| Default | `+content-packages+`
+|===
+
+[#scheduler_commands_path]
+=== SCHEDULER_COMMANDS_PATH
+
+|===
+h| Description | Path to the directory containing the scripts, that can be run by the scheduler
+h| Env | `+SCHEDULER_COMMANDS_PATH+`
+h| System Property | `+com.gentics.contentnode.scheduler_commands.path+`
+h| Configuration | -
+h| Default | `+scheduler-commands+`
+|===
+
+[#static_serve_list]
+=== STATIC_SERVE_LIST
+
+|===
+h| Description | Comma separated list of directories that contain files, which should be served statically over HTTP
+h| Env | `+STATIC_SERVE_LIST+`
+h| System Property | `+com.gentics.contentnode.static_serve_list+`
+h| Configuration | -
+h| Default |
+|===
+
+[#ui_conf_path]
+=== UI_CONF_PATH
+
+|===
+h| Description | Path to UI configuration files
+h| Env | `+UI_CONF_PATH+`
+h| System Property | `+com.gentics.contentnode.ui.conf_path+`
+h| Configuration | `+ui.conf_path+`
+h| Default | `+ui-conf+`
+|===
+
+[#tmp_path]
+=== TMP_PATH
+
+|===
+h| Description | Path to store temporary files
+h| Env | `+TMP_PATH+`
+h| System Property | `+com.gentics.contentnode.tmp_path+`
+h| Configuration | `+tmppath+`
+h| Default | System property java.io.tmpdir
+|===
+
+[#node_user_password]
+=== NODE_USER_PASSWORD
+
+|===
+h| Description | Initial password for the CMS user 'node'
+h| Env | `+NODE_USER_PASSWORD+`
+h| System Property | `+com.gentics.contentnode.node_user.password+`
+h| Configuration | -
+h| Default |
+|===
+
+[#node_db_driver_class]
+=== NODE_DB_DRIVER_CLASS
+
+|===
+h| Description | Name of the JDBC Driver class for accessing the backend DB
+h| Env | `+NODE_DB_DRIVER_CLASS+`
+h| System Property | `+com.gentics.contentnode.db.driverClass+`
+h| Configuration | `+db.settings.driverClass+`
+h| Default | `+org.mariadb.jdbc.Driver+`
+|===
+
+[#node_db_host]
+=== NODE_DB_HOST
+
+|===
+h| Description | Hostname of the backend DB
+h| Env | `+NODE_DB_HOST+`
+h| System Property | `+com.gentics.contentnode.db.host+`
+h| Configuration | `+db.settings.host+`
+h| Default | `+localhost+`
+|===
+
+[#node_db_port]
+=== NODE_DB_PORT
+
+|===
+h| Description | Port of the backend DB
+h| Env | `+NODE_DB_PORT+`
+h| System Property | `+com.gentics.contentnode.db.port+`
+h| Configuration | `+db.settings.port+`
+h| Default | `+3306+`
+|===
+
+[#node_db_user]
+=== NODE_DB_USER
+
+|===
+h| Description | Username for accessing the backend DB
+h| Env | `+NODE_DB_USER+`
+h| System Property | `+com.gentics.contentnode.db.user+`
+h| Configuration | `+db.settings.user+`
+h| Default |
+|===
+
+[#node_db_password]
+=== NODE_DB_PASSWORD
+
+|===
+h| Description | Password for accessing the backend DB
+h| Env | `+NODE_DB_PASSWORD+`
+h| System Property | `+com.gentics.contentnode.db.password+`
+h| Configuration | `+db.settings.password+`
+h| Default |
+|===
+
+[#node_db_name]
+=== NODE_DB_NAME
+
+|===
+h| Description | Name of the backend DB
+h| Env | `+NODE_DB_NAME+`
+h| System Property | `+com.gentics.contentnode.db.name+`
+h| Configuration | `+db.settings.name+`
+h| Default | `+node_utf8+`
+|===
+
+[#node_db_parameters]
+=== NODE_DB_PARAMETERS
+
+|===
+h| Description | Additional JDBC Parameters for accessing the backend DB
+h| Env | `+NODE_DB_PARAMETERS+`
+h| System Property | `+com.gentics.contentnode.db.parameters+`
+h| Configuration | `+db.settings.jdbcparameters+`
+h| Default | `+netTimeoutForStreamingResults=900+`
+|===
+
+[#node_db_url]
+=== NODE_DB_URL
+
+|===
+h| Description | JDBC Connection URL for accessing the backend DB
+h| Env | `+NODE_DB_URL+`
+h| System Property | `+com.gentics.contentnode.db.url+`
+h| Configuration | `+db.settings.url+`
+h| Default | _Will be constructed from [<<node_db_host],NODE_DB_HOST>>, [<<node_db_port],NODE_DB_PORT>>, [<<node_db_name],NODE_DB_NAME>> and [<<node_db_parameters]_,NODE_DB_PARAMETERS>>
+|===
+
+[#node_db_init_timeout]
+=== NODE_DB_INIT_TIMEOUT
+
+|===
+h| Description | Timeout in ms for establishing initial connection to the backen DB, when the CMS is started
+h| Env | `+NODE_DB_INIT_TIMEOUT+`
+h| System Property | `+com.gentics.contentnode.db.init_timeout+`
+h| Configuration | -
+h| Default | `+60000+`
+|===
+
+[#alohaeditor_path]
+=== ALOHAEDITOR_PATH
+
+|===
+h| Description | Path to Aloha Editor (used only in development environments)
+h| Env | `+ALOHAEDITOR_PATH+`
+h| System Property | `+com.gentics.contentnode.alohaeditor.path+`
+h| Configuration | -
+h| Default |
+|===
+
+[#alohaeditor_plugins_path]
+=== ALOHAEDITOR_PLUGINS_PATH
+
+|===
+h| Description | Path to Aloha Editor Plugins (used only in development environments)
+h| Env | `+ALOHAEDITOR_PLUGINS_PATH+`
+h| System Property | `+com.gentics.contentnode.alohaeditor.plugins.path+`
+h| Configuration | -
+h| Default |
+|===
+
+[#gcnjsapi_path]
+=== GCNJSAPI_PATH
+
+|===
+h| Description | Path to Gentics CMS JS API (used only in development environments)
+h| Env | `+GCNJSAPI_PATH+`
+h| System Property | `+com.gentics.contentnode.gcnjsapi.path+`
+h| Configuration | -
+h| Default |
+|===

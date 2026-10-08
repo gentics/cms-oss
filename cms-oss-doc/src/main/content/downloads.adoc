@@ -1,0 +1,16 @@
+---
+title: "Downloads"
+description: "Gentics CMS related downloads"
+---
+= Downloads
+
+This page lists all downloads for Gentics CMS
+
+All our downloads are managed via maven. You can browse through the maven repository.
+
+[#packages]
+== Packages
+
+* The https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms-oss/cms-oss-server/[cms-server] is the JAR file that must be launched to start Gentics CMS.
+
+* The https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms-oss/cms-js-lib/[cms-js-lib,title="gcnjsapi"] contains the Gentics CMS JavaScript API downloadable as ZIP file.

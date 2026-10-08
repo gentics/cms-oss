@@ -1,0 +1,153 @@
+---
+title: "Updating implementations"
+description: "Guide for safely updating implementations with the UpdateImplementation command-line tool"
+---
+= Updating implementations
+
+Updating implementations from xref:devtools_overview.adoc[Devtool packages] require some steps to be done.
+The UpdateImplementation command-line tool helps to automate the process by performing the following steps:
+
+* Set the CMS into maintenance mode (with maintenance message)
+* Suspend the scheduler
+* Reload the configuration
+* Synchronize devtool packages from the filesystem into the CMS
+* Apply Content.Repository changes
+* Republish objects
+* Resume the scheduler
+* Reset maintenance mode and message
+
+[#usage]
+== Usage
+
+The tool can either be configured with a configuration file:
+
+[source,shell]
+----
+$ java -Duser.dir=/cms -cp cms-server.jar com.gentics.contentnode.tools.UpdateImplementation -f update.yml
+----
+
+or via command-line parameters:
+
+[source,shell]
+----
+$ java -Duser.dir=/cms -cp cms-server.jar com.gentics.contentnode.tools.UpdateImplementation -u node -p secret -P baseimplementation gallery
+----
+
+Note: If both a configuration file and command-line parameters are given, the command-line parameters will overwrite settings from the configuration file.
+
+[#parameters]
+== Parameters
+
+[%header]
+|===
+| command-line | Configuration File | Default | Description
+
+| `+--help+` | | | Print usage and exit
+| `+-f,--file [path]+` | | | Path to configuration file
+| `+-b,--base [url]+` | base | http://localhost | Base URL to the CMS
+| `+-u,--user [login]+` | user | _required_ | Username for accessing the CMS
+| `+-p,--password [pass]+` | password | _required_ | Password
+| `+-P,--package [pck]+` | package | | List of packages to synchronize
+| `+-c,--contentrepository [crs]+` | contentrepository | | List of Content.Repository IDs to repair
+| `+-m,--maintenanceMode+` | maintenanceMode | false | Flag to enable maintenance mode
+| `+-M,--maintenanceMessage [msg]+` | maintenanceMessage | | Maintenance message
+| `+-r,--reloadConfig+` | reloadConfig | false | Flag to reload the configuration
+| `+-rfi,--republishFiles+` | republishFiles | false | Flag to republish files
+| `+-rfo,--republishFolders+` | republishFolders | false | Flag to republish folders
+| `+-rp,--republishPages+` | republishPages | false | Flag to republish pages
+| `+-rs,--resumeScheduler [when]+` | resumeScheduler | always | Whether to resume the scheduler. "always" will resume the scheduler everytime (on success), "running" will resume the scheduler only if it was running before, "never" will never resume the scheduler
+| `+-t,--timeout [ms]+` | timeout | 60000 | Timeout in milliseconds for waiting for some long-lasting tasks (e.g. suspending the scheduler, repairing Content.Repositories, ...)
+| `+-ts,--triggerSyncPages+` | triggerSyncPages | false | Flag to trigger synchronization of pages with templates contained in the packages
+| `+-as,--awaitSyncPages+` | awaitSyncPages | false | Flag to await synchronization of pages with templates contained in the packages (if triggerSyncPages is enabled)
+| `+-ast,--awaitSyncPagesTimeout [ms]+` | awaitSyncPagesTimeout | 600000 | Timeout in milliseconds for awaiting synchronization of pages with templates
+|===
+
+Configuration file example:
+
+.config.yml
+[source,shell]
+----
+user: node
+password: secret
+package:
+  - baseimplementation
+  - gallery
+contentrepository:
+  - 47
+  - 11
+maintenanceMode: true
+maintenanceMessage: The CMS is currently not available due to an update.
+reloadConfig: true
+----
+
+[#details]
+== Details
+
+[#error-behaviour]
+=== Error behaviour
+
+If something goes wrong (devool package synchronization fails, Content.Repository cannot be repaired successfully, ...), the
+tool will fail immediately. This means that the scheduler will still be suspended and the maintenance mode will still be set.
+
+[#init-checks]
+=== Init checks
+
+Before doing anything else, the tool will login to the CMS (checking base URL and login credentials) and read all configured
+devtool packages and Content.Repositories (checking for existence and permissions).
+If anything fails, the tool with fail with an error.
+
+[#set-maintenance-mode-optional]
+=== Set maintenance mode (optional)
+
+Maintenance mode and message will be set at the beginning of the update process. Maintenance mode and message can be set independently.
+
+[#suspend-scheduler]
+=== Suspend scheduler
+
+The tool will suspend the scheduler and wait, until all currently running scheduler tasks finish.
+If the scheduler failes to reach the state "suspended" in the configured timeout, the tool will fail with an error.
+
+[#reload-configuration-optional]
+=== Reload configuration (optional)
+
+The tool will trigger a "reload configuration" in the CMS, which will let any changes in configuration files become effective (e.g. activate additional features, ...).
+
+[#devtool-packages-optional]
+=== Devtool packages (optional)
+
+All listed devtool packages will be synchronized from the filesystem into the CMS in the order, they were defined.
+If synchronization for a devtool package fails, the tool will fail with an error.
+
+[#triggering-page-synchronization-optional]
+=== Triggering page synchronization (optional)
+
+If synchronized devtool packages contain templates, and triggering page synchronization is enabled, the tool will check the tag status of every template contained in any of the packages.
+If the tag status of a template shows unsynchronized pages (pages missing tags from the template or having tags using different constructs than defined in the template), the asynchronous
+synchronization of pages with the template is triggered.
+Optionally, the tool will wait for the synchronization to finish (up to the configured timeout) by polling the tag status. If not all pages can be synchronized within the given timeout, the
+tool will fail with an error, but the synchronization process may continue to run in the CMS (and succeed at a later time).
+
+[#content-repositories-optional]
+=== Content.Repositories (optional)
+
+All listed Content.Repositories will be repaired in the order, they were defined.
+Repairing a Content.Repository will update the structure to meet any changes in the tagmap.
+For Mesh Content.Repository, this will also generate new Branches (if required), update Schemas and wait for
+Node or Schema Migrations.
+If repairing a Content.Repository fails or takes longer than the configured timeout, the tool will fail with an error.
+
+[#republish-objects-optional]
+=== Republish objects (optional)
+
+The tool will dirt published objects of all nodes, which either have one of the devool packages assigned or are published into one of the Content.Repositories.
+
+[#resume-scheduler-optional]
+=== Resume scheduler (optional)
+
+The scheduler will be resumed.
+
+[#reset-maintenance-mode-optional]
+=== Reset maintenance mode (optional)
+
+If maintenance mode was set, it will be cleared.
+If a maintenance message was set, it will be reset to empty.

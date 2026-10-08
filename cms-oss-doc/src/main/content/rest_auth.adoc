@@ -1,0 +1,67 @@
+---
+title: "Authentication methods for REST API"
+description: "Describes possible authentication methods for the REST API"
+---
+= Authentication methods for REST API
+
+The REST API supports different methods of authentication. This section describes necessary configuration and methods.
+
+[#session-identification]
+== Session Identification
+
+When using the REST API, a session is identified by the `+session secret+` cookie and the `+session id+`, which must be sent as query parameter `+sid+`.
+This ensures that
+
+* A session can never be fully identified by URLs (because the session secret is not part of the URL)
+* One client may have multiple sessions. They share the same session secret, but use different session ids
+
+[#authentication-with-credentials]
+== Authentication with credentials
+
+To login with credentials, the client must
+
+[source,shell]
+----
+POST /rest/auth/login
+{
+  "login": ...,
+  "password": ...
+}
+----
+
+The response will be of the form
+
+[source,shell]
+----
+{
+  "sid" : "1022",
+  "user" : {
+    "id" : 34,
+    "description" : "",
+    "login" : "editor",
+    "email" : "",
+    "firstName" : "Max",
+    "lastName" : "No-Publish"
+  },
+  "responseInfo" : {
+    "responseCode" : "OK",
+    "responseMessage" : "Successfully performed login"
+  }
+}
+----
+
+Note that the "User-Agent" has to be set in the header of the request as it will be saved in the session, otherwise the login will fail.
+
+Additionally, the session secret cookie will be set to the client.
+
+[#logout]
+== Logout
+
+A logout can be performed with the following request
+
+[source]
+----
+POST /rest/auth/logout/{sid}
+----
+
+in the response, the session secret cookie is removed.

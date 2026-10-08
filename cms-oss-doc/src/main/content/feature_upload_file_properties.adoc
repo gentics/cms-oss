@@ -1,0 +1,21 @@
+---
+title: "Entering file inormation after upload"
+---
+= Entering file inormation after upload
+
+After uploading a file, editors have to leave the page to be able to enter file informations, which are available in each project, as object properties for the file.
+
+[#feature-activation]
+== Feature activation
+
+If you want to use this feature, you first have to enable it node.conf
+
+.conf/features.yml
+[source,javascript]
+----
+feature:
+    UPLOAD_FILE_PROPERTIES: true
+----
+
+After that a modal window will appear after an upload, displaying the file properties and object properties.
+(These could also be set afterward by clicking on the file anyway.)

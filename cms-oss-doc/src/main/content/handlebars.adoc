@@ -1,0 +1,543 @@
+---
+title: "Rendering with Handlebars"
+description: "Rendering in the CMS with Handlebars"
+---
+= Rendering with Handlebars
+
+With the use of a Handlebars Part Type, the CMS is able to render content with Handlebars templates.
+
+[#general-description]
+== General description
+
+The CMS uses the https://github.com/jknack/handlebars.java[handlebars.java] implementation of https://handlebarsjs.com/[Handlebars].
+
+For a general introduction to the Handlebars templating language, see the https://handlebarsjs.com/guide/[Handlebars Guides].
+
+[#usage]
+== Usage
+
+To render a Handlebars template, you only need to add a "Handlebars" part to a tagtype. The part will use its own input as template.
+
+Below is an example of a construct with a single "Handlebars" part, that is not hidden and will render the template `+{{ cms.page.name }}+` (which will output the current page's name).
+
+image:images/gcn_dialogs/handlebars_construct.png[]
+
+[#resolving]
+== Resolving
+
+The context of a rendered Handlebars part will always contain the base object `+cms+` which can be used to resolve some base objects:
+
+* `+cms.node+` resolves to the xref:meta_attributes.adoc#node[node] of the currently rendered object.
+* `+cms.folder+` resolves to the xref:meta_attributes.adoc#folder[folder] of the currently rendered object (or the rendered folder).
+* `+cms.page+` resolves to the currently rendered xref:meta_attributes.adoc#page[page] (if the tag is rendered in a page).
+* `+cms.template+` resolves to the xref:meta_attributes.adoc#template[template] of the currently rendered page (of the tag is rendered in a page).
+* `+cms.file+` resolves to the currently rendered xref:meta_attributes.adoc#file[file/image] (of the tag is rendered in a file/image).
+* `+cms.object+` resolves to the object tags of the currently rendered object.
+* `+cms.rendermode+` resolves to the xref:meta_attributes.adoc#rendermode[rendermode] information.
+
+TIP: To find out all possible attributes that can be resolved from the base object "cms", you can use something like `+{{#each cms}}{{ @key }}:{{ this }}<br>{{/each}}+`.
+This obviously does not only work for "cms", but for every object in the context.
+
+TIP: The inner content of xref:gcn_part_types.adoc[JSON] part type can also be resolved, including array indices. For instance, resolving `+{{cms.tag.parts.otherpart.whoever.0.whatever}}+` on `+{"whatever":{"whoever": "wherever"}, "whoever":[{"whatever": "wherever"}]+` results in `+wherever+` being rendered.
+
+The Handlebars Part Type does not support "shortcuts" when resolving. So for example to resolve a specific part in the current tag,
+it is not allowed to omit the "parts" keyword in handlebars: `+{{ cms.tag.parts.html }}+` will resolve to the part "html" in the current tag, whereas `+{{ cms.tag.html }}+` will *not* work.
+Hence, if you need to, say, render a copyright of a referenced image, set withing an image's object property, it is possible to use
+either `+{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+` with `+target+` image dereferencing, or
+`+{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+`, where in addition `+parts+` property listing, and `+text+` part type now have to be explicitly mentioned, if one wants to avoid using `+gtx_render+` (which is  discouraged).
+
+[#helpers]
+== Helpers
+
+Since Handlebars templating language itself is completely Logic-less, the Handlebars Part Type provides some helpers for supporting more complex rendering logic:
+
+[#built-in-helpers]
+=== Built-in Helpers
+
+All https://handlebarsjs.com/guide/builtin-helpers.html[Built-in helpers] are supported.
+
+[#conditional-helpers]
+=== Conditional Helpers
+
+All https://github.com/jknack/handlebars.java/blob/master/handlebars/src/main/java/com/github/jknack/handlebars/helper/ConditionalHelpers.java[Conditional Helpers] provided by handlebars.java are supported.
+
+[#string-helpers]
+=== String Helpers
+
+All https://github.com/jknack/handlebars.java/blob/master/handlebars/src/main/java/com/github/jknack/handlebars/helper/StringHelpers.java[String Helpers] provided by handlebars.java are supported.
+
+[#additional-helpers]
+=== Additional Helpers
+
+[%header]
+|===
+| Name | Description | Example
+
+| <<gtx_render,gtx_render>> | Render another object (e.g. a tag, page, ...) | `+{{{gtx_render cms.page.tags.othertag }}}+`
+| <<gtx_edit,gtx_edit>> | Like gtx_render, but will render the object in edit mode (if possible) | `+{{{gtx_edit cms.page.tags.othertag }}}+`
+| <<gtx_sort,gtx_sort>> | Sort a list of objects by the given attribute (which might be a path to resolve) | `+{{#each (gtx_sort cms.folder.folders "name"}}{{name}}<br>{{/each}}+`
+| <<gtx_channel,gtx_channel>> | Render the block in the scope of the given channel | `+{{#gtx_channel cms.tag.parts.node.target}}<a href="{{ cms.page.url }}">{{ cms.page.name }}</a>{{/gtx_channel}}+`
+| <<gtx_gis,gtx_gis>> | Include a resized image into the output | `+<img src="{{gtx_gis cms.tag.parts.image width=100 mode="prop" }}">+`
+| <<gtx_form,gtx_form>> | Include a form | `+{{gtx_form cms.tag.parts.form type="java" }}+`
+| <<gtx_i18n,gtx_i18n>> | Include a translation in the language of the currently rendered page | `+{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+`
+| <<gtx_script,gtx_script>> | Execute a script from a devtool package and render the output | `+{{gtx_script "demopackage.scriptname" page=cms.page}}+`
+| <<gtx_json_path,gtx_json_path>> | Navigate over a link:gcn_part_type.html[JSON] part type using https://goessner.net/articles/JsonPath/[JSONPath] | `+{{gtx_json_path cms.tag.parts.json "$.objarray[0].objfield"}}+`
+|===
+
+[#gtx_render]
+==== gtx_render
+
+This helper will render the given object (if it is e.g. a tag or a page) or output the String representation of anything else.
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_render object}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+object+` | Object to be rendered | _mandatory_
+|===
+
+NOTE: When using double curly braces, HTML code rendered from the object will be escaped. If HTML code should not be escaped, triple curly braces have to be used, see https://handlebarsjs.com/guide/#html-escaping[HTML Escaping] for details.
+
+The helper can also be used in combination with other helpers (conditional helpers for example) like shown in the following example:
+
+[source,shell]
+----
+{{! Iterate over all subfolders of the current folder }}
+{{#each cms.folder.folders}}
+  {{! Omit folders, that have the checkbox in the object property "navhidden" checked }}
+  {{#neq (gtx_render this.object.navhidden) "1"}}
+    {{! Output the name of the folder }}
+    {{name}}<br>
+  {{/neq}}
+{{/each}}
+----
+
+NOTE: Since gtx_render will always output a String, the comparison must also be done with the String ("1") and not with the Integer (1).
+
+WARNING: The Handlebars Part Type will *only* render objects if the gtx_render helper is used. Simply referencing like `+{{{ cms.page.tags.othertag }}}+` will not render the other tag, but will output some information about the referenced object.
+
+[#gtx_edit]
+==== gtx_edit
+
+This helper is a variant of the `+gtx_render+` helper, which will render the object in edit mode, if possible.
+
+General usage is:
+
+[source,shell]
+----
+{{{gtx_edit object}}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+object+` | Object to be rendered | _mandatory_
+|===
+
+[#gtx_sort]
+==== gtx_sort
+
+This helper can be used to sort objects by attributes (or even attribute paths).
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_sort list sortBy [sortOrder]}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+list+` | Objects to be sorted | _mandatory_
+| `+sortBy+` | Attribute (or Attribute path) by which the objects shall be sorted | _mandatory_
+| `+sortOder+` | *asc* for sorting in ascending order, *desc* for descending order | *asc*
+|===
+
+The gtx_sort helper will in most cases be used together with the `+each+` helper:
+
+[source,shell]
+----
+{{! Iterate over all subfolders of the current folder, sorted by the object property "navsortorder" }}
+{{#each (gtx_sort cms.folder.folders "object.navsortorder" "asc")}}
+  {{! Omit folders, that have the checkbox in the object property "navhidden" checked }}
+  {{#neq (gtx_render this.object.navhidden) "1"}}
+    {{! Output the name of the folder and the navsortorder }}
+    {{name}} ({{gtx_render object.navsortorder}})<br>
+  {{/neq}}
+{{/each}}
+----
+
+TIP: As can be seen in the example above, the `+gtx_sort+` helper will resolve the attribute path for each object, if the resolved values (tags in this case) are something that can be rendered, it will
+render them, and if all values are numerical, the sorting will be done numerical.
+
+[#gtx_channel]
+==== gtx_channel
+
+This is a block helper, which will switch the rendering scope to the given channel for the block.
+
+General usage is:
+
+[source,shell]
+----
+{{#gtx_channel node}}
+  block
+{{/gtx_channel}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+node+` | Reference to the node/channel. | _mandatory_
+|===
+
+The reference to the node/channel can be one of
+
+* local ID of a node/channel
+* global ID of a node/channel
+* A resolved node/channel object
+* Tag part of type "Node"
+
+The channel scope influences the `+resolving+` (loading) of objects, that take part in multichannelling. It is important to note, that the channel scope does *not* change
+the objects, which are *directly* referenced via `+cms+` (like `+cms.node+`, `+cms.page+`, ...), because those objects have already been loaded.
+
+Objects, which are further resolved, however, *will* be influenced by the channel scope. The following example should make this clear:
+
+[source,html]
+----
+{{#gtx_channel [channel]}}
+  <!-- Examples, which are independent of the channel scope -->
+  {{cms.node}} <!-- This is always the current node -->
+  {{cms.page}} <!-- This is always the current page -->
+  {{cms.folder}} <!-- This is always the current folder -->
+
+  <!-- Examples, which depend on the channel scope -->
+  {{cms.page.folder}} <!-- This is the current page's folder in the scope of the channel -->
+  {{cms.page.node}} <!-- This is the current page's node in the scope of the channel -->
+  {{cms.folder.node}} <!-- This is the current folder's node in the scope of the channel -->
+
+{{/gtx_channel}}
+----
+
+[#gtx_gis]
+==== gtx_gis
+
+This helper will either render a Gentics Image Store URL for a resized image, or - when used for an installation of Gentics Portal | php - a widget that will resize that image.
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_gis image [width=value] [height=value] [mode=value] [type=value] [crop_width=value] [crop_height=value] [crop_x=value] [crop_y=value]}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+image+` | Reference to the image. | _mandatory_
+| `+width+` | Width of the resized image | *auto*
+| `+height+` | Height of the resized image | *auto*
+| `+mode+` | Resizing mode ("prop", "force", "smart", "fpsmart") | *prop*
+| `+type+` | Type of the rendering ("url", "phpwidget") | *url*
+| `+crop_width+` | Cropping width | _mandatory_
+| `+crop_height+` | Cropping height | _mandatory_
+| `+crop_x+` | Start X coordinate of the image area (from the top left corner) | 0
+| `+crop_y+` | Start Y coordinate of the image area (from the top left corner) | 0
+|===
+
+The reference to the image can be one of
+
+* local ID of an image
+* global ID of an image
+* A resolved image object
+* Tag part of type "Image"
+
+For details see xref:feature_genticsimagestore.adoc[Gentics CMS GenticsImageStore].
+
+[#gtx_form]
+==== gtx_form
+
+This helper will include a CMS form into the tag.
+
+General usage is:
+
+[source,shell]
+----
+{{{gtx_form form [type=value] [previewRoot=value] [showResults=value] }}}
+----
+
+or (as block helper)
+
+[source,shell]
+----
+{{#gtx_form form [type=value] [previewRoot=value] [showResults=value] }}
+{{{this}}}
+{{else}}
+    no-form-block
+{{/gtx_form}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+form+` | Reference to the form | _mandatory_
+| `+type+` | Type of used portal. Must be either *java* or *php* | *java*
+| `+previewRoot+` | HTML Element, which should be rendered as root element for the preview | *div*
+| `+showResults+` | Boolean flag to force rendering results of a poll instead of the form itself. (This has no effect on non-poll forms.) | *false*
+| `+no-form-block+` | Block that is rendered when no form was selected. | (empty)
+|===
+
+The reference to the form can be one of
+
+* local ID of a form
+* global ID of a form
+* A resolved form object
+* Tag part of type "Form"
+
+[#gtx_i18n]
+==== gtx_i18n
+
+This helper can be used to render language specific output (in the language of the current page).
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_i18n [object] [de=value] [en=value] ... [default=value]}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+object+` | Optional object to resolve the translation (from the language code) | (empty)
+| `+de+` | Optional german translation | (empty)
+| `+en+` | Optional english translation | (empty)
+| `+[language code]+` | Optional translation for the given language code | (empty)
+| `+default+` | Optional default translation | (empty)
+|===
+
+Translations given as parameters always take precedence over translations resolved from an optionally given object.
+
+The helper will first try to get the translation for the current page language (if rendered for a page and the page has a language).
+
+Then it will fall back to the remaining languages of the current node (if the node has languages assigned).
+
+Finally it will fall back to "default".
+
+If no translation is found, it will render nothing.
+
+[#gtx_script]
+==== gtx_script
+
+This helper executes a groovy script from a devtool package and renders the output.
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_script [scriptname] [param1=value1 param2=value2 ...]}}
+----
+
+With the parameters
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+scriptname+` | Fully qualified name of the script to be executed | _mandatory_
+|===
+
+All other parameters will be injected into the script context. See xref:groovy.adoc#groovy-scripts-in-devtool-packages[Groovy Scripts in Devtool Packages] for details.
+
+[#gtx_json_path]
+==== gtx_json_path
+
+Helps navigating over a xref:gcn_part_types.adoc[JSON] part type using https://goessner.net/articles/JsonPath/[JSONPath] notation input.
+
+General usage is:
+
+[source,shell]
+----
+{{gtx_json_path [object] [JSONPath-string]}}
+----
+
+Where the parameters are
+
+[%header]
+|===
+| Name | Description | Default
+
+| `+object+` | JSON part type object to resolve from | _mandatory_
+| `+JSONPath-string+` | JSONPath notated string | _mandatory_
+|===
+
+An example of rendering a JSON part type "otherpart" of a current tag, having content
+
+[source,shell]
+----
+{"whatever":{"whoever": "wherever"}, "whoever":[{"whatever": "wherever"}], "wherever": ["what", "who", "where"]}
+----
+
+using the following calls
+
+[source,shell]
+----
+{{gtx_json_path cms.tag.parts.otherpart "$[*]['whoever']"}}, {{gtx_json_path cms.tag.parts.otherpart "$.whoever[0].whatever"}}, {{gtx_json_path cms.tag.parts.otherpart "$.wherever[1]"}}
+----
+
+will result in
+
+[source,shell]
+----
+"wherever, wherever, who"
+----
+
+Please refer to the https://github.com/json-path/JsonPath/blob/master/README.md[implementing library documentation] for the whole possibilities of JSONPath.
+
+[#custom-helpers]
+=== Custom helpers
+
+For implementation of custom logic, it is possible to create helpers as Javascript files in devtool packages.
+
+Every `+.js+` file located in the directory `+/cms/packages/[package]/handlebars/helpers/+` is interpreted as a handlebars helper.
+
+The name of the file (without extension) defines the name of the helper, which will be prefixed with the packagename to avoid naming conflicts.
+The file must contain a single JavaScript function (the name of that function does not matter).
+
+For example:
+
+./cms/packages/implementation_package/handlebars/helpers/get_name.js
+[source,shell]
+----
+function get_name(obj) {
+    return obj.name;
+}
+----
+
+will be available as helper `+implementation_package.get_name+` and can be used like this:
+
+[source,shell]
+----
+{{implementation_package.get_name cms.page}}
+----
+
+If an additional `+options+` parameter is added at the end of the argument list, Handlebars will automatically fill this parameter with an object giving access to the https://handlebarsjs.com/guide/block-helpers.html#hash-arguments[hash arguments] as well as the `+options.fn()+` and `+options.reverse()+` function. Calling `+options.fn(ctx)+` will render the contents of the helper with the given context `+ctx+`, and `+options.reverse(ctx)+` will render the `+else+` block. The name of the `+options+` parameter can be chosen freely, but it must be the last parameter in the list. The following example assumes that the given tag has two text parts `+short_desc+` and `+long_desc+` as well as a checkbox part `+inline+`. The helper is supposed to render the tag with the content-block if `+inline+` is checked and with the else-block otherwise. To include hash arguments, it will also generate the string containing a `+title+` attribute if present:
+
+./cms/packages/implementation_package/handlebars/helpers/render_tag.js
+[source,shell]
+----
+function render_tag(tag, options) {
+    let ctx = {};
+
+    if (options.hash.title) {
+        ctx['title'] = ' title="' + encodeURIComponent(options.hash.title) + '"';
+    }
+
+    if (tag.parts.inline.checked) {
+        ctx['message'] = tag.parts.short_desc.text;
+
+        return options.fn(ctx);
+    }
+
+    ctx['message'] = tag.parts.long_desc.text;
+
+    return options.fn(ctx);
+}
+----
+
+Usage of the helper:
+
+[source,shell]
+----
+{{#implementation_package.render_tag cms.tag title='Tag title'}}
+    <span{{title}}>{{message}}</span>
+{{else}}
+    <p{{title}}>{{message}}</p>
+{{/implementation_package.render_tag}}
+----
+
+WARNING: The usage of custom helpers from devtool packages will *not* be tracked by the internal dependency management. If any helper in a
+devtool package is modified, republishing of the affected objects needs to be done manually.
+
+[#default-package-helpers]
+==== Default package helpers
+
+Currently the only tagtype in the default package that uses Handlebars is the https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html[Aloha Page Link Tag] which uses the `+gtx_alohalink+` helper also contained in the default package. Since helpers must always be prefixed with their respective package names, a custom implementation of the Aloha Page Link Tag requires adding the tag to a custom package, then adding a custom helper for use in the Handlebars part and calling that helper with the package prefix (see the https://www.gentics.com/Content.Node/guides/aloha_gcn_alohapagelink.html#customizing-the-aloha-editor-page-link-tag[Aloha Page Link Tag] guide).
+
+NOTE: Helpers defined in devtool packages will only be available, if the devtool package is assigned to the Node for which the object is currently rendered!
+
+NOTE: Helpers will not be synchonized into the CMS, so changes in a helper file will be effective immediately.
+
+[#partials]
+== Partials
+
+For reusing templates, it is possible to define https://handlebarsjs.com/guide/partials.html[Partials] as files in devtool packages.
+
+Every `+.hbs+` file located in the directory `+/cms/packages/[package]/handlebars/partials/+` is interpreted as a handlebars partial.
+
+The name of the file (without extension) defines the name of the partial, which will be prefixed with the packagename to avoid naming conflicts.
+
+For example:
+
+./cms/packages/implementation_package/handlebars/partials/render_name.hbs
+[source,shell]
+----
+{{ name }}
+----
+
+will be available as partial `+implementation_package.render_name+` and can be used like this:
+
+[source,shell]
+----
+{{> implementation_package.render_name cms.page }}
+----
+
+NOTE: Partials will not be synchonized into the CMS, so changes in a partial file will be effective immediately.
+
+WARNING: The usage of partials from devtool packages will *not* be tracked by the internal dependency management. If any partial in a
+devtool package is modified, republishing of the affected objects needs to be done manually.
+
+[#differences-to-velocity]
+== Differences to Velocity
+
+This section will cover some differences between the old Velocity PartType and the Handlebars PartType (apart from the obvious difference in templating language syntax), which hopefully will help with migration of implementations.
+
+[%header]
+|===
+| | Velocity | Handlebars
+
+| Construct setup | The Velocity PartType needs another PartType with keyword `+template+` which contains the template to render. | The Handlebars PartType will use its own content as template.
+| Rendering of objects | Direct references to objects that can be rendered will render them (e.g. `+$cms.page.tags.html+` will render the tag `+html+`). | Direct references will *not* render the object, but will output some textual description. For rendering the <<gtx_render,`+gtx_render+`>> (or <<gtx_edit,`+gtx_edit+`>>) helper must be used.
+| Resolving shortcuts | Velocity supports various shortcuts, so e.g. `+$cms.tag.partname+` will resolve the part `+partname+` in the tag as well as `+$cms.tag.parts.partname+` does. | Shortcuts are not supported in the Handlebars PartType, so in order to resolve a specific part of a tag, the `+parts+` keyword *must* be used: `+{{ cms.tag.parts.partname }}+`
+| Reusable templates | The Velocity PartType supports both locally defined and globally configured macros | The Handlebars PartType supports <<partials,partials>>, which must be defined in devtool packages.
+| Programmatic logic | Velocity supports programmatic logic like defining variables, calling various methods of objects and even instantiation of new objects. | Handlebars is logic-less but supports programmatic logic via <<helpers,helpers>> (built-in or <<custom-helpers,custom>>) which guarantees a clean separation between business logic and presentation.
+| HTML Escaping | Velocity does not escape HTML by default, so for instance the EscapeTool must be used for that purpose. | Handlebars does HTML Escaping when two curly braces are used and omits HTML Escaping upon three curly braces.
+| Resolving of context variables | In Velocity, it is possible to add variables to the context and resolve them via the velocity part. | In Handlebars it is not possible to access the context via resolving.
+|===

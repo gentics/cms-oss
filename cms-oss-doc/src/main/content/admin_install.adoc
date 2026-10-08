@@ -1,0 +1,175 @@
+---
+title: "Installing Gentics CMS"
+description: "Learn how to install Gentics CMS"
+---
+= Installing Gentics CMS
+
+This page described what steps are needed to install Gentics CMS.
+
+[#pre-requirements]
+== Pre Requirements
+
+* xref:faq_system_requirements.adoc[System Requirements]
+* All commands have to be executed using the root user.
+* Make sure the locale en_US.UTF-8 is generated
+* Make sure your timezone is correctly set (eg. to CET)
+* Make sure Java 17 is installed on the system. Installation commands differ depending on the operating system (see the xref:gcn_compatibility_list.adoc#operating-systems[compatibility list] for details on supported operating systems).
+
+[#download-the-package]
+=== Download the package
+
+Download the Gentics CMS JAR from our Maven repository:
+
+. OSS version: https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms-oss/cms-oss-server/
+. Enterprise version: https://repo.gentics.com/service/rest/repository/browse/maven/com/gentics/cms/cms-server/
+
+NOTE: Access to the repository for the Enterprise version requires credentials. Please contact your account manager for details.
+
+Save the JAR file under /cms.
+
+[#create-service]
+=== Create service
+
+[#create-node-user]
+==== Create node user
+
+Concrete commands may vary depending on the operating system, but the following examples should work on most Linux based operating systems. The examples assume that they are executed as the `+root+` user. When executed with another user prefixing all commands with `+sudo+` might be necessary.
+
+. Create group for `+node+` user: `+groupadd node+`
+. Create `+node+` user, add to `+node+` group and assign home directory `+/cms+`: `+useradd -m -d /cms -g node node+`
+. (Optional) Set password for `+node+` user: `+passwd node+`
+
+Create the systemd service file:
+
+./cms/cms.service
+[source,shell]
+----
+[Unit]
+Description=Gentics CMS
+Wants=basic.target
+After=basic.target network.target syslog.target
+
+[Service]
+User=node
+Restart=on-failure
+# Replace "YOUR_LICENSE_KEY" in the following line with your actual license key.
+Environment="LICENSEKEY=YOUR_LICENSE_KEY"
+# Only one of the two following lines may be uncommented. This example assumes that the enterprise version is used, adapt the following two lines if the OSS version should be used instead.
+# ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.path=conf -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
+ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.path=conf -Dcom.gentics.contentnode.config.files=cms -cp cms-server.jar --add-opens=java.base/java.lang=ALL-UNNAMED com.gentics.contentnode.server.Runner
+WorkingDirectory=/cms
+LimitMEMLOCK=infinity
+LimitNOFILE=65536
+LimitAS=infinity
+LimitRSS=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+----
+
+Please note that `+-Dcom.gentics.contentnode.config.path=conf+` can be omitted, as having a default value of `+conf+`. Here we mention it to make the whole config path clear, consisting of `+user.dir+` + `+com.gentics.contentnode.config.path+` + `+com.gentics.contentnode.config.files+` , which in this case corresponds to /cms/conf/cms .
+
+The license key can alternatively also be set by storing the key in `+/cms/keys/license.key+`.
+
+Create the configuration .yml files under /cms/conf/cms and activate the service with
+
+[#database-configuration]
+==== Database configuration
+
+The configuration for the database access should be put in /cms/conf/cms/db.yml:
+
+./cms/conf/cms/db.yml
+[source,shell]
+----
+db:
+  settings:
+    user: "node_cms"
+    password: "PASSWORD_FOR_USER node_cms"
+    # The following setting are only necessary if the database server is not running on the same host as the CMS.
+    host: "DATABASE_HOST"
+----
+
+NOTE: Make sure that the DB configuration file is only readable by the `+node+` user.
+
+Alternatively the database configuration can also be set via environment variables. See https://www.gentics.com/Content.Node/cmp8/guides/admin_docker.html#environment-variables[Environment variables] for details.
+
+[source,shell]
+----
+# systemctl enable /cms/cms.service
+----
+
+[#database-server]
+=== Database server
+
+Please install a xref:gcn_compatibility_list.adoc[compatible] MySQL Server on your system.
+We suggest a installation of MariaDB on the same server that will host Gentics CMS.
+
+The following mysql permissions are needed.
+
+[source,shell]
+----
+  mysql> GRANT usage ON *.* to node_cms@HOSTNAME;
+  mysql> GRANT super ON *.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8_cr.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8_todo.* to node_cms@HOSTNAME;
+----
+
+The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
+
+[source,shell]
+----
+[mysqld]
+  innodb_flush_log_at_trx_commit = 2
+  character-set-server           = utf8mb4
+  character_set_client           = utf8
+  character-set-filesystem       = utf8
+
+  sql_mode                       = ""
+  innodb                         = FORCE
+  default-storage-engine         = InnoDB
+  max_allowed_packet             = 256M
+  collation_server               = utf8_general_ci
+
+[client]
+  default-character-set          = utf8
+----
+
+When using a MariaDB version 11.6 and up the following additional setting is necessary.
+
+[source,shell]
+----
+[mysqld]
+  innodb_snapshot_isolation      = 0
+----
+
+[#reverse-proxy-configuration]
+== Reverse proxy configuration
+
+Once started the CMS is reachable under http://localhost:8080. To make it reachable under a certain domain, the web server (e.g. Apache or Nginx) must be configured to use a reverse proxy to forward requests for the CMS to localhost:8080.
+
+[#migration]
+== Migration
+
+See the xref:admin_migration_cmp8.adoc[migration guide] for information about migrating from CMP 7.x to CMP 8.x.
+
+[#final-recommendations-and-suggestions]
+=== Final recommendations and suggestions
+
+IMPORTANT: It is mandatory to adjust the xref:faq_memory_performance_settings.adoc[memory settings] for your installation. Not doing so can lead to performance issues.
+
+NOTE: It's considered best practice to use hyphens (-) instead of underscores (pass:[_]) in URL's. For new installations you should add xref:feature_sanitize_name.adoc#using-hyphens-instead-of-underscores[these settings] to your configuration.
+
+[#resetting-the-database]
+=== Resetting the database
+
+The database of the Gentics CMS can by reset anytime by dropping & recreating the database:
+
+[source,shell]
+----
+mysql> DROP database node_utf8;
+mysql> CREATE database node_utf8;
+----
+
+The database structure will be recreated during the next startup of Gentics CMS.

@@ -1,0 +1,683 @@
+---
+title: "Migration from CMP 7.x to CMP 8.x"
+---
+= Migration from CMP 7.x to CMP 8.x
+
+With CMP 8.x the architecture of the CMS has been changed significally.
+Instead of the hybrid architecture of prior versions (with PHP code running in an Apache HTTP Server and Java code running in an Apache Tomcat Server),
+the CMS now consists of only a single .jar file, which will start an embedded HTTP Server.
+
+For migration of an existing installation to CMP 8.x, at least the following steps will be necessary:
+
+* Migrate the configuration (from PHP-style to YML-style)
+* Change configuration options, that have been renamed
+* Move files to new locations
+* Adapt URLs for accessing the CMS via HTTP if necessary
+
+[#migrate-configuration]
+== Migrate configuration
+
+When starting CMS 6.0 it is important to define which configuration files to load via a comma separated list in either
+
+* Environment variable `CONF_FILES`, or
+* Java system property `com.gentics.contentnode.config.files`
+
+Note that for every directory in this list, all .yml files in the directory will be loaded.
+
+[#transform-to-yml-file-s]
+=== Transform to .yml file(s)
+
+The format of the configuration files has been changed from PHP files to YML files.
+
+To help with the migration, there is a tool in the CMS (also available in CMP 7.x), which converts the current configuration into a YML file.
+The tool must be used in a CMS running CMP 7.x:
+
+[source,shell]
+----
+/Node/bin/java.sh com.gentics.contentnode.tools.MigrateConfiguration -config "http://localhost/.Node/?do=24" -out /tmp/new_configuration.yml
+----
+
+It supports the following command line parameters:
+
+[%header]
+|===
+| Parameter | Description
+
+| -config | URL to get configuration
+| -out | Filename for writing the migrated configuration
+|===
+
+NOTE: The written configuration file will only contain configuration settings, which are different from the current default settings.
+
+WARNING: The tool only re-writes the current configuration (collected from all PHP-style configuration files) in the new format, but will not do necessary changes in the configuration. This has to be done manually (see chapters below).
+
+[#manual-transformation-of-configuration-settings]
+=== Manual transformation of configuration settings
+
+[#enabling-of-features]
+==== Enabling of features
+
+In the old PHP-style configuration, features were enabled like this:
+
+./Node/etc/conf.d/*.conf
+[source,javascript]
+----
+$FEATURE["wastebin"] = true;
+----
+
+In the new format, this is done with:
+
+.features.yml
+[source,shell]
+----
+feature:
+  wastebin: true
+----
+
+[#database-access]
+==== Database Access
+
+PHP-style:
+
+./Node/etc/conf.d/*.conf
+[source,javascript]
+----
+$SETTINGS["db"] = "<dbname>";
+$SETTINGS["server"] = "<dbhost>:<dbport>";
+$SETTINGS["login"] = "<dbuser>";
+$SETTINGS["pw"] = "<dbpassword>";
+----
+
+New format and configuration parameters:
+
+.db.yml
+[source,shell]
+----
+db:
+  settings:
+    url: jdbc:mariadb://<dbhost>:<dbport>/<dbname>
+    user: <dbuser>
+    password: <dbpassword>
+----
+
+[#other-settings]
+==== Other settings
+
+Most other settings will be transformed in the following way:
+
+PHP-style:
+
+./Node/etc/conf.d/*.conf
+[source,javascript]
+----
+$ALOHA_SETTINGS['plugins']['block']['rootTags'] = array('div', 'span', 'a');
+----
+
+New format:
+
+.aloha.yml
+[source,shell]
+----
+aloha_settings:
+  plugins:
+    block:
+      rootTags:
+        - "div"
+        - "span"
+        - "a"
+----
+
+[#exceptions]
+===== Exceptions
+
+There are two exception to the naming rule above:
+
+. Settings in `$PUBLISH_LOAD_BALANCING` must be put under `config.loadbalancing`.
+
+PHP-style:
+
+./Node/etc/conf.d/*.conf
+[source,javascript]
+----
+$PUBLISH_LOAD_BALANCING["threadlimit"] = 2;
+----
+
+New format:
+
+.conf/*.yml
+[source,shell]
+----
+config
+  loadbalancing:
+    threadlimit: 2
+----
+
+[#configuration-changes]
+=== Configuration changes
+
+Some configuration parameters have been renamed or removed:
+
+[%header]
+|===
+| Parameter | Change
+
+| cn_map_db_settings | _Removed_
+| db.settings.login | Renamed to `+db.settings.user+`
+| db.settings.pw | Renamed to `+db.settings.password+`
+| filepath | _Removed_
+| fileutils.class | _Removed_
+| fileutils.encoding | _Removed_
+| nodecopy_configfile | _Removed_
+| nodepath | _Removed_
+| selfupdate.updateFromLocal | _Removed_
+| tidy_configuration | _Removed_
+| ttm_skip_backup | _Removed_
+| xnl_function | _Removed_
+|===
+
+[#keycloak-integration]
+=== Keycloak Integration
+
+Keycloak integration is now done in the following steps
+
+. Activate Feature
+. Place keycloak.json as `+ui-conf/keycloak.json+`
+. Optionally configure keycloak.user_created_callback
+. Optionally configure keycloak.init_groups
+
+.keycloak.yml
+[source,shell]
+----
+feature:
+  keycloak: true
+keycloak:
+  user_created_callback: your.companyname.custom.SsoUserCreated
+  init_groups: |
+    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
+      [3],
+      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
+        [4],
+        [5]
+      )
+    )
+----
+
+[#property-substitution]
+=== Property substitution
+
+The new configuration files will now support property substitution in string values.
+
+The general format for property substitution is `+${key:property}+` where `+key+` defines substitution type, and `+property+` the property to be substituted:
+
+[%header]
+|===
+| Key | Description | Example | Replacement
+
+| base64Encoder | Replace with base64 encoded string | `+${base64Encoder:Hello World}+` | `+SGVsbG8gV29ybGQ=+`
+| base64Decoder | Replace with base64 decoded string | `+${base64Decoder:SGVsbG8gV29ybGQ=}+` | `+Hello World+`
+| date | Replace with current date | `+${date:yyyy-mm-dd}+` | `+2023-04-01+`
+| env | Replace with value of environment variable | `+${env:USER}+` | `+node+`
+| sys | Replace with value of system property | `+${sys:user.name}+` | `+node+`
+| urlEncoder | Replace with URL encoded string | `+${urlEncoder:path with spaces}+` | `+path``+with+``spaces+`
+| urlDecoder | Replace with URL decoded string | `+${urlDecoder:path``+with+``spaces}+` | `+path with spaces+`
+|===
+
+[#environment-variables]
+=== Environment variables
+
+The CMS now supports the following environment variables (some settings can also be set over Java System properties or in the CMS configuration):
+
+[#http_port]
+==== HTTP_PORT
+
+|===
+h| Description | Http Port of the CMS
+h| Env | `+HTTP_PORT+`
+h| System Property | `+com.gentics.contentnode.http.port+`
+h| Configuration | `+server.port+`
+h| Default | 8080
+|===
+
+[#http2]
+==== HTTP2
+
+|===
+h| Description | Use HTTP/2 protocol version
+h| Env | `+HTTP2+`
+h| System Property | `+com.gentics.contentnode.http2+`
+h| Configuration | `+server.http2+`
+h| Default | false
+|===
+
+[#conf_path]
+==== CONF_PATH
+
+|===
+h| Description | Path to configuration files
+h| Env | `+CONF_PATH+`
+h| System Property | `+com.gentics.contentnode.config.path+`
+h| Configuration | -
+h| Default | `+conf+`
+|===
+
+[#dbfiles_path]
+==== DBFILES_PATH
+
+|===
+h| Description | Path to binary files
+h| Env | `+DBFILES_PATH+`
+h| System Property | `+com.gentics.contentnode.dbfiles.path+`
+h| Configuration | `+config.dbfiles+`
+h| Default | `+data/dbfiles+`
+|===
+
+[#conf_files]
+==== CONF_FILES
+
+|===
+h| Description | Comma separated list of configuration files or folders containing configuration files (relative to <<conf_path,CONF_PATH>>)
+h| Env | `+CONF_FILES+`
+h| System Property | `+com.gentics.contentnode.config.files+`
+h| Configuration | -
+h| Default |
+|===
+
+[#licensekey]
+==== LICENSEKEY
+
+|===
+h| Description | License Key
+h| Env | `+LICENSEKEY+`
+h| System Property | `+com.gentics.contentnode.license-key+`
+h| Configuration | -
+h| Default |
+|===
+
+[#keys_path]
+==== KEYS_PATH
+
+|===
+h| Description | Path to keys directory
+h| Env | `+KEYS_PATH+`
+h| System Property | `+com.gentics.contentnode.keys.path+`
+h| Configuration | -
+h| Default | `+keys+`
+|===
+
+[#cache_config_path]
+==== CACHE_CONFIG_PATH
+
+|===
+h| Description | Path to cache.ccf
+h| Env | `+CACHE_CONFIG_PATH+`
+h| System Property | `+com.gentics.contentnode.cache.config.path+`
+h| Configuration | -
+h| Default | [<<conf_path]/,CONF_PATH>>``+cache.ccf+``
+|===
+
+[#cache_path]
+==== CACHE_PATH
+
+|===
+h| Description | Path to cache files
+h| Env | `+CACHE_PATH+`
+h| System Property | `+com.gentics.contentnode.cache.path+`
+h| Configuration | -
+h| Default | `+cache+`
+|===
+
+[#logs_path]
+==== LOGS_PATH
+
+|===
+h| Description | Path to logs
+h| Env | `+LOGS_PATH+`
+h| System Property | `+com.gentics.contentnode.logs.path+`
+h| Configuration | -
+h| Default | `+logs+`
+|===
+
+[#publish_path]
+==== PUBLISH_PATH
+
+|===
+h| Description | Path to statically published files
+h| Env | `+PUBLISH_PATH+`
+h| System Property | `+com.gentics.contentnode.publish.path+`
+h| Configuration | -
+h| Default | `+publish+`
+|===
+
+[#gis_path]
+==== GIS_PATH
+
+|===
+h| Description | Path to statically published GIS files
+h| Env | `+GIS_PATH+`
+h| System Property | `+com.gentics.contentnode.gis.path+`
+h| Configuration | -
+h| Default | [<<publish_path]/,PUBLISH_PATH>>``+gis+``
+|===
+
+[#packages_path]
+==== PACKAGES_PATH
+
+|===
+h| Description | Path to the directory containing the devtool packages
+h| Env | `+PACKAGES_PATH+`
+h| System Property | `+com.gentics.contentnode.packages.path+`
+h| Configuration | -
+h| Default | `+packages+`
+|===
+
+[#content_packages_path]
+==== CONTENT_PACKAGES_PATH
+
+|===
+h| Description | Path to the directory containing the content packages
+h| Env | `+CONTENT_PACKAGES_PATH+`
+h| System Property | `+com.gentics.contentnode.content_packages.path+`
+h| Configuration | -
+h| Default | `+content-packages+`
+|===
+
+[#scheduler_commands_path]
+==== SCHEDULER_COMMANDS_PATH
+
+|===
+h| Description | Path to the directory containing the scripts, that can be run by the scheduler
+h| Env | `+SCHEDULER_COMMANDS_PATH+`
+h| System Property | `+com.gentics.contentnode.scheduler_commands.path+`
+h| Configuration | -
+h| Default | `+scheduler-commands+`
+|===
+
+[#static_serve_list]
+==== STATIC_SERVE_LIST
+
+|===
+h| Description | Comma separated list of directories that contain files, which should be served statically over HTTP
+h| Env | `+STATIC_SERVE_LIST+`
+h| System Property | `+com.gentics.contentnode.static_serve_list+`
+h| Configuration | -
+h| Default |
+|===
+
+[#ui_conf_path]
+==== UI_CONF_PATH
+
+|===
+h| Description | Path to UI configuration files
+h| Env | `+UI_CONF_PATH+`
+h| System Property | `+com.gentics.contentnode.ui.conf_path+`
+h| Configuration | `+ui.conf_path+`
+h| Default | `+ui-conf+`
+|===
+
+[#tmp_path]
+==== TMP_PATH
+
+|===
+h| Description | Path to store temporary files
+h| Env | `+TMP_PATH+`
+h| System Property | `+com.gentics.contentnode.tmp_path+`
+h| Configuration | `+tmppath+`
+h| Default | System property java.io.tmpdir
+|===
+
+[#node_user_password]
+==== NODE_USER_PASSWORD
+
+|===
+h| Description | Initial password for the CMS user 'node'
+h| Env | `+NODE_USER_PASSWORD+`
+h| System Property | `+com.gentics.contentnode.node_user.password+`
+h| Configuration | -
+h| Default |
+|===
+
+[#node_db_driver_class]
+==== NODE_DB_DRIVER_CLASS
+
+|===
+h| Description | Name of the JDBC Driver class for accessing the backend DB
+h| Env | `+NODE_DB_DRIVER_CLASS+`
+h| System Property | `+com.gentics.contentnode.db.driverClass+`
+h| Configuration | `+db.settings.driverClass+`
+h| Default | `+org.mariadb.jdbc.Driver+`
+|===
+
+[#node_db_host]
+==== NODE_DB_HOST
+
+|===
+h| Description | Hostname of the backend DB
+h| Env | `+NODE_DB_HOST+`
+h| System Property | `+com.gentics.contentnode.db.host+`
+h| Configuration | `+db.settings.host+`
+h| Default | `+localhost+`
+|===
+
+[#node_db_port]
+==== NODE_DB_PORT
+
+|===
+h| Description | Port of the backend DB
+h| Env | `+NODE_DB_PORT+`
+h| System Property | `+com.gentics.contentnode.db.port+`
+h| Configuration | `+db.settings.port+`
+h| Default | `+3306+`
+|===
+
+[#node_db_user]
+==== NODE_DB_USER
+
+|===
+h| Description | Username for accessing the backend DB
+h| Env | `+NODE_DB_USER+`
+h| System Property | `+com.gentics.contentnode.db.user+`
+h| Configuration | `+db.settings.user+`
+h| Default |
+|===
+
+[#node_db_password]
+==== NODE_DB_PASSWORD
+
+|===
+h| Description | Password for accessing the backend DB
+h| Env | `+NODE_DB_PASSWORD+`
+h| System Property | `+com.gentics.contentnode.db.password+`
+h| Configuration | `+db.settings.password+`
+h| Default |
+|===
+
+[#node_db_name]
+==== NODE_DB_NAME
+
+|===
+h| Description | Name of the backend DB
+h| Env | `+NODE_DB_NAME+`
+h| System Property | `+com.gentics.contentnode.db.name+`
+h| Configuration | `+db.settings.name+`
+h| Default | `+node_utf8+`
+|===
+
+[#node_db_parameters]
+==== NODE_DB_PARAMETERS
+
+|===
+h| Description | Additional JDBC Parameters for accessing the backend DB
+h| Env | `+NODE_DB_PARAMETERS+`
+h| System Property | `+com.gentics.contentnode.db.parameters+`
+h| Configuration | `+db.settings.jdbcparameters+`
+h| Default | `+netTimeoutForStreamingResults=900+`
+|===
+
+[#node_db_url]
+==== NODE_DB_URL
+
+|===
+h| Description | JDBC Connection URL for accessing the backend DB
+h| Env | `+NODE_DB_URL+`
+h| System Property | `+com.gentics.contentnode.db.url+`
+h| Configuration | `+db.settings.url+`
+h| Default | _Will be constructed from [<<node_db_host],NODE_DB_HOST>>, [<<node_db_port],NODE_DB_PORT>>, [<<node_db_name],NODE_DB_NAME>> and [<<node_db_parameters]_,NODE_DB_PARAMETERS>>
+|===
+
+[#node_db_init_timeout]
+==== NODE_DB_INIT_TIMEOUT
+
+|===
+h| Description | Timeout in ms for establishing initial connection to the backen DB, when the CMS is started
+h| Env | `+NODE_DB_INIT_TIMEOUT+`
+h| System Property | `+com.gentics.contentnode.db.init_timeout+`
+h| Configuration | -
+h| Default | `+60000+`
+|===
+
+[#alohaeditor_path]
+==== ALOHAEDITOR_PATH
+
+|===
+h| Description | Path to Aloha Editor (used only in development environments)
+h| Env | `+ALOHAEDITOR_PATH+`
+h| System Property | `+com.gentics.contentnode.alohaeditor.path+`
+h| Configuration | -
+h| Default |
+|===
+
+[#alohaeditor_plugins_path]
+==== ALOHAEDITOR_PLUGINS_PATH
+
+|===
+h| Description | Path to Aloha Editor Plugins (used only in development environments)
+h| Env | `+ALOHAEDITOR_PLUGINS_PATH+`
+h| System Property | `+com.gentics.contentnode.alohaeditor.plugins.path+`
+h| Configuration | -
+h| Default |
+|===
+
+[#gcnjsapi_path]
+==== GCNJSAPI_PATH
+
+|===
+h| Description | Path to Gentics CMS JS API (used only in development environments)
+h| Env | `+GCNJSAPI_PATH+`
+h| System Property | `+com.gentics.contentnode.gcnjsapi.path+`
+h| Configuration | -
+h| Default |
+|===
+
+[#disk-based-cache-files]
+=== Disk based cache files
+
+In order to have the cache place the files for disk based caches (normally for GIS and publish cache) at the configured location, it is mandatory to have the cache.ccf file contain the following lines:
+
+.cache.ccf
+[source,shell]
+----
+...
+jcs.auxiliary.DC.attributes.DiskPath=${com.gentics.contentnode.cache.path}
+...
+jcs.auxiliary.PUB.attributes.DiskPath=${com.gentics.contentnode.cache.path}
+...
+----
+
+[#changes-in-directory-structure]
+== Changes in directory structure
+
+The directory structure has been flattened and made configurable.
+The new default values are considered relative to the execution directory of the CMS. If the CMS is running in a container, this will be relative to `+/cms+`.
+
+[%header]
+|===
+| Contents | Old directory | New default
+
+| Configuration files | `+/Node/etc/conf.d+` | `+conf+`
+| File `+nodelog.yml+` | `+/Node/tomcat/conf/gentics+` | `+conf+`
+| File `+cache.ccf+` | `+/Node/tomcat/conf/gentics+` | `+conf+`
+| UI Configuration files | `+/Node/var/httpd/htdocs/customer-config+` | `+ui-conf+`
+| File `+license.key+` | `+/Node/tomcat/conf/gentics+` | `+keys+`
+| Generated private key | `+/Node/tomcat/conf/gentics+` | `+keys+`
+| Uploaded binaries | `+/Node/node/content/dbfiles+` | `+data/dbfiles+`
+| Disk based cache for GIS | `+/Node/tomcat/temp/jcs+` | `+cache+`
+| Disk based cache for Publish Cache | `+/Node/tomcat/temp/pub+` | `+cache+`
+| Publish logs | `+/Node/node/content/log+` | `+logs+`
+| CMS logs | `+/Node/tomcat/logs+` | `+logs+`
+| Statically published content | `+/Node/node/content/publish+` | `+publish+`
+| Statically published GIS Images | `+/Node/node/content/imagestore+` | `+publish/gis+`
+| Devtool packages | `+/Node/node/content/packages+` | `+packages+`
+| Custom libraries | `+/Node/tomcat/shared/lib/custom+` | `+libs+`
+| Content packages | `+/Node/node/content/content-packages+` | `+content-packages+`
+| Scheduler scripts | `+/Node/bin/scheduler-commands+` | `+scheduler-commands+`
+|===
+
+[#url-changes]
+== URL Changes
+
+WARNING: The default port of the CMS has been changed from 80 to 8080.
+
+The URLs to various parts of the CMS have been changed (shortened), and some parts have been removed:
+
+[%header]
+|===
+| Description | Old URL | New URL
+
+| Old UI and PHP backend | `+/.Node/...+` | _Removed_
+| File Servlet | `+/file/...+` | _Removed_
+| Aloha Tag Servlet | `+/alohatag/...+` | _Removed_
+| Java Parser Invoker | `+/JavaParserInvoker/...+` | _Removed_
+| Tidy Servlet | `+/tidy/...+` | _Removed_
+| Gentics Image Store | `+/GenticsImageStore/...+` | `+/GenticsImageStore+`
+| Aloha Page Servlet | `+/alohapage/...+` | `+/alohaeditor/...+`
+| Aloha Editor | `+/[build-timestamp]/alohaeditor/...+` | `+/alohaeditor/[build-timestamp]/...+`
+| Gentics CMS JS API | `+/[build-timestamp]/gcnjsapi/...+` | `+/gcnjsapi/[build-timestamp]/...+`
+| REST API | `+/rest/...+` | `+/rest/...+`
+| JMX Monitoring API | `+/jmx/...+` | `+/jmx/...+`
+| Keycloak configuration | `+/customer-config/config/keycloak.json+` | `+/ui-conf/keycloak.json+`
+| UI Overrides | `+/customer-config/config/ui-overrides.json+` | `+/ui-conf/ui-overrides.json+`
+| Form Generator Overrides | `+/customer-config/config/config-override.json+` | `+/ui-conf/config-override.json+`
+| Form Editor configuration | `+/customer-config/config/form-editor.json+` | `+/ui-conf/form-editor.json+`
+| UI Custom Script | `+/customer-config/scripts/index.js+` | `+/ui-conf/index.js+`
+| Implementation tool | `+/generic.html+` | `+/tools/generic.html+`
+| Implementation tool | `+/renderpage.html+` | `+/tools/renderpage.html+`
+| Open API (YAML) | `+/openapi.yaml+` | `+/openapi/openapi.yaml+`
+| Open API (JSON) | `+/openapi.json+` | `+/openapi/openapi.json+`
+|===
+
+[#file-upload-manipulator]
+== File Upload Manipulator
+
+Since PHP has been removed from the CMS, it is no longer possible to implement a File Upload Manipulator with PHP scripts that run along
+with the CMS. Existing PHP scripts that serve as File Upload Manipulator must be migrated to an external service, which can run PHP scripts.
+
+When the container image of the CMS is used, that external service must run in another container and http access between the CMS container and the FUM
+container must be possible.
+
+[#removed-features]
+== Removed Features
+
+[#xnl]
+=== XNL
+
+Rendering XNL has been removed. All existing XNL Implementations must be replaced with Handlebars Implementations.
+
+[#import-export]
+=== Import/Export
+
+Use the new https://www.gentics.com/Content.Node/cmp8/guides/feature_content_staging.html[Content Staging]. instead.
+
+[#sso-with-cas]
+=== SSO with CAS
+
+Single-Sign-On is now handled by the xref:rest_auth.adoc#sso-with-keycloak[Keycloak integration]
+
+[#activiti-integration]
+=== Activiti Integration
+
+Use the Activiti API directly.
+
+[#auto-update]
+=== Auto-Update
+
+See the Gentics infoportal for instructions on how to update https://www.gentics.com/infoportal/cmp/operations/docker/updates/[Docker], https://www.gentics.com/infoportal/cmp/operations/kubernetes/updates/[Kubernetes] or https://www.gentics.com/infoportal/cmp/operations/linux/updates/[Linux] installations.

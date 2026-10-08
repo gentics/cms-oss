@@ -1,0 +1,296 @@
+---
+title: "Using meta attributes"
+---
+= Using meta attributes
+
+Here you learn about the various ways to use meta attributes in Gentics CMS.
+
+NOTE: If you're just looking for a compiled list of meta attributes head over to the xref:meta_attributes.adoc[List of meta attributes]
+
+[#syntax]
+== Syntax
+
+[#node-style]
+=== Node-Style
+
+The Node-style syntax is available in pages, templates and tags. When the rendered attribute
+is a tag, it will be rendered with the appropriate icons.
+
+WARNING: Rendering tags in edit mode via the Node-Style syntax can cause problems, if the template contains "`+<@" or "+`>`+" characters (for example @<?php ... ?>+`). Consider using the `+#gtx_edit+`.
+
+.Example: print the page name
+[source,shell]
+----
+  <node page.name>
+----
+
+[#handlebars-style]
+=== Handlebars-Style
+
+WARNING: Rendering tags with the plain Handlebars syntax will *not* generate tag icons. Use the `+#gtx_edit+` helper to render tags in edit mode.
+
+.Example: print the page name
+[source,shell]
+----
+	{{cms.page.name}}
+----
+
+[#tagmap-style]
+=== Tagmap-Style
+
+The Gentics CMS Tagmap requires no special syntax - you can access the properties directly.
+
+.Example: print the page name
+[source,shell]
+----
+	page.name
+----
+
+NOTE: This syntax is only available in the Tagmap editor in the field "tagname".
+
+[#resolving-properties]
+=== Resolving properties
+
+You can chain properties together using a dot-syntax to traverse through linked objects
+
+.Example: display lastname of the folders creator
+[source,shell]
+----
+  <node page.folder.creator.lastname> // Node-Style
+  $cms.page.folder.creator.lastname // VTL-Style
+  page.folder.creator.lastname // Tagmap-Style
+----
+
+[#baseobjects]
+== Baseobjects
+
+These are the base objects that can be used in the CMS, along with examples on how they can be accessed and in which contexts they are made available.
+
+[%header]
+|===
+| Object | Handlebars example | Node-Style Example | Availability
+
+| <<page,page>> | {{cms.page.name}} | &lt;node page.name&gt; | page
+| <<template,template>> | {{cms.template.id}} | &lt;node template.id&gt; | page, template
+| <<file,file>> | {{cms.file.name}} | &lt;node file.name&gt; | file
+| <<folder,folder>> | {{cms.folder.name}} | &lt;node folder.name&gt; | folder, file, page
+| <<node,node>> | {{cms.node.host}} | &lt;node node.host&gt; | file, folder, page, tag, template
+| <<object,object>> | {{gtx_render cms.object.startpage}} | &lt;node object.startpage&gt; | file, folder, page
+| <<rendermode,rendermode>> | {{cms.rendermode}} | N/A | file, folder, page, tag, template
+| <<tag,tag>> | {{gtx_render cms.tag.parts.url}} | &lt;node url&gt; | tag
+|===
+
+[#page]
+=== Page
+
+NOTE: Access the list of xref:meta_attributes.adoc#page[page meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+The actual pageobject is only available in pagecontext (pages, pageurl's, page overviews, pagetags).
+
+.Example: render the publish date
+[source,shell]
+----
+	<node page.publishdate> // Node-Style
+	$cms.page.publishdate // VTL-Style
+----
+
+[#template]
+=== Template
+
+NOTE: Access the list of xref:meta_attributes.adoc#template[template meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+The basic object applies to the actual template and provides the access for some properties of the template.
+
+.Example: resolve the template id
+[source,shell]
+----
+	Node Style: <node template.id>
+	VTL Style: $cms.template.id
+----
+
+[#folder]
+=== Folder
+
+NOTE: Access the list of xref:meta_attributes.adoc#folder[folder meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+The basic object offers information about the folder.
+
+.Example: resolve the folder name
+[source,shell]
+----
+Node Style: <node folder.name>
+VTL Style: $cms.folder.name
+----
+
+[#file]
+=== File
+
+NOTE: Access the list of xref:meta_attributes.adoc#file[file meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This basic object is not available page context, but in context of object properties and overviews.
+
+.Example: output the filename
+[source,shell]
+----
+Node Style: <node file.name>
+VTL Style: $cms.file.name
+----
+
+[#node]
+=== Node
+
+NOTE: Access the list of xref:meta_attributes.adoc#node[node meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This basic object applies access to information of the actual node.
+
+.Example: output the hostname
+[source,shell]
+----
+Node Style: <node node.host>
+VTL Style: $cms.node.host
+----
+
+[#object]
+=== Object
+
+Applies access to the object properties of the actual object.
+
+.Example: access object property color of the page
+[source,shell]
+----
+$cms.page.object.color
+----
+
+If an object property is not found on the current object a fallback mechanism will be triggered.
+
+. when using a page object Gentics CMS will try to resolve the object property from the template ($cms.template.object.color)
+. if not successful resolving will continue with the folder object ($cms.folder.object.color)
+
+[#tag]
+=== Tag
+
+NOTE: Access the list of xref:meta_attributes.adoc#tag[tag meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This basic object applies access to information of a tag in a page.
+
+.Example: access a tags name
+[source,shell]
+----
+Node Style: <node [TAGNAME].name>
+Node Style: <node tag.name>
+VTL Style: $cms.page.tags.TAGNAME.name
+----
+
+[#rendermode]
+=== Rendermode
+
+NOTE: Rendermode is *only available when using Handlebars syntax*. Access the list of xref:meta_attributes.adoc#rendermode[rendermode meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This basic object applies access to information of the actual node during rendering with Handlebars.
+
+.Example: Output publish status
+[source,shell]
+----
+VTL Style: {{cms.rendermode.publish}}
+----
+
+[#childobjects]
+== Childobjects
+
+Child objects are only available from the context of a base object.
+
+[#language]
+=== Language
+
+NOTE: Access the list of xref:meta_attributes.adoc#language[language meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This property allows you to access information related to the current page language as well as other language variants of the page.
+
+.Example: print language code of page
+[source,shell]
+----
+Node Style: <node page.language.code>
+VTL Style: $cms.page.language.code
+----
+
+[#pagetag-templatetag-parttype]
+=== Pagetag/Templatetag Parttype
+
+NOTE: Access the list of xref:meta_attributes.adoc#pagetag-templatetag-parttype[Pagetag/Templatetag Parttype meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+This object is used to access information of page- or templatetags.
+
+.Example: access tagid from tag linked via a pagetag
+[source,shell]
+----
+$cms.page.tags.pagetag.tag.id
+----
+
+[#text-parttypes]
+=== Text Parttypes
+
+NOTE: Access the list of xref:meta_attributes.adoc#text-parttypes[Text Parttypes meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+The following Text Parttypes are available for use. Some Parttypes will modify you textual contents as described:
+
+[%header]
+|===
+| Parttype | Modification
+
+| Text Short | none
+| Text | Linebreaks (\n) will be replaced by `+<br />+` tags
+| Text/HTML .2+| These Parttypes will remove all trailing whitespaces and replace all linebreaks by newline characters (`+\n+`). In the next step the following HTML tags will have a `+<br />+` tag appended to them: `+<b>+`, `+<strong>+`, `+<i>+`, `+<font>+`, `+<div>+`, `+<span>+` and `+<br>+`.
+| Text/HTML Long
+| HTML .2+| none
+| HTML Long
+|===
+
+WARNING: We strongly suggest not to use `+Text/HTML+` and `+Text/HTML Long+` Parttypes in your implementation as their replacing behaviour will confuse implementers and editors. Those parttypes are only available for legacy support.
+
+[#markuplanguage]
+=== Markuplanguage
+
+NOTE: Access the list of xref:meta_attributes.adoc#markuplanguage[markuplanguage meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+The markuplanguage attribute allows you to access the markuplanguage setting of a template.
+
+.Example: ouput the name of the markuplanguage
+[source,shell]
+----
+Node Style: <node page.template.ml.name>
+VTL Style: $cms.page.template.ml.name
+----
+
+[#user]
+=== User
+
+NOTE: Access the list of xref:meta_attributes.adoc#user[user meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+.Example: ouput the pages creators lastname
+[source,shell]
+----
+Node Style: <node page.creator.lastname>
+VTL Style: $cms.page.creator.lastname
+----
+
+[#overview-template]
+=== Overview Template
+
+NOTE: Access the list of xref:meta_attributes.adoc#overview-template[overview templates meta attributes] from the xref:meta_attributes.adoc[list of meta attributes] page.
+
+Overview templates are used in overview parttypes. They use a special syntax. Inside an overview you have access to the object that is currently listed as well as some meta properties.
+
+.Example: list of pages with numbering
+[source,shell]
+----
+<node ds_pageoverview>
+<!--
+	will generate output like
+	<p>News Page (1/12)</p>
+	<p>Another Page (2/12)</p>
+	<p>Third Page (3/12)</p>
+	...
+-->
+<p><node page.name> (<node ds.nr>/<node ds.count>)</p>
+</node ds_pageoverview>
+----

@@ -1,0 +1,80 @@
+---
+title: "Docker"
+description: "Running the CMS docker image"
+---
+= Docker
+
+[#gentics-cms-docker-compose-stack]
+== Gentics CMS Docker Compose Stack
+
+Please use the Gentics CMS Docker Compose Stack provided at https://github.com/gentics/cms-compose[https://github.com/gentics/cms-compose] for running Gentics CMS.
+
+[#example-usage]
+== Example usage
+
+when not using the Gentics CMS Docker Compose Stack
+
+[source,shell]
+----
+docker network create genticscms
+docker run -d --name db --net genticscms -e MYSQL_RANDOM_ROOT_PASSWORD=true -e MYSQL_DATABASE=node_utf8 -e MYSQL_USER=node -e MYSQL_PASSWORD=node mariadb:10.3 --sql-mode=""
+docker run -d -p 8080:80 --net genticscms --name cms -e NODE_DB_HOST=db docker.gentics.com/gentics/cms:5.33
+----
+
+[#configuration]
+== Configuration
+
+[#environment-variables]
+=== Environment variables
+
+[%header]
+|===
+| Variable | Default | Description
+
+| CONFIG_ACCESS_SUBNET | 127.0.0.0/8 | The network allowed to fetch the config via /.Node/?do=24
+| ADD_JAVA_OPTS | | Additional java options
+| JAVA_XMS | 1024m | Initial JVM memory allocation pool
+| JAVA_XMX | 1024m | Maximum JVM memory allocation pool
+| JAVA_GC_OPTS | -XX:+PrintGC | JVM GC settings
+| LICENSEKEY | (empty) | GCMS License key
+| LICENSEKEY_PATH | /cms/keys/license.key | Path to license key file in the container
+| PRIVATEKEY_PATH | /cms/keys/private-key.jwk | Path to the private key of the CMS in the container
+| NODE_DB_HOST | localhost | MySQL host
+| NODE_DB_PORT | 3306 | MySQL port
+| NODE_DB_USER | node | MySQL user
+| NODE_DB_PASSWORD | node | MySQL password
+| NODE_DB_NAME | node_utf8 | MySQL database name
+| NODE_DB_CONNECT_TIMEOUT | 60 | Time in seconds to wait for the database to be reachable before exiting with an error
+| NODE_USER_PASSWORD | | Password to set for the node CMS user
+|===
+
+[#volumes]
+=== Volumes
+
+[%header]
+|===
+| Volume path | Description
+
+| /cms/keys | License key and the private used by the CMS to issue JWTs
+| /cms/data | Uploaded binary files.
+| /cms/cache | Filesystem cache.
+| /cms/logs | Log files.
+| /cms/publish | Base directory for publishing to filesystem.
+| /cms/packages | Devtools packages.
+| /cms/content-packages | Content packages.
+| /cms/scheduler-commands | Shell scripts for execution by the scheduler.
+| /cms/libs | Additional library JAR files.
+| /cms/classes | Classes replacing ones in the server.jar archive.
+|===
+
+[#kubernetes-openshift]
+== Kubernetes / Openshift
+
+The CMS docker image can also be used with a Kubernetes or Openshift pod. Running the container with a random user ID and group ID 0 is supported (Openshift policies support). All folders that should be writable are owned by the group ID 0 and are group writable.
+
+Note: It might be necessary to configure the port of the internal Apache Http Server to a non-privileged port (e.g. 8080) by using the environment variable _APACHE_PORT_ when running the container in Openshift.
+
+[#updating]
+== Updating
+
+Updating to a newer version normally doesn't require any special actions besides changing the image tag.

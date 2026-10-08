@@ -1,0 +1,56 @@
+---
+title: "Backup"
+description: "Learn how to backup Gentics CMS"
+---
+= Backup
+
+This article describes how to create a consistent backup of Gentics CMS.
+
+WARNING: Doing backups is *not* part of Gentics CMS - doing backups is part of
+each customer's liability.
+
+WARNING: Backing up database tables while Gentics CMS is up and
+running will most certainly lead to data inconsistencies.
+
+WARNING: The following steps may vary, depending on your system. Please adapt
+your steps accordingly.
+
+[#database-backup]
+== Database Backup
+
+Create a backup of your MySQL database.
+
+[source,shell]
+----
+  # stop Gentics CMS
+  # dump the database
+  mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 3306 -p node_utf8 > /Node/tmp/node_utf8.sql
+----
+
+[#file-backup]
+== File Backup
+
+NOTE: Backup your database first
+
+[source,shell]
+----
+# stop Gentics CMS
+# create a full backup
+tar cvfz /backup/cms-data-`date +%F`.tar.gz /cms/data
+# start Gentics CMS
+----
+
+[#differential-backup]
+=== Differential Backup
+
+NOTE: Backup your database first
+
+The `+rdiff-backup+` https://github.com/rdiff-backup/rdiff-backup#installation[package] can be used to create incremental backups of the CMS data.
+
+[source,shell]
+----
+# stop Gentics CMS
+# create backup using rdiff-backup
+rdiff-backup /cms/ /backup/cms
+# start Gentics CMS
+----

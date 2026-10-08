@@ -1,0 +1,164 @@
+---
+title: "Page Resource"
+---
+= Page Resource
+
+[#page-create]
+== Page Create
+
+The create Request is used to create new pages.
+
+[source,javascript]
+----
+POST /rest/page/create
+{
+  folderId : ..;  // id of the folder
+  templateId: ..; // id of the template
+  language: ..;   // language code
+  variantId: ..;  // id of the variant
+}
+----
+
+[#page-load]
+== Page Load
+
+Load the page with given ID.
+
+[source,javascript]
+----
+GET /rest/page/load/{id}
+----
+
+|===
+| Name | Description | Defaultvalue
+| id | Local or global Id of the page to load | -
+| update | TRUE when the page shall be locked on the backend | FALSE
+| template | TRUE when the template information shall be embedded in the page response | FALSE
+| folder | TRUE when the folder information shall be embedded in the page response | FALSE
+| langvars | TRUE when the language variants shall be embedded in the page response | FALSE
+| workflow | TRUE when the workflow information shall be embedded in the page response | FALSE
+| pagevars | TRUE when the page variants shall be embedded in the page response. Page variants will contain folder information. | FALSE
+| translationstatus | TRUE will return information on the page's translation status | FALSE
+|===
+
+[#page-save]
+== Page save
+
+Save the page with given ID.
+It is perfectly possible to just send the part of the page, which actually needs to be modified when saving. The only mandatory field in the page object is the page id.
+
+[source,javascript]
+----
+POST /rest/page/save/{id}
+{
+  page: ..;   // the page
+  unlock: ..; // true, when the page shall be unlocked
+  delete: ..; // list of tagnames which shall be deleted
+}
+----
+
+[#page-preview]
+== Page preview
+
+Render a preview of the given page.
+
+[source,javascript]
+----
+POST /rest/page/preview
+{
+  page: ..;
+}
+----
+
+[#page-delete]
+== Page delete
+
+Deletes the given page.
+
+[source,javascript]
+----
+POST /rest/page/delete/{id}
+----
+
+[#page-cancel]
+== Page cancel
+
+Cancel editing the current page (unlocks the page).
+
+POST /rest/page/cancel/\{id}
+newtag
+
+Create a new tag in the page. The posted magicValue will be inserted into the created tag at appropriate position.
+
+POST /rest/page/newtag/\{id}?constructId=..
+{
+magicValue: ..;
+}
+
+[#page-restoreversion]
+== Page restoreVersion
+
+Restore a certain version of the page.
+
+[source,javascript]
+----
+POST /rest/page/restore/{id}?version=..
+----
+
+[#translate]
+== translate
+
+Translate the given page into another language.
+
+[source,javascript]
+----
+POST /rest/page/translate/{id}?language=..
+----
+
+[#page-publish]
+== Page publish
+
+Publish the given page. If the user has no permission to publish the page, a workflow for the publish process will be started. The posted message will be sent to users in groups responsible for further proceeding in the workflow.
+
+[source,javascript]
+----
+POST /rest/page/publish/{id}
+{
+  "message" : ..;
+}
+----
+
+[#workflow-decline]
+== workflow/decline
+
+Decline the workflow step (assign the page to another group).
+
+[source,javascript]
+----
+POST /rest/page/workflow/decline/{id}
+{
+  "message" : ..;
+  "group" : ..;
+  "delete" : ..;
+}
+----
+
+|===
+| Name | Description | default Value
+| id | Page id | -
+| message | Message which explains, why the workflow is declined | -
+| group | ID of the group to which the workflow shall be assigned (mandatory if delete is FALSE) | -
+| delete | TRUE if the workflow shall be completely deleted | FALSE
+|===
+
+Parameters for /rest/page/workflow/decline
+
+[#page-workflow-revoke]
+== Page workflow/revoke
+
+Revoke a workflow (if it was not yet edited).
+
+[source,javascript]
+----
+POST /rest/page/workflow/revoke/{id}
+----

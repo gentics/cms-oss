@@ -1,0 +1,52 @@
+---
+title: "File Resource"
+---
+= File Resource
+
+[#file-create]
+== File create
+
+The create Request is used to create new files. The method will accept multipart/form-data
+Binary data must be located within the BodyPart with the name 'fileBinaryData'.
+
+[source,javascript]
+----
+POST /rest/file/create.json
+----
+
+Fields:
+
+|===
+| Name | Description | Mandatory
+| folderId | Id of the target folder | true
+| nodeId | Id of the target node | false
+| fileBinaryData | Binary data field name | false
+| fileDescription | Description of the file | false
+|===
+
+[#generic-request-parameters]
+=== Generic Request Parameters:
+
+[source,javascript]
+----
+&content-wrapper-filter=true
+----
+
+When adding this Request Parameter the response content will be wrapped by a textarea tag. This is useful if you use uploaders that utilizes hidden iframes.
+
+[source,javascript]
+----
+&filter-contenttype=text/html;charset=utf8
+----
+
+This parameter will overwrite the reponse content-type header by the given value. Rest calls will usually return a content-type of 'application/json'.
+
+[#file-createsimple]
+== File createSimple
+
+The createSimple Request is used to create a new file. The method will accept binary post data.
+
+[source,javascript]
+----
+POST /rest/file/createSimple?folderId={folderid}&qqfile={fileName}
+----

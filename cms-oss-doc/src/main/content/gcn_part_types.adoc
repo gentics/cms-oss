@@ -1,0 +1,110 @@
+---
+title: "Part Types in Gentics CMS"
+description: "List of all existing part types"
+---
+= Part Types in Gentics CMS
+
+This section contains an overview over existing part types. These part types can be used to create tagtypes. Part types are the essential building blocks of tagtypes.
+
+[#overview]
+== Overview
+
+[%header]
+|===
+| Type Id | Type Name | Description
+
+| 1 | Text | Used for normal text (without HTML), which is entered using the tagfill dialog. Linebreaks will be transformed into &lt;br&gt; tags while rendering.
+| 4 | Page | The URL (page) part type provides an element to select a page within any accessible folder.
+| 6 | Image | Reference an image.
+| 8 | File | Reference a file.
+| 13 | Overview | The overview part type creates and overview which can be configured using a the provided wizard. **WARNING:** Cannot be used together with other tag parts that are set as editable.
+| 21 | HTML | Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering.
+| 25 | Folder | This part can be used to select a folder.
+| 29 | Select (single) | This part type provides static datasources from which a user can pick a single value.
+| 30 | Select (multiple) | This part type provides static datasources from which a user can pick multiple values.
+| 31 | Checkbox | Part type for input of boolean value.
+| 32 | Datasource | With this part type, the user can define individual datasources in the tag.
+| 40 | Node | The node part is a drop-down menu with the nodes available to the user.
+| 42 | Form | The CMS Form part lets the user select a form from the CMS. See link:feature_forms.html[Gentics CMS Forms] for details.
+| 43 | Handlebars | The Handlebars part type renders its content with the Handlebars rendering engine. See xref:handlebars.adoc[Rendering with Handlebars] for details.
+| 44 | JSON | The JSON part type offers storing, validation and navigation/resolving over structured data in the https://www.json.org/json-en.html[JavaScript Object Notation] content.
+| 45 | Groovy | The Groovy part type allows to execute Groovy Scripts for preparation of data to be rendered. See xref:groovy.adoc[Implementation of Groovy Scripts] for details.
+|===
+
+NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type `+HTML+`.
+
+[#json-part-type]
+== JSON Part Type
+
+This part type is designed to work with content of the https://www.json.org/json-en.html[JavaScript Object Notation] . The tag content of this type is validated against JSON syntax.
+
+Optionally, one may limit the allowed content with JSON schemas. As the simplest example of such allowance limits, the following JSON schemas depict the person data, and a simple array of strings:
+
+[source,shell]
+----
+{
+    "type" : "object",
+    "properties" : {
+        "firstName" : {
+            "type" : "string"
+        },
+        "lastName" : {
+            "type" : "string"
+        }
+    },
+    "required" : [
+        "firstName",
+        "lastName"
+    ]
+
+}
+----
+
+[source,shell]
+----
+{
+    "type" : "array",
+    "items" : {
+        "type" : "string"
+    }
+}
+----
+
+So the following contents will pass the corresponding schema filters:
+
+[source,shell]
+----
+{
+    "firstName" : "John",
+    "lastName" : "Doe"
+}
+----
+
+[source,shell]
+----
+[
+    "a string",
+    "another string"
+]
+----
+
+For looking up into the full possibilities of JSON schemas filtering one may inspect the https://json-schema.org/[official JSON Schema guide].
+
+[#custom-part-type-implementations]
+== Custom Part Type Implementations
+
+Custom part types can be created using the AbstractExtensiblePartType class.
+
+To use extensible parttypes you need to insert a row into the type table of the cms database.
+Please note that once the row has been inserted, any changes to the row, such as updating
+the class name, require a CMS restart (the part type information is cached internally).
+
+To avoid id conflicts please calculate your personal id range for now:
+
+* Take the 1st 4 characters of one of the customers cms license keys.
+* Convert them from hex to dec.
+* Multiply by 1000. this is the lowest allowed id.
+* Add 999. thid is the highest allowed id.
+* E.g: license key is A2B4-xxxx-xxxx...
+* HEX a2b4 is 41652 in decimal.
+* Your personal id range is 41652000 - 41652999.

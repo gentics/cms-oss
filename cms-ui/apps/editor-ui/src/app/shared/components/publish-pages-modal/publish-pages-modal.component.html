@@ -1,19 +1,25 @@
 <div class="modal-title">
     <h5>{{ 'modal.publish_pages_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <span class="lead">
+        {{ 'modal.publish_pages_header_' + (filteredPages.length === 1 ? 'singular_' : 'plural_') + (selectVariants ? 'variants' : 'without_language') | gtxI18n: {
+            some: filteredPages.length,
+            count: pages.length,
+            language: folderLanguage.name
+        } }}
+    </span>
+
+    @if (!selectVariants) {
+        <div
+            class="notice"
+            [innerHTML]="'modal.publish_pages_header_review_notice_without_language' | gtxI18n:{ language: folderLanguage.name }"
+        ></div>
+    }
 
     @if (pages.length > 1 && selectVariants) {
-        <div class="select-variants-all">
-            <gtx-button
-                flat
-                size="small"
-                type="secondary"
-                data-action="'select-all-languages"
-                (click)="selectAllLanguageVariants()"
-            >
-                <icon left>check</icon>
-                {{ 'modal.page_select_all_button_title' | gtxI18n }}
-            </gtx-button>
-
+        <div class="table-actions-bar">
             <gtx-button
                 flat
                 size="small"
@@ -24,12 +30,42 @@
                 <icon left>replay</icon>
                 {{ 'modal.page_reset_selection_button' | gtxI18n }}
             </gtx-button>
+
+            <gtx-button
+                flat
+                size="small"
+                type="secondary"
+                data-action="select-all-languages"
+                (click)="selectAllLanguageVariants()"
+            >
+                <icon left>check</icon>
+                {{ 'modal.page_select_all_button_title' | gtxI18n }}
+            </gtx-button>
         </div>
     }
-</div>
 
-<div class="modal-content">
-    @if (selectVariants) {
+    <gtx-table
+        [rows]="rows"
+        [columns]="columns"
+        [paginated]="false"
+        [selectable]="false"
+        [renderers]="{
+            languages: languagesRenderer
+        }"
+    />
+
+    <ng-template #languagesRenderer let-value="value">
+        <page-language-selector
+            [page]="value"
+            [variants]="variants[value.id]"
+            [selected]="selectedLanguageVariants[value.id]"
+            [activeLanguage]="folderLanguage"
+            data-control="language"
+            (selectionChange)="onLanguageSelectionChange(value.id, $event)"
+        ></page-language-selector>
+    </ng-template>
+
+    <!-- @if (selectVariants) {
         <table>
             <ng-container *ngTemplateOutlet="page_variants_table; context: {
                 allPages: pages,
@@ -45,7 +81,7 @@
                 i18nSuffix: 'without_language'
             }"></ng-container>
         </table>
-    }
+    } -->
 </div>
 
 <div class="modal-footer">

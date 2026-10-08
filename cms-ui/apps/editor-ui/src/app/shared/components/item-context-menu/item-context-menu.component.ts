@@ -397,7 +397,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
     private hasOnlineItem(item: InheritableItem, isPage: boolean, isForm: boolean, inherited: boolean): boolean {
         if (isPage) {
             const page = item as Page;
-            if (page != null && page.online && !page.queued) {
+            if (page != null && page.online) {
                 return !this.isDeleted && !inherited;
             }
         }
@@ -408,7 +408,7 @@ export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
                     return false;
                 }
                 const page = this.entityResolver.getPage(pageId);
-                if (page != null && page.online && !page.queued) {
+                if (page != null && page.online) {
                     hasOnlineItem = true;
                 }
                 return true;

@@ -2,15 +2,6 @@
 
 @include flex-modal;
 
-.table-actions-bar {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-top: 1rem;
-}
-
 .notice {
     display: block;
     font-size: 13px;

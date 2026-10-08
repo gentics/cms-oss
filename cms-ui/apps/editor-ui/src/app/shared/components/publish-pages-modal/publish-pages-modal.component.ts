@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { Language, Page } from '@gentics/cms-models';
-import { BaseModal } from '@gentics/ui-core';
+import { BaseModal, TableColumn, TableRow } from '@gentics/ui-core';
 import { LanguageVariantMap } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ApplicationStateService } from '../../../state';
@@ -14,7 +15,7 @@ import { ApplicationStateService } from '../../../state';
     templateUrl: './publish-pages-modal.component.html',
     styleUrls: ['./publish-pages-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+    standalone: false,
 })
 export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnInit {
 
@@ -41,8 +42,13 @@ export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnI
      */
     public folderLanguage: Language;
 
+    public rows: TableRow<Page>[] = [];
+    public columns: TableColumn<Page>[] = [];
+
+    public filteredPages: Page[] = [];
+
     // Computed values
-    pagesWithoutCurrentLanguage: Page[];
+    private pagesWithoutCurrentLanguage: Page[] = [];
     selectedLanguageVariants: { [pageId: number]: number[] } = {};
     selectCount: number;
 
@@ -50,26 +56,51 @@ export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnI
         private changeDetector: ChangeDetectorRef,
         private entityResolver: EntityResolver,
         private appState: ApplicationStateService,
+        private i18n: I18nService,
     ) {
         super();
     }
 
     ngOnInit(): void {
         this.folderLanguage = this.entityResolver.getLanguage(this.appState.now.folder.activeLanguage);
-        this.pagesWithoutCurrentLanguage = [];
 
-        this.pages.forEach(item => {
-            if (item.language !== this.folderLanguage.code) {
-                this.pagesWithoutCurrentLanguage.push(item);
-            }
+        if (!this.selectVariants) {
+            this.pages.forEach((item) => {
+                if (item.language !== this.folderLanguage.code) {
+                    this.pagesWithoutCurrentLanguage.push(item);
+                }
+            });
+
+            this.filteredPages = this.pagesWithoutCurrentLanguage;
+        } else {
+            this.filteredPages = this.pages;
+        }
+
+        this.rows = this.filteredPages.map((page) => {
+            return {
+                id: `${page.id}`,
+                item: page,
+            };
         });
+
+        this.columns = [
+            {
+                id: 'name',
+                label: this.i18n.instant('common.name'),
+                fieldPath: 'name',
+            },
+            {
+                id: 'languages',
+                label: this.i18n.instant('editor.item_page_language_variant_plural'),
+            },
+        ];
 
         this.resetLanguageVariantSelection();
     }
 
     confirm(): void {
         const idsToPublish = this.flattenMap(this.selectedLanguageVariants);
-        const entities: Page[] = idsToPublish.map(id => this.entityResolver.getEntity('page', id));
+        const entities: Page[] = idsToPublish.map((id) => this.entityResolver.getEntity('page', id));
         this.closeFn(entities);
     }
 
@@ -81,7 +112,7 @@ export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnI
         this.selectedLanguageVariants = {};
 
         for (const [id, variants] of Object.entries(this.variants)) {
-            this.selectedLanguageVariants[id] = (variants as Page[]).map(page => page.id);
+            this.selectedLanguageVariants[id] = (variants as Page[]).map((page) => page.id);
         }
         this.selectCount = this.flattenMap(this.selectedLanguageVariants).length;
 
@@ -118,6 +149,6 @@ export class PublishPagesModalComponent extends BaseModal<Page[]> implements OnI
      * Given a map of { id: T[] }, flattens it into an array of T.
      */
     private flattenMap<T>(hashMap: { [id: number]: T[] }): T[] {
-        return Object.values(hashMap).flatMap(entry => entry);
+        return Object.values(hashMap).flatMap((entry) => entry);
     }
 }

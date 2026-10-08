@@ -18,6 +18,7 @@ import {
     EntityImporter,
     findContextContent,
     findNotification,
+    findTableRowById,
     findTableRowByText,
     FOLDER_A,
     GroupImportData,
@@ -1155,5 +1156,385 @@ test.describe('Page Management', () => {
         const buttons = footer.locator('gtx-button');
         await expect(buttons).toHaveCount(1);
         await expect(buttons).toHaveAttribute('data-action', 'close');
+    });
+
+    test('should put a page into the queue when no publish permission', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19583',
+        }],
+    }, async ({ page }) => {
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.READ_ITEMS,
+                    GcmsPermission.UPDATE_ITEMS,
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+        await itemAction(item, 'publish');
+
+        await test.step('Publish modal', async () => {
+            const modal = page.locator('gtx-publish-pages-modal');
+
+            const row = await findTableRowById(modal.locator('.modal-content'), TEST_PAGE.id, true);
+            const lang = row.locator('[data-control="language"]');
+            await lang.locator('[data-action="select-all"] button').click();
+
+            const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+            const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+            await clickModalAction(modal, 'confirm');
+            const pubRes = await pubReq;
+            const pubData = await pubRes.json() as CMSResponse;
+            expect(pubData.responseInfo.responseCode).toEqual(ResponseCode.OK);
+            // This text is not getting translated luckily, so we can identify that the page was put into the queue properly
+            expect(pubData.responseInfo.responseMessage).toContain('publish workflow');
+
+            // Wait for the list to be reloaded
+            await pageListReq;
+        });
+
+        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        await expect(itemIndicator).toHaveCount(1);
+        await expect(itemIndicator).toContainClass('indicator-in-queue');
+    });
+
+    test('should put a published page into the queue when no publish permission', {
+        annotation: [{
+            type: 'ticket',
+            description: 'SUP-19583',
+        }],
+    }, async ({ page }) => {
+        // Page needs to be published first
+        await IMPORTER.client.page.publish(TEST_PAGE.id, {
+            alllang: true,
+        }).send();
+
+        await setupWithPermissions(page, [
+            {
+                type: AccessControlledType.NODE,
+                instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+
+                perms: [
+                    GcmsPermission.READ,
+                    GcmsPermission.READ_ITEMS,
+                    GcmsPermission.UPDATE_ITEMS,
+                ],
+            },
+        ]);
+
+        const list = findList(page, ITEM_TYPE_PAGE);
+        const item = findItem(list, TEST_PAGE.id);
+
+        const takeOfflineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+        const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+        await itemAction(item, 'take-offline');
+        await takeOfflineReq;
+        // Compares to the publish request, we can't determine this request state based on the response
+        await pageListReq;
+
+        // Now should be marked as in queue for taking it offline
+        const itemIndicator = item.locator('> gtx-language-state .indicator');
+        await expect(itemIndicator).toHaveCount(1);
+        await expect(itemIndicator).toContainClass('indicator-in-queue');
+    });
+
+    test.describe('Publish and take offline modals', () => {
+
+        const PUBLISH_MODAL = 'gtx-publish-pages-modal';
+        const TIME_MANAGED_MODAL = 'gtx-publish-time-managed-pages-modal';
+        const TAKE_OFFLINE_MODAL = 'gtx-take-pages-offline-modal';
+
+        async function setupEditor(page: Page, canPublish: boolean): Promise<void> {
+            const perms = [
+                GcmsPermission.READ,
+                GcmsPermission.READ_ITEMS,
+                GcmsPermission.UPDATE_ITEMS,
+            ];
+            if (canPublish) {
+                perms.push(GcmsPermission.PUBLISH_PAGES);
+            }
+
+            await setupWithPermissions(page, [
+                {
+                    type: AccessControlledType.NODE,
+                    instanceId: `${IMPORTER.get(NODE_MINIMAL).folderId}`,
+                    perms,
+                },
+            ]);
+        }
+
+        async function importTranslation(): Promise<CMSPage> {
+            const translation: PageTranslationImportData = {
+                [IMPORT_TYPE]: IMPORT_TYPE_PAGE_TRANSLATION,
+                [IMPORT_ID]: `${NAMESPACE}_${TEST_PAGE[IMPORT_ID]}_${LANGUAGE_DE}`,
+
+                language: LANGUAGE_DE,
+                pageId: PAGE_ONE[IMPORT_ID],
+                pageName: 'Seite Eins',
+            };
+            await IMPORTER.importData([translation]);
+
+            return IMPORTER.get(translation);
+        }
+
+        async function expectItemInQueue(item: Locator): Promise<void> {
+            const itemIndicator = item.locator('> gtx-language-state .indicator');
+            await expect(itemIndicator).toHaveCount(1);
+            await expect(itemIndicator).toContainClass('indicator-in-queue');
+        }
+
+        test('should not open the publish modal when the page is in the active language', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await setupEditor(page, true);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+
+            const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+            await itemAction(item, 'publish');
+            await pubReq;
+
+            await expect(page.locator(PUBLISH_MODAL)).not.toBeAttached();
+            await expectItemPublished(item);
+        });
+
+        test('should open the publish modal when the page has no variant in the active language', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await setupEditor(page, true);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_DE);
+            const item = findItem(list, TEST_PAGE.id);
+            await itemAction(item, 'publish');
+
+            const modal = page.locator(PUBLISH_MODAL);
+            await expect(modal).toBeVisible();
+            await expect(modal.locator('.modal-content .notice')).toBeVisible();
+
+            const row = await findTableRowById(modal.locator('.modal-content'), TEST_PAGE.id, true);
+            const confirmButton = modal.locator('.modal-footer [data-action="confirm"] button');
+
+            // Page is not in the active language, so nothing is selected by default
+            await expect(confirmButton).toBeDisabled();
+
+            await row.locator('[data-control="language"] [data-action="select-all"] button').click();
+            await expect(confirmButton).toBeEnabled();
+
+            const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+            await clickModalAction(modal, 'confirm');
+            await pubReq;
+
+            await expect(modal).not.toBeAttached();
+        });
+
+        test('should open the publish modal when publishing the language variants', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            const translation = await importTranslation();
+            await setupEditor(page, true);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+            await itemAction(item, 'publish-variants');
+
+            const modal = page.locator(PUBLISH_MODAL);
+            await expect(modal).toBeVisible();
+
+            const row = await findTableRowById(modal.locator('.modal-content'), TEST_PAGE.id, true);
+            const confirmButton = modal.locator('.modal-footer [data-action="confirm"] button');
+
+            // When selecting variants, nothing is pre-selected
+            await expect(confirmButton).toBeDisabled();
+
+            await row.locator('[data-control="language"] [data-action="select-all"] button').click();
+            await expect(confirmButton).toBeEnabled();
+
+            // Multiple pages are published via the multi-publish endpoint
+            const pubReq = page.waitForRequest(matchRequest('POST', '/rest/page/publish'));
+            await clickModalAction(modal, 'confirm');
+            const body = (await pubReq).postDataJSON();
+            expect([...body.ids].sort()).toEqual([TEST_PAGE.id, translation.id].sort());
+
+            await expect(modal).not.toBeAttached();
+        });
+
+        test('should publish a page which is queued for immediate publishing without the time-management modal', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await setupEditor(page, false);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+
+            await test.step('Put page into the publish queue', async () => {
+                const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+                const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+                await itemAction(item, 'publish');
+                await pubReq;
+                await pageListReq;
+                await expectItemInQueue(item);
+            });
+
+            await test.step('Publish the queued page again', async () => {
+                // Page is queued without a publish date, so it should be published directly
+                const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+                await itemAction(item, 'publish');
+                const pubRes = await pubReq;
+                const pubData = await pubRes.json() as CMSResponse;
+                expect(pubData.responseInfo.responseCode).toEqual(ResponseCode.OK);
+            });
+
+            await expect(page.locator(TIME_MANAGED_MODAL)).not.toBeAttached();
+            await expect(page.locator(PUBLISH_MODAL)).not.toBeAttached();
+        });
+
+        test('should open the time-management modal for a page which is queued for publishing at a date', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await setupEditor(page, false);
+
+            await test.step('Put page into the publish queue with a date', async () => {
+                const client = await createClientFromPage(page);
+                // One week into the future, in seconds
+                const publishAt = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
+                await client.page.publish(TEST_PAGE.id, {
+                    alllang: false,
+                    at: publishAt,
+                }).send();
+                await page.reload();
+            });
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+            await expectItemInQueue(item);
+
+            await itemAction(item, 'publish');
+
+            const modal = page.locator(TIME_MANAGED_MODAL);
+            await expect(modal).toBeVisible();
+            await expect(await findTableRowById(modal.locator('.modal-content'), TEST_PAGE.id, true)).toBeVisible();
+
+            await clickModalAction(modal, 'cancel');
+            await expect(modal).not.toBeAttached();
+        });
+
+        test('should not open the take offline modal for a page without language variants', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await IMPORTER.client.page.publish(TEST_PAGE.id, {
+                alllang: true,
+            }).send();
+            await setupEditor(page, true);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+
+            const offlineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+            await itemAction(item, 'take-offline');
+            await offlineReq;
+
+            await expect(page.locator(TAKE_OFFLINE_MODAL)).not.toBeAttached();
+            await expectItemOffline(item);
+        });
+
+        test('should open the take offline modal for a page with language variants', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            const translation = await importTranslation();
+            await IMPORTER.client.page.publish(TEST_PAGE.id, {
+                alllang: true,
+            }).send();
+            await setupEditor(page, true);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+            await itemAction(item, 'take-offline');
+
+            const modal = page.locator(TAKE_OFFLINE_MODAL);
+            await expect(modal).toBeVisible();
+
+            const row = await findTableRowById(modal.locator('.modal-content'), TEST_PAGE.id, true);
+            // The page itself is selected by default
+            await expect(modal.locator('.modal-footer [data-action="confirm"] button')).toBeEnabled();
+
+            await row.locator('[data-action="select-all"] button').click();
+
+            const pageOfflineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+            const translationOfflineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${translation.id}`);
+            await clickModalAction(modal, 'confirm');
+            await pageOfflineReq;
+            await translationOfflineReq;
+
+            await expect(modal).not.toBeAttached();
+        });
+
+        test('should be able to take a queued online page offline', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19583',
+            }],
+        }, async ({ page }) => {
+            await IMPORTER.client.page.publish(TEST_PAGE.id, {
+                alllang: true,
+            }).send();
+            await setupEditor(page, false);
+
+            const list = findList(page, ITEM_TYPE_PAGE);
+            await setListLanguage(list, LANGUAGE_EN);
+            const item = findItem(list, TEST_PAGE.id);
+
+            await test.step('Put online page into the publish queue', async () => {
+                const pubReq = waitForResponseFrom(page, 'POST', `/rest/page/publish/${TEST_PAGE.id}`);
+                const pageListReq = waitForResponseFrom(page, 'GET', `/rest/folder/getPages/${TEST_PAGE.folderId}`);
+                await itemAction(item, 'publish');
+                await pubReq;
+                await pageListReq;
+                await expectItemInQueue(item);
+            });
+
+            // Taking it offline has to still be possible, even though it is queued
+            const offlineReq = waitForResponseFrom(page, 'POST', `/rest/page/takeOffline/${TEST_PAGE.id}`);
+            await itemAction(item, 'take-offline');
+            await offlineReq;
+
+            await expect(page.locator(TAKE_OFFLINE_MODAL)).not.toBeAttached();
+        });
     });
 });

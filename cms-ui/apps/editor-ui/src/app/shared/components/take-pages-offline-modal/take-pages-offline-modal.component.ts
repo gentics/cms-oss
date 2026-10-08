@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { IModalDialog } from '@gentics/ui-core';
-import { InheritableItem, ItemType } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { InheritableItem, Page } from '@gentics/cms-models';
+import { BaseModal, TableColumn, TableRow } from '@gentics/ui-core';
 import { LanguageVariantMap } from '../../../common/models';
+import { I18nService } from '@gentics/cms-components';
 
 export interface MultiPagesOfflineResult {
     delete: InheritableItem[];
@@ -13,59 +14,62 @@ export interface MultiPagesOfflineResult {
  * When closed, the dialog promise will resolve to an array of page ids to be taken offline.
  */
 @Component({
-    selector: 'take-pages-offline-modal',
-    templateUrl: './take-pages-offline-modal.tpl.html',
-    styleUrls: ['./take-pages-offline-modal.scss'],
-    standalone: false
+    selector: 'gtx-take-pages-offline-modal',
+    templateUrl: './take-pages-offline-modal.component.html',
+    styleUrls: ['./take-pages-offline-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false,
 })
-export class TakePagesOfflineModal implements IModalDialog {
+export class TakePagesOfflineModal extends BaseModal<number[]> implements OnInit {
 
-    closeFn: (idsToDelete: number[]) => void;
-    cancelFn: (val?: any) => void;
+    @Input()
+    pagesToTakeOffline: Page[];
 
-    // Should be passed in by the function which creates the modal
-    pagesToTakeOffline: InheritableItem[];
+    @Input()
     pageLanguageVariants: LanguageVariantMap;
 
-    itemType: ItemType = 'page';
-    selectedLanguageVariants: { [pageId: number]: number[] } = {};
+    public rows: TableRow<Page>[] = [];
+    public columns: TableColumn<Page>[] = [];
 
-    get deleteCount(): number {
-        return this.flattenMap(this.selectedLanguageVariants).length;
+    public selectedLanguageVariants: { [pageId: number]: number[] } = {};
+    public finalIds: number[] = [];
+
+    constructor(
+        private i18n: I18nService,
+    ) {
+        super();
     }
-
-    constructor() {}
 
     ngOnInit(): void {
-        this.pagesToTakeOffline.forEach(item => {
+        this.rows = this.pagesToTakeOffline.map((page) => {
+            return {
+                id: `${page.id}`,
+                item: page,
+            };
+        });
+
+        this.columns = [
+            {
+                id: 'name',
+                label: this.i18n.instant('common.name'),
+                fieldPath: 'name',
+            },
+            {
+                id: 'languages',
+                label: this.i18n.instant('editor.item_page_language_variant_plural'),
+            },
+        ];
+
+        this.pagesToTakeOffline.forEach((item) => {
             this.selectedLanguageVariants[item.id] = [item.id];
         });
-    }
-
-    confirm(): void {
-        const idsToTakeOffline = this.flattenMap(this.selectedLanguageVariants);
-        this.closeFn(idsToTakeOffline);
     }
 
     /**
      * Handles changes to the language variants selection for pages.
      */
-    onLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
+    onLanguageSelectionChange(itemId: number, variantIds: number[]): void {
         this.selectedLanguageVariants[itemId] = variantIds;
-    }
-
-    registerCloseFn(close: (idsToDelete: number[]) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
-    }
-
-    /**
-     * Given a map of { id: T[] }, flattens it into an array of T.
-     */
-    private flattenMap<T>(hashMap: { [id: number]: T[] }): T[] {
-        return Object.keys(hashMap).reduce((all, id) => all.concat(hashMap[+id]), []);
+        this.finalIds = Object.values(this.selectedLanguageVariants).flatMap((ids) => ids);
     }
 }

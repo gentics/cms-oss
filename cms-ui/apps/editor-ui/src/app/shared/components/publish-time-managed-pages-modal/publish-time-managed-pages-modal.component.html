@@ -1,0 +1,49 @@
+<div class="modal-title">
+    <h5>{{ 'modal.publish_title' | gtxI18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <div class="notice">{{ 'modal.publish_page_has_queued_publish_notice' | gtxI18n }}</div>
+
+    <gtx-table
+        [rows]="rows"
+        [columns]="columns"
+        [paginated]="false"
+        [selectable]="false"
+        [renderers]="{
+            publishSchedule: publishScheduleRenderer
+        }"
+    />
+
+    <ng-template #publishScheduleRenderer let-value="value">
+        {{ value | gtxI18nDate:'dateTime' }}
+    </ng-template>
+
+    <div gtx-radio-group>
+        <gtx-radio-button
+            [label]="'modal.publish_keep_at' | gtxI18n"
+            [value]="true"
+            [(ngModel)]="publishAtChecked"
+        />
+
+        <gtx-radio-button
+            [label]="'modal.publish_immediately' | gtxI18n"
+            [value]="false"
+            [(ngModel)]="publishAtChecked"
+        />
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        flat
+        type="secondary"
+        data-action="cancel"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | gtxI18n }}</gtx-button>
+
+    <gtx-button
+        data-action="confirm"
+        (click)="okayClicked()"
+    >{{ 'common.okay_button' | gtxI18n }}</gtx-button>
+</div>

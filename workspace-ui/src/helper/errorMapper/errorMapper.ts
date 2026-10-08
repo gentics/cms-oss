@@ -1,4 +1,4 @@
-import { GenaixApiError } from '@/services/apiService/apiService';
+import { GenaixApiError, NoCmsConnectionError } from '@/services/apiService/apiService';
 import type { GenaixCode } from '@/services/apiService/genaix/types';
 import type { CmsResponseCode } from '@/services/cmsApiService/cmsApiService';
 import { HttpError } from '@/services/httpService/httpService';
@@ -84,11 +84,21 @@ function statusMessageKey(status: number): string {
 }
 
 /**
- * The i18n key of a readable sentence for `error`: by GenAIx `genaix_code`, then by CMS
+ * The i18n key of a readable sentence for `error`: a quoted passage missing from its file, then by
+ * GenAIx `genaix_code`, then by CMS
  * `responseInfo.responseCode`, then by HTTP status. A code this client does not know falls back to
  * the status (contract, `GenaixCode`).
  */
 export function errorMessageKey(error: unknown): string {
+    if (error instanceof NoCmsConnectionError) {
+        return 'errors.noCmsConnection';
+    }
+
+    // A verbatim passage named a file it does not occur in (contract, `Problem.errors[].code`).
+    if (error instanceof GenaixApiError && error.problem?.errors?.some((fieldError) => fieldError.code === 'passage_not_found')) {
+        return 'errors.genaix.passage_not_found';
+    }
+
     if (error instanceof GenaixApiError && isKnown(GENAIX_CODES, error.genaixCode)) {
         return `errors.genaix.${error.genaixCode}`;
     }

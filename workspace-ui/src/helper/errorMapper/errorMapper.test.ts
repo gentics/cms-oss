@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import en from '@/i18n/locales/en/common.json';
-import { GenaixApiError } from '@/services/apiService/apiService';
+import { GenaixApiError, NoCmsConnectionError } from '@/services/apiService/apiService';
 import type { Problem } from '@/services/apiService/genaix/types';
 import { HttpError } from '@/services/httpService/httpService';
 
@@ -25,6 +25,25 @@ function translation(key: string): unknown {
 describe('errorMessageKey', () => {
     it('maps a GenAIx error by its genaix_code', () => {
         expect(errorMessageKey(genaixError(409, 'run_already_active'))).toBe('errors.genaix.run_already_active');
+    });
+
+    it('names a verbatim passage missing from its file, and leaves other validation errors generic', () => {
+        const problem = {
+            type: 'https://genaix.gentics.com/problems/validation-failed',
+            title: 'x',
+            status: 422,
+            genaix_code: 'validation_failed',
+            errors: [{ pointer: '/parts/1/text', detail: 'not in the file', code: 'passage_not_found' }],
+        } as Problem;
+
+        expect(errorMessageKey(new GenaixApiError('/genaix/api/v1/x', 422, problem, new Headers()))).toBe('errors.genaix.passage_not_found');
+        expect(translation('errors.genaix.passage_not_found')).toEqual(expect.any(String));
+        expect(errorMessageKey(genaixError(422, 'validation_failed'))).toBe('errors.genaix.validation_failed');
+    });
+
+    it('says when there is no cms connection to start a session with', () => {
+        expect(errorMessageKey(new NoCmsConnectionError())).toBe('errors.noCmsConnection');
+        expect(translation('errors.noCmsConnection')).toEqual(expect.any(String));
     });
 
     it('falls back to the status for a genaix_code it does not know', () => {

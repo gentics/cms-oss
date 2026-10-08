@@ -47,6 +47,34 @@
   & [data-verbatim-text] {
     white-space: pre-wrap;
   }
+
+  /* A token (reference, file, setting) is a node view too (`TokenChip`): design.md §12 "@-Token". */
+  & [data-token] {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 270px;
+    padding: 0 2px 0 4px;
+    border: 1px solid rgba(var(--interactive-rgb), 0.3);
+    border-radius: var(--corner-sm);
+    background: rgba(var(--interactive-rgb), 0.13);
+    color: var(--fg-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    line-height: 1.6;
+    vertical-align: -2px;
+    white-space: nowrap;
+
+    & > svg {
+      flex: none;
+      color: var(--interactive);
+    }
+  }
+
+  & [data-token-label] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* Dashboard: one large line of text on the surface (design.md §5.1, §11). */

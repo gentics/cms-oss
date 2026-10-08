@@ -4,7 +4,7 @@ import { HttpError } from '@/services/httpService/httpService';
 import { useCmsTokenStore } from '@/store/useCmsTokenStore';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
-import { type CmsTokenInfo, createCmsToken, getCmsToken } from './cmsApiService';
+import { type CmsTokenInfo, createCmsToken, createSessionCmsToken, getCmsToken, SESSION_CMS_TOKEN_LIFETIME_SECONDS } from './cmsApiService';
 
 const NOW_S = 1_790_800_000;
 
@@ -53,6 +53,17 @@ describe('createCmsToken', () => {
         expect(init?.method).toBe('POST');
         expect(init?.credentials).toBe('same-origin');
         expect(postedBody(fetchMock)).toEqual({ name: 'genaix-workspace-1', expires: NOW_S + 3600 });
+    });
+
+    it('posts the given lifetime and pruneOnExpiry', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW_S * 1000);
+
+        const fetchMock = stubFetchSequence(createdResponse());
+
+        await createCmsToken('genaix-s-1', { lifetimeSeconds: 600, pruneOnExpiry: true });
+
+        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-s-1', expires: NOW_S + 600, pruneOnExpiry: true });
     });
 
     it('throws an HttpError with the status when the CMS refuses', async () => {
@@ -184,5 +195,46 @@ describe('getCmsToken', () => {
 
             expect(useErrorNotificationStore.getState().errors).toEqual([]);
         });
+    });
+});
+
+describe('createSessionCmsToken', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+        vi.useRealTimers();
+    });
+
+    it('in development returns a fake token valid for 24 hours and sends no request to the CMS', async () => {
+        vi.stubEnv('DEV', true);
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW_S * 1000);
+
+        const fetchMock = stubFetchSequence();
+        const created = await createSessionCmsToken('genaix-pending-1');
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(created).toEqual({
+            token: expect.stringMatching(/^cmstok_dev_/),
+            name: 'genaix-pending-1',
+            expiresAt: new Date((NOW_S + SESSION_CMS_TOKEN_LIFETIME_SECONDS) * 1000).toISOString(),
+        });
+    });
+
+    it('otherwise creates a CMS token valid for 24 hours that the CMS prunes once it has expired', async () => {
+        vi.stubEnv('DEV', false);
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(NOW_S * 1000);
+
+        const expires = NOW_S + SESSION_CMS_TOKEN_LIFETIME_SECONDS;
+        const fetchMock = stubFetchSequence(createdResponse({ name: 'genaix-pending-1', expires }));
+
+        await expect(createSessionCmsToken('genaix-pending-1')).resolves.toEqual({
+            token: 'cmstok_secret',
+            name: 'genaix-pending-1',
+            expiresAt: new Date(expires * 1000).toISOString(),
+        });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/admin/token');
+        expect(postedBody(fetchMock)).toEqual({ name: 'genaix-pending-1', expires, pruneOnExpiry: true });
     });
 });

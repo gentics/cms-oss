@@ -86,7 +86,7 @@ Changelog Folder: changelog
 
 ### UI Components
 
-- Check `src/components/ui/` and the catalogue (`npm run catalogue`, `src/catalogue/Catalogue.tsx`) before building UI; the catalogue shows every component in every variant and state. The layer has Button (variants `primary`, `secondary`, `ghost`, `danger`, `solid`; sizes `default`, `sm`, `icon`, `icon-lg`), Checkbox, Label, Select, Tabs, Tooltip, DropdownMenu (with checkbox and radio items), Dialog, Drawer, and toasts (`useToast()` from `ui/use-toast`).
+- Check `src/components/ui/` and the catalogue (`npm run catalogue`, `src/catalogue/Catalogue.tsx`) before building UI; the catalogue shows every component in every variant and state. The layer has Button (variants `primary`, `secondary`, `ghost`, `danger`, `solid`; sizes `default`, `sm`, `icon`, `icon-lg`), Checkbox, RadioGroup with Radio, Label, Select, Tabs, Tooltip, DropdownMenu (with checkbox and radio items), Dialog, Drawer, and toasts (`useToast()` from `ui/use-toast`).
 - Do not rebuild what the layer has. Outside it, native `<button>`, `<select>`, `<dialog>` and inline `<svg>` are ESLint errors (`no-restricted-syntax`). If a variant or size is missing, add it to the component in the layer and to the catalogue. Do not restyle a layer component from outside: a CSS Module class on it competes with its Tailwind utilities.
 - Base UI, not Radix: compose with the `render` prop (`<DropdownMenuTrigger render={<Button variant="ghost" />}>`), not `asChild`. Checkbox and radio items keep a menu open unless they get `closeOnClick`; `finalFocus` on `DropdownMenuContent` sets where focus goes when the menu closes.
 - A new or changed layer component or variant goes into the catalogue (texts under `catalogue.*` in both locales) and gets a test next to it.

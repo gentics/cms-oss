@@ -5,7 +5,7 @@ import { GenaixApiError } from '@/services/apiService/apiService';
 import type { Problem } from '@/services/apiService/genaix/types';
 import { HttpError } from '@/services/httpService/httpService';
 
-import { errorMessageKey } from './errorMapper';
+import { errorMessageKey, problemMessageKey } from './errorMapper';
 
 function genaixError(status: number, genaixCode: string): GenaixApiError {
     const problem = { type: 'https://genaix.gentics.com/problems/x', title: 'x', status, genaix_code: genaixCode } as Problem;
@@ -68,5 +68,18 @@ describe('errorMessageKey', () => {
         ];
 
         keys.forEach((key) => expect(typeof translation(key), key).toBe('string'));
+    });
+});
+
+describe('problemMessageKey', () => {
+    const problem = (status: number, genaixCode: string) => ({ type: 't', title: 'x', status, genaix_code: genaixCode }) as Problem;
+
+    it('maps a Problem from the event stream by its genaix_code', () => {
+        expect(problemMessageKey(problem(424, 'mcp_authorization_required'))).toBe('errors.genaix.mcp_authorization_required');
+    });
+
+    it('falls back to the status for a genaix_code it does not know', () => {
+        expect(problemMessageKey(problem(502, 'added_in_a_later_version'))).toBe('errors.http.server');
+        expect(typeof translation(problemMessageKey(problem(423, 'cms_object_locked')))).toBe('string');
     });
 });

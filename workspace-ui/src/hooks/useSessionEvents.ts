@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { genaixKeys } from '@/hooks/useGenaixQueries';
 import { connectSessionEvents } from '@/services/apiService/eventStream';
+import type { GenaixEvent } from '@/services/apiService/genaix/types';
 import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /**
@@ -13,9 +14,17 @@ import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/s
  *
  * Every call opens its own stream, so call it once per session, from the chat view. Other
  * components read the live state from `useWorkspaceEventStore` with `selectSession`.
+ *
+ * `onEvent` gets every event as parsed from the stream, after it was applied. A new callback on
+ * each render does not reconnect.
  */
-export function useSessionEvents(sessionId: string | undefined) {
+export function useSessionEvents(sessionId: string | undefined, onEvent?: (event: GenaixEvent) => void) {
     const queryClient = useQueryClient();
+    const onEventRef = useRef(onEvent);
+
+    useEffect(() => {
+        onEventRef.current = onEvent;
+    });
 
     useEffect(() => {
         if (!sessionId) {
@@ -58,6 +67,7 @@ export function useSessionEvents(sessionId: string | undefined) {
             onStatus: (status) => store().setConnection(sessionId, status),
             onEvent: (event) => {
                 store().applyEvent(sessionId, event);
+                onEventRef.current?.(event);
 
                 if (event.type === 'message.completed') {
                     persistedMessageKeys(selectSession(sessionId)(store())).forEach((key) => toClear.add(key));

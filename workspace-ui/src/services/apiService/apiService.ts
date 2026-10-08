@@ -1,12 +1,18 @@
 import type {
     FileMode,
     GenaixCode,
+    Interaction,
+    InteractionAnswer,
+    McpConnection,
     Me,
     MessageAccepted,
     MessageCreateBody,
     MessagePage,
     Problem,
+    Run,
     Session,
+    SessionAuthorization,
+    SessionAuthorizationRequest,
     SessionCreateBody,
     SessionCreated,
     SessionFile,
@@ -139,6 +145,14 @@ export function getMe(): Promise<Me> {
     return genaixRequest<Me>('/me');
 }
 
+// GET /mcp/connections: the caller's connections, default first within each connector type. When
+// the installation names a default URL, the first call creates the default connection.
+export async function listMcpConnections(connector?: string): Promise<McpConnection[]> {
+    const { items } = await genaixRequest<{ items: McpConnection[] }>(`/mcp/connections${queryString({ connector })}`);
+
+    return items;
+}
+
 // GET /workflows: the workflow modules, read once and cached.
 export async function listWorkflows(): Promise<Workflow[]> {
     const { items } = await genaixRequest<{ items: Workflow[] }>('/workflows');
@@ -156,6 +170,17 @@ export function listSessions(filters: SessionFilters = {}, page: PageParams = {}
 export function createSession(body: SessionCreateBody): Promise<SessionCreated> {
     return genaixRequest<SessionCreated>('/sessions', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+}
+
+// PUT /sessions/{session_id}/authorizations/{connection_id}: registers the credential this session
+// uses for one connection. GenAIx verifies it before storing it; `422` `mcp_authorization_rejected`
+// when the connection refuses it. Idempotent: registering again replaces the credential.
+export function putSessionAuthorization(sessionId: string, connectionId: string, body: SessionAuthorizationRequest): Promise<SessionAuthorization> {
+    return genaixRequest<SessionAuthorization>(`/sessions/${encodeURIComponent(sessionId)}/authorizations/${encodeURIComponent(connectionId)}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
@@ -243,4 +268,33 @@ export function postMessage(sessionId: string, body: MessageCreateBody): Promise
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
+}
+
+// POST /sessions/{session_id}/runs/{run_id}/cancel: `202` with the run, now `cancelling`; the stream
+// ends it with `run.cancelled`. Idempotent: a run that already ended is `202` with no effect. CMS
+// writes already made are not rolled back.
+export function cancelRun(sessionId: string, runId: string, reason?: string): Promise<Run> {
+    return genaixRequest<Run>(`/sessions/${encodeURIComponent(sessionId)}/runs/${encodeURIComponent(runId)}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reason === undefined ? {} : { reason }),
+    });
+}
+
+// POST /sessions/{session_id}/interactions/{interaction_id}: answers a pending interaction; the run
+// continues on the event stream with `interaction.resolved`. `410 interaction_expired` after its
+// lifetime, `409 interaction_already_answered` on a second answer. The `answer` shape follows the
+// interaction's `kind` (contract §9).
+export function answerInteraction(sessionId: string, interactionId: string, answer: InteractionAnswer): Promise<Interaction> {
+    return genaixRequest<Interaction>(`/sessions/${encodeURIComponent(sessionId)}/interactions/${encodeURIComponent(interactionId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer }),
+    });
+}
+
+// GET /sessions/{session_id}/files/{file_id}/content, as a link target: the browser downloads the file
+// through the same-origin proxy, which adds the credentials.
+export function sessionFileContentUrl(sessionId: string, fileId: string): string {
+    return `${GENAIX_API_BASE}/sessions/${encodeURIComponent(sessionId)}/files/${encodeURIComponent(fileId)}/content`;
 }

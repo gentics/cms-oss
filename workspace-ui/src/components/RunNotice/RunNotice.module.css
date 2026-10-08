@@ -1,0 +1,49 @@
+/* How a run ended or what went wrong in it, as a line in the stream (design.md §3.3 status colours,
+   the 3 px left edge of an error row). Status by icon and text, never by colour alone (§14). */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 740px;
+  margin-left: var(--chat-indent);
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+  background: var(--bg-surface);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.notice > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.error {
+  border-color: rgba(var(--error-rgb), 0.3);
+  border-left: 3px solid var(--error);
+  background: var(--error-bg);
+}
+
+.error > svg {
+  color: var(--error);
+}
+
+.warning {
+  border-color: rgba(var(--warning-rgb), 0.3);
+  border-left: 3px solid var(--warning);
+  background: var(--warning-bg);
+}
+
+.warning > svg {
+  color: var(--warning);
+}
+
+.title {
+  color: var(--fg-primary);
+  font-weight: 500;
+}
+
+.detail {
+  margin: 2px 0 0;
+}

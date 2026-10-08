@@ -223,7 +223,7 @@ Die Oberfläche ist **kompakt**. Skala in px: `2 · 4 · 6 · 8 · 10 · 12 · 1
 | **Deaktiviert** | `opacity: .42`, `cursor: not-allowed`, kein Hover. |
 | **Nur lesen** | Fläche `--bg-subtle`, Text `--fg-secondary`, Rand `--border-subtle` (bei Eigenschafts-Feldern gestrichelt). |
 | **Ungültig** | Siehe §3.3. |
-| **Lädt** | Skeleton: Verlauf `rgba(fg-primary,.05 → .11 → .05)`, 200 % breit, 1.1 s linear endlos. „Denkt“: drei 5-px-Punkte in `--interactive-fill`, 1 s, versetzt um 0.14 s, 3 px Hub. Streaming: 6 × 13 px Cursor in `--interactive`, blinkt im 1-s-Takt. |
+| **Lädt** | Skeleton: Verlauf `rgba(fg-primary,.05 → .11 → .05)`, 200 % breit, 1.1 s linear endlos. „Denkt“: drei 5-px-Punkte in `--interactive-fill`, 1 s, versetzt um 0.14 s, 3 px Hub. Streaming: kein Cursor, der Text wächst an Ort und Stelle (Entscheidung GPU-2725). |
 | **Leer** | Zentrierter Text 12–13 px in `--fg-muted`, 26 px oben/unten. Keine Illustration. |
 | **Aufmerksamkeit** | Puls-Ring `0 → 12px`, `rgba(interactive,.45 → 0)`, 1 s, höchstens 2-mal. |
 

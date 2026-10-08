@@ -384,4 +384,41 @@ describe('Composer', () => {
             expect(onSubmit).not.toHaveBeenCalled();
         });
     });
+    describe('while a run is working (chat)', () => {
+        function renderChat(props: { isRunning: boolean; isStopping?: boolean }) {
+            const onSubmit = vi.fn();
+            const onStop = vi.fn();
+
+            render(<Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} onStop={onStop} {...props} />, { wrapper: UiProvider });
+
+            return { onSubmit, onStop, field: screen.getByRole('textbox', { name: 'What should happen?' }) };
+        }
+
+        it('shows Stop instead of send, which stops the run, and sends nothing on Enter', async () => {
+            const user = userEvent.setup();
+            const { onSubmit, onStop, field } = renderChat({ isRunning: true });
+
+            expect(screen.queryByRole('button', { name: 'Send' })).not.toBeInTheDocument();
+
+            await user.click(field);
+            await user.keyboard('Next step{Enter}');
+            await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+            expect(onSubmit).not.toHaveBeenCalled();
+            expect(onStop).toHaveBeenCalledTimes(1);
+        });
+
+        it('disables Stop while the run is stopping', () => {
+            renderChat({ isRunning: true, isStopping: true });
+
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeDisabled();
+        });
+
+        it('shows send again once no run is working', () => {
+            renderChat({ isRunning: false });
+
+            expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
+        });
+    });
 });

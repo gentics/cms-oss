@@ -1,19 +1,11 @@
-/* The middle column: the stream scrolls, the composer floats over its bottom with a fade to the
-   canvas behind it (draft `.composerwrap`; design.md §11 "Chat": max. 760 px). */
+/* The middle column: the stream (`ChatStream`) scrolls, the composer floats over its bottom with a
+   fade to the canvas behind it (draft `.composerwrap`; design.md §11 "Chat": max. 760 px). */
 .chat {
   position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
-}
-
-.stream {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  /* Room for the composer floating over the end of the stream. */
-  padding-bottom: 140px;
 }
 
 .dock {

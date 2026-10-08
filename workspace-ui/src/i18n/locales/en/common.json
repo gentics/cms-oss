@@ -52,7 +52,155 @@
     "chat": {
         "placeholder": "What should happen?",
         "send": "Send",
-        "sendFailed": "The message could not be sent"
+        "sendFailed": "The message could not be sent",
+        "sender": {
+            "user": "You",
+            "assistant": "Assistant",
+            "system": "System"
+        },
+        "thinking": "Thinking",
+        "stop": "Stop",
+        "stopFailed": "The run could not be stopped",
+        "steps": {
+            "title": "Steps",
+            "current": "Step {{number}} of {{total}}: {{label}}",
+            "progress": "{{done}} of {{total}} steps done",
+            "collapse": "Hide the steps",
+            "expand": "Show the steps",
+            "status": {
+                "pending": "Pending",
+                "running": "In progress",
+                "waiting": "Waiting for you",
+                "done": "Done",
+                "skipped": "Skipped",
+                "failed": "Failed"
+            }
+        },
+        "file": "File",
+        "fileVerbatim": "File, word for word",
+        "notice": {
+            "cancelled": "Stopped",
+            "failed": "The run failed",
+            "error": "Something went wrong, the run continues",
+            "auth": "No access to the {{connector}} connection"
+        },
+        "interaction": {
+            "title": {
+                "ask_user": "Question",
+                "choice": "Choose",
+                "confirm": "Confirm",
+                "form": "Details",
+                "settings_review": "Check settings"
+            },
+            "answer": "Your answer",
+            "comment": "Comment",
+            "choose": "Choose…",
+            "send": "Send",
+            "confirm": "Confirm",
+            "confirmed": "Confirmed",
+            "approve": "Yes",
+            "reject": "No",
+            "answerFailed": "The answer could not be sent",
+            "answerFirst": "Answer the question above first",
+            "setting": {
+                "node": "Website",
+                "folder": "Folder",
+                "template": "Template",
+                "language": "Language",
+                "filename": "File name",
+                "publish_at": "Publish at"
+            },
+            "source": {
+                "text": "From your text",
+                "context": "From the session",
+                "default": "Default"
+            }
+        }
+    },
+    "parts": {
+        "selectedCount": "{{count}} selected",
+        "statusNote": {
+            "info": "Note",
+            "warning": "Warning",
+            "skipped": "Skipped"
+        },
+        "file": {
+            "unnamed": "File",
+            "download": "Download"
+        },
+        "tree": {
+            "title": "Structure",
+            "expand": "Expand {{label}}",
+            "collapse": "Collapse {{label}}"
+        },
+        "list": {
+            "title": "Choose"
+        },
+        "properties": {
+            "title": "Properties"
+        },
+        "images": {
+            "title": "Images",
+            "image": "Image {{number}}"
+        },
+        "table": {
+            "title": "Table",
+            "yes": "Yes",
+            "no": "No",
+            "shown": "{{shown}} of {{total}}"
+        },
+        "pageStructure": {
+            "title": "Page structure",
+            "verbatim": "Word for word",
+            "status": {
+                "planned": "Planned",
+                "created": "Created",
+                "updated": "Updated",
+                "locked": "Locked",
+                "failed": "Failed"
+            }
+        },
+        "construct": {
+            "parts": "Parts",
+            "mandatory": "Required",
+            "template": "Template",
+            "validation": "Validation",
+            "valid": "The template is valid",
+            "line": "line {{line}}",
+            "severity": {
+                "error": "Error",
+                "warning": "Warning",
+                "info": "Info"
+            }
+        },
+        "apiCalls": {
+            "title": "CMS calls",
+            "call": "Call",
+            "status": "Status",
+            "summary": "What it did"
+        },
+        "plan": {
+            "title": "Plan",
+            "proposed": "Proposed plan",
+            "adjusted": "Plan · adjusted",
+            "adjustedByYou": "Adjusted by you",
+            "adjust": "Adjust",
+            "accept": "Accept plan",
+            "acceptText": "Go ahead with the plan as proposed.",
+            "adjustedIntro": "Execute this plan:",
+            "step": "Step {{number}}",
+            "placeholder": "Describe the step",
+            "moveUp": "Move step up",
+            "moveDown": "Move step down",
+            "remove": "Remove step",
+            "add": "Add a step",
+            "keys": "Enter adds a step · Esc cancels",
+            "cancel": "Cancel",
+            "done": "Done"
+        },
+        "citation": {
+            "title": "Sources"
+        }
     },
     "voice": {
         "start": "Dictate",
@@ -142,6 +290,11 @@
             "title": "Checkbox",
             "label": "Publish now"
         },
+        "radio": {
+            "title": "Radio",
+            "campaign": "Campaign landing page",
+            "topic": "Topic page"
+        },
         "select": {
             "title": "Select",
             "label": "Page",
@@ -207,6 +360,39 @@
             "errorDetail": "The CMS did not respond.",
             "deleted": "Page deleted",
             "undo": "Undo"
+        },
+        "parts": {
+            "title": "Message parts",
+            "fallback": "Fallback",
+            "variants": {
+                "textMarkdown": "Markdown",
+                "textPlain": "Plain text",
+                "noteInfo": "Info",
+                "noteWarning": "Warning",
+                "noteSkipped": "Skipped",
+                "treeNested": "Nested, with selection",
+                "treeFlat": "Flat, without title",
+                "listSingle": "Single choice, with description and reference",
+                "listMulti": "Multiple choice, preselected",
+                "properties": "Values, references, empty",
+                "imagesSingle": "Single choice",
+                "imagesMulti": "Multiple choice, preselected, without alt text",
+                "tableFull": "All column types, with total and source",
+                "tableSmall": "Small, without footer",
+                "structureDone": "All statuses, verbatim, with page",
+                "structurePlanned": "Planned, without page",
+                "draftValid": "Valid",
+                "draftIssues": "With errors, warning and info",
+                "draftMinimal": "Minimal",
+                "apiCalls": "Successful and failed calls",
+                "citations": "With markers and snippets",
+                "citationsBare": "Without markers and snippets",
+                "fileNamed": "With name",
+                "fileUnnamed": "Without name",
+                "unknownWithText": "Unknown type, with text",
+                "unknownWithoutText": "Unknown type, without text (shows nothing)",
+                "brokenTable": "Known type that fails to render"
+            }
         }
     },
     "errors": {

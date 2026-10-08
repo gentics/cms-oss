@@ -12,6 +12,16 @@ import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/
 
 import '@/i18n';
 
+// The CMS credential of a new session has tests of its own (`sessionAuthorization.test.ts`); here it
+// would take the stubbed fetch responses meant for starting the session.
+const { AUTHORIZATION } = vi.hoisted(() => ({
+    AUTHORIZATION: { connection_id: 'c-1', auth_type: 'bearer', token: 'cmstok_dev_1', token_name: 'genaix-pending-1', expires_at: '2026-10-08T08:00:00.000Z' },
+}));
+
+vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
+    newSessionCmsAuthorization: () => Promise.resolve(AUTHORIZATION),
+}));
+
 // jsdom has no ResizeObserver; the session page's AppShell measures its columns with one.
 class ResizeObserverStub {
     observe() {}
@@ -94,6 +104,7 @@ describe('DashboardPage', () => {
         expect(JSON.parse(init?.body as string)).toEqual({
             workflow: 'content_research',
             message: { parts: [{ type: 'text', text: 'Which pages are offline?' }] },
+            authorizations: [AUTHORIZATION],
         });
         expect(queryClient.getQueryData(['genaix', 'sessions', 's-1'])).toEqual(session);
         // The session page is, for now, the workspace: its left column has a toggle, even without a preview.

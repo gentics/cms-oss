@@ -23,6 +23,15 @@ These variables have no `VITE_` prefix, so they stay on the dev server and are n
 
 The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/genaix/api/v1`): the same-origin proxy path that `src/services/apiService/apiService.ts` sends every GenAIx request to. It is bundled into the client, so it holds a path and never a secret. The dev proxy above only serves `/genaix/api/v1`, so a different value in development needs a matching `server.proxy` entry.
 
+### CMS credential of a session
+
+Every workflow except `free_chat` acts on the CMS through MCP, so GenAIx needs a CMS API token for it. Without one a run ends with `auth.required` and `run.failed` (`424` `mcp_authorization_required`). The Workspace registers one token per session, the integrated path of `.claude/contracts/genaix-docs/02-auth-and-context-flow.md` ("Session-scoped authorization"), in `src/helper/sessionAuthorization/sessionAuthorization.ts`:
+
+- Starting a session: `POST /rest/admin/token` on the CMS (24 hours, `pruneOnExpiry`), then `POST /sessions` with the token in `authorizations`, for the user's default `cms` connection (`GET /mcp/connections`).
+- Every later turn: unless `session.authorizations` holds an `authorized` credential valid for more than 10 more minutes, a new token is created and registered with `PUT /sessions/{session_id}/authorizations/{connection_id}` before the message is posted.
+
+In development (`npm run dev`, `import.meta.env.DEV`) the token is a fake and no request goes to the CMS (`createSessionCmsToken` in `src/services/cmsApiService/cmsApiService.ts`). The GenAIx mock contacts no CMS and accepts it; a real GenAIx refuses it with `422` `mcp_authorization_rejected`. The production build always creates a real token.
+
 ### API types
 
 `src/services/apiService/genaix/schema.d.ts` is generated from the contract `.claude/contracts/openapi.yaml`. Regenerate it with `npm run generate:api` whenever the contract changes. Import types through the aliases in `src/services/apiService/genaix/types.ts`.

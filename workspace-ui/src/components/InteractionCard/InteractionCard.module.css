@@ -1,0 +1,101 @@
+/* The fields of a pending interaction inside its chat card (design.md §12 "Eingabefelder": surface,
+   `--border-field`, `--corner-md`, 32 px; §8 focus of a text field: `--interactive` border + halo). */
+.card {
+  max-width: 740px;
+  margin-left: var(--chat-indent);
+}
+
+.prompt {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.required {
+  margin-left: 3px;
+  color: var(--error);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-field);
+  border-radius: var(--corner-md);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font: inherit;
+  transition: border-color var(--duration-state) var(--easing), box-shadow var(--duration-state) var(--easing);
+}
+
+.input:focus,
+.input:focus-visible {
+  border-color: var(--interactive);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--interactive-rgb), 0.16);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+textarea.input {
+  min-height: 54px;
+  resize: vertical;
+}
+
+.hint {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+/* A confirmed settings review: the chosen value under its label, read-only; the status in the foot
+   as icon and word in `--success` (design.md §3.3). */
+dl.fields {
+  margin: 0;
+}
+
+.settingValue {
+  margin: 0;
+  color: var(--fg-secondary);
+}
+
+.confirmed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+}

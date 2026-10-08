@@ -15,6 +15,9 @@
   --bg-subtle: #f3f6f8;
   --bg-preview-stage: #eaf4fc;
   --bg-solid: #004c77;
+  /* Text on `--bg-solid` in both themes, and its alpha base (§12 "Chat-Blasen": white, tokens .20). */
+  --fg-on-solid: #fff;
+  --fg-on-solid-rgb: 255, 255, 255;
   --agent-message-bg: #f2f8fd;
   --agent-message-border: rgba(var(--interactive-rgb), 0.18);
   --border-subtle: rgba(var(--fg-primary-rgb), 0.12);
@@ -68,10 +71,14 @@
   --duration-state: 130ms;
   --duration-popover: 160ms;
   --duration-card: 250ms;
-  /* §8: the attention pulse and the blink of the streaming cursor, also the voice input's. */
+  /* §8: the attention pulse; the blink of the voice input's recording dot. */
   --duration-attention: 1s;
   --duration-cursor-blink: 1s;
   --press-scale: 0.97;
+
+  /* Chat (§11, §12 "Chat-Blasen"): what stands in the agent's column is indented by its avatar
+     (26 px) plus the gap after it (9 px). */
+  --chat-indent: 35px;
 
   /* Base text (§5): 13 px, line height 1.45 */
   font: var(--font-size-base) / 1.45 var(--font-sans);

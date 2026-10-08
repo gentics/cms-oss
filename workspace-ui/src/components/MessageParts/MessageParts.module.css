@@ -1,0 +1,591 @@
+/* Chat card of a structured part (draft `.part`, `.parthd`, `.partbd`, `.partft`; design.md §12
+   "Chat-Karte (Part)", §7: head 8 × 10 px, body 10 × 10 px, foot 8 × 10 px). */
+.card {
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+  animation: pop var(--duration-card) var(--easing);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.head > svg {
+  flex: none;
+  color: var(--interactive);
+}
+
+.body {
+  padding: 10px;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Prose (`text`, `UnknownPart`): Markdown elements in the bubble (draft `.bubble p`, `.bubble ul`). */
+.prose {
+  overflow-wrap: anywhere;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose pre,
+.prose blockquote {
+  margin: 0 0 6px;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 18px;
+}
+
+.prose li {
+  margin: 2px 0;
+}
+
+.prose strong,
+.prose b,
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 500;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin: 8px 0 4px;
+  font-size: var(--font-size-md);
+}
+
+.prose code {
+  padding: 1px 4px;
+  border-radius: var(--corner-xs);
+  background: rgba(var(--interactive-rgb), 0.09);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: 8px 10px;
+  border-radius: var(--corner-md);
+  background: var(--bg-subtle);
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.prose blockquote {
+  padding: 4px 10px;
+  border-left: 2px solid var(--interactive);
+  color: var(--fg-secondary);
+}
+
+.prose a {
+  color: var(--interactive);
+}
+
+.plain {
+  white-space: pre-wrap;
+}
+
+/* `status_note`: a short line, not a card. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.note > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.noteWarning > svg {
+  color: var(--warning);
+}
+
+/* `@`-token of a `ContextReference` (design.md §12 "`@`-Token / Referenz"). */
+.ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 270px;
+  padding: 0 5px;
+  border: 1px solid rgba(var(--interactive-rgb), 0.3);
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), 0.13);
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  vertical-align: baseline;
+}
+
+.ref > svg {
+  flex: none;
+  color: var(--interactive);
+}
+
+.refText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* `tree_view` (09-workspace-complete `.tree`, `.tnode`, `.tkids`). */
+.tree,
+.treeKids {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.treeKids {
+  margin-left: 17px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.treeNode {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: var(--corner-md);
+  transition: background var(--duration-state) var(--easing);
+}
+
+.treeNode:hover {
+  background: var(--bg-subtle);
+}
+
+.treeTwist {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  color: rgba(var(--fg-primary-rgb), 0.4);
+}
+
+.treeLabel {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.treeLabel > svg {
+  flex: none;
+  color: var(--interactive);
+}
+
+.treeRoot {
+  font-weight: 500;
+}
+
+/* `selectable_list` and a `choice` interaction (draft `.selrow`). */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: var(--corner-lg);
+  cursor: pointer;
+  transition: background var(--duration-state) var(--easing);
+}
+
+.row:hover {
+  background: var(--bg-subtle);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rowLabel {
+  font-weight: 500;
+}
+
+.rowDescription {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* `properties_list` (draft `.propcard`, `.prow`, `.pk`). */
+.properties {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.property {
+  padding: 6px 8px;
+  border-radius: var(--corner-lg);
+}
+
+.propertyKey {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.propertyValue {
+  margin: 0;
+  font-size: var(--font-size-base);
+  overflow-wrap: anywhere;
+}
+
+/* `image_grid` (draft `.grid`, `.tile`; design.md §12 "Bildraster"). */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tile {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 2px solid transparent;
+  border-radius: var(--corner-lg);
+  background: var(--bg-subtle);
+  cursor: pointer;
+  transition: border-color var(--duration-state) var(--easing);
+}
+
+.tile[data-selected] {
+  border-color: var(--interactive);
+}
+
+.tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tileControl {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+/* `table`, `api_call_log` (draft `.tbl`; design.md §12 "Tabelle"). */
+.tableScroll {
+  overflow-x: auto;
+  margin: -6px -6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.table th {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.number {
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.ok {
+  color: var(--success);
+}
+
+.bad {
+  color: var(--error);
+}
+
+/* Badge (design.md §12 "Badge"): status of a page block. */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), 0.12);
+  color: var(--fg-primary);
+  font-size: var(--font-size-overline);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge[data-status='created'],
+.badge[data-status='updated'] {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.badge[data-status='locked'] {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badge[data-status='failed'] {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.badge[data-status='planned'] {
+  background: none;
+  color: var(--fg-muted);
+}
+
+/* `page_structure`: one line per block. */
+.blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--corner-lg);
+}
+
+.block > svg {
+  flex: none;
+  color: var(--interactive);
+}
+
+.blockText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.meta {
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* `construct_draft`. */
+.section + .section {
+  margin-top: 10px;
+}
+
+.sectionTitle {
+  margin: 0 0 4px;
+  color: var(--fg-muted);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.code {
+  overflow-x: auto;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--corner-md);
+  background: var(--bg-subtle);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  white-space: pre;
+}
+
+.issues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+}
+
+.issue > svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.issue[data-severity='error'] > svg {
+  color: var(--error);
+}
+
+.issue[data-severity='warning'] > svg {
+  color: var(--warning);
+}
+
+.issue[data-severity='info'] > svg {
+  color: var(--interactive);
+}
+
+/* `citation`: the sources of an answer, as quiet meta text (design.md §5.1 `--font-size-xs`,
+   `--fg-muted`), no card, set off from the text by an indent along a line. */
+.sources {
+  margin-top: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-subtle);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+}
+
+.sourcesTitle {
+  margin-bottom: 2px;
+}
+
+.citations {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.citation {
+  display: flex;
+  gap: 6px;
+}
+
+.marker {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.citationText {
+  min-width: 0;
+}
+
+.sourceLabel {
+  color: var(--fg-secondary);
+}
+
+.snippet {
+  margin: 0;
+}
+
+.snippet mark {
+  background: rgba(var(--interactive-rgb), 0.14);
+  color: inherit;
+}
+
+/* `file_ref`: download chip (design.md §6.1: `--corner-lg` for attachments). */
+.file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-lg);
+  background: var(--bg-surface);
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: border-color var(--duration-state) var(--easing), background var(--duration-state) var(--easing);
+}
+
+.file:hover {
+  border-color: var(--interactive);
+  background: rgba(var(--interactive-rgb), 0.06);
+}
+
+.file > svg {
+  flex: none;
+  color: var(--interactive);
+}

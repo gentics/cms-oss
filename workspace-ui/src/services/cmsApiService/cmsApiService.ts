@@ -1,4 +1,4 @@
-import { httpRequest } from '@/services/httpService/httpService';
+import { HttpError, httpRequest, toHttpError } from '@/services/httpService/httpService';
 
 /**
  * `responseInfo.responseCode` of a CMS REST response, which CMS REST responses carry alongside the
@@ -56,6 +56,122 @@ export async function createCmsToken(name: string): Promise<CmsTokenInfo> {
     return { ...created, expires };
 }
 
+// The same-origin request the CMS REST API answers with the browser's own CMS session cookie.
+const CMS_GET: RequestInit = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
+
+/** The logged-in CMS user (`GET /rest/user/me`), as far as the workspace needs it. */
+export interface CmsUser {
+    id: number;
+    login: string;
+    firstName: string;
+    lastName: string;
+}
+
+/**
+ * A CMS login that did not succeed: `POST /rest/auth/login` answered with a `responseInfo.responseCode`
+ * other than `OK` (`NOTFOUND` for wrong credentials, `MAINTENANCEMODE`, `FAILURE`), or
+ * `GET /rest/auth/ssologin` answered with such a code instead of a session id.
+ */
+export class CmsLoginError extends Error {
+    readonly responseCode: string;
+
+    constructor(responseCode: string) {
+        super(`CMS login failed: ${responseCode}`);
+        this.name = 'CmsLoginError';
+        this.responseCode = responseCode;
+    }
+}
+
+/**
+ * The CMS user of the browser's CMS session cookie: `GET /rest/user/me`. `null` while there is no
+ * valid session: the CMS answers `401` for a missing or expired cookie.
+ */
+export async function getCmsUser(): Promise<CmsUser | null> {
+    try {
+        const { user } = await httpRequest<{ user?: CmsUser }>('/rest/user/me', CMS_GET);
+
+        return user ?? null;
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 401) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Logs in with user name and password, as the editor and admin UI do: `POST /rest/auth/login`. The
+ * CMS sets the session cookie itself. It answers `200` for a refused login too, with the reason in
+ * `responseInfo.responseCode`, which is thrown as a `CmsLoginError`.
+ */
+export async function loginToCms(login: string, password: string): Promise<CmsUser> {
+    const response = await httpRequest<{ responseInfo?: { responseCode?: string }; user?: CmsUser }>('/rest/auth/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password }),
+    });
+    const responseCode = response.responseInfo?.responseCode ?? 'FAILURE';
+
+    if (responseCode !== 'OK' || !response.user) {
+        throw new CmsLoginError(responseCode);
+    }
+
+    return response.user;
+}
+
+/** Ends the CMS session: `POST /rest/auth/logout`, which also deletes the session cookie. */
+export async function logoutFromCms(): Promise<void> {
+    await httpRequest<unknown>('/rest/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } });
+}
+
+/** The Keycloak settings the CMS offers its UIs (`GET /rest/keycloak`, the `cms-keycloak` module). */
+export interface CmsKeycloakConfig {
+    'auth-server-url': string;
+    realm: string;
+    resource: string;
+    /** `keycloak.show_sso_button`: offer SSO as a button next to the login form instead of redirecting at once. */
+    showSSOButton?: boolean;
+}
+
+/** The CMS's Keycloak settings, or `null` when it has none: `404` while the feature is off or not installed. */
+export async function getCmsKeycloakConfig(): Promise<CmsKeycloakConfig | null> {
+    try {
+        return await httpRequest<CmsKeycloakConfig>('/rest/keycloak', CMS_GET);
+    } catch (error) {
+        if (error instanceof HttpError && error.status === 404) {
+            return null;
+        }
+
+        throw error;
+    }
+}
+
+/**
+ * Turns a Keycloak access token into a CMS session, as the editor and admin UI do:
+ * `GET /rest/auth/ssologin` with `Authorization: Bearer`. The CMS sets the session cookie and answers
+ * the session id as plain text; anything else is the response code of a refused login, thrown as a
+ * `CmsLoginError`.
+ */
+export async function ssoLoginToCms(accessToken: string): Promise<void> {
+    const url = '/rest/auth/ssologin';
+    const response = await fetch(url, {
+        credentials: 'same-origin',
+        headers: { Accept: 'text/plain', Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+        throw await toHttpError(url, response);
+    }
+
+    const result = (await response.text()).trim();
+
+    if (!/^\d+$/.test(result)) {
+        throw new CmsLoginError(result || 'FAILURE');
+    }
+}
+
 /** A CMS node (`GET /rest/node`), as far as the composer needs it. `folderId` is its root folder. */
 export interface CmsNode {
     id: number;
@@ -74,9 +190,6 @@ export interface CmsItem {
     /** The folder path, e.g. `/Campaigns/`; not every type carries it. */
     path?: string;
 }
-
-// The same-origin request the CMS REST API answers with the browser's own CMS session cookie.
-const CMS_GET: RequestInit = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
 
 /** The nodes the current CMS user can see: `GET /rest/node`. */
 export async function listCmsNodes(): Promise<CmsNode[]> {

@@ -1,0 +1,80 @@
+/* The login on the canvas: one card, anchored to the top like the dashboard (design.md §11). */
+.page {
+  box-sizing: border-box;
+  height: 100svh;
+  overflow-y: auto;
+  padding: min(28vh, 280px) 16px 60px;
+  background: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.45;
+}
+
+/* Card: `--bg-surface`, `--border-subtle`, `--corner-2xl`, 16 px inside (design.md §7, §12); rises in (§10). */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--corner-2xl);
+  background: var(--bg-surface);
+  animation: rise var(--duration-card) var(--easing);
+}
+
+/* The brand, as in the topbar: logomark and name (design.md §9). */
+.title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 4px;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+/* Gentics logomark as a mask in `--interactive`, 218:256, 20 × 24 px (design.md §9). */
+.logo {
+  flex: none;
+  width: 20px;
+  height: 24px;
+  background: var(--interactive);
+  mask: url('../../assets/gentics-logomark.png') center / contain no-repeat;
+}
+
+/* Label above the field (design.md §4.2). */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* A refused login: icon and text in `--error` on `--error-bg`, 3 px left edge (design.md §3.3). */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(var(--error-rgb), 0.3);
+  border-left: 3px solid var(--error);
+  border-radius: var(--corner-lg);
+  background: var(--error-bg);
+  color: var(--error);
+  font-size: var(--font-size-sm);
+
+  & svg {
+    flex: none;
+    margin-top: 1px;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}

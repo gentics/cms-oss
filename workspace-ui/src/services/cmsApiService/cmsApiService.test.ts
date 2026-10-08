@@ -2,7 +2,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HttpError } from '@/services/httpService/httpService';
 
-import { CMS_SEARCH_MAX_ITEMS, type CmsTokenInfo, createCmsToken, listCmsNodes, searchCmsItems } from './cmsApiService';
+import {
+    CMS_SEARCH_MAX_ITEMS,
+    CmsLoginError,
+    type CmsTokenInfo,
+    createCmsToken,
+    getCmsKeycloakConfig,
+    getCmsUser,
+    listCmsNodes,
+    loginToCms,
+    logoutFromCms,
+    searchCmsItems,
+    ssoLoginToCms,
+} from './cmsApiService';
 
 const NOW_S = 1_790_800_000;
 
@@ -95,5 +107,82 @@ describe('searchCmsItems', () => {
         expect(url.searchParams.get('maxItems')).toBe(String(CMS_SEARCH_MAX_ITEMS));
         expect(url.searchParams.getAll('type')).toEqual(['page', 'folder', 'image']);
         expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
+    });
+});
+
+describe('CMS login', () => {
+    const user = { id: 3, login: 'editor', firstName: 'Eddie', lastName: 'Tor' };
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('getCmsUser returns the user of the session cookie, and null for 401', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ user }), new Response('', { status: 401 }));
+
+        await expect(getCmsUser()).resolves.toEqual(user);
+        await expect(getCmsUser()).resolves.toBeNull();
+        expect(fetchMock).toHaveBeenCalledWith('/rest/user/me', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('getCmsUser throws other errors', async () => {
+        stubFetchSequence(new Response('', { status: 500 }));
+
+        await expect(getCmsUser()).rejects.toBeInstanceOf(HttpError);
+    });
+
+    it('loginToCms posts the credentials and returns the user', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' }, user }));
+
+        await expect(loginToCms('editor', 'secret')).resolves.toEqual(user);
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/auth/login');
+        expect(init).toMatchObject({ method: 'POST', credentials: 'same-origin' });
+        expect(postedBody(fetchMock)).toEqual({ login: 'editor', password: 'secret' });
+    });
+
+    it('loginToCms throws the response code of a refused login, which the CMS answers with 200', async () => {
+        stubFetchSequence(Response.json({ responseInfo: { responseCode: 'NOTFOUND' } }));
+
+        const error = await loginToCms('editor', 'wrong').catch((caught: unknown) => caught);
+
+        expect(error).toBeInstanceOf(CmsLoginError);
+        expect(error).toMatchObject({ responseCode: 'NOTFOUND' });
+    });
+
+    it('logoutFromCms posts the logout', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ responseInfo: { responseCode: 'OK' } }));
+
+        await logoutFromCms();
+
+        expect(fetchMock).toHaveBeenCalledWith('/rest/auth/logout', expect.objectContaining({ method: 'POST', credentials: 'same-origin' }));
+    });
+
+    it('getCmsKeycloakConfig returns the settings, and null for 404', async () => {
+        const config = { 'auth-server-url': 'https://sso.example.com', realm: 'cms', resource: 'cms-ui', showSSOButton: true };
+
+        stubFetchSequence(Response.json(config), new Response('', { status: 404 }));
+
+        await expect(getCmsKeycloakConfig()).resolves.toEqual(config);
+        await expect(getCmsKeycloakConfig()).resolves.toBeNull();
+    });
+
+    it('ssoLoginToCms sends the access token and accepts the session id it gets back', async () => {
+        const fetchMock = stubFetchSequence(new Response('1234'));
+
+        await expect(ssoLoginToCms('kc-token')).resolves.toBeUndefined();
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/auth/ssologin');
+        expect(init?.headers).toMatchObject({ Authorization: 'Bearer kc-token' });
+    });
+
+    it('ssoLoginToCms throws the response code it gets instead of a session id', async () => {
+        stubFetchSequence(new Response('MAINTENANCEMODE'));
+
+        await expect(ssoLoginToCms('kc-token')).rejects.toMatchObject({ name: 'CmsLoginError', responseCode: 'MAINTENANCEMODE' });
     });
 });

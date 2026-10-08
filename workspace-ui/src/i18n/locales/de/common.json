@@ -8,7 +8,22 @@
             "de": "Deutsch"
         },
         "darkMode": "Dunkler Modus",
-        "lightMode": "Heller Modus"
+        "lightMode": "Heller Modus",
+        "logout": "Abmelden"
+    },
+    "login": {
+        "username": "Benutzername",
+        "password": "Passwort",
+        "submit": "Anmelden",
+        "singleSignOn": "Mit SSO anmelden",
+        "errors": {
+            "invalidCredentials": "Benutzername oder Passwort ist falsch.",
+            "maintenance": "Das CMS ist im Wartungsmodus. Anmelden ist gerade nicht möglich.",
+            "failed": "Die Anmeldung ist fehlgeschlagen.",
+            "singleSignOn": "Single Sign-on ist nicht verfügbar.",
+            "logout": "Das Abmelden ist fehlgeschlagen.",
+            "singleSignOnLogout": "Sie sind vom CMS abgemeldet, aber noch per Single Sign-on angemeldet."
+        }
     },
     "workspace": {
         "resizeLeft": "Breite der linken Spalte",
@@ -135,7 +150,8 @@
             "invalid": "Ungültig",
             "disabled": "Deaktiviert",
             "placeholder": "Platzhalter",
-            "selected": "Gewählt"
+            "selected": "Gewählt",
+            "filled": "Ausgefüllt"
         },
         "buttons": {
             "title": "Buttons",
@@ -162,6 +178,11 @@
         "checkbox": {
             "title": "Checkbox",
             "label": "Sofort veröffentlichen"
+        },
+        "input": {
+            "title": "Eingabefeld",
+            "label": "Benutzername",
+            "placeholder": "Benutzernamen eingeben"
         },
         "select": {
             "title": "Auswahl",

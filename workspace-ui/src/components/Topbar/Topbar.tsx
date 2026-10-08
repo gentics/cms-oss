@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { MoonIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon, SunIcon } from 'lucide-react';
+import { LogOutIcon, MoonIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PanelRightCloseIcon, PanelRightOpenIcon, SunIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { useCmsLogout } from '@/hooks/useCmsAuth';
 import { useThemeStore } from '@/store/useThemeStore';
 
 import styles from './Topbar.module.css';
@@ -21,7 +22,7 @@ interface TopbarProps {
 /**
  * The bar above the workspace: at the far left the toggle of the left column (pages with one), the
  * brand, which leads home to the dashboard, the language switch (final_draft.html `#langBtn`), the
- * light/dark toggle (icons per design.md §9) and at the far right the toggle of the right column
+ * light/dark toggle (icons per design.md §9), the logout and at the far right the toggle of the right column
  * (while there is a preview). Phones (≤ 640 px) show only the center column and have no column
  * toggles.
  */
@@ -29,6 +30,7 @@ export function Topbar({ isLeftColumnVisible = true, onToggleLeftColumn, isRight
     const { t, i18n } = useTranslation();
     const theme = useThemeStore((state) => state.theme);
     const toggleTheme = useThemeStore((state) => state.toggleTheme);
+    const logout = useCmsLogout();
     const themeLabel = t(theme === 'dark' ? 'topbar.lightMode' : 'topbar.darkMode');
     const leftColumnLabel = t(isLeftColumnVisible ? 'workspace.hideLeftColumn' : 'workspace.showLeftColumn');
     const rightColumnLabel = t(isRightColumnVisible ? 'workspace.hideRightColumn' : 'workspace.showRightColumn');
@@ -65,6 +67,17 @@ export function Topbar({ isLeftColumnVisible = true, onToggleLeftColumn, isRight
 
             <Button variant="ghost" size="icon" aria-label={themeLabel} title={themeLabel} onClick={toggleTheme}>
                 {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
+            </Button>
+
+            <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('topbar.logout')}
+                title={t('topbar.logout')}
+                disabled={logout.isPending}
+                onClick={() => logout.mutate()}
+            >
+                <LogOutIcon size={20} />
             </Button>
             {onToggleRightColumn && (
                 <span className={styles.columnToggle}>

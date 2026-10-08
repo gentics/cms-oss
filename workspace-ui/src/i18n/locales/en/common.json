@@ -8,7 +8,22 @@
             "de": "Deutsch"
         },
         "darkMode": "Dark mode",
-        "lightMode": "Light mode"
+        "lightMode": "Light mode",
+        "logout": "Log out"
+    },
+    "login": {
+        "username": "User name",
+        "password": "Password",
+        "submit": "Log in",
+        "singleSignOn": "Log in with SSO",
+        "errors": {
+            "invalidCredentials": "The user name or the password is wrong.",
+            "maintenance": "The CMS is in maintenance mode. Logging in is not possible right now.",
+            "failed": "The login failed.",
+            "singleSignOn": "Single sign-on is not available.",
+            "logout": "Logging out failed.",
+            "singleSignOnLogout": "You are logged out of the CMS, but still logged in with single sign-on."
+        }
     },
     "workspace": {
         "resizeLeft": "Width of the left column",
@@ -135,7 +150,8 @@
             "invalid": "Invalid",
             "disabled": "Disabled",
             "placeholder": "Placeholder",
-            "selected": "Selected"
+            "selected": "Selected",
+            "filled": "Filled"
         },
         "buttons": {
             "title": "Buttons",
@@ -162,6 +178,11 @@
         "checkbox": {
             "title": "Checkbox",
             "label": "Publish now"
+        },
+        "input": {
+            "title": "Input",
+            "label": "User name",
+            "placeholder": "Enter a user name"
         },
         "select": {
             "title": "Select",

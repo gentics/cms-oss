@@ -64,7 +64,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	/**
 	 * List of objects to be put upon the render stack while getting a property from the object
 	 */
-	protected List<StackResolvable> stack = new Vector<StackResolvable>();
+	private List<StackResolvable> stack = new Vector<StackResolvable>();
 
 	/**
 	 * Wrap the value into instance(s) of {@link ResolvableMapWrapper}.
@@ -88,7 +88,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 				public int size() {
 					return listValue.size();
 				}
-				
+
 				@Override
 				public Object get(int index) {
 					return wrap(listValue.get(index), context, mother, forMap);

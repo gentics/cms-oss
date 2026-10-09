@@ -12,6 +12,8 @@ public class ApiTokenCreationRequest implements Serializable {
 
 	protected int expires;
 
+	protected boolean pruneOnExpiry;
+
 	/**
 	 * Token name
 	 * @return name
@@ -45,6 +47,24 @@ public class ApiTokenCreationRequest implements Serializable {
 	 */
 	public ApiTokenCreationRequest setExpires(int expires) {
 		this.expires = expires;
+		return this;
+	}
+
+	/**
+	 * Shall the token be pruned automatically when it expires
+	 * @return flag value
+	 */
+	public boolean isPruneOnExpiry() {
+		return pruneOnExpiry;
+	}
+
+	/**
+	 * Set the "pruneOnExpiry" flag value
+	 * @param pruneOnExpiry flag value
+	 * @return fluent API
+	 */
+	public ApiTokenCreationRequest setPruneOnExpiry(boolean pruneOnExpiry) {
+		this.pruneOnExpiry = pruneOnExpiry;
 		return this;
 	}
 }

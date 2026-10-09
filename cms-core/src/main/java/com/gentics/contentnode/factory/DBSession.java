@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.Language;
+import com.gentics.contentnode.auth.ApiTokenFactory;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.db.DBUtils.HandleSelectResultSet;
 import com.gentics.contentnode.i18n.CNDictionary;
@@ -233,7 +234,7 @@ public class DBSession implements Session {
 	 * This method will - for all users - remove all systemsessions with a since that is older than the allowed session age,
 	 * only the last of those sessions will be kept
 	 */
-	protected static void cleanOldSessions() {
+	public static void cleanOldSessions() {
 		try (Trx trx = new Trx()) {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			int sessionAge = ObjectTransformer.getInt(t.getNodeConfig().getDefaultPreferences().getProperty("session_age"), 3600);
@@ -262,6 +263,8 @@ public class DBSession implements Session {
 
 			DBUtils.updateWithPK("systemsession", "id", "secret = ?", new Object[] { "" }, "secret != ? AND since < ?",
 					new Object[] { "", allowedSince });
+
+			ApiTokenFactory.pruneExpiredTokens();
 
 			trx.success();
 		} catch (NodeException e) {

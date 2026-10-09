@@ -35,6 +35,11 @@ public class ApiTokenDataModel implements Serializable {
 	private int expires;
 
 	/**
+	 * Shall the token be pruned when it expires
+	 */
+	private boolean pruneOnExpiry;
+
+	/**
 	 * Time when the token was used the last time (0 when it was never used)
 	 */
 	private int lastUsed;
@@ -131,6 +136,24 @@ public class ApiTokenDataModel implements Serializable {
 	 */
 	public ApiTokenDataModel setExpires(int expires) {
 		this.expires = expires;
+		return this;
+	}
+
+	/**
+	 * Shall the token be pruned automatically when it expires
+	 * @return flag value
+	 */
+	public boolean isPruneOnExpiry() {
+		return pruneOnExpiry;
+	}
+
+	/**
+	 * Set the pruneOnExpiry flag value
+	 * @param pruneOnExpiry flag value
+	 * @return fluent API
+	 */
+	public ApiTokenDataModel setPruneOnExpiry(boolean pruneOnExpiry) {
+		this.pruneOnExpiry = pruneOnExpiry;
 		return this;
 	}
 

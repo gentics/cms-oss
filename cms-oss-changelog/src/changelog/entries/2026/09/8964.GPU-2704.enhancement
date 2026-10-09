@@ -1,0 +1,2 @@
+API Tokens of users can now have the @pruneOnExpiry@ flag set.
+Expired tokens with this flag set will automatically be removed from the system.

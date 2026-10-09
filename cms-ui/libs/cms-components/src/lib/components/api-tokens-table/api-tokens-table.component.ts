@@ -75,6 +75,12 @@ export class ApiTokensTableComponent implements OnInit {
                 sortable: true,
             },
             {
+                id: 'pruneOnExpiry',
+                label: this.i18n.instant('api_token.prune_on_expiry'),
+                fieldPath: 'pruneOnExpiry',
+                sortable: true,
+            },
+            {
                 id: 'lastUsed',
                 label: this.i18n.instant('api_token.last_used'),
                 fieldPath: 'lastUsed',
@@ -84,6 +90,7 @@ export class ApiTokensTableComponent implements OnInit {
                 id: 'valid',
                 label: this.i18n.instant('api_token.token_valid'),
                 fieldPath: 'valid',
+                sortable: true,
             },
         ];
 
@@ -108,6 +115,7 @@ export class ApiTokensTableComponent implements OnInit {
                             name: token.name,
                             cdate: new Date(token.cdate * 1000),
                             expires: token.expires === 0 ? '' : new Date(token.expires * 1000),
+                            pruneOnExpiry: token.pruneOnExpiry,
                             lastUsed: token.lastUsed === 0 ? '' : new Date(token.lastUsed * 1000),
                             valid: token.valid,
                         },

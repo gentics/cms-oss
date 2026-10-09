@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -631,4 +631,59 @@ describe('Composer', () => {
             expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument();
         });
     });
+
+    describe('reference tokens from outside', () => {
+        const first = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
+        const second = { type: 'page' as const, id: '8903', node_id: 3, label: 'Nutzungsbedingungen' };
+
+        it('adds them before the text, removes them again and reports the objects in the field', async () => {
+            const user = userEvent.setup();
+            const onSubmit = vi.fn();
+            const onReferencesChange = vi.fn();
+            const ref = createRef<ComposerHandle>();
+
+            render(
+                <Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} ref={ref} onReferencesChange={onReferencesChange} notice="Starts a new session" />,
+                { wrapper: UiProvider },
+            );
+
+            const field = screen.getByRole('textbox', { name: 'What should happen?' });
+
+            expect(screen.getByText('Starts a new session')).toBeInTheDocument();
+
+            act(() => ref.current!.setText('publish'));
+            act(() => ref.current!.addReferences([first, second]));
+
+            expect(field).toHaveTextContent('Garantiebedingungen Nutzungsbedingungen publish');
+            expect(onReferencesChange).toHaveBeenLastCalledWith([first, second]);
+
+            act(() => ref.current!.removeReferences([first]));
+
+            expect(field).toHaveTextContent('Nutzungsbedingungen publish');
+            expect(field).not.toHaveTextContent('Garantiebedingungen');
+            expect(onReferencesChange).toHaveBeenLastCalledWith([second]);
+
+            await user.keyboard('{Enter}');
+
+            expect(onSubmit).toHaveBeenCalledWith({ parts: [{ type: 'reference', ref: second }, { type: 'text', text: ' publish' }], files: [] });
+        });
+
+        it('puts the caret behind them, also when the field had no focus', async () => {
+            const user = userEvent.setup();
+            const onSubmit = vi.fn();
+            const ref = createRef<ComposerHandle>();
+
+            render(<Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} ref={ref} />, { wrapper: UiProvider });
+
+            act(() => ref.current!.addReferences([first]));
+
+            // Tiptap focuses in the next frame.
+            await waitFor(() => expect(screen.getByRole('textbox', { name: 'What should happen?' })).toHaveFocus());
+
+            await user.keyboard('Publish it{Enter}');
+
+            expect(onSubmit).toHaveBeenCalledWith({ parts: [{ type: 'reference', ref: first }, { type: 'text', text: ' Publish it' }], files: [] });
+        });
+    });
 });
+

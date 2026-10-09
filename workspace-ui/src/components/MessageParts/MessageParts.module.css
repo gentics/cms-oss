@@ -368,6 +368,24 @@
   border-bottom: 0;
 }
 
+/* The checkbox column of a table whose rows can be handed off. */
+.table .selectCell {
+  width: 1px;
+  padding-right: 0;
+}
+
+/* A selected row (§8 "Ausgewählt"; §3.2 "gewählte Tabellenzeile"). */
+.table tr.selectedRow td {
+  background: rgba(var(--interactive-rgb), 0.09);
+}
+
+/* The caption on the left of the foot, the actions pushed right (§12 "Chat-Karte": "Beschriftung
+   links, Aktionen rechts"). */
+.caption {
+  flex: 1;
+  min-width: 0;
+}
+
 .number {
   color: var(--fg-secondary);
   font-variant-numeric: tabular-nums;

@@ -1,13 +1,15 @@
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
+import { HandOffContext } from '@/components/EditTheseButton/handOffContext';
 import { ConfirmedSettingsCard, InteractionCard } from '@/components/InteractionCard/InteractionCard';
 import { PlanCard } from '@/components/PlanCard/PlanCard';
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
-import { useSessionMessages } from '@/hooks/useGenaixQueries';
+import { READ_ONLY_WORKFLOW } from '@/helper/workflowGuess/workflowGuess';
+import { useSession, useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
 import { type LiveMessage, type LivePlan, type LiveRun, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -178,7 +180,8 @@ function isWorking(run: LiveRun | null | undefined, messages: LiveMessage[]): bo
  * How a run ended (`RunNotice`) follows the last message of that run. At the end: the pending
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
- * its steps, plan and thinking. Follows new content while scrolled to the end.
+ * its steps, plan and thinking. Follows new content while scrolled to the end. In a read-only session
+ * the result cards can hand their objects off to a new session (`HandOffContext`).
  */
 export function ChatStream({ sessionId }: { sessionId: string }) {
     const history = useSessionMessages(sessionId);
@@ -195,6 +198,11 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         };
     }));
     const steps = useWorkflowSteps(sessionId);
+    const session = useSession(sessionId).data;
+    const isReadOnly = session?.workflow === READ_ONLY_WORKFLOW;
+    const nodeId = session?.context?.node_id;
+    // One value while the session stays the same, so the cards do not re-render with every event.
+    const handOff = useMemo(() => (isReadOnly ? { nodeId } : null), [isReadOnly, nodeId]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const stickRef = useRef(true);
 
@@ -334,9 +342,11 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
 
     return (
         <div ref={scrollRef} className={styles.stream} onScroll={handleScroll}>
-            <ol className={styles.list}>
-                {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
-            </ol>
+            <HandOffContext value={handOff}>
+                <ol className={styles.list}>
+                    {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
+                </ol>
+            </HandOffContext>
         </div>
     );
 }

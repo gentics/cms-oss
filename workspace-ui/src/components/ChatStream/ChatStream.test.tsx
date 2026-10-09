@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GenaixEvent, Message } from '@/services/apiService/genaix/types';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
-import { createWrapper } from '@/test/renderWithProviders';
+import { createWrapper, renderWithProviders } from '@/test/renderWithProviders';
 
 import { ChatStream } from './ChatStream';
 
@@ -346,6 +346,45 @@ describe('ChatStream', () => {
             await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/proxy/genaix/workflows'));
 
             expect(chatItems()).toEqual(['YouHello', 'Assistant', 'Hi.']);
+        });
+    });
+
+    describe('result cards', () => {
+        // An answer with a research table of two pages.
+        const answer: Message = {
+            ...message('m-2', 'assistant', '', 'r-1'),
+            parts: [{
+                type: 'table',
+                label: 'Pages',
+                columns: [{ key: 'page', label: 'Page', type: 'ref' }],
+                rows: [
+                    { page: { type: 'page', id: '8871', node_id: 3, label: 'Garantiebedingungen' } },
+                    { page: { type: 'page', id: '8903', node_id: 3, label: 'Nutzungsbedingungen' } },
+                ],
+            }],
+        };
+
+        it('can hand their objects off in a read-only session', async () => {
+            stubSession('content_research', [], [message('m-1', 'user', 'Which pages mention the terms?', 'r-1'), answer]);
+
+            renderWithProviders(<ChatStream sessionId={SESSION} />);
+
+            expect(await screen.findByRole('checkbox', { name: 'Select Garantiebedingungen' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: 'Edit these' })).toBeInTheDocument();
+        });
+
+        it('cannot in any other session', async () => {
+            const fetchMock = stubSession('content_edit', [], [message('m-1', 'user', 'Change these', 'r-1'), answer]);
+
+            renderWithProviders(<ChatStream sessionId={SESSION} />);
+
+            expect(await screen.findByText('Garantiebedingungen')).toBeInTheDocument();
+            await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain(`/rest/proxy/genaix/sessions/${SESSION}`));
+            // The session's answer is in, so its workflow has been read.
+            await act(async () => {});
+
+            expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+            expect(screen.queryByRole('button', { name: 'Edit these' })).not.toBeInTheDocument();
         });
     });
 });

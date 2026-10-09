@@ -3725,13 +3725,16 @@ public class MeshPublisher implements AutoCloseable {
 						FieldList<JsonNode> field = new JsonFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
-							String jsonString = ObjectTransformer.getString(o, null);
-							if (jsonString != null) {
-								field.add(JsonUtil.toJsonNode(jsonString, true));
+							JsonNode jsonNode = MeshPublishUtils.toJsonNode(o);
+							if (jsonNode != null) {
+								field.add(jsonNode);
 							}
 						}
 					} else {
-						fields.put(entry.getMapname(), new JsonFieldImpl().setJson(JsonUtil.toJsonNode(ObjectTransformer.getString(value, null), true)));
+						JsonNode jsonNode = MeshPublishUtils.toJsonNode(value);
+						if (jsonNode != null) {
+							fields.put(entry.getMapname(), new JsonFieldImpl().setJson(jsonNode));
+						}
 					}
 					break;
 				}

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { UserMessagePart } from '@/services/apiService/genaix/types';
 
-import { DEFAULT_WORKFLOW, guessWorkflow } from './workflowGuess';
+import { DEFAULT_WORKFLOW, guessWorkflow, handOffWorkflow } from './workflowGuess';
 
 function text(value: string): UserMessagePart[] {
     return [{ type: 'text', text: value }];
@@ -39,5 +39,17 @@ describe('guessWorkflow', () => {
     it('falls back to the default workflow', () => {
         expect(guessWorkflow(text('Hello'))).toBe(DEFAULT_WORKFLOW);
         expect(guessWorkflow([])).toBe(DEFAULT_WORKFLOW);
+    });
+});
+
+describe('handOffWorkflow', () => {
+    it('never hands off to the read-only research workflow', () => {
+        expect(handOffWorkflow(text('Publish all these pages'))).toBe('content_edit');
+        expect(handOffWorkflow(text('Show me where they are linked'))).toBe('content_edit');
+    });
+
+    it('keeps any other guess', () => {
+        expect(handOffWorkflow(text('Create a landing page linking these'))).toBe('content_create');
+        expect(handOffWorkflow(text('Change the intro of these pages'))).toBe('content_edit');
     });
 });

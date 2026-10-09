@@ -25,3 +25,14 @@
   margin: 0 auto;
   pointer-events: auto;
 }
+
+/* The composer's notice while the next message starts a new session ("Edit these"). */
+.noticeIcon {
+  flex: none;
+  color: var(--interactive);
+}
+
+.noticeText {
+  flex: 1;
+  min-width: 0;
+}

@@ -12,6 +12,7 @@ import { stubUploads } from '@/test/stubUploads';
 import { useAnswerInteraction,
     useArchiveSession,
     useCancelRun,
+    useHandOffSession,
     useMe,
     useSendMessage,
     useSendTurn,
@@ -335,6 +336,69 @@ describe('GenAIx query hooks', () => {
             await waitFor(() => expect(result.current.isError).toBe(true));
             expect(fetchMock).toHaveBeenCalledTimes(1);
             expect((result.current.error as GenaixApiError).genaixCode).toBe('service_unavailable');
+        });
+    });
+
+    describe('useHandOffSession', () => {
+        const first = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
+        const second = { type: 'page' as const, id: '8903', node_id: 3, label: 'Nutzungsbedingungen' };
+
+        it('starts a session with every referenced object in its context, in the node of the read-only one', async () => {
+            const fetchMock = stubFetch(Response.json({ id: 's-2', status: 'active', run_id: 'r-1', message_id: 'm-1' }, { status: 201 }));
+            const parts = [
+                { type: 'reference' as const, ref: first },
+                { type: 'text' as const, text: ' ' },
+                { type: 'reference' as const, ref: second },
+                { type: 'text' as const, text: ' publish all these pages, and ' },
+                { type: 'reference' as const, ref: first },
+            ];
+
+            const { result } = renderHook(() => useHandOffSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts, files: [], nodeId: 3 }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions');
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toEqual({
+                // Never the read-only workflow again (`handOffWorkflow`).
+                workflow: 'content_edit',
+                context: { node_id: 3, references: [first, second], guidelines: [], connection_ids: [] },
+                message: { parts },
+                authorizations: [AUTHORIZATION],
+            });
+            expect(result.current.data).toMatchObject({ id: 's-2' });
+        });
+
+        it('refetches the session lists, which the left column shows while the new session opens', async () => {
+            stubFetch(Response.json({ id: 's-2', status: 'active' }, { status: 201 }));
+
+            const queryClient = new QueryClient();
+            const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+            const { result } = renderHook(() => useHandOffSession(), {
+                wrapper: ({ children }: { children: ReactNode }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>,
+            });
+
+            act(() => result.current.mutate({ parts: [{ type: 'reference', ref: first }, { type: 'text', text: ' publish it' }], files: [] }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(invalidate).toHaveBeenCalledWith({ queryKey: ['genaix', 'sessions', 'list'] });
+            expect(queryClient.getQueryData(['genaix', 'sessions', 's-2'])).toMatchObject({ id: 's-2' });
+        });
+
+        it('leaves the node out when the read-only session names none', async () => {
+            const fetchMock = stubFetch(Response.json({ id: 's-2', status: 'active' }, { status: 201 }));
+
+            const { result } = renderHook(() => useHandOffSession(), { wrapper });
+
+            act(() => result.current.mutate({ parts: [{ type: 'reference', ref: first }, { type: 'text', text: ' create a landing page about it' }], files: [] }));
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toMatchObject({
+                workflow: 'content_create',
+                context: { references: [first], guidelines: [], connection_ids: [] },
+            });
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string).context).not.toHaveProperty('node_id');
         });
     });
 

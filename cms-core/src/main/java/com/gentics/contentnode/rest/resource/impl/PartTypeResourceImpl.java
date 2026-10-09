@@ -12,6 +12,7 @@ import com.gentics.contentnode.factory.PartTypeFactory;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.resolving.ResolvableWrapper;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.model.PartType;
 import com.gentics.contentnode.rest.model.response.PartTypeListResponse;
 import com.gentics.contentnode.rest.resource.PartTypeResource;
@@ -36,6 +37,7 @@ import jakarta.ws.rs.core.MediaType;
 public class PartTypeResourceImpl implements PartTypeResource {
 
 	@GET
+	@McpTool(description = "Get the list of available part types, optionally filtered.")
 	public PartTypeListResponse list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging,  @BeanParam PartTypeListParameterBean partTypeFilter) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {

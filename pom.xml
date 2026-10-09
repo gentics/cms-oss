@@ -58,6 +58,13 @@
 		<jackson.version>2.21.7</jackson.version>
 		<jackson-annotations.version>2.21</jackson-annotations.version>
 
+		<!-- Model Context Protocol Java SDK (see https://github.com/modelcontextprotocol/java-sdk) -->
+		<mcp.version>2.0.1</mcp.version>
+		<!-- Classpath scanning for MCP tool discovery (see https://github.com/classgraph/classgraph) -->
+		<classgraph.version>4.8.194</classgraph.version>
+		<!-- Bytecode analysis, used to detect @Context field usage in @McpTool methods (see https://asm.ow2.io) -->
+		<asm.version>9.10.1</asm.version>
+
 		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>9.37.4</nimbus-jose-jwt.version>

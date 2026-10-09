@@ -36,6 +36,8 @@ import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.model.ContentLanguage;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.response.ContentLanguageResponse;
@@ -120,7 +122,9 @@ public class LanguageResourceImpl implements LanguageResource {
 	@GET
 	@Path("/{id}")
 	@Override
-	public ContentLanguageResponse get(@PathParam("id") String id) throws NodeException {
+	@McpTool(description = "Get the content language with the given ID.")
+	public ContentLanguageResponse get(
+			@PathParam("id") @McpToolParam(name = "id", description = "ID of the content language.") String id) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			com.gentics.contentnode.object.ContentLanguage language = MiscUtils
 					.load(com.gentics.contentnode.object.ContentLanguage.class, id);

@@ -65,6 +65,7 @@ import com.gentics.contentnode.rest.configuration.KeyProvider;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredPerm;
+import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.model.CmpCompatibility;
 import com.gentics.contentnode.rest.model.CmpProduct;
 import com.gentics.contentnode.rest.model.CmpVersionInfo;
@@ -330,6 +331,7 @@ public class AdminResourceImpl implements AdminResource {
 	@Path("/actionlog")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	@RequiredPerm(type = PermHandler.TYPE_ACTIONLOG, bit = PermHandler.PERM_VIEW)
+	@McpTool(description = "Get the CMS action log, optionally paged and/or filtered by user, action, object type, object ID and/or time range.")
 	public ActionLogEntryList getActionLog(@BeanParam PagingParameterBean paging, @BeanParam ActionLogParameterBean param) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			LogQuery query = new ActionLogger.LogQuery().page(paging).query(param);

@@ -22,7 +22,6 @@ import org.apache.commons.collections4.SetUtils;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
-import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -728,9 +727,22 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 		// the file was moved
 		if (Events.isEvent(eventMask, Events.MOVE)) {
 			// the property "folder_id" changed
-			List modProps = getModifiedProperties(new String[] { "folder_id"});
+			List<String> modProps = getModifiedProperties(new String[] { "folder_id"});
 
 			triggerEvent(object, (String[]) modProps.toArray(new String[modProps.size()]), Events.UPDATE, depth + 1, channelId);
+		}
+
+		// when a localized copy is created, the other channel variants are no longer resolved in its channel.
+		// dependencies are stored for the channel of the rendered page (which may differ from the channel, in which
+		// the file was resolved, e.g. in a #gtx_channel block), so trigger the dependencies on the other variants for all channels
+		if (Events.isEvent(eventMask, Events.CREATE) && !isMaster()) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+
+			for (File channelVariant : t.getObjects(File.class, getChannelSet().values())) {
+				if (!channelVariant.equals(this)) {
+					channelVariant.triggerEvent(new DependencyObject(channelVariant, (NodeObject) null), null, Events.UPDATE, depth + 1, 0);
+				}
+			}
 		}
 	}
 

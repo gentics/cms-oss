@@ -1129,6 +1129,16 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		// if the published page is a localized copy, we need to hide former inherited pages in subchannels
 		if (!isMaster()) {
 			PageFactory.hideFormerInheritedObjects(Page.TYPE_PAGE, getId(), getChannel(), getChannelSet());
+
+			// when the localized copy is published for the first time, dirt the other channel variants,
+			// so that their dependencies (e.g. on the variant resolved in a #gtx_channel block) include the new variant
+			if (0 == lastPublishedVersion) {
+				for (Page channelVariant : t.getObjects(Page.class, getChannelSet().values())) {
+					if (!channelVariant.equals(this)) {
+						channelVariant.dirtPage(0);
+					}
+				}
+			}
 		}
 
 		// dirt all page variants

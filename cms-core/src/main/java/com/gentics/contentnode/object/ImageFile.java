@@ -13,7 +13,7 @@ import com.gentics.contentnode.factory.TType;
 /**
  * This is the image object. It extends the methods of a {@link File} by image-specific methods.
  */
-@TType(ImageFile.TYPE_IMAGE)
+@TType(value = ImageFile.TYPE_IMAGE, name = "image")
 public interface ImageFile extends File {
 
 	/**

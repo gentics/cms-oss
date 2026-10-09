@@ -160,7 +160,28 @@ public class HandlebarsPartTypeTemplateRenderingTest extends AbstractHandlebarsP
 			new Object[] { "cms.folder.images.[0].isfile", "false", null },
 			new Object[] { "cms.folder.images.[0].isimage", "true", null },
 			new Object[] { "cms.folder.images.[0].ismaster", "true", null },
-			new Object[] { "cms.folder.images.[0].inherited", "false", null }
+			new Object[] { "cms.folder.images.[0].inherited", "false", null },
+
+			// gtx_load Helper Family
+			new Object[] { "{{#with (gtx_load \"node\" cms.page.tags.urls_construct1.parts.node.id)}}{{ host }}{{/with}}", "test.node.hostname", Arrays.asList(Pair.of("node", "host")) },
+			new Object[] { "{{#with (gtx_load \"10001\" cms.page.tags.urls_construct1.parts.node.id)}}{{ host }}{{/with}}", "test.node.hostname", Arrays.asList(Pair.of("node", "host")) },
+			new Object[] { "{{#with (gtx_load 10001 cms.page.tags.urls_construct1.parts.node.id)}}{{ host }}{{/with}}", "test.node.hostname", Arrays.asList(Pair.of("node", "host")) },
+
+			new Object[] { "{{#with (gtx_load \"page\" cms.page.tags.urls_construct1.parts.page.id)}}{{ name }}{{/with}}", "Target Page", Arrays.asList(Pair.of("targetPage", "name")) },
+			new Object[] { "{{#with (gtx_load \"10007\" cms.page.tags.urls_construct1.parts.page.id)}}{{ name }}{{/with}}", "Target Page", Arrays.asList(Pair.of("targetPage", "name")) },
+			new Object[] { "{{#with (gtx_load 10007 cms.page.tags.urls_construct1.parts.page.id)}}{{ name }}{{/with}}", "Target Page", Arrays.asList(Pair.of("targetPage", "name")) },
+
+			new Object[] { "{{#with (gtx_load \"folder\" cms.page.tags.urls_construct1.parts.folder.id)}}{{ name }}{{/with}}", "Home", Arrays.asList(Pair.of("homeFolder", "name")) },
+			new Object[] { "{{#with (gtx_load \"10002\" cms.page.tags.urls_construct1.parts.folder.id)}}{{ name }}{{/with}}", "Home", Arrays.asList(Pair.of("homeFolder", "name")) },
+			new Object[] { "{{#with (gtx_load 10002 cms.page.tags.urls_construct1.parts.folder.id)}}{{ name }}{{/with}}", "Home", Arrays.asList(Pair.of("homeFolder", "name")) },
+
+			new Object[] { "{{#with (gtx_load \"file\" cms.page.tags.urls_construct1.parts.file.id)}}{{ name }}{{/with}}", "testfile.txt", Arrays.asList(Pair.of("testFile", "name")) },
+			new Object[] { "{{#with (gtx_load \"10008\" cms.page.tags.urls_construct1.parts.file.id)}}{{ name }}{{/with}}", "testfile.txt", Arrays.asList(Pair.of("testFile", "name")) },
+			new Object[] { "{{#with (gtx_load 10008 cms.page.tags.urls_construct1.parts.file.id)}}{{ name }}{{/with}}", "testfile.txt", Arrays.asList(Pair.of("testFile", "name")) },
+
+			new Object[] { "{{#with (gtx_load \"image\" cms.page.tags.urls_construct1.parts.image.id)}}{{ name }}{{/with}}", "blume.jpg", Arrays.asList(Pair.of("testImage", "name")) },
+			new Object[] { "{{#with (gtx_load \"10011\" cms.page.tags.urls_construct1.parts.image.id)}}{{ name }}{{/with}}", "blume.jpg", Arrays.asList(Pair.of("testImage", "name")) },
+			new Object[] { "{{#with (gtx_load 10011 cms.page.tags.urls_construct1.parts.image.id)}}{{ name }}{{/with}}", "blume.jpg", Arrays.asList(Pair.of("testImage", "name")) }
 
 		));
 	}

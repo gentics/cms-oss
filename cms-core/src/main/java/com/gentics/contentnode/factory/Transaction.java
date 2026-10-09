@@ -581,6 +581,20 @@ public interface Transaction extends LanguageProvider, PreparedStatementHandler,
 	Class<? extends NodeObject> getClass(String tableName);
 
 	/**
+	 * Get the class for a given name
+	 * @param objName object name
+	 * @return class or null if not found
+	 */
+	Class<? extends NodeObject> getClassForName(String objName);
+
+	/**
+	 * Get the class for either a given object type or name
+	 * @param spec either an object type or name
+	 * @return class or null if not found
+	 */
+	Class<? extends NodeObject> getClassForTypeOrName(Object spec);
+
+	/**
 	 * Get the table into which objects of given class are stored
 	 * @param clazz class
 	 * @return table name

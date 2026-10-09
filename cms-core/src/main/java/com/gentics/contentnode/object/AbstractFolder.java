@@ -625,6 +625,10 @@ public abstract class AbstractFolder extends AbstractContentObject implements Fo
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
 
 	/*
 	 * (non-Javadoc)

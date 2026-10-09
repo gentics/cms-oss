@@ -286,6 +286,11 @@ public abstract class ObjectTagDefinition extends AbstractContentObject implemen
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * Get the locale-backed name
 	 *

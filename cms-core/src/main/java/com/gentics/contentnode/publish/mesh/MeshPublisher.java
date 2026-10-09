@@ -806,7 +806,8 @@ public class MeshPublisher implements AutoCloseable {
 			LocalizableNodeObject<NodeObject> locObject = (LocalizableNodeObject<NodeObject>)object;
 			return toMeshUuid(locObject.getMaster().getGlobalId().toString());
 		} else {
-			return toMeshUuid(object.getGlobalId().toString());
+			return Optional.ofNullable(object.getGlobalId()).map(GlobalId::toString).map(MeshPublisher::toMeshUuid)
+					.orElse(null);
 		}
 	}
 

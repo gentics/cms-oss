@@ -232,6 +232,11 @@ public class RoleFactory extends AbstractFactory {
 				return super.get(key);
 			}
 		}
+
+		@Override
+		public boolean replaceWithStringInMap() {
+			return true;
+		}
 	}
 
 	/**

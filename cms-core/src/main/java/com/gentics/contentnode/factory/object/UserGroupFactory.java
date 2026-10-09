@@ -298,7 +298,7 @@ public class UserGroupFactory extends AbstractFactory {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			SystemUser creator = (SystemUser) t.getObject(SystemUser.class, creatorId);
 
-			assertNodeObjectNotNull(creator, creatorId, "creator");
+			assertNodeObjectNotNull(creator, creatorId, "creator", true);
 			return creator;
 		}
 
@@ -317,7 +317,7 @@ public class UserGroupFactory extends AbstractFactory {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			SystemUser editor = (SystemUser) t.getObject(SystemUser.class, editorId);
 
-			assertNodeObjectNotNull(editor, editorId, "editor");
+			assertNodeObjectNotNull(editor, editorId, "editor", true);
 			return editor;
 		}
 

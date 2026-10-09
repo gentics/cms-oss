@@ -3,6 +3,7 @@ package com.gentics.contentnode.object.parttype.groovy;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.Phases;
@@ -86,11 +87,12 @@ public class GroovyPartType extends TextPartType {
 					unit.addSource(scriptName, code);
 					unit.compile(Phases.CLASS_GENERATION);
 
-					// when compiled, add it to the class path
 					groovyClass = GroovyUtils.findGroovyClass(unit, scriptClassName);
-					if (groovyClass != null) {
-						unit.getClassLoader().defineClass(groovyClass.getName(), groovyClass.getBytes());
-					}
+
+					// add all compiled classes to the classpath
+					GroovyUtils.findGroovyClasses(unit, scriptClassName).forEach(clazz -> {
+						unit.getClassLoader().defineClass(clazz.getName(), clazz.getBytes());
+					});
 				}
 
 				return GroovyUtils.call(unit.getClassLoader(), scriptClassName, script -> {
@@ -105,6 +107,15 @@ public class GroovyPartType extends TextPartType {
 			if (tag != null) {
 				renderType.pop(tag);
 			}
+		}
+	}
+
+	@Override
+	public Object getAsMapValue(String key) {
+		if (Strings.CS.equals(key, "execute")) {
+			return "";
+		} else {
+			return super.getAsMapValue(key);
 		}
 	}
 

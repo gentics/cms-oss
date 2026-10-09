@@ -832,6 +832,11 @@ public abstract class AbstractPage extends AbstractContentObject implements Page
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	protected String getDate(int timestamp) {
 		long microtime = ObjectTransformer.getLong(Integer.valueOf(timestamp), 0L);
 		SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy");

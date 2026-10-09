@@ -425,6 +425,18 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 		}
 	}
 
+	@Override
+	public Object getAsMapValue(String key) {
+		try {
+			Object value = getPartType().getAsMapValue(key);
+
+			return value;
+		} catch (NodeException e) {
+			logger.error("Error while resolving {" + key + "}", e);
+			return null;
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see com.gentics.lib.base.object.NodeObject#dirtCache()
 	 */

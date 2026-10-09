@@ -41,6 +41,12 @@ Hence, if you need to, say, render a copyright of a referenced image, set within
 either +{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+ with +target+ image dereferencing, or 
 +{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where in addition +parts+ property listing, and +text+ part type now have to be explicitly mentioned, if one wants to avoid using +gtx_render+ (which is  discouraged).
 
+h4. Iteration restrictions
+
+When iterating over the properties of a CMS object, the resolved values of properties that reference other CMS objects (like "folder", "creator", ...) will not be the
+referenced objects themselves, but will be their string representation instead. This ensures that algorithms that recursively iterate over properties of a CMS object will
+not cause endless loops.
+
 h3. Helpers
 
 Since Handlebars templating language itself is completely Logic-less, the Handlebars Part Type provides some helpers for supporting more complex rendering logic:

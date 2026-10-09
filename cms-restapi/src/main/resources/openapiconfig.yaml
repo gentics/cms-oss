@@ -14,13 +14,15 @@ openAPI:
       url: http://www.apache.org/licenses/LICENSE-2.0.html
   components:
     securitySchemes:
-      sid:
+      bearerAuth:
+        type: http
+        description: CMS API Token
+        scheme: bearer
+      sessionSecret:
         type: apiKey
-        description: CMS SID
-        name: sid
-        in: query
-  securityRequirements:
-    one:
-      entries:
-        entry:
-          name: sid
+        description: CMS session secret
+        name: GCN_SESSION_SECRET
+        in: cookie
+  security:
+  - bearerAuth: []
+  - sessionSecret: []

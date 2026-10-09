@@ -14,6 +14,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertDir
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +37,9 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.StageableChanneledNodeObject;
+import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.response.StagingStatus;
+import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 
 /**
@@ -127,6 +131,95 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 		expectAllDirted(channel, localizedObject);
 		expectAllDirted(subChannel, localizedObject);
 		assertObjectsAreDirted();
+	}
+
+	/**
+	 * Test adding a local object from an inherited folder into the content package
+	 * and then re-exporting everything.
+	 * @throws NodeException
+	 */
+	@Test
+	public void testReexportLocalObjectInInheritedFolder() throws NodeException {
+		Folder masterFolder = create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Master Folder");
+		}).build();
+
+		String masterFolderGlobalId = execute(Folder::getGlobalId, masterFolder).toString();
+
+		T localObject = createLocalObject(masterFolder);
+		String localObjectGlobalId = execute(NodeObject::getGlobalId, localObject).toString();
+
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, localObjectGlobalId, false));
+
+		// local object should be included in the package
+		IdTypeMapRequest request = new IdTypeMapRequest();
+		Map<String, List<String>> ids = new HashMap<>();
+		ids.computeIfAbsent(type, k -> new ArrayList<>()).add(localObjectGlobalId);
+		ids.computeIfAbsent("folder", k -> new ArrayList<>()).add(masterFolderGlobalId);
+		request.setIds(ids);
+		StagingStatusResponse statusResponse = new ContentStagingResourceImpl().status(packageName, request);
+		assertResponseOK(statusResponse);
+		assertThat(statusResponse.getStagingStatus()).as("Status info before export")
+			.containsEntry(localObjectGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true))
+			.containsEntry(masterFolderGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(false));
+
+		// export (again)
+		assertResponseOK(new ContentStagingResourceImpl().exportFromCms(packageName, 0));
+
+		// local object should still be included in the package
+		statusResponse = new ContentStagingResourceImpl().status(packageName, request);
+		assertResponseOK(statusResponse);
+		assertThat(statusResponse.getStagingStatus()).as("Status info after export")
+			.containsEntry(localObjectGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true))
+			.containsEntry(masterFolderGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(false));
+	}
+
+	/**
+	 * Test adding a local object from a local folder into the content package
+	 * and then re-exporting everything.
+	 * @throws NodeException
+	 */
+	@Test
+	public void testReexportLocalObjectInLocalFolder() throws NodeException {
+		Folder localFolder = create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Channel Folder");
+			f.setChannelInfo(channel.getId(), null);
+		}).build();
+
+		String localFolderGlobalId = execute(Folder::getGlobalId, localFolder).toString();
+
+		T localObject = createLocalObject(localFolder);
+		String localObjectGlobalId = execute(NodeObject::getGlobalId, localObject).toString();
+
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, localObjectGlobalId, false));
+
+		// local folder and object should be included in the package
+		IdTypeMapRequest request = new IdTypeMapRequest();
+		Map<String, List<String>> ids = new HashMap<>();
+		ids.computeIfAbsent(type, k -> new ArrayList<>()).add(localObjectGlobalId);
+		ids.computeIfAbsent("folder", k -> new ArrayList<>()).add(localFolderGlobalId);
+		request.setIds(ids);
+		StagingStatusResponse statusResponse = new ContentStagingResourceImpl().status(packageName, request);
+		assertResponseOK(statusResponse);
+		assertThat(statusResponse.getStagingStatus()).as("Status info before export")
+			.containsEntry(localObjectGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true))
+			.containsEntry(localFolderGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true));
+
+		// export (again)
+		assertResponseOK(new ContentStagingResourceImpl().exportFromCms(packageName, 0));
+
+		// local folder and object should still be included in the package
+		statusResponse = new ContentStagingResourceImpl().status(packageName, request);
+		assertResponseOK(statusResponse);
+		assertThat(statusResponse.getStagingStatus()).as("Status info after export")
+			.containsEntry(localObjectGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true))
+			.containsEntry(localFolderGlobalId, new StagingStatus().setPackageName(packageName).setIncluded(true));
 	}
 
 	/**

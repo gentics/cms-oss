@@ -1,0 +1,1 @@
+Publishing into Mesh no longer fails, when an image with published image variants has been deleted.

@@ -2,6 +2,7 @@ package com.gentics.contentnode.tests.publish.gis;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertObject;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
@@ -59,6 +60,7 @@ import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -76,7 +78,7 @@ import com.gentics.testutils.GenericTestUtils;
  * Test cases for publishing GIS images into the filesystem
  */
 @RunWith(Parameterized.class)
-@GCNFeature(set = { Feature.PUB_DIR_SEGMENT, Feature.TAG_IMAGE_RESIZER, Feature.MESH_CONTENTREPOSITORY })
+@GCNFeature(set = { Feature.PUB_DIR_SEGMENT, Feature.TAG_IMAGE_RESIZER, Feature.MESH_CONTENTREPOSITORY, Feature.WASTEBIN })
 @Category(MeshTest.class)
 public class GenticsImageStorePublishTest {
 	/**
@@ -342,6 +344,69 @@ public class GenticsImageStorePublishTest {
 				}
 			}
 			trx.success();
+		}
+	}
+
+	/**
+	 * Test that republishing succeeds after an image, which had variants published into Mesh, was deleted
+	 * @throws Exception
+	 */
+	@Test
+	public void testDeleteImageWithVariants() throws Exception {
+		Folder folder = Builder.create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Testfolder");
+			f.setPublishDir("testfolder");
+		}).build();
+
+		ImageFile image = (ImageFile) supply(() -> {
+			try {
+				return createImage(folder, "blume.jpg",
+						IOUtils.toByteArray(GenericTestUtils.getPictureResource("blume.jpg")));
+			} catch (IOException e) {
+				throw new NodeException(e);
+			}
+		});
+
+		Page page = Builder.create(Page.class, p -> {
+			p.setFolderId(folder.getId());
+			p.setTemplateId(template.getId());
+			p.setName("Page");
+
+			getPartType(ImageURLPartType.class, p.getContentTag("gistag"), "image").setTargetImage(image);
+		}).publish().build();
+
+		// run publish
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		String meshProject = supply(() -> node.getMeshProject());
+
+		if (mesh) {
+			assertObject("Image before deletion", meshContext.client(), meshProject, image, true);
+			if (publishImageVariants) {
+				ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(meshProject,
+						supply(() -> MeshPublisher.getMeshUuid(image)), "binarycontent").blockingGet();
+				assertThat(variants.getVariants()).as("Image variants before deletion").hasSize(2);
+			}
+		}
+
+		// delete the image
+		operate(t -> t.getObject(image, true).delete(false));
+
+		// republish
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		if (mesh) {
+			assertObject("Image after deletion", meshContext.client(), meshProject, image, false);
+			assertObject("Page after deletion of image", meshContext.client(), meshProject, page, true);
+		} else {
+			operate(() -> assertPublishFS(context.getPubDir(), image, node, false));
 		}
 	}
 }

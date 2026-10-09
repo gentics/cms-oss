@@ -9,8 +9,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Part;
@@ -23,14 +26,20 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.ResolvableMapWrapper;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.HandlebarsError;
+import com.github.jknack.handlebars.HandlebarsException;
 import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.github.jknack.handlebars.context.MapValueResolver;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.StringTemplateSource;
+
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * PartType implementation for using {@link Handlebars} template engine
@@ -112,6 +121,40 @@ public class HandlebarsPartType extends TextPartType {
 	@Override
 	public Type getPropertyType() {
 		return Property.Type.RICHTEXT;
+	}
+
+	@Override
+	public void validateValue(Part part, Value value, ValueContainer container, Function<String, RestMappedException> exceptionSupplier) throws NodeException {
+		String stringValue = value.getValueText();
+		if (StringUtils.isEmpty(stringValue)) {
+			// Nothing to validate
+			return;
+		}
+		// only the syntax is validated: helpers depend on the node (devtool packages) and are resolved when rendering,
+		// so unknown helpers are accepted here (partials are resolved when rendering anyway)
+		Handlebars handlebars = new Handlebars().registerHelperMissing((context, options) -> null);
+		try {
+			handlebars.compile(new StringTemplateSource(part.getKeyname(), stringValue));
+		} catch (HandlebarsException e) {
+			HandlebarsError error = e.getError();
+			String reason = error != null
+					? I18NHelper.get("validation.handlebars.syntaxerror", Integer.toString(error.line), Integer.toString(error.column), error.reason)
+					: e.getMessage();
+			throw exceptionSupplier.apply(reason)
+				.setMessageType(Message.Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+		} catch (IOException e) {
+			throw new NodeException(e);
+		}
+	}
+
+	@Override
+	public String getPartValidationMessageKey() {
+		return "validation.handlebars.part.failed";
+	}
+
+	@Override
+	public String getTagPartValidationMessageKey() {
+		return "validation.handlebars.tag.part.failed";
 	}
 
 	/**

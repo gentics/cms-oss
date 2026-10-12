@@ -2956,7 +2956,8 @@ public class MeshPublisher implements AutoCloseable {
 			// postSave for updating binary data
 			if (o.getObject() instanceof File) {
 				File file = (File) o.getObject();
-				boolean uploadBinary = (ObjectTransformer.isEmpty(o.getAttributes()) || o.getAttributes().contains("binarycontent")) && file.getFilesize() > 0;
+				long fileSize = file.getFilesizeFromBinary();
+				boolean uploadBinary = (ObjectTransformer.isEmpty(o.getAttributes()) || o.getAttributes().contains("binarycontent")) && fileSize > 0;
 				boolean setFocalPointInfo = file.isImage();
 
 				if (uploadBinary) {
@@ -2981,7 +2982,7 @@ public class MeshPublisher implements AutoCloseable {
 									"draft",
 									"binarycontent",
 									in,
-									file.getFilesizeFromBinary(),
+									fileSize,
 									file.getFilename(),
 									file.getFiletype(),
 									true,

@@ -1319,6 +1319,76 @@ public class MeshPublishTest {
 	}
 
 	/**
+	 * Test publishing an image with focal point, for which the binary data is uploaded, but not saved to the content object (the filesize is 0).
+	 * Also, the publish process should not fail on focal-point-only updates.
+	 * @throws Exception
+	 */
+	@Test
+	public void testFocalPointPublishingWithBrokenBinary() throws Exception {
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		// create an image with focal point
+		ImageFile image = null;
+		try (InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg")) {
+			image = Trx.supply(() -> {
+				return create(ImageFile.class, img -> {
+					img.setFolderId(folder.getId());
+					img.setFileStream(inputStream);
+					img.setName("testimage.jpg");
+					img.setFpX(0.7f);
+					img.setFpY(0.3f);
+				});
+			});
+		}
+
+		// set the filesize to 0, so that the binary data will not be uploaded
+		image = update(image, upd -> {
+			upd.setFilesize(0);
+		});
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// assert image
+		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true);
+
+		// update the focalpoint
+		image = update(image, upd -> {
+			upd.setFpX(0.5f);
+			upd.setFpY(0.5f);
+		});
+
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		// publish again
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// assert still published
+		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true);
+	}
+
+	/**
 	 * Test recovering from a filename conflict
 	 * @throws Exception
 	 */

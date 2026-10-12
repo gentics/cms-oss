@@ -945,14 +945,15 @@ export class FolderActionsService {
                 const loadedFolders = this.appState.now.entities.folder;
 
                 for (const item of collection) {
+                    const itemNodeId = (item as Page).channelId || item.masterNodeId;
                     if (
                         (loadedFolders[item.folderId] == null
                           || loadedFolders[item.folderId].permissionsMap == null
                         )
                         // Dont add the same load multiple times
-                        && !foldersToLoad.some((toLoad) => toLoad.id === item.folderId && toLoad.nodeId === item.masterNodeId)
+                        && !foldersToLoad.some((toLoad) => toLoad.id === item.folderId && toLoad.nodeId === itemNodeId)
                     ) {
-                        foldersToLoad.push({ id: item.folderId, nodeId: item.masterNodeId });
+                        foldersToLoad.push({ id: item.folderId, nodeId: itemNodeId });
                     }
                 }
 

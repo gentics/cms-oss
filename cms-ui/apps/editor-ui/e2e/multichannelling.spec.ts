@@ -4,6 +4,7 @@ import {
     BackgroundJobResponse,
     Page as CMSPage,
     Feature,
+    Folder,
     GcmsPermission,
     LocalizationType,
     Node,
@@ -24,6 +25,8 @@ import {
     EntityImporter,
     findTableAction,
     findTableRowById,
+    FOLDER_C,
+    FOLDER_C_A,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
@@ -129,6 +132,11 @@ test.describe('Multichannelling', () => {
     let masterNode: Node;
     let channelNode: Node;
 
+    /** Matches the list-outlet URL of the specified folder, i.E. `(list:node/1/folder/2)` */
+    function folderUrlPattern(nodeId: number, folderId: number): RegExp {
+        return new RegExp(`list:node/${nodeId}/folder/${folderId}(?![0-9])`);
+    }
+
     test.beforeAll(async ({ request }) => {
         IMPORTER.setApiContext(request);
 
@@ -158,6 +166,7 @@ test.describe('Multichannelling', () => {
             {
                 type: AccessControlledType.NODE,
                 instanceId: `${masterNode.folderId}`,
+                subObjects: true,
                 perms: [
                     { type: GcmsPermission.CREATE_ITEMS, value: true },
                     { type: GcmsPermission.READ, value: true },
@@ -165,6 +174,10 @@ test.describe('Multichannelling', () => {
                     { type: GcmsPermission.UPDATE_ITEMS, value: true },
                     { type: GcmsPermission.PUBLISH_PAGES, value: true },
                     { type: GcmsPermission.DELETE_ITEMS, value: true },
+                    // Required for localizing/unlocalizing folders
+                    { type: GcmsPermission.CREATE, value: true },
+                    { type: GcmsPermission.UPDATE_FOLDER, value: true },
+                    { type: GcmsPermission.DELETE_FOLDER, value: true },
                 ],
             },
         ];
@@ -634,6 +647,106 @@ test.describe('Multichannelling', () => {
             const modal = page.locator('gtx-modal-dialog');
             await expect(modal.locator('.modal-footer [data-action="localize"]')).toBeVisible();
             await expect(modal.locator('.modal-footer [data-action="partial-localize"]')).not.toBeAttached();
+        });
+
+        test('should display the localized folder after localizing the current folder', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20143',
+            }],
+        }, async ({ page }) => {
+            const PARENT_FOLDER = IMPORTER.get(FOLDER_C);
+            const MASTER_FOLDER = IMPORTER.get(FOLDER_C_A);
+            const folderTitle = page.locator('folder-contents > .title');
+
+            await test.step('Navigate to the nested folder', async () => {
+                await navigateToFolder(page, PARENT_FOLDER.id);
+                await navigateToFolder(page, MASTER_FOLDER.id);
+
+                await expect(page).toHaveURL(folderUrlPattern(channelNode.id, MASTER_FOLDER.id));
+                await expect(folderTitle.locator('.title-name')).toHaveText(MASTER_FOLDER.name);
+            });
+
+            let localizedFolder: Folder;
+
+            await test.step('Localize the current folder', async () => {
+                const localizeReq = waitForResponseFrom(page, 'POST', `/rest/folder/localize/${MASTER_FOLDER.id}`);
+                const folderOptions = await openContext(folderTitle.locator('folder-context-menu gtx-dropdown-list'));
+                await folderOptions.locator('[data-action="localize"]').click();
+                await localizeReq;
+
+                localizedFolder = (await IMPORTER.client.folder.get(MASTER_FOLDER.id, { nodeId: channelNode.id }).send()).folder;
+                expect(localizedFolder.inherited).toBe(false);
+                expect(localizedFolder.id).not.toEqual(MASTER_FOLDER.id);
+            });
+
+            await test.step('Validate the localized folder view', async () => {
+                await expect(page).toHaveURL(folderUrlPattern(channelNode.id, localizedFolder.id));
+                await expect(folderTitle.locator('.title-name')).toHaveText(localizedFolder.name);
+
+                // The context menu has to reflect the localized state as well
+                const folderOptions = await openContext(folderTitle.locator('folder-context-menu gtx-dropdown-list'));
+                await expect(folderOptions.locator('[data-action="restore"]')).toBeVisible();
+                await expect(folderOptions.locator('[data-action="localize"]')).not.toBeAttached();
+            });
+        });
+
+        test('should display the inherited folder after unlocalizing the current folder', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-20143',
+            }],
+        }, async ({ page }) => {
+            const PARENT_FOLDER = IMPORTER.get(FOLDER_C);
+            const MASTER_FOLDER = IMPORTER.get(FOLDER_C_A);
+            const folderTitle = page.locator('folder-contents > .title');
+
+            let localizedFolder: Folder;
+
+            await test.step('Localize the folder via API', async () => {
+                await IMPORTER.client.folder.localize(MASTER_FOLDER.id, { channelId: channelNode.id }).send();
+
+                localizedFolder = (await IMPORTER.client.folder.get(MASTER_FOLDER.id, { nodeId: channelNode.id }).send()).folder;
+                expect(localizedFolder.inherited).toBe(false);
+                expect(localizedFolder.id).not.toEqual(MASTER_FOLDER.id);
+            });
+
+            await test.step('Navigate to the localized folder', async () => {
+                await navigateToFolder(page, PARENT_FOLDER.id);
+                await navigateToFolder(page, localizedFolder.id);
+
+                await expect(page).toHaveURL(folderUrlPattern(channelNode.id, localizedFolder.id));
+                await expect(folderTitle.locator('.title-name')).toHaveText(localizedFolder.name);
+            });
+
+            await test.step('Unlocalize the current folder', async () => {
+                const folderOptions = await openContext(folderTitle.locator('folder-context-menu gtx-dropdown-list'));
+                await folderOptions.locator('[data-action="restore"]').click();
+
+                const modal = page.locator('multi-delete-modal-modal');
+                await modal.waitFor();
+
+                const unlocalizeReq = waitForResponseFrom(page, 'POST', '/rest/folder/unlocalize');
+                await modal.locator('.modal-footer .confirm-button button').click();
+                const unlocalizeRes = await unlocalizeReq;
+                expect(unlocalizeRes.request().postDataJSON()).toEqual(expect.objectContaining({
+                    ids: [localizedFolder.id],
+                    channelId: channelNode.id,
+                }));
+
+                const inheritedFolder = (await IMPORTER.client.folder.get(MASTER_FOLDER.id, { nodeId: channelNode.id }).send()).folder;
+                expect(inheritedFolder.inherited).toBe(true);
+            });
+
+            await test.step('Validate the inherited folder view', async () => {
+                await expect(page).toHaveURL(folderUrlPattern(channelNode.id, MASTER_FOLDER.id));
+                await expect(folderTitle.locator('.title-name')).toHaveText(MASTER_FOLDER.name);
+
+                // The context menu has to reflect the inherited state as well
+                const folderOptions = await openContext(folderTitle.locator('folder-context-menu gtx-dropdown-list'));
+                await expect(folderOptions.locator('[data-action="localize"]')).toBeVisible();
+                await expect(folderOptions.locator('[data-action="restore"]')).not.toBeAttached();
+            });
         });
     });
 });

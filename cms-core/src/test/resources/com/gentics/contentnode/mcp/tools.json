@@ -5388,11 +5388,11 @@
                         "type": "string",
                         "format": "uri",
                         "maxLength": 2000,
-                        "description": "HTTPS URL the server fetches. Must be on the allowlist configured for the calling installation."
+                        "description": "HTTPS URL the CMS fetches (plain http only for localhost/127.0.0.1). Its host must be on the installation's allowlist (CMS config mcp.upload_url_hosts, env MCP_UPLOAD_URL_HOSTS, comma-separated host names with optional :port); an empty allowlist refuses URL sources. No redirects are followed; connect timeout 10 s, total 60 s, at most 25 MB. A refused or failed URL source is a tool error whose message starts with 'URL source refused: '; the client may then retry with kind base64."
                       },
                       "expiresAt": {
                         "type": "integer",
-                        "description": "Unix timestamp in seconds."
+                        "description": "Unix timestamp in seconds. A URL source whose expiresAt is in the past is refused without fetching."
                       }
                     },
                     "required": [
@@ -5472,7 +5472,112 @@
                 "path": "/file/create"
               }
             ],
-            "notes": "POST /file/createSimple?folderId=&nodeId=&description=&overwrite= takes multipart/form-data and returns FileUploadResponse; POST /file/create takes a MultiPart body. MCP has no binary channel, so cms-mcp decodes base64 or fetches the URL server-side and builds the multipart request itself. Images are stored through the same route and recognised by mime type. To be confirmed: whether an outbound server-side fetch is permitted, and should it be host-allowlisted per installation token? Recommendation: HTTPS only, allowlist, 25 MB cap, no redirects."
+            "notes": "POST /file/createSimple?folderId=&nodeId=&description=&overwrite= takes multipart/form-data and returns FileUploadResponse; POST /file/create takes a MultiPart body. MCP has no binary channel, so cms-mcp decodes base64 or fetches the URL server-side and builds the multipart request itself. Images are stored through the same route and recognised by mime type. The URL fetch is HTTPS only, host-allowlisted per installation (mcp.upload_url_hosts), without redirects, with a 10 s connect and 60 s total timeout and a 25 MB cap; the fetched bytes take the same path as base64."
+          }
+        },
+        {
+          "name": "create_folder",
+          "title": "Create folder",
+          "description": "Creates a folder below a parent folder, in the parent's node. Use it when the user asks for a folder that does not exist yet, before creating pages or uploading files into it. A folder of the same name in the parent is refused (failOnDuplicate). publishDir defaults to a name derived by the CMS.",
+          "group": "content_write",
+          "access": "write",
+          "roles": [
+            "content_creator",
+            "chief_content_creator",
+            "cmp_admin"
+          ],
+          "scenarios": [
+            "S1"
+          ],
+          "phase": "one",
+          "implementation": {
+            "kind": "composite",
+            "composes": [
+              "check create permission on the parent folder",
+              "POST /folder/create with failOnDuplicate true",
+              "read back the folder"
+            ],
+            "transaction": "single"
+          },
+          "permissions": [
+            {
+              "type": "folder",
+              "perms": [
+                "create"
+              ],
+              "scope": "the parent folder"
+            }
+          ],
+          "idempotent": false,
+          "inputSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "parentFolderId": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "publishDir": {
+                "type": "string",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 255
+              },
+              "idempotencyKey": {
+                "type": "string",
+                "maxLength": 128,
+                "description": "Opaque client-supplied key. Phase One: logged, otherwise ignored."
+              }
+            },
+            "required": [
+              "parentFolderId",
+              "name"
+            ]
+          },
+          "outputSchema": {
+            "type": "object",
+            "properties": {
+              "folder": {
+                "type": "object",
+                "properties": {
+                  "ref": {
+                    "$ref": "#/definitions/ObjectRef"
+                  },
+                  "parentFolderId": {
+                    "type": "integer"
+                  },
+                  "publishDir": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              },
+              "created": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "folder",
+              "created"
+            ]
+          },
+          "cms": {
+            "endpoints": [
+              {
+                "method": "POST",
+                "path": "/folder/create"
+              }
+            ],
+            "notes": "FolderCreateRequest {motherId, name, publishDir, description, failOnDuplicate, nodeId, ...}; response FolderLoadResponse. MCP parentFolderId maps to motherId; failOnDuplicate is always true, so a duplicate name is INVALIDDATA naming name. The create permission on the parent folder (PermHandler.ObjectPermission.create for Folder) is checked before, as the CMS reports a missing one as a plain failure. A channel (nodeId) is rejected like on the other writes."
           }
         }
       ]

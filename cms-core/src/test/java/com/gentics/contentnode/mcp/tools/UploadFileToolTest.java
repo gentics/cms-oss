@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import com.gentics.contentnode.mcp.model.FileInfo;
 import com.gentics.contentnode.rest.model.Image;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -56,12 +57,10 @@ public class UploadFileToolTest {
 	}
 
 	@Test
-	public void testDecode() {
+	public void testDecode() throws Exception {
 		assertThat(UploadFileTool.decode(Map.of("kind", "base64", "data", DATA))).isEqualTo("hello".getBytes());
 		assertThat(UploadFileTool.decode(Map.of("kind", "base64", "data", DATA.substring(0, 4) + "\r\n"
 				+ DATA.substring(4)))).isEqualTo("hello".getBytes());
-		assertThatThrownBy(() -> UploadFileTool.decode(Map.of("kind", "url", "url", "https://example.com/a.png")))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("URL sources are not supported");
 		assertThatThrownBy(() -> UploadFileTool.decode(Map.of("kind", "base64", "data", "!!!")))
 				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("not valid base64");
 		assertThatThrownBy(() -> UploadFileTool.decode(Map.of("kind", "base64", "data", "")))
@@ -70,6 +69,19 @@ public class UploadFileToolTest {
 		assertThatThrownBy(() -> UploadFileTool.decode(Map.of("kind", "base64", "data", oversize)))
 				.isInstanceOf(IllegalArgumentException.class);
 		assertThatThrownBy(() -> UploadFileTool.decode(null)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void testDecodeUrlNotAllowlisted() {
+		String property = ConfigurationValue.MCP_UPLOAD_URL_HOSTS.getSystemPropertyName();
+		System.setProperty(property, "files.example.org");
+		try {
+			assertThatThrownBy(() -> UploadFileTool.decode(Map.of("kind", "url", "url", "https://example.com/a.png")))
+					.isInstanceOf(IllegalArgumentException.class)
+					.hasMessageStartingWith("URL source refused: host example.com:443 is not on the allowlist");
+		} finally {
+			System.clearProperty(property);
+		}
 	}
 
 	@Test

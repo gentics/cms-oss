@@ -227,7 +227,14 @@ public enum ConfigurationValue {
 	 * enabling it only makes a missing credential fail earlier, and more explicitly, at the
 	 * transport level. Disabled (i.e. {@code false}) by default.
 	 */
-	MCP_REQUIRE_AUTH("MCP_REQUIRE_AUTH", "com.gentics.contentnode.mcp.requireAuth", "mcp.requireAuth", () -> "false")
+	MCP_REQUIRE_AUTH("MCP_REQUIRE_AUTH", "com.gentics.contentnode.mcp.requireAuth", "mcp.requireAuth", () -> "false"),
+
+	/**
+	 * Comma-separated hosts the MCP tool {@code upload_file} may fetch a URL source from, each as {@code host} (default
+	 * port of the scheme) or {@code host:port}. Empty (the default) refuses URL sources.
+	 */
+	MCP_UPLOAD_URL_HOSTS("MCP_UPLOAD_URL_HOSTS", "com.gentics.contentnode.mcp.uploadUrlHosts", "mcp.upload_url_hosts",
+			() -> "")
 
 	;
 

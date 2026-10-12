@@ -8,6 +8,7 @@ import com.gentics.contentnode.mcp.tools.AssignConstructToNodesTool;
 import com.gentics.contentnode.mcp.tools.AssignUserToGroupTool;
 import com.gentics.contentnode.mcp.tools.CountContentTool;
 import com.gentics.contentnode.mcp.tools.CreateConstructTool;
+import com.gentics.contentnode.mcp.tools.CreateFolderTool;
 import com.gentics.contentnode.mcp.tools.CreatePageTool;
 import com.gentics.contentnode.mcp.tools.CreateUserTool;
 import com.gentics.contentnode.mcp.tools.DeletePageTool;
@@ -82,7 +83,7 @@ public final class ManualMcpTools {
 			new UpdateConstructTool(), new AssignConstructToNodesTool(), new ListPackagesTool(),
 			new AddConstructToPackageTool(), new ListUsersTool(), new ListGroupsTool(),
 			new GetGroupPermissionsTool(), new CreateUserTool(), new AssignUserToGroupTool(),
-			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool());
+			new RemoveUserFromGroupTool(), new PreviewPermissionImpactTool(), new CreateFolderTool());
 
 	/**
 	 * Static class, no instances

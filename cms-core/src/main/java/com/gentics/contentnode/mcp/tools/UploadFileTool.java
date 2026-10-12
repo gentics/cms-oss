@@ -3,6 +3,7 @@ package com.gentics.contentnode.mcp.tools;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Proxy;
+import java.net.URI;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.FileInfo;
 import com.gentics.contentnode.mcp.util.Args;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.mcp.util.UrlSources;
 import com.gentics.contentnode.mcp.util.Writes;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -40,9 +42,10 @@ import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * Stores a base64 encoded file in a folder. Delegates to {@link FileResourceImpl#createSimple}, which reads the file
- * from the request body, so it gets a request that only serves the decoded bytes. The permission to create (or, when
- * overwriting, to edit) files is checked before, because the delegate reports a missing one as a plain failure.
+ * Stores a base64 encoded file, or the file of an allowlisted URL (see {@link UrlSources}), in a folder. Delegates to
+ * {@link FileResourceImpl#createSimple}, which reads the file from the request body, so it gets a request that only
+ * serves the bytes. The permission to create (or, when overwriting, to edit) files is checked before (and before a URL
+ * is fetched), because the delegate reports a missing one as a plain failure.
  */
 public class UploadFileTool extends AbstractMcpTool {
 	static final String NAME = "upload_file";
@@ -103,8 +106,10 @@ public class UploadFileTool extends AbstractMcpTool {
 				"maxLength", MAX_BASE64_LENGTH));
 		Map<String, Object> url = new LinkedHashMap<>();
 		url.put("kind", Map.of("const", "url"));
-		url.put("url", schema("string", "Not supported yet: calls with a URL source are rejected.", "maxLength", 2000));
-		url.put("expiresAt", schema("integer", "Unix timestamp in seconds."));
+		url.put("url", schema("string", "HTTPS URL the CMS fetches, at most 25 MB. Its host must be on the allowlist "
+				+ "configured for the CMS installation, otherwise the call fails with 'URL source refused'.", "maxLength",
+				UrlSources.MAX_URL_LENGTH));
+		url.put("expiresAt", schema("integer", "Unix timestamp in seconds after which the URL is not fetched."));
 
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_FOLDER_ID, schema("integer", "ID of the folder.", "minimum", 1));
@@ -128,11 +133,12 @@ public class UploadFileTool extends AbstractMcpTool {
 
 		return Tool.builder().name(NAME).title("Upload file")
 				.description("Puts a binary into a CMS folder so a page can reference it. Pass the content as source "
-						+ "{kind: base64, data}, at most 5 MB decoded; URL sources are not supported yet. Use the "
-						+ "node's default file or image folder from list_nodes unless the user names a folder. A file "
-						+ "of the same name in the folder is refused unless overwrite is true. The CMS detects images "
-						+ "by extension and content and may convert them (e.g. to WebP), so read fileName from the "
-						+ "result.")
+						+ "{kind: base64, data}, at most 5 MB decoded, or as {kind: url, url}, which the CMS fetches "
+						+ "(at most 25 MB) from allowlisted hosts only; if that fails with 'URL source refused', pass "
+						+ "the file as base64. Use the node's default file or image folder from list_nodes unless the "
+						+ "user names a folder. A file of the same name in the folder is refused unless overwrite is "
+						+ "true. The CMS detects images by extension and content and may convert them (e.g. to WebP), "
+						+ "so read fileName from the result.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties)
 						.required(List.of(ARG_FOLDER_ID, ARG_NAME, ARG_SOURCE)).additionalProperties(false).build())
 				.outputSchema(outputSchema())
@@ -150,10 +156,16 @@ public class UploadFileTool extends AbstractMcpTool {
 		String fileName = fileName(name, stringArg(arguments, ARG_MEDIA_TYPE, 0, 150));
 		String description = stringArg(arguments, ARG_DESCRIPTION, 0, 4000);
 		boolean overwrite = booleanArg(arguments, ARG_OVERWRITE, false);
-		byte[] data = decode(arguments.get(ARG_SOURCE));
+		Object source = arguments.get(ARG_SOURCE);
+		// a URL is checked now, but only fetched once the caller may store the file
+		URI url = UrlSources.isUrl(source) ? UrlSources.uri((Map<?, ?>) source) : null;
+		byte[] data = url == null ? decode(source) : null;
 		Writes.logIdempotencyKey(NAME, folderId, arguments);
 
 		boolean exists = checkFolder(folderId, fileName, overwrite);
+		if (url != null) {
+			data = UrlSources.fetch(url);
+		}
 
 		FileUploadResponse response = RestPermissions.guard(FileResource.class, new FileResourceImpl())
 				.createSimple(request(data), folderId, 0, null, fileName, description, overwrite);
@@ -186,17 +198,19 @@ public class UploadFileTool extends AbstractMcpTool {
 	}
 
 	/**
-	 * Decode the source
+	 * Decode the source, or fetch a URL source
 	 * @param source source argument
 	 * @return file content
-	 * @throws IllegalArgumentException if the source is not valid base64 of at most {@link #MAX_BYTES}
+	 * @throws InterruptedException if interrupted while fetching
+	 * @throws IllegalArgumentException if the source is not valid base64 of at most {@link #MAX_BYTES}, or a URL
+	 *         source is refused
 	 */
-	static byte[] decode(Object source) {
+	static byte[] decode(Object source) throws InterruptedException {
 		if (!(source instanceof Map<?, ?> map)) {
 			throw new IllegalArgumentException("Missing required argument '%s'".formatted(ARG_SOURCE));
 		}
-		if ("url".equals(map.get("kind"))) {
-			throw new IllegalArgumentException("URL sources are not supported yet, pass the file as {kind: base64}");
+		if (UrlSources.isUrl(map)) {
+			return UrlSources.fetch(UrlSources.uri(map));
 		}
 		if (!"base64".equals(map.get("kind")) || !(map.get("data") instanceof String data)) {
 			throw new IllegalArgumentException("'%s' must be {kind: base64, data}".formatted(ARG_SOURCE));

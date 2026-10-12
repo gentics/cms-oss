@@ -156,6 +156,13 @@
             }
         }
     },
+    "handOff": {
+        "editThese": "Edit these",
+        "notice_one": "The next message starts a new session with {{count}} object",
+        "notice_other": "The next message starts a new session with {{count}} objects",
+        "cancel": "Stay in this session",
+        "startFailed": "The session could not be started"
+    },
     "parts": {
         "selectedCount": "{{count}} selected",
         "statusNote": {
@@ -186,7 +193,9 @@
             "title": "Table",
             "yes": "Yes",
             "no": "No",
-            "shown": "{{shown}} of {{total}}"
+            "shown": "{{shown}} of {{total}}",
+            "select": "Select {{label}}",
+            "selectAll": "Select all rows"
         },
         "pageStructure": {
             "title": "Page structure",

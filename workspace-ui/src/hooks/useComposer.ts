@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
 import { useToast } from '@/components/ui/use-toast';
-import { holdsToken, pendingFileSource, readParts, selectedRange, sourceAttachmentId, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
+import { holdsToken, pendingFileSource, readParts, REFERENCE_NODE, type ReferenceAttrs, referenceContent, referencedObjects, referenceKey, selectedRange, sourceAttachmentId, textContent, touchesVerbatim, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
 import { checkUploadFile, formatMegabytes, UPLOAD_MAX_BYTES } from '@/helper/uploadLimits/uploadLimits';
 import type { StartFile, StartSessionInput } from '@/hooks/useGenaixQueries';
+import type { ContextReference } from '@/services/apiService/genaix/types';
 
 /** A file attached in a composer, before it is uploaded. */
 export interface Attachment extends StartFile {
@@ -17,7 +18,8 @@ export interface Attachment extends StartFile {
 /**
  * The state of the `Composer` (dashboard and session chat): the field, a Tiptap editor with its
  * verbatim passages (`composerParts`), and the attached files within the upload limits
- * (`uploadLimits`). The caller decides what a submit does.
+ * (`uploadLimits`). The caller decides what a submit does. `references` are the objects the field's
+ * tokens point at.
  */
 export function useComposer() {
     const { t, i18n } = useTranslation();
@@ -27,11 +29,17 @@ export function useComposer() {
     const [isEmpty, setIsEmpty] = useState(true);
     const [hasSelection, setHasSelection] = useState(false);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [references, setReferences] = useState<ContextReference[]>([]);
 
-    // Typing, dictation, a passage locked or unlocked: every change of the text.
+    // Typing, dictation, a passage locked or unlocked, a token added or removed: every change.
     useEffect(() => {
         function onUpdate() {
-            setIsEmpty(readParts(editor.state.doc).length === 0);
+            const parts = readParts(editor.state.doc);
+            const next = referencedObjects(parts);
+
+            setIsEmpty(parts.length === 0);
+            // A new array only when the objects changed, so typing does not count as a change.
+            setReferences((current) => (current.map(referenceKey).join() === next.map(referenceKey).join() ? current : next));
         }
 
         editor.on('update', onUpdate);
@@ -78,10 +86,48 @@ export function useComposer() {
         return { parts, files: attachments.map(({ file, mode }) => ({ file, mode })) };
     }
 
+    /**
+     * Puts a reference token for each of `refs` at the start of the field, before what is typed
+     * there, and the caret at the end, so the instruction can be typed behind them.
+     */
+    function addReferences(refs: ContextReference[]) {
+        // A browser selection left in the field from before (it lost the focus, its content changed)
+        // can stand for the same place as the new caret, so ProseMirror keeps it, while the browser
+        // types at the start of the field. Without it, focusing sets a fresh one.
+        if (!editor.isFocused) {
+            window.getSelection()?.removeAllRanges();
+        }
+
+        // `focus` with a position: without one it would put back the selection from before the insert.
+        editor.chain().insertContentAt(0, referenceContent(refs)).focus('end').run();
+    }
+
+    /** Removes the reference tokens of `refs` from the field, and the space each was followed by. */
+    function removeReferences(refs: ContextReference[]) {
+        const keys = new Set(refs.map(referenceKey));
+
+        editor.chain().command(({ tr }) => {
+            const ranges: { from: number; to: number }[] = [];
+
+            tr.doc.descendants((node, pos) => {
+                if (node.type.name === REFERENCE_NODE && keys.has(referenceKey((node.attrs as ReferenceAttrs).ref))) {
+                    const after = tr.doc.textBetween(pos + node.nodeSize, Math.min(pos + node.nodeSize + 1, tr.doc.content.size));
+
+                    ranges.push({ from: pos, to: pos + node.nodeSize + (after === ' ' ? 1 : 0) });
+                }
+            });
+            // From the end, so the earlier positions stay valid.
+            ranges.reverse().forEach(({ from, to }) => tr.delete(from, to));
+
+            return true;
+        }).run();
+    }
+
     /** Empties the field and drops the attachments, after a message was sent. */
     function reset() {
         editor.commands.clearContent();
         setIsEmpty(true);
+        setReferences([]);
         setAttachments([]);
     }
 
@@ -205,7 +251,10 @@ export function useComposer() {
         isEmpty,
         hasSelection,
         attachments,
+        references,
         setText,
+        addReferences,
+        removeReferences,
         readInput,
         reset,
         markSelectionVerbatim,

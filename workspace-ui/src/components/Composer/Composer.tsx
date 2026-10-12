@@ -1,5 +1,5 @@
 import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
-import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
+import { type DragEvent, type ReactNode, type Ref, useEffect, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,7 @@ import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
 import { useComposer } from '@/hooks/useComposer';
 import type { StartSessionInput } from '@/hooks/useGenaixQueries';
 import { useSpeechDictation } from '@/hooks/useSpeechDictation';
+import type { ContextReference } from '@/services/apiService/genaix/types';
 
 import styles from './Composer.module.css';
 
@@ -24,6 +25,10 @@ export interface ComposerHandle {
     setText: (text: string) => void;
     /** Empties the field and drops the attachments, after a message was sent. */
     reset: () => void;
+    /** Puts a reference token for each of `refs` at the start of the field, the caret at the end. */
+    addReferences: (refs: ContextReference[]) => void;
+    /** Removes the reference tokens of `refs` from the field. */
+    removeReferences: (refs: ContextReference[]) => void;
 }
 
 interface ComposerProps {
@@ -47,6 +52,10 @@ interface ComposerProps {
     onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
     sessionId?: string;
+    /** Called with the objects the field's reference tokens point at, whenever they change. */
+    onReferencesChange?: (references: ContextReference[]) => void;
+    /** A line at the top of the box, e.g. where the next message goes. */
+    notice?: ReactNode;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -63,7 +72,7 @@ const TEXT_KEYS = {
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
  * (`isRunning`), Stop replaces send and calls `onStop`.
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, onReferencesChange, notice, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -71,7 +80,10 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         isEmpty,
         hasSelection,
         attachments,
+        references,
         setText,
+        addReferences,
+        removeReferences,
         readInput,
         reset,
         markSelectionVerbatim,
@@ -105,7 +117,13 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
             openTyping();
         },
         reset,
+        addReferences,
+        removeReferences,
     }));
+
+    useEffect(() => {
+        onReferencesChange?.(references);
+    }, [references, onReferencesChange]);
 
     // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
     const dictation = useSpeechDictation({ onText: setText, onEnd: () => textInput().focus() });
@@ -269,6 +287,8 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     dictation.isListening ? styles.listening : '',
                 ].filter(Boolean).join(' ')}
             >
+                {notice && <div className={styles.notice}>{notice}</div>}
+
                 <div className={styles.attachments}>
                     <AttachmentList
                         attachments={attachments}

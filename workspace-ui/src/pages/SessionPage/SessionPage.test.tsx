@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useHandOffStore } from '@/store/useHandOffStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 import { stubUploads } from '@/test/stubUploads';
@@ -25,6 +26,7 @@ vi.mock('@/components/ChatStream/ChatStream', () => ({ ChatStream: () => null })
 // sessionAuthorization.test.ts; here it would take the stubbed fetch responses meant for sending.
 vi.mock('@/helper/sessionAuthorization/sessionAuthorization', () => ({
     ensureSessionCmsAuthorization: () => Promise.resolve(),
+    newSessionCmsAuthorization: () => Promise.resolve({ connection_id: 'c-1', auth_type: 'bearer', token: 'cmstok_dev_1' }),
 }));
 
 // jsdom has no ResizeObserver; the page's AppShell measures its columns with one.
@@ -69,6 +71,10 @@ function stubFetch(...responses: Response[]) {
 const accepted = () => Response.json({ message_id: 'm-1', run_id: 'r-1', session_id: 's-1' }, { status: 202 });
 
 async function renderComposer() {
+    return (await renderPage()).field;
+}
+
+async function renderPage() {
     const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/sessions/s-1'] }) });
 
     render(
@@ -79,7 +85,7 @@ async function renderComposer() {
         </QueryClientProvider>,
     );
 
-    return screen.findByRole('textbox', { name: 'What should happen?' });
+    return { router, field: await screen.findByRole('textbox', { name: 'What should happen?' }) };
 }
 
 describe('SessionPage', () => {
@@ -88,6 +94,7 @@ describe('SessionPage', () => {
         vi.stubGlobal('ResizeObserver', ResizeObserverStub);
         useWorkspaceEventStore.setState({ sessions: {} });
         useErrorNotificationStore.setState({ errors: [] });
+        useHandOffStore.setState({ handOffs: {} });
     });
 
     afterEach(() => {
@@ -319,5 +326,130 @@ describe('SessionPage', () => {
         act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 2, ts: '2026-10-07T09:00:01Z', session_id: 's-1', type: 'run.cancelled', run: { id: 'r-1', status: 'cancelled', started_at: '2026-10-07T09:00:00Z', step_count: 0 } }));
 
         expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+    });
+
+    describe('Edit these', () => {
+        const first = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
+        const second = { type: 'page' as const, id: '8903', node_id: 3, label: 'Nutzungsbedingungen' };
+        const third = { type: 'page' as const, id: '9077', node_id: 3, label: 'Was Kunden wissen müssen' };
+
+        function editThese(...references: (typeof first)[]) {
+            act(() => useHandOffStore.getState().request('s-1', { references, nodeId: 3 }));
+        }
+
+        it('puts the objects into the field and starts a new session with them on sending', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(Response.json({ id: 's-2', status: 'active', run_id: 'r-2', message_id: 'm-2' }, { status: 201 }));
+            const { router, field } = await renderPage();
+
+            editThese(first, second);
+
+            expect(await screen.findByText('The next message starts a new session with 2 objects')).toBeInTheDocument();
+            expect(field).toHaveTextContent('Garantiebedingungen Nutzungsbedingungen');
+            await waitFor(() => expect(field).toHaveFocus());
+
+            await user.keyboard('Publish all these pages{Enter}');
+
+            await waitFor(() => expect(router.state.location.pathname).toBe('/sessions/s-2'));
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions');
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toMatchObject({
+                workflow: 'content_edit',
+                context: { node_id: 3, references: [first, second] },
+                message: {
+                    parts: [
+                        { type: 'reference', ref: first },
+                        { type: 'text', text: ' ' },
+                        { type: 'reference', ref: second },
+                        { type: 'text', text: ' Publish all these pages' },
+                    ],
+                },
+            });
+            expect(useHandOffStore.getState().handOffs).toEqual({});
+        });
+
+        it('keeps what is typed, and takes the objects of an earlier "Edit these" out for the new ones', async () => {
+            const user = userEvent.setup();
+
+            stubFetch();
+
+            const { field } = await renderPage();
+
+            await user.click(field);
+            await user.keyboard('Publish');
+            editThese(first);
+
+            expect(await screen.findByText('The next message starts a new session with 1 object')).toBeInTheDocument();
+            expect(field).toHaveTextContent('Garantiebedingungen Publish');
+
+            editThese(second, third);
+
+            expect(await screen.findByText('The next message starts a new session with 2 objects')).toBeInTheDocument();
+            expect(field).toHaveTextContent('Nutzungsbedingungen Was Kunden wissen müssen Publish');
+            expect(field).not.toHaveTextContent('Garantiebedingungen');
+        });
+
+        it('stays in this session after the notice is dismissed, without the objects', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+            const { router, field } = await renderPage();
+
+            editThese(first, second);
+            await user.click(await screen.findByRole('button', { name: 'Stay in this session' }));
+
+            expect(screen.queryByText(/starts a new session/)).not.toBeInTheDocument();
+            expect(field).not.toHaveTextContent('Garantiebedingungen');
+
+            await user.click(field);
+            await user.keyboard('Which of them are online?{Enter}');
+
+            await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/messages');
+            expect(router.state.location.pathname).toBe('/sessions/s-1');
+        });
+
+        it('offers none of this session\'s files in the @-menu, since the new session cannot use them', async () => {
+            const user = userEvent.setup();
+            const fetchMock = vi.fn<typeof fetch>(async () => Response.json({ items: [], next_cursor: null }));
+
+            vi.stubGlobal('fetch', withEmptySessionList(fetchMock));
+
+            const { field } = await renderPage();
+            const uploadRequests = () => fetchMock.mock.calls.filter(([input]) => String(input).includes('/sessions/s-1/files'));
+
+            // Without a hand-off the @-menu offers them.
+            await user.click(field);
+            await user.keyboard('@');
+            await waitFor(() => expect(uploadRequests()).not.toHaveLength(0));
+            await user.keyboard('{Escape}');
+            fetchMock.mockClear();
+
+            editThese(first);
+            await screen.findByText('The next message starts a new session with 1 object');
+            await waitFor(() => expect(field).toHaveFocus());
+            // A new word, so the menu opens again.
+            await user.keyboard(' @');
+
+            expect(await screen.findByRole('listbox', { name: 'Context' })).toBeInTheDocument();
+            expect(uploadRequests()).toHaveLength(0);
+        });
+
+        it('keeps the input and reports a session that could not be started', async () => {
+            const user = userEvent.setup();
+
+            stubFetch(Response.json({ type: 't', title: 't', status: 503, genaix_code: 'service_unavailable' }, { status: 503 }));
+
+            const { router, field } = await renderPage();
+
+            editThese(first);
+            await screen.findByText('The next message starts a new session with 1 object');
+            await waitFor(() => expect(field).toHaveFocus());
+            await user.keyboard('Take it offline{Enter}');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([{ messageKey: 'handOff.startFailed' }]));
+            expect(field).toHaveTextContent('Garantiebedingungen Take it offline');
+            expect(screen.getByText('The next message starts a new session with 1 object')).toBeInTheDocument();
+            expect(router.state.location.pathname).toBe('/sessions/s-1');
+        });
     });
 });

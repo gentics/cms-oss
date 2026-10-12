@@ -156,6 +156,13 @@
             }
         }
     },
+    "handOff": {
+        "editThese": "Diese bearbeiten",
+        "notice_one": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekt",
+        "notice_other": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekten",
+        "cancel": "In dieser Session bleiben",
+        "startFailed": "Die Session konnte nicht gestartet werden"
+    },
     "parts": {
         "selectedCount": "{{count}} ausgewählt",
         "statusNote": {
@@ -186,7 +193,9 @@
             "title": "Tabelle",
             "yes": "Ja",
             "no": "Nein",
-            "shown": "{{shown}} von {{total}}"
+            "shown": "{{shown}} von {{total}}",
+            "select": "{{label}} auswählen",
+            "selectAll": "Alle Zeilen auswählen"
         },
         "pageStructure": {
             "title": "Seitenstruktur",

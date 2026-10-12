@@ -32,6 +32,20 @@
   display: contents;
 }
 
+/* A line at the top of the box (`notice`): small tinted head strip like a chat card's (§12). */
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -8px -10px 8px;
+  padding: 4px 6px 4px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--corner-2xl) var(--corner-2xl) 0 0;
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
 /* Wrapper of the inline VoiceInput, so the mobile rules below can hide it. */
 .inlineVoice {
   display: inline-flex;

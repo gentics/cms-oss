@@ -193,6 +193,32 @@ export function textContent(text: string): JSONContent[] {
     ]);
 }
 
+/** What tells two references apart: the same object is the same type, node and id. */
+export function referenceKey(ref: ContextReference): string {
+    return `${ref.type}:${ref.node_id ?? ''}:${ref.id}`;
+}
+
+/** The objects the `reference` parts among `parts` point at, each once, in their order. */
+export function referencedObjects(parts: UserMessagePart[]): ContextReference[] {
+    const refs = new Map<string, ContextReference>();
+
+    for (const part of parts) {
+        if (part.type === 'reference') {
+            refs.set(referenceKey(part.ref), part.ref);
+        }
+    }
+
+    return [...refs.values()];
+}
+
+/**
+ * `refs` as content for the field: a reference token each, a space after each one, so the caret
+ * lands behind them and the user can go on typing.
+ */
+export function referenceContent(refs: ContextReference[]): JSONContent[] {
+    return refs.flatMap((ref): JSONContent[] => [{ type: REFERENCE_NODE, attrs: { ref } }, { type: 'text', text: ' ' }]);
+}
+
 /**
  * The selection, if it is a non-empty range of text inside `field`: what the Verbatim button would
  * lock, and whether it shows as pressed.

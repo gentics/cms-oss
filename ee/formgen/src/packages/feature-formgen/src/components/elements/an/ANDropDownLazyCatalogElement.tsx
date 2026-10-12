@@ -76,13 +76,18 @@ function ANDropDownLazyCatalogElement(props: IFormComponentAttributes) {
   };
   const clearInput = () => {
     setInputValue('');
-    setOptions([]);
+    loadFilteredOptions('');
     onValueChange(props.isList ? [] : null);
   };
+  // Synchroner Guard: onFocus kann im selben Event-Zyklus doppelt kommen (Pfeil + Input-Fokus),
+  // dabei sehen beide Aufrufe noch den alten loading-State.
+  const loadingRef = useRef(false);
   const loadOptions = (text: string) => {
-    if (props.handleLazyCatalog && !loading) {
+    if (props.handleLazyCatalog && !loadingRef.current) {
+      loadingRef.current = true;
       setLoading(true);
       props.handleLazyCatalog(props.jsonpath, text, (possibleValues: IPossibleValue[] | null) => {
+        loadingRef.current = false;
         setLoading(false);
         setOptions(possibleValues || []);
       });

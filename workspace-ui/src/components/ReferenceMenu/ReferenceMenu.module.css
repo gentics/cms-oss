@@ -227,3 +227,23 @@
     transform: translateY(7px);
   }
 }
+
+/* Narrowed to folders, the way to the advanced folder search, always last (draft `.popadv`). */
+.advanced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  cursor: pointer;
+
+  &:hover,
+  &[aria-selected='true'] {
+    background: rgba(var(--interactive-rgb), .1);
+  }
+
+  & .name {
+    color: var(--interactive);
+  }
+}

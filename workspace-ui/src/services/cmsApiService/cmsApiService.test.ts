@@ -10,6 +10,7 @@ import {
     getCmsKeycloakConfig,
     getCmsUser,
     isCmsFeatureActive,
+    listCmsFolders,
     listCmsNodes,
     loginToCms,
     logoutFromCms,
@@ -281,5 +282,41 @@ describe('CMS login', () => {
         stubFetchSequence(new Response('MAINTENANCEMODE'));
 
         await expect(ssoLoginToCms('kc-token')).rejects.toMatchObject({ name: 'CmsLoginError', responseCode: 'MAINTENANCEMODE' });
+    });
+});
+
+describe('listCmsFolders', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const FOLDER = { id: 42, name: 'Campaigns', path: '/Corporate Website/Campaigns/', hasSubfolders: true, inherited: false };
+
+    it('lists one page of a folder\'s subfolders in the node, with how many there are', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folders: [FOLDER], numItems: 61, hasMoreItems: true }));
+
+        await expect(listCmsFolders(3, 7, { skipCount: 60, maxItems: 60 })).resolves.toEqual({ folders: [FOLDER], total: 61, hasMore: true });
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.pathname).toBe('/rest/folder/getFolders/7');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.get('skipCount')).toBe('60');
+        expect(url.searchParams.get('maxItems')).toBe('60');
+        expect(url.searchParams.has('search')).toBe(false);
+        expect(url.searchParams.has('recursive')).toBe(false);
+        expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('searches below the folder, recursively', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folders: [FOLDER] }));
+
+        await expect(listCmsFolders(3, 7, { search: 'Camp', maxItems: 50 })).resolves.toEqual({ folders: [FOLDER], total: 1, hasMore: false });
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.searchParams.get('search')).toBe('Camp');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(url.searchParams.get('maxItems')).toBe('50');
     });
 });

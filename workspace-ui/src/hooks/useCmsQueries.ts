@@ -1,6 +1,14 @@
-import { type QueryClient, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { type CmsItem, type CmsItemType, type CmsNode, isCmsFeatureActive, listCmsNodes, searchCmsItems } from '@/services/cmsApiService/cmsApiService';
+import {
+    type CmsItem,
+    type CmsItemType,
+    type CmsNode,
+    isCmsFeatureActive,
+    listCmsFolders,
+    listCmsNodes,
+    searchCmsItems,
+} from '@/services/cmsApiService/cmsApiService';
 
 /** Query keys of the CMS server state. */
 export const cmsKeys = {
@@ -8,6 +16,8 @@ export const cmsKeys = {
     feature: (name: string) => ['cms', 'features', name] as const,
     searches: (nodeId: number, type: CmsItemType) => ['cms', 'nodes', nodeId, 'search', type] as const,
     search: (nodeId: number, type: CmsItemType, query: string, elastic: boolean) => [...cmsKeys.searches(nodeId, type), query, elastic] as const,
+    folderLevel: (nodeId: number, folderId: number) => ['cms', 'nodes', nodeId, 'folders', folderId] as const,
+    folderSearch: (nodeId: number, folderId: number, query: string) => ['cms', 'nodes', nodeId, 'folder-search', folderId, query] as const,
 };
 
 /**
@@ -76,5 +86,46 @@ export function useCmsSearch(nodes: CmsNode[], query: string, types: readonly Cm
             isStale: queries.some((result) => result.isPlaceholderData),
             isError: queries.some((result) => result.isError),
         }),
+    });
+}
+
+/** How many folders of one level the folder search shows at a time. */
+export const FOLDER_LEVEL_PAGE_SIZE = 60;
+
+/** How many folders the folder search shows for a text. */
+export const FOLDER_SEARCH_MAX_ITEMS = 50;
+
+/**
+ * The folders in the folder `folderId` of the node `nodeId` (`listCmsFolders`), `FOLDER_LEVEL_PAGE_SIZE`
+ * at a time: `fetchNextPage` loads the next ones while `hasNextPage`. A minute fresh, like a node's
+ * root level. Nothing is asked without both ids.
+ */
+export function useCmsFolderLevel(nodeId: number | undefined, folderId: number | undefined) {
+    return useInfiniteQuery({
+        queryKey: cmsKeys.folderLevel(nodeId ?? 0, folderId ?? 0),
+        queryFn: nodeId === undefined || folderId === undefined
+            ? skipToken
+            : ({ pageParam, signal }) => listCmsFolders(nodeId, folderId, { skipCount: pageParam, maxItems: FOLDER_LEVEL_PAGE_SIZE, signal }),
+        initialPageParam: 0,
+        getNextPageParam: (last, pages) => (last.hasMore ? pages.length * FOLDER_LEVEL_PAGE_SIZE : undefined),
+        staleTime: ROOT_LEVEL_STALE_MS,
+    });
+}
+
+/**
+ * The first `FOLDER_SEARCH_MAX_ITEMS` folders of `node` that `listCmsFolders` finds for `query`, and
+ * how many it found in all; nothing is asked for an empty `query`. While a new text is searched, the
+ * last answer stands in (`isPlaceholderData`).
+ */
+export function useCmsFolderSearch(node: CmsNode | undefined, query: string) {
+    const nodeId = node?.id;
+    const rootFolderId = node?.folderId;
+
+    return useQuery({
+        queryKey: cmsKeys.folderSearch(nodeId ?? 0, rootFolderId ?? 0, query),
+        queryFn: nodeId === undefined || rootFolderId === undefined || query === ''
+            ? skipToken
+            : ({ signal }) => listCmsFolders(nodeId, rootFolderId, { search: query, maxItems: FOLDER_SEARCH_MAX_ITEMS, signal }),
+        placeholderData: keepPreviousData,
     });
 }

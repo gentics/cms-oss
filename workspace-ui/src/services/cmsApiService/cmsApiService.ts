@@ -172,11 +172,16 @@ export async function ssoLoginToCms(accessToken: string): Promise<void> {
     }
 }
 
-/** A CMS node (`GET /rest/node`), as far as the composer needs it. `folderId` is its root folder. */
+/**
+ * A CMS node (`GET /rest/node`), as far as the composer needs it. `folderId` is its root folder. A
+ * channel (`type: 'channel'`) names the node or channel it inherits from in `inheritedFromName`.
+ */
 export interface CmsNode {
     id: number;
     name: string;
     folderId: number;
+    type?: 'node' | 'channel';
+    inheritedFromName?: string;
 }
 
 /** The CMS object types the composer's @-menu searches. */
@@ -299,4 +304,52 @@ export async function searchCmsItems(
     const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
 
     return items ?? [];
+}
+
+/**
+ * A folder as `GET /rest/folder/getFolders` lists it, as far as the folder search needs it. `path`
+ * runs from the node's root folder to the folder itself, e.g. `/Website/Products/Cloud/`; `inherited`
+ * is `false` for a folder of the node itself, in a channel for one local to the channel.
+ */
+export interface CmsFolder {
+    id: number;
+    name: string;
+    path?: string;
+    hasSubfolders: boolean;
+    inherited: boolean;
+}
+
+/** A page of folders and how many there are in all. */
+export interface CmsFolderPage {
+    folders: CmsFolder[];
+    /** All folders listed or found, not only those on this page. */
+    total: number;
+    hasMore: boolean;
+}
+
+/**
+ * The folders in the folder `folderId` of the node `nodeId`, sorted by name: `GET /rest/folder/getFolders/{folderId}`
+ * with `nodeId` (multichannelling), `skipCount` and `maxItems`. With `search`, those below it whose id,
+ * name or description contains `search` (`recursive`). The CMS leaves out folders the user may not
+ * view, and answers how many there are in all (`numItems`) and whether more follow (`hasMoreItems`).
+ */
+export async function listCmsFolders(
+    nodeId: number,
+    folderId: number,
+    { search = '', skipCount = 0, maxItems, signal }: { search?: string; skipCount?: number; maxItems: number; signal?: AbortSignal },
+): Promise<CmsFolderPage> {
+    const params = new URLSearchParams({ nodeId: String(nodeId), skipCount: String(skipCount), maxItems: String(maxItems) });
+
+    if (search !== '') {
+        params.set('search', search);
+        params.set('recursive', 'true');
+    }
+
+    const response = await httpRequest<{ folders?: CmsFolder[]; numItems?: number; hasMoreItems?: boolean }>(
+        `/rest/folder/getFolders/${folderId}?${params}`,
+        { ...CMS_GET, signal },
+    );
+    const folders = response.folders ?? [];
+
+    return { folders, total: response.numItems ?? folders.length, hasMore: response.hasMoreItems === true };
 }

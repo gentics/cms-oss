@@ -74,7 +74,9 @@
             "failed": "The search could not be completed.",
             "empty": "No context found for “{{query}}”.",
             "emptyNoQuery": "No context found.",
-            "asText": "“{{query}}” as plain text"
+            "asText": "“{{query}}” as plain text",
+            "advanced": "Advanced folder search…",
+            "advancedDetail": "All folders · channels · deeper levels"
         },
         "attachment": {
             "source": "as a source",
@@ -496,5 +498,31 @@
         "noCmsConnection": "There is no CMS connection to work with.",
         "invalidResponse": "The server sent a response that could not be read.",
         "unknown": "An unexpected error occurred."
+    },
+    "folderSearch": {
+        "title": "Choose a folder",
+        "node": "Node",
+        "channelOf": "{{name}} (channel of {{master}})",
+        "search": "Search folders",
+        "placeholder": "Search folders in {{node}}",
+        "path": "Folder path",
+        "list": "Folders",
+        "recent": "Recent",
+        "allFolders": "All folders · {{total}}",
+        "inFolder": "In {{name}} · {{total}}",
+        "topMatches": "Top {{shown}} of {{total}} matches",
+        "matches_one": "{{count}} match",
+        "matches_other": "{{count}} matches",
+        "empty": "No folder matches “{{query}}” in {{node}}.",
+        "emptyLevel": "No subfolders.",
+        "showMore": "Show {{count}} more of {{remaining}}",
+        "open": "Open {{name}}",
+        "local": "Local",
+        "localHint": "Only in this channel",
+        "loading": "Loading folders…",
+        "failed": "The folders could not be loaded.",
+        "pick": "Pick a folder",
+        "cancel": "Cancel",
+        "use": "Use folder"
     }
 }

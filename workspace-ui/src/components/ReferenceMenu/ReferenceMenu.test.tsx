@@ -348,6 +348,89 @@ describe('ReferenceMenu', () => {
         expect(parts()).toEqual([{ type: 'text', text: '@zzz' }]);
     });
 
+    it('offers the advanced folder search last among folders; it starts with the typed text, and its folder replaces @query', async () => {
+        const user = userEvent.setup();
+        const { field, parts } = renderField();
+
+        await user.click(field);
+        await user.keyboard('Use @folder:Camp');
+
+        const list = await screen.findByRole('listbox', { name: 'Context' });
+
+        expect(await within(list).findByText('Folders · 1')).toBeInTheDocument();
+
+        const advanced = screen.getByRole('option', { name: /Advanced folder search/ });
+
+        expect(list).toHaveAttribute('aria-owns', advanced.id);
+
+        await user.keyboard('{End}');
+
+        expect(field).toHaveAttribute('aria-activedescendant', advanced.id);
+
+        await user.keyboard('{Enter}');
+
+        const dialog = await screen.findByRole('dialog', { name: 'Choose a folder' });
+        const search = within(dialog).getByRole('combobox', { name: 'Search folders' });
+
+        expect(screen.queryByRole('listbox', { name: 'Context' })).not.toBeInTheDocument();
+        expect(search).toHaveValue('Camp');
+        expect(await within(dialog).findByText('1 match')).toBeInTheDocument();
+        await waitFor(() => expect(search).toHaveFocus());
+
+        await user.keyboard('{Enter}');
+
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        expect(parts()).toEqual([
+            { type: 'text', text: 'Use ' },
+            { type: 'reference', ref: { type: 'folder', id: '42', node_id: 3, label: 'Campaigns' } },
+        ]);
+    });
+
+    it('goes back to the @-menu, still narrowed to folders, when the folder search is cancelled', async () => {
+        const user = userEvent.setup();
+        const { field, parts } = renderField();
+
+        await user.click(field);
+        await user.keyboard('@');
+        await screen.findByRole('listbox', { name: 'Context' });
+        await user.keyboard('{ArrowDown}{Enter}Camp');
+
+        await user.click(await screen.findByRole('option', { name: /Advanced folder search/ }));
+
+        const dialog = await screen.findByRole('dialog', { name: 'Choose a folder' });
+
+        const search = within(dialog).getByRole('combobox', { name: 'Search folders' });
+
+        expect(search).toHaveValue('Camp');
+        // The dialog moves the focus to its search a frame after it opened.
+        await waitFor(() => expect(search).toHaveFocus());
+
+        await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+        const list = await screen.findByRole('listbox', { name: 'Context' });
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Remove filter' }).parentElement).toHaveTextContent('Folders');
+        expect(await within(list).findByRole('option', { name: /Campaigns/ })).toBeInTheDocument();
+        // The editor focuses its field a frame later.
+        await waitFor(() => expect(field).toHaveFocus());
+        expect(parts()).toEqual([{ type: 'text', text: '@Camp' }]);
+    });
+
+    it('offers the advanced folder search only among folders', async () => {
+        const user = userEvent.setup();
+        const { field } = renderField();
+
+        await user.click(field);
+        await user.keyboard('@Camp');
+
+        const list = await screen.findByRole('listbox', { name: 'Context' });
+
+        await within(list).findByText('Folders · 1');
+
+        expect(screen.queryByRole('option', { name: /Advanced folder search/ })).not.toBeInTheDocument();
+    });
+
     it('closes on Esc and keeps the text', async () => {
         const user = userEvent.setup();
         const { field, parts } = renderField();

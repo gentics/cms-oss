@@ -1,18 +1,19 @@
-import type { Editor, JSONContent } from '@tiptap/core';
+import type { Editor, JSONContent, Range } from '@tiptap/core';
 import { exitSuggestion } from '@tiptap/suggestion';
-import { AtSignIcon, FileTextIcon, FolderIcon, GlobeIcon, ImageIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
+import { AtSignIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, ImageIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-import { followReferenceTrigger, type ReferenceTrigger, referenceTriggerKey } from '@/components/ComposerTextInput/composerExtensions';
+import { followReferenceTrigger, type ReferenceTrigger, referenceTriggerKey, reopenReferenceMenu } from '@/components/ComposerTextInput/composerExtensions';
+import { FolderSearchDialog } from '@/components/FolderSearchDialog/FolderSearchDialog';
 import { Button } from '@/components/ui/button';
 import { FILE_REF_NODE, REFERENCE_NODE } from '@/helper/composerParts/composerParts';
 import { formatMegabytes } from '@/helper/uploadLimits/uploadLimits';
 import { useCmsNodes, useCmsSearch } from '@/hooks/useCmsQueries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useSessionUploads } from '@/hooks/useGenaixQueries';
-import { CMS_ITEM_TYPES, type CmsItemType } from '@/services/cmsApiService/cmsApiService';
+import { CMS_ITEM_TYPES, type CmsFolder, type CmsItemType, type CmsNode } from '@/services/cmsApiService/cmsApiService';
 
 import styles from './ReferenceMenu.module.css';
 
@@ -110,7 +111,9 @@ interface ReferenceMenuProps {
  * (only the narrowed type, if any), the session's uploaded files and the CMS nodes, grouped.
  * Arrows, Home and End move, Enter or a click inserts the token in place of `@query`, Tab narrows to
  * the active entry's group, Esc closes and keeps the text. The editor places it at the `@`
- * (`ReferenceTriggerExtension`).
+ * (`ReferenceTriggerExtension`). Narrowed to folders, its last entry opens the advanced folder search
+ * (`FolderSearchDialog`) with the typed text; the folder chosen there replaces `@query`, and Cancel
+ * goes back to the menu.
  */
 export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
     // The open menu as the editor reports it (query, where `@query` sits, the element to render
@@ -118,21 +121,73 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
     const [openMenu, setOpenMenu] = useState<ReferenceTrigger | null>(null);
     // The key handling of the open list; while the menu is open, the editor offers it every key first.
     const listKeyHandlerRef = useRef<((event: KeyboardEvent) => boolean) | null>(null);
+    // The advanced folder search while open: where `@query` sits, and the text it started with.
+    const [advanced, setAdvanced] = useState<{ range: Range; query: string } | null>(null);
+    // The group the menu opens narrowed to: folders, when Cancel in the folder search goes back to it.
+    const [reopenScope, setReopenScope] = useState<Group | null>(null);
 
     // Follows the editor's @-trigger while mounted (`ReferenceTriggerExtension`).
     useEffect(() => followReferenceTrigger(editor, {
-        onChange: setOpenMenu,
+        onChange: (trigger) => {
+            setOpenMenu(trigger);
+
+            if (!trigger) {
+                setReopenScope(null);
+            }
+        },
         onKeyDown: (event) => listKeyHandlerRef.current?.(event) ?? false,
     }), [editor]);
 
-    if (!openMenu) {
-        return null;
+    // Closes the menu for the folder search; `@query` stays in the field until a folder is chosen.
+    function openAdvanced(query: string) {
+        if (!openMenu) {
+            return;
+        }
+
+        setAdvanced({ range: openMenu.range, query });
+        exitSuggestion(editor.view, referenceTriggerKey);
     }
 
-    // A new `@` starts a new menu, without the selection or narrowing of the last one.
-    return createPortal(
-        <MenuList key={openMenu.range.from} editor={editor} openMenu={openMenu} sessionId={sessionId} listKeyHandlerRef={listKeyHandlerRef} />,
-        openMenu.host,
+    // Replaces `@query` with the folder's token and a space to go on typing.
+    function pickFolder(node: CmsNode, folder: CmsFolder) {
+        if (!advanced) {
+            return;
+        }
+
+        const ref = { type: 'folder', id: String(folder.id), node_id: node.id, label: folder.name };
+
+        setAdvanced(null);
+        editor.chain().focus().insertContentAt(advanced.range, [{ type: REFERENCE_NODE, attrs: { ref } }, { type: 'text', text: ' ' }]).run();
+    }
+
+    // Back to the menu, narrowed to folders, with the caret at the end of `@query`.
+    function cancelAdvanced() {
+        if (!advanced) {
+            return;
+        }
+
+        setAdvanced(null);
+        setReopenScope('folder');
+        reopenReferenceMenu(editor, advanced.range.to);
+    }
+
+    return (
+        <>
+            {openMenu && createPortal(
+                // A new `@` starts a new menu, without the selection or narrowing of the last one.
+                <MenuList
+                    key={openMenu.range.from}
+                    editor={editor}
+                    openMenu={openMenu}
+                    sessionId={sessionId}
+                    initialScope={reopenScope}
+                    listKeyHandlerRef={listKeyHandlerRef}
+                    onAdvancedSearch={openAdvanced}
+                />,
+                openMenu.host,
+            )}
+            {advanced && <FolderSearchDialog initialQuery={advanced.query} onPick={pickFolder} onCancel={cancelAdvanced} />}
+        </>
     );
 }
 
@@ -140,11 +195,15 @@ interface MenuListProps {
     editor: Editor;
     openMenu: ReferenceTrigger;
     sessionId?: string;
+    /** The group the menu starts narrowed to, if any. */
+    initialScope: Group | null;
     /** Set to the list's key handling while it is shown. */
     listKeyHandlerRef: RefObject<((event: KeyboardEvent) => boolean) | null>;
+    /** Opens the advanced folder search with the typed text. */
+    onAdvancedSearch: (query: string) => void;
 }
 
-function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListProps) {
+function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef, onAdvancedSearch }: MenuListProps) {
     const { t, i18n } = useTranslation();
     const listId = useId();
     const [active, setActive] = useState(0);
@@ -152,7 +211,7 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
     // Whether the active entry changed by keyboard, so that the list scrolls it into view.
     const followsKeyboardRef = useRef(false);
     // The group chosen with Tab; a prefix typed in the query wins over it.
-    const [tabScope, setTabScope] = useState<Group | null>(null);
+    const [tabScope, setTabScope] = useState<Group | null>(initialScope);
     const typed = parseQuery(openMenu.query);
     const scope = typed.scope ?? tabScope;
     const text = typed.text.trim();
@@ -199,10 +258,13 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
         .filter(({ items: inGroup }) => inGroup.length > 0);
     // The entries in the order shown; the keyboard moves through these.
     const shown = groups.flatMap(({ items: inGroup }) => inGroup);
-    const optionCount = isChoosingGroup ? groupChoices.length : shown.length;
+    // Narrowed to folders, the advanced folder search is the last entry, after those found.
+    const offersAdvanced = scope === 'folder';
+    const optionCount = isChoosingGroup ? groupChoices.length : shown.length + (offersAdvanced ? 1 : 0);
     const activeIndex = Math.min(active, Math.max(0, optionCount - 1));
     const activeItem = isChoosingGroup ? undefined : shown[activeIndex];
     const activeGroup = isChoosingGroup ? groupChoices[activeIndex] : undefined;
+    const isAdvancedActive = offersAdvanced && activeIndex === shown.length;
     const optionId = (index: number) => `${listId}-${index}`;
     // Searching from the first key on: also while the text waits out the delay, so that the menu
     // does not say "nothing found" before the CMS was asked.
@@ -288,6 +350,8 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
             case 'Enter':
                 if (activeGroup) {
                     narrowTo(activeGroup);
+                } else if (isAdvancedActive) {
+                    onAdvancedSearch(text);
                 } else if (activeItem) {
                     pick(activeItem);
                 }
@@ -326,7 +390,7 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
     }, [listKeyHandlerRef]);
 
     // The field is the textbox that controls the list and names its active entry.
-    const activeId = activeItem || activeGroup ? optionId(activeIndex) : null;
+    const activeId = activeItem || activeGroup || isAdvancedActive ? optionId(activeIndex) : null;
 
     // Keeps the entry the keyboard moved to in view; the first one with the list's top, its group's
     // head included, and any other with the head of its group if it is the first there.
@@ -395,7 +459,15 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
                 <span className={styles.query}>{text ? `“${text}”` : t('composer.mention.search')}</span>
             </div>
 
-            <div ref={listRef} id={listId} role="listbox" aria-label={t('composer.mention.label')} className={styles.list}>
+            <div
+                ref={listRef}
+                id={listId}
+                role="listbox"
+                aria-label={t('composer.mention.label')}
+                // The advanced folder search below the states of the search belongs to the list.
+                aria-owns={offersAdvanced ? optionId(shown.length) : undefined}
+                className={styles.list}
+            >
                 {isChoosingGroup && groupChoices.map((group, position) => {
                     const Icon = GROUP_ICONS[group];
 
@@ -476,6 +548,25 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
                             {t('composer.mention.asText', { query: openMenu.query })}
                         </Button>
                     )}
+                </div>
+            )}
+
+            {offersAdvanced && (
+                <div
+                    id={optionId(shown.length)}
+                    role="option"
+                    aria-selected={isAdvancedActive}
+                    className={styles.advanced}
+                    // Keeps the caret in the field.
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseMove={() => setActive(shown.length)}
+                    onClick={() => onAdvancedSearch(text)}
+                >
+                    <span className={styles.icon}><FolderTreeIcon size={16} aria-hidden /></span>
+                    <span className={styles.text}>
+                        <span className={styles.name}>{t('composer.mention.advanced')}</span>
+                        <span className={styles.detail}>{t('composer.mention.advancedDetail')}</span>
+                    </span>
                 </div>
             )}
         </div>

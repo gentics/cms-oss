@@ -254,9 +254,8 @@ test.describe('Media Upload', () => {
         }
 
         const uploadReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${fileObj.id}`);
-        const loadReq = waitForResponseFrom(page, 'GET', `/rest/file/load/${fileObj.id}`);
         await uploadFileFromInput(page, fileInput, [FIXTURE_FILE_TXT2.fixturePath]);
-        await Promise.all([uploadReq, loadReq]);
+        await uploadReq;
 
         await expect(preview.locator('.file-preview .file-details .name')).toHaveText(getFileName(FIXTURE_FILE_TXT2));
     });
@@ -302,9 +301,8 @@ test.describe('Media Upload', () => {
         }
 
         const uploadReq = waitForResponseFrom(page, 'POST', `/rest/file/save/${fileObj.id}`);
-        const loadReq = waitForResponseFrom(page, 'GET', `/rest/image/load/${fileObj.id}`);
         await uploadFileFromInput(page, fileInput, [FIXTURE_IMAGE_JPEG2.fixturePath]);
-        await Promise.all([uploadReq, loadReq]);
+        await uploadReq;
 
         await expect(preview.locator('.image-preview .filename')).toHaveText(getFileName(FIXTURE_IMAGE_JPEG2));
     });

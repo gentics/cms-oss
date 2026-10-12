@@ -2818,16 +2818,9 @@ export class FolderActionsService {
         this.appState.dispatch(new StartListSavingAction(type));
 
         return this.client.file.uploadTo(fileId, file, fileName, options).pipe(
-            switchMap(() => {
-                if (type === 'file') {
-                    return this.client.file.get(fileId);
-                } else {
-                    return this.client.image.get(fileId);
-                }
-            }),
             map((loadRes) => {
-                const item = loadRes.file || loadRes.image;
-                const normalized = normalize({ ...item }, getNormalizrSchema(type));
+                const item: CMSFile | Image = loadRes.file || loadRes.image;
+                const normalized = normalize({ ...item }, getNormalizrSchema(item.type));
                 this.appState.dispatch(new AddEntitiesAction(normalized));
                 this.appState.dispatch(new ListSavingSuccessAction(type));
 
@@ -2835,6 +2828,7 @@ export class FolderActionsService {
                     successfull: true,
                     item: item,
                     file: file,
+                    response: loadRes,
                 };
             }),
             catchError((err) => {

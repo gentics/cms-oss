@@ -10,6 +10,7 @@ import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
 import { IconButton } from '@/components/IconButton/IconButton';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type SendTurnInput, type StartSessionInput, useCancelRun, useHandOffSession, useSendTurn } from '@/hooks/useGenaixQueries';
+import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { ContextReference, InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
@@ -33,6 +34,8 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * While the session's run is working, Stop cancels it (`POST …/runs/{run_id}/cancel`). While it waits
  * for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card
  * holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card first.
+ * Once the interaction is answered, from the card or here, or has expired (`useInteractionLock`), the
+ * run counts as working again: no second answer is sent, and Stop is offered.
  *
  * "Edit these" in a result card (`useHandOffStore`) puts the selected objects into the field, in
  * place of any handed over before, and says so above it: the next message then starts a new session
@@ -51,7 +54,8 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
     // What "Edit these" handed over, while the next message starts a new session.
     const handOff = useHandOffStore((state) => state.handOffs[sessionId]);
     const [referenceCount, setReferenceCount] = useState(0);
-    const isWaiting = !handOff && run?.status === 'waiting_for_input' && Boolean(pending);
+    const pendingLock = useInteractionLock(pending);
+    const isWaiting = !handOff && run?.status === 'waiting_for_input' && Boolean(pending) && !pendingLock;
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
 
@@ -127,14 +131,32 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
             }
 
             replyTo = { interaction_id: pending.id, answer };
+            useInteractionDraftStore.getState().lock(pending.id, 'sending');
         }
+
+        // The interaction still locked as `sending`, unless `interaction.resolved` came first and took it away.
+        const repliedTo = () => (replyTo && useInteractionDraftStore.getState().locks[replyTo.interaction_id] ? replyTo.interaction_id : undefined);
 
         setUploadProgress([]);
         // The promise, not `mutate` callbacks: those are dropped once the user has gone on to another
         // session, and a failed send would go unreported.
         sendTurn.mutateAsync({ ...input, replyTo, onFileProgress: reportUploadProgress }).then(
-            () => composerRef.current?.reset(),
+            () => {
+                const interactionId = repliedTo();
+
+                if (interactionId) {
+                    useInteractionDraftStore.getState().lock(interactionId, 'answered');
+                }
+
+                composerRef.current?.reset();
+            },
             (error: unknown) => {
+                const interactionId = repliedTo();
+
+                if (interactionId) {
+                    lockAfterFailure(interactionId, error);
+                }
+
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
             },
         );

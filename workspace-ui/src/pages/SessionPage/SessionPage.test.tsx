@@ -8,6 +8,7 @@ import { UiProvider } from '@/components/ui/provider';
 import { routeTree } from '@/router';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
+import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { sessionFixture, stubSessionRoutes, withEmptySessionList } from '@/test/genaixSessions';
 import { stubUploads } from '@/test/stubUploads';
@@ -95,6 +96,7 @@ describe('SessionPage', () => {
         useWorkspaceEventStore.setState({ sessions: {} });
         useErrorNotificationStore.setState({ errors: [] });
         useHandOffStore.setState({ handOffs: {} });
+        useInteractionDraftStore.setState({ drafts: {}, locks: {} });
     });
 
     afterEach(() => {
@@ -326,6 +328,91 @@ describe('SessionPage', () => {
         act(() => useWorkspaceEventStore.getState().applyEvent('s-1', { seq: 2, ts: '2026-10-07T09:00:01Z', session_id: 's-1', type: 'run.cancelled', run: { id: 'r-1', status: 'cancelled', started_at: '2026-10-07T09:00:00Z', step_count: 0 } }));
 
         expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
+    });
+
+    describe('answering the question the run waits on', () => {
+        // A run that waits on an `ask_user` question expiring `expiresAt`, by default in 10 minutes.
+        function waitOnQuestion(expiresAt = new Date(Date.now() + 10 * 60_000).toISOString()) {
+            const store = useWorkspaceEventStore.getState();
+
+            store.applyEvent('s-1', { seq: 1, ts: '2026-10-07T09:00:00Z', session_id: 's-1', type: 'run.started', run: { id: 'r-1', status: 'running', started_at: '2026-10-07T09:00:00Z', step_count: 0 } });
+            store.applyEvent('s-1', {
+                seq: 2,
+                ts: '2026-10-07T09:00:01Z',
+                session_id: 's-1',
+                run_id: 'r-1',
+                type: 'interaction.requested',
+                interaction: { id: 'i-1', kind: 'ask_user', prompt: 'Which audience?', multi: false, blocking: true, status: 'pending', requested_at: '2026-10-07T09:00:01Z', expires_at: expiresAt, run_id: 'r-1' },
+            });
+        }
+
+        it('answers it once with the turn, then offers Stop instead of a second answer', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion();
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            await waitFor(() => expect(field).toHaveTextContent(''));
+            expect(JSON.parse(fetchMock.mock.calls[0]![1]!.body as string)).toMatchObject({
+                reply_to_interaction: { interaction_id: 'i-1', answer: { text: 'Existing customers' } },
+            });
+            expect(useInteractionDraftStore.getState().locks['i-1']).toBe('answered');
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('sends no answer while the card is sending one', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion();
+            useInteractionDraftStore.getState().lock('i-1', 'sending');
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('sends no answer once the question has expired', async () => {
+            const user = userEvent.setup();
+            const fetchMock = stubFetch(accepted());
+
+            waitOnQuestion(new Date(Date.now() - 1000).toISOString());
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+            expect(fetchMock).not.toHaveBeenCalled();
+        });
+
+        it('keeps the input and locks the question as expired when GenAIx refuses the answer with 410', async () => {
+            const user = userEvent.setup();
+
+            stubFetch(Response.json({ type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }, { status: 410 }));
+            waitOnQuestion();
+            const field = await renderComposer();
+
+            await user.click(field);
+            await user.keyboard('Existing customers{Enter}');
+
+            await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'chat.sendFailed', detailKey: 'errors.genaix.interaction_expired' },
+            ]));
+            expect(useInteractionDraftStore.getState().locks['i-1']).toBe('expired');
+            expect(field).toHaveTextContent('Existing customers');
+        });
     });
 
     describe('Edit these', () => {

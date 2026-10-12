@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Button } from './button';
@@ -117,5 +118,35 @@ describe('DropdownMenu', () => {
         await user.click(screen.getByRole('menuitemradio', { name: 'Table' }));
 
         expect(onValueChange).toHaveBeenCalledWith('table', expect.anything());
+    });
+
+    it('opens without a trigger at an anchor element, and closes with Escape', async () => {
+        const user = userEvent.setup();
+
+        function AnchoredMenu() {
+            const anchor = useRef<HTMLDivElement>(null);
+            const [open, setOpen] = useState(false);
+
+            return (
+                <>
+                    <div ref={anchor}>Paragraph</div>
+                    <Button onClick={() => setOpen(true)}>Show actions</Button>
+                    <DropdownMenu open={open} onOpenChange={setOpen}>
+                        <DropdownMenuContent anchor={anchor}>
+                            <DropdownMenuItem>Reference</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </>
+            );
+        }
+
+        render(<AnchoredMenu />, { wrapper: UiProvider });
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Show actions' }));
+        expect(await screen.findByRole('menuitem', { name: 'Reference' })).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument());
     });
 });

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMS Preview Plan</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f3f6f8; --ink: #004c77; --text: #3e4850; --muted: #697278;
+    --line: rgba(0, 76, 119, .14); --accent: #029ddd; --accent-bg: rgba(2, 157, 221, .10);
+    --ok: #1b6b4a; --ok-bg: #eaf6f0; --warn: #8a5a00; --warn-bg: #fff6e5; --err: #b3261e; --err-bg: #fdecea;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1112; --surface: #1b1d1f; --ink: #ecedee; --text: #c7cacd; --muted: #979a9c;
+      --line: rgba(152, 157, 162, .22); --accent: #45b4e8; --accent-bg: rgba(69, 180, 232, .14);
+      --ok: #8ad6b2; --ok-bg: #15291f; --warn: #efc470; --warn-bg: #2e2610; --err: #f2b5b1; --err-bg: #331a18;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1112; --surface: #1b1d1f; --ink: #ecedee; --text: #c7cacd; --muted: #979a9c;
+    --line: rgba(152, 157, 162, .22); --accent: #45b4e8; --accent-bg: rgba(69, 180, 232, .14);
+    --ok: #8ad6b2; --ok-bg: #15291f; --warn: #efc470; --warn-bg: #2e2610; --err: #f2b5b1; --err-bg: #331a18;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { color: var(--ink); font-size: 28px; font-weight: 600; margin: 0 0 4px; }
+  h2 { color: var(--ink); font-size: 20px; font-weight: 600; margin: 44px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  h3 { color: var(--ink); font-size: 16px; font-weight: 600; margin: 22px 0 6px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .lead { font-size: 17px; color: var(--ink); background: var(--accent-bg); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 0 8px 8px 0; }
+  code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .tbl { overflow-x: auto; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface); color: var(--ink); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+  .st { display: inline-block; white-space: nowrap; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .ok { color: var(--ok); background: var(--ok-bg); }
+  .wait { color: var(--warn); background: var(--warn-bg); }
+  .no { color: var(--err); background: var(--err-bg); }
+  .phase { border: 1px solid var(--line); border-radius: 10px; padding: 4px 16px 12px; margin: 14px 0; }
+  .phase h3 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .needs { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
+  li { margin: 4px 0; }
+  .note { color: var(--muted); font-size: 13px; }
+  .summary { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 4px 18px 8px; margin: 0 0 20px; }
+  .tech { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+  .summary h2 { margin: 14px 0 6px; padding-top: 0; border-top: 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>CMS Preview: Recommendations and Implementation Plan</h1>
+<div class="meta">As of 2026-10-08 · Based on the spike (<code>cms-preview-integration-spike.html</code>)</div>
+
+<section class="summary">
+<h2>The plan in short</h2>
+<p><strong>Goal:</strong> while the AI writes a page, the user sees that page next to the chat, exactly as the CMS shows it.</p>
+<ol>
+  <li><strong>Ask first.</strong> We send our open questions to the GenAIx team and decide a few things in our own team. For example: the preview link GenAIx sends today opens the page for editing and locks it. It should only show the page.</li>
+  <li><strong>Show the page.</strong> The page appears in the right column. It reloads after every change the AI makes. A banner says when someone else is editing the page. A button publishes it. This step needs no other team.</li>
+  <li><strong>Select parts of the page.</strong> The user clicks a text or an image to select it. This waits until the CMS can tell us where each part sits on the page.</li>
+  <li><strong>Change a part with the AI.</strong> The user selects a part and says in the chat what should change. This waits until GenAIx can accept "this part of the page" in a message.</li>
+  <li><strong>Type directly in the page.</strong> This comes last, and only if users need it.</li>
+  <li><strong>Optional CMS changes.</strong> Only if the team agrees that the CMS may be changed for the Workspace.</li>
+</ol>
+<p><strong>Points to keep an eye on:</strong> If GenAIx does not add "this part of the page", users can still describe a part in words in the chat. If a proxy keeps the page from showing in the frame, the "Open" link next to it still opens the page. The customer's page scripts run next to the Workspace, so we want a short security check on that.</p>
+</section>
+
+<p class="lead">First we show the page read-only, because no other team has to do anything for that. Selecting parts of the page comes once we know the CMS can mark them. Changing a part with the AI comes once GenAIx can accept a reference to one part. Typing directly in the page comes last, when users need it.</p>
+
+<h2>Recommended</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Topic</th><th>Recommendation</th></tr></thead>
+  <tbody>
+    <tr><td>Showing the page</td><td>The page is shown in a frame inside the Workspace, served from the same host as the Workspace. GenAIx sends the frame's address. The Workspace uses it for the frame and for the "Open" link, and only makes sure it opens the page read-only.
+      <span class="tech">Technical: <code>preview_url</code> from <code>preview.updated</code>; the Workspace sets <code>mode=view</code> and <code>real=view</code> when they are missing or different.</span></td></tr>
+    <tr><td>Finding the parts of the page</td><td>To outline parts of the page, we must know where each part is. First we check whether the existing CMS feature <code>COPY_TAGS</code> tells us that. If it does not, and the CMS may be changed, the CMS gets a read-only view that marks each part.</td></tr>
+    <tr><td>Selecting parts</td><td>The Workspace draws outlines on a layer above the frame. The customer's page itself is never changed. For keyboard users, a list of the page's parts sits next to the frame.</td></tr>
+    <tr><td>Locks</td><td>When someone else is editing the page, one banner above the page says so. Edit actions stay disabled until they are done.
+      <span class="tech">Technical: from the page's <code>locked</code> / <code>lockedBy</code> / <code>lockedSince</code>.</span></td></tr>
+    <tr><td>Changing a part with the AI</td><td>The user selects a part and describes the change in the chat. GenAIx makes the change, the page reloads, and the changed part is highlighted.</td></tr>
+    <tr><td>Changing text by hand</td><td>First, a small form: the text typed there is sent to GenAIx, which writes it word for word. Next to it, a button opens the page in the normal CMS editor. Later, the user can type directly in the page, but only while the AI is not working.
+      <span class="tech">Technical: the form's text is sent as a <code>verbatim</code> part.</span></td></tr>
+    <tr><td>Save, Publish, Discard</td><td><strong>Publish</strong> asks GenAIx to publish the page. There is no "Save now", because every change is already saved as an unpublished draft. A <strong>Save</strong> button could mean "hand the page over". <strong>Discard</strong> waits until GenAIx tells us what discarding does in the CMS.
+      <span class="tech">Technical: the <code>publish</code>, <code>release</code> and <code>discard</code> transitions.</span></td></tr>
+  </tbody>
+</table></div>
+
+<h2>Plan</h2>
+
+<div class="phase">
+<h3>Phase 0: Questions and decisions <span class="st ok">Can start</span></h3>
+<p class="needs">Runs alongside the other phases. Phases 2 to 5 need its answers.</p>
+<p><strong>Questions to the GenAIx team</strong></p>
+<ol>
+  <li>Can a chat message point to one part of one page (the page plus the part's name)? <strong>Phase 3 cannot start without this.</strong>
+    <span class="tech">Technical: a <code>ContextReference</code> for one tag (page + tag keyword).</span></li>
+  <li>The preview link GenAIx sends today opens the page for editing and locks it. It should open the page read-only.
+    <span class="tech">Technical: today the link carries <code>mode=view</code>; read-only needs <code>real=view</code>.</span></li>
+  <li>What does "discard" do in the CMS? And do unpublished changes to an already published page stay off the live website?</li>
+  <li>Can GenAIx tell us for each part whether it is being worked on or has failed? Can the session snapshot hold a preview for each page instead of just one?
+    <span class="tech">Technical: the block status in <code>page_structure</code>.</span></li>
+  <li>How should GenAIx learn that a user changed text by hand? For example, through a follow-up message that contains the new text word for word.
+    <span class="tech">Technical: as a <code>verbatim</code> part.</span></li>
+</ol>
+<p><strong>Decisions in our team</strong></p>
+<ol>
+  <li>May we change the CMS for the Workspace?</li>
+  <li>May the Workspace save page content itself, or only through GenAIx?</li>
+  <li>The customer's page scripts would run on the same host as the Workspace, without a sandbox. Is that acceptable?</li>
+  <li>Product: locks apply to the whole page; hand edits start with a form; there is no Accept or Discard for each single AI suggestion.</li>
+</ol>
+<p><strong>Question to Ops:</strong> does a proxy in front of the CMS forbid showing the CMS in a frame?
+  <span class="tech">Technical: an <code>X-Frame-Options</code> or CSP header.</span></p>
+</div>
+
+<div class="phase">
+<h3>Phase 1: Show the page (read-only) <span class="st wait">In progress</span></h3>
+<p class="needs">No other team is needed. The right column is implemented on branch <code>f-gpu-2712</code> (not merged yet): it appears as soon as GenAIx sends the first preview and shows the page read-only. Lock banner, Publish and a few extras are still open.</p>
+<ol>
+  <li><span class="st ok">Done</span> <strong>Names for the data:</strong> the preview data from GenAIx has a name in our code.
+    <span class="tech">Technical: <code>LivePreview</code> in <code>src/store/useWorkspaceEventStore.ts</code>, taken from the generated <code>preview.updated</code> event type; no separate aliases were needed.</span></li>
+  <li><span class="st ok">Done</span> <strong>Read the preview:</strong> GenAIx keeps the current preview for each session. The Workspace reads it from the session's updates and only holds it while it is shown.
+    <span class="tech">Technical: <code>preview</code> in <code>useWorkspaceEventStore</code>, set by each <code>preview.updated</code>.</span>
+    <br><span class="st wait">Open</span> If GenAIx has shortened the session's update history, the preview only comes back with the next change. Reading it from the session snapshot would close that gap. Tabs for several pages are open too; we would track them ourselves, because GenAIx holds one preview per session.
+    <span class="tech">Technical: <code>preview</code> in <code>GET /sessions/{session_id}/workflow</code>, needed after <code>410 events_pruned</code>.</span></li>
+  <li><span class="st ok">Done</span> <strong>Frame address:</strong> GenAIx already sends it. The Workspace only makes sure it opens the page read-only.
+    <span class="tech">Technical: <code>preview_url</code> from <code>preview.updated</code>; <code>mode=view</code> and <code>real=view</code> are set when they are missing or different (<code>readOnlyPreviewUrl</code> in <code>PreviewColumn.tsx</code>).</span></li>
+  <li><span class="st ok">Done</span> <strong>Preview column:</strong> the right column shows the page in a frame, with its address and an "Open" link. It appears as soon as the first preview arrives; before that there is no right column and no button for it.
+    <span class="tech">Technical: <code>src/components/PreviewColumn/</code>, passed to <code>AppShell</code> by <code>SessionPage.tsx</code>.</span>
+    <br><span class="st wait">Open</span> Buttons for desktop, mobile (390 px) and full screen, and tabs for several pages.</li>
+  <li><span class="st ok">Done</span> <strong>Reload:</strong> the frame reloads after each update, even when the address stays the same.
+    <span class="tech">Technical: the frame is keyed by the event's <code>seq</code>.</span>
+    <br><span class="st wait">Open</span> Keeping the scroll position across a reload.</li>
+  <li><span class="st wait">Open</span> <strong>Lock banner:</strong> ask the CMS whether the page is locked. Ask again after each update, and when GenAIx reports that the page is locked.
+    <span class="tech">Technical: a new function in <code>cmsApiService</code>, used through TanStack Query; GenAIx reports a lock with status 423.</span></li>
+  <li><span class="st wait">Open</span> <strong>Publish:</strong> a Publish button. If GenAIx refuses because a quality check failed, show why.
+    <span class="tech">Technical: the <code>publish</code> transition; the refusal is <code>409 quality_gate_failed</code>.</span></li>
+</ol>
+<p><strong>Done when:</strong> a session in which GenAIx writes a page shows that page read-only in the right column (done). The page reloads after each change (done), a banner shows locks (open), and the page can be published (open). Tests sit next to the code and all texts exist in English and German (done for the column). <code>npm run check</code> passes (fails today only on <code>tailwind-boundary.test.ts</code>, which also fails without this change). An end-to-end test covers the column (open).</p>
+</div>
+
+<div class="phase">
+<h3>Phase 2: Outline and select parts <span class="st wait">Waits for markers</span></h3>
+<p class="needs">The read-only page must mark its parts. Either the CMS feature <code>COPY_TAGS</code> does that, or the CMS is changed (phase 5).</p>
+<p><strong>What <code>COPY_TAGS</code> is:</strong> a CMS feature for copying content elements (tags) from one page to another. To recognise a copied element, the CMS writes markers into the page's HTML, and it does so in the read-only preview, the mode our frame uses. With these markers the Workspace can find each part of the page. The feature is off by default and is switched on for all nodes or per node. Switching it on also lets editors copy and paste tags, so it is a decision for whoever runs the CMS. As far as the code shows, only the page's own tags get markers, not the template's, and only tags with one outer HTML element (or localizable ones). How many parts a real page gets has not been checked yet.
+  <span class="tech">Technical: <code>feature: copy_tags: true</code> in <code>conf/*.yml</code>; markers <code>data-gcn-pageid</code>, <code>data-gcn-tagid</code>, <code>data-gcn-tagname</code>, <code>data-gcn-i18n-constructname</code>; added by <code>AlohaRenderer.java:1511</code> in read-only mode. Docs: <code>cms-oss-doc/src/main/source/feature_copy_tags.textile</code>.</span></p>
+<ol>
+  <li><strong>Outlines:</strong> a layer above the frame draws an outline around each marked part. The outlines follow along when the user scrolls or resizes, and when the page reloads or changes.
+    <span class="tech">Technical: outlines from <code>[data-gcn-tagid]</code>.</span></li>
+  <li><strong>Hover and select:</strong> only the innermost part under the mouse is highlighted. A click selects it and opens a menu with only the actions allowed for that part.</li>
+  <li><strong>States:</strong> a part can show that it is selected, that the AI changed it, or that it comes from the template. If GenAIx supports it, also that it is being worked on or has failed.
+    <span class="tech">Technical: changed from <code>changed_elements</code>; from the template via <code>TEMPLATETAG</code> / <code>inherited</code>.</span></li>
+  <li><strong>Focus mode:</strong> the rest of the page is covered, with a gap around the selected part.</li>
+  <li><strong>List of parts:</strong> next to the frame, a list of the page's parts lets keyboard users select them. Alt+Up and Alt+Down move to the outer or inner part.
+    <span class="tech">Technical: <code>GET /rest/page/getTags/{id}</code>.</span></li>
+</ol>
+<p><strong>Done when:</strong> parts can be selected with mouse and keyboard, the parts the AI changed are highlighted, and both work in the light and the dark theme. Until phase 3 is done, the user can only describe the selected part in words in the chat.</p>
+</div>
+
+<div class="phase">
+<h3>Phase 3: Change a part with the AI <span class="st no">Blocked by GenAIx</span></h3>
+<p class="needs">GenAIx must accept a reference to one part (phase 0, question 1).</p>
+<ol>
+  <li><strong>Send the selection:</strong> the selected part is sent along with the chat message.</li>
+  <li><strong>Menu actions:</strong> "Change with AI" fills in the chat input. "Swap image" is answered by picking one of the options GenAIx offers.
+    <span class="tech">Technical: through a <code>choice</code> interaction.</span></li>
+  <li><strong>Hand edit form:</strong> a small form shows the part's text. On "Apply", the text goes to GenAIx together with the reference, and GenAIx writes it word for word.
+    <span class="tech">Technical: as a <code>verbatim</code> part.</span></li>
+  <li><strong>"Open in CMS editor":</strong> a button as a fallback. It needs no change from GenAIx, so it can be released earlier.</li>
+</ol>
+<p><strong>Done when:</strong> a user selects a part, asks for a change or types new text, and after the reload sees the change highlighted.</p>
+</div>
+
+<div class="phase">
+<h3>Phase 4: Type directly in the page <span class="st wait">Later</span></h3>
+<p class="needs">Needs a product decision. Editing text is medium effort; full CMS editing (content elements, images, files) would be large.</p>
+<ol>
+  <li><strong>Switching it on:</strong> "Edit by hand" can only be switched on while the AI is not working. If the AI is working, the user can stop it first.
+    <span class="tech">Technical: between <code>run.started</code> and <code>run.completed</code>.</span></li>
+  <li><strong>Connection to the CMS editor:</strong> the Workspace provides what the CMS editor expects from the page around it, and shows the editor's dialogs and menus with our own Dialog and DropdownMenu.
+    <span class="tech">Technical: <code>GCMSUI_childIFrameInit</code> with <code>runPreLoadScript</code> / <code>runPostLoadScript</code>, plus <code>openDialog</code>, <code>openDynamicModal</code>, <code>openDynamicDropdown</code>.</span></li>
+  <li><strong>Toolbar in our design:</strong> the editor's toolbar buttons are shown in our design, like the toolbar in the mockup.
+    <span class="tech">Technical: the components Aloha hands over through <code>registerComponent</code>.</span></li>
+  <li><strong>Apply or Cancel:</strong> "Apply" saves with the page's own save function inside the frame; "Cancel" drops the text. Afterwards the page is read-only again, and the chat notes that text was written by hand.</li>
+  <li><strong>Tell GenAIx</strong> about the hand edit, in the way agreed in phase 0.</li>
+</ol>
+<p><strong>Done when:</strong> a user types directly in the page with our toolbar, saves or cancels, and the AI continues afterwards without losing the hand edit.</p>
+</div>
+
+<div class="phase">
+<h3>Phase 5: CMS additions <span class="st wait">Optional</span></h3>
+<p class="needs">Only if the team decides that the CMS may be changed for the Workspace.</p>
+<ul>
+  <li>A read-only view of the page that marks each part, if <code>COPY_TAGS</code> does not fit. This unblocks phase 2.</li>
+  <li>A marker on each part whose content comes from a data source.</li>
+  <li>"Ask for the lock" and "Leave a note".</li>
+  <li>Discard that returns the page to its state from before the session, agreed with GenAIx.</li>
+</ul>
+</div>
+
+<h2>Points to keep an eye on</h2>
+<div class="tbl"><table>
+  <thead><tr><th>If</th><th>Then</th><th>What still works / what we do</th></tr></thead>
+  <tbody>
+    <tr><td>GenAIx does not add the reference to one part</td><td>Phase 3 waits; users describe a part in words in the chat</td><td>We ask for it in phase 0; phases 1 and 2 can ship without it</td></tr>
+    <tr><td><code>COPY_TAGS</code> does not fit, and the CMS may not be changed</td><td>The page shows no outlines</td><td>Users select parts from the list next to the frame</td></tr>
+    <tr><td>A proxy keeps the CMS from showing in a frame</td><td>The frame stays empty</td><td>The "Open" link next to the frame still opens the page; we ask Ops in phase 0</td></tr>
+    <tr><td>The customer's page scripts run next to the Workspace</td><td>This needs a look from a security point of view</td><td>The team decides in phase 0 whether this is acceptable</td></tr>
+    <tr><td>Text is changed by hand without GenAIx</td><td>GenAIx's later word-for-word check of marked text may not pass</td><td>Hand edits go through GenAIx (phase 3 form), or GenAIx is told about them (phase 4)</td></tr>
+  </tbody>
+</table></div>
+
+<p class="note">This plan comes from reading the CMS code, the GenAIx contract 1.0.0-rc.2 and the mockup. Nothing was tried on a live CMS. Code references and details are in <code>cms-preview-integration-spike.html</code>.</p>
+
+</main>
+</body>
+</html>

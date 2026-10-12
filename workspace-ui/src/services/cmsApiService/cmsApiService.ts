@@ -202,17 +202,63 @@ export async function listCmsNodes(): Promise<CmsNode[]> {
 export const CMS_SEARCH_MAX_ITEMS = 20;
 
 /**
- * Pages, folders and images in `node` whose id, name or description matches `query`: `GET
- * /rest/folder/getItems/{root folder}` with `search`, recursive, at most `CMS_SEARCH_MAX_ITEMS`.
+ * Objects of `types` (pages, folders and images unless given) in `node` whose id, name or description
+ * matches `query`: `GET /rest/folder/getItems/{root folder}` with `search`, recursive, at most
+ * `CMS_SEARCH_MAX_ITEMS`. An empty `query` matches every object of those types.
  */
-export async function searchCmsItems(node: CmsNode, query: string, signal?: AbortSignal): Promise<CmsItem[]> {
+export async function searchCmsItems(node: CmsNode, query: string, signal?: AbortSignal, types: CmsItemType[] = ['page', 'folder', 'image']): Promise<CmsItem[]> {
     const params = new URLSearchParams({ nodeId: String(node.id), search: query, recursive: 'true', maxItems: String(CMS_SEARCH_MAX_ITEMS) });
 
-    for (const type of ['page', 'folder', 'image'] satisfies CmsItemType[]) {
+    for (const type of types) {
         params.append('type', type);
     }
 
     const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
 
     return items ?? [];
+}
+
+/**
+ * A page's properties as `GET /rest/page/load/{id}` returns them (`rest/model/Page.java`), as far as the
+ * page settings need them. `cdate` and `edate` are unix seconds.
+ */
+export interface CmsPage {
+    id: number;
+    name: string;
+    fileName?: string;
+    description?: string;
+    niceUrl?: string;
+    priority?: number;
+    templateId?: number;
+    folderId: number;
+    language?: string;
+    cdate: number;
+    edate: number;
+}
+
+/** The page `id`, in `nodeId` if given: `GET /rest/page/load/{id}`, read only (no `update`, so it is not locked). */
+export async function loadCmsPage(id: number, nodeId?: number, signal?: AbortSignal): Promise<CmsPage> {
+    const params = nodeId === undefined ? '' : `?${new URLSearchParams({ nodeId: String(nodeId) })}`;
+    const { page } = await httpRequest<{ page: CmsPage }>(`/rest/page/load/${id}${params}`, { ...CMS_GET, signal });
+
+    return page;
+}
+
+/** A template (`rest/model/Template.java`), as far as the page settings need it. */
+export interface CmsTemplate {
+    id: number;
+    name: string;
+}
+
+/** The templates linked to the folder `folderId`, in `nodeId` if given: `GET /rest/folder/getTemplates/{folderId}`. */
+export async function listCmsTemplates(folderId: number, nodeId?: number, signal?: AbortSignal): Promise<CmsTemplate[]> {
+    const params = nodeId === undefined ? '' : `?${new URLSearchParams({ folderNodeId: String(nodeId) })}`;
+    const { templates } = await httpRequest<{ templates?: CmsTemplate[] }>(`/rest/folder/getTemplates/${folderId}${params}`, { ...CMS_GET, signal });
+
+    return templates ?? [];
+}
+
+/** Where the CMS serves the image `imageId` of `nodeId` itself: `GET /rest/file/content/load/{id}`, with the user's CMS session. */
+export function cmsImageUrl(nodeId: number, imageId: number): string {
+    return `/rest/file/content/load/${imageId}?${new URLSearchParams({ nodeId: String(nodeId) })}`;
 }

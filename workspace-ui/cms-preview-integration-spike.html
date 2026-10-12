@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMS Preview Spike</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f3f6f8;
+    --ink: #004c77;
+    --text: #3e4850;
+    --muted: #697278;
+    --line: rgba(0, 76, 119, .14);
+    --accent: #029ddd;
+    --accent-bg: rgba(2, 157, 221, .10);
+    --ok: #1b6b4a; --ok-bg: #eaf6f0;
+    --warn: #8a5a00; --warn-bg: #fff6e5;
+    --err: #b3261e; --err-bg: #fdecea;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1112; --surface: #1b1d1f; --ink: #ecedee; --text: #c7cacd; --muted: #979a9c;
+      --line: rgba(152, 157, 162, .22); --accent: #45b4e8; --accent-bg: rgba(69, 180, 232, .14);
+      --ok: #8ad6b2; --ok-bg: #15291f; --warn: #efc470; --warn-bg: #2e2610; --err: #f2b5b1; --err-bg: #331a18;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1112; --surface: #1b1d1f; --ink: #ecedee; --text: #c7cacd; --muted: #979a9c;
+    --line: rgba(152, 157, 162, .22); --accent: #45b4e8; --accent-bg: rgba(69, 180, 232, .14);
+    --ok: #8ad6b2; --ok-bg: #15291f; --warn: #efc470; --warn-bg: #2e2610; --err: #f2b5b1; --err-bg: #331a18;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { color: var(--ink); font-size: 28px; font-weight: 600; margin: 0 0 4px; letter-spacing: -.01em; }
+  h2 { color: var(--ink); font-size: 20px; font-weight: 600; margin: 44px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .lead { font-size: 17px; color: var(--ink); background: var(--accent-bg); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 0 8px 8px 0; }
+  code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .tbl { overflow-x: auto; margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface); color: var(--ink); font-weight: 600; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+  .st { display: inline-block; white-space: nowrap; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .st.ready { color: var(--ok); background: var(--ok-bg); }
+  .st.validate { color: var(--warn); background: var(--warn-bg); }
+  .st.blocked { color: var(--err); background: var(--err-bg); }
+  .rec { font-weight: 600; color: var(--ink); }
+  figure { margin: 16px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  ol li, ul li { margin: 4px 0; }
+  ul.checks { list-style: none; padding-left: 0; }
+  ul.checks li::before { content: "☐  "; color: var(--accent); }
+  .note { color: var(--muted); font-size: 13px; }
+  /* diagram tokens */
+  .d-edge { stroke: var(--muted); }
+  .d-box { fill: none; stroke: var(--muted); stroke-width: 1.25; }
+  .d-key { fill: var(--accent-bg); stroke: var(--accent); stroke-width: 2; }
+  .d-name { fill: var(--ink); font-weight: 600; font-size: 13px; }
+  .d-line { fill: var(--muted); font-size: 11.5px; }
+  .d-line-k { fill: var(--ink); font-size: 11.5px; }
+  .d-title { fill: var(--ink); font-weight: 600; font-size: 15px; }
+  .d-arrow { fill: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>CMS Preview Integration Spike</h1>
+<div class="meta">As of 2026-10-08 · Gentics Workspace UI · GenAIx contract 1.0.0-rc.2</div>
+
+<p class="lead">Recommended: frame a read-only CMS rendering in a same-origin iframe, draw selection in an overlay owned by the Workspace, and route edits through GenAIx. Showing the page works with the CMS as it is. One blocker remains on the GenAIx side: it must accept a reference to one element. Element markers need either a CMS setting or a small CMS change.</p>
+
+<p class="note">The Workspace UI runs on the same server as the CMS (served at <code>/workspace/</code>); GenAIx is a separate product with its own contract. Everything here was read from code and contracts. Nothing was run against a live CMS; the one-day prototype at the end validates the runtime parts.</p>
+
+<h2>Findings at a glance</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Criterion</th><th>What we found</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>Framing and embedding</td><td>Same-origin iframe works: <code>/workspace/</code>, <code>/alohapage</code> and <code>/rest</code> run in one Jetty context, the session cookie has path <code>/</code>, and no CMS code sets <code>X-Frame-Options</code> or <code>frame-ancestors</code>. The Workspace builds the frame link itself from <code>cms_ref</code>.</td><td><span class="st validate">Needs validation</span></td></tr>
+    <tr><td>Identifying elements</td><td>Edit mode marks every block with <code>data-gcn-tagid</code> / <code>data-gcn-tagname</code>. Read-only output carries them only for inherited template tags, or for all tags with the <code>COPY_TAGS</code> feature. A CMS change could add a read-only mode with markers.</td><td><span class="st validate">Needs validation</span></td></tr>
+    <tr><td>Overlay-based selection</td><td>An overlay over the same-origin iframe can outline marked tags without touching the page. A selection cannot be sent to GenAIx: the contract has no tag reference.</td><td><span class="st blocked">Blocked</span></td></tr>
+    <tr><td>Lock state</td><td>Locks are per page, expire after 600 s, have no keep-alive, and conflict as HTTP 409 <code>PERMISSION</code> (CMS) or 423 <code>cms_object_locked</code> (GenAIx). Per-element locks as in the mockup are not possible.</td><td><span class="st ready">Ready</span></td></tr>
+    <tr><td>Editing selected elements</td><td>All writes go through the CMS REST API. Editing via GenAIx needs a tag reference; inline editing in the page needs Aloha edit mode and a bridge to it, a medium effort for text editing.</td><td><span class="st blocked">Blocked</span></td></tr>
+  </tbody>
+</table></div>
+
+<h2>Recommended architecture</h2>
+<figure>
+<svg viewBox="0 0 760 396" role="img" aria-label="The page is framed read-only; edits travel through GenAIx" font-family="system-ui, -apple-system, Segoe UI, sans-serif">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="d-arrow"/></marker></defs>
+  <text x="24" y="32" class="d-title">The page is framed read-only; edits travel through GenAIx</text>
+  <rect x="24" y="60" width="400" height="312" rx="8" class="d-box"/>
+  <text x="40" y="84" class="d-name">Browser: Workspace UI at /workspace/</text>
+  <rect x="40" y="100" width="368" height="56" rx="8" class="d-box"/>
+  <text x="52" y="124" class="d-name">Chat and composer</text>
+  <text x="52" y="140" class="d-line">sends instructions, shows answers and interactions</text>
+  <rect x="40" y="184" width="368" height="72" rx="8" class="d-box"/>
+  <text x="52" y="208" class="d-name">Overlay layer</text>
+  <text x="52" y="224" class="d-line">outlines, selection, changed highlight, focus mask</text>
+  <text x="52" y="240" class="d-line">page-level lock banner, tag list for keyboard users</text>
+  <rect x="40" y="284" width="368" height="72" rx="8" class="d-key"/>
+  <text x="52" y="308" class="d-name">Preview iframe</text>
+  <text x="52" y="324" class="d-line-k">/alohapage?real=newview (read-only)</text>
+  <text x="52" y="340" class="d-line-k">same origin as the Workspace, takes no lock</text>
+  <rect x="520" y="100" width="216" height="72" rx="8" class="d-box"/>
+  <text x="532" y="124" class="d-name">GenAIx</text>
+  <text x="532" y="140" class="d-line">reached through the CMS proxy</text>
+  <text x="532" y="156" class="d-line">writes with update_page_tags</text>
+  <rect x="520" y="268" width="216" height="88" rx="8" class="d-box"/>
+  <text x="532" y="292" class="d-name">CMS</text>
+  <text x="532" y="308" class="d-line">/alohapage renders the page</text>
+  <text x="532" y="324" class="d-line">/rest getTags: tag list</text>
+  <text x="532" y="340" class="d-line">/rest page load: lock state</text>
+  <g fill="none" class="d-edge" stroke-width="1.25">
+    <path d="M408 114H520" marker-end="url(#arr)"/>
+    <path d="M520 144H408" marker-end="url(#arr)"/>
+    <path d="M628 172V268" marker-end="url(#arr)"/>
+    <path d="M408 320H520" marker-end="url(#arr)"/>
+    <path d="M408 220H464V296H520" marker-end="url(#arr)"/>
+    <path d="M224 256V284" marker-end="url(#arr)"/>
+  </g>
+  <text x="464" y="106" text-anchor="middle" class="d-line">message</text>
+  <text x="464" y="170" text-anchor="middle" class="d-line">preview.updated</text>
+  <text x="640" y="224" class="d-line">MCP writes</text>
+  <text x="464" y="340" text-anchor="middle" class="d-line">loads page</text>
+  <text x="472" y="256" class="d-line">tag list, lock state</text>
+  <text x="232" y="274" class="d-line">reads [data-gcn-tagid]</text>
+</svg>
+<figcaption>Workspace UI, CMS and GenAIx · who calls what</figcaption>
+</figure>
+<p>The iframe loads the page with the user's own CMS session; the overlay reads its tag markers through same-origin access; every content change is written by GenAIx and comes back as <code>preview.updated</code>. Two arrows depend on open items: the markers the overlay reads (question 4) and a tag reference in the message (question 1).</p>
+
+<h2>1. Framing and embedding</h2>
+<p class="rec">Recommendation: the Workspace builds the iframe link itself from <code>cms_ref</code> in <code>preview.updated</code>: <code>/alohapage?real=newview&amp;realid=&lt;id&gt;&amp;nodeid=&lt;node_id&gt;</code>. GenAIx's <code>preview_url</code> is only used for an "Open" link beside the frame, as the integration guide asks.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Option</th><th>What it renders</th><th>Lock</th><th>Aloha scripts</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td><code>/alohapage?real=newview&amp;realid&amp;nodeid</code></td><td>Read-only page (<code>EM_ALOHA_READONLY</code>)</td><td>No</td><td>No</td><td><strong>Recommended</strong></td></tr>
+    <tr><td><code>GET /rest/page/render/content/{id}</code></td><td>Raw HTML in <code>EM_PREVIEW</code></td><td>No</td><td>No</td><td>Fallback; fewer markers</td></tr>
+    <tr><td><code>/alohapage</code> without <code>real</code> (GenAIx's current <code>preview_url</code>)</td><td>Edit mode (<code>EM_ALOHA</code>)</td><td><strong>Yes</strong>, when the user may edit</td><td>Yes, expects the editor UI as parent</td><td>Avoid</td></tr>
+    <tr><td><code>GET /rest/page/render/{id}?edit=true</code></td><td>Edit mode</td><td><strong>Yes</strong></td><td>No</td><td>Avoid</td></tr>
+  </tbody>
+</table></div>
+<p><strong>Why same-origin works:</strong> <code>/workspace/*</code>, <code>/alohapage</code> and <code>/rest/*</code> are registered on one Jetty context, and the <code>GCN_SESSION_SECRET</code> cookie is set with path <code>/</code>, so the iframe loads with the user's own session. No CMS code sets <code>X-Frame-Options</code> or <code>frame-ancestors</code>; a proxy in front of the CMS might, which Ops has to confirm.</p>
+<p><strong>Why we don't frame <code>preview_url</code>:</strong> GenAIx sends <code>alohapage?realid=9142&amp;nodeid=3&amp;mode=view</code>, but <code>AlohaPageServlet</code> has no <code>mode</code> parameter. Without <code>real=view|newview</code> it renders edit mode, locks the page for a user with edit permission, and loads Aloha scripts that call <code>window.parent.GCMSUI_childIFrameInit</code>, which only the editor UI defines. The servlet is also <code>@Deprecated</code> in favour of the REST render endpoint. <code>cms_ref</code> requires only <code>type</code> and <code>id</code>; when <code>node_id</code> is missing, the session's node is the fallback (our proposal).</p>
+<p>Limits:</p>
+<ul>
+  <li>Same-origin and unsandboxed, the customer's template JavaScript runs with access to the Workspace. A sandbox without <code>allow-same-origin</code> would protect us but also block the overlay.</li>
+  <li>Every <code>preview.updated</code> reloads the iframe. Same-origin lets us save and restore the scroll position; loading into a hidden second iframe and swapping would avoid a flash (not tested).</li>
+  <li>Mobile view = the iframe set to 390 px wide, so the page's own media queries apply.</li>
+</ul>
+
+<h2>2. Identifying elements</h2>
+<p class="rec">Recommendation: validate the <code>COPY_TAGS</code> feature first, since it needs no code change. If it does not fit and we can change the CMS, add a read-only rendering with markers.</p>
+<p>What the CMS renders (<code>AlohaRenderer</code>):</p>
+<ul>
+  <li><strong>Edit mode</strong> wraps every editable block with <code>class="aloha-block"</code>, <code>id="GENTICS_BLOCK_&lt;tagId&gt;"</code> and <code>data-gcn-pageid</code>, <code>data-gcn-tagid</code>, <code>data-gcn-tagname</code>, <code>data-gcn-i18n-constructname</code>.</li>
+  <li><strong>Read-only and preview</strong> add those attributes only to inherited template tags, or to every tag when the <code>COPY_TAGS</code> feature is on for the node. A normal read-only preview gives us nothing to find content tags by.</li>
+  <li><code>changed_elements</code> in <code>preview.updated</code> holds tag keywords such as <code>content_1</code>. We expect these to equal <code>data-gcn-tagname</code>; this is not verified.</li>
+</ul>
+<div class="tbl"><table>
+  <thead><tr><th>Option</th><th>How</th><th>Cost</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>A. <code>COPY_TAGS</code> on</td><td>Read-only output then carries <code>data-gcn-tagid</code> / <code>data-gcn-tagname</code> on every tag</td><td>Config only; default and side effects unknown</td><td><strong>Validate first</strong></td></tr>
+    <tr><td>B. Annotated read-only mode</td><td>New CMS option: markers without lock and without Aloha; the marker code already exists for edit mode</td><td>CMS change</td><td><strong>If A does not fit</strong></td></tr>
+    <tr><td>C. Edit-mode rendering</td><td>As the editor UI's inheritance editor does: fetch <code>alohapage?real=newedit&amp;type=json</code>, find tags by <code>.GENTICS_tagname_&lt;name&gt;</code> or <code>[data-gcn-tagid]</code></td><td>Locks the page, needs edit permission</td><td>Avoid while GenAIx writes</td></tr>
+    <tr><td>D. Tag list only</td><td><code>GET /rest/page/getTags/{id}</code> (name, construct, type, inherited) without DOM mapping</td><td>No highlight in the page</td><td>Keyboard fallback, not a replacement</td></tr>
+  </tbody>
+</table></div>
+
+<h2>3. Overlay-based selection</h2>
+<p class="rec">Recommendation: the Workspace draws outlines, labels and dimming in its own layer above the iframe and never changes the customer's DOM.</p>
+<ol>
+  <li>After each load, query the iframe's <code>contentDocument</code> for <code>[data-gcn-tagid]</code> and read each element's <code>getBoundingClientRect</code>.</li>
+  <li>Position outline boxes in an overlay stacked over the iframe; recompute on scroll, resize, reload and DOM changes (<code>ResizeObserver</code>, <code>MutationObserver</code>).</li>
+  <li>Hover highlights only the deepest tag under the pointer; a click selects and opens the element menu with only the allowed actions.</li>
+  <li>States per tag: selected, changed (from <code>changed_elements</code>), locked, and, if GenAIx confirms, busy and failed from the <code>page_structure</code> block status (<code>planned</code>, <code>created</code>, <code>updated</code>, <code>locked</code>, <code>failed</code>).</li>
+  <li>Focus mode = an overlay mask with a cut-out around the target.</li>
+</ol>
+<p>Limits:</p>
+<ul>
+  <li>A selection stays a UI concept: <code>ContextReference</code> has no tag type, so it cannot be sent to GenAIx yet.</li>
+  <li>Clicks inside an iframe are not keyboard-accessible. A tag list beside the frame (<code>GET /rest/page/getTags/{id}</code>) gives keyboard users the same selection, with Alt+Up/Down for parent and child as in the mockup.</li>
+  <li>The overlay needs same-origin access; a cross-origin preview would rule this approach out.</li>
+</ul>
+
+<h2>4. Lock state</h2>
+<p class="rec">Recommendation: show one page-level lock banner and disable edit actions while someone else holds the lock; mark template tags as "from the template" per tag.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Fact</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td>A lock covers the whole page (its content row, shared by language variants), never one tag</td><td><code>PageFactory</code> lock query</td></tr>
+    <tr><td>A lock expires after <code>lock_time: 600</code> s; no keep-alive endpoint was found</td><td><code>config.yml</code></td></tr>
+    <tr><td>Lock state is readable without locking: <code>locked</code>, <code>lockedBy</code>, <code>lockedSince</code> on the page</td><td>REST <code>Page</code> model</td></tr>
+    <tr><td>A lock conflict in the CMS is HTTP 409 with <code>responseCode: PERMISSION</code> (not <code>LOCKED</code>)</td><td><code>ReadOnlyMapper</code></td></tr>
+    <tr><td>GenAIx reports <code>423 cms_object_locked</code> with <code>locked_by</code></td><td>GenAIx API docs</td></tr>
+    <tr><td>GenAIx write tools lock, save and unlock inside one call; there is no lock event in the stream</td><td>MCP scope docs</td></tr>
+  </tbody>
+</table></div>
+<p>How the UI shows it:</p>
+<ul>
+  <li>Read the lock with a plain page load (never <code>update=true</code>, which takes the lock) when the preview opens; refresh it on <code>preview.updated</code> and on any 423.</li>
+  <li>Banner: "&lt;user&gt; is editing this page since &lt;time&gt;"; feedback and edit actions disabled.</li>
+  <li>Per tag, only "from the template" is detectable (<code>Tag.type = TEMPLATETAG</code> / <code>inherited</code>).</li>
+</ul>
+<p>Not possible: the mockup's per-element "M. Weber is editing this", because the CMS locks whole pages. Without a CMS change also not possible: a "from the data source" lock (no source found) and "Ask for the lock" / "Leave a note" (no API found).</p>
+
+<h2>5. Editing selected elements</h2>
+<p class="rec">Recommendation: every edit of a selected tag goes through GenAIx, including hand-written text, which is sent as a <code>verbatim</code> part so GenAIx writes it byte for byte and the verbatim gate proves it. This needs a tag reference in the GenAIx contract.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Option</th><th>How</th><th>Pros</th><th>Cons</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>A. AI edit via GenAIx</td><td>Message with instruction + tag reference; result arrives as <code>preview.updated</code> with <code>changed_elements</code></td><td>One write path, GenAIx state stays consistent</td><td>Needs a tag <code>ContextReference</code>; until then only free text ("the headline")</td><td><strong>Recommended</strong></td></tr>
+    <tr><td>B. Hand edit as verbatim via GenAIx</td><td>A form with the tag's text parts; the text is sent as a <code>verbatim</code> part + tag reference</td><td>Matches the mockup's "written by hand · verbatim"; gate-proven</td><td>Same contract gap; not inline in the page</td><td><strong>Recommended</strong> for hand edits</td></tr>
+    <tr><td>C. Hand edit direct via CMS REST</td><td><code>POST /rest/page/save/{id}</code> with <code>tags</code> and <code>unlock: true</code></td><td>Works today</td><td>Bypasses GenAIx; a verbatim block changed this way fails the gate later</td><td>Only if the team allows it</td></tr>
+    <tr><td>D. Inline editing in the page</td><td>The CMS's Aloha edit mode in the frame (<code>GENTICS_EDITABLE_&lt;valueId&gt;</code>), with a bridge to it in the Workspace</td><td>Looks like the mockup, toolbar in our design</td><td>Medium effort for text editing, large for full CMS editing (see below). Edit mode locks the page; GenAIx writes as the same CMS user, so this probably does not conflict (not verified), but unsaved typing can clash with GenAIx's writes</td><td>As a separate "Edit by hand" mode, see below</td></tr>
+    <tr><td>E. Editor UI tag editor</td><td><code>GCMSUI.openTagEditor</code></td><td>Full CMS editing</td><td>Large: the CMS editor's tag dialogs rebuilt in the Workspace</td><td>Only together with D, later</td></tr>
+    <tr><td>F. Open in CMS editor</td><td>A button that opens the page in the existing CMS editor (<code>/editor/</code>) in a new tab</td><td>No development; full CMS editing</td><td>The user leaves the Workspace; GenAIx does not know about the edit</td><td>Cheap fallback</td></tr>
+  </tbody>
+</table></div>
+<p>The contracts state "one write path" through the CMS REST API but do not say whether the Workspace UI may write page content itself during a session; that is question 6 below.</p>
+
+<h2>Edit a text with GenAIx</h2>
+<p class="rec">The user selects an element and says in the chat what should change; GenAIx writes the change, it is saved at once as an unpublished version, and the preview reloads with the change highlighted.</p>
+<ol>
+  <li><strong>Select:</strong> the user clicks the element in the overlay (or picks it from the tag list).</li>
+  <li><strong>Describe:</strong> the user types the change in the chat, e.g. "Make the headline shorter". The element goes along as a reference, once GenAIx supports a tag reference (question 1); until then the user names it in words.</li>
+  <li><strong>GenAIx works:</strong> a run starts. GenAIx may ask back through an interaction card (question, choice, confirmation), and before its first CMS write in a run it can show a settings review to confirm.</li>
+  <li><strong>Saved:</strong> GenAIx writes with <code>update_page_tags</code>; the change is saved immediately as an unpublished version.</li>
+  <li><strong>Shown:</strong> <code>preview.updated</code> arrives with <code>changed_elements</code>; the frame reloads and the overlay highlights the changed element.</li>
+  <li><strong>Next:</strong> not happy → ask again, or use "Edit by hand"; done → <strong>Publish</strong>.</li>
+</ol>
+
+<h2>Edit by hand in the page</h2>
+<p class="rec">For users who want to type directly in the page, like in the mockup: a separate "Edit by hand" mode that switches the frame to the CMS's own edit mode while no AI run is active.</p>
+<ol>
+  <li>The user clicks "Edit by hand". It is only offered while no AI run is active (<code>run.started</code> / <code>run.completed</code> on the stream); a running run can be stopped first with <code>POST /sessions/{session_id}/runs/{run_id}/cancel</code>. GenAIx has no "pause".</li>
+  <li>The frame switches to <code>/alohapage?real=newedit&amp;realid=…&amp;nodeid=…</code>: the CMS's edit mode (Aloha), as the CMS editor uses it.</li>
+  <li>The user types directly in the page and clicks <strong>Apply</strong> (saves via the page's save function inside the frame, as the CMS editor does) or <strong>Cancel</strong> (drops the unsaved text).</li>
+  <li>The frame goes back to read-only, the chat shows a note such as "@Headline — written by hand", and the AI can continue.</li>
+</ol>
+<div class="tbl"><table>
+  <thead><tr><th>Pros</th><th>Cons</th></tr></thead>
+  <tbody>
+    <tr><td>Typing directly in the page, as in the mockup (<code>startEdit</code> / <code>commitEdit</code>)</td><td><strong>Bridge needed:</strong> edit mode calls <code>window.parent.GCMSUI_childIFrameInit</code>, so the Workspace has to provide a bridge (effort table below). This is true whenever edit mode is used, also if the page were loaded in edit mode from the start</td></tr>
+    <tr><td><strong>Cancel</strong> and <strong>Apply</strong> map directly onto edit mode, matching the mockup's edit toolbar</td><td><strong>Toolbar components must be drawn by us:</strong> Aloha hands each toolbar component to the host page (<code>GCMSUI.registerComponent(slot, component)</code>, <code>gcmsui-surface.js:63-68</code>), so we render them with our UI components</td></tr>
+    <tr><td><strong>Toolbar in our design:</strong> because the host page draws the toolbar, it can look like the mockup's (bold, italic, list, link, character count)</td><td></td></tr>
+    <tr><td>A chat note after saving, like the mockup's "written by hand", is easy</td><td><strong>Selection:</strong> Aloha marks and selects blocks itself, which can clash with our overlay; the overlay would probably be shown only in read-only mode</td></tr>
+    <tr><td>No clash with AI writes: editing is only possible while no run is active</td><td><strong>Lock:</strong> edit mode locks the page and the lock expires after 600 s without a keep-alive. GenAIx writes as the same CMS user, so its writes probably do not hit the lock (not verified)</td></tr>
+    <tr><td>Uses the CMS's own, proven editing</td><td><strong>GenAIx does not know about the edit:</strong> a changed verbatim text fails its check later. Idea, to confirm with GenAIx: after Apply, send the new text as a <code>verbatim</code> part so its checks know it</td></tr>
+    <tr><td></td><td><strong>Save scope unverified:</strong> it is not checked whether the save writes only the edited fields or the whole page, which could overwrite earlier AI changes</td></tr>
+    <tr><td></td><td>Locks stay per page; the mockup's per-element lock remains out of reach</td></tr>
+  </tbody>
+</table></div>
+<p><strong>How big is the bridge?</strong> The CMS's Aloha plugin (<code>cms-aloha-plugins/src/main/js/gcn/</code>) calls these bridge functions:</p>
+<div class="tbl"><table>
+  <thead><tr><th>Needed for</th><th>Bridge functions</th><th>Effort</th></tr></thead>
+  <tbody>
+    <tr><td>Starting edit mode</td><td><code>GCMSUI_childIFrameInit</code> returning <code>runPreLoadScript</code> / <code>runPostLoadScript</code> (<code>gcmsui-scripts-launcher.js</code>)</td><td>Small</td></tr>
+    <tr><td>Toolbar</td><td><code>registerComponent</code> / <code>unregisterComponent</code> (<code>gcmsui-surface.js:63-75</code>); without a bridge the toolbar is skipped</td><td>Medium</td></tr>
+    <tr><td>Dialogs and dropdowns</td><td><code>openDialog</code> (confirm, alert), <code>openDynamicModal</code>, <code>openDynamicDropdown</code> (<code>gcmsui-surface.js:77-150</code>); map onto our Dialog and DropdownMenu</td><td>Small to medium</td></tr>
+    <tr><td>Tag handling</td><td><code>getConstructs</code> (4 calls), <code>openTagEditor</code> (<code>gcn-plugin.js:151</code>); probably not needed for plain text (not verified)</td><td>Large for full tag editing</td></tr>
+    <tr><td>Minor</td><td><code>focusEditorTab</code>; <code>closeErrorClass</code> (optional, guarded)</td><td>Small</td></tr>
+  </tbody>
+</table></div>
+<p>In total: edit mode without a toolbar is a small stub (whether typing then works is not verified); <strong>text editing with our own toolbar and dialogs is a medium effort</strong>; everything the CMS editor can do (tag editor, image editing, file browser, uploads) is large.</p>
+<p>Recommendation: start with the form (option B) plus "Open in CMS editor" (option F), and add "Edit by hand" for text editing with our own toolbar when users need in-page editing. The prototype should first check that editing works with the minimal bridge.</p>
+
+<h2>When changes are saved</h2>
+<p class="rec">Every change is saved in the CMS the moment GenAIx writes it; there is no separate save step. Going live is a separate step: the <code>publish</code> transition.</p>
+<ol>
+  <li><strong>New page:</strong> created at the start as an offline draft; <code>create_page</code> never publishes (<code>mcp-tools.json</code>, <code>create_page</code>).</li>
+  <li><strong>Each content change:</strong> saved by <code>update_page_tags</code>, which locks, applies, saves, creates a version and unlocks inside one call (<code>mcp-tools.json</code>, <code>update_page_tags</code>; <code>04-mcp-scope.md:325-328</code>).</li>
+  <li><strong>Preview:</strong> <code>preview.updated</code> fires after every CMS write, so each reload shows something already saved.</li>
+  <li><strong>Publish:</strong> only through the <code>publish</code> transition; gates run first, and the CMS decides between direct publish and review request.</li>
+</ol>
+<p>What that means for "Save", "Publish" and "Discard" buttons (the mockup has all three on its review screen):</p>
+<div class="tbl"><table>
+  <thead><tr><th>Button</th><th>Maps to</th><th>Works?</th></tr></thead>
+  <tbody>
+    <tr><td>Publish</td><td>Transition <code>publish</code></td><td>Yes</td></tr>
+    <tr><td>Save</td><td>Nothing to call, changes are already saved unpublished; or <code>release</code> to stop the AI and freeze the session</td><td>Yes, but not "save now"</td></tr>
+    <tr><td>Discard</td><td>Transition <code>discard</code>; it starts no run, and no source says it undoes CMS changes. With a CMS change, a restore to the version from before the session could be added.</td><td>Unclear: question 3</td></tr>
+  </tbody>
+</table></div>
+<p>Holding changes back until a click on "Save" would need GenAIx to stop writing directly: the preview always shows what the CMS has stored. Not covered by the sources: how many saves one AI step makes, and whether unpublished edits to an already published page stay off the live site until publish.</p>
+
+<h2>If we can change the CMS</h2>
+<p>The Workspace lives in the CMS repository and is served by the CMS. If the team decides the CMS may be adapted for it (question 5), four points improve. Everything else in this document stays the same, including the GenAIx blocker.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Topic</th><th>With the CMS as it is</th><th>With CMS changes</th></tr></thead>
+  <tbody>
+    <tr><td>Element markers</td><td>Depend on the <code>COPY_TAGS</code> setting</td><td>A read-only rendering with markers, built in <code>AlohaRenderer</code></td></tr>
+    <tr><td>"From the data source" lock, ask for the lock, notes</td><td>Not possible</td><td>Can be built</td></tr>
+    <tr><td>Discard back to the starting state</td><td>Only what GenAIx's <code>discard</code> does (unclear)</td><td>A restore to the CMS version from before the session, agreed with GenAIx</td></tr>
+    <tr><td>Typing directly into the page</td><td>Medium effort for text editing with our own toolbar</td><td>Same effort, but CMS-side adjustments become possible</td></tr>
+  </tbody>
+</table></div>
+
+<h2>The mockup's preview, built for real</h2>
+<p>Most of the mockup (<code>maybe_final_draft.html</code>) carries over; what changes is everything that relied on its preview being inline HTML in the app rather than a CMS page in an iframe. The real preview shows the customer's actual website; only outlines, labels and menus on top come from the Workspace.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Mockup feature</th><th>Real implementation</th><th>Feasibility</th></tr></thead>
+  <tbody>
+    <tr><td>Preview appears only once the page is touched</td><td>Right column opens on the first <code>preview.updated</code>; <code>SessionPage</code> and <code>AppShell</code> already support a hidden right column</td><td>Ready, event wiring missing</td></tr>
+    <tr><td>Desktop / Mobile 390 px / Full screen</td><td>Iframe width 390 px (real media queries); full screen as a pane state</td><td>Possible</td></tr>
+    <tr><td>Page tabs for several pages</td><td>One tab per <code>cms_ref</code> from <code>preview.updated</code>; the workflow snapshot keeps only one <code>preview</code>, so tabs are lost on app reload</td><td>Partly: needs our own state or a contract change</td></tr>
+    <tr><td>Create plan builds the page step by step</td><td>Reload on each <code>preview.updated</code>, keep the scroll position, optional hidden-iframe swap</td><td>Possible</td></tr>
+    <tr><td>Hover outline, selection, label badge</td><td>Overlay from <code>[data-gcn-tagid]</code>; label from <code>data-gcn-i18n-constructname</code></td><td>Depends on markers (section 2)</td></tr>
+    <tr><td>Changed highlight</td><td>From <code>changed_elements</code></td><td>Possible if keyword = <code>data-gcn-tagname</code></td></tr>
+    <tr><td>Busy shimmer, error state</td><td>From <code>page_structure</code> block status</td><td>Needs GenAIx confirmation</td></tr>
+    <tr><td>Focus mode (dim all but target)</td><td>Overlay mask with a cut-out</td><td>Possible</td></tr>
+    <tr><td>Alt+Up/Down, Esc</td><td>On the overlay, plus a tag list for keyboard users</td><td>Possible</td></tr>
+    <tr><td>Lock "from the template"</td><td><code>Tag.type = TEMPLATETAG</code> / <code>inherited</code></td><td>Possible</td></tr>
+    <tr><td>Lock "from the data source"</td><td>No source today</td><td>Only with a CMS change</td></tr>
+    <tr><td>"M. Weber is editing this" on one element; ask for the lock, leave a note</td><td>Locks are per page: page banner; asking and notes need a CMS change</td><td>Page level only; extras with a CMS change</td></tr>
+    <tr><td>Feedback to the AI on an element</td><td>Message to GenAIx</td><td>Blocked: tag reference</td></tr>
+    <tr><td>Inline hand edit with toolbar</td><td>Form for the tag's parts, sent as <code>verbatim</code> via GenAIx; or the "Edit by hand" mode with Cancel / Apply</td><td>Form: blocked by tag reference; "Edit by hand": medium effort, toolbar in our design</td></tr>
+    <tr><td>Image swap via image grid</td><td><code>choice</code> interaction with image options</td><td>Possible; target needs tag reference</td></tr>
+    <tr><td>Suggestion with Before/After, Accept/Discard</td><td>No contract counterpart; the mockup itself says accepting the plan is the approval</td><td>Product decision</td></tr>
+    <tr><td>Page settings sheet</td><td>Page properties; mapping to REST fields and write path not checked</td><td>To clarify</td></tr>
+    <tr><td>Review: failing check highlights its element</td><td>A check finding's <code>location</code> can carry a tag keyword</td><td>Possible (idea)</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Open questions and dependencies</h2>
+<p>One item blocks implementation (1); the rest shape it.</p>
+<ol>
+  <li><strong>GenAIx — tag reference.</strong> Add a <code>ContextReference</code> for one tag on one page (page + tag keyword), so a selection can be sent with a message or a verbatim part.</li>
+  <li><strong>GenAIx — preview URL.</strong> Not blocking, because the Workspace builds its own frame link, but <code>preview_url</code> should be fixed for the "Open" link: <code>mode=view</code> opens edit mode and locks the page. When is <code>mode: edit</code> sent at all?</li>
+  <li><strong>GenAIx — discard.</strong> What does <code>discard</code> do to the CMS: delete a new draft page, restore the version from before the session, or nothing? Do unpublished edits to a published page stay off the live site until publish?</li>
+  <li><strong>CMS — markers.</strong> Is <code>COPY_TAGS</code> acceptable on the nodes we target (default, side effects), or do we need an annotated read-only rendering?</li>
+  <li><strong>Team — CMS changes.</strong> May the CMS be adapted for the Workspace? This decides the four points in "If we can change the CMS".</li>
+  <li><strong>Team — write path.</strong> May the Workspace UI write page content directly during a session, or only through GenAIx?</li>
+  <li><strong>Product — scope.</strong> Accept page-level locks instead of per-element locks, hand editing in a form instead of inline, and decide on per-suggestion Accept/Discard and on the CMS extras.</li>
+  <li><strong>GenAIx — states and pages.</strong> Can <code>page_structure</code> block status drive per-tag busy/failed/locked, and can the workflow snapshot hold one preview per page?</li>
+  <li><strong>Security — isolation.</strong> Is running the customer's template JavaScript same-origin and unsandboxed next to the Workspace acceptable?</li>
+  <li><strong>Ops — proxy.</strong> Does a proxy in front of the CMS add <code>X-Frame-Options</code> or CSP?</li>
+  <li><strong>Edit by hand — bridge.</strong> Does text editing work with the minimal bridge plus toolbar components, without the tag functions? Does its save write only the edited fields?</li>
+  <li><strong>GenAIx — hand edits.</strong> How should GenAIx learn about a hand edit, for example a follow-up message with the text as a <code>verbatim</code> part?</li>
+</ol>
+
+<h2>Next step: a one-day prototype</h2>
+<p>A throwaway page in the Workspace, served from <code>/workspace/</code> against a real CMS, settles everything this spike could not verify from code.</p>
+<ul class="checks">
+  <li>Build the frame link from a real <code>cms_ref</code> and frame <code>/alohapage?real=newview&amp;realid=&lt;id&gt;&amp;nodeid=&lt;node&gt;</code>: does it render, and is <code>contentDocument</code> readable?</li>
+  <li>Confirm the page is not locked afterwards (<code>locked</code> on a plain page load).</li>
+  <li>Query <code>[data-gcn-tagid]</code> with <code>COPY_TAGS</code> off and on; count how many content tags are found.</li>
+  <li>Draw overlay outlines from <code>getBoundingClientRect</code>; check scroll, resize and a reload.</li>
+  <li>Compare a GenAIx <code>changed_elements</code> value with <code>data-gcn-tagname</code> on the same page.</li>
+  <li>Trigger a lock from a second user and check the banner data (<code>lockedBy</code>, <code>lockedSince</code>).</li>
+  <li>Repeat behind the production proxy to see whether framing headers appear.</li>
+  <li>Switch the frame to <code>real=newedit</code> with a stub <code>GCMSUI_childIFrameInit</code>: can the page be edited and saved, and do the toolbar components arrive through <code>registerComponent</code>?</li>
+</ul>
+
+<h2>Sources</h2>
+<p>All paths are in the <code>cms-oss</code> repository; the contracts are GenAIx <code>1.0.0-rc.2</code> under <code>workspace-ui/.claude/contracts/</code>. Read from code, not run.</p>
+<div class="tbl"><table>
+  <thead><tr><th>Finding</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>One Jetty context for <code>/rest</code>, <code>/workspace</code>, <code>/alohapage</code></td><td><code>cms-oss-server/.../server/OSSRunner.java:166, 175, 352</code></td></tr>
+    <tr><td>Session cookie path <code>/</code></td><td><code>AuthenticationResourceImpl.java:161</code></td></tr>
+    <tr><td><code>real</code> parameter, edit mode, lock on load</td><td><code>cms-oss-server/.../servlets/AlohaPageServlet.java:52-54, 127-131, 199-212</code></td></tr>
+    <tr><td>Edit-mode script calls the parent</td><td><code>webroot/alohaeditor/gcmsui-scripts-launcher.js:9</code></td></tr>
+    <tr><td>Render modes</td><td><code>cms-core/.../render/RenderType.java:77-102</code></td></tr>
+    <tr><td>REST render and preview endpoints</td><td><code>cms-restapi/.../resource/PageResource.java:233, 352-400, 445-482</code></td></tr>
+    <tr><td>Tag markers, read-only condition</td><td><code>cms-core/.../aloha/AlohaRenderer.java:1391-1512, 1880-1903</code></td></tr>
+    <tr><td>Lock per page, timeout, release</td><td><code>PageFactory.java:4269-4303, 5456-5498</code>; <code>runtime/config.yml:43</code></td></tr>
+    <tr><td>Lock conflict = 409 <code>PERMISSION</code></td><td><code>ReadOnlyMapper.java:20-28</code></td></tr>
+    <tr><td>Editor UI frames <code>/alohapage</code> same-origin</td><td><code>cms-ui/apps/editor-ui/.../content-frame.component.ts:547</code>, <code>.html:141-155</code></td></tr>
+    <tr><td>Edit-mode tag lookup (prior art)</td><td><code>inheritance-editor.component.ts:142-163, 208</code></td></tr>
+    <tr><td><code>Preview</code>, <code>PreviewUpdatedEvent</code>, <code>changed_elements</code></td><td><code>openapi.yaml:9717-9744, 10604-10629</code></td></tr>
+    <tr><td><code>cms_ref</code> fields: <code>type</code>, <code>id</code> required, <code>node_id</code> optional</td><td><code>openapi.yaml</code>, schema <code>CmsObjectRef</code>; example in <code>genaix-docs/09-integration-guide.md:792</code></td></tr>
+    <tr><td><code>ContextReference</code> has no tag type</td><td><code>openapi.yaml:6629-6690</code></td></tr>
+    <tr><td><code>page_structure</code> block status and <code>tag_keyword</code></td><td><code>openapi.yaml:8215-8280</code></td></tr>
+    <tr><td>Example <code>preview_url</code> with <code>mode=view</code></td><td><code>genaix-docs/03-genaix-api.md:530</code></td></tr>
+    <tr><td>Framing warning, "open link"</td><td><code>genaix-docs/09-integration-guide.md:851-855</code></td></tr>
+    <tr><td>Session transitions (<code>publish</code>, <code>discard</code>, <code>release</code>)</td><td><code>openapi.yaml:2122ff</code>; <code>genaix-docs/09-integration-guide.md:826-837</code></td></tr>
+    <tr><td>"Preview equals production", one write path, draft pages</td><td><code>genaix-docs/01-architecture.md:64, 68, 114</code></td></tr>
+    <tr><td>MCP write tools lock inside one call</td><td><code>genaix-docs/04-mcp-scope.md:325-328</code></td></tr>
+    <tr><td>GenAIx <code>423 cms_object_locked</code></td><td><code>genaix-docs/03-genaix-api.md:906</code></td></tr>
+    <tr><td>Preview not wired up in the app yet</td><td><code>workspace-ui/src/pages/SessionPage/SessionPage.tsx:84-86</code></td></tr>
+    <tr><td>CMS editor saves from the parent; bridge it installs</td><td><code>content-frame.component.ts:1380-1387</code>; <code>customer-script.service.ts:143-265</code>; <code>libs/cms-integration-api-models/src/lib/gcms-ui-bridge.ts</code></td></tr>
+    <tr><td>Bridge functions used by the CMS's Aloha plugin; toolbar handed to the host</td><td><code>cms-aloha-plugins/src/main/js/gcn/lib/gcmsui-surface.js:63-150</code>, <code>gcn-plugin.js:151</code>, <code>gcn-util.js:187, 203</code>, <code>gcn-tags.js:158</code>; <code>webroot/alohaeditor/gcmsui-scripts-launcher.js</code></td></tr>
+    <tr><td>Stopping a run</td><td><code>openapi.yaml:3064</code> (<code>/sessions/{session_id}/runs/{run_id}/cancel</code>)</td></tr>
+    <tr><td>Mockup preview, markers, locks, editing, review buttons</td><td><code>workspace-ui/maybe_final_draft.html:651-673, 1246-1252, 2684, 2840-2864, 3054-3366, 4851-4869</code></td></tr>
+  </tbody>
+</table></div>
+
+</main>
+</body>
+</html>

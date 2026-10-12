@@ -1,10 +1,11 @@
 // A composer's field (dashboard and chat, `ComposerTextInput`) is a Tiptap editor. Its document
 // holds text, line breaks, locked verbatim passages and tokens (references, session files,
-// settings). This file reads it into the message `parts` GenAIx expects (`readParts`) and builds
+// settings, parts of the previewed page). This file reads it into the message `parts` GenAIx expects (`readParts`) and builds
 // content for it. Attached files are added as `file_ref` parts later, in `useStartSession` and
 // `useSendTurn`.
 import type { JSONContent } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import type { TFunction } from 'i18next';
 
 import type { ContextReference, FileMode, UserMessagePart } from '@/services/apiService/genaix/types';
 
@@ -59,6 +60,12 @@ export const REFERENCE_NODE = 'reference';
 /** The token of a setting: a `setting` part, from the attributes `key`, `value` and `label`. */
 export const SETTING_NODE = 'setting';
 /**
+ * The token of one part (tag) of a page, picked in the preview. `ContextReference` stops at the page,
+ * so the part goes out as a `reference` part for the page, then `text`, which names the tag in the
+ * user's language, in front of what follows.
+ */
+export const PAGE_ELEMENT_NODE = 'pageElement';
+/**
  * The token of an uploaded session file: a `file_ref` part, from the attributes `fileId` and `mode`;
  * `name` is only shown.
  */
@@ -76,6 +83,113 @@ export interface SettingAttrs {
     key: string;
     value: string;
     label: string;
+}
+
+/** The attributes of a page part token. */
+export interface PageElementAttrs {
+    /** The page the part belongs to, as a `page` reference. */
+    page: ContextReference;
+    /** The tag name, e.g. `content_2`. */
+    tagName: string;
+    /** The name of its type, e.g. "Text"; empty when unknown. */
+    constructName: string;
+    /** What names the part in the message, e.g. ` – part "content_2" (Text): `. */
+    text: string;
+}
+
+/** The text that names a part of a page in a message (`PageElementAttrs.text`), in the user's language. */
+export function pageElementNaming(t: TFunction, { tagName, constructName }: Pick<PageElementAttrs, 'tagName' | 'constructName'>): string {
+    return constructName ? t('composer.pageElement.naming', { tagName, constructName }) : t('composer.pageElement.namingWithoutType', { tagName });
+}
+
+/**
+ * The parts of a message about a part of a page, sent without the field (the preview's feedback
+ * card): as a token in the field would be read (`readParts`), the page as a `reference` part, then
+ * the naming text and `text` as one `text` part.
+ */
+export function pageElementParts({ page, text: naming }: PageElementAttrs, text: string): UserMessagePart[] {
+    return [{ type: 'reference', ref: page }, { type: 'text', text: normalizeText(naming + text).trimEnd() }];
+}
+
+/**
+ * The text that names a part of a page and asks to replace its text, in the user's language: what
+ * precedes the new text of a hand edit (`pageElementEditParts`).
+ */
+export function pageElementReplaceNaming(t: TFunction, { tagName, constructName }: Pick<PageElementAttrs, 'tagName' | 'constructName'>): string {
+    return constructName
+        ? t('composer.pageElement.replaceWith', { tagName, constructName })
+        : t('composer.pageElement.replaceWithWithoutType', { tagName });
+}
+
+/**
+ * The parts of a hand edit of a part of a page (the preview's edit card): the page as a `reference`
+ * part, the naming text (`pageElementReplaceNaming`) as a `text` part, then `text` as a `verbatim`
+ * part the user wrote, unchanged, so that GenAIx writes it character-identical; its label names the part
+ * as its token does (e.g. "Text · content_2"), for the check and the audit trail. The part is named
+ * as for `PAGE_ELEMENT_NODE`; the request to replace its text is an interim wording, until GenAIx
+ * defines how a hand edit is sent.
+ */
+export function pageElementEditParts({ page, tagName, constructName, text: naming }: PageElementAttrs, text: string): UserMessagePart[] {
+    return [
+        { type: 'reference', ref: page },
+        { type: 'text', text: normalizeText(naming) },
+        { type: 'verbatim', text, source: 'user', label: constructName ? `${constructName} · ${tagName}` : tagName },
+    ];
+}
+
+/**
+ * The text that names a part of a page and asks to replace its image, in the user's language: what
+ * precedes the chosen image (`pageElementImageParts`).
+ */
+export function pageElementReplaceImageNaming(t: TFunction, { tagName, constructName }: Pick<PageElementAttrs, 'tagName' | 'constructName'>): string {
+    return constructName
+        ? t('composer.pageElement.replaceImageWith', { tagName, constructName })
+        : t('composer.pageElement.replaceImageWithWithoutType', { tagName });
+}
+
+/**
+ * The parts of an image swap of a part of a page (the preview's image card): the page as a `reference`
+ * part, the naming text (`pageElementReplaceImageNaming`) as a `text` part, then the chosen CMS image
+ * as a `reference` part. The part is named as for `PAGE_ELEMENT_NODE`; the request to replace its image
+ * is an interim wording, until GenAIx defines how an image swap is sent.
+ */
+export function pageElementImageParts({ page, text: naming }: PageElementAttrs, image: ContextReference): UserMessagePart[] {
+    return [
+        { type: 'reference', ref: page },
+        { type: 'text', text: normalizeText(naming) },
+        { type: 'reference', ref: image },
+    ];
+}
+
+/** One changed page setting: the field's label as the user saw it and its new value, the template as a `template` reference. */
+export interface PageSettingsChange {
+    label: string;
+    value: string | ContextReference;
+}
+
+/**
+ * The parts of a change of a page's settings (the preview's page settings): the page as a `reference`
+ * part, a text asking to change its settings, then per change a text naming the field followed by the
+ * new value, as a `verbatim` part the user wrote, unchanged and labelled with the field, or as the
+ * `reference` part of a template. An emptied field is asked to be emptied. The wording is interim,
+ * until GenAIx defines how page settings are sent.
+ */
+export function pageSettingsParts(t: TFunction, page: ContextReference, changes: PageSettingsChange[]): UserMessagePart[] {
+    return [
+        { type: 'reference', ref: page },
+        { type: 'text', text: t('composer.pageSettings.change') },
+        ...changes.flatMap(({ label, value }): UserMessagePart[] => {
+            const naming = `\n${label}: `;
+
+            if (typeof value !== 'string') {
+                return [{ type: 'text', text: naming }, { type: 'reference', ref: value }];
+            }
+
+            return value === ''
+                ? [{ type: 'text', text: naming + t('composer.pageSettings.empty') }]
+                : [{ type: 'text', text: naming }, { type: 'verbatim', text: value, source: 'user', label }];
+        }),
+    ];
 }
 
 /** The attributes of a session file token. */
@@ -100,6 +214,11 @@ export function tokenLabel(node: ProseMirrorNode): string {
         }
         case FILE_REF_NODE:
             return (node.attrs as FileRefAttrs).name;
+        case PAGE_ELEMENT_NODE: {
+            const { tagName, constructName } = node.attrs as PageElementAttrs;
+
+            return constructName ? `${constructName} · ${tagName}` : tagName;
+        }
         default:
             return '';
     }
@@ -136,7 +255,8 @@ function normalizeText(text: string): string {
 /**
  * The message parts of the field's document, in order: typed text as `text` parts, locked passages
  * as `verbatim` parts with their text unchanged and their `source` as stored, tokens as `reference`,
- * `setting` and `file_ref` parts. Leading and trailing white space of the message is dropped; an
+ * `setting` and `file_ref` parts, a page part as a `reference` part for its page and its naming
+ * text joined with the text that follows (`PAGE_ELEMENT_NODE`). Leading and trailing white space of the message is dropped; an
  * empty field gives no parts.
  */
 export function readParts(doc: ProseMirrorNode): UserMessagePart[] {
@@ -155,7 +275,13 @@ export function readParts(doc: ProseMirrorNode): UserMessagePart[] {
     doc.forEach((node) => {
         const token = tokenPart(node);
 
-        if (token) {
+        if (node.type.name === PAGE_ELEMENT_NODE) {
+            const { page, text: naming } = node.attrs as PageElementAttrs;
+
+            flushText();
+            parts.push({ type: 'reference', ref: page });
+            text += naming;
+        } else if (token) {
             flushText();
             parts.push(token);
         } else if (node.type.name === VERBATIM_NODE) {

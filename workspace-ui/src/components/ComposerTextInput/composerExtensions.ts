@@ -7,7 +7,7 @@ import { type EditorState, PluginKey } from '@tiptap/pm/state';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Suggestion, type SuggestionProps } from '@tiptap/suggestion';
 
-import { FILE_REF_NODE, REFERENCE_NODE, SETTING_NODE, TOKEN_ATTRIBUTE, tokenLabel, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
+import { FILE_REF_NODE, PAGE_ELEMENT_NODE, REFERENCE_NODE, SETTING_NODE, TOKEN_ATTRIBUTE, tokenLabel, VERBATIM_NODE } from '@/helper/composerParts/composerParts';
 
 import { TokenChip } from './TokenChip';
 import { VerbatimPassage } from './VerbatimPassage';
@@ -204,10 +204,11 @@ const ReferenceTriggerExtension = Extension.create<object, { listener: Reference
 const Reference = token(REFERENCE_NODE, { ref: null });
 const Setting = token(SETTING_NODE, { key: '', value: '', label: '' });
 const FileRef = token(FILE_REF_NODE, { fileId: '', mode: 'source', name: '' });
+const PageElement = token(PAGE_ELEMENT_NODE, { page: null, tagName: '', constructName: '', text: '' });
 
 /**
  * The extensions of the field: inline content only (text sits in the field itself, no paragraphs),
  * line breaks, undo, locked verbatim passages, tokens and the @-menu's trigger. One array for every
  * editor, so `useEditor` sees the same extensions on each render.
  */
-export const composerExtensions = [Document.extend({ content: 'inline*' }), Text, HardBreak, UndoRedo, Verbatim, Reference, Setting, FileRef, ReferenceTriggerExtension];
+export const composerExtensions = [Document.extend({ content: 'inline*' }), Text, HardBreak, UndoRedo, Verbatim, Reference, Setting, FileRef, PageElement, ReferenceTriggerExtension];

@@ -26,16 +26,21 @@ function DropdownMenuTrigger(props: MenuPrimitive.Trigger.Props) {
     return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
+/**
+ * The menu's popup, at its trigger, or at `anchor` (an element or a ref) for a menu without a
+ * trigger, opened through `DropdownMenu`'s `open`.
+ */
 function DropdownMenuContent({
     className,
     side = 'bottom',
     sideOffset = 6,
     align = 'start',
+    anchor,
     ...props
-}: MenuPrimitive.Popup.Props & Pick<MenuPrimitive.Positioner.Props, 'align' | 'side' | 'sideOffset'>) {
+}: MenuPrimitive.Popup.Props & Pick<MenuPrimitive.Positioner.Props, 'align' | 'side' | 'sideOffset' | 'anchor'>) {
     return (
         <MenuPrimitive.Portal>
-            <MenuPrimitive.Positioner side={side} sideOffset={sideOffset} align={align} className="z-50 outline-none">
+            <MenuPrimitive.Positioner side={side} sideOffset={sideOffset} align={align} anchor={anchor} className="z-50 outline-none">
                 <MenuPrimitive.Popup data-slot="dropdown-menu-content" className={cn(popupClassName, className)} {...props} />
             </MenuPrimitive.Positioner>
         </MenuPrimitive.Portal>

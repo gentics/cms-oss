@@ -320,4 +320,25 @@ describe('SessionPage', () => {
 
         expect(screen.getByRole('button', { name: 'Send' })).toBeInTheDocument();
     });
+
+    it('shows the right column only once the session has a preview', async () => {
+        stubFetch();
+        await renderComposer();
+
+        expect(screen.queryByRole('button', { name: 'Hide the right column' })).not.toBeInTheDocument();
+        expect(screen.queryByTitle('Preview of the page in the CMS')).not.toBeInTheDocument();
+
+        act(() => useWorkspaceEventStore.getState().applyEvent('s-1', {
+            seq: 1,
+            ts: '2026-10-07T09:00:01Z',
+            session_id: 's-1',
+            type: 'preview.updated',
+            cms_ref: { type: 'page', id: 9142, node_id: 3 },
+            preview_url: 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view',
+            mode: 'view',
+        }));
+
+        expect(screen.getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
+        expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view');
+    });
 });

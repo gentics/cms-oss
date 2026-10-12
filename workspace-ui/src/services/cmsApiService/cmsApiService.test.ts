@@ -4,12 +4,15 @@ import { HttpError } from '@/services/httpService/httpService';
 
 import {
     CMS_SEARCH_MAX_ITEMS,
+    cmsImageUrl,
     CmsLoginError,
     type CmsTokenInfo,
     createCmsToken,
     getCmsKeycloakConfig,
     getCmsUser,
     listCmsNodes,
+    listCmsTemplates,
+    loadCmsPage,
     loginToCms,
     logoutFromCms,
     searchCmsItems,
@@ -107,6 +110,57 @@ describe('searchCmsItems', () => {
         expect(url.searchParams.get('maxItems')).toBe(String(CMS_SEARCH_MAX_ITEMS));
         expect(url.searchParams.getAll('type')).toEqual(['page', 'folder', 'image']);
         expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('searches only the given types', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [] }));
+
+        await searchCmsItems({ id: 3, name: 'Corporate Website', folderId: 7 }, '', undefined, ['image']);
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.searchParams.getAll('type')).toEqual(['image']);
+        expect(url.searchParams.get('search')).toBe('');
+    });
+});
+
+describe('loadCmsPage', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('loads the page of the node read only, with the CMS session cookie', async () => {
+        const page = { id: 9142, name: 'Terms', fileName: 'terms.html', folderId: 42, cdate: 1, edate: 2 };
+        const fetchMock = stubFetchSequence(Response.json({ page }));
+
+        await expect(loadCmsPage(9142, 3)).resolves.toEqual(page);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/page/load/9142?nodeId=3', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('loads the page without a node when none is known', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ page: { id: 9142 } }));
+
+        await loadCmsPage(9142);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/page/load/9142');
+    });
+});
+
+describe('listCmsTemplates', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('lists the templates linked to the folder of the node', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ templates: [{ id: 17, name: 'Kampagnen-Landingpage' }] }));
+
+        await expect(listCmsTemplates(42, 3)).resolves.toEqual([{ id: 17, name: 'Kampagnen-Landingpage' }]);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/folder/getTemplates/42?folderNodeId=3', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+});
+
+describe('cmsImageUrl', () => {
+    it('is where the CMS serves the image of the node', () => {
+        expect(cmsImageUrl(3, 4411)).toBe('/rest/file/content/load/4411?nodeId=3');
     });
 });
 

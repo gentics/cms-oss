@@ -353,6 +353,34 @@ describe('useWorkspaceEventStore', () => {
         });
     });
 
+    describe('preview', () => {
+        const ref = { type: 'page', id: 9142, node_id: 3 };
+        const url = 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view';
+
+        it('has none before the first preview.updated', () => {
+            apply(event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }));
+
+            expect(session().preview).toBeUndefined();
+        });
+
+        it('keeps the last preview.updated with its seq', () => {
+            apply(
+                event(1, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view' }),
+                event(2, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view', changed_elements: ['content_1'] }),
+            );
+
+            expect(session().preview).toEqual({ seq: 2, cms_ref: ref, preview_url: url, mode: 'view', changed_elements: ['content_1'] });
+        });
+
+        it('resetSession drops the preview', () => {
+            apply(event(1, 'preview.updated', { cms_ref: ref, preview_url: url, mode: 'view' }));
+
+            useWorkspaceEventStore.getState().resetSession(SESSION);
+
+            expect(session().preview).toBeUndefined();
+        });
+    });
+
     it('resetSession also drops the run, the notices and the interactions', () => {
         apply(
             event(1, 'run.started', { run_id: 'r-1', run: { id: 'r-1', status: 'running' } }),

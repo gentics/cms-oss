@@ -1,17 +1,20 @@
 import { useParams } from '@tanstack/react-router';
-import { useRef, useState } from 'react';
+import { type RefObject, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
+import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
+import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type SendTurnInput, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
-import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './SessionPage.module.css';
 
@@ -30,8 +33,7 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card
  * holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card first.
  */
-function SessionComposer({ sessionId }: { sessionId: string }) {
-    const composerRef = useRef<ComposerHandle>(null);
+function SessionComposer({ sessionId, composerRef }: { sessionId: string; composerRef: RefObject<ComposerHandle | null> }) {
     const sendTurn = useSendTurn(sessionId);
     const cancelRun = useCancelRun(sessionId);
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
@@ -104,16 +106,57 @@ function SessionComposer({ sessionId }: { sessionId: string }) {
 }
 
 /**
+ * The preview of one session's page (`PreviewColumn`): a part of it goes into the chat composer, and
+ * feedback on a part is sent as a turn of its own, as the page plus the part named in the text
+ * (`pageElementParts`). New text written for a part by hand is sent the same way, as the page, a text
+ * asking to replace the part's text, and the new text as a `verbatim` part (`pageElementEditParts`), and
+ * so is a CMS image picked for a part, as a `reference` part (`pageElementImageParts`). Changed page
+ * settings go as the page, a text asking to change them, and each new value (`pageSettingsParts`). None needs a run
+ * to be working or waiting: a second message would be refused (`409 run_already_active`), and none is an
+ * answer to the run's question.
+ */
+function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string; preview: LivePreview; composerRef: RefObject<ComposerHandle | null> }) {
+    const { t } = useTranslation();
+    const sendTurn = useSendTurn(sessionId);
+    const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
+
+    async function send(parts: UserMessagePart[]) {
+        try {
+            await sendTurn.mutateAsync({ parts, files: [] });
+        } catch (error) {
+            useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
+
+            throw error;
+        }
+    }
+
+    return (
+        <PreviewColumn
+            preview={preview}
+            onReferenceInChat={(element, text) => composerRef.current?.insertPageElement(element, text)}
+            onSendFeedback={(element, text) => send(pageElementParts({ ...element, text: pageElementNaming(t, element) }, text))}
+            onSendEdit={(element, text) => send(pageElementEditParts({ ...element, text: pageElementReplaceNaming(t, element) }, text))}
+            onSendImage={(element, image) => send(pageElementImageParts({ ...element, text: pageElementReplaceImageNaming(t, element) }, image))}
+            onSendSettings={(page, changes) => send(pageSettingsParts(t, page, changes))}
+            canSendFeedback={!run && !sendTurn.isPending}
+        />
+    );
+}
+
+/**
  * The page of the session routes (`/sessions/$id`, `/sessions/$id/review`): the workspace with the
  * session's conversation in the middle column and its chat composer at the bottom. It follows the
  * session's event stream, so sent turns and replies land in `useWorkspaceEventStore`. The left column
- * is the searchable session history; the preview (right) comes later.
+ * is the searchable session history, the right one the CMS preview once there is one.
  */
 export function SessionPage() {
     const { id } = useParams({ strict: false });
 
     // The chat view is the one consumer of the stream (other components read the store).
     useSessionEvents(id);
+    // The chat composer, for the preview to add a part of the page to it.
+    const composerRef = useRef<ComposerHandle>(null);
+    const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
 
     // The composer floats over the bottom of the middle column, the column scrolls underneath (draft
     // `.composerwrap`). Both routes have an `id`; the composer that sends renders only with one.
@@ -122,13 +165,20 @@ export function SessionPage() {
             {id && <ChatStream key={id} sessionId={id} />}
             {id && (
                 <div className={styles.dock}>
-                    <SessionComposer key={id} sessionId={id} />
+                    <SessionComposer key={id} sessionId={id} composerRef={composerRef} />
                 </div>
             )}
         </div>
     );
 
     // A session starts without a preview; the right column appears once GenAIx sends one
-    // (`preview.updated`, not wired up yet).
-    return <AppShell left={<HistoryColumn />} center={chat} right={null} isRightColumnVisible={false} />;
+    // (`preview.updated`, design.md §11 "Vorschau erst bei Bedarf").
+    return (
+        <AppShell
+            left={<HistoryColumn />}
+            center={chat}
+            right={id && preview && <SessionPreview key={id} sessionId={id} preview={preview} composerRef={composerRef} />}
+            isRightColumnVisible={Boolean(preview)}
+        />
+    );
 }

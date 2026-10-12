@@ -11,7 +11,7 @@ import { IconButton } from '@/components/IconButton/IconButton';
 import { ReferenceMenu } from '@/components/ReferenceMenu/ReferenceMenu';
 import { Button } from '@/components/ui/button';
 import { VoiceInput } from '@/components/VoiceInput/VoiceInput';
-import { attachmentSource } from '@/helper/composerParts/composerParts';
+import { attachmentSource, PAGE_ELEMENT_NODE, type PageElementAttrs, pageElementNaming, textContent } from '@/helper/composerParts/composerParts';
 import { UPLOAD_ACCEPT } from '@/helper/uploadLimits/uploadLimits';
 import { useComposer } from '@/hooks/useComposer';
 import type { StartSessionInput } from '@/hooks/useGenaixQueries';
@@ -19,9 +19,18 @@ import { useSpeechDictation } from '@/hooks/useSpeechDictation';
 
 import styles from './Composer.module.css';
 
+/** A part of a page to add to the field (`ComposerHandle.insertPageElement`). */
+export type PageElementInput = Omit<PageElementAttrs, 'text'>;
+
 export interface ComposerHandle {
     /** Replaces the field's content with `text` and opens the text prompt. */
     setText: (text: string) => void;
+    /**
+     * Adds a part of a page as a token at the end of the field, followed by `text` if given, opens the
+     * text prompt and puts the cursor behind it, for the user to say what should happen
+     * (`PAGE_ELEMENT_NODE`).
+     */
+    insertPageElement: (element: PageElementInput, text?: string) => void;
     /** Empties the field and drops the attachments, after a message was sent. */
     reset: () => void;
 }
@@ -103,6 +112,13 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         setText: (text) => {
             setText(text);
             openTyping();
+        },
+        insertPageElement: (element, text = '') => {
+            // The text naming the part, in the user's language (`PAGE_ELEMENT_NODE`).
+            const attrs: PageElementAttrs = { ...element, text: pageElementNaming(t, element) };
+
+            openTyping();
+            editor.chain().focus('end').insertContent([{ type: PAGE_ELEMENT_NODE, attrs }, ...textContent(` ${text}`)]).run();
         },
         reset,
     }));

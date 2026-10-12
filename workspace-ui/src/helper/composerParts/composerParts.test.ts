@@ -2,9 +2,10 @@ import { getSchema, type JSONContent } from '@tiptap/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { composerExtensions } from '@/components/ComposerTextInput/composerExtensions';
+import i18n from '@/i18n';
 import type { ContextReference, FileMode } from '@/services/apiService/genaix/types';
 
-import { holdsToken, pendingFileSource, readParts, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
+import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, pendingFileSource, readParts, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
 
 const schema = getSchema(composerExtensions);
 
@@ -19,6 +20,11 @@ const verbatim = (value: string): JSONContent => ({ type: 'verbatim', attrs: { t
 const reference = (ref: ContextReference): JSONContent => ({ type: 'reference', attrs: { ref } });
 const setting = (key: string, value: string, label = ''): JSONContent => ({ type: 'setting', attrs: { key, value, label } });
 const fileRef = (fileId: string, mode: FileMode, name: string): JSONContent => ({ type: 'fileRef', attrs: { fileId, mode, name } });
+const page9142: ContextReference = { type: 'page', id: '9142', node_id: 3, label: 'Neue Nutzungsbedingungen ab Q3' };
+const pageElement = (tagName: string, constructName: string, naming: string): JSONContent => ({
+    type: 'pageElement',
+    attrs: { page: page9142, tagName, constructName, text: naming },
+});
 
 function field(html: string): HTMLElement {
     const element = document.createElement('div');
@@ -41,7 +47,123 @@ function select(node: Node, start: number, length: number): Range {
     return range;
 }
 
+describe('pageElementNaming', () => {
+    it('names a part with its type, or with its name alone, in the user\'s language', async () => {
+        await i18n.changeLanguage('en');
+        expect(pageElementNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – part "content_2" (Text): ');
+        expect(pageElementNaming(i18n.t, { tagName: 'content_2', constructName: '' })).toBe(' – part "content_2": ');
+
+        await i18n.changeLanguage('de');
+        expect(pageElementNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – Teil "content_2" (Text): ');
+        await i18n.changeLanguage('en');
+    });
+});
+
+describe('pageElementParts', () => {
+    it('gives the page as a reference, then the naming text and the given text as one text part', () => {
+        expect(pageElementParts({ page: page9142, tagName: 'content_2', constructName: 'Text', text: ' – part "content_2" (Text): ' }, 'shorter,  more\nactive ')).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_2" (Text): shorter, more\nactive' },
+        ]);
+    });
+});
+
+describe('pageElementReplaceNaming', () => {
+    it('names a part and asks to replace its text, with its type or with its name alone, in the user\'s language', async () => {
+        await i18n.changeLanguage('en');
+        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – part "content_2" (Text), replace its text with: ');
+        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: '' })).toBe(' – part "content_2", replace its text with: ');
+
+        await i18n.changeLanguage('de');
+        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: 'Text' })).toBe(' – Teil "content_2" (Text), ersetze seinen Text durch: ');
+        expect(pageElementReplaceNaming(i18n.t, { tagName: 'content_2', constructName: '' })).toBe(' – Teil "content_2", ersetze seinen Text durch: ');
+        await i18n.changeLanguage('en');
+    });
+});
+
+describe('pageElementEditParts', () => {
+    it('gives the page as a reference, the naming text, then the new text as a verbatim part, unchanged and labelled with the part', () => {
+        expect(pageElementEditParts({ page: page9142, tagName: 'content_2', constructName: 'Text', text: ' – part "content_2" (Text), replace its text with: ' }, ' Ab dem  1. Juli\ngilt ')).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_2" (Text), replace its text with: ' },
+            { type: 'verbatim', text: ' Ab dem  1. Juli\ngilt ', source: 'user', label: 'Text · content_2' },
+        ]);
+    });
+
+    it('labels a part without a type by its name alone', () => {
+        const [, , quote] = pageElementEditParts({ page: page9142, tagName: 'content_3', constructName: '', text: ' – part "content_3", replace its text with: ' }, 'Neu');
+
+        expect(quote).toEqual({ type: 'verbatim', text: 'Neu', source: 'user', label: 'content_3' });
+    });
+});
+
+describe('pageElementReplaceImageNaming', () => {
+    it('names a part and asks to replace its image, with its type or with its name alone, in the user\'s language', async () => {
+        await i18n.changeLanguage('en');
+        expect(pageElementReplaceImageNaming(i18n.t, { tagName: 'content_1', constructName: 'Image' })).toBe(' – part "content_1" (Image), replace its image with: ');
+        expect(pageElementReplaceImageNaming(i18n.t, { tagName: 'content_1', constructName: '' })).toBe(' – part "content_1", replace its image with: ');
+
+        await i18n.changeLanguage('de');
+        expect(pageElementReplaceImageNaming(i18n.t, { tagName: 'content_1', constructName: 'Image' })).toBe(' – Teil "content_1" (Image), ersetze sein Bild durch: ');
+        expect(pageElementReplaceImageNaming(i18n.t, { tagName: 'content_1', constructName: '' })).toBe(' – Teil "content_1", ersetze sein Bild durch: ');
+        await i18n.changeLanguage('en');
+    });
+});
+
+describe('pageElementImageParts', () => {
+    it('gives the page as a reference, the naming text, then the picked image as a reference', () => {
+        const image: ContextReference = { type: 'image', id: '4411', node_id: 3, label: 'team-workshop-2026.jpg' };
+
+        expect(pageElementImageParts({ page: page9142, tagName: 'content_1', constructName: 'Image', text: ' – part "content_1" (Image), replace its image with: ' }, image)).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_1" (Image), replace its image with: ' },
+            { type: 'reference', ref: image },
+        ]);
+    });
+});
+
+describe('pageSettingsParts', () => {
+    const template: ContextReference = { type: 'template', id: '21', node_id: 3, label: 'Themenseite' };
+
+    it('gives the page, the request to change its settings, then each change: its label and the value as written, the template as a reference', async () => {
+        await i18n.changeLanguage('en');
+        expect(pageSettingsParts(i18n.t, page9142, [{ label: 'Name', value: 'Terms  of use' }, { label: 'Template', value: template }])).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – change its page settings:' },
+            { type: 'text', text: '\nName: ' },
+            { type: 'verbatim', text: 'Terms  of use', source: 'user', label: 'Name' },
+            { type: 'text', text: '\nTemplate: ' },
+            { type: 'reference', ref: template },
+        ]);
+    });
+
+    it('asks to empty an emptied setting, in the user\'s language', async () => {
+        await i18n.changeLanguage('de');
+        expect(pageSettingsParts(i18n.t, page9142, [{ label: 'Nice URL', value: '' }])).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – ändere seine Seiteneinstellungen:' },
+            { type: 'text', text: '\nNice URL: leeren' },
+        ]);
+        await i18n.changeLanguage('en');
+    });
+});
+
 describe('readParts', () => {
+    it('reads a page part as a reference to its page, its naming text joined with what follows', () => {
+        expect(readParts(doc(pageElement('content_2', 'Text', ' – part "content_2" (Text): '), text('make this shorter')))).toEqual([
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "content_2" (Text): make this shorter' },
+        ]);
+    });
+
+    it('ends the text before a page part and keeps its naming text when nothing follows', () => {
+        expect(readParts(doc(text('Look at '), pageElement('hero', 'Image', ' – part "hero" (Image): ')))).toEqual([
+            { type: 'text', text: 'Look at ' },
+            { type: 'reference', ref: page9142 },
+            { type: 'text', text: ' – part "hero" (Image):' },
+        ]);
+    });
+
     it('gives no parts for an empty or blank field', () => {
         expect(readParts(doc())).toEqual([]);
         expect(readParts(doc(text('  '), lineBreak))).toEqual([]);

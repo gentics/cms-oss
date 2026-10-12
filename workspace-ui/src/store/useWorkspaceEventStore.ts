@@ -88,6 +88,9 @@ export interface LiveConfirmation extends StreamAnchor {
     messageId: string;
 }
 
+/** The CMS preview of the page the session produced, as the last `preview.updated` sent it. */
+export type LivePreview = Pick<Extract<GenaixEvent, { type: 'preview.updated' }>, 'seq' | 'cms_ref' | 'preview_url' | 'mode' | 'changed_elements'>;
+
 /**
  * The live state of one session: what is not in `GET /sessions/{session_id}/messages` yet. The
  * history itself stays in TanStack Query.
@@ -108,6 +111,8 @@ export interface SessionLiveState {
     plans?: LivePlan[];
     /** Every confirmed settings review, in the order `interaction.resolved` sent them. */
     confirmations?: LiveConfirmation[];
+    /** The CMS preview; absent until the first `preview.updated`. */
+    preview?: LivePreview;
 }
 
 interface WorkspaceEventState {
@@ -338,6 +343,14 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         next.plans = [...(session.plans ?? []), { seq: event.seq, plan: event.plan, runId, ...anchorIn(session.messages, runId) }];
     }
 
+    // `preview.updated` fires after every CMS write affecting the preview; the last one wins. Its `seq`
+    // tells a reload apart from the same URL sent again.
+    if (event.type === 'preview.updated') {
+        const { seq, cms_ref, preview_url, mode, changed_elements } = event;
+
+        next.preview = { seq, cms_ref, preview_url, mode, changed_elements };
+    }
+
     if (event.type === 'interaction.resolved' && event.message_id) {
         next.confirmations = [
             ...(session.confirmations ?? []),
@@ -415,6 +428,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         steps: undefined,
         plans: undefined,
         confirmations: undefined,
+        preview: undefined,
         messages: session.messages.filter((message) => message.kind === 'sent' && message.status !== 'sent'),
     }))),
 }));

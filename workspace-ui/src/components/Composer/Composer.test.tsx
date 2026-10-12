@@ -126,6 +126,45 @@ describe('Composer', () => {
         expect(onSubmit).toHaveBeenCalledWith({ parts: [{ type: 'text', text: 'Create a new landing page' }], files: [] });
     });
 
+    it('insertPageElement puts the given text behind the token', async () => {
+        const user = userEvent.setup();
+        const { field, ref, onSubmit } = renderComposer();
+        const page = { type: 'page' as const, id: '9142', node_id: 3 };
+
+        act(() => ref.current!.insertPageElement({ page, tagName: 'content_2', constructName: 'Text' }, 'shorter'));
+
+        expect(field).toHaveTextContent('Text · content_2 shorter');
+
+        await user.click(screen.getByRole('button', { name: 'Start a session' }));
+
+        expect(onSubmit).toHaveBeenCalledWith({
+            parts: [{ type: 'reference', ref: page }, { type: 'text', text: ' – part "content_2" (Text): shorter' }],
+            files: [],
+        });
+    });
+
+    it('insertPageElement adds a token for a part of a page, sent as the page plus the part named in the text', async () => {
+        const user = userEvent.setup();
+        const { field, ref, onSubmit } = renderComposer();
+        const page = { type: 'page' as const, id: '9142', node_id: 3, label: 'Neue Nutzungsbedingungen ab Q3' };
+
+        act(() => ref.current!.insertPageElement({ page, tagName: 'content_2', constructName: 'Text' }));
+
+        expect(within(field).getByText('Text · content_2')).toBeInTheDocument();
+        expect(field).toHaveFocus();
+
+        await user.keyboard('make this shorter');
+        await user.click(screen.getByRole('button', { name: 'Start a session' }));
+
+        expect(onSubmit).toHaveBeenCalledWith({
+            parts: [
+                { type: 'reference', ref: page },
+                { type: 'text', text: ' – part "content_2" (Text): make this shorter' },
+            ],
+            files: [],
+        });
+    });
+
     describe('verbatim', () => {
         it('locks the selected passage and submits it as a verbatim part', async () => {
             const user = userEvent.setup();

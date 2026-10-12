@@ -7,6 +7,8 @@ import {
     isCmsFeatureActive,
     listCmsFolders,
     listCmsNodes,
+    listCmsTemplates,
+    loadCmsPage,
     searchCmsItems,
 } from '@/services/cmsApiService/cmsApiService';
 
@@ -18,6 +20,9 @@ export const cmsKeys = {
     search: (nodeId: number, type: CmsItemType, query: string, elastic: boolean) => [...cmsKeys.searches(nodeId, type), query, elastic] as const,
     folderLevel: (nodeId: number, folderId: number) => ['cms', 'nodes', nodeId, 'folders', folderId] as const,
     folderSearch: (nodeId: number, folderId: number, query: string) => ['cms', 'nodes', nodeId, 'folder-search', folderId, query] as const,
+    images: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'images', query] as const,
+    page: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId] as const,
+    templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
 };
 
 /**
@@ -127,5 +132,32 @@ export function useCmsFolderSearch(node: CmsNode | undefined, query: string) {
             ? skipToken
             : ({ signal }) => listCmsFolders(nodeId, rootFolderId, { search: query, maxItems: FOLDER_SEARCH_MAX_ITEMS, signal }),
         placeholderData: keepPreviousData,
+    });
+}
+
+/**
+ * The images in `node` that match `query` (`searchCmsItems`, images only); an empty query lists all
+ * of the node's images, also those below its root folder (`recursive`). Off while there is no node.
+ */
+export function useCmsImages(node: CmsNode | undefined, query: string) {
+    return useQuery({
+        queryKey: cmsKeys.images(node, query),
+        queryFn: node ? ({ signal }) => searchCmsItems(node, 'image', query, { recursive: true, signal }) : skipToken,
+    });
+}
+
+/** The page `id` as the CMS has it now (`loadCmsPage`); each mount loads it again, so the page settings show its current values. */
+export function useCmsPage(id: number, nodeId: number | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.page(id, nodeId),
+        queryFn: ({ signal }) => loadCmsPage(id, nodeId, signal),
+    });
+}
+
+/** The templates linked to the folder `folderId` (`listCmsTemplates`); off while the folder is not known. */
+export function useCmsTemplates(folderId: number | undefined, nodeId: number | undefined) {
+    return useQuery({
+        queryKey: cmsKeys.templates(folderId, nodeId),
+        queryFn: folderId === undefined ? skipToken : ({ signal }) => listCmsTemplates(folderId, nodeId, signal),
     });
 }

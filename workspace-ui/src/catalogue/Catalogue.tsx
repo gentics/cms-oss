@@ -1,5 +1,5 @@
 import { ArrowUpIcon, MicIcon, PencilIcon, PlusIcon, QuoteIcon, SaveIcon, SlidersHorizontalIcon, TrashIcon, Undo2Icon, XIcon } from 'lucide-react';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PartRenderer } from '@/components/MessageParts/MessageParts';
@@ -24,9 +24,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverClose, PopoverContent, PopoverTitle, PopoverTrigger } from '@/components/ui/popover';
 import { Radio, RadioGroup } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -90,6 +92,8 @@ export function Catalogue() {
     const [theme, setTheme] = useState<Theme>('system');
     const [showLineNumbers, setShowLineNumbers] = useState(true);
     const [layout, setLayout] = useState('tree');
+    const anchoredMenuAnchor = useRef<HTMLSpanElement>(null);
+    const [isAnchoredMenuOpen, setIsAnchoredMenuOpen] = useState(false);
 
     const pageItems = { home: t('catalogue.select.home'), news: t('catalogue.select.news'), contact: t('catalogue.select.contact') };
     const languageItems = { en: 'English', de: 'Deutsch' };
@@ -293,6 +297,25 @@ export function Catalogue() {
                     </div>
                 </Section>
 
+                <Section id="catalogue-textarea" title={t('catalogue.textarea.title')}>
+                    <div className={styles.grid}>
+                        {inputStates.map(({ state, defaultValue, invalid, disabled }) => (
+                            <State key={state} label={t(`catalogue.states.${state}`)}>
+                                <div className={styles.field}>
+                                    <Label htmlFor={`catalogue-textarea-${state}`}>{t('catalogue.textarea.label')}</Label>
+                                    <Textarea
+                                        id={`catalogue-textarea-${state}`}
+                                        defaultValue={defaultValue && t('catalogue.textarea.value')}
+                                        placeholder={t('catalogue.textarea.placeholder')}
+                                        aria-invalid={invalid}
+                                        disabled={disabled}
+                                    />
+                                </div>
+                            </State>
+                        ))}
+                    </div>
+                </Section>
+
                 <Section id="catalogue-select" title={t('catalogue.select.title')}>
                     <div className={styles.grid}>
                         {selectStates.map(({ state, defaultValue, invalid, disabled }) => (
@@ -389,6 +412,33 @@ export function Catalogue() {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    {/* Without a trigger: opened by the page, at an element (`anchor`), as the preview's element menu. */}
+                    <div className={styles.row}>
+                        <span ref={anchoredMenuAnchor}>{t('catalogue.menu.anchor')}</span>
+                        <Button variant="secondary" onClick={() => setIsAnchoredMenuOpen(true)}>{t('catalogue.menu.openAtAnchor')}</Button>
+                    </div>
+                    <DropdownMenu open={isAnchoredMenuOpen} onOpenChange={setIsAnchoredMenuOpen}>
+                        <DropdownMenuContent anchor={anchoredMenuAnchor}>
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel>{t('catalogue.menu.anchor')}</DropdownMenuLabel>
+                                <DropdownMenuItem>{t('catalogue.menu.rename')}</DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </Section>
+
+                <Section id="catalogue-popover" title={t('catalogue.popover.title')}>
+                    <Popover>
+                        <PopoverTrigger render={<Button variant="secondary" />}>{t('catalogue.popover.open')}</PopoverTrigger>
+                        <PopoverContent>
+                            <div className={styles.popover}>
+                                <PopoverTitle>{t('catalogue.popover.heading')}</PopoverTitle>
+                                <Label htmlFor="catalogue-popover-field">{t('catalogue.textarea.label')}</Label>
+                                <Textarea id="catalogue-popover-field" placeholder={t('catalogue.textarea.placeholder')} />
+                                <PopoverClose render={<Button variant="secondary" size="sm" />}>{t('catalogue.popover.close')}</PopoverClose>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 </Section>
 
                 <Section id="catalogue-dialog" title={t('catalogue.dialog.title')}>

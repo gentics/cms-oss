@@ -1,0 +1,215 @@
+/* Right column content: head with the title, the URL, "Open" and the widths, then the page as a white
+   sheet on the preview stage (design.md §11 "Vorschau-Bühne"). */
+.column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Full screen: the column over the whole window, below the layer's popups (z-50). */
+.fullScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg-surface);
+}
+
+.viewports {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 9px 0 15px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  margin: 0;
+  color: var(--fg-primary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  background: var(--bg-preview-stage);
+}
+
+.page {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(var(--fg-primary-rgb), 0.15);
+  border-radius: var(--corner-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--elevation-1);
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Above the frame, the size of the page area: outlines of the parts (design.md §12 "Elemente in der
+   Vorschau"). It lets the mouse through to the page. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hovered,
+.selected,
+.changed {
+  position: absolute;
+  border-radius: var(--corner-xs);
+}
+
+/* Changed by the last CMS write (design.md §12 "Geändert"). */
+.changed {
+  background: rgba(var(--success-rgb), 0.07);
+}
+
+.hovered {
+  outline: 1.5px dashed rgba(var(--interactive-rgb), 0.55);
+  outline-offset: 2px;
+}
+
+.selected {
+  outline: 2px solid var(--interactive);
+  outline-offset: 2px;
+}
+
+/* The selected part while its new text is written (design.md §12 "Wird bearbeitet"). */
+.selected.editing {
+  outline-color: var(--interactive-fill);
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 5px;
+  border-radius: var(--corner-xs);
+  background: var(--fg-primary);
+  color: var(--bg-surface);
+  font-size: var(--font-size-overline);
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Focus mode while the feedback card is open: the page around the part fades and loses colour
+   (design.md §12: opacity .24, saturation .3), drawn over it, the page itself unchanged. */
+.dim {
+  position: absolute;
+  background: color-mix(in srgb, var(--bg-surface) 76%, transparent);
+  backdrop-filter: saturate(0.3);
+}
+
+/* The feedback card (final_draft.html `.spot`): head with the part's name, its token and the field,
+   then the actions. */
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cardIcon {
+  flex: none;
+  color: var(--interactive);
+}
+
+.cardTitle {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+}
+
+/* The part as an @-token (design.md §12 "@-Token / Referenz"). */
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 270px;
+  padding: 1px 6px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--interactive-rgb), 0.3);
+  border-radius: var(--corner-sm);
+  background: rgba(var(--interactive-rgb), 0.13);
+  color: var(--fg-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  & svg {
+    flex: none;
+    color: var(--interactive);
+  }
+}
+
+.cardFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+/* The selected part, named in the header, with a button to clear it. */
+.selection {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Mobile: the page 390 px wide in a device frame (design.md §11 "Vorschau-Bühne", §6.1). */
+.mobile {
+  justify-content: center;
+}
+
+.mobile .page {
+  flex: 0 1 390px;
+  border: 6px solid rgba(var(--fg-primary-rgb), 0.34);
+  border-radius: 22px;
+}

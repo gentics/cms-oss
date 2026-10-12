@@ -25,6 +25,63 @@
             "singleSignOnLogout": "Sie sind vom CMS abgemeldet, aber noch per Single Sign-on angemeldet."
         }
     },
+    "preview": {
+        "title": "Vorschau",
+        "open": "Öffnen",
+        "frameTitle": "Vorschau der Seite im CMS",
+        "viewport": "Breite der Vorschau",
+        "desktop": "Desktop",
+        "mobile": "Mobil · 390 px",
+        "fullScreen": "Vollbild",
+        "leaveFullScreen": "Vollbild verlassen",
+        "selection": {
+            "selected": "Ausgewählt: {{name}}",
+            "clear": "Auswahl aufheben",
+            "removed": "Der ausgewählte Teil ist nicht mehr auf der Seite",
+            "referenceInChat": "Im Chat referenzieren",
+            "referenced": "Als Referenz hinzugefügt – jetzt schreiben, was passieren soll."
+        },
+        "feedback": {
+            "give": "Feedback geben",
+            "label": "Was soll mit dieser Stelle passieren?",
+            "cancel": "Abbrechen",
+            "toChat": "In den Chat",
+            "send": "Senden"
+        },
+        "edit": {
+            "write": "Selbst schreiben",
+            "label": "Neuer Text",
+            "cancel": "Abbrechen",
+            "apply": "Übernehmen",
+            "unchanged": "Nichts geändert, daher nichts gesendet."
+        },
+        "image": {
+            "swap": "Bild tauschen",
+            "search": "Bilder suchen",
+            "use": "Bild verwenden",
+            "cancel": "Abbrechen",
+            "loading": "Bilder werden geladen …",
+            "empty": "Keine Bilder gefunden.",
+            "failed": "Die Bilder konnten nicht geladen werden."
+        },
+        "settings": {
+            "open": "Seiteneinstellungen",
+            "title": "Seiteneinstellungen",
+            "close": "Schließen",
+            "apply": "Übernehmen",
+            "loading": "Seiteneinstellungen werden geladen …",
+            "failed": "Die Seiteneinstellungen konnten nicht geladen werden.",
+            "name": "Name",
+            "fileName": "Dateiname",
+            "description": "Beschreibung",
+            "template": "Template",
+            "priority": "Priorität",
+            "niceUrl": "Nice URL",
+            "language": "Sprache",
+            "created": "Erstellt",
+            "edited": "Zuletzt bearbeitet"
+        }
+    },
     "workspace": {
         "resizeLeft": "Breite der linken Spalte",
         "resizeRight": "Breite der rechten Spalte",
@@ -88,6 +145,18 @@
             "typeNotAccepted": "Dieser Dateityp wird nicht unterstützt: {{type}}",
             "waiting": "wartet",
             "progress": "{{percent}} %"
+        },
+        "pageElement": {
+            "naming": " – Teil \"{{tagName}}\" ({{constructName}}): ",
+            "namingWithoutType": " – Teil \"{{tagName}}\": ",
+            "replaceWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze seinen Text durch: ",
+            "replaceWithWithoutType": " – Teil \"{{tagName}}\", ersetze seinen Text durch: ",
+            "replaceImageWith": " – Teil \"{{tagName}}\" ({{constructName}}), ersetze sein Bild durch: ",
+            "replaceImageWithWithoutType": " – Teil \"{{tagName}}\", ersetze sein Bild durch: "
+        },
+        "pageSettings": {
+            "change": " – ändere seine Seiteneinstellungen:",
+            "empty": "leeren"
         }
     },
     "chat": {
@@ -350,6 +419,12 @@
             "label": "Benutzername",
             "placeholder": "Benutzernamen eingeben"
         },
+        "textarea": {
+            "title": "Mehrzeiliges Feld",
+            "label": "Feedback",
+            "placeholder": "Was soll passieren?",
+            "value": "Kürzer, aktiver"
+        },
         "select": {
             "title": "Auswahl",
             "label": "Seite",
@@ -384,7 +459,15 @@
             "lineNumbers": "Zeilennummern",
             "tree": "Baumansicht",
             "table": "Tabelle",
-            "delete": "Löschen"
+            "delete": "Löschen",
+            "anchor": "Absatz auf der Seite",
+            "openAtAnchor": "Am Absatz öffnen"
+        },
+        "popover": {
+            "title": "Popover",
+            "open": "Feedback geben",
+            "heading": "Feedback zu dieser Stelle",
+            "close": "Fertig"
         },
         "dialog": {
             "title": "Dialog",

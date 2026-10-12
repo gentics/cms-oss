@@ -25,6 +25,63 @@
             "singleSignOnLogout": "You are logged out of the CMS, but still logged in with single sign-on."
         }
     },
+    "preview": {
+        "title": "Preview",
+        "open": "Open",
+        "frameTitle": "Preview of the page in the CMS",
+        "viewport": "Preview width",
+        "desktop": "Desktop",
+        "mobile": "Mobile · 390 px",
+        "fullScreen": "Full screen",
+        "leaveFullScreen": "Leave full screen",
+        "selection": {
+            "selected": "Selected: {{name}}",
+            "clear": "Clear selection",
+            "removed": "The selected part is no longer on the page",
+            "referenceInChat": "Reference in the chat",
+            "referenced": "Added as a reference — now write what should happen."
+        },
+        "feedback": {
+            "give": "Give feedback",
+            "label": "What should happen to this spot?",
+            "cancel": "Cancel",
+            "toChat": "In the chat",
+            "send": "Send"
+        },
+        "edit": {
+            "write": "Write it yourself",
+            "label": "New text",
+            "cancel": "Cancel",
+            "apply": "Apply",
+            "unchanged": "Nothing changed, so nothing was sent."
+        },
+        "image": {
+            "swap": "Swap the image",
+            "search": "Search images",
+            "use": "Use image",
+            "cancel": "Cancel",
+            "loading": "Loading images …",
+            "empty": "No images found.",
+            "failed": "The images could not be loaded."
+        },
+        "settings": {
+            "open": "Page settings",
+            "title": "Page settings",
+            "close": "Close",
+            "apply": "Apply",
+            "loading": "Loading the page settings …",
+            "failed": "The page settings could not be loaded.",
+            "name": "Name",
+            "fileName": "Filename",
+            "description": "Description",
+            "template": "Template",
+            "priority": "Priority",
+            "niceUrl": "Nice URL",
+            "language": "Language",
+            "created": "Created",
+            "edited": "Last edited"
+        }
+    },
     "workspace": {
         "resizeLeft": "Width of the left column",
         "resizeRight": "Width of the right column",
@@ -88,6 +145,18 @@
             "typeNotAccepted": "This file type is not supported: {{type}}",
             "waiting": "waiting",
             "progress": "{{percent}} %"
+        },
+        "pageElement": {
+            "naming": " – part \"{{tagName}}\" ({{constructName}}): ",
+            "namingWithoutType": " – part \"{{tagName}}\": ",
+            "replaceWith": " – part \"{{tagName}}\" ({{constructName}}), replace its text with: ",
+            "replaceWithWithoutType": " – part \"{{tagName}}\", replace its text with: ",
+            "replaceImageWith": " – part \"{{tagName}}\" ({{constructName}}), replace its image with: ",
+            "replaceImageWithWithoutType": " – part \"{{tagName}}\", replace its image with: "
+        },
+        "pageSettings": {
+            "change": " – change its page settings:",
+            "empty": "empty it"
         }
     },
     "chat": {
@@ -350,6 +419,12 @@
             "label": "User name",
             "placeholder": "Enter a user name"
         },
+        "textarea": {
+            "title": "Textarea",
+            "label": "Feedback",
+            "placeholder": "What should happen?",
+            "value": "Shorter, more active"
+        },
         "select": {
             "title": "Select",
             "label": "Page",
@@ -384,7 +459,15 @@
             "lineNumbers": "Line numbers",
             "tree": "Tree view",
             "table": "Table",
-            "delete": "Delete"
+            "delete": "Delete",
+            "anchor": "Paragraph on the page",
+            "openAtAnchor": "Open at the paragraph"
+        },
+        "popover": {
+            "title": "Popover",
+            "open": "Give feedback",
+            "heading": "Feedback for this spot",
+            "close": "Done"
         },
         "dialog": {
             "title": "Dialog",

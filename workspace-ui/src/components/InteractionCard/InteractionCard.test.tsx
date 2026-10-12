@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Interaction } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { createWrapper } from '@/test/renderWithProviders';
 
 import { ConfirmedSettingsCard, InteractionCard } from './InteractionCard';
@@ -14,8 +15,9 @@ function interaction(overrides: Partial<Interaction> & Pick<Interaction, 'kind' 
         multi: false,
         blocking: true,
         status: 'pending',
-        requested_at: '2026-10-07T09:23:16Z',
-        expires_at: '2026-10-07T09:33:16Z',
+        requested_at: new Date().toISOString(),
+        // The contract's default lifetime: 10 minutes.
+        expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
         ...overrides,
     };
 }
@@ -47,10 +49,12 @@ function renderCard(value: Interaction) {
 describe('InteractionCard', () => {
     beforeEach(() => {
         useErrorNotificationStore.setState({ errors: [] });
+        useInteractionDraftStore.setState({ drafts: {}, locks: {} });
     });
 
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.useRealTimers();
     });
 
     it('answers a settings review with one setting part per proposed and missing key', async () => {
@@ -191,7 +195,37 @@ describe('InteractionCard', () => {
         expect(await sentAnswer(fetchMock)).toEqual({ text: 'Existing customers' });
     });
 
-    it('shows an error when the answer is refused, for example an expired question', async () => {
+    it('is answered once: locked while the answer is on its way, and marked as answered after', async () => {
+        const user = userEvent.setup();
+        let accept: (response: Response) => void = () => {};
+        const fetchMock = vi.fn<typeof fetch>(() => new Promise((resolve) => {
+            accept = resolve;
+        }));
+
+        vi.stubGlobal('fetch', fetchMock);
+        renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?' }));
+
+        await user.click(screen.getByRole('button', { name: 'Yes' }));
+
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'No' })).toBeDisabled();
+
+        accept(Response.json({ id: 'i-1', status: 'answered' }));
+
+        expect(await screen.findByText('Answered')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays locked while the composer sends an answer to it', () => {
+        useInteractionDraftStore.getState().lock('i-1', 'sending');
+        renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?' }));
+
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+        expect(screen.queryByText('Answered')).not.toBeInTheDocument();
+    });
+
+    it('shows an error and locks as expired when GenAIx refuses the answer with 410', async () => {
         const user = userEvent.setup();
 
         stubAnswer(() => Response.json({ type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }, { status: 410 }));
@@ -202,7 +236,64 @@ describe('InteractionCard', () => {
         await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
             { messageKey: 'chat.interaction.answerFailed', detailKey: 'errors.genaix.interaction_expired' },
         ]));
+        expect(screen.getByText('Expired')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+    });
+
+    it('shows an error and locks as answered when GenAIx already has an answer (409)', async () => {
+        const user = userEvent.setup();
+
+        stubAnswer(() => Response.json({ type: 't', title: 'Answered', status: 409, genaix_code: 'interaction_already_answered' }, { status: 409 }));
+        renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?' }));
+
+        await user.click(screen.getByRole('button', { name: 'Yes' }));
+
+        await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
+            { messageKey: 'chat.interaction.answerFailed', detailKey: 'errors.genaix.interaction_already_answered' },
+        ]));
+        expect(screen.getByText('Answered')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+    });
+
+    it('can be answered again after any other failure', async () => {
+        const user = userEvent.setup();
+
+        stubAnswer(() => Response.json({ type: 't', title: 'Invalid', status: 422, genaix_code: 'validation_failed' }, { status: 422 }));
+        renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?' }));
+
+        await user.click(screen.getByRole('button', { name: 'Yes' }));
+
+        await waitFor(() => expect(useErrorNotificationStore.getState().errors).toHaveLength(1));
         expect(screen.getByRole('button', { name: 'Yes' })).toBeEnabled();
+        expect(screen.queryByText('Expired')).not.toBeInTheDocument();
+    });
+
+    it('cannot be answered once it has expired', async () => {
+        const user = userEvent.setup();
+        const fetchMock = stubAnswer();
+
+        renderCard(interaction({ kind: 'ask_user', prompt: 'Which audience?', expires_at: new Date(Date.now() - 1000).toISOString() }));
+
+        expect(screen.getByText('Expired')).toBeInTheDocument();
+        expect(screen.getByRole('textbox', { name: 'Your answer' })).toBeDisabled();
+
+        await user.type(screen.getByRole('textbox', { name: 'Your answer' }), 'Existing customers{Enter}');
+
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('locks at the moment it expires', () => {
+        vi.useFakeTimers({ now: new Date('2026-10-07T09:23:16Z') });
+        renderCard(interaction({ kind: 'confirm', prompt: 'Publish now?', expires_at: '2026-10-07T09:33:16Z' }));
+
+        act(() => vi.advanceTimersByTime(10 * 60_000 - 1));
+
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeEnabled();
+
+        act(() => vi.advanceTimersByTime(1));
+
+        expect(screen.getByRole('button', { name: 'Yes' })).toBeDisabled();
+        expect(screen.getByText('Expired')).toBeInTheDocument();
     });
 });
 

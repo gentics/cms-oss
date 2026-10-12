@@ -1,17 +1,19 @@
-import type { Editor, JSONContent } from '@tiptap/core';
+import type { Editor, JSONContent, Range } from '@tiptap/core';
 import { exitSuggestion } from '@tiptap/suggestion';
-import { AtSignIcon, FileTextIcon, FolderIcon, GlobeIcon, ImageIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
+import { AtSignIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, ImageIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-import { followReferenceTrigger, type ReferenceTrigger, referenceTriggerKey } from '@/components/ComposerTextInput/composerExtensions';
+import { followReferenceTrigger, type ReferenceTrigger, referenceTriggerKey, reopenReferenceMenu } from '@/components/ComposerTextInput/composerExtensions';
+import { FolderSearchDialog } from '@/components/FolderSearchDialog/FolderSearchDialog';
 import { Button } from '@/components/ui/button';
 import { FILE_REF_NODE, REFERENCE_NODE } from '@/helper/composerParts/composerParts';
 import { formatMegabytes } from '@/helper/uploadLimits/uploadLimits';
 import { useCmsNodes, useCmsSearch } from '@/hooks/useCmsQueries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useSessionUploads } from '@/hooks/useGenaixQueries';
+import { CMS_ITEM_TYPES, type CmsFolder, type CmsItemType, type CmsNode } from '@/services/cmsApiService/cmsApiService';
 
 import styles from './ReferenceMenu.module.css';
 
@@ -64,6 +66,16 @@ function parseQuery(query: string): { scope: Group | null; text: string; prefixL
     return scope ? { scope, text: rest, prefixLength: prefix.length + 1 } : { scope: null, text: query, prefixLength: 0 };
 }
 
+// The CMS object types searched within `scope`: all of them without one, none for a group that
+// is not in the CMS search (session files, projects).
+function searchedTypes(scope: Group | null): readonly CmsItemType[] {
+    if (scope === null) {
+        return CMS_ITEM_TYPES;
+    }
+
+    return CMS_ITEM_TYPES.filter((type) => type === scope);
+}
+
 // Whether `name` contains `text`, ignoring case; every name contains the empty text.
 function contains(name: string, text: string): boolean {
     return name.toLowerCase().includes(text.toLowerCase());
@@ -93,10 +105,15 @@ interface ReferenceMenuProps {
 }
 
 /**
- * The @-menu of a composer's field (draft `#pop`): CMS pages, folders and images found for the text
- * after `@`, the session's uploaded files and the CMS nodes, grouped. Arrows, Home and End move,
- * Enter or a click inserts the token in place of `@query`, Tab narrows to the active entry's group,
- * Esc closes and keeps the text. The editor places it at the `@` (`ReferenceTriggerExtension`).
+ * The @-menu of a composer's field (draft `#pop`). A bare `@` offers the groups; Enter, Tab or a
+ * click on one narrows the menu to it and shows what it holds (CMS objects: those on the nodes' root
+ * levels), and Backspace goes back to the groups. Text after `@` finds CMS pages, folders and images
+ * (only the narrowed type, if any), the session's uploaded files and the CMS nodes, grouped.
+ * Arrows, Home and End move, Enter or a click inserts the token in place of `@query`, Tab narrows to
+ * the active entry's group, Esc closes and keeps the text. The editor places it at the `@`
+ * (`ReferenceTriggerExtension`). Narrowed to folders, its last entry opens the advanced folder search
+ * (`FolderSearchDialog`) with the typed text; the folder chosen there replaces `@query`, and Cancel
+ * goes back to the menu.
  */
 export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
     // The open menu as the editor reports it (query, where `@query` sits, the element to render
@@ -104,21 +121,73 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
     const [openMenu, setOpenMenu] = useState<ReferenceTrigger | null>(null);
     // The key handling of the open list; while the menu is open, the editor offers it every key first.
     const listKeyHandlerRef = useRef<((event: KeyboardEvent) => boolean) | null>(null);
+    // The advanced folder search while open: where `@query` sits, and the text it started with.
+    const [advanced, setAdvanced] = useState<{ range: Range; query: string } | null>(null);
+    // The group the menu opens narrowed to: folders, when Cancel in the folder search goes back to it.
+    const [reopenScope, setReopenScope] = useState<Group | null>(null);
 
     // Follows the editor's @-trigger while mounted (`ReferenceTriggerExtension`).
     useEffect(() => followReferenceTrigger(editor, {
-        onChange: setOpenMenu,
+        onChange: (trigger) => {
+            setOpenMenu(trigger);
+
+            if (!trigger) {
+                setReopenScope(null);
+            }
+        },
         onKeyDown: (event) => listKeyHandlerRef.current?.(event) ?? false,
     }), [editor]);
 
-    if (!openMenu) {
-        return null;
+    // Closes the menu for the folder search; `@query` stays in the field until a folder is chosen.
+    function openAdvanced(query: string) {
+        if (!openMenu) {
+            return;
+        }
+
+        setAdvanced({ range: openMenu.range, query });
+        exitSuggestion(editor.view, referenceTriggerKey);
     }
 
-    // A new `@` starts a new menu, without the selection or narrowing of the last one.
-    return createPortal(
-        <MenuList key={openMenu.range.from} editor={editor} openMenu={openMenu} sessionId={sessionId} listKeyHandlerRef={listKeyHandlerRef} />,
-        openMenu.host,
+    // Replaces `@query` with the folder's token and a space to go on typing.
+    function pickFolder(node: CmsNode, folder: CmsFolder) {
+        if (!advanced) {
+            return;
+        }
+
+        const ref = { type: 'folder', id: String(folder.id), node_id: node.id, label: folder.name };
+
+        setAdvanced(null);
+        editor.chain().focus().insertContentAt(advanced.range, [{ type: REFERENCE_NODE, attrs: { ref } }, { type: 'text', text: ' ' }]).run();
+    }
+
+    // Back to the menu, narrowed to folders, with the caret at the end of `@query`.
+    function cancelAdvanced() {
+        if (!advanced) {
+            return;
+        }
+
+        setAdvanced(null);
+        setReopenScope('folder');
+        reopenReferenceMenu(editor, advanced.range.to);
+    }
+
+    return (
+        <>
+            {openMenu && createPortal(
+                // A new `@` starts a new menu, without the selection or narrowing of the last one.
+                <MenuList
+                    key={openMenu.range.from}
+                    editor={editor}
+                    openMenu={openMenu}
+                    sessionId={sessionId}
+                    initialScope={reopenScope}
+                    listKeyHandlerRef={listKeyHandlerRef}
+                    onAdvancedSearch={openAdvanced}
+                />,
+                openMenu.host,
+            )}
+            {advanced && <FolderSearchDialog initialQuery={advanced.query} onPick={pickFolder} onCancel={cancelAdvanced} />}
+        </>
     );
 }
 
@@ -126,26 +195,42 @@ interface MenuListProps {
     editor: Editor;
     openMenu: ReferenceTrigger;
     sessionId?: string;
+    /** The group the menu starts narrowed to, if any. */
+    initialScope: Group | null;
     /** Set to the list's key handling while it is shown. */
     listKeyHandlerRef: RefObject<((event: KeyboardEvent) => boolean) | null>;
+    /** Opens the advanced folder search with the typed text. */
+    onAdvancedSearch: (query: string) => void;
 }
 
-function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListProps) {
+function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef, onAdvancedSearch }: MenuListProps) {
     const { t, i18n } = useTranslation();
     const listId = useId();
     const [active, setActive] = useState(0);
+    const listRef = useRef<HTMLDivElement>(null);
+    // Whether the active entry changed by keyboard, so that the list scrolls it into view.
+    const followsKeyboardRef = useRef(false);
     // The group chosen with Tab; a prefix typed in the query wins over it.
-    const [tabScope, setTabScope] = useState<Group | null>(null);
+    const [tabScope, setTabScope] = useState<Group | null>(initialScope);
     const typed = parseQuery(openMenu.query);
     const scope = typed.scope ?? tabScope;
-    const searchText = useDebouncedValue(typed.text.trim(), SEARCH_DELAY_MS);
-    const nodes = useCmsNodes();
-    const search = useCmsSearch(nodes.data ?? [], searchText);
-    const uploads = useSessionUploads(sessionId);
     const text = typed.text.trim();
+    const searchText = useDebouncedValue(text, SEARCH_DELAY_MS);
+    // Without text, the nodes' root levels: loaded with the bare `@`, so a group chosen next shows
+    // them at once. Text is searched once it has stayed the same for a moment.
+    const query = text === '' ? '' : searchText;
+    const types = searchedTypes(scope);
+    const nodes = useCmsNodes();
+    const search = useCmsSearch(nodes.data ?? [], query, types);
+    const uploads = useSessionUploads(sessionId);
+    // A bare `@` offers the groups to narrow to first; the Files group only in a session.
+    const isChoosingGroup = scope === null && text === '';
+    const groupChoices = GROUPS.filter((group) => group !== 'file' || sessionId !== undefined);
+    // CMS objects found for other text than typed: narrowed to the typed text until the answer.
+    const isStale = text !== query || search.isStale;
 
     const items: MenuItem[] = [
-        ...search.results.flatMap(({ node, items: found }) => found.map((item): MenuItem => ({
+        ...search.results.flatMap(({ node, items: found }) => found.filter((item) => !isStale || contains(item.name, text)).map((item): MenuItem => ({
             key: `${node.id}-${item.type}-${item.id}`,
             group: item.type,
             name: item.name,
@@ -173,10 +258,18 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
         .filter(({ items: inGroup }) => inGroup.length > 0);
     // The entries in the order shown; the keyboard moves through these.
     const shown = groups.flatMap(({ items: inGroup }) => inGroup);
-    const activeIndex = Math.min(active, Math.max(0, shown.length - 1));
-    const activeItem = shown[activeIndex];
+    // Narrowed to folders, the advanced folder search is the last entry, after those found.
+    const offersAdvanced = scope === 'folder';
+    const optionCount = isChoosingGroup ? groupChoices.length : shown.length + (offersAdvanced ? 1 : 0);
+    const activeIndex = Math.min(active, Math.max(0, optionCount - 1));
+    const activeItem = isChoosingGroup ? undefined : shown[activeIndex];
+    const activeGroup = isChoosingGroup ? groupChoices[activeIndex] : undefined;
+    const isAdvancedActive = offersAdvanced && activeIndex === shown.length;
     const optionId = (index: number) => `${listId}-${index}`;
-    const isLoading = nodes.isLoading || (searchText !== '' && search.isLoading) || uploads.isLoading;
+    // Searching from the first key on: also while the text waits out the delay, so that the menu
+    // does not say "nothing found" before the CMS was asked.
+    const isSearching = types.length > 0 && (text !== query || search.isLoading);
+    const isLoading = nodes.isLoading || isSearching || uploads.isLoading;
 
     // Replaces `@query` with the entry's token and a space to go on typing.
     function pick(item: MenuItem) {
@@ -189,6 +282,18 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
         editor.commands.focus();
     }
 
+    // Makes the entry at `index` the active one from the keyboard: the list scrolls to it.
+    function moveTo(index: number) {
+        followsKeyboardRef.current = true;
+        setActive(index);
+    }
+
+    // Narrows the menu to `group`, chosen from the groups, with Tab or the right arrow.
+    function narrowTo(group: Group) {
+        setTabScope(group);
+        moveTo(0);
+    }
+
     // Drops the narrowing: a typed prefix is taken out of the query, a Tab narrowing is forgotten.
     function clearScope() {
         if (typed.scope) {
@@ -198,43 +303,79 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
         }
 
         setTabScope(null);
-        setActive(0);
+        moveTo(0);
     }
 
     function handleKeyDown(event: KeyboardEvent): boolean {
-        const count = shown.length;
+        const count = optionCount;
 
         switch (event.key) {
             case 'ArrowDown':
-                setActive(count ? (activeIndex + 1) % count : 0);
+                moveTo(count ? (activeIndex + 1) % count : 0);
 
                 return true;
             case 'ArrowUp':
-                setActive(count ? (activeIndex - 1 + count) % count : 0);
+                moveTo(count ? (activeIndex - 1 + count) % count : 0);
 
                 return true;
             case 'Home':
-                setActive(0);
+                moveTo(0);
 
                 return true;
             case 'End':
-                setActive(Math.max(0, count - 1));
+                moveTo(Math.max(0, count - 1));
 
                 return true;
+            case 'ArrowRight': {
+                // Into the active group, or the active entry's group; otherwise the caret moves.
+                const group = activeGroup ?? (scope === null ? activeItem?.group : undefined);
+
+                if (group) {
+                    narrowTo(group);
+
+                    return true;
+                }
+
+                return false;
+            }
+            case 'ArrowLeft':
+                // Out of a group with nothing typed in it, back to the groups.
+                if (scope !== null && text === '') {
+                    clearScope();
+
+                    return true;
+                }
+
+                return false;
             case 'Enter':
-                if (activeItem) {
+                if (activeGroup) {
+                    narrowTo(activeGroup);
+                } else if (isAdvancedActive) {
+                    onAdvancedSearch(text);
+                } else if (activeItem) {
                     pick(activeItem);
                 }
 
                 // Never sends the message while the menu is open.
                 return true;
-            case 'Tab':
-                if (scope === null && activeItem) {
-                    setTabScope(activeItem.group);
-                    setActive(0);
+            case 'Tab': {
+                const group = activeGroup ?? activeItem?.group;
+
+                if (scope === null && group) {
+                    narrowTo(group);
                 }
 
                 return true;
+            }
+            case 'Backspace':
+                // Back from a chosen group to the groups, instead of deleting the `@`.
+                if (tabScope !== null && openMenu.query === '') {
+                    clearScope();
+
+                    return true;
+                }
+
+                return false;
             default:
                 return false;
         }
@@ -249,7 +390,33 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
     }, [listKeyHandlerRef]);
 
     // The field is the textbox that controls the list and names its active entry.
-    const activeId = activeItem ? optionId(activeIndex) : null;
+    const activeId = activeItem || activeGroup || isAdvancedActive ? optionId(activeIndex) : null;
+
+    // Keeps the entry the keyboard moved to in view; the first one with the list's top, its group's
+    // head included, and any other with the head of its group if it is the first there.
+    useEffect(() => {
+        const list = listRef.current;
+
+        if (!followsKeyboardRef.current || !list) {
+            return;
+        }
+
+        followsKeyboardRef.current = false;
+
+        const option = activeId ? document.getElementById(activeId) : null;
+
+        if (!option || activeIndex === 0) {
+            list.scrollTop = 0;
+
+            return;
+        }
+
+        if (option.previousElementSibling?.getAttribute('role') !== 'option') {
+            option.previousElementSibling?.scrollIntoView({ block: 'nearest' });
+        }
+
+        option.scrollIntoView({ block: 'nearest' });
+    });
 
     useEffect(() => {
         const field = editor.view.dom;
@@ -292,8 +459,38 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
                 <span className={styles.query}>{text ? `“${text}”` : t('composer.mention.search')}</span>
             </div>
 
-            <div id={listId} role="listbox" aria-label={t('composer.mention.label')} className={styles.list}>
-                {groups.map(({ group, items: inGroup }) => (
+            <div
+                ref={listRef}
+                id={listId}
+                role="listbox"
+                aria-label={t('composer.mention.label')}
+                // The advanced folder search below the states of the search belongs to the list.
+                aria-owns={offersAdvanced ? optionId(shown.length) : undefined}
+                className={styles.list}
+            >
+                {isChoosingGroup && groupChoices.map((group, position) => {
+                    const Icon = GROUP_ICONS[group];
+
+                    return (
+                        <div
+                            key={group}
+                            id={optionId(position)}
+                            role="option"
+                            aria-selected={position === activeIndex}
+                            className={styles.item}
+                            // Keeps the caret in the field.
+                            onMouseDown={(event) => event.preventDefault()}
+                            onMouseMove={() => setActive(position)}
+                            onClick={() => narrowTo(group)}
+                        >
+                            <span className={styles.icon}><Icon size={16} aria-hidden /></span>
+                            <span className={styles.text}>
+                                <span className={styles.name}>{t(`composer.mention.groups.${group}`)}</span>
+                            </span>
+                        </div>
+                    );
+                })}
+                {!isChoosingGroup && groups.map(({ group, items: inGroup }) => (
                     <div key={group} role="group" aria-labelledby={`${listId}-${group}`}>
                         <div id={`${listId}-${group}`} className={styles.groupHead}>
                             {t(`composer.mention.groups.${group}`)} · {inGroup.length}
@@ -326,11 +523,24 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
                 ))}
             </div>
 
-            {isLoading && <div className={styles.loading} role="status" aria-label={t('composer.mention.loading')} />}
+            {!isChoosingGroup && isLoading && (
+                // Rows in the shape of entries: three in place of an empty list, one below found ones.
+                <div className={styles.loading} role="status" aria-label={t('composer.mention.loading')}>
+                    {Array.from({ length: shown.length === 0 ? 3 : 1 }, (_, index) => (
+                        <div key={index} className={styles.skeletonRow} aria-hidden>
+                            <span className={styles.skeletonIcon} />
+                            <span className={styles.skeletonText}>
+                                <span className={styles.skeletonLine} />
+                                <span className={styles.skeletonLine} />
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
 
-            {search.isError && <p className={styles.failed}>{t('composer.mention.failed')}</p>}
+            {!isChoosingGroup && search.isError && <p className={styles.failed}>{t('composer.mention.failed')}</p>}
 
-            {!isLoading && shown.length === 0 && (
+            {!isChoosingGroup && !isLoading && shown.length === 0 && (
                 <div className={styles.empty}>
                     <p>{text ? t('composer.mention.empty', { query: text }) : t('composer.mention.emptyNoQuery')}</p>
                     {text && (
@@ -338,6 +548,25 @@ function MenuList({ editor, openMenu, sessionId, listKeyHandlerRef }: MenuListPr
                             {t('composer.mention.asText', { query: openMenu.query })}
                         </Button>
                     )}
+                </div>
+            )}
+
+            {offersAdvanced && (
+                <div
+                    id={optionId(shown.length)}
+                    role="option"
+                    aria-selected={isAdvancedActive}
+                    className={styles.advanced}
+                    // Keeps the caret in the field.
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseMove={() => setActive(shown.length)}
+                    onClick={() => onAdvancedSearch(text)}
+                >
+                    <span className={styles.icon}><FolderTreeIcon size={16} aria-hidden /></span>
+                    <span className={styles.text}>
+                        <span className={styles.name}>{t('composer.mention.advanced')}</span>
+                        <span className={styles.detail}>{t('composer.mention.advancedDetail')}</span>
+                    </span>
                 </div>
             )}
         </div>

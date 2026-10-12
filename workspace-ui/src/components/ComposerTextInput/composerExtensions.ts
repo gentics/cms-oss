@@ -3,7 +3,7 @@ import { Document } from '@tiptap/extension-document';
 import { HardBreak } from '@tiptap/extension-hard-break';
 import { Text } from '@tiptap/extension-text';
 import { UndoRedo } from '@tiptap/extensions';
-import { type EditorState, PluginKey } from '@tiptap/pm/state';
+import { type EditorState, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Suggestion, type SuggestionProps } from '@tiptap/suggestion';
 
@@ -114,6 +114,22 @@ export function isReferenceMenuOpen(state: EditorState): boolean {
     return referenceTriggerKey.getState(state)?.active === true;
 }
 
+// The meta of a transaction that opens a closed @-menu again (`reopenReferenceMenu`).
+const REOPEN_META = 'referenceTriggerReopen';
+
+/**
+ * Opens the @-menu again at the `@query` that ends at `position`, after it was closed there: puts
+ * the caret there and focuses the field. Without this the plugin keeps a menu closed that was closed
+ * at the same `@` (`@tiptap/suggestion`, `shouldKeepDismissed`).
+ */
+export function reopenReferenceMenu(editor: Editor, position: number) {
+    editor.chain().focus().command(({ tr }) => {
+        tr.setSelection(TextSelection.create(tr.doc, position)).setMeta(REOPEN_META, true);
+
+        return true;
+    }).run();
+}
+
 /** An open @-menu: what follows the `@`, where `@query` sits, and the element the menu renders into. */
 export interface ReferenceTrigger {
     query: string;
@@ -171,6 +187,7 @@ const ReferenceTriggerExtension = Extension.create<object, { listener: Reference
             pluginKey: referenceTriggerKey,
             char: '@',
             placement: 'top-start',
+            shouldResetDismissed: ({ transaction }) => transaction.getMeta(REOPEN_META) === true,
             render: () => {
                 let host: HTMLElement | null = null;
                 let unmount: (() => void) | null = null;

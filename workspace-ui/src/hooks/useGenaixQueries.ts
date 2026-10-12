@@ -1,8 +1,8 @@
 import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { referencedObjects, resolvePendingFileSources } from '@/helper/composerParts/composerParts';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
-import { guessWorkflow } from '@/helper/workflowGuess/workflowGuess';
+import { guessWorkflow, handOffWorkflow } from '@/helper/workflowGuess/workflowGuess';
 import {
     answerInteraction,
     archiveSession,
@@ -25,6 +25,7 @@ import type {
     InteractionAnswer,
     MessageCreateBody,
     Session,
+    SessionContext,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
@@ -169,15 +170,14 @@ async function uploadFileParts(sessionId: string, files: StartFile[], onFileProg
     return fileParts;
 }
 
-async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
+async function startSession({ parts, files, onFileProgress }: StartSessionInput, workflow = guessWorkflow(parts), context?: SessionContext): Promise<Session> {
     const authorizations = [await newSessionCmsAuthorization()];
-    const workflow = guessWorkflow(parts);
 
     if (files.length === 0) {
-        return createSession({ workflow, message: { parts }, authorizations });
+        return createSession({ workflow, context, message: { parts }, authorizations });
     }
 
-    const session = await createSession({ workflow, authorizations });
+    const session = await createSession({ workflow, context, authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
 
@@ -195,9 +195,41 @@ export function useStartSession() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: startSession,
+        mutationFn: (input: StartSessionInput) => startSession(input),
         onSuccess: (session) => {
             queryClient.setQueryData(genaixKeys.session(session.id), session);
+        },
+        retry: false,
+    });
+}
+
+/** The first message of a session handed off from a read-only one, and where that one worked. */
+export interface HandOffSessionInput extends StartSessionInput {
+    /** The read-only session's `context.node_id`, which the new session works in too. */
+    nodeId?: number;
+}
+
+/**
+ * Starts a session that acts on objects selected in a read-only session ("Edit these"): its
+ * instruction as the first message, every object the message refers to in `context.references`, in
+ * the read-only session's node, with a workflow that is not read-only (`handOffWorkflow`). Like
+ * `useStartSession`, it puts the session into the cache and is never retried.
+ */
+export function useHandOffSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ nodeId, ...input }: HandOffSessionInput) => startSession(input, handOffWorkflow(input.parts), {
+            ...(nodeId !== undefined && { node_id: nodeId }),
+            references: referencedObjects(input.parts),
+            // Their contract defaults, the same as leaving them out; the generated type requires them.
+            guidelines: [],
+            connection_ids: [],
+        }),
+        onSuccess: (session) => {
+            queryClient.setQueryData(genaixKeys.session(session.id), session);
+            // The left column stays while the new session opens; it lists the new one too.
+            void queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
         },
         retry: false,
     });

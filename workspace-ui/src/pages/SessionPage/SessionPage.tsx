@@ -1,18 +1,22 @@
-import { useParams } from '@tanstack/react-router';
-import { type RefObject, useRef, useState } from 'react';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { MessageSquarePlusIcon, XIcon } from 'lucide-react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
+import { IconButton } from '@/components/IconButton/IconButton';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
 import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
-import { type SendTurnInput, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
+import { type SendTurnInput, type StartSessionInput, useCancelRun, useHandOffSession, useSendTurn } from '@/hooks/useGenaixQueries';
+import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
-import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
+import type { ContextReference, InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
@@ -32,13 +36,27 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * While the session's run is working, Stop cancels it (`POST …/runs/{run_id}/cancel`). While it waits
  * for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card
  * holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card first.
+ * Once the interaction is answered, from the card or here, or has expired (`useInteractionLock`), the
+ * run counts as working again: no second answer is sent, and Stop is offered.
+ *
+ * "Edit these" in a result card (`useHandOffStore`) puts the selected objects into the field, in
+ * place of any handed over before, and says so above it: the next message then starts a new session
+ * with the objects in the field (`useHandOffSession`) and opens it. The notice's X turns that off and
+ * takes the objects out again; with no object left in the field it is off as well.
  */
 function SessionComposer({ sessionId, composerRef }: { sessionId: string; composerRef: RefObject<ComposerHandle | null> }) {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
     const sendTurn = useSendTurn(sessionId);
+    const handOffSession = useHandOffSession();
     const cancelRun = useCancelRun(sessionId);
     const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
     const pending = useWorkspaceEventStore((state) => selectSession(sessionId)(state).interactions?.at(-1));
-    const isWaiting = run?.status === 'waiting_for_input' && Boolean(pending);
+    // What "Edit these" handed over, while the next message starts a new session.
+    const handOff = useHandOffStore((state) => state.handOffs[sessionId]);
+    const [referenceCount, setReferenceCount] = useState(0);
+    const pendingLock = useInteractionLock(pending);
+    const isWaiting = !handOff && run?.status === 'waiting_for_input' && Boolean(pending) && !pendingLock;
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
 
@@ -52,7 +70,56 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
         });
     }
 
+    // Takes the objects of "Edit these" over into the field, in place of those handed over before.
+    useEffect(() => {
+        if (!handOff || handOff.isInField) {
+            return;
+        }
+
+        composerRef.current?.removeReferences(handOff.replaces);
+        composerRef.current?.addReferences(handOff.references);
+        useHandOffStore.getState().markInField(sessionId);
+    }, [composerRef, handOff, sessionId]);
+
+    const handleReferencesChange = useCallback((references: ContextReference[]) => {
+        setReferenceCount(references.length);
+
+        // Nothing left to hand off; also a composer that opens empty again ends one it had.
+        if (references.length === 0 && useHandOffStore.getState().handOffs[sessionId]?.isInField) {
+            useHandOffStore.getState().end(sessionId);
+        }
+    }, [sessionId]);
+
+    function cancelHandOff() {
+        if (handOff) {
+            composerRef.current?.removeReferences(handOff.references);
+        }
+
+        useHandOffStore.getState().end(sessionId);
+    }
+
+    function startHandOff(input: StartSessionInput, nodeId: number | undefined) {
+        // The promise, not `mutate` callbacks, as for a turn below.
+        handOffSession.mutateAsync({ ...input, nodeId, onFileProgress: reportUploadProgress }).then(
+            (session) => {
+                composerRef.current?.reset();
+                useHandOffStore.getState().end(sessionId);
+                void navigate({ to: '/sessions/$id', params: { id: session.id } });
+            },
+            (error: unknown) => {
+                useErrorNotificationStore.getState().addError({ messageKey: 'handOff.startFailed', detailKey: errorMessageKey(error) });
+            },
+        );
+    }
+
     function handleSubmit(input: StartSessionInput) {
+        if (handOff) {
+            setUploadProgress([]);
+            startHandOff(input, handOff.nodeId);
+
+            return;
+        }
+
         let replyTo: SendTurnInput['replyTo'];
 
         if (isWaiting && pending) {
@@ -65,14 +132,32 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
             }
 
             replyTo = { interaction_id: pending.id, answer };
+            useInteractionDraftStore.getState().lock(pending.id, 'sending');
         }
+
+        // The interaction still locked as `sending`, unless `interaction.resolved` came first and took it away.
+        const repliedTo = () => (replyTo && useInteractionDraftStore.getState().locks[replyTo.interaction_id] ? replyTo.interaction_id : undefined);
 
         setUploadProgress([]);
         // The promise, not `mutate` callbacks: those are dropped once the user has gone on to another
         // session, and a failed send would go unreported.
         sendTurn.mutateAsync({ ...input, replyTo, onFileProgress: reportUploadProgress }).then(
-            () => composerRef.current?.reset(),
+            () => {
+                const interactionId = repliedTo();
+
+                if (interactionId) {
+                    useInteractionDraftStore.getState().lock(interactionId, 'answered');
+                }
+
+                composerRef.current?.reset();
+            },
             (error: unknown) => {
+                const interactionId = repliedTo();
+
+                if (interactionId) {
+                    lockAfterFailure(interactionId, error);
+                }
+
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
             },
         );
@@ -95,10 +180,22 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
             ref={composerRef}
             variant="chat"
             onSubmit={handleSubmit}
-            isSubmitting={sendTurn.isPending}
+            isSubmitting={sendTurn.isPending || handOffSession.isPending}
             uploadProgress={uploadProgress}
-            sessionId={sessionId}
-            isRunning={Boolean(run) && !isWaiting}
+            // Files are per session: the new one cannot refer to this one's uploads (`SessionCreate`).
+            sessionId={handOff ? undefined : sessionId}
+            onReferencesChange={handleReferencesChange}
+            notice={handOff && (
+                <>
+                    <MessageSquarePlusIcon size={14} className={styles.noticeIcon} aria-hidden />
+                    <span className={styles.noticeText}>{t('handOff.notice', { count: referenceCount })}</span>
+                    <IconButton variant="ghost" size="icon" label={t('handOff.cancel')} onClick={cancelHandOff}>
+                        <XIcon size={14} />
+                    </IconButton>
+                </>
+            )}
+            // A new session can start while this one's run works; Stop is for this session only.
+            isRunning={Boolean(run) && !isWaiting && !handOff}
             isStopping={run?.status === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}
         />

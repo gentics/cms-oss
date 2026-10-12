@@ -74,6 +74,8 @@
   /* §8: the attention pulse; the blink of the voice input's recording dot. */
   --duration-attention: 1s;
   --duration-cursor-blink: 1s;
+  /* §8 "Lädt": one sweep of the skeleton shimmer. */
+  --duration-skeleton: 1.1s;
   --press-scale: 0.97;
 
   /* Chat (§11, §12 "Chat-Blasen"): what stands in the agent's column is indented by its avatar

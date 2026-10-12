@@ -66,7 +66,8 @@
   text-transform: uppercase;
 }
 
-/* An entry: icon chip (design.md §9, "Eintragsarten im @-Menü"), name and detail. */
+/* An entry: icon chip (design.md §9, "Eintragsarten im @-Menü"), name and detail. It rises into
+   place when it appears (§10 `rise`). */
 .item {
   display: flex;
   align-items: center;
@@ -74,6 +75,7 @@
   padding: 6px 8px;
   border-radius: var(--corner-md);
   cursor: pointer;
+  animation: rise var(--duration-card) var(--easing);
 
   &:hover {
     background: rgba(var(--interactive-rgb), .07);
@@ -125,12 +127,80 @@
   font-size: var(--font-size-xs);
 }
 
-/* Loading: one skeleton row (design.md §8); without the shimmer, which has no duration token. */
+/* Loading (design.md §8 "Lädt"): skeleton rows in the shape of the entries, under a shimmer. */
 .loading {
-  height: 30px;
-  margin: 4px 7px 8px;
-  border-radius: var(--corner-md);
-  background: rgba(var(--fg-primary-rgb), .08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 4px 4px;
+
+  &:first-child,
+  .list:empty + & {
+    padding-top: 4px;
+  }
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+}
+
+.skeletonText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeletonIcon,
+.skeletonLine {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--fg-primary-rgb), .05) 0%,
+    rgba(var(--fg-primary-rgb), .11) 50%,
+    rgba(var(--fg-primary-rgb), .05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--duration-skeleton) linear infinite;
+}
+
+.skeletonIcon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--corner-full);
+}
+
+.skeletonLine {
+  width: 62%;
+  height: 9px;
+  border-radius: var(--corner-xs);
+
+  & + & {
+    width: 38%;
+    height: 7px;
+  }
+}
+
+/* Rows of different lengths, so that they read as entries. */
+.skeletonRow:nth-child(2) .skeletonLine:first-child {
+  width: 48%;
+}
+
+.skeletonRow:nth-child(3) .skeletonLine:first-child {
+  width: 70%;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
 }
 
 .failed {
@@ -149,4 +219,31 @@
   color: var(--fg-muted);
   font-size: var(--font-size-sm);
   text-align: center;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}
+
+/* Narrowed to folders, the way to the advanced folder search, always last (draft `.popadv`). */
+.advanced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  cursor: pointer;
+
+  &:hover,
+  &[aria-selected='true'] {
+    background: rgba(var(--interactive-rgb), .1);
+  }
+
+  & .name {
+    color: var(--interactive);
+  }
 }

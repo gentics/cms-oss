@@ -5,7 +5,7 @@ import { composerExtensions } from '@/components/ComposerTextInput/composerExten
 import i18n from '@/i18n';
 import type { ContextReference, FileMode } from '@/services/apiService/genaix/types';
 
-import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, pendingFileSource, readParts, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
+import { holdsToken, pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts, pendingFileSource, readParts, referenceContent, resolvePendingFileSources, selectedRange, textContent, touchesVerbatim } from './composerParts';
 
 const schema = getSchema(composerExtensions);
 
@@ -267,6 +267,23 @@ describe('textContent', () => {
     it('takes the text literally, with line breaks and without empty text nodes', () => {
         expect(readParts(doc(...textContent('a <b>x</b>\n\nend')))).toEqual([{ type: 'text', text: 'a <b>x</b>\n\nend' }]);
         expect(textContent('')).toEqual([]);
+    });
+});
+
+describe('referenceContent', () => {
+    it('gives a reference token per object, which the field reads back as reference parts', () => {
+        const pages: ContextReference[] = [
+            { type: 'page', id: '8871', node_id: 3, label: 'Garantiebedingungen' },
+            { type: 'page', id: '8903', node_id: 3, label: 'Nutzungsbedingungen' },
+        ];
+
+        expect(readParts(doc(...referenceContent(pages), { type: 'text', text: 'publish these' }))).toEqual([
+            { type: 'reference', ref: pages[0] },
+            { type: 'text', text: ' ' },
+            { type: 'reference', ref: pages[1] },
+            { type: 'text', text: ' publish these' },
+        ]);
+        expect(referenceContent([])).toEqual([]);
     });
 });
 

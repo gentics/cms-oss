@@ -131,7 +131,9 @@
             "failed": "Die Suche konnte nicht abgeschlossen werden.",
             "empty": "Kein Kontext für „{{query}}“ gefunden.",
             "emptyNoQuery": "Kein Kontext gefunden.",
-            "asText": "„{{query}}“ als Text"
+            "asText": "„{{query}}“ als Text",
+            "advanced": "Erweiterte Ordnersuche…",
+            "advancedDetail": "Alle Ordner · Channels · tiefere Ebenen"
         },
         "attachment": {
             "source": "als Quelle",
@@ -206,6 +208,8 @@
             "send": "Senden",
             "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
+            "answered": "Beantwortet",
+            "expired": "Abgelaufen",
             "approve": "Ja",
             "reject": "Nein",
             "answerFailed": "Die Antwort konnte nicht gesendet werden",
@@ -224,6 +228,13 @@
                 "default": "Standard"
             }
         }
+    },
+    "handOff": {
+        "editThese": "Diese bearbeiten",
+        "notice_one": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekt",
+        "notice_other": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekten",
+        "cancel": "In dieser Session bleiben",
+        "startFailed": "Die Session konnte nicht gestartet werden"
     },
     "parts": {
         "selectedCount": "{{count}} ausgewählt",
@@ -255,7 +266,9 @@
             "title": "Tabelle",
             "yes": "Ja",
             "no": "Nein",
-            "shown": "{{shown}} von {{total}}"
+            "shown": "{{shown}} von {{total}}",
+            "select": "{{label}} auswählen",
+            "selectAll": "Alle Zeilen auswählen"
         },
         "pageStructure": {
             "title": "Seitenstruktur",
@@ -579,5 +592,31 @@
         "noCmsConnection": "Es gibt keine CMS-Verbindung, mit der gearbeitet werden kann.",
         "invalidResponse": "Der Server hat eine unlesbare Antwort gesendet.",
         "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "folderSearch": {
+        "title": "Ordner wählen",
+        "node": "Node",
+        "channelOf": "{{name}} (Channel von {{master}})",
+        "search": "Ordner suchen",
+        "placeholder": "Ordner in {{node}} suchen",
+        "path": "Ordnerpfad",
+        "list": "Ordner",
+        "recent": "Zuletzt verwendet",
+        "allFolders": "Alle Ordner · {{total}}",
+        "inFolder": "In {{name}} · {{total}}",
+        "topMatches": "Top {{shown}} von {{total}} Treffern",
+        "matches_one": "{{count}} Treffer",
+        "matches_other": "{{count}} Treffer",
+        "empty": "Kein Ordner in {{node}} passt zu „{{query}}“.",
+        "emptyLevel": "Keine Unterordner.",
+        "showMore": "{{count}} weitere von {{remaining}} zeigen",
+        "open": "{{name}} öffnen",
+        "local": "Lokal",
+        "localHint": "Nur in diesem Channel",
+        "loading": "Ordner werden geladen…",
+        "failed": "Die Ordner konnten nicht geladen werden.",
+        "pick": "Ordner auswählen",
+        "cancel": "Abbrechen",
+        "use": "Ordner verwenden"
     }
 }

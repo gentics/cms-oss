@@ -10,6 +10,8 @@ import {
     createCmsToken,
     getCmsKeycloakConfig,
     getCmsUser,
+    isCmsFeatureActive,
+    listCmsFolders,
     listCmsNodes,
     listCmsTemplates,
     loadCmsPage,
@@ -92,35 +94,133 @@ describe('listCmsNodes', () => {
 });
 
 describe('searchCmsItems', () => {
+    const NODE = { id: 3, name: 'Corporate Website', folderId: 7 };
+
     afterEach(() => {
         vi.unstubAllGlobals();
+        vi.restoreAllMocks();
     });
 
-    it('searches pages, folders and images below the node root folder, recursively and capped', async () => {
-        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 42, name: 'Campaigns', type: 'folder' }] }));
+    // The URL of the one request made.
+    function requestUrl(fetchMock: ReturnType<typeof stubFetchSequence>): URL {
+        return new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+    }
 
-        await expect(searchCmsItems({ id: 3, name: 'Corporate Website', folderId: 7 }, 'Camp')).resolves.toEqual([{ id: 42, name: 'Campaigns', type: 'folder' }]);
+    it('searches pages below the node root folder, recursively and capped', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [{ id: 8871, name: 'Campaign launch', type: 'page' }] }));
 
-        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+        await expect(searchCmsItems(NODE, 'page', 'Camp')).resolves.toEqual([{ id: 8871, name: 'Campaign launch', type: 'page' }]);
+
+        const url = requestUrl(fetchMock);
 
         expect(url.pathname).toBe('/rest/folder/getItems/7');
         expect(url.searchParams.get('nodeId')).toBe('3');
         expect(url.searchParams.get('search')).toBe('Camp');
         expect(url.searchParams.get('recursive')).toBe('true');
         expect(url.searchParams.get('maxItems')).toBe(String(CMS_SEARCH_MAX_ITEMS));
-        expect(url.searchParams.getAll('type')).toEqual(['page', 'folder', 'image']);
+        expect(url.searchParams.getAll('type')).toEqual(['page']);
         expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
     });
 
-    it('searches only the given types', async () => {
+    it('lists the objects below the root folder too when asked to, without a query', async () => {
         const fetchMock = stubFetchSequence(Response.json({ items: [] }));
 
-        await searchCmsItems({ id: 3, name: 'Corporate Website', folderId: 7 }, '', undefined, ['image']);
+        await searchCmsItems(NODE, 'image', '', { recursive: true });
 
-        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+        const url = requestUrl(fetchMock);
 
+        expect(url.pathname).toBe('/rest/folder/getItems/7');
+        expect(url.searchParams.has('search')).toBe(false);
+        expect(url.searchParams.get('recursive')).toBe('true');
         expect(url.searchParams.getAll('type')).toEqual(['image']);
-        expect(url.searchParams.get('search')).toBe('');
+    });
+
+    it('searches folders with getFolders, which getItems leaves out', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folders: [{ id: 42, name: 'Campaigns', type: 'folder', path: '/Corporate Website/' }] }));
+
+        await expect(searchCmsItems(NODE, 'folder', 'Camp')).resolves.toEqual([{ id: 42, name: 'Campaigns', type: 'folder', path: '/Corporate Website/' }]);
+
+        const url = requestUrl(fetchMock);
+
+        expect(url.pathname).toBe('/rest/folder/getFolders/7');
+        expect(url.searchParams.get('search')).toBe('Camp');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(url.searchParams.has('type')).toBe(false);
+    });
+
+    it('lists the root level without a query', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [] }));
+
+        await expect(searchCmsItems(NODE, 'image', '')).resolves.toEqual([]);
+
+        const url = requestUrl(fetchMock);
+
+        expect(url.pathname).toBe('/rest/folder/getItems/7');
+        expect(url.searchParams.has('search')).toBe(false);
+        expect(url.searchParams.has('recursive')).toBe(false);
+        expect(url.searchParams.get('maxItems')).toBe(String(CMS_SEARCH_MAX_ITEMS));
+        expect(url.searchParams.getAll('type')).toEqual(['image']);
+    });
+
+    it('searches with Elasticsearch when asked to, fuzzy and below the node root folder', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ hits: { total: 1, hits: [{ _id: 8871, _object: { id: 8871, name: 'Campaign launch', type: 'page' } }] } }));
+
+        await expect(searchCmsItems(NODE, 'page', 'Campain', { elastic: true })).resolves.toEqual([{ id: 8871, name: 'Campaign launch', type: 'page' }]);
+
+        const url = requestUrl(fetchMock);
+        const body = postedBody(fetchMock) as { query: { bool: { must: [{ bool: { should: Record<string, unknown>[] } }] } }; size: number };
+        const should = body.query.bool.must[0].bool.should;
+
+        expect(fetchMock.mock.calls[0]![1]?.method).toBe('POST');
+        expect(url.pathname).toBe('/rest/elastic/page/_search');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.get('folderId')).toBe('7');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(body.size).toBe(CMS_SEARCH_MAX_ITEMS);
+        expect(should).toContainEqual({ multi_match: { fields: ['name^2', 'path', 'description', 'content'], query: 'Campain', fuzziness: 'AUTO' } });
+        expect(should).toContainEqual({ wildcard: { filename: { value: '*campain*', boost: 2 } } });
+        expect(should).not.toContainEqual({ term: { id: expect.anything() } });
+    });
+
+    it('also finds the id of a number with Elasticsearch', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ hits: { hits: [] } }));
+
+        await searchCmsItems(NODE, 'folder', '42', { elastic: true });
+
+        const body = postedBody(fetchMock) as { query: { bool: { must: [{ bool: { should: unknown[] } }] } } };
+
+        expect(body.query.bool.must[0].bool.should).toContainEqual({ term: { id: 42 } });
+    });
+
+    it('falls back to the search without Elasticsearch when that fails', async () => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const fetchMock = stubFetchSequence(new Response('', { status: 500 }), Response.json({ folders: [{ id: 42, name: 'Campaigns', type: 'folder' }] }));
+
+        await expect(searchCmsItems(NODE, 'folder', 'Camp', { elastic: true })).resolves.toEqual([{ id: 42, name: 'Campaigns', type: 'folder' }]);
+        expect(new URL(fetchMock.mock.calls[1]![0] as string, 'http://cms.test').pathname).toBe('/rest/folder/getFolders/7');
+    });
+
+    it('lists the root level without Elasticsearch', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ items: [] }));
+
+        await searchCmsItems(NODE, 'page', '', { elastic: true });
+
+        expect(requestUrl(fetchMock).pathname).toBe('/rest/folder/getItems/7');
+    });
+});
+
+describe('isCmsFeatureActive', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('asks the CMS whether the feature is on', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ name: 'elasticsearch', activated: true }), Response.json({ name: 'elasticsearch', activated: false }));
+
+        await expect(isCmsFeatureActive('elasticsearch')).resolves.toBe(true);
+        await expect(isCmsFeatureActive('elasticsearch')).resolves.toBe(false);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/admin/features/elasticsearch', expect.objectContaining({ credentials: 'same-origin' }));
     });
 });
 
@@ -238,5 +338,41 @@ describe('CMS login', () => {
         stubFetchSequence(new Response('MAINTENANCEMODE'));
 
         await expect(ssoLoginToCms('kc-token')).rejects.toMatchObject({ name: 'CmsLoginError', responseCode: 'MAINTENANCEMODE' });
+    });
+});
+
+describe('listCmsFolders', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const FOLDER = { id: 42, name: 'Campaigns', path: '/Corporate Website/Campaigns/', hasSubfolders: true, inherited: false };
+
+    it('lists one page of a folder\'s subfolders in the node, with how many there are', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folders: [FOLDER], numItems: 61, hasMoreItems: true }));
+
+        await expect(listCmsFolders(3, 7, { skipCount: 60, maxItems: 60 })).resolves.toEqual({ folders: [FOLDER], total: 61, hasMore: true });
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.pathname).toBe('/rest/folder/getFolders/7');
+        expect(url.searchParams.get('nodeId')).toBe('3');
+        expect(url.searchParams.get('skipCount')).toBe('60');
+        expect(url.searchParams.get('maxItems')).toBe('60');
+        expect(url.searchParams.has('search')).toBe(false);
+        expect(url.searchParams.has('recursive')).toBe(false);
+        expect(fetchMock.mock.calls[0]![1]).toEqual(expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('searches below the folder, recursively', async () => {
+        const fetchMock = stubFetchSequence(Response.json({ folders: [FOLDER] }));
+
+        await expect(listCmsFolders(3, 7, { search: 'Camp', maxItems: 50 })).resolves.toEqual({ folders: [FOLDER], total: 1, hasMore: false });
+
+        const url = new URL(fetchMock.mock.calls[0]![0] as string, 'http://cms.test');
+
+        expect(url.searchParams.get('search')).toBe('Camp');
+        expect(url.searchParams.get('recursive')).toBe('true');
+        expect(url.searchParams.get('maxItems')).toBe('50');
     });
 });

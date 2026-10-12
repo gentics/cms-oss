@@ -53,7 +53,7 @@ describe('ImagePicker', () => {
         vi.unstubAllGlobals();
     });
 
-    it('lists the node\'s images without a search text, each as the CMS serves it, searching images only', async () => {
+    it('lists all of the node\'s images without a search text, each as the CMS serves it, searching images only', async () => {
         const fetchMock = stubCms();
 
         renderPicker();
@@ -64,7 +64,8 @@ describe('ImagePicker', () => {
         const search = fetchMock.mock.calls.map(([input]) => new URL(String(input), 'http://app.test')).find((url) => url.pathname === '/rest/folder/getItems/7')!;
 
         expect(search.searchParams.get('nodeId')).toBe('3');
-        expect(search.searchParams.get('search')).toBe('');
+        expect(search.searchParams.has('search')).toBe(false);
+        expect(search.searchParams.get('recursive')).toBe('true');
         expect(search.searchParams.getAll('type')).toEqual(['image']);
     });
 

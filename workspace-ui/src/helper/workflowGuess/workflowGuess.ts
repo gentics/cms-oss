@@ -35,3 +35,24 @@ export function guessWorkflow(parts: UserMessagePart[]): string {
 
     return match?.[0] ?? DEFAULT_WORKFLOW;
 }
+
+/**
+ * The workflow that writes nothing to the CMS (`08-workflow-modules.md` §8.2). Its results can be
+ * handed off to a new session that acts on them (`EditTheseButton`).
+ */
+export const READ_ONLY_WORKFLOW = 'content_research';
+
+// What a hand-off starts when its instruction would otherwise be read-only again: the mock's module
+// that acts on the pages in `context.references`.
+const HAND_OFF_FALLBACK_WORKFLOW = 'content_edit';
+
+/**
+ * TEMPORARY, like `guessWorkflow`: the workflow of a session handed off from a read-only one. The
+ * guess from its instruction, but never `READ_ONLY_WORKFLOW`, since the hand-off is there to act on
+ * the selected objects.
+ */
+export function handOffWorkflow(parts: UserMessagePart[]): string {
+    const workflow = guessWorkflow(parts);
+
+    return workflow === READ_ONLY_WORKFLOW ? HAND_OFF_FALLBACK_WORKFLOW : workflow;
+}

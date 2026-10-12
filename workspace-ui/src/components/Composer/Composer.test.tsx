@@ -302,7 +302,11 @@ describe('Composer', () => {
                     return Response.json({ items: [{ id: 3, name: 'Corporate Website', folderId: 7 }] });
                 }
 
-                return Response.json({ items: [{ id: 42, name: 'Campaigns', type: 'folder' }] });
+                if (url.pathname === '/rest/folder/getFolders/7') {
+                    return Response.json({ folders: [{ id: 42, name: 'Campaigns', type: 'folder' }] });
+                }
+
+                return Response.json({ items: [] });
             }));
         }
 

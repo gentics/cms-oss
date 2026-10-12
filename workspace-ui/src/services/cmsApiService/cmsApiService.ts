@@ -180,9 +180,11 @@ export interface CmsNode {
 }
 
 /** The CMS object types the composer's @-menu searches. */
-export type CmsItemType = 'page' | 'folder' | 'image';
+export const CMS_ITEM_TYPES = ['page', 'folder', 'image'] as const;
 
-/** A page, folder or image found by `searchCmsItems`, as far as the composer needs it. */
+export type CmsItemType = typeof CMS_ITEM_TYPES[number];
+
+/** A page, folder or image listed by `searchCmsItems`, as far as the composer needs it. */
 export interface CmsItem {
     id: number;
     name: string;
@@ -198,19 +200,101 @@ export async function listCmsNodes(): Promise<CmsNode[]> {
     return items ?? [];
 }
 
+/**
+ * Whether the CMS feature `name` is on: `GET /rest/admin/features/{name}`, as the editor UI asks for
+ * `elasticsearch`. The CMS answers every user, and `activated: false` for a feature it does not know.
+ */
+export async function isCmsFeatureActive(name: string): Promise<boolean> {
+    const { activated } = await httpRequest<{ activated?: boolean }>(`/rest/admin/features/${encodeURIComponent(name)}`, CMS_GET);
+
+    return activated === true;
+}
+
 /** How many objects one node returns for one search. */
 export const CMS_SEARCH_MAX_ITEMS = 20;
 
-/**
- * Pages, folders and images in `node` whose id, name or description matches `query`: `GET
- * /rest/folder/getItems/{root folder}` with `search`, recursive, at most `CMS_SEARCH_MAX_ITEMS`.
- */
-export async function searchCmsItems(node: CmsNode, query: string, signal?: AbortSignal): Promise<CmsItem[]> {
-    const params = new URLSearchParams({ nodeId: String(node.id), search: query, recursive: 'true', maxItems: String(CMS_SEARCH_MAX_ITEMS) });
+// The fields `*query*` is looked for in, per type, as in the editor UI's search (`allFilterAdd` in
+// `cms-ui/apps/editor-ui/.../query-assembler-elasticsearch.service.ts`).
+const ELASTIC_WILDCARD_FIELDS: Record<CmsItemType, readonly string[]> = {
+    page: ['niceUrl', 'filename', 'name.raw'],
+    folder: ['name.raw'],
+    image: ['filename', 'name.raw'],
+};
 
-    for (const type of ['page', 'folder', 'image'] satisfies CmsItemType[]) {
-        params.append('type', type);
+// The Elasticsearch query of the editor UI's search: `query` in name (weighted twice), path,
+// description and content, or as part of the names and file names. Unlike there, the words also
+// match with a typo (`fuzziness`), and a number also finds the object of that id, as `getItems` does.
+function elasticQuery(type: CmsItemType, query: string) {
+    const part = `*${query.toLowerCase().replace(/[\\*?]/g, '\\$&')}*`;
+    const should: unknown[] = [
+        { multi_match: { fields: ['name^2', 'path', 'description', 'content'], query, fuzziness: 'AUTO' } },
+        ...ELASTIC_WILDCARD_FIELDS[type].map((field) => ({ wildcard: { [field]: { value: part, boost: field === 'niceUrl' ? 1 : 2 } } })),
+    ];
+
+    if (/^\d+$/.test(query)) {
+        should.push({ term: { id: Number(query) } });
     }
+
+    return { query: { bool: { must: [{ bool: { should } }] } }, from: 0, size: CMS_SEARCH_MAX_ITEMS, _source: false };
+}
+
+/**
+ * The objects of `type` below the root folder of `node` that Elasticsearch finds for `query`, best
+ * first: `POST /rest/elastic/{type}/_search` with `nodeId`, `folderId` and `recursive`, as the editor
+ * UI searches (feature `elasticsearch`). The CMS answers the objects in `hits.hits[]._object`.
+ */
+export async function elasticSearchCmsItems(node: CmsNode, type: CmsItemType, query: string, signal?: AbortSignal): Promise<CmsItem[]> {
+    const params = new URLSearchParams({ nodeId: String(node.id), folderId: String(node.folderId), recursive: 'true' });
+    const { hits } = await httpRequest<{ hits?: { hits?: { _object?: CmsItem }[] } }>(`/rest/elastic/${type}/_search?${params}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(elasticQuery(type, query)),
+        signal,
+    });
+
+    return (hits?.hits ?? []).flatMap(({ _object: item }) => (item ? [item] : []));
+}
+
+/**
+ * The objects of `type` in `node`: for an empty `query` those directly in its root folder, otherwise
+ * those below it that match `query` (recursive). At most `CMS_SEARCH_MAX_ITEMS`. With `elastic`, a
+ * query goes to Elasticsearch (`elasticSearchCmsItems`), and only if that fails to the search below,
+ * which matches id, name or description: folders from `GET /rest/folder/getFolders/{root folder}`,
+ * pages and images from `GET /rest/folder/getItems/{root folder}`, which leaves out folders.
+ */
+export async function searchCmsItems(
+    node: CmsNode,
+    type: CmsItemType,
+    query: string,
+    { elastic = false, signal }: { elastic?: boolean; signal?: AbortSignal } = {},
+): Promise<CmsItem[]> {
+    if (elastic && query !== '') {
+        try {
+            return await elasticSearchCmsItems(node, type, query, signal);
+        } catch (error) {
+            if (signal?.aborted) {
+                throw error;
+            }
+
+            console.warn('Elasticsearch search failed, searching without it.', error);
+        }
+    }
+
+    const params = new URLSearchParams({ nodeId: String(node.id), maxItems: String(CMS_SEARCH_MAX_ITEMS) });
+
+    if (query !== '') {
+        params.set('search', query);
+        params.set('recursive', 'true');
+    }
+
+    if (type === 'folder') {
+        const { folders } = await httpRequest<{ folders?: CmsItem[] }>(`/rest/folder/getFolders/${node.folderId}?${params}`, { ...CMS_GET, signal });
+
+        return folders ?? [];
+    }
+
+    params.set('type', type);
 
     const { items } = await httpRequest<{ items?: CmsItem[] }>(`/rest/folder/getItems/${node.folderId}?${params}`, { ...CMS_GET, signal });
 

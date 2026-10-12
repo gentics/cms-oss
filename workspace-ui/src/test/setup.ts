@@ -17,8 +17,10 @@ const noMediaQuery = (query: string): MediaQueryList => ({
     dispatchEvent: () => false,
 });
 
-// Only in jsdom; tests in the node environment have no DOM.
+// Only in jsdom; tests in the node environment have no DOM. Without layout there is nothing to
+// scroll either (`scrollIntoView`, the @-menu following the keyboard).
 if (typeof document !== 'undefined') {
+    Element.prototype.scrollIntoView ??= () => {};
     Range.prototype.getClientRects ??= noRects;
     Range.prototype.getBoundingClientRect ??= emptyRect;
     document.elementFromPoint ??= () => null;

@@ -41,6 +41,12 @@ Hence, if you need to, say, render a copyright of a referenced image, set within
 either +{{{gtx_render cms.tag.parts.img.target.object.copyright }}}+ with +target+ image dereferencing, or 
 +{{cms.tag.parts.img.target.object.copyright.parts.text.text}}+, where in addition +parts+ property listing, and +text+ part type now have to be explicitly mentioned, if one wants to avoid using +gtx_render+ (which is  discouraged).
 
+h4. Iteration restrictions
+
+When iterating over the properties of a CMS object, the resolved values of properties that reference other CMS objects (like "folder", "creator", ...) will not be the
+referenced objects themselves, but will be their string representation instead. This ensures that algorithms that recursively iterate over properties of a CMS object will
+not cause endless loops.
+
 h3. Helpers
 
 Since Handlebars templating language itself is completely Logic-less, the Handlebars Part Type provides some helpers for supporting more complex rendering logic:
@@ -69,6 +75,7 @@ h4. Additional Helpers
 | "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
 | "gtx_script":#gtx_script | Execute a script from a devtool package and render the output | +{{gtx_script "demopackage.scriptname" page=cms.page}}+ |
 | "gtx_json_path":#gtx_json_path | Navigate over a "JSON":gcn_part_type.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ | +{{gtx_json_path cms.tag.parts.json "$.objarray[0].objfield"}}+ |
+| "gtx_load":#gtx_load | Load an object into the context | +{{#with (gtx_load "page" 1234) }}{{ name }}{{/with}}+ |
 
 h5. gtx_render
 
@@ -342,6 +349,25 @@ will result in
 </shell>
 
 Please refer to the "implementing library documentation":https://github.com/json-path/JsonPath/blob/master/README.md for the whole possibilities of JSONPath.
+
+h5. gtx_load
+
+This helper loads an object with specified type (one of "node", "folder", "page", "file or "image") and id (either local or global)
+into the context. It will typically be used together with the @with@ helper.
+
+General usage is:
+
+<html>
+{{#with (gtx_load [type] [id]) as | loadedObject | }}
+<!-- access loadedObject in this block -->
+{{/with}}
+</html>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +type+ | Type of the object to load | _mandatory_ |
+| +id+   | Either the local or global id of the object to load | _mandatory_ |
 
 h4. Custom helpers
 

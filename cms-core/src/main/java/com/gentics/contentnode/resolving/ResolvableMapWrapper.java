@@ -72,13 +72,17 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 	 * @param value value to wrap
 	 * @param context optional context
 	 * @param mother optional mother
+	 * @param forMap true when the value is wrapped for a map
 	 * @return optionally wrapped value
 	 */
-	protected static Object wrap(Object value, NodeObject context, ResolvableMapWrapper mother) {
+	protected static Object wrap(Object value, NodeObject context, ResolvableMapWrapper mother, boolean forMap) {
 		if (value instanceof ResolvableMapWrappable resolvableMapWrappable) {
-			return new ResolvableMapWrapper(resolvableMapWrappable, context, mother);
+			if (forMap && resolvableMapWrappable.replaceWithStringInMap()) {
+				return value.toString();
+			} else {
+				return new ResolvableMapWrapper(resolvableMapWrappable, context, mother);
+			}
 		} else if (value instanceof List<?> listValue) {
-
 			return new AbstractList<Object>() {
 				@Override
 				public int size() {
@@ -87,18 +91,29 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 				@Override
 				public Object get(int index) {
-					return wrap(listValue.get(index), context, mother);
+					return wrap(listValue.get(index), context, mother, forMap);
 				}
 			};
 		} else if (value instanceof Map<?, ?> mapValue) {
-
 			Map<Object, Object> wrappedMap = value instanceof LinkedHashMap<?, ?> ? new LinkedHashMap<>(mapValue.size())
 					: new HashMap<>();
 			mapValue.forEach((k, v) -> {
-				wrappedMap.put(k, wrap(v, context, mother));
+				wrappedMap.put(k, wrap(v, context, mother, forMap));
 			});
 
 			return wrappedMap;
+		} else if (value instanceof Object[] array) {
+			return new AbstractList<Object>() {
+				@Override
+				public int size() {
+					return array.length;
+				}
+
+				@Override
+				public Object get(int index) {
+					return wrap(array[index], context, mother, forMap);
+				}
+			};
 		} else if (value instanceof ArrayNode arrayNode) {
 			return new AbstractList<Object>() {
 				@Override
@@ -108,7 +123,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 				@Override
 				public Object get(int index) {
-					return wrap(arrayNode.get(index), context, mother);
+					return wrap(arrayNode.get(index), context, mother, forMap);
 				}
 			};
 		} else if (value instanceof ObjectNode objectNode) {
@@ -116,7 +131,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 					: new HashMap<>();
 
 			objectNode.forEachEntry((k, v) -> {
-				wrappedMap.put(k, wrap(v, context, mother));
+				wrappedMap.put(k, wrap(v, context, mother, forMap));
 			});
 
 			return wrappedMap;
@@ -129,7 +144,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 		} else if (value instanceof NumericNode numericNode) {
 			return numericNode.numberValue();
 		} else if (value instanceof POJONode pojoNode) {
-			return wrap(pojoNode.getPojo(), context, mother);
+			return wrap(pojoNode.getPojo(), context, mother, forMap);
 		} else if (value instanceof TextNode textNode) {
 			return textNode.asText();
 		} else {
@@ -183,7 +198,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 	@Override
 	public Object get(String key) {
-		return wrap(wrapped.get(key), getSubContext(), this);
+		return wrap(wrapped.get(key), getSubContext(), this, false);
 	}
 
 	/**
@@ -309,7 +324,7 @@ public class ResolvableMapWrapper extends AbstractMap<String, Object> implements
 
 		@Override
 		public Object getValue() {
-			return wrap(wrapped.get(key), getSubContext(), ResolvableMapWrapper.this);
+			return wrap(wrapped.getAsMapValue(key), getSubContext(), ResolvableMapWrapper.this, true);
 		}
 
 		@Override

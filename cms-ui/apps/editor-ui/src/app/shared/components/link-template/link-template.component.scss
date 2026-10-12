@@ -27,6 +27,10 @@
         }
 
         .template-list-header-bulk {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
             &.list-empty {
                 icon-checkbox {
                     color: lighten($gcms-color-page, 45%);
@@ -67,7 +71,7 @@
     }
 
     gtx-contents-list-item {
-        align-items: end;
+        align-items: center;
         padding: 10px 0;
 
         ::ng-deep .hl-pipe {

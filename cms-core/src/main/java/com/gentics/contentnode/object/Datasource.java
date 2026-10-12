@@ -149,6 +149,11 @@ public abstract class Datasource extends AbstractContentObject implements Synchr
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * @param id object id
 	 * @param info object info

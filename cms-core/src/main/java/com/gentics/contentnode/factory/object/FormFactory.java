@@ -1062,6 +1062,11 @@ public class FormFactory extends AbstractFactory {
 		}
 
 		@Override
+		public boolean replaceWithStringInMap() {
+			return true;
+		}
+
+		@Override
 		public Set<String> getResolvableKeys() {
 			return SetUtils.union(super.getResolvableKeys(), Set.of("name", "description", "cdate", "edate", "pdate",
 					"creator", "editor", "publisher", "folder", "externalId", "formType", "languages"));

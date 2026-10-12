@@ -68,18 +68,6 @@
         }
     }
 
-    .close-button {
-        margin-left: 0.5rem;
-    }
-
-    .content-frame-context-menu {
-        margin-left: 0.5rem;
-
-        +.close-button {
-            margin-left: 0.25rem;
-        }
-    }
-
     .page-editor-controls {
         height: 2.75rem;
         border-top: 1px solid $gtx-color-very-light-gray;
@@ -150,6 +138,7 @@
         flex-wrap: nowrap;
         align-items: center;
         flex: 0 0 auto;
+        gap: 0.25rem;
     }
 
     node-selector {

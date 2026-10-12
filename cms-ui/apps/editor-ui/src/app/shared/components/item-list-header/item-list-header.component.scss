@@ -17,6 +17,7 @@ $item-list-min-height: 63px;
 
 .type {
     text-transform: uppercase;
+    line-height: 1;
 
     .count-full {
         @media screen and (max-width: $small-screen) {

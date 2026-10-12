@@ -1,18 +1,17 @@
-@import '../../../styles/base-import';
-
-// form p {
-//     margin-bottom: 10px;
-// }
-
-// form p:last-child {
-//     margin-bottom: 0;
-// }
-
 :host {
     display: inline-block;
     user-select: none;
 
     button {
+        // 1rem = 14px; all sizes below are relative to the button font-size
+        font-size: 1rem;
+        height: 2.5em;
+        line-height: 1;
+        padding: 1px 2em 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+
         &.btn {
             transition-property: color, border;
             overflow: hidden;
@@ -21,19 +20,31 @@
         }
 
         &.btn:hover {
-            @include z-depth-1;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        &::ng-deep icon {
+            font-size: 1.3em;
+            line-height: 1;
+
+            &[left],
+            &[right] {
+                margin: 0;
+            }
         }
 
         &.small {
-            font-size: $gtx-font-size-small;
-            padding: 0 5px;
-            height: 24px;
-            line-height: 24px;
+            font-size: 0.8rem;
+            height: 2.3em;
+            padding: 1px 0.5em 0;
+
+            &::ng-deep icon {
+                font-size: 1.5em;
+            }
         }
 
         &.large {
-            height: 54px;
-            line-height: 56px;
+            padding: 1.85em 2em;
         }
     }
 
@@ -43,97 +54,98 @@
 
     button:not(.btn-flat) {
         // default (primary)
-        background-color: $gtx-color-primary;
+        background-color: var(--gtx-primary);
         border: 1px solid transparent;
 
         &:hover {
-            background-color: lighten($gtx-color-primary, 5%);
+            background-color: color-mix(in oklab, var(--gtx-primary), white 5%);
         }
 
         &:active {
-            @include z-depth-0;
-            background-color: darken($gtx-color-primary, 10%);
+            box-shadow: none !important;
+            background-color: color-mix(in oklab, var(--gtx-primary), black 10%);
         }
 
         &:focus {
             // background-color: darken($gtx-color-primary, 2%);
-            border: 1px solid darken($gtx-color-primary, 10%);
+            border: 1px solid color-mix(in oklab, var(--gtx-primary), black 10%);
         }
 
         &.secondary {
-            background-color: lighten($gtx-color-secondary, 7%);
-            color: $gtx-color-very-dark-gray;
+            background-color: color-mix(in oklab, var(--gtx-secondary), white 7%);
+            color: var(--gtx-very-dark-gray);
+
             &:hover {
-                background-color: lighten($gtx-color-secondary, 10%);
+                background-color: color-mix(in oklab, var(--gtx-secondary), white 10%);
             }
             &:active {
-                background-color: darken($gtx-color-secondary, 10%);
+                background-color: color-mix(in oklab, var(--gtx-secondary), black 10%);
             }
             &:focus {
                 // background-color: lighten($gtx-color-secondary, 2%);
-                border: 1px solid darken($gtx-color-secondary, 8%);
+                border: 1px solid color-mix(in oklab, var(--gtx-secondary), black 8%);
             }
         }
 
         &.success {
-            background-color: $gtx-color-success;
+            background-color: var(--gtx-success);
             &:hover {
-                background-color: lighten($gtx-color-success, 7%);
+                background-color: color-mix(in oklab, var(--gtx-success), white 7%);
             }
             &:active {
-                background-color: darken($gtx-color-success, 10%);
+                background-color: color-mix(in oklab, var(--gtx-success), black 10%);
             }
             &:focus {
                 // background-color: darken($gtx-color-success, 2%);
-                border: 1px solid darken($gtx-color-success, 15%);
+                border: 1px solid color-mix(in oklab, var(--gtx-success), black 15%);
             }
         }
 
         &.warning {
-            background-color: $gtx-color-warning;
+            background-color: var(--gtx-warning);
             &:hover {
-                background-color: lighten($gtx-color-warning, 10%);
+                background-color: color-mix(in oklab, var(--gtx-warning), white 10%);
             }
             &:active {
-                background-color: darken($gtx-color-warning, 10%);
+                background-color: color-mix(in oklab, var(--gtx-warning), black 10%);
             }
             &:focus {
                 // background-color: darken($gtx-color-warning, 2%);
-                border: 1px solid darken($gtx-color-warning, 15%);
+                border: 1px solid color-mix(in oklab, var(--gtx-warning), black 15%);
             }
         }
 
         &.alert {
-            background-color: $gtx-color-alert;
+            background-color: var(--gtx-alert);
             &:hover {
-                background-color: lighten($gtx-color-alert, 10%);
+                background-color: color-mix(in oklab, var(--gtx-alert), white 10%);
             }
             &:active {
-                background-color: darken($gtx-color-alert, 10%);
+                background-color: color-mix(in oklab, var(--gtx-alert), black 10%);
             }
             &:focus {
                 // background-color: darken($gtx-color-alert, 2%);
-                border: 1px solid darken($gtx-color-alert, 20%);
+                border: 1px solid color-mix(in oklab, var(--gtx-alert), black 20%);
             }
         }
     }
 
     button.btn-flat {
-        border: 1px solid transparentize($gtx-color-primary, 0.8);
-        color: darken($gtx-color-primary, 20%);
+        border: 1px solid color-mix(in oklab, var(--gtx-primary), transparent 80%);
+        color: color-mix(in oklab, var(--gtx-primary), black 20%);
 
         &:hover,
         &:active {
             box-shadow: none;
-            background-color: transparentize($gtx-color-primary, 0.9);
+            background-color: color-mix(in oklab, var(--gtx-primary), transparent 90%);
         }
 
         &:active {
-            background-color: transparentize($gtx-color-primary, 0.6);
+            background-color: color-mix(in oklab, var(--gtx-primary), transparent 60%);
         }
 
         &:focus {
-            border: 1px solid transparentize($gtx-color-primary, 0.3);
+            border: 1px solid color-mix(in oklab, var(--gtx-primary), transparent 30%);
         }
 
         &:focus:not(:hover) {
@@ -141,58 +153,58 @@
         }
 
         &.secondary {
-            color: $gtx-color-dark-gray;
-            border-color: transparentize($gtx-color-secondary, 0.7);
+            color: var(--gtx-dark-gray);
+            border-color: color-mix(in oklab, var(--gtx-secondary), transparent 70%);
             &:hover {
-                background-color: transparentize($gtx-color-secondary, 0.5);
+                background-color: color-mix(in oklab, var(--gtx-secondary), transparent 50%);
             }
             &:active {
-                background-color: transparentize($gtx-color-secondary, 0.1);
+                background-color: color-mix(in oklab, var(--gtx-secondary), transparent 10%);
             }
             &:focus {
-                border: 1px solid transparentize($gtx-color-secondary, 0);
+                border: 1px solid var(--gtx-secondary);
             }
         }
 
         &.success {
-            color: darken($gtx-color-success, 10%);
-            border-color: transparentize($gtx-color-success, 0.75);
+            color: color-mix(in oklab, var(--gtx-success), black 10%);
+            border-color: color-mix(in oklab, var(--gtx-success), transparent 75%);
             &:hover {
-                background-color: transparentize($gtx-color-success, 0.8);
+                background-color: color-mix(in oklab, var(--gtx-success), transparent 80%);
             }
             &:active {
-                background-color: transparentize($gtx-color-success, 0.5);
+                background-color: color-mix(in oklab, var(--gtx-success), transparent 50%);
             }
             &:focus {
-                border: 1px solid transparentize($gtx-color-success, 0.2);
+                border: 1px solid color-mix(in oklab, var(--gtx-success), transparent 20%);
             }
         }
 
         &.warning {
-            color: darken($gtx-color-warning, 10%);
-            border-color: transparentize($gtx-color-warning, 0.75);
+            color: color-mix(in oklab, var(--gtx-warning), black 10%);
+            border-color: color-mix(in oklab, var(--gtx-warning), transparent 75%);
             &:hover {
-                background-color: transparentize($gtx-color-warning, 0.9);
+                background-color: color-mix(in oklab, var(--gtx-warning), transparent 90%);
             }
             &:active {
-                background-color: transparentize($gtx-color-warning, 0.6);
+                background-color: color-mix(in oklab, var(--gtx-warning), transparent 60%);
             }
             &:focus {
-                border: 1px solid transparentize($gtx-color-warning, 0.2);
+                border: 1px solid color-mix(in oklab, var(--gtx-warning), transparent 20%);
             }
         }
 
         &.alert {
-            color: darken($gtx-color-alert, 10%);
-            border-color: transparentize($gtx-color-alert, 0.75);
+            color: color-mix(in oklab, var(--gtx-alert), black 10%);
+            border-color: color-mix(in oklab, var(--gtx-alert), transparent 75%);
             &:hover {
-                background-color: transparentize($gtx-color-alert, 0.9);
+                background-color: color-mix(in oklab, var(--gtx-alert), transparent 90%);
             }
             &:active {
-                background-color: transparentize($gtx-color-alert, 0.6);
+                background-color: color-mix(in oklab, var(--gtx-alert), transparent 60%);
             }
             &:focus {
-                border: 1px solid transparentize($gtx-color-alert, 0.2);
+                border: 1px solid color-mix(in oklab, var(--gtx-alert), transparent 20%);
             }
         }
     }
@@ -201,117 +213,83 @@
         padding: 0;
         border: 1px solid transparent;
         background: none !important;
+        height: 1.9em;
+        line-height: 1;
+        aspect-ratio: 1 / 1;
+        align-items: center;
+        justify-content: center;
 
-        &.small {
-            height: 18px;
-            line-height: 16px;
-
-            > icon,
-            > i {
-                font-size: 16px;
-            }
-        }
-
-        &.regular {
-            height: 26px;
-            line-height: 24px;
-
-            > icon,
-            > i {
-                font-size: 24px;
-            }
-        }
-
-        &.large {
-            height: 44px;
-            line-height: 42px;
-
-            > icon,
-            > i {
-                font-size: 42px;
-            }
+        > icon,
+        > i {
+            font-size: 1.7143em;
         }
 
         &:hover {
-            color: darken($gtx-color-primary, 5%);
+            color: color-mix(in oklab, var(--gtx-primary), black 5%);
         }
 
         &:active {
-            color: darken($gtx-color-primary, 25%);
+            color: color-mix(in oklab, var(--gtx-primary), black 25%);
         }
 
         &:focus {
-            border-color: transparentize($gtx-color-primary, 0.8);
+            border-color: color-mix(in oklab, var(--gtx-primary), transparent 80%);
         }
 
         &.secondary {
-            color: $gtx-color-dark-gray;
+            color: var(--gtx-dark-gray);
             &:hover {
-                color: transparentize($gtx-color-dark-gray, 0.2);
+                color: color-mix(in oklab, var(--gtx-dark-gray), transparent 20%);
             }
             &:active {
-                color: darken($gtx-color-dark-gray, 10%);
+                color: color-mix(in oklab, var(--gtx-dark-gray), black 10%);
             }
             &:focus {
-                border-color: transparentize($gtx-color-secondary, 0.6);
+                border-color: color-mix(in oklab, var(--gtx-secondary), transparent 60%);
             }
         }
 
         &.success {
-            color: darken($gtx-color-success, 10%);
+            color: color-mix(in oklab, var(--gtx-success), black 10%);
             &:hover {
-                color: transparentize($gtx-color-success, 0.1);
+                color: color-mix(in oklab, var(--gtx-success), transparent 10%);
             }
             &:active {
-                color: darken($gtx-color-success, 15%);
+                color: color-mix(in oklab, var(--gtx-success), black 15%);
             }
             &:focus {
-                border-color: transparentize($gtx-color-success, 0.8);
+                border-color: color-mix(in oklab, var(--gtx-success), transparent 80%);
             }
         }
 
         &.warning {
-            color: darken($gtx-color-warning, 10%);
+            color: color-mix(in oklab, var(--gtx-warning), black 10%);
             &:hover {
-                color: transparentize($gtx-color-warning, 0.1);
+                color: color-mix(in oklab, var(--gtx-warning), transparent 10%);
             }
             &:active {
-                color: darken($gtx-color-warning, 15%);
+                color: color-mix(in oklab, var(--gtx-warning), black 15%);
             }
             &:focus {
-                border-color: transparentize($gtx-color-warning, 0.8);
+                border-color: color-mix(in oklab, var(--gtx-warning), transparent 80%);
             }
         }
 
         &.alert {
-            color: darken($gtx-color-alert, 10%);
+            color: color-mix(in oklab, var(--gtx-alert), black 10%);
             &:hover {
-                color: $gtx-color-alert;
+                color: var(--gtx-alert);
             }
             &:active {
-                color: darken($gtx-color-alert, 15%);
+                color: color-mix(in oklab, var(--gtx-alert), black 15%);
             }
             &:focus {
-                border-color: transparentize($gtx-color-alert, 0.9);
+                border-color: color-mix(in oklab, var(--gtx-alert), transparent 90%);
             }
         }
     }
 
     &.with-shadow .btn:not(.btn-icon) {
         box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
-    }
-}
-
-button::ng-deep {
-    icon[left],
-    i.left {
-        margin-right: 5px;
-        float: left;
-    }
-
-    icon[right],
-    i.right {
-        margin-left: 5px;
-        float: right;
     }
 }

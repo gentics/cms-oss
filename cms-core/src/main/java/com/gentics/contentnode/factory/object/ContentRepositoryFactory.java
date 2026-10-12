@@ -2014,6 +2014,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			return super.get(key);
 		}
 
+		@Override
+		public boolean replaceWithStringInMap() {
+			return true;
+		}
+
 		@SuppressWarnings("unused")
 		public void setId(Integer id) {
 			if (this.id == null) {

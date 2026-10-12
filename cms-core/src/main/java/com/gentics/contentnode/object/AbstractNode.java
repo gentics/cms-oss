@@ -331,6 +331,11 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
+	@Override
 	public void setContentrepositoryId(Integer contentRepositoryId) throws ReadOnlyException {
 		failReadOnly();
 	}

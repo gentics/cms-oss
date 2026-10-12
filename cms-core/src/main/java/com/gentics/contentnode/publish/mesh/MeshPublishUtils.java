@@ -6,7 +6,10 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.gentics.mesh.core.rest.common.GenericMessageResponse;
+import com.gentics.mesh.core.rest.error.GenericRestException;
+import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
 
@@ -132,5 +135,32 @@ public final class MeshPublishUtils {
 	 */
 	public static boolean isResponseStatus(Throwable t, HttpResponseStatus status) {
 		return getMeshRestClientMessageException(t).map(meshException -> meshException.getStatusCode() == status.code()).orElse(false);
+	}
+
+	/**
+	 * Transform the given value into a {@link JsonNode} for publishing into a field of type json
+	 * @param value value to transform
+	 * @return json node value (may be null)
+	 */
+	public static JsonNode toJsonNode(Object value) {
+		if (value == null) {
+			return null;
+		}
+
+		// first try to interpret a string as serialized JSON object
+		if (value instanceof String stringValue) {
+			JsonNode jsonNode = JsonUtil.toJsonNode(stringValue, true);
+			if (jsonNode != null) {
+				return jsonNode;
+			}
+		}
+
+		try {
+			String jsonString = JsonUtil.toJson(value);
+			return JsonUtil.toJsonNode(jsonString, true);
+		} catch (GenericRestException e) {
+			MeshPublisher.logger.warn("%s could not be transformed to JSON".formatted(value));
+			return null;
+		}
 	}
 }

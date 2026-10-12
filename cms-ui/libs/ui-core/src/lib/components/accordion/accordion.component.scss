@@ -4,6 +4,7 @@
         flex-flow: row wrap;
         width: 100%;
         position: relative;
+        align-items: center;
 
         &.toggleable {
             cursor: pointer;
@@ -21,7 +22,6 @@
             font-size: 1.1rem;
             display: inline-block;
             flex: 0 0 auto;
-            margin: auto 0 auto 1rem;
             width: 24px;
             height: 24px;
             text-align: left;
@@ -39,6 +39,13 @@
     }
 
     .accordion-content {
-        overflow: auto;
+        overflow: hidden;
+        height: 0;
+        transition: 300ms;
+        interpolate-size: allow-keywords;
+
+        &.open {
+            height: unset;
+        }
     }
 }

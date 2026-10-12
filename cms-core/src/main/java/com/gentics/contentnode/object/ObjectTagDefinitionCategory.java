@@ -110,6 +110,11 @@ public abstract class ObjectTagDefinitionCategory extends AbstractContentObject 
 		}
 	}
 
+	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
 	/**
 	 * Get the name
 	 * @return the name

@@ -1,9 +1,12 @@
 package com.gentics.contentnode.object;
 
+import java.util.Set;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.resolving.ResolvableMapWrappable;
 import com.gentics.contentnode.rest.model.ItemVersion;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 
@@ -11,7 +14,7 @@ import com.gentics.contentnode.rest.util.ModelBuilder;
  * the "version" of one NodeObject - currently this can't be loaded straight through a
  * node factory because version numbers are calculated dynamically.
  */
-public class NodeObjectVersion implements Resolvable {
+public class NodeObjectVersion implements Resolvable, ResolvableMapWrappable {
 	/**
 	 * Transform the node object into its rest model. If the version is null, this returns null
 	 */
@@ -120,6 +123,11 @@ public class NodeObjectVersion implements Resolvable {
 	@Override
 	public boolean canResolve() {
 		return true;
+	}
+
+	@Override
+	public Set<String> getResolvableKeys() {
+		return Set.of("number", "editor", "date", "major", "published");
 	}
 
 	@Override

@@ -46,6 +46,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
 
     public readonly CHECKBOX_STATE_INDETERMINATE = CHECKBOX_STATE_INDETERMINATE;
     public readonly FALLBACK_TABLE_COLUMN_RENDERER = FALLBACK_TABLE_COLUMN_RENDERER;
+    public readonly cancelEvent = cancelEvent;
 
     /** If this table's rows can be selected. */
     @Input()
@@ -245,10 +246,6 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         if (typeof column.clickOverride === 'function') {
             column.clickOverride(row, column, event);
         }
-    }
-
-    public preventClick(event: MouseEvent): void {
-        cancelEvent(event);
     }
 
     public handleSingleActionClick(action: TableAction<T>, row: R): void {

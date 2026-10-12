@@ -1,0 +1,7 @@
+When iterating over properties of CMS objects (e.g. with @cms.page.each@) the resolved values of
+reference properties (like "folder", "creator", ...) will no longer be CMS objects but their string
+representation instead.
+The old behaviour could easily lead to endless loops when doing something like @println(cms.page)@ or
+transforming CMS objects to their JSON representation.
+See "Accessing cms":https://www.gentics.com/Content.Node/cmp8/guides/groovy.html#accessing-cms in the
+guides for details.

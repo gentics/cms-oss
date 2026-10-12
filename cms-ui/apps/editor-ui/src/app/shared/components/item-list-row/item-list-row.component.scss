@@ -2,8 +2,6 @@
 @import "thumbnail-grid";
 @import "list-styles";
 
-$item-list-min-height: 63px;
-
 .liveurl-icon {
     align-self: baseline;
 }
@@ -11,12 +9,11 @@ $item-list-min-height: 63px;
 gtx-contents-list-item {
     align-items: flex-start;
     border-bottom: 1px dotted $gtx-color-very-light-gray;
-    min-height: $item-list-min-height;
     width: 100%;
     gap: 0.5rem;
 
     .item-primary {
-        padding: 0;
+        padding: 0.35rem 0 0 0;
     }
 
     .current-language-container {
@@ -42,10 +39,18 @@ gtx-contents-list-item {
         }
     }
 
+    .display-fields {
+        padding-top: 0.2rem;
+    }
+
     .show-on-hover {
         filter: grayscale(20%);
         opacity: 0.35;
+        padding-top: 0.2rem;
+        display: flex;
+        gap: 0.5rem;
     }
+
     &:hover {
         .show-on-hover {
             opacity: 1;

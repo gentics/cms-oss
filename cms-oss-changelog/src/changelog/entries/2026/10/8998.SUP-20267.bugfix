@@ -1,0 +1,2 @@
+Using closures in groovy scripts in parts of type GroovyPartType will no longer
+fail with a ClassNotFoundException.

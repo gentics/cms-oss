@@ -454,6 +454,7 @@ gtx-progress-bar::ng-deep {
     display: flex;
     align-items: center;
     padding-right: 8px;
+    gap: 0.5rem;
 
     @media only screen and (max-width: $small-screen) {
         margin-right: 0 !important;

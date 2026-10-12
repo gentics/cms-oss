@@ -62,7 +62,8 @@ public class GroovyRenderingTest extends AbstractGroovyTest {
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (String script : List.of("simple", "foldername", "import_class1", "import_class2", "direct_script",
-				"direct_script_with_param", "load_page_script", "load_page_class", "foldername_script")) {
+				"direct_script_with_param", "load_page_script", "load_page_class", "foldername_script", "closure",
+				"user_meshuuid", "page_foldername", "iterate_ref")) {
 			data.add(new Object[] { script });
 		}
 		return data;

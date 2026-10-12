@@ -500,6 +500,13 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 				p.setHidden(false);
 				p.setKeyname("image");
 			}).doNotSave().build());
+			c.getParts().add(create(Part.class, p -> {
+				p.setPartTypeId(getPartTypeId(NodePartType.class));
+				p.setEditable(1);
+				p.setHidden(false);
+				p.setKeyname("node");
+			}).doNotSave().build());
+
 		}).build();
 
 		checkboxConstruct = create(Construct.class, c -> {
@@ -637,6 +644,7 @@ public abstract class AbstractHandlebarsPartTypeRenderingTest {
 			getPartType(FileURLPartType.class, urlsTag, "file").setNode(node);
 			getPartType(ImageURLPartType.class, urlsTag, "image").setTargetImage(testImage);
 			getPartType(ImageURLPartType.class, urlsTag, "image").setNode(node);
+			getPartType(NodePartType.class, urlsTag, "node").setNode(node);
 
 			// add a checkbox tag
 			ContentTag checkboxTag = p.getContent().addContentTag(checkboxConstruct.getId());

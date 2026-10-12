@@ -1,0 +1,1 @@
+Fixed saving data containing line breaks into parts of type JsonPartType.

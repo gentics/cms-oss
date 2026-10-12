@@ -32,13 +32,13 @@ $item-list-min-height: 63px;
 
 .header-controls {
     display: inline-flex;
+    gap: 0.5rem;
 }
 
 .type-actions {
     display: inline-flex;
-    > * {
-        margin-left: 10px;
-    }
+    gap: 0.5rem;
+
     language-context-selector {
         @media screen and (max-width: $small-screen) {
             max-width: 100px;

@@ -119,10 +119,10 @@ $easeOutCubic: cubic-bezier(0.215, 0.610, 0.355, 1.000);
     .modal-footer {
         text-align: right;
         min-height: fit-content;
-
-        gtx-button {
-            margin: 5px;
-        }
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        justify-content: flex-end;
     }
 
     @media #{$small-and-down} {

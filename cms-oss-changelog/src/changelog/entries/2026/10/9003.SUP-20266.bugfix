@@ -1,0 +1,1 @@
+Fixed publishing of Groovy script results into Mesh fields of type "json": objects and arrays returned by the script are now handled correctly, not only serialized JSON strings.

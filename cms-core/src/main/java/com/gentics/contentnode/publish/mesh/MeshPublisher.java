@@ -777,11 +777,13 @@ public class MeshPublisher implements AutoCloseable {
 	 * For localized copies, the global ID of the master is returned.
 	 * @param object object
 	 * @param useProjectRootNode true when the returned uuid may be the uuid of the project's root node (if project per node is activated). False to always use the uuid converted from the cms uuid
-	 * @return Mesh UUID
+	 * @return Mesh UUID or null if the object was null
 	 * @throws NodeException
 	 */
 	public static String getMeshUuid(NodeObject object, boolean useProjectRootNode) throws NodeException {
-		if (object instanceof DummyObject) {
+		if (object == null) {
+			return null;
+		} else if (object instanceof DummyObject) {
 			return ((DummyObject) object).getMeshUuid();
 		} else if (object instanceof Page) {
 			Page page = (Page) object;
@@ -806,7 +808,8 @@ public class MeshPublisher implements AutoCloseable {
 			LocalizableNodeObject<NodeObject> locObject = (LocalizableNodeObject<NodeObject>)object;
 			return toMeshUuid(locObject.getMaster().getGlobalId().toString());
 		} else {
-			return toMeshUuid(object.getGlobalId().toString());
+			return Optional.ofNullable(object.getGlobalId()).map(GlobalId::toString).map(MeshPublisher::toMeshUuid)
+					.orElse(null);
 		}
 	}
 
@@ -3724,13 +3727,16 @@ public class MeshPublisher implements AutoCloseable {
 						FieldList<JsonNode> field = new JsonFieldListImpl();
 						fields.put(entry.getMapname(), field);
 						for (Object o : ObjectTransformer.getCollection(value, Collections.emptyList())) {
-							String jsonString = ObjectTransformer.getString(o, null);
-							if (jsonString != null) {
-								field.add(JsonUtil.toJsonNode(jsonString, true));
+							JsonNode jsonNode = MeshPublishUtils.toJsonNode(o);
+							if (jsonNode != null) {
+								field.add(jsonNode);
 							}
 						}
 					} else {
-						fields.put(entry.getMapname(), new JsonFieldImpl().setJson(JsonUtil.toJsonNode(ObjectTransformer.getString(value, null), true)));
+						JsonNode jsonNode = MeshPublishUtils.toJsonNode(value);
+						if (jsonNode != null) {
+							fields.put(entry.getMapname(), new JsonFieldImpl().setJson(jsonNode));
+						}
 					}
 					break;
 				}

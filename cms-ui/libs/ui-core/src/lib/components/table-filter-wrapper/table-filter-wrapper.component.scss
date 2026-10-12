@@ -1,7 +1,6 @@
-@import '../../../styles/base-import';
-
 :host {
     display: flex;
+    width: 100%;
 }
 
 .wrapper {
@@ -10,6 +9,7 @@
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
 
     .filter-icon {
         font-size: 20px;
@@ -29,34 +29,11 @@
     .filter-content {
         flex: 1 1 auto;
 
-        ::ng-deep gtx-select {
-            margin: 0;
+        ::ng-deep gtx-form-element-container {
+            font-size: 0.9rem;
 
-            .view-value {
+            .element-container .box-wrapper {
                 border: none;
-                margin: 0;
-                height: 2rem;
-                padding: 5px 0;
-            }
-        }
-
-        ::ng-deep gtx-input {
-            .input-element {
-                border: none;
-                margin: 0;
-                height: 2rem;
-                padding: 5px 0;
-                font-size: 0.9rem;
-            }
-        }
-
-        ::ng-deep gtx-date-time-picker {
-            gtx-input .input-element {
-                color: $gtx-color-off-black;
-
-                &::placeholder {
-                    color: $gtx-color-light-gray;
-                }
             }
         }
     }

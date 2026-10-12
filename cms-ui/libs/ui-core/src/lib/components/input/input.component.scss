@@ -1,5 +1,3 @@
-@import '../../../styles/base-import';
-
 :host {
     .input-element {
         width: 100%;
@@ -10,6 +8,10 @@
         outline: none;
         box-shadow: none;
         font-size: inherit;
+
+        &::placeholder {
+            color: var(--gtx-light-gray);
+        }
 
         &:focus {
             border: none;
@@ -35,6 +37,6 @@
     }
 
     &.ng-invalid.ng-touched gtx-form-element-container {
-        border-color: $gtx-color-alert;
+        border-color: var(--gtx-alert);
     }
 }

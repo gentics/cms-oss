@@ -223,6 +223,11 @@ public abstract class AbstractSystemUser extends AbstractContentObject implement
 	}
 
 	@Override
+	public boolean replaceWithStringInMap() {
+		return true;
+	}
+
+	@Override
 	public void setActive(boolean active) throws ReadOnlyException {
 		failReadOnly();
 	}

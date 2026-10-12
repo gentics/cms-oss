@@ -1,5 +1,7 @@
 package com.gentics.contentnode.object.parttype.handlebars;
 
+import static com.gentics.contentnode.render.RenderUtils.wrap;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,9 +10,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.codehaus.groovy.control.CompilationUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.gentics.api.lib.datasource.Datasource;
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.resolving.Resolvable;
 import com.gentics.api.lib.resolving.ResolvableComparator;
@@ -18,8 +28,12 @@ import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.File;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
@@ -42,16 +56,16 @@ import com.github.jknack.handlebars.helper.HelperFunction;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ParseContext;
 import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Strings;
-import org.codehaus.groovy.control.CompilationUnit;
 
 /**
  * Source for helpers used when rendering a {@link HandlebarsPartType}
  */
 public class HelperSource {
+	/**
+	 * Set of loadable classes
+	 */
+	private final static Set<Class<? extends NodeObject>> LOADABLE_CLASSES = Set.of(Node.class, Folder.class, Page.class, File.class, ImageFile.class);
+
 	/**
 	 * Render helper
 	 * @param value renderable to render
@@ -263,6 +277,26 @@ public class HelperSource {
 	}
 
 	/**
+	 * Load Helper
+	 * @param type type of the object to load
+	 * @param id id of the object to load
+	 * @param options options
+	 * @return loaded object as {@link Resolvable}
+	 * @throws NodeException
+	 */
+	@HelperFunction("gtx_load")
+	public static Resolvable gtxLoad(Object type, Object id, Options options) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Class<? extends NodeObject> objClass = t.getClassForTypeOrName(type);
+
+		if (objClass == null || !LOADABLE_CLASSES.contains(objClass)) {
+			return null;
+		}
+
+		return wrap(t.getObject(objClass, ObjectTransformer.getString(id, null)));
+	}
+
+	/**
 	 * Script helper for calling groovy scripts (from devtool packages)
 	 * @param name script name
 	 * @param options additional options
@@ -278,7 +312,7 @@ public class HelperSource {
 
 			for (String key : options.hash.keySet()) {
 				script.setProperty(key, options.hash.get(key));
-}
+			}
 		});
 	}
 }

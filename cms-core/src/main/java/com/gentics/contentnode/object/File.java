@@ -34,7 +34,7 @@ import com.gentics.contentnode.rest.model.PageLanguageCode;
  * For memory usage reasons, the binary content is not stored in this class,
  * but on the hard drive.
  */
-@TType(File.TYPE_FILE)
+@TType(value = File.TYPE_FILE, name = "file")
 public interface File extends Resolvable, StageableChanneledNodeObject, Disinheritable<ContentFile>, ObjectTagContainer, NodeObjectWithAlternateUrls, NamedNodeObject, StackResolvableNodeObject, CustomMetaDateNodeObject {
 
 	/**

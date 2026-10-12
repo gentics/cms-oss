@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.cache.PortalCache;
 import com.gentics.api.lib.cache.PortalCacheException;
@@ -87,8 +88,9 @@ public class NodeFactory {
 
 	private Set<ObjectFactory> factorySet;
 	private Map<Class<? extends NodeObject>, Set<PreloadableObjectFactory>> preloaderMap;
-	private List<Integer> typeList;
-	private List<Class<? extends NodeObject>> classList;
+	private Map<Integer, Class<? extends NodeObject>> classPerType = new HashMap<>();
+	private Map<Class<? extends NodeObject>, Integer> typePerClass = new HashMap<>();
+	private Map<String, Class<? extends NodeObject>> classPerName = new HashMap<>();
 	private Map<Class<? extends NodeObject>, Map<String, DataFieldHandler>> dataFieldHandlers = new HashMap<Class<? extends NodeObject>, Map<String, DataFieldHandler>>();
 	private String factoryKeyname;
 	private boolean initialized = false;
@@ -193,6 +195,16 @@ public class NodeFactory {
 			return NodeFactory.this.getClass(tableName);
 		}
 
+		@Override
+		public Class<? extends NodeObject> getClassForName(String objName) {
+			return NodeFactory.this.getClassForName(objName);
+		}
+
+		@Override
+		public Class<? extends NodeObject> getClassForTypeOrName(Object spec) {
+			return NodeFactory.this.getClassForTypeOrName(spec);
+		}
+
 		/* (non-Javadoc)
 		 * @see com.gentics.lib.base.factory.FactoryHandle#getTable(java.lang.Class)
 		 */
@@ -273,8 +285,6 @@ public class NodeFactory {
 		factoryMap = new LinkedHashMap<Class<? extends NodeObject>, ObjectFactory>(10);
 		factorySet = new LinkedHashSet<ObjectFactory>(10);
 		preloaderMap = new HashMap<Class<? extends NodeObject>, Set<PreloadableObjectFactory>>(5);
-		typeList = new ArrayList<Integer>(20);
-		classList = new ArrayList<Class<? extends NodeObject>>(20);
 		initialized = false;
 		try {
 			cache = PortalCache.getCache(CACHEREGION);
@@ -415,16 +425,20 @@ public class NodeFactory {
 
 		// TODO check for conflicts with ttypes
 		int objType = 0;
+		String objName = null;
 		TType ttype = clazz.getAnnotation(TType.class);
 		if (ttype != null) {
 			objType = ttype.value();
+			objName = ttype.name();
 		}
 
 		if (objType > 0) {
-			typeList.add(objType);
-			classList.add(clazz);
-			if (typeList.size() != classList.size()) {// woho, some mystery is happening here!
-			}
+			classPerType.put(objType, clazz);
+			typePerClass.put(clazz, objType);
+		}
+
+		if (StringUtils.isNotBlank(objName)) {
+			classPerName.put(objName, clazz);
 		}
 
 		// get all annotated setters/getters for exported fields of the class
@@ -663,9 +677,7 @@ public class NodeFactory {
 	 * @return the corresponding ttype, or 0 if no ttype is mapped to this class.
 	 */
 	public int getTType(Class<? extends NodeObject> clazz) {
-		int pos = classList.indexOf(clazz);
-
-		return (pos != -1) ? typeList.get(pos) : 0;
+		return typePerClass.getOrDefault(clazz, 0);
 	}
 
 	/**
@@ -674,9 +686,39 @@ public class NodeFactory {
 	 * @return the mapped class for this ttype, or null if the ttype is unknown.
 	 */
 	public Class<? extends NodeObject> getClass(int objType) {
-		int pos = typeList.indexOf(objType);
+		return classPerType.getOrDefault(objType, null);
+	}
 
-		return (pos != -1) ? classList.get(pos) : null;
+	/**
+	 * Get the class for a given name
+	 * @param objName object name
+	 * @return class or null if not found
+	 */
+	public Class<? extends NodeObject> getClassForName(String objName) {
+		return classPerName.getOrDefault(objName, null);
+	}
+
+	/**
+	 * Get the class for either a given object type or name
+	 * @param spec either an object type or name
+	 * @return class or null if not found
+	 */
+	public Class<? extends NodeObject> getClassForTypeOrName(Object spec) {
+		if (spec instanceof Integer objType) {
+			return getClass(objType);
+		} else if (spec instanceof String specAsString) {
+			Class<? extends NodeObject> objClass = getClassForName(specAsString);
+			if (objClass != null) {
+				return objClass;
+			}
+
+			int objType = ObjectTransformer.getInt(spec, 0);
+			if (objType > 0) {
+				return getClass(objType);
+			}
+		}
+
+		return null;
 	}
 
 	/**

@@ -75,6 +75,7 @@ h4. Additional Helpers
 | "gtx_i18n":#gtx_i18n | Include a translation in the language of the currently rendered page | +{{gtx_i18n de="Deutsch" en="English" default="Other language" }}+ |
 | "gtx_script":#gtx_script | Execute a script from a devtool package and render the output | +{{gtx_script "demopackage.scriptname" page=cms.page}}+ |
 | "gtx_json_path":#gtx_json_path | Navigate over a "JSON":gcn_part_type.html part type using "JSONPath":https://goessner.net/articles/JsonPath/ | +{{gtx_json_path cms.tag.parts.json "$.objarray[0].objfield"}}+ |
+| "gtx_load":#gtx_load | Load an object into the context | +{{#with (gtx_load "page" 1234) }}{{ name }}{{/with}}+ |
 
 h5. gtx_render
 
@@ -348,6 +349,25 @@ will result in
 </shell>
 
 Please refer to the "implementing library documentation":https://github.com/json-path/JsonPath/blob/master/README.md for the whole possibilities of JSONPath.
+
+h5. gtx_load
+
+This helper loads an object with specified type (one of "node", "folder", "page", "file or "image") and id (either local or global)
+into the context. It will typically be used together with the @with@ helper.
+
+General usage is:
+
+<html>
+{{#with (gtx_load [type] [id]) as | loadedObject | }}
+<!-- access loadedObject in this block -->
+{{/with}}
+</html>
+
+With the parameters
+
+|_. Name |_. Description |_. Default |
+| +type+ | Type of the object to load | _mandatory_ |
+| +id+   | Either the local or global id of the object to load | _mandatory_ |
 
 h4. Custom helpers
 

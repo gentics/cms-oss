@@ -44,7 +44,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 /**
  * This is the page object of the object layer.
  */
-@TType(Page.TYPE_PAGE)
+@TType(value = Page.TYPE_PAGE, name = "page")
 @ViewPermType(PermType.readitems)
 @CreatePermType(PermType.createitems)
 @EditPermType(PermType.updateitems)

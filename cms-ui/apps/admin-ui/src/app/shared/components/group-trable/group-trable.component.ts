@@ -1,10 +1,10 @@
-import { CategoryInfo, GroupBO, PermissionsCategorizer, PermissionsUtils } from '@admin-ui/common';
-import { GroupTrableLoaderOptions, GroupTrableLoaderService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { I18nService } from '@gentics/cms-components';
 import { AccessControlledType, Group } from '@gentics/cms-models';
 import { TableColumn, TrableRow } from '@gentics/ui-core';
-import { I18nService } from '@gentics/cms-components';
 import { isEqual } from 'lodash-es';
+import { CategoryInfo, GroupBO, PermissionsCategorizer, PermissionsUtils } from '../../../common';
+import { GroupTrableLoaderOptions, GroupTrableLoaderService } from '../../../core';
 import { GroupDataService } from '../../providers/group-data/group-data.service';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
@@ -37,7 +37,7 @@ export class GroupTrableComponent extends BaseEntityTrableComponent<Group, Group
 
     public categorizer: PermissionsCategorizer;
 
-    protected oldCagegories: CategoryInfo[] = [];
+    protected oldCategories: CategoryInfo[] = [];
 
     public rawColumns: TableColumn<GroupBO>[] = [
         {
@@ -99,7 +99,7 @@ export class GroupTrableComponent extends BaseEntityTrableComponent<Group, Group
     }
 
     protected override onLoad(): void {
-        if (this.permissions && !isEqual(this.oldCagegories, this.categorizer.getKnownCategories())) {
+        if (this.permissions && !isEqual(this.oldCategories, this.categorizer.getKnownCategories())) {
             this.rebuildColumns();
         }
     }

@@ -1,10 +1,10 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, GroupBO, PermissionsCategorizer } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { AccessControlledType, Group, PermissionInfo, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { combineLatest, forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, GroupBO, PermissionsCategorizer } from '../../../common';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 import { GroupOperations } from '../operations';
 
@@ -41,26 +41,26 @@ export class GroupTrableLoaderService extends BaseTrableLoaderService<Group, Gro
 
         if (parent?.id) {
             groupLoader = this.api.group.getSubgroups(parent.id).pipe(
-                map(res => res.items),
+                map((res) => res.items),
             );
         } else {
             groupLoader = this.api.group.getGroupsTree().pipe(
-                map(res => res.groups),
+                map((res) => res.groups),
             );
         }
 
         return groupLoader.pipe(
-            switchMap(groups => {
+            switchMap((groups) => {
                 if (!options?.permissions || !options.parentId) {
-                    return of(groups.map(group => this.mapToBusinessObject(group)));
+                    return of(groups.map((group) => this.mapToBusinessObject(group)));
                 }
 
                 if (groups.length === 0) {
                     return of([]);
                 }
 
-                return forkJoin(groups.map(group => this.operations.getGroupInstancePermissions(group.id, options.parentType, options.parentId).pipe(
-                    map(perms => this.mapToBusinessObject(group, options, perms)),
+                return forkJoin(groups.map((group) => this.operations.getGroupInstancePermissions(group.id, options.parentType, options.parentId).pipe(
+                    map((perms) => this.mapToBusinessObject(group, options, perms)),
                 )));
             }),
         );
@@ -73,7 +73,7 @@ export class GroupTrableLoaderService extends BaseTrableLoaderService<Group, Gro
     ): TrableRow<GroupBO> {
         const mapped = super.mapToTrableRow(entity, parent, options);
 
-        mapped.children = (entity.children || []).map(child => this.mapToTrableRow(child as any, mapped));
+        mapped.children = (entity.children || []).map((child) => this.mapToTrableRow(child as any, mapped));
 
         return mapped;
     }

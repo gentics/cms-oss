@@ -235,8 +235,6 @@
         "edit": "bearbeiten",
         "editperm_permission_required": "Sie haben nicht die Berechtigung um Berechtigungen zu editieren",
         "setperm_permission_required": "Sie haben nicht die Berechtigung um Berechtigungen zu setzen",
-        "contentRepositoryFragment_singular": "CR-Fragment",
-        "contentRepositoryFragment_plural": "CR-Fragmente",
         "dataSourceEntry_plural": "Einträge",
         "dataSourceEntry_singular": "Eintrag",
         "dataSource_plural": "Datenquellen",

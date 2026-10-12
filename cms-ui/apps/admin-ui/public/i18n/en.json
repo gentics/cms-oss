@@ -235,8 +235,6 @@
         "edit": "Edit",
         "editperm_permission_required": "You do not have permission to edit permissions",
         "setperm_permission_required": "You do not have permission to set permissions",
-        "contentRepositoryFragment_singular": "CR Fragment",
-        "contentRepositoryFragment_plural": "CR Fragments",
         "dataSourceEntry_plural": "entries",
         "dataSourceEntry_singular": "entry",
         "dataSource_plural": "dataSources",
@@ -723,7 +721,7 @@
         "select_node_overview_title": "Select node",
         "select_node_overview_description": "Select a Node from which you want to view the Templates from"
     },
-    "content-repository-fragment": {
+    "content_repository_fragment": {
         "contentRepositoryFragment_singular": "CR Fragment",
         "contentRepositoryFragment_plural": "CR Fragments",
         "contentRepositoryFragment_successfully_added_to_package": "ContentRepository Fragment {{name}} successfully added to package",

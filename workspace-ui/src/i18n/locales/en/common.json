@@ -139,6 +139,8 @@
             "send": "Send",
             "confirm": "Confirm",
             "confirmed": "Confirmed",
+            "answered": "Answered",
+            "expired": "Expired",
             "approve": "Yes",
             "reject": "No",
             "answerFailed": "The answer could not be sent",

@@ -1,4 +1,4 @@
-import { CircleCheckIcon, CircleQuestionMarkIcon, SlidersHorizontalIcon } from 'lucide-react';
+import { CircleCheckIcon, CircleQuestionMarkIcon, SlidersHorizontalIcon, TimerOffIcon } from 'lucide-react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useAnswerInteraction } from '@/hooks/useGenaixQueries';
+import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import type { Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
@@ -349,6 +350,27 @@ export function ConfirmedSettingsCard({ settings }: { settings: UserSettingPart[
     );
 }
 
+// Why the card is locked, as icon and word (design.md §3.3).
+function LockStatus({ lock }: { lock: 'answered' | 'expired' }) {
+    const { t } = useTranslation();
+
+    if (lock === 'expired') {
+        return (
+            <span className={styles.expired}>
+                <TimerOffIcon size={14} aria-hidden />
+                {t('chat.interaction.expired')}
+            </span>
+        );
+    }
+
+    return (
+        <span className={styles.confirmed}>
+            <CircleCheckIcon size={14} aria-hidden />
+            {t('chat.interaction.answered')}
+        </span>
+    );
+}
+
 const KINDS: Record<Interaction['kind'], (props: KindProps) => ReactNode> = {
     ask_user: AskUser,
     choice: Choice,
@@ -361,19 +383,35 @@ const KINDS: Record<Interaction['kind'], (props: KindProps) => ReactNode> = {
  * A pending interaction (contract §9): the agent's question as a chat card, with the controls its
  * `kind` needs, answered through `POST …/interactions/{interaction_id}`, or by a message from the
  * composer that carries what the card holds as `reply_to_interaction` (`useInteractionDraftStore`). The run continues on the
- * stream, whose `interaction.resolved` removes the card. A refused answer (`409` already answered,
- * `410` expired) is shown as an error notification.
+ * stream, whose `interaction.resolved` removes the card.
+ *
+ * It is answered once: the controls lock while an answer from the card or the composer is on its way,
+ * and stay locked after it was accepted (`Answered`) or once `expires_at` has passed (`Expired`), until
+ * `interaction.resolved` comes (`useInteractionLock`). A refused answer is shown as an error
+ * notification; `409` already answered and `410` expired keep the card locked, any other failure
+ * unlocks it.
  */
 export function InteractionCard({ interaction, sessionId }: { interaction: Interaction; sessionId: string }) {
     const { t } = useTranslation();
     const answer = useAnswerInteraction(sessionId);
+    const lock = useInteractionLock(interaction);
     const Kind = KINDS[interaction.kind];
 
     useEffect(() => () => useInteractionDraftStore.getState().clearDraft(interaction.id), [interaction.id]);
 
     function submit(value: InteractionAnswer) {
+        const drafts = useInteractionDraftStore.getState();
+
+        // The store, not `lock`: a second click can come before the card re-renders.
+        if (lock || drafts.locks[interaction.id]) {
+            return;
+        }
+
+        drafts.lock(interaction.id, 'sending');
         answer.mutate({ interactionId: interaction.id, answer: value }, {
+            onSuccess: () => useInteractionDraftStore.getState().lock(interaction.id, 'answered'),
             onError: (error) => {
+                lockAfterFailure(interaction.id, error);
                 useErrorNotificationStore.getState().addError({ messageKey: 'chat.interaction.answerFailed', detailKey: errorMessageKey(error) });
             },
         });
@@ -388,10 +426,10 @@ export function InteractionCard({ interaction, sessionId }: { interaction: Inter
             <PartCard
                 icon={interaction.kind === 'settings_review' ? SlidersHorizontalIcon : CircleQuestionMarkIcon}
                 title={t(`chat.interaction.title.${interaction.kind}`)}
+                footer={lock === 'answered' || lock === 'expired' ? <LockStatus lock={lock} /> : undefined}
             >
                 <p className={styles.prompt}>{interaction.prompt}</p>
-                {/* Stays disabled after an accepted answer until `interaction.resolved` removes the card. */}
-                <Kind interaction={interaction} onSubmit={submit} disabled={answer.isPending || answer.isSuccess} />
+                <Kind interaction={interaction} onSubmit={submit} disabled={Boolean(lock)} />
             </PartCard>
         </div>
     );

@@ -93,9 +93,15 @@ dl.fields {
   color: var(--fg-secondary);
 }
 
-.confirmed {
+.confirmed,
+.expired {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: var(--success);
+}
+
+/* A question that can no longer be answered: neither success nor error, so in secondary text. */
+.expired {
+  color: var(--fg-secondary);
 }

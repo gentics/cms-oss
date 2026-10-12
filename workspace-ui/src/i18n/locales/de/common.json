@@ -139,6 +139,8 @@
             "send": "Senden",
             "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
+            "answered": "Beantwortet",
+            "expired": "Abgelaufen",
             "approve": "Ja",
             "reject": "Nein",
             "answerFailed": "Die Antwort konnte nicht gesendet werden",

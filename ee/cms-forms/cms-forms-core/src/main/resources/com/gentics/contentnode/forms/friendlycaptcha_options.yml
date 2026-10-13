@@ -1,12 +1,12 @@
-- value: friendly_auto
+- value: friendlycaptcha_auto
   labelI18n:
     de: "Friendly Captcha"
     en: "Friendly Captcha"
-- value: friendly_button
+- value: friendlycaptcha_button
   labelI18n:
     de: "Friendly Captcha: Button"
     en: "Friendly Captcha: Button"
-- value: friendly_background
+- value: friendlycaptcha_background
   labelI18n:
     de: "Friendly Captcha: Hintergrund"
     en: "Friendly Captcha: Background"

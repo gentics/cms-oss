@@ -21,7 +21,7 @@ export default function CMSFormCaptcha({ formState }: Props) {
 
   const renderElement = () => {
     switch (config.provider) {
-      case 'friendly':
+      case 'friendlycaptcha':
         return (
           <CmsFriendlyCaptchaElement
             provider={config.provider}

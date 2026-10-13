@@ -1,4 +1,4 @@
-export type CaptchaProvider = 'friendly' | 'recaptcha';
+export type CaptchaProvider = 'friendlycaptcha' | 'recaptcha';
 
 type ExecuteFn = () => Promise<string | null>;
 type Listener = () => void;
@@ -139,7 +139,7 @@ export const CaptchaService = {
    */
   getRequestHeaders(): Record<string, string> {
     if (_token == null || _provider == null) return {};
-    if (_provider === 'friendly') return { 'frc-captcha-response': _token };
+    if (_provider === 'friendlycaptcha') return { 'frc-captcha-response': _token };
     if (_provider === 'recaptcha') return { 'x-recaptcha-token': _token };
     return {};
   },

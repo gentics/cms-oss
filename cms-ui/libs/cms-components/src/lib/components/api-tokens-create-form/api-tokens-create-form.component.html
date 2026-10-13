@@ -15,5 +15,9 @@
             [clearable]="true"
             [min]="NOW"
         />
+        <gtx-checkbox
+            [label]="'api_token.prune_on_expiry' | gtxI18n"
+            formControlName="pruneOnExpiry"
+        ></gtx-checkbox>
     </div>
 </form>

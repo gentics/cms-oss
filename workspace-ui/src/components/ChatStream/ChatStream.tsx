@@ -2,15 +2,16 @@ import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
+import { ChatPlanCard } from '@/components/ChatPlanCard/ChatPlanCard';
 import { ConfirmedSettingsCard, InteractionCard } from '@/components/InteractionCard/InteractionCard';
-import { PlanCard } from '@/components/PlanCard/PlanCard';
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
 import { useSessionMessages } from '@/hooks/useGenaixQueries';
+import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
-import { type LiveMessage, type LivePlan, type LiveRun, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSessionWorking, type LiveMessage, type LivePlan, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ChatStream.module.css';
 
@@ -146,7 +147,7 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
     return { key: id, runId, node: <ConfirmedSettingsCard settings={settings} /> };
 }
 
-// Where a plan version shows: after the message it came after (`after`), else before its run's first
+// Where a plan shows: after the message it first came after (`after`), else before its run's first
 // agent message (`before`), else at the end (-1 for both).
 function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { after: number; before: number } {
     const after = afterMessageId ? entries.findIndex((entry) => entry.key === afterMessageId) : -1;
@@ -158,30 +159,24 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { aft
     return { after: -1, before: entries.findIndex((entry) => entry.runId === runId && entry.isAgent) };
 }
 
-/** Whether the run is working, or a turn is on its way: the thinking indicator shows. */
-function isWorking(run: LiveRun | null | undefined, messages: LiveMessage[]): boolean {
-    if (run) {
-        return run.status !== 'waiting_for_input';
-    }
-
-    return messages.some((message) => message.kind === 'sent' && message.status === 'sending');
-}
-
 /**
  * The conversation of a session: the history (`GET …/messages`, every page), then what the event
  * stream added since (`useWorkspaceEventStore`), each message once. A message the stream has is shown
  * as streamed, also where the history lists it already while it is still in progress, until the
  * refetched history replaces it (`useSessionEvents`). Where the agent is in its workflow
- * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every version of each plan (`PlanCard`) stands where its first `plan.updated` came, and
- * a confirmed settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came; an agent
- * message that went on streaming after them is shown split there (`splitMessage`).
+ * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every
+ * plan but the open one (`ChatPlanCard`) stands where its first `plan.updated` came, and a confirmed
+ * settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came; an agent message that
+ * went on streaming after them is shown split there (`splitMessage`).
  * How a run ended (`RunNotice`) follows the last message of that run. At the end: the pending
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
- * its steps, plan and thinking. Follows new content while scrolled to the end.
+ * its steps, plans and thinking. Follows new content while scrolled to the end. The open plan is in the
+ * plan bar above the composer (`PlanBar`, `useOpenPlan`), not in the conversation.
  */
 export function ChatStream({ sessionId }: { sessionId: string }) {
     const history = useSessionMessages(sessionId);
+    const openPlan = useOpenPlan(sessionId);
     const { messages, run, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
@@ -260,20 +255,17 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
             : [];
     });
 
-    // Each version of each plan where its `plan.updated` first came, but not a plan still being drafted
-    // (rc.4: `drafting`, version 0, no items yet); only the newest version of a plan can be adjusted and
-    // accepted.
-    const shownPlans = (plans ?? []).filter(({ plan }) => plan.status !== 'drafting');
-    const newestVersions = new Set(shownPlans.filter((livePlan, index) => !shownPlans.slice(index + 1).some(({ plan }) => plan.id === livePlan.plan.id)));
-    const placedPlans = shownPlans.map((livePlan) => ({
-        ...planPlace(entries, livePlan),
-        seq: livePlan.seq,
-        afterPart: livePlan.afterPart,
-        item: {
-            key: `plan-${livePlan.seq}`,
-            node: <PlanCard plan={livePlan.plan} sessionId={sessionId} canAnswer={newestVersions.has(livePlan) && !isWorking(run, messages)} />,
-        },
-    }));
+    // Each plan but the open one, where its first `plan.updated` came (rc.4: one card per plan, a closed
+    // one included), once it is more than a draft (`drafting`, no items yet). A plan read with
+    // `GET …/plans/{plan_id}` has no place and stands at the end.
+    const placedPlans = (plans ?? [])
+        .filter(({ plan }) => plan.id !== openPlan?.id && plan.status !== 'drafting')
+        .map((livePlan) => ({
+            ...planPlace(entries, livePlan),
+            seq: livePlan.seq,
+            afterPart: livePlan.afterPart,
+            item: { key: `plan-${livePlan.plan.id}`, node: <ChatPlanCard plan={livePlan.plan} sessionId={sessionId} /> },
+        }));
     const cutsAfter = (index: number): Cut[] => [...placedPlans, ...confirmationCuts].filter(({ after }) => after === index);
 
     // Each notice after the last message of its run, else at the end.
@@ -304,7 +296,7 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
     }));
 
-    if (isWorking(run, messages)) {
+    if (isSessionWorking({ run, messages })) {
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 

@@ -8,7 +8,9 @@ import type {
     MessagePart,
     MessageRole,
     Plan,
+    PlanState,
     Problem,
+    Publication,
     RunStatus,
     Step,
     UserMessagePart,
@@ -51,6 +53,8 @@ export type LiveMessage = SentMessage | ReceivedMessage;
 export interface LiveRun {
     id: string;
     status: RunStatus;
+    /** The plan the run works for (`Run.plan_id`); absent for a run of the session agent and a side run (rc.4). */
+    planId?: string;
     /** The latest `status` event's text, for the thinking indicator. */
     statusText?: string;
 }
@@ -75,7 +79,10 @@ export interface StreamAnchor {
     afterPart?: number;
 }
 
-/** One `plan.updated`: the whole plan as it was then, and where in the stream it came. */
+/**
+ * One plan: as its latest `plan.updated` sent it, and the `seq`, run and place in the stream it first
+ * came with. A plan read with `GET …/plans/{plan_id}` (`hydratePlans`) has `seq` 0 and no place.
+ */
 export interface LivePlan extends StreamAnchor {
     seq: number;
     plan: Plan;
@@ -113,12 +120,18 @@ export interface SessionLiveState {
     /** Each plan's main steps by plan id, then by step id, as `step.updated` last reported them. */
     steps?: Record<string, Record<string, Step>>;
     /**
-     * Every version of every plan (`plan.id`, `plan.version`), in the order they first came. A later
-     * `plan.updated` of the same version (a change of `status` alone) replaces its plan in place.
+     * Every plan of the session, one entry per `plan.id`, in the order they first came: each later
+     * `plan.updated` of a plan replaces it in place (09-integration-guide.md, "The plan card").
      */
     plans?: LivePlan[];
+    /** By interaction id: the plan an `interaction.requested` belongs to (rc.4 `plan_id`; none for the session agent's). */
+    interactionPlans?: Record<string, string>;
     /** Every confirmed settings review, in the order `interaction.resolved` sent them. */
     confirmations?: LiveConfirmation[];
+    /** By plan id: the publish outcome of each page the plan wrote, as `publications.updated` last sent it. */
+    publications?: Record<string, Publication[]>;
+    /** By plan id: the `seq` of the latest event carrying that `plan_id`, so `hydratePlans` keeps what is newer. */
+    planSeqs?: Record<string, number>;
     /** The CMS preview; absent until the first `preview.updated`. */
     preview?: LivePreview;
 }
@@ -140,6 +153,13 @@ interface WorkspaceEventState {
     clearMessages: (sessionId: string, keys: string[]) => void;
     /** After `410 events_pruned`: back to `lastSeq` 0, keeping only unsent turns. */
     resetSession: (sessionId: string) => void;
+    /**
+     * Puts plan snapshots (`GET …/plans/{plan_id}`, `reloadPlans`) into the live state: each plan, its
+     * main steps, its publications, the question its run waits on and, while there is none, the preview.
+     * A plan an event told about after `sinceSeq` (`planSeqs`) is left as the stream has it: the
+     * snapshot was asked for after `sinceSeq`, so those events are at least as new as it is.
+     */
+    hydratePlans: (sessionId: string, states: PlanState[], sinceSeq: number) => void;
 }
 
 const EMPTY_SESSION: SessionLiveState = { lastSeq: 0, connection: 'closed', messages: [] };
@@ -150,6 +170,18 @@ const NO_RUNS: LiveRun[] = [];
 /** Selector for one session's live state; a stable empty state while there is none. */
 export function selectSession(sessionId: string) {
     return (state: WorkspaceEventState): SessionLiveState => state.sessions[sessionId] ?? EMPTY_SESSION;
+}
+
+/**
+ * Whether the session's agent is at work: a run that does not wait for the user, or a turn on its way
+ * before its run has started.
+ */
+export function isSessionWorking({ run, messages }: Pick<SessionLiveState, 'run' | 'messages'>): boolean {
+    if (run) {
+        return run.status !== 'waiting_for_input';
+    }
+
+    return messages.some((message) => message.kind === 'sent' && message.status === 'sending');
 }
 
 /** `localId` of a sent message, `id` of a received one. */
@@ -282,8 +314,11 @@ function updateRun(runs: LiveRun[], runId: string | null | undefined, update: (r
 
 function applyToRuns(runs: LiveRun[], event: GenaixEvent): LiveRun[] {
     switch (event.type) {
-        case 'run.started':
-            return [...runs.filter(({ id }) => id !== event.run.id), { id: event.run.id, status: event.run.status }];
+        case 'run.started': {
+            const { id, status, plan_id: planId } = event.run;
+
+            return [...runs.filter((run) => run.id !== id), { id, status, ...(planId && { planId }) }];
+        }
         case 'run.completed':
         case 'run.failed':
         case 'run.cancelled':
@@ -293,7 +328,7 @@ function applyToRuns(runs: LiveRun[], event: GenaixEvent): LiveRun[] {
             return updateRun(runs, event.run_id, (run) => ({ ...run, statusText: event.text }));
         case 'part.started':
             // A `status` has no end event. Once the agent writes a part, what it said it was doing is over.
-            return updateRun(runs, event.run_id, (run) => (run.statusText ? { id: run.id, status: run.status } : run));
+            return updateRun(runs, event.run_id, (run) => (run.statusText ? { ...run, statusText: undefined } : run));
         case 'interaction.requested':
             return updateRun(runs, event.run_id ?? event.interaction.run_id, (run) => ({ ...run, status: 'waiting_for_input' }));
         case 'interaction.resolved':
@@ -348,20 +383,15 @@ function applyToSteps(steps: SessionLiveState['steps'], event: GenaixEvent): Ses
     return { ...steps, [event.plan_id]: { ...steps?.[event.plan_id], [event.step.id]: event.step } };
 }
 
-// `plan.updated` carries the whole plan every time, never a delta, also when only its `status` changed
-// (rc.4), which leaves its `version` as it is. A new version is kept with its place in the stream; the
-// same version again replaces its plan there.
-function applyToPlans(plans: LivePlan[] | undefined, event: Extract<GenaixEvent, { type: 'plan.updated' }>, messages: LiveMessage[]): LivePlan[] {
-    const { plan } = event;
-    const index = (plans ?? []).findIndex((live) => live.plan.id === plan.id && live.plan.version === plan.version);
-
-    if (plans && index >= 0) {
-        return plans.map((live, i) => (i === index ? { ...live, plan } : live));
+// `plan.updated` carries the whole plan every time, never a delta, on every change of its items and of
+// its status (rc.4). One entry per plan, in the order they first came, with the place it first came at:
+// a later one replaces its plan there.
+function applyToPlans(plans: LivePlan[] = [], { seq, plan, run_id: runId }: Extract<GenaixEvent, { type: 'plan.updated' }>, messages: LiveMessage[]): LivePlan[] {
+    if (plans.some((live) => live.plan.id === plan.id)) {
+        return plans.map((live) => (live.plan.id === plan.id ? { ...live, plan } : live));
     }
 
-    const runId = event.run_id ?? undefined;
-
-    return [...(plans ?? []), { seq: event.seq, plan, runId, ...anchorIn(messages, runId) }];
+    return [...plans, { seq, plan, ...(runId && { runId }), ...anchorIn(messages, runId ?? undefined) }];
 }
 
 // The place of what comes now: after the agent message of the run that had started by then, if any,
@@ -381,6 +411,21 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
 
     if (event.type === 'plan.updated') {
         next.plans = applyToPlans(session.plans, event, session.messages);
+    }
+
+    const planId = event.type === 'plan.updated' ? event.plan.id : event.plan_id;
+
+    if (planId) {
+        next.planSeqs = { ...session.planSeqs, [planId]: event.seq };
+    }
+
+    if (event.type === 'interaction.requested' && event.plan_id) {
+        next.interactionPlans = { ...session.interactionPlans, [event.interaction.id]: event.plan_id };
+    }
+
+    // `publications.updated` carries the plan's whole array every time (rc.4: per plan).
+    if (event.type === 'publications.updated' && event.plan_id) {
+        next.publications = { ...session.publications, [event.plan_id]: event.publications };
     }
 
     // `preview.updated` fires after every CMS write affecting the preview; the last one wins. Its `seq`
@@ -416,6 +461,41 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
     }
 
     return next;
+}
+
+// The plan snapshots `hydratePlans` takes: every one but those an event told about after `sinceSeq`.
+function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq: number): SessionLiveState {
+    const fresh = states.filter(({ plan }) => (session.planSeqs?.[plan.id] ?? 0) <= sinceSeq);
+
+    if (fresh.length === 0) {
+        return session;
+    }
+
+    let plans = session.plans ?? [];
+    let { interactions, interactionPlans } = session;
+    const steps = { ...session.steps };
+    const publications = { ...session.publications };
+
+    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending } of fresh) {
+        plans = plans.some((live) => live.plan.id === plan.id)
+            ? plans.map((live) => (live.plan.id === plan.id ? { ...live, plan } : live))
+            : [...plans, { seq: 0, plan }];
+        steps[plan.id] = Object.fromEntries(planSteps.map((step) => [step.id, step]));
+        publications[plan.id] = planPublications ?? [];
+
+        if (pending && !interactions?.some(({ id }) => id === pending.id)) {
+            interactions = [...(interactions ?? []), pending];
+            interactionPlans = { ...interactionPlans, [pending.id]: plan.id };
+        }
+    }
+
+    // The preview of the newest plan that has one, as the last `preview.updated` would have said it.
+    const latest = session.preview ? undefined : fresh.findLast((state) => state.preview)?.preview;
+    const preview = latest
+        ? { seq: 0, cms_ref: latest.cms_ref, preview_url: latest.preview_url, mode: latest.mode, changed_elements: latest.changed_elements }
+        : session.preview;
+
+    return { ...session, plans, steps, publications, interactions, interactionPlans, preview };
 }
 
 export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
@@ -475,8 +555,18 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         interactions: undefined,
         steps: undefined,
         plans: undefined,
+        interactionPlans: undefined,
         confirmations: undefined,
+        publications: undefined,
+        planSeqs: undefined,
         preview: undefined,
         messages: session.messages.filter((message) => message.kind === 'sent' && message.status !== 'sent'),
     }))),
+
+    hydratePlans: (sessionId, states, sinceSeq) => set((state) => {
+        const session = state.sessions[sessionId] ?? EMPTY_SESSION;
+        const next = hydrateSession(session, states, sinceSeq);
+
+        return next === session ? state : updateSession(state.sessions, sessionId, () => next);
+    }),
 }));

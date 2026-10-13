@@ -232,6 +232,42 @@
             }
         }
     },
+    "planBar": {
+        "label": "Offener Plan",
+        "expand": "Plan anzeigen",
+        "collapse": "Plan ausblenden",
+        "actions": {
+            "release": "Freigeben",
+            "reopen": "Wieder öffnen",
+            "publish": "Veröffentlichen",
+            "request_review": "Prüfung anfordern",
+            "discard": "Verwerfen"
+        },
+        "count": {
+            "pending_one": "{{count}} Seite zu veröffentlichen",
+            "pending_other": "{{count}} Seiten zu veröffentlichen",
+            "published_one": "{{count}} veröffentlicht",
+            "published_other": "{{count}} veröffentlicht",
+            "review_requested_one": "{{count}} in Prüfung",
+            "review_requested_other": "{{count}} in Prüfung",
+            "failed_one": "{{count}} fehlgeschlagen",
+            "failed_other": "{{count}} fehlgeschlagen"
+        },
+        "gate": {
+            "title": "Prüfungen nicht bestanden",
+            "blocking": "Blockierend",
+            "warning": "Warnung",
+            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Versuchen Sie es dann erneut.",
+            "acknowledgeHint": "Bestätigen Sie diese Warnungen, um fortzufahren.",
+            "close": "Schließen",
+            "anyway": {
+                "release": "Trotzdem freigeben",
+                "publish": "Trotzdem veröffentlichen",
+                "request_review": "Trotzdem Prüfung anfordern"
+            }
+        },
+        "transitionFailed": "Der Plan konnte nicht geändert werden"
+    },
     "handOff": {
         "editThese": "Diese bearbeiten"
     },
@@ -301,8 +337,6 @@
         },
         "plan": {
             "title": "Plan",
-            "proposed": "Vorgeschlagener Plan",
-            "adjusted": "Plan · angepasst",
             "adjustedByYou": "Von Ihnen angepasst",
             "adjust": "Anpassen",
             "accept": "Plan annehmen",
@@ -315,8 +349,17 @@
             "keys": "Enter fügt einen Schritt hinzu · Esc bricht ab",
             "cancel": "Abbrechen",
             "done": "Fertig",
-            "superseded": "Durch einen neueren Plan ersetzt",
-            "discarded": "Verworfen"
+            "status": {
+                "proposed": "Vorgeschlagen",
+                "accepted": "Angenommen",
+                "running": "Läuft",
+                "done": "Fertig",
+                "released": "Bereit zum Veröffentlichen",
+                "published": "Veröffentlicht",
+                "review_requested": "Wartet auf Prüfung",
+                "discarded": "Verworfen",
+                "superseded": "Durch einen neueren Plan ersetzt"
+            }
         },
         "citation": {
             "title": "Quellen"

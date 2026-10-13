@@ -1,16 +1,18 @@
 import { useParams } from '@tanstack/react-router';
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, type RefObject, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
+import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';
 import { pageElementEditParts, pageElementImageParts, pageElementNaming, pageElementParts, pageElementReplaceImageNaming, pageElementReplaceNaming, pageSettingsParts } from '@/helper/composerParts/composerParts';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { type SendTurnInput, type StartSessionInput, useCancelRun, useSendTurn } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
+import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
@@ -31,11 +33,13 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
  * The chat composer of one session. Enter or send posts the turn (`useSendTurn`); on success the
  * field is emptied, on failure an error is shown and the input stays. `SessionPage` keys it by the
  * session, so going on to another session from the left column starts with an empty composer.
- * While the session's run is working, Stop cancels it (`POST …/runs/{run_id}/cancel`). While it waits
- * for an answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card
- * holds, or for `ask_user` with the turn's text; with nothing to answer, it asks for the card first.
- * Once the interaction is answered, from the card or here, or has expired (`useInteractionLock`), the
- * run counts as working again: no second answer is sent, and Stop is offered.
+ * While a run is working, Stop cancels it (`POST …/runs/{run_id}/cancel`): a run of the session agent
+ * or a side run first, else the plan's run. Only the first two hold the composer; beside a plan's own
+ * run a turn is a read-only side run (rc.4), so send stays next to Stop. While a run waits for an
+ * answer, a turn answers the pending interaction (`reply_to_interaction`) with what its card holds, or
+ * for `ask_user` with the turn's text; with nothing to answer, it asks for the card first. Once the
+ * interaction is answered, from the card or here, or has expired (`useInteractionLock`), the run counts
+ * as working again: no second answer is sent, and Stop is offered.
  *
  * "Edit these" in a result card (`useHandOffStore`) puts the selected objects into the field. The
  * next message is an ordinary turn of this session, whose session agent drafts a plan for them (rc.4).
@@ -43,12 +47,17 @@ function textAnswer(parts: UserMessagePart[]): InteractionAnswer | undefined {
 function SessionComposer({ sessionId, composerRef }: { sessionId: string; composerRef: RefObject<ComposerHandle | null> }) {
     const sendTurn = useSendTurn(sessionId);
     const cancelRun = useCancelRun(sessionId);
-    const run = useWorkspaceEventStore((state) => selectSession(sessionId)(state).run);
+    // The latest run without a plan (the session agent's, or a side run beside a plan's run), which holds
+    // the composer, and the latest plan's run, which does not.
+    const sessionRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => !live.planId));
+    const planRun = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.findLast((live) => Boolean(live.planId)));
+    const run = sessionRun ?? planRun;
     const pending = useWorkspaceEventStore((state) => selectSession(sessionId)(state).interactions?.at(-1));
+    const pendingRunStatus = useWorkspaceEventStore((state) => selectSession(sessionId)(state).runs?.find((live) => live.id === pending?.run_id)?.status);
     // What "Edit these" handed over, until it is in the field.
     const handOff = useHandOffStore((state) => state.handOffs[sessionId]);
     const pendingLock = useInteractionLock(pending);
-    const isWaiting = run?.status === 'waiting_for_input' && Boolean(pending) && !pendingLock;
+    const isWaiting = pendingRunStatus === 'waiting_for_input' && Boolean(pending) && !pendingLock;
     // Upload progress of the files sent, by their position, for the composer's attachment list.
     const [uploadProgress, setUploadProgress] = useState<number[]>([]);
 
@@ -137,6 +146,7 @@ function SessionComposer({ sessionId, composerRef }: { sessionId: string; compos
             uploadProgress={uploadProgress}
             sessionId={sessionId}
             isRunning={Boolean(run) && !isWaiting}
+            canSendMeanwhile={!sessionRun}
             isStopping={run?.status === 'cancelling' || cancelRun.isPending}
             onStop={handleStop}
         />
@@ -195,14 +205,21 @@ export function SessionPage() {
     // The chat composer, for the preview to add a part of the page to it.
     const composerRef = useRef<ComposerHandle>(null);
     const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
+    // The plan the bar above the composer is for, if any; the stream keeps room for the bar meanwhile,
+    // as high as it is, expanded or not.
+    const openPlan = useOpenPlan(id ?? '');
+    const [planBarHeight, setPlanBarHeight] = useState(0);
+    const chatStyle = openPlan ? ({ '--plan-bar-space': `${planBarHeight}px` } as CSSProperties) : undefined;
 
     // The composer floats over the bottom of the middle column, the column scrolls underneath (draft
-    // `.composerwrap`). Both routes have an `id`; the composer that sends renders only with one.
+    // `.composerwrap`), with the plan bar right above it (design.md §11). Both routes have an `id`; the
+    // composer that sends renders only with one.
     const chat = (
-        <div className={styles.chat}>
+        <div className={styles.chat} style={chatStyle}>
             {id && <ChatStream key={id} sessionId={id} />}
             {id && (
                 <div className={styles.dock}>
+                    {openPlan && <PlanBar key={openPlan.id} sessionId={id} plan={openPlan} onHeightChange={setPlanBarHeight} />}
                     <SessionComposer key={id} sessionId={id} composerRef={composerRef} />
                 </div>
             )}

@@ -17,6 +17,7 @@ import {
     listWorkflows,
     postMessage,
     type SessionFilters,
+    transitionPlan,
     uploadSessionFile,
 } from '@/services/apiService/apiService';
 import type {
@@ -24,6 +25,7 @@ import type {
     InteractionAnswer,
     MessageCreateBody,
     Session,
+    TransitionRequest,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
@@ -232,6 +234,32 @@ export function useSendTurn(sessionId: string) {
                 ...(replyTo && { reply_to_interaction: replyTo }),
             });
         },
+        retry: false,
+    });
+}
+
+/** One plan transition: which plan, and the request (`action`, `acknowledge_checks`). */
+export interface TransitionPlanInput {
+    planId: string;
+    request: TransitionRequest;
+}
+
+/**
+ * POST /sessions/{session_id}/plans/{plan_id}/transitions, after making sure the session holds a CMS
+ * credential (`publish` acts through the session's CMS connection). The plan's new status arrives as
+ * `plan.updated` on the event stream; the session lists are refetched, since the to-dos filter on the
+ * plan's status. Never retried: a repeated `publish` would start a second run.
+ */
+export function useTransitionPlan(sessionId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ planId, request }: TransitionPlanInput) => {
+            await ensureSessionCmsAuthorization(sessionId);
+
+            return transitionPlan(sessionId, planId, request);
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
         retry: false,
     });
 }

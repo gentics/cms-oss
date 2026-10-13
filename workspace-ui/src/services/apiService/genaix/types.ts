@@ -112,4 +112,15 @@ export type Step = GenaixSchema<'Step'>;
 export type StepTemplate = GenaixSchema<'StepTemplate'>;
 export type Plan = GenaixSchema<'Plan'>;
 export type PlanStatus = GenaixSchema<'PlanStatus'>;
+
+// Plan reads (GET /sessions/{session_id}/plans, /plans/{plan_id})
+export type PlanState = GenaixSchema<'PlanState'>;
+export type PlanSummary = GenaixSchema<'PlanSummary'>;
+export type PlanPage = GenaixSchema<'PlanPage'>;
+
+// Plan transitions (POST /sessions/{session_id}/plans/{plan_id}/transitions) and their outcome
+export type TransitionRequest = GenaixSchema<'TransitionRequest'>;
+export type TransitionAccepted = GenaixSchema<'TransitionAccepted'>;
+export type Publication = GenaixSchema<'Publication'>;
+export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;

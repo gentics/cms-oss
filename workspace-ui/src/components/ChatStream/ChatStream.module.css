@@ -16,6 +16,7 @@
   max-width: 760px;
   margin: 0 auto;
   list-style: none;
-  /* Room for the composer floating over the end of the stream. */
-  padding: 16px 20px 140px;
+  /* Room for the composer floating over the end of the stream, and for the plan bar above it while
+     one shows (`--plan-bar-space`, set by SessionPage). */
+  padding: 16px 20px calc(140px + var(--plan-bar-space, 0px));
 }

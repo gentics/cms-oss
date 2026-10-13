@@ -20,6 +20,8 @@ Configuration is read from `.env.local` (see `.env.example`); `.env.example` its
 | `GENAIX_SUBJECT` | `sub_workspace_dev` | `X-GCMS-Subject` sent for every request |
 | `CMS_PROXY_TARGET` | none | CMS that `/rest` is forwarded to, e.g. `https://cms.example.com`. Without it the dev server answers the logged-in user (`GET /rest/user/me`, a fixed dev user, so there is no login) and the CMS API token request (`POST /rest/admin/token`, a test token) itself, so sessions start against the GenAIx mock; every other CMS call (e.g. the @-menu search) has no CMS |
 
+| `GENAIX_VIA_CMS` | none | `true`, together with `CMS_PROXY_TARGET`: `/rest/proxy/genaix` goes to the custom proxy of that CMS (proxied mode) instead of `GENAIX_API_URL`, and the three `GENAIX_` values above are not used. Needed for a GenAIx installation with a CMS key, which answers direct mode with `401` `identity_invalid`. The CMS needs a `custom_proxy` entry `genaix`, and GenAIx the public key of that CMS (`09-integration-guide.md`, section 3) |
+
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
 
 In production the UI is served from the CMS host, so `/rest` is same-origin and needs no proxy. In development the proxy keeps the CMS cookies on `localhost` (`cookieDomainRewrite`); the CMS calls are authenticated by the CMS session cookie, so they need a session on that CMS.

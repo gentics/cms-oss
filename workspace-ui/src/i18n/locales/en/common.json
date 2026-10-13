@@ -232,6 +232,42 @@
             }
         }
     },
+    "planBar": {
+        "label": "Open plan",
+        "expand": "Show plan",
+        "collapse": "Hide plan",
+        "actions": {
+            "release": "Release",
+            "reopen": "Reopen",
+            "publish": "Publish",
+            "request_review": "Request review",
+            "discard": "Discard"
+        },
+        "count": {
+            "pending_one": "{{count}} page to publish",
+            "pending_other": "{{count}} pages to publish",
+            "published_one": "{{count}} published",
+            "published_other": "{{count}} published",
+            "review_requested_one": "{{count}} in review",
+            "review_requested_other": "{{count}} in review",
+            "failed_one": "{{count}} failed",
+            "failed_other": "{{count}} failed"
+        },
+        "gate": {
+            "title": "Checks failed",
+            "blocking": "Blocking",
+            "warning": "Warning",
+            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then try again.",
+            "acknowledgeHint": "Confirm these warnings to go on.",
+            "close": "Close",
+            "anyway": {
+                "release": "Release anyway",
+                "publish": "Publish anyway",
+                "request_review": "Request review anyway"
+            }
+        },
+        "transitionFailed": "The plan could not be changed"
+    },
     "handOff": {
         "editThese": "Edit these"
     },
@@ -301,8 +337,6 @@
         },
         "plan": {
             "title": "Plan",
-            "proposed": "Proposed plan",
-            "adjusted": "Plan · adjusted",
             "adjustedByYou": "Adjusted by you",
             "adjust": "Adjust",
             "accept": "Accept plan",
@@ -315,8 +349,17 @@
             "keys": "Enter adds a step · Esc cancels",
             "cancel": "Cancel",
             "done": "Done",
-            "superseded": "Replaced by a newer plan",
-            "discarded": "Discarded"
+            "status": {
+                "proposed": "Proposed",
+                "accepted": "Accepted",
+                "running": "Running",
+                "done": "Done",
+                "released": "Ready to publish",
+                "published": "Published",
+                "review_requested": "Waiting for review",
+                "discarded": "Discarded",
+                "superseded": "Replaced by a newer plan"
+            }
         },
         "citation": {
             "title": "Sources"

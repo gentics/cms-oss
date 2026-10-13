@@ -9,6 +9,9 @@ import type {
     MessageAccepted,
     MessageCreateBody,
     MessagePage,
+    Plan,
+    PlanPage,
+    PlanState,
     PlanStatus,
     Problem,
     Run,
@@ -20,6 +23,8 @@ import type {
     SessionFile,
     SessionPage,
     SessionStatus,
+    TransitionAccepted,
+    TransitionRequest,
     Workflow,
 } from '@/services/apiService/genaix/types';
 import { HttpError, httpRequest } from '@/services/httpService/httpService';
@@ -309,6 +314,30 @@ export function answerInteraction(sessionId: string, interactionId: string, answ
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answer }),
+    });
+}
+
+// GET /sessions/{session_id}/plans: every plan of the session in short, oldest first (rc.4). Not paged.
+export function listPlans(sessionId: string): Promise<PlanPage> {
+    return genaixRequest<PlanPage>(`/sessions/${encodeURIComponent(sessionId)}/plans`);
+}
+
+// GET /sessions/{session_id}/plans/{plan_id}: the whole state of one plan, the snapshot of its
+// plan-scoped events (rc.4). `404 plan_not_found` for a plan the session does not hold.
+export function getPlanState(sessionId: string, planId: string): Promise<PlanState> {
+    return genaixRequest<PlanState>(`/sessions/${encodeURIComponent(sessionId)}/plans/${encodeURIComponent(planId)}`);
+}
+
+// POST /sessions/{session_id}/plans/{plan_id}/transitions: release, reopen, publish, request_review or
+// discard one plan (rc.4). `200` with the plan when the status changed at once; `202` with
+// `{run_id, plan, session}` when a run does the work (`publish`, `request_review`), its outcome on
+// the event stream. `409 quality_gate_failed` lists the failing checks; the non-blocking ones go back
+// in `acknowledge_checks` to get past them.
+export function transitionPlan(sessionId: string, planId: string, body: TransitionRequest): Promise<Plan | TransitionAccepted> {
+    return genaixRequest<Plan | TransitionAccepted>(`/sessions/${encodeURIComponent(sessionId)}/plans/${encodeURIComponent(planId)}/transitions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
     });
 }
 

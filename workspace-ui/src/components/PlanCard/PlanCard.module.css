@@ -1,10 +1,8 @@
-/* The work plan in the chat, aligned with the agent's text (avatar 26 px + 9 px gap). Items as
-   design.md §12 "Plan-Schritte": 18 px round number in `rgba(interactive,.13)`; done
-   `--success-bg`/`--success`; running `--interactive-fill` with pulse (§8: at most twice). The
-   other states in their status colours (§3.3), always with icon and word. */
+/* The work plan in the plan bar. Items as design.md §12 "Plan-Schritte": 18 px round number in
+   `rgba(interactive,.13)`; done `--success-bg`/`--success`; running `--interactive-fill` with pulse
+   (§8: at most twice). The other states in their status colours (§3.3), always with icon and word. */
 .plan {
-  max-width: 600px;
-  margin-left: var(--chat-indent);
+  font-size: var(--font-size-base);
 }
 
 .summary {
@@ -101,6 +99,19 @@
 
 .failed .status {
   color: var(--error);
+}
+
+/* Its actions below the steps, as the foot of a chat card (§12): caption left, actions right. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
 }
 
 /* The caption on the left of the foot, the actions pushed right (§12 "Chat-Karte": "Beschriftung

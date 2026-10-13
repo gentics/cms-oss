@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { HandOffContext } from '@/components/EditTheseButton/handOffContext';
 import { UiProvider } from '@/components/ui/provider';
 import type { SelectableListPart } from '@/services/apiService/genaix/types';
 import { renderWithProviders } from '@/test/renderWithProviders';
@@ -58,16 +57,14 @@ describe('SelectableListPartView', () => {
         expect(screen.getByText('1 selected')).toBeInTheDocument();
     });
 
-    describe('in a read-only session', () => {
+    describe('Edit these', () => {
         function renderHandOff(part: Partial<SelectableListPart>) {
             return renderWithProviders(
-                <HandOffContext value={{ nodeId: 3 }}>
-                    <SelectableListPartView part={{ type: 'selectable_list', label: 'Which template?', items, multi: true, ...part }} sessionId="s-1" />
-                </HandOffContext>,
+                <SelectableListPartView part={{ type: 'selectable_list', label: 'Which template?', items, multi: true, ...part }} sessionId="s-1" />,
             );
         }
 
-        it('hands off the objects of the selected items', async () => {
+        it('hands the objects of the selected items to the composer', async () => {
             const user = userEvent.setup();
 
             renderHandOff({});
@@ -76,7 +73,7 @@ describe('SelectableListPartView', () => {
 
             expect(editThese).toBeDisabled();
 
-            // An item without an object hands nothing off.
+            // An item without an object hands nothing over.
             await user.click(screen.getByRole('checkbox', { name: /Themenseite/ }));
 
             expect(editThese).toBeDisabled();

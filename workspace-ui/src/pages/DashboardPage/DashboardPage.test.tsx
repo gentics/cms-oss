@@ -67,10 +67,17 @@ describe('DashboardPage', () => {
 
     it('shows the open to-dos and folds out the recent sessions', async () => {
         const user = userEvent.setup();
-        const todo = sessionFixture({ id: 's-1', title: 'Prices 2026', status: 'review_requested' });
+        const todo = sessionFixture({ id: 's-1', title: 'Prices 2026', status: 'active' });
         const recent = sessionFixture({ id: 's-2', title: 'Careers page' });
 
-        stubSessionRoutes((url) => ({ items: url.searchParams.has('status') ? [todo] : [recent, todo], next_cursor: null }));
+        // The to-do queries (rc.4: `plan_status` for review) and the recent sessions, which take neither filter.
+        stubSessionRoutes((url) => {
+            if (url.searchParams.has('plan_status') || url.searchParams.has('status')) {
+                return { items: url.searchParams.get('plan_status') === 'review_requested' ? [todo] : [], next_cursor: null };
+            }
+
+            return { items: [recent, todo], next_cursor: null };
+        });
         renderDashboard();
 
         const todos = await screen.findByRole('region', { name: 'Open to-dos' });
@@ -102,7 +109,6 @@ describe('DashboardPage', () => {
 
         expect(url).toBe('/rest/proxy/genaix/sessions');
         expect(JSON.parse(init?.body as string)).toEqual({
-            workflow: 'content_research',
             message: { parts: [{ type: 'text', text: 'Which pages are offline?' }] },
             authorizations: [AUTHORIZATION],
         });

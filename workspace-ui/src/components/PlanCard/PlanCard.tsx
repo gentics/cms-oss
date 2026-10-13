@@ -30,7 +30,7 @@ interface Row extends PlanStepInput {
 }
 
 function rowsOf(items: PlanItem[]): Row[] {
-    return items.map(({ id, label, target }) => ({ key: id, label, target }));
+    return items.map(({ id, label, target }) => ({ key: id, id, label, target }));
 }
 
 // Whether the steps differ from the agent's plan: wording, order, a target, a step added or removed.
@@ -174,9 +174,9 @@ interface PlanCardProps {
 /**
  * The agent's work plan (`plan.updated`) as a chat card (design.md §12 "Chat-Karte", "Plan-Schritte";
  * draft `partHTML` plan, `editPlan`): the summary, then each item with its number or state, its target
- * and its status word. While nothing of it has started and no run works, Adjust edits the steps in the
+ * and its status word. While the plan is `proposed` and no run works, Adjust edits the steps in the
  * card and Accept plan sends the plan to the agent (`planMessage`): as proposed, or as adjusted. A later
- * version says why it changed (`reason`).
+ * version says why it changed (`reason`); a plan that was replaced or discarded says so.
  */
 export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
     const { t } = useTranslation();
@@ -186,8 +186,9 @@ export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
     // The steps while the user adjusts them; none while the plan is only shown.
     const [draft, setDraft] = useState<Row[]>();
     const [isAccepted, setIsAccepted] = useState(false);
-    const isPending = items.every((item) => statusOf(item) === 'pending');
-    const canAct = isPending && canAnswer && !isAccepted;
+    // Only a proposed plan can be accepted (contract: `409 plan_not_proposed` otherwise).
+    const isProposed = plan.status === 'proposed';
+    const canAct = isProposed && canAnswer && !isAccepted;
 
     const isEditing = Boolean(draft) && canAct;
     const steps = stepsOf(draft ?? []);
@@ -201,14 +202,14 @@ export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
 
     function accept() {
         setIsAccepted(true);
-        sendMessage.mutateAsync(planMessage(adjusted, { acceptText: t('parts.plan.acceptText'), intro: t('parts.plan.adjustedIntro') })).catch((error: unknown) => {
+        sendMessage.mutateAsync(planMessage(plan, adjusted)).catch((error: unknown) => {
             setIsAccepted(false);
             useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
         });
     }
 
     // A version with a `reason` is the agent's answer to the user, no longer its proposal.
-    const title = adjusted ? t('parts.plan.adjusted') : t(isPending && !plan.reason ? 'parts.plan.proposed' : 'parts.plan.title');
+    const title = adjusted ? t('parts.plan.adjusted') : t(isProposed && !plan.reason ? 'parts.plan.proposed' : 'parts.plan.title');
     let footer;
 
     if (isEditing) {
@@ -236,6 +237,8 @@ export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
                 </Button>
             </>
         );
+    } else if (plan.status === 'superseded' || plan.status === 'discarded') {
+        footer = <span className={styles.caption}>{t(`parts.plan.${plan.status}`)}</span>;
     } else if (plan.reason && !adjusted) {
         footer = <span className={styles.caption}>{plan.reason}</span>;
     }

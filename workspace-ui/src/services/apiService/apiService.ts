@@ -9,6 +9,7 @@ import type {
     MessageAccepted,
     MessageCreateBody,
     MessagePage,
+    PlanStatus,
     Problem,
     Run,
     Session,
@@ -23,9 +24,10 @@ import type {
 } from '@/services/apiService/genaix/types';
 import { HttpError, httpRequest } from '@/services/httpService/httpService';
 
-// Same-origin path of the CMS proxy, which adds the installation token and X-GCMS-Subject. Never
-// GenAIx itself: that would need the installation token in the browser. In development the Vite dev
-// server plays the proxy (see `vite.config.ts`). Set `VITE_GENAIX_API_BASE` to override (`.env.example`).
+// Same-origin path of the CMS proxy, which adds the installation token (`X-GenAIx-Installation`) and the
+// user's CMS identity assertion (`Authorization`). Never GenAIx itself: that would need the installation
+// token in the browser. In development the Vite dev server plays the proxy in direct mode (see
+// `vite.config.ts`). Set `VITE_GENAIX_API_BASE` to override (`.env.example`).
 export const GENAIX_API_BASE = import.meta.env.VITE_GENAIX_API_BASE || '/rest/proxy/genaix';
 
 /** How many times a retryable GenAIx request is retried (queries and the event stream). */
@@ -137,6 +139,8 @@ export interface PageParams {
 
 export interface SessionFilters {
     status?: SessionStatus[];
+    /** The status of the session's open plan, else its latest (since rc.4). */
+    plan_status?: PlanStatus[];
     workflow?: string[];
     q?: string;
 }

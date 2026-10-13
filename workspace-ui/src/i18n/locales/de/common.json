@@ -188,6 +188,9 @@
         },
         "file": "Datei",
         "fileVerbatim": "Datei, wortgetreu",
+        "planAccepted": "Plan angenommen",
+        "planAdjusted_one": "Plan angepasst · {{count}} Schritt",
+        "planAdjusted_other": "Plan angepasst · {{count}} Schritte",
         "notice": {
             "cancelled": "Gestoppt",
             "failed": "Der Lauf ist fehlgeschlagen",
@@ -230,11 +233,7 @@
         }
     },
     "handOff": {
-        "editThese": "Diese bearbeiten",
-        "notice_one": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekt",
-        "notice_other": "Die nächste Nachricht startet eine neue Session mit {{count}} Objekten",
-        "cancel": "In dieser Session bleiben",
-        "startFailed": "Die Session konnte nicht gestartet werden"
+        "editThese": "Diese bearbeiten"
     },
     "parts": {
         "selectedCount": "{{count}} ausgewählt",
@@ -307,8 +306,6 @@
             "adjustedByYou": "Von Ihnen angepasst",
             "adjust": "Anpassen",
             "accept": "Plan annehmen",
-            "acceptText": "Den Plan bitte wie vorgeschlagen umsetzen.",
-            "adjustedIntro": "Diesen Plan umsetzen:",
             "step": "Schritt {{number}}",
             "placeholder": "Schritt beschreiben",
             "moveUp": "Schritt nach oben",
@@ -317,7 +314,9 @@
             "add": "Schritt hinzufügen",
             "keys": "Enter fügt einen Schritt hinzu · Esc bricht ab",
             "cancel": "Abbrechen",
-            "done": "Fertig"
+            "done": "Fertig",
+            "superseded": "Durch einen neueren Plan ersetzt",
+            "discarded": "Verworfen"
         },
         "citation": {
             "title": "Quellen"
@@ -546,10 +545,15 @@
             "run_not_found": "Der Lauf wurde nicht gefunden.",
             "file_not_found": "Die Datei wurde nicht gefunden.",
             "interaction_not_found": "Die Rückfrage wurde nicht gefunden.",
+            "plan_not_found": "Der Plan wurde nicht gefunden.",
             "unknown_workflow": "Der Workflow ist nicht bekannt.",
             "run_already_active": "In dieser Sitzung läuft bereits ein Lauf.",
-            "session_released": "Die Sitzung wurde beendet.",
+            "session_archived": "Die Sitzung wurde archiviert.",
             "workflow_transition_invalid": "Dieser Schritt ist im Workflow gerade nicht möglich.",
+            "plan_outdated": "Der Plan hat sich inzwischen geändert. Bitte prüfen Sie die aktuelle Version.",
+            "plan_closed": "Dieser Plan ist abgeschlossen und kann nicht mehr angenommen werden.",
+            "plan_not_proposed": "Dieser Plan kann gerade nicht angenommen werden.",
+            "plan_scope_violation": "Diese Änderung gehört nicht zum angenommenen Plan.",
             "interaction_already_answered": "Diese Rückfrage wurde bereits beantwortet.",
             "interaction_expired": "Diese Rückfrage ist abgelaufen.",
             "events_pruned": "Ältere Aktualisierungen sind nicht mehr verfügbar. Die Sitzung wird neu geladen.",

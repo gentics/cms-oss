@@ -188,6 +188,9 @@
         },
         "file": "File",
         "fileVerbatim": "File, word for word",
+        "planAccepted": "Plan accepted",
+        "planAdjusted_one": "Plan adjusted · {{count}} step",
+        "planAdjusted_other": "Plan adjusted · {{count}} steps",
         "notice": {
             "cancelled": "Stopped",
             "failed": "The run failed",
@@ -230,11 +233,7 @@
         }
     },
     "handOff": {
-        "editThese": "Edit these",
-        "notice_one": "The next message starts a new session with {{count}} object",
-        "notice_other": "The next message starts a new session with {{count}} objects",
-        "cancel": "Stay in this session",
-        "startFailed": "The session could not be started"
+        "editThese": "Edit these"
     },
     "parts": {
         "selectedCount": "{{count}} selected",
@@ -307,8 +306,6 @@
             "adjustedByYou": "Adjusted by you",
             "adjust": "Adjust",
             "accept": "Accept plan",
-            "acceptText": "Go ahead with the plan as proposed.",
-            "adjustedIntro": "Execute this plan:",
             "step": "Step {{number}}",
             "placeholder": "Describe the step",
             "moveUp": "Move step up",
@@ -317,7 +314,9 @@
             "add": "Add a step",
             "keys": "Enter adds a step · Esc cancels",
             "cancel": "Cancel",
-            "done": "Done"
+            "done": "Done",
+            "superseded": "Replaced by a newer plan",
+            "discarded": "Discarded"
         },
         "citation": {
             "title": "Sources"
@@ -546,10 +545,15 @@
             "run_not_found": "The run was not found.",
             "file_not_found": "The file was not found.",
             "interaction_not_found": "The question was not found.",
+            "plan_not_found": "The plan was not found.",
             "unknown_workflow": "The workflow is not known.",
             "run_already_active": "A run is already in progress in this session.",
-            "session_released": "The session has been closed.",
+            "session_archived": "The session has been archived.",
             "workflow_transition_invalid": "This step is not possible in the workflow right now.",
+            "plan_outdated": "The plan has changed in the meantime. Please check the current version.",
+            "plan_closed": "This plan is closed and can no longer be accepted.",
+            "plan_not_proposed": "This plan cannot be accepted right now.",
+            "plan_scope_violation": "This change is not part of the accepted plan.",
             "interaction_already_answered": "This question has already been answered.",
             "interaction_expired": "This question has expired.",
             "events_pruned": "Older updates are no longer available. The session is being reloaded.",

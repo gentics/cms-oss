@@ -1,38 +1,29 @@
-import type { ContextReference, MessageCreateBody, UserMessagePart } from '@/services/apiService/genaix/types';
+import type { ContextReference, MessageCreateBody, Plan, UserPlanItem } from '@/services/apiService/genaix/types';
 
-/** One step of a plan the user accepts: its label and, where the agent named one, its target. */
+/** One step of a plan the user accepts: its label, the plan item it keeps (`id`) and its target. */
 export interface PlanStepInput {
+    /** The id of a step of the proposed plan; a step without one is new. */
+    id?: string;
     label: string;
     target?: ContextReference;
 }
 
 /**
- * The message that accepts the agent's plan. The contract has no route for it: a plan is answered with
- * an ordinary message in `execute` mode (`MessageCreate.options.mode`). Accepted as proposed, that is
- * the plain `acceptText`. Adjusted, it carries the plan as a numbered list after `intro`, one step per
- * line with its target as a `reference` part inside the line, the shape the Workspace UI and the GenAIx
- * mock agreed on for rc.2 (mock README, "The adjusted plan is a new execute message").
+ * The message that accepts the agent's plan: a `plan` part naming the plan and the version the user
+ * saw, in `execute` mode. Since rc.4 only this part accepts a plan; a plain message goes to the session
+ * agent (contract, `UserPlanPart`). Accepted as proposed, it carries no `items`. Adjusted, it carries
+ * the steps in their new order: one with the `id` of a proposed step keeps that step, one without an
+ * `id` is new, a proposed step left out is removed.
  */
-export function planMessage(steps: PlanStepInput[] | undefined, { acceptText, intro }: { acceptText: string; intro: string }): MessageCreateBody {
-    if (!steps) {
-        return { parts: [{ type: 'text', text: acceptText }], options: { mode: 'execute' } };
-    }
+export function planMessage(plan: Plan, steps?: PlanStepInput[]): MessageCreateBody {
+    const items = steps?.map(({ id, label, target }): UserPlanItem => ({
+        ...(id !== undefined && { id }),
+        label,
+        ...(target && { target }),
+    }));
 
-    const parts: UserMessagePart[] = [];
-    let text = intro;
-
-    steps.forEach((step, index) => {
-        text += `\n${index + 1}. ${step.label}`;
-
-        if (step.target) {
-            parts.push({ type: 'text', text: `${text} ` }, { type: 'reference', ref: step.target });
-            text = '';
-        }
-    });
-
-    if (text) {
-        parts.push({ type: 'text', text });
-    }
-
-    return { parts, options: { mode: 'execute' } };
+    return {
+        parts: [{ type: 'plan', plan: { plan_id: plan.id, based_on_version: plan.version, ...(items && { items }) } }],
+        options: { mode: 'execute' },
+    };
 }

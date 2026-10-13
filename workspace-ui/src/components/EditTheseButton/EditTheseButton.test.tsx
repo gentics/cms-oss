@@ -6,7 +6,6 @@ import { UiProvider } from '@/components/ui/provider';
 import { useHandOffStore } from '@/store/useHandOffStore';
 
 import { EditTheseButton } from './EditTheseButton';
-import { HandOffContext } from './handOffContext';
 
 import '@/i18n';
 
@@ -17,19 +16,17 @@ describe('EditTheseButton', () => {
         useHandOffStore.setState({ handOffs: {} });
     });
 
-    it('hands the selected objects and the node of the read-only session to its composer', async () => {
+    it('hands the selected objects to the composer of its session', async () => {
         const user = userEvent.setup();
 
         render(
-            <HandOffContext value={{ nodeId: 3 }}>
-                <EditTheseButton sessionId="s-1" references={[page]} />
-            </HandOffContext>,
+            <EditTheseButton sessionId="s-1" references={[page]} />,
             { wrapper: UiProvider },
         );
 
         await user.click(screen.getByRole('button', { name: 'Edit these' }));
 
-        expect(useHandOffStore.getState().handOffs['s-1']).toMatchObject({ references: [page], nodeId: 3, isInField: false });
+        expect(useHandOffStore.getState().handOffs['s-1']).toEqual([page]);
     });
 
     it('is disabled while nothing is selected', () => {

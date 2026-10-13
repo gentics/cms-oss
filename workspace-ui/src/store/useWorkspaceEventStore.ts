@@ -100,14 +100,22 @@ export interface SessionLiveState {
     lastSeq: number;
     connection: EventStreamStatus;
     messages: LiveMessage[];
-    /** The active run; absent or `null` while none runs. */
+    /**
+     * Every run in progress, oldest first: a plan's run and, beside it, a side run of the session agent
+     * (contract rc.4, `Run.mode: side`). Absent while none ran yet.
+     */
+    runs?: LiveRun[];
+    /** The active run, the latest of `runs`; absent or `null` while none runs. */
     run?: LiveRun | null;
     notices?: RunNotice[];
     /** Interactions waiting for an answer (`interaction.requested`, not resolved yet). */
     interactions?: Interaction[];
-    /** The workflow's main steps by id, as `step.updated` last reported them. */
-    steps?: Record<string, Step>;
-    /** Every version of the work plan, in the order `plan.updated` sent them. */
+    /** Each plan's main steps by plan id, then by step id, as `step.updated` last reported them. */
+    steps?: Record<string, Record<string, Step>>;
+    /**
+     * Every version of every plan (`plan.id`, `plan.version`), in the order they first came. A later
+     * `plan.updated` of the same version (a change of `status` alone) replaces its plan in place.
+     */
     plans?: LivePlan[];
     /** Every confirmed settings review, in the order `interaction.resolved` sent them. */
     confirmations?: LiveConfirmation[];
@@ -135,6 +143,9 @@ interface WorkspaceEventState {
 }
 
 const EMPTY_SESSION: SessionLiveState = { lastSeq: 0, connection: 'closed', messages: [] };
+
+// `runs` while none ran yet; one array, so an event that changes no run leaves the state as it is.
+const NO_RUNS: LiveRun[] = [];
 
 /** Selector for one session's live state; a stable empty state while there is none. */
 export function selectSession(sessionId: string) {
@@ -254,25 +265,41 @@ function applyToMessages(messages: LiveMessage[], event: GenaixEvent): LiveMessa
     }
 }
 
-function applyToRun(run: LiveRun | null | undefined, event: GenaixEvent): LiveRun | null | undefined {
+// Updates the run an event belongs to (`run_id`), else the latest one; `runs` unchanged when `update`
+// returns the run itself.
+function updateRun(runs: LiveRun[], runId: string | null | undefined, update: (run: LiveRun) => LiveRun): LiveRun[] {
+    const index = runId ? runs.findIndex(({ id }) => id === runId) : runs.length - 1;
+    const run = runs[index];
+
+    if (!run) {
+        return runs;
+    }
+
+    const next = update(run);
+
+    return next === run ? runs : runs.map((current, i) => (i === index ? next : current));
+}
+
+function applyToRuns(runs: LiveRun[], event: GenaixEvent): LiveRun[] {
     switch (event.type) {
         case 'run.started':
-            return { id: event.run.id, status: event.run.status };
+            return [...runs.filter(({ id }) => id !== event.run.id), { id: event.run.id, status: event.run.status }];
         case 'run.completed':
         case 'run.failed':
         case 'run.cancelled':
-            return run && run.id !== event.run.id ? run : null;
+            // Only that run ends: a side run ending leaves the plan's run working (rc.4).
+            return runs.some(({ id }) => id === event.run.id) ? runs.filter(({ id }) => id !== event.run.id) : runs;
         case 'status':
-            return run ? { ...run, statusText: event.text } : run;
+            return updateRun(runs, event.run_id, (run) => ({ ...run, statusText: event.text }));
         case 'part.started':
             // A `status` has no end event. Once the agent writes a part, what it said it was doing is over.
-            return run?.statusText ? { id: run.id, status: run.status } : run;
+            return updateRun(runs, event.run_id, (run) => (run.statusText ? { id: run.id, status: run.status } : run));
         case 'interaction.requested':
-            return run ? { ...run, status: 'waiting_for_input' } : run;
+            return updateRun(runs, event.run_id ?? event.interaction.run_id, (run) => ({ ...run, status: 'waiting_for_input' }));
         case 'interaction.resolved':
-            return run?.status === 'waiting_for_input' ? { ...run, status: 'running' } : run;
+            return updateRun(runs, event.run_id, (run) => (run.status === 'waiting_for_input' ? { ...run, status: 'running' } : run));
         default:
-            return run;
+            return runs;
     }
 }
 
@@ -310,14 +337,31 @@ function applyToInteractions(interactions: Interaction[] | undefined, event: Gen
     }
 }
 
-// `step.updated` is a full replacement keyed by id. Only the main steps are kept: an update of a
-// substep (`parent_step_id`) may be ignored by a client that shows only those (contract).
-function applyToSteps(steps: Record<string, Step> | undefined, event: GenaixEvent): Record<string, Step> | undefined {
-    if (event.type !== 'step.updated' || event.parent_step_id) {
+// `step.updated` is a full replacement keyed by its plan (`plan_id`, rc.4) and its id. Only the main
+// steps are kept: an update of a substep (`parent_step_id`) may be ignored by a client that shows only
+// those (contract).
+function applyToSteps(steps: SessionLiveState['steps'], event: GenaixEvent): SessionLiveState['steps'] {
+    if (event.type !== 'step.updated' || event.parent_step_id || !event.plan_id) {
         return steps;
     }
 
-    return { ...steps, [event.step.id]: event.step };
+    return { ...steps, [event.plan_id]: { ...steps?.[event.plan_id], [event.step.id]: event.step } };
+}
+
+// `plan.updated` carries the whole plan every time, never a delta, also when only its `status` changed
+// (rc.4), which leaves its `version` as it is. A new version is kept with its place in the stream; the
+// same version again replaces its plan there.
+function applyToPlans(plans: LivePlan[] | undefined, event: Extract<GenaixEvent, { type: 'plan.updated' }>, messages: LiveMessage[]): LivePlan[] {
+    const { plan } = event;
+    const index = (plans ?? []).findIndex((live) => live.plan.id === plan.id && live.plan.version === plan.version);
+
+    if (plans && index >= 0) {
+        return plans.map((live, i) => (i === index ? { ...live, plan } : live));
+    }
+
+    const runId = event.run_id ?? undefined;
+
+    return [...(plans ?? []), { seq: event.seq, plan, runId, ...anchorIn(messages, runId) }];
 }
 
 // The place of what comes now: after the agent message of the run that had started by then, if any,
@@ -330,17 +374,13 @@ function anchorIn(messages: LiveMessage[], runId: string | undefined): StreamAnc
 
 function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionLiveState {
     const next: SessionLiveState = { ...session, lastSeq: event.seq, messages: applyToMessages(session.messages, event) };
-    const run = applyToRun(session.run, event);
+    const runs = applyToRuns(session.runs ?? NO_RUNS, event);
     const notice = noticeOf(event);
     const interactions = applyToInteractions(session.interactions, event);
     const steps = applyToSteps(session.steps, event);
 
-    // `plan.updated` carries the whole plan every time, never a delta. Each one is kept with its place
-    // in the stream.
     if (event.type === 'plan.updated') {
-        const runId = event.run_id ?? undefined;
-
-        next.plans = [...(session.plans ?? []), { seq: event.seq, plan: event.plan, runId, ...anchorIn(session.messages, runId) }];
+        next.plans = applyToPlans(session.plans, event, session.messages);
     }
 
     // `preview.updated` fires after every CMS write affecting the preview; the last one wins. Its `seq`
@@ -358,8 +398,9 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         ];
     }
 
-    if (run !== session.run) {
-        next.run = run;
+    if (runs !== (session.runs ?? NO_RUNS)) {
+        next.runs = runs;
+        next.run = runs.at(-1) ?? null;
     }
 
     if (notice) {
@@ -410,9 +451,15 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         connection,
     }))),
 
-    markRunCancelling: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => (
-        session.run?.id === runId ? { ...session, run: { ...session.run, status: 'cancelling' } } : session
-    ))),
+    markRunCancelling: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => {
+        if (!session.runs?.some(({ id }) => id === runId)) {
+            return session;
+        }
+
+        const runs = updateRun(session.runs, runId, (run) => ({ ...run, status: 'cancelling' }));
+
+        return { ...session, runs, run: runs.at(-1) ?? null };
+    })),
 
     clearMessages: (sessionId, keys) => set((state) => updateSession(state.sessions, sessionId, (session) => ({
         ...session,
@@ -422,6 +469,7 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
     resetSession: (sessionId) => set((state) => updateSession(state.sessions, sessionId, (session) => ({
         ...session,
         lastSeq: 0,
+        runs: undefined,
         run: undefined,
         notices: undefined,
         interactions: undefined,

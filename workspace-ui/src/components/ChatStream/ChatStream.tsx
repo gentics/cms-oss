@@ -1,15 +1,13 @@
-import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
-import { HandOffContext } from '@/components/EditTheseButton/handOffContext';
 import { ConfirmedSettingsCard, InteractionCard } from '@/components/InteractionCard/InteractionCard';
 import { PlanCard } from '@/components/PlanCard/PlanCard';
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
-import { READ_ONLY_WORKFLOW } from '@/helper/workflowGuess/workflowGuess';
-import { useSession, useSessionMessages } from '@/hooks/useGenaixQueries';
+import { useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
 import { type LiveMessage, type LivePlan, type LiveRun, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -174,14 +172,13 @@ function isWorking(run: LiveRun | null | undefined, messages: LiveMessage[]): bo
  * stream added since (`useWorkspaceEventStore`), each message once. A message the stream has is shown
  * as streamed, also where the history lists it already while it is still in progress, until the
  * refetched history replaces it (`useSessionEvents`). Where the agent is in its workflow
- * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every version of the work plan (`PlanCard`) stands where its `plan.updated` came, and
+ * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every version of each plan (`PlanCard`) stands where its first `plan.updated` came, and
  * a confirmed settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came; an agent
  * message that went on streaming after them is shown split there (`splitMessage`).
  * How a run ended (`RunNotice`) follows the last message of that run. At the end: the pending
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
- * its steps, plan and thinking. Follows new content while scrolled to the end. In a read-only session
- * the result cards can hand their objects off to a new session (`HandOffContext`).
+ * its steps, plan and thinking. Follows new content while scrolled to the end.
  */
 export function ChatStream({ sessionId }: { sessionId: string }) {
     const history = useSessionMessages(sessionId);
@@ -198,11 +195,6 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         };
     }));
     const steps = useWorkflowSteps(sessionId);
-    const session = useSession(sessionId).data;
-    const isReadOnly = session?.workflow === READ_ONLY_WORKFLOW;
-    const nodeId = session?.context?.node_id;
-    // One value while the session stays the same, so the cards do not re-render with every event.
-    const handOff = useMemo(() => (isReadOnly ? { nodeId } : null), [isReadOnly, nodeId]);
     const scrollRef = useRef<HTMLDivElement>(null);
     const stickRef = useRef(true);
 
@@ -268,15 +260,18 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
             : [];
     });
 
-    // Each version of the plan where its `plan.updated` came; only the newest can be adjusted and accepted.
-    const newestPlan = plans?.at(-1);
-    const placedPlans = (plans ?? []).map((livePlan) => ({
+    // Each version of each plan where its `plan.updated` first came, but not a plan still being drafted
+    // (rc.4: `drafting`, version 0, no items yet); only the newest version of a plan can be adjusted and
+    // accepted.
+    const shownPlans = (plans ?? []).filter(({ plan }) => plan.status !== 'drafting');
+    const newestVersions = new Set(shownPlans.filter((livePlan, index) => !shownPlans.slice(index + 1).some(({ plan }) => plan.id === livePlan.plan.id)));
+    const placedPlans = shownPlans.map((livePlan) => ({
         ...planPlace(entries, livePlan),
         seq: livePlan.seq,
         afterPart: livePlan.afterPart,
         item: {
             key: `plan-${livePlan.seq}`,
-            node: <PlanCard plan={livePlan.plan} sessionId={sessionId} canAnswer={livePlan === newestPlan && !isWorking(run, messages)} />,
+            node: <PlanCard plan={livePlan.plan} sessionId={sessionId} canAnswer={newestVersions.has(livePlan) && !isWorking(run, messages)} />,
         },
     }));
     const cutsAfter = (index: number): Cut[] => [...placedPlans, ...confirmationCuts].filter(({ after }) => after === index);
@@ -342,11 +337,9 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
 
     return (
         <div ref={scrollRef} className={styles.stream} onScroll={handleScroll}>
-            <HandOffContext value={handOff}>
-                <ol className={styles.list}>
-                    {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
-                </ol>
-            </HandOffContext>
+            <ol className={styles.list}>
+                {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
+            </ol>
         </div>
     );
 }

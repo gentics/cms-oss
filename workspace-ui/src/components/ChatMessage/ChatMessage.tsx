@@ -1,4 +1,4 @@
-import { AtSignIcon, HashIcon, ListFilterIcon, PaperclipIcon } from 'lucide-react';
+import { AtSignIcon, HashIcon, ListFilterIcon, PaperclipIcon, RouteIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +17,8 @@ function Token({ icon, children }: { icon: ReactNode; children: ReactNode }) {
     );
 }
 
-// A part of a user turn (contract `UserMessagePart`, the six types of §5.1).
+// A part of a user turn (contract `UserMessagePart`, §5.1). A `plan` part accepts the agent's plan,
+// as proposed or with the user's steps (`planMessage`).
 function UserPart({ part }: { part: UserMessagePart }) {
     const { t } = useTranslation();
 
@@ -34,6 +35,12 @@ function UserPart({ part }: { part: UserMessagePart }) {
             return <Token icon={<HashIcon size={12} aria-hidden />}>{`${part.key}: ${part.label || part.value}`}</Token>;
         case 'filter':
             return <Token icon={<ListFilterIcon size={12} aria-hidden />}>{part.label}</Token>;
+        case 'plan':
+            return (
+                <Token icon={<RouteIcon size={12} aria-hidden />}>
+                    {part.plan.items ? t('chat.planAdjusted', { count: part.plan.items.length }) : t('chat.planAccepted')}
+                </Token>
+            );
         default:
             return null;
     }

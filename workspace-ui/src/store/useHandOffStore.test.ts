@@ -10,32 +10,21 @@ describe('useHandOffStore', () => {
         useHandOffStore.setState({ handOffs: {} });
     });
 
-    it('keeps a hand-off per session until it ends', () => {
-        useHandOffStore.getState().request('s-1', { references: [first], nodeId: 3 });
+    it('keeps the objects per session until the composer has taken them', () => {
+        useHandOffStore.getState().request('s-1', [first]);
 
-        expect(useHandOffStore.getState().handOffs).toEqual({ 's-1': { references: [first], nodeId: 3, isInField: false, replaces: [] } });
-
-        useHandOffStore.getState().markInField('s-1');
-
-        expect(useHandOffStore.getState().handOffs['s-1']).toMatchObject({ isInField: true });
+        expect(useHandOffStore.getState().handOffs).toEqual({ 's-1': [first] });
 
         useHandOffStore.getState().end('s-1');
 
         expect(useHandOffStore.getState().handOffs).toEqual({});
     });
 
-    it('replaces the objects already in the field with those of a later request', () => {
-        useHandOffStore.getState().request('s-1', { references: [first] });
-        useHandOffStore.getState().markInField('s-1');
-        useHandOffStore.getState().request('s-1', { references: [second] });
+    it('keeps only the latest request of a session, and those of other sessions', () => {
+        useHandOffStore.getState().request('s-1', [first]);
+        useHandOffStore.getState().request('s-2', [first]);
+        useHandOffStore.getState().request('s-1', [second]);
 
-        expect(useHandOffStore.getState().handOffs['s-1']).toEqual({ references: [second], isInField: false, replaces: [first] });
-    });
-
-    it('replaces nothing new for a request that came before the field took the last one', () => {
-        useHandOffStore.getState().request('s-1', { references: [first] });
-        useHandOffStore.getState().request('s-1', { references: [second] });
-
-        expect(useHandOffStore.getState().handOffs['s-1']).toMatchObject({ references: [second], replaces: [] });
+        expect(useHandOffStore.getState().handOffs).toEqual({ 's-1': [second], 's-2': [first] });
     });
 });

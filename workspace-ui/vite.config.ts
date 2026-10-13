@@ -109,10 +109,11 @@ export default defineConfig(({ mode }) => {
 
         server: {
             proxy: {
-                // Stands in for the CMS proxy (09-integration-guide.md, section 3): forward all
-                // of /rest/proxy/genaix, drop the browser's credentials and identity, and set the
-                // installation token and X-GCMS-Subject server-side. Listed before /rest, so it
-                // wins over the CMS forward below.
+                // Stands in for the CMS proxy in direct mode (09-integration-guide.md, section 3,
+                // "a development proxy in direct mode"): forward all of /rest/proxy/genaix, drop the
+                // browser's credentials and identity, and set the installation token and
+                // X-GCMS-Subject server-side. X-GenAIx-Installation is cleared, since it would switch
+                // the request into proxied mode. Listed before /rest, so it wins over the CMS forward below.
                 '/rest/proxy/genaix/': {
                     target: genaixApiUrl,
                     changeOrigin: true,
@@ -120,6 +121,7 @@ export default defineConfig(({ mode }) => {
                     configure: (proxy) => {
                         proxy.on('proxyReq', (proxyReq) => {
                             proxyReq.removeHeader('Cookie');
+                            proxyReq.removeHeader('X-GenAIx-Installation');
                             proxyReq.setHeader('Authorization', `Bearer ${genaixApiToken}`);
                             proxyReq.setHeader('X-GCMS-Subject', genaixSubject);
                         });

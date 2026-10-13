@@ -170,7 +170,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 		String nodeVersionTable = baseTableName + "_nodeversion";
 
 		return String.format(
-				"SELECT object.* FROM `%s` object WHERE object.id = ? AND nodeversiontimestamp = (SELECT MAX(nodeversiontimestamp) FROM `%s` WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)",
+				"SELECT object.* FROM `%s` object WHERE object.id = ? AND nodeversiontimestamp = (SELECT MAX(nodeversiontimestamp) FROM `%s` WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY object.auto_id",
 				nodeVersionTable, nodeVersionTable);
 	}
 
@@ -1688,7 +1688,8 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 					FactoryDataRow stored = objData.get(recId);
 					if (stored != null) {
 						int storedTimestamp = stored.getInt("nodeversiontimestamp");
-						if (rowTimestamp > storedTimestamp) {
+						// if there are multiple rows for the same version (which should not happen), the first written row (lowest auto_id) is used
+						if (rowTimestamp > storedTimestamp || (rowTimestamp == storedTimestamp && rs.getInt("auto_id") < stored.getInt("auto_id"))) {
 							objData.put(recId, new FactoryDataRow(rs));
 						}
 					} else {

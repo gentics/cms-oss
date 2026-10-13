@@ -63,7 +63,7 @@ public class OverviewFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_DS_SQL = "SELECT * FROM ds_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM ds_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
 
 	/**
 	 * SQL Statement for batchloading ds
@@ -106,7 +106,7 @@ public class OverviewFactory extends AbstractFactory {
 	 */
 	protected final static String SELECT_VERSIONED_DS_OBJ_SQL = "SELECT * FROM ds_obj_nodeversion WHERE id = ? AND nodeversiontimestamp = "
 			+ "(SELECT MAX(nodeversiontimestamp) FROM ds_obj_nodeversion "
-			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id)";
+			+ "WHERE (nodeversionremoved > ? OR nodeversionremoved = 0) AND nodeversiontimestamp <= ? AND id = ? GROUP BY id) ORDER BY auto_id";
 
 	/**
 	 * SQL Statement for batchloading ds_obj

@@ -13,8 +13,10 @@ export interface paths {
         };
         /**
          * Validate the installation token
-         * @description Cheap credential check. Requires a valid installation token but **not** the identity
-         *     headers, so a caller can verify its configuration before any user is involved.
+         * @description Cheap credential check. Requires a valid installation token, in either
+         *     `Authorization` (direct) or `X-GenAIx-Installation` (proxied), but **no** identity,
+         *     so a caller can verify its configuration before any user is involved. An assertion
+         *     sent along is ignored.
          */
         get: operations["ping"];
         put?: never;
@@ -74,14 +76,16 @@ export interface paths {
          *     record itself. Nothing is retained and nothing is recoverable.
          *
          *     **The installation calls this when the person behind the subject is removed.** That
-         *     is the only way it can happen: the subject is opaque and installation-scoped, so
-         *     GenAIx cannot resolve a person to a subject and could never start the deletion on
-         *     its own. The side that mints subjects is the side that knows when one should cease
-         *     to exist.
+         *     is the only way it can happen: the subject is opaque and installation-scoped, and
+         *     GenAIx keeps nothing that resolves a person to a subject, so it could never start the
+         *     deletion on its own. The side that knows the person is the side that knows when their
+         *     subject should cease to exist.
          *
-         *     Authenticated by the installation token alone. It carries no `X-GCMS-Subject` of its
-         *     own, because it is an installation acting on a subject rather than a user acting on
-         *     their own data, and the subject to erase is in the path.
+         *     Authenticated by the installation token alone, in either header; any identity
+         *     assertion or `X-GCMS-Subject` sent along is ignored, because this is an installation
+         *     acting on a subject rather than a user acting on their own data, and the subject to
+         *     erase is in the path. To erase by the CMS login instead of the derived subject, and
+         *     to keep the login out of URLs and access logs, use `POST /subjects/erase`.
          *
          *     Active runs of that subject are cancelled first. Credentials the subject registered
          *     are deleted here but are **not revoked on any target system**; their owner deletes
@@ -90,6 +94,42 @@ export interface paths {
          *     Idempotent: a subject with nothing stored, or one that was never seen, is `204`.
          */
         delete: operations["deleteSubject"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/subjects/erase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Erase everything held for one subject, named in the body
+         * @description The same erasure as `DELETE /subjects/{subject}`, with the subject named in the body
+         *     (since `1.0.0-rc.3`). The body carries exactly one of:
+         *
+         *     - `cms_sub`: the `sub` claim the CMS identity assertion carries for the person,
+         *       their login with any `jwt.prefix`. GenAIx derives the subject from it exactly as it
+         *       does for a proxied request and erases that subject. Needs a CMS public key
+         *       configured on the installation; without one it is `422`, because no subject was
+         *       ever derived from a `sub`.
+         *     - `subject`: the subject itself, as `DELETE /subjects/{subject}` takes it.
+         *
+         *     The body is what keeps a login out of URLs and access logs. The CMS side calls this
+         *     when it deletes a user; if it does not, a later user who is given the same login
+         *     derives the same subject and inherits what is stored under it.
+         *
+         *     Authenticated by the installation token alone, in either header, and any assertion
+         *     sent along is ignored. Idempotent: a subject with nothing stored, or one that was
+         *     never seen, is `204`.
+         */
+        post: operations["eraseSubject"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -202,7 +242,11 @@ export interface paths {
          */
         get: operations["getMcpConnection"];
         put?: never;
-        post?: never;
+        /**
+         * The PATCH of a connection, sent as POST
+         * @description `PATCH /mcp/connections/{connection_id}` for a caller that cannot send `PATCH`, such as one behind the CMS custom proxy (since `1.0.0-rc.3`). Same body, same semantics, same responses. `X-HTTP-Method-Override` must be `PATCH`; any other value is `400` with `genaix_code: malformed_request`.
+         */
+        post: operations["updateMcpConnectionViaPost"];
         /**
          * Delete a connection
          * @description Removes the connection and its stored credential. It **revokes nothing** on the
@@ -231,6 +275,9 @@ export interface paths {
          *     `default: true` moves the flag off the previous default of that connector type;
          *     `default: false` on the only connection of a type is refused with `422`, because a
          *     connector type always has a default while it has any connection.
+         *
+         *     `POST` with `X-HTTP-Method-Override: PATCH` is the same call (since `1.0.0-rc.3`),
+         *     for callers behind the CMS custom proxy, which does not forward `PATCH`.
          */
         patch: operations["patchMcpConnection"];
         trace?: never;
@@ -327,21 +374,56 @@ export interface paths {
         };
         /**
          * List the calling user's sessions
-         * @description Returns only sessions owned by (installation token, `X-GCMS-Subject`), newest
-         *     activity first. `archived` sessions are excluded unless `status=archived` is
-         *     requested explicitly.
+         * @description Returns only sessions owned by (installation token, subject), newest activity
+         *     first. `archived` sessions are excluded unless `status=archived` is requested
+         *     explicitly. Filters combine with AND.
          */
         get: operations["listSessions"];
         put?: never;
         /**
          * Create a session
-         * @description Creates a session owned by (installation token, `X-GCMS-Subject`). A session is
-         *     one user task. `workflow` selects the behaviour profile and the shape of the
-         *     workflow view and defaults to `free_chat`. It is fixed at creation: it is not a
-         *     member of `SessionPatch`, so a `PATCH /sessions/{session_id}` carrying a
-         *     `workflow` field is rejected as `422` with `genaix_code: validation_failed` like
-         *     any other unknown property. To work under a different workflow, create a new
-         *     session.
+         * @description Creates a session owned by (installation token, subject). Since `1.0.0-rc.4` a
+         *     session is **one conversation**, and the work it carries out is a sequence of
+         *     **plans** (`GET /sessions/{session_id}/plans`), each under its own workflow module
+         *     with its own steps, checks, gates, publications and lifecycle. The rules every
+         *     session keeps, enforced by GenAIx and never left to the model:
+         *
+         *     1. **Plans never mix.** Every write, check, gate result, preview and publication
+         *        belongs to exactly one plan (`plan_id`); at most one plan executes at a time; a
+         *        closed plan never changes again.
+         *     2. **The agent always knows the current task**: its context starts with the open
+         *        plan, and closed plans appear as a factual history.
+         *     3. **Only what the user accepted changes the CMS.** Write tools exist only in a plan
+         *        the user accepted, and a write must target an object of that plan
+         *        (`plan_scope_violation` otherwise). Releasing and publishing are the user's
+         *        transitions of a plan.
+         *     4. **Reading is free**, with or without a plan, at any time.
+         *     5. **The agent proposes, the user accepts**, as proposed or adjusted, in the plan
+         *        card (`plan` part with `plan_id`).
+         *     6. **Nothing of the conversation is lost**: older turns may be summarised for the
+         *        agent (`status` `context_compacted`), but every plan, write and user decision
+         *        stays exact and recallable.
+         *
+         *     Without `workflow` the session starts with the **session agent**, which reads,
+         *     answers and proposes plans; that is the normal start of a Workspace conversation.
+         *     With `workflow` (a CMS context action such as "Create page here") the first plan
+         *     is drafted under that module at once. A session has no workflow of its own any
+         *     more, so `SessionPatch` has no `workflow` member either: a `PATCH` carrying one is
+         *     rejected as `422` with `genaix_code: validation_failed` like any other unknown
+         *     property.
+         *
+         *     ### Continuing from an earlier session
+         *
+         *     `continued_from` (since `1.0.0-rc.3`) names an earlier conversation this one builds
+         *     on; follow-up work in the same conversation is a further plan, not a new session
+         *     (since `1.0.0-rc.4`). It must be a session of the same
+         *     installation and the same subject; anything else, unknown and foreign alike, is
+         *     `422` with pointer `/continued_from`, so the call leaks nothing about other
+         *     sessions. GenAIx gives the agent the earlier session's user messages, its final
+         *     assistant messages and its `cms_objects` as read-only context. It copies no files,
+         *     no authorizations, no plan and no workflow state. The link is returned as
+         *     `Session.continued_from`, is immutable, and `GET /sessions?continued_from=<id>`
+         *     lists the follow-ups of a session.
          *
          *     ### Creating with the first message
          *
@@ -367,19 +449,20 @@ export interface paths {
          *     token and the first turn in one call.
          *
          *     A credential registered this way belongs to the session: it is used only by this
-         *     session's runs and is deleted when the session reaches `published`, `discarded` or
-         *     `archived`, when the client deletes it, or when it expires. Leaving `authorizations`
+         *     session's runs, by every plan of it, and is deleted when the session is archived or
+         *     deleted, when the client deletes it, or when it expires (since `1.0.0-rc.4`; before,
+         *     also when the session was published or discarded). Leaving `authorizations`
          *     out is fine when the caller holds a standing authorization on the connection, or
          *     when the client registers one later with
          *     `PUT /sessions/{session_id}/authorizations/{connection_id}`.
          *
          *     ### Availability is a hint
          *
-         *     `workflow` must name an installed module; whether the caller can act in it right
-         *     now is what `capabilities.workflows` in `GET /me` and `Workflow.available` report,
-         *     and this call does not refuse a session on that ground (since `1.0.0-rc.2`). A
-         *     session created without a usable credential for a required connector answers
-         *     `auth.required` on its first run and fails it with `424`
+         *     `workflow`, when sent, must name an installed module; whether the caller can act in
+         *     it right now is what `capabilities.workflows` in `GET /me` and `Workflow.available`
+         *     report, and this call does not refuse a session on that ground (since
+         *     `1.0.0-rc.2`). A plan drafted without a usable credential for a required connector
+         *     answers `auth.required` on its first run and fails it with `424`
          *     `mcp_authorization_required`; the client registers a credential and sends the turn
          *     again. Credentials sent in `authorizations` on this call satisfy the requirement for
          *     this session immediately, without a standing authorization. A required connector
@@ -429,7 +512,11 @@ export interface paths {
          */
         get: operations["getSession"];
         put?: never;
-        post?: never;
+        /**
+         * The PATCH of a session, sent as POST
+         * @description `PATCH /sessions/{session_id}` for a caller that cannot send `PATCH`, such as one behind the CMS custom proxy (since `1.0.0-rc.3`). Same body, same semantics, same responses. `X-HTTP-Method-Override` must be `PATCH`; any other value is `400` with `genaix_code: malformed_request`.
+         */
+        post: operations["updateSessionViaPost"];
         /**
          * Archive a session
          * @description Soft delete: the session moves to `status: archived` and disappears from the
@@ -447,11 +534,15 @@ export interface paths {
          * @description Partial update. Only `title`, `context` and `labels` are writable. `context` is
          *     replaced wholesale when present, so the client sends the complete context
          *     object it wants; this keeps removal of a reference expressible without a patch
-         *     language. `workflow` and `status` are not writable here - use
-         *     `POST /sessions/{session_id}/transitions` for status.
+         *     language. `status` is not writable here - use
+         *     `POST /sessions/{session_id}/transitions` to archive, and a plan's own transitions
+         *     for plans; a session has no `workflow` to write (since `1.0.0-rc.4`).
          *
-         *     Emits `session.updated` on the event stream. `409` when the session is
-         *     `archived` or `discarded`.
+         *     Emits `session.updated` on the event stream. `409` with `session_archived` when the
+         *     session is archived.
+         *
+         *     `POST` with `X-HTTP-Method-Override: PATCH` is the same call (since `1.0.0-rc.3`),
+         *     for callers behind the CMS custom proxy, which does not forward `PATCH`.
          */
         patch: operations["patchSession"];
         trace?: never;
@@ -466,61 +557,183 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Drive the session status machine
-         * @description One route for every status change, so a client has a single call to make
-         *     and the server keeps the state machine in one place.
+         * Archive or unarchive the conversation
+         * @description The session's own transitions (since `1.0.0-rc.4`). Releasing, publishing,
+         *     requesting review and discarding act on one plan and moved to
+         *     `POST /sessions/{session_id}/plans/{plan_id}/transitions`.
          *
-         *     | action | from | to | starts a run |
+         *     | action | from | to |
+         *     |---|---|---|
+         *     | `archive` | `active`, `waiting_for_input` | `archived` |
+         *     | `unarchive` | `archived` | `active` |
+         *
+         *     `archive` cancels an active run, hides the session from the default list and
+         *     deletes its session credentials; its plans keep their statuses. `unarchive` brings
+         *     the conversation back; credentials are registered again before the next turn.
+         *     Repeating either on a session already there is `200` with no event; a real change
+         *     appends `session.updated` with `changed: [status, updated_at]`. `409`
+         *     `workflow_transition_invalid` for any other action.
+         */
+        post: operations["transitionSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The plans of a session
+         * @description Every plan of the session, oldest first, in short (since `1.0.0-rc.4`): the plan
+         *     cards a client draws in the conversation, and the ledger of closed work. At most one
+         *     plan is open unless a module's `plan_policy.concurrency` allows a new plan beside a
+         *     released one, and at most one executes. The state of one plan is
+         *     `GET /sessions/{session_id}/plans/{plan_id}`.
+         */
+        get: operations["listPlans"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The complete state of one plan
+         * @description The plan, its steps, checks, gates, approval chain, publications, derived settings,
+         *     objects and previews in one snapshot (since `1.0.0-rc.4`; for the session as a
+         *     whole `GET /sessions/{session_id}/workflow` before). The reconnect counterpart of the
+         *     plan-scoped events carrying this `plan_id`. `404` with `genaix_code:
+         *     plan_not_found` for a plan id the session does not have.
+         */
+        get: operations["getPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{session_id}/plans/{plan_id}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Drive a plan's lifecycle (release, publish, discard)
+         * @description One route for every user-driven status change of a plan (since `1.0.0-rc.4`; until
+         *     then these were the session's own transitions, `POST /sessions/{session_id}/transitions`).
+         *     The session stays `active` throughout; only the plan moves.
+         *
+         *     | action | from (`PlanStatus`) | to | starts a run |
          *     |---|---|---|---|
-         *     | `release` | `active`, `waiting_for_input` | `released` | no |
-         *     | `reopen` | `released`, `review_requested`, `published` | `active` | no |
+         *     | `release` | `done` (also `running`, which stops it) | `released` | no |
+         *     | `reopen` | `released`, `review_requested`, `published` | `accepted` | no |
          *     | `publish` | `released` | `published` or `review_requested` | yes |
          *     | `request_review` | `released` | `review_requested` | yes |
-         *     | `discard` | any except `archived` | `discarded` | no |
-         *     | `archive` | any | `archived` | no |
+         *     | `discard` | any open status | `discarded` | only with `on_discard: restore` |
          *
-         *     `release` stops generation: an active run is cancelled before the status flips,
+         *     Accepting a plan is not a transition: it is the user's message with a `plan` part
+         *     naming the plan, so the acceptance is part of the conversation.
+         *     A `reopen` of a published plan makes it executable again for corrections; its pages
+         *     stay published until the next `publish`.
+         *
+         *     `release` stops generation: the plan's active run is cancelled before the status flips,
          *     **after** the gates have passed. The gates run first (since `1.0.0-rc.2`): a
          *     `release` the gates refuse leaves the active run untouched, so a user does not lose
          *     the run to a refusal.
          *
          *     **Idempotency and the response body** (since `1.0.0-rc.2`). Repeating `discard` on a
-         *     `discarded` session or `archive` on an `archived` one is `200` with the session and
-         *     no event; only a real change appends `session.updated` with `changed: [status,
-         *     updated_at]` (`released_at` too for `release`). The `202` of `publish` and
-         *     `request_review` carries the session **as it is when the call returns**, that is
-         *     `released`, before the transition run has landed; the outcome arrives on the event
-         *     stream and in the next `GET`.
+         *     `discarded` plan is `200` with the plan and no event; only a real change appends
+         *     `plan.updated` with the new `status`. The `202` of `publish` and `request_review`
+         *     carries the plan **as it is when the call returns**, that is `released`, before the
+         *     transition run has landed; the outcome arrives on the event stream and in the next
+         *     `GET /sessions/{session_id}/plans/{plan_id}`.
+         *
+         *     **Closed plans.** A transition on a closed plan (`published` except `reopen`,
+         *     `review_requested` except `reopen`, `discarded`, `superseded`) is `409` with
+         *     `genaix_code: plan_closed`; an unknown plan id is `404` `plan_not_found`.
+         *
+         *     **Every page the plan wrote** (since `1.0.0-rc.3`, per plan since `1.0.0-rc.4`).
+         *     `publish` and `request_review` act on every page the plan created or changed: the
+         *     pages of its `cms_objects` written with `operation` `created` or `updated`, in the
+         *     order of their first write, and a page stays in that set when a later `published`
+         *     replaces its `operation`. Each such page has one `Publication` in
+         *     `PlanState.publications`, resolved from the permissions on **its own folder**, so one
+         *     plan can publish one page directly and send another to review. The array is
+         *     announced whole by `publications.updated` with the plan's `plan_id`. Pages another
+         *     plan of the session wrote are never touched.
+         *
+         *     - `publish` handles every entry that is `pending` or `failed`, each directly or as a
+         *       review request according to its folder; entries already `published` or
+         *       `review_requested` are left alone, so repeating `publish` after a partial failure
+         *       retries exactly the pages that did not go out.
+         *     - `request_review` sends every such entry to review.
+         *     - `at` applies to every page the call handles.
          *
          *     **Request review** (since `1.0.0-rc.2`). The CMS has no call that submits a page for
          *     review: its `publish_page` queues the page for approval only when the acting user
          *     lacks `publishpages` on the folder. `request_review` therefore calls the CMS only for
-         *     such a user, and for a user who may publish directly it is a GenAIx-side step: the
-         *     session becomes `review_requested` with the approval step `pending`, no CMS write
-         *     happens, and a later `publish` performs it. `publish` maps the CMS outcome
-         *     `published` or `scheduled` (with `at`) to `published` and `queued_for_approval` to
-         *     `review_requested`; a CMS problem lands the run `failed` and leaves the session
-         *     `released`.
+         *     a page in such a folder, and for a page the user may publish directly it is a
+         *     GenAIx-side step: the entry becomes `review_requested` with its approval step
+         *     `pending`, no CMS write happens, and a later `publish` performs it. `publish` maps the
+         *     CMS outcome `published` or `scheduled` (with `at`) to `published` and
+         *     `queued_for_approval` to `review_requested`, per page; a CMS problem marks that entry
+         *     `failed` with its `error`.
          *
-         *     **Credentials.** A session's own MCP credentials are deleted when `publish`,
-         *     `discard` or `archive` lands, because such a session no longer acts on any connected
-         *     system. They are **kept** through `release` and `request_review`, since publishing
-         *     and requesting review still do. A `reopen` therefore starts from a session with no
-         *     credential of its own if it had been published, and the client registers a fresh one
-         *     with `PUT /sessions/{session_id}/authorizations/{connection_id}` before the next
-         *     turn.
+         *     **Plan status after the run** (since `1.0.0-rc.3`, per plan since `1.0.0-rc.4`), from
+         *     the entries:
+         *
+         *     | publications | run | plan |
+         *     |---|---|---|
+         *     | every entry `published` | `completed` | `published` |
+         *     | at least one `review_requested`, none `failed` | `completed` | `review_requested` |
+         *     | any entry `failed` | `failed` | stays `released` |
+         *
+         *     Entries that did go out before a failure stay `published` or `review_requested`.
+         *     There is no partial discard: a page the user does not want published is taken out of
+         *     the work by editing the plan before it is executed.
+         *
+         *     **Discard** follows the module's `plan_policy.on_discard`: `keep` leaves the pages the
+         *     plan wrote as they are (unpublished changes stay as drafts in the CMS) and answers
+         *     `200`; `restore` restores each page's version from before the plan in a transition
+         *     run and answers `202`, the plan being `discarded` once the run has landed. A plan that
+         *     wrote nothing is discarded at once either way.
+         *
+         *     **Credentials.** Plan transitions never touch the session's credentials: the next
+         *     plan of the conversation acts with them too. They end when the session is archived
+         *     or deleted, or when they expire (since `1.0.0-rc.4`).
          *
          *     `publish` is asynchronous because it goes through the session's CMS connection. The
-         *     response is `202` with the `run_id` to follow on the event stream. Whether the
-         *     page is published directly or only submitted for review is decided
-         *     **server-side** from the CMS permissions of the user on the target folder, not
-         *     from a cached flag, and the outcome is reported in the workflow view's
-         *     `approval_chain` and as `approval_chain.updated` events. A `publish` that the
-         *     CMS converts into a review request still returns `202`; the final session
-         *     status is `review_requested`.
+         *     response is `202` with the `run_id` to follow on the event stream. Whether a page is
+         *     published directly or only submitted for review is decided **server-side** from the
+         *     CMS permissions of the user on that page's folder, not from a cached flag, and the
+         *     outcome is reported per page in `publications` and `publications.updated`, and for
+         *     the first page also in the plan-level `approval_chain` and
+         *     `approval_chain.updated`. A `publish` that the CMS converts into a review request
+         *     still returns `202`; the final plan status follows the table above.
          *
          *     **Quality gates.** Before `release`, `publish` and `request_review` the harness runs
-         *     the workflow module's gates for that moment (`when: before_release` or
+         *     the plan's workflow module's gates for that moment (`when: before_release` or
          *     `before_publish`) and re-checks the ones already run. The transition is refused with
          *     `409` and `genaix_code: quality_gate_failed` while **any** gate-sourced check is
          *     failing, blocking or not. The two kinds differ in how they clear:
@@ -540,11 +753,11 @@ export interface paths {
          *     ones, and `acknowledgeable_checks` the ids the client may pass back in
          *     `acknowledge_checks`.
          *
-         *     `409` when the action is not legal from the current status. `423` when the CMS
+         *     `409` when the action is not legal from the plan's current status. `423` when the CMS
          *     object is locked by another user. `424` when the CMS rejects the write or the
          *     connection cannot be used.
          */
-        post: operations["transitionSession"];
+        post: operations["transitionPlan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -617,9 +830,11 @@ export interface paths {
          *     | `setting` | `#[key: value]` |
          *     | `file_ref` | `[[file name]]` |
          *     | `filter` | `#[label]` |
+         *     | `plan` | a numbered list, `1. label` per item, items separated by `\n` |
          *
          *     Parts are concatenated in order with nothing inserted between them: the spacing
-         *     belongs to the `text` parts. A literal `[` or `]` inside a label, a key, a value,
+         *     belongs to the `text` parts, and a client that puts a `plan` part after text ends
+         *     that text with a line break. A literal `[` or `]` inside a label, a key, a value,
          *     a file name or a text is escaped as `\[` and `\]`, so the rendering stays
          *     unambiguous and can be read back. `[[file name]]` uses the name GenAIx holds for
          *     that session file, not a name the client supplies.
@@ -638,6 +853,53 @@ export interface paths {
          *       the user selected instead of what the model re-infers from prose.
          *     - `file_ref` parts attach session files; `mode: verbatim` puts the whole file
          *       under the same gate.
+         *     - a `plan` part accepts the open proposed plan it names in the version the user
+         *       adjusted, and the run executes that plan (below).
+         *
+         *     ### Plans: drafting, proposing, accepting
+         *
+         *     Since `1.0.0-rc.4` a message goes to the **session agent** unless it accepts a plan
+         *     or answers a plan run's question. The session agent reads and answers freely; when
+         *     the user asks for a change it drafts a plan under the fitting workflow module
+         *     (`plan.updated` with `status: drafting`), and that module's proposing run reads,
+         *     plans and ends without any CMS write (`status: proposed`). A module with
+         *     `plan_approval: true` (`content_create`, `content_edit`; since `1.0.0-rc.3`) always
+         *     proposes like this; `plan_only` asks the same of any module for one turn.
+         *
+         *     Only the user accepts a plan, and only with a **`plan` part** naming it, on a message
+         *     in `options.mode: execute` (since `1.0.0-rc.4`): without `items` it accepts the plan
+         *     as proposed, with `items` as the user adjusted it. A plain message is never an
+         *     acceptance, because `execute` is the default mode and the user may be asking for
+         *     something else (S7: "make it a news item instead" drafts a new plan, which
+         *     supersedes the proposed one); every message without a `plan` part goes to the
+         *     session agent. The same `plan` part naming a `done` plan at its current version,
+         *     without `items`, runs that plan again (`running`) for corrections within the scope
+         *     the user accepted, a gate that refused the release for instance.
+         *
+         *     - At most one `plan` part per message, and only with `mode: execute`; otherwise
+         *       `422` with `genaix_code: validation_failed` and pointer `/parts/<i>`.
+         *     - `plan.plan_id` must name the session's open proposed plan, otherwise `409` with
+         *       `plan_closed` (a closed plan, or none of this session) or `plan_not_proposed` (a
+         *       plan still drafting or already accepted).
+         *     - `plan.based_on_version` must be that plan's current `version`, otherwise `409`
+         *       with `genaix_code: plan_outdated`. The client re-reads
+         *       `GET /sessions/{session_id}/plans/{plan_id}` and lets the user adjust the current
+         *       version.
+         *     - Items in order are the order of work. An item whose `id` equals a current plan
+         *       item keeps that step, with its `kind` and `target` unless the part sets them; an
+         *       item without an `id`, or with one the plan does not have, is a new step and GenAIx
+         *       assigns its id; a current step the part does not list is removed.
+         *
+         *     The run starts with a `plan.updated` at version current + 1 holding exactly the plan
+         *     it will execute, with `reason` `Accepted as proposed.` or `Adjusted by the user: ...`,
+         *     and then works; the plan is `accepted`, then `running`. When the agent has to
+         *     deviate from that plan - merge, split or drop a step - it emits a further
+         *     `plan.updated` whose `reason` says why; it never deviates silently, and it never
+         *     adds an item or a target after acceptance: more work is a new proposal the user
+         *     accepts. A CMS write
+         *     outside the plan's objects is refused before it reaches the CMS: `tool.failed` with
+         *     a `422` problem `plan_scope_violation`, then `error` with `recoverable: true`; the
+         *     agent proposes a change to the plan instead.
          *
          *     ### Settings that govern a write
          *
@@ -690,10 +952,22 @@ export interface paths {
          *       loses nothing because the events are persisted and can be replayed from
          *       `GET /sessions/{session_id}/events?after=<seq>`.
          *
-         *     `409` with `genaix_code: run_already_active` when a run is still active; the
-         *     client must cancel it first (`POST .../runs/{run_id}/cancel`). `409` with
-         *     `session_released` when the session is `released`, `published`,
-         *     `review_requested`, `discarded` or `archived` - reopen it first.
+         *     **Side runs (since `1.0.0-rc.4`).** While a run of a plan is active (`propose`,
+         *     `execute` or `transition`), a message starts a **side run**: the session agent with
+         *     the CMS read tools, `read_file`, `load_skill` and `recall` only, no CMS write tool and
+         *     no change to the plan, so the
+         *     user can keep asking while long work runs. `Session.side_run_id` names it; at most
+         *     one at a time. A message that accepts a plan (its `plan` part) or answers the plan
+         *     run's interaction is never a side run.
+         *
+         *     `409` with `genaix_code: run_already_active` when the session agent's own run or a
+         *     side run is still active, or when a message that accepts a plan arrives while a
+         *     plan's run is active; the client waits or cancels it first
+         *     (`POST .../runs/{run_id}/cancel`). `409` with `session_archived` when the session
+         *     is archived - unarchive it first. A plan's status never blocks a message. `409`
+         *     with `plan_outdated`, `plan_closed` or `plan_not_proposed` when a `plan` part names
+         *     a plan version that is no longer current, a closed plan, or a plan that is not
+         *     waiting for acceptance.
          *
          *     `reply_to_interaction` is a shortcut that answers a pending interaction and
          *     continues in the same call, equivalent to
@@ -701,17 +975,19 @@ export interface paths {
          *     It exists so that answering a question and continuing the conversation
          *     can be a single round trip.
          *
-         *     It is also the **exception to `run_already_active`**. A run blocked in
-         *     `waiting_for_input` is still an active run, so a plain message is refused with
-         *     `409` while it waits; a message whose `reply_to_interaction.interaction_id` names
-         *     that run's pending interaction is accepted instead. The answer resolves the
+         *     It is also an **exception to `run_already_active`**. A run blocked in
+         *     `waiting_for_input` is still an active run: while the session agent's own run waits,
+         *     a plain message is refused with `409`, and while a plan's run waits a plain message
+         *     starts a side run (since `1.0.0-rc.4`). A message whose
+         *     `reply_to_interaction.interaction_id` names that run's pending interaction is
+         *     accepted instead. The answer resolves the
          *     interaction, the message is appended to the session, and both belong to the run
          *     that was waiting: no second run is started, and the `run_id` in the `202` is the
          *     unblocked run, not a new one. Naming an interaction that is not pending still
          *     fails - `404` when it is unknown, `409` with `interaction_already_answered` when it
          *     was resolved, `410` with `interaction_expired` when its `expires_at` has passed -
          *     and a `409` with `run_already_active` remains the answer to a plain message sent
-         *     while any run is active.
+         *     while the session agent's own run or a side run is active.
          *
          *     Verbatim content is declared at three granularities and `Verification.unit` names
          *     which one was proven: a `verbatim` part for a passage of text, typed or quoted out
@@ -814,8 +1090,11 @@ export interface paths {
          *     `events_retention_hours` means no pruning.
          *
          *     `410` with `genaix_code: events_pruned` is the answer when `after` points before
-         *     the window. The client then re-hydrates through `GET /sessions/{id}/messages` and
-         *     `GET /sessions/{id}/workflow` and reconnects with `after=0`.
+         *     the window. The client then re-hydrates through `GET /sessions/{id}/messages`,
+         *     `GET /sessions/{id}/plans` and `GET /sessions/{id}/plans/{plan_id}` and reconnects
+         *     with `after=0`. Pruning never touches what the agent knows: the record of every plan
+         *     and user decision is kept for the session's lifetime, independent of event
+         *     retention (since `1.0.0-rc.4`).
          *
          *     ### Lifetime
          *
@@ -874,9 +1153,11 @@ export interface paths {
          *     2. A client **MUST** tolerate a message part whose `type` it does not know,
          *        rendering its `text` field when present and otherwise skipping it silently.
          *     3. A client **MUST** treat `plan.updated`, `step.updated`, `check.updated`,
-         *        `derived_settings.updated` and `approval_chain.updated` as idempotent full
-         *        replacements keyed by id, never as deltas. Applying the same event twice
-         *        **MUST** be a no-op.
+         *        `derived_settings.updated`, `approval_chain.updated` and `publications.updated`
+         *        as idempotent full replacements keyed by `plan_id` plus the object's id (since
+         *        `1.0.0-rc.4`), never as deltas. Applying the same event twice **MUST** be a
+         *        no-op. An event without `plan_id`, replayed from an older session, belongs to
+         *        that session's only plan.
          *     4. A client **MUST** apply `part.delta` in `seq` order, and **MUST** treat
          *        `part.completed` as authoritative over its accumulated copy, so a client that
          *        missed deltas still ends up correct.
@@ -1007,12 +1288,11 @@ export interface paths {
          *     WEBP, ZIP, DOCX) GenAIx checks the magic number and answers `422` when the bytes
          *     are not what the type says.
          *
-         *     `409` with `genaix_code: session_released` when the session has moved past
-         *     generation, that is when its status is `released`, `published`,
-         *     `review_requested`, `discarded` or `archived`. Uploading is part of composing a
-         *     turn, so it is allowed only while the session is `active` or
-         *     `waiting_for_input`. Reopen the session first with
-         *     `POST /sessions/{session_id}/transitions` `{"action": "reopen"}`.
+         *     `409` with `genaix_code: session_archived` when the session is archived (since
+         *     `1.0.0-rc.4`; `session_released` for the rc.3 session statuses before). Uploading
+         *     is part of composing a turn, so it is allowed while the session is `active` or
+         *     `waiting_for_input`, whatever its plans' statuses. Unarchive the session first with
+         *     `POST /sessions/{session_id}/transitions` `{"action": "unarchive"}`.
          *
          *     An active run does **not** block an upload: the client may stage the next turn's
          *     files while the agent is still working.
@@ -1045,9 +1325,9 @@ export interface paths {
          *     - `run_already_active` while a run is active, because the agent may be reading the
          *       file. Cancel the run with `POST /sessions/{session_id}/runs/{run_id}/cancel`
          *       first, or wait for it to finish.
-         *     - `session_released` when the session status is `released`, `published`,
-         *       `review_requested`, `discarded` or `archived`. The session filesystem is frozen
-         *       together with the rest of the turn; reopen the session to change it.
+         *     - `session_archived` when the session is archived (since `1.0.0-rc.4`). A file a
+         *       closed plan used stays deletable while the session is open: the plan's record is
+         *       its events, checks and gate evidence, not the upload.
          */
         delete: operations["deleteSessionFile"];
         options?: never;
@@ -1075,6 +1355,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/file-links/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Fetch a session file through a signed link
+         * @description An unauthenticated, HMAC-signed, short-lived link to the bytes of one session file
+         *     (since `1.0.0-rc.4`). GenAIx mints it when an agent uploads a session file into the
+         *     CMS: it passes `https://<GenAIx public base URL>/api/v1/file-links/<token>` to the CMS
+         *     MCP tool `upload_file` as `source.url`, with `expiresAt` set to the link's expiry, and
+         *     the CMS fetches the file itself instead of receiving it base64-encoded in the tool
+         *     call. The token names the file and its expiry (by default 300 s after minting) and is
+         *     signed with a GenAIx secret; it carries no credential and grants nothing but this one
+         *     read. The link may be fetched more than once within its lifetime.
+         *
+         *     The route needs no installation token and no identity, so the CMS can fetch it
+         *     without GenAIx credentials. An unknown, expired or tampered token is `404`, never
+         *     `401` or `403`, so a probe learns nothing about which files exist. For the CMS to
+         *     fetch it, the CMS administrator puts the GenAIx host on the CMS MCP allowlist
+         *     `mcp.upload_url_hosts` (environment `MCP_UPLOAD_URL_HOSTS`); without it the CMS
+         *     refuses the URL source and GenAIx falls back to base64 (at most 5 MB).
+         */
+        get: operations["getFileLink"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workflows": {
         parameters: {
             query?: never;
@@ -1093,9 +1407,16 @@ export interface paths {
          *     authorization is always enforced by the CMS, never by this list.
          *
          *     Phase One ids: `content_create` (S1), `content_research` (S2), `construct_create`
-         *     (S3), `admin_user` (S4, optional) and `free_chat`. This route lists every module
-         *     the installation has; `capabilities.workflows` in `GET /me` says which of them
-         *     *this user* may start.
+         *     (S3), `admin_user` (S4, optional) and `content_edit` (changes to existing pages,
+         *     since `1.0.0-rc.3`). This route lists every module a plan can run under;
+         *     `capabilities.workflows` in `GET /me` says which of them *this user* may start. The
+         *     session agent, which answers and drafts plans in every session, is not a catalogue
+         *     entry (since `1.0.0-rc.4`; `free_chat` was its predecessor): it is always there, and
+         *     it reads with the user's own credential.
+         *
+         *     `plan_approval` says whether a module waits for the user to accept its plan before
+         *     it writes, and `plan_policy` how its plans behave in the session; the flow is on
+         *     `POST /sessions/{session_id}/messages`.
          */
         get: operations["listWorkflows"];
         put?: never;
@@ -1162,10 +1483,10 @@ export interface paths {
          *     model. The harness attaches it to outbound MCP calls; it is not part of any prompt,
          *     any event, or any message part.
          *
-         *     `409` with `genaix_code: session_released` when the session is `published`,
-         *     `discarded` or `archived`: those sessions do not act any more, which is exactly why
-         *     their credentials are deleted. `released` and `review_requested` still accept one,
-         *     because publishing and requesting review still act on the CMS.
+         *     `409` with `genaix_code: session_archived` when the session is archived: an archived
+         *     session does not act any more, which is exactly why its credentials are deleted.
+         *     Every other session accepts one, whatever its plans' statuses (since `1.0.0-rc.4`;
+         *     before, `session_released` for a `published` or `discarded` session).
          */
         put: operations["putSessionAuthorization"];
         post?: never;
@@ -1180,8 +1501,9 @@ export interface paths {
          *     owner deletes it there or it expires. Idempotent: deleting when nothing is
          *     registered is `204`.
          *
-         *     GenAIx does the same deletion by itself when the session reaches `published`,
-         *     `discarded` or `archived`, or when `expires_at` passes.
+         *     GenAIx does the same deletion by itself when the session is archived or deleted, or
+         *     when `expires_at` passes (since `1.0.0-rc.4`; before, also at `published` and
+         *     `discarded`).
          */
         delete: operations["deleteSessionAuthorization"];
         options?: never;
@@ -1197,14 +1519,23 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * The live workflow view of a session
-         * @description The complete workflow state of a session in one snapshot: the plan, the steps with
+         * The state of the session's open or latest plan (deprecated)
+         * @deprecated
+         * @description **Deprecated since `1.0.0-rc.4`.** A session holds several plans; read them with
+         *     `GET /sessions/{session_id}/plans` and `GET /sessions/{session_id}/plans/{plan_id}`.
+         *     This route returns the `PlanState` of the session's open plan, else of its latest
+         *     plan, else `404`, so a client written against one workflow per session keeps
+         *     working for sessions with a single plan.
+         *
+         *     The complete state of that plan in one snapshot: the plan, the steps with
          *     their substeps, the checks including verbatim proofs, the quality gates of the
-         *     workflow module and what happened to each, the approval chain, the derived settings
-         *     and the CMS objects touched.
+         *     workflow module and what happened to each, the approval chain, the publish outcome
+         *     and the latest preview of every page, the derived settings and the CMS objects
+         *     touched.
          *
          *     This is the **reconnect** counterpart of the `plan.updated`, `step.updated`,
-         *     `check.updated`, `approval_chain.updated` and `derived_settings.updated` events.
+         *     `check.updated`, `approval_chain.updated`, `publications.updated`,
+         *     `preview.updated` and `derived_settings.updated` events.
          *     A client hydrates from here once and then keeps it current from the stream. Gate
          *     results have no event of their own: a gate publishes a `Check`, so `check.updated`
          *     keeps `gates` current too.
@@ -1349,10 +1680,14 @@ export interface components {
          * @description Machine-readable error code. Clients branch on this, not on `type` or `status`.
          *     New members are added in minor versions; a client that meets an unknown code
          *     falls back to `status`.
+         *
+         *     `1.0.0-rc.4`: `session_released` is replaced by `session_archived` (a session is no
+         *     longer released; its plans are), and `plan_not_found`, `plan_closed`,
+         *     `plan_not_proposed` and `plan_scope_violation` are new.
          * @example run_already_active
          * @enum {string}
          */
-        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "unknown_workflow" | "run_already_active" | "session_released" | "workflow_transition_invalid" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable";
+        GenaixCode: "malformed_request" | "invalid_cursor" | "subject_missing" | "identity_invalid" | "unsupported_accept" | "invalid_installation_token" | "session_forbidden" | "session_not_found" | "run_not_found" | "file_not_found" | "interaction_not_found" | "plan_not_found" | "unknown_workflow" | "run_already_active" | "session_archived" | "workflow_transition_invalid" | "plan_outdated" | "plan_closed" | "plan_not_proposed" | "plan_scope_violation" | "interaction_already_answered" | "interaction_expired" | "events_pruned" | "file_too_large" | "unsupported_media_type" | "validation_failed" | "quality_gate_failed" | "cms_object_locked" | "mcp_connection_not_found" | "mcp_connection_limit" | "mcp_authorization_required" | "mcp_authorization_rejected" | "mcp_unreachable" | "cms_request_failed" | "model_error" | "model_rate_limited" | "rate_limited" | "service_unavailable";
         /**
          * Ping
          * @description Result of the installation-token check.
@@ -1370,6 +1705,22 @@ export interface components {
             api_version: string;
         };
         /**
+         * SubjectErasure
+         * @description Body of `POST /subjects/erase` (since `1.0.0-rc.3`): exactly one of `cms_sub` and `subject`. Both at once, or neither, is `422`.
+         */
+        SubjectErasure: {
+            /**
+             * @description The `sub` claim the CMS identity assertion carries for the person: their login, with any `jwt.prefix` the proxy configures. GenAIx derives the subject from it as it does for a proxied request. `422` when the installation has no CMS public key configured.
+             * @example j.huber
+             */
+            cms_sub?: string;
+            /**
+             * @description The subject itself, as `Me.user.subject` reports it.
+             * @example sub_c3f1a07d9e5b4826
+             */
+            subject?: string;
+        } & (unknown | unknown);
+        /**
          * Me
          * @description Resolved identity, what this installation offers this user, and a one-line summary of each MCP connection they hold. Connector types live under `/mcp/connectors`, and the connections and their authorizations under `/mcp/connections`.
          */
@@ -1384,10 +1735,10 @@ export interface components {
                  */
                 cms_base_url: string;
             };
-            /** @description The caller, as GenAIx knows them: an opaque subject and nothing else. There is no name, no login, no id and no group list, because none is ever sent. A client that wants to show who is signed in already knows. */
+            /** @description The caller, as GenAIx knows them: an opaque subject and nothing else. There is no name, no login, no id and no group list, because GenAIx keeps none (the identity assertion's other claims are ignored). A client that wants to show who is signed in already knows. */
             user: {
                 /**
-                 * @description The value of `X-GCMS-Subject`, or its `sub` claim when the header carried a signed assertion. This is the owner key of every session, connection and authorization the caller holds.
+                 * @description The subject GenAIx derived from the CMS identity assertion's `sub` on a proxied request, or the `X-GCMS-Subject` value on a direct one. This is the owner key of every session, connection and authorization the caller holds, and the value `DELETE /subjects/{subject}` takes.
                  * @example sub_c3f1a07d9e5b4826
                  */
                 subject: string;
@@ -1589,7 +1940,7 @@ export interface components {
             connection_id: string;
             /** @description The connection's connector type, repeated so a client needs no second call. */
             connector: string;
-            /** @description The subject this authorization belongs to, the same opaque owner key `X-GCMS-Subject` carries. GenAIx holds no other identity for it. */
+            /** @description The subject this authorization belongs to, the same opaque owner key `Me.user.subject` reports. GenAIx holds no other identity for it. */
             user: {
                 subject: string;
             };
@@ -1861,55 +2212,97 @@ export interface components {
              */
             guidelines: string[];
             /**
-             * @description MCP connections this session works through. Omitted means the user's `default` connection of each connector type the workflow requires. Naming them explicitly is how a client picks which of several instances a session touches. A connection that is deleted or loses its authorization makes the next run fail with `424` and `genaix_code: mcp_authorization_required`.
+             * @description MCP connections this session works through. Omitted means the user's `default` connection of each connector type a plan's workflow requires. Naming them explicitly is how a client picks which of several instances a session touches. A connection that is deleted or loses its authorization makes the next run fail with `424` and `genaix_code: mcp_authorization_required`.
              * @default []
              */
             connection_ids: string[];
         };
         /**
          * SessionStatus
-         * @description Session status machine:
+         * @description Session status machine (since `1.0.0-rc.4` the session is the conversation; what
+         *     rc.3 called `released`, `published`, `review_requested` and `discarded` is now the
+         *     status of a plan, `PlanStatus`):
          *
          *     ```
          *     active <-> waiting_for_input
-         *     active  -> released
-         *     released -> published | review_requested | active | discarded
-         *     any      -> archived
+         *     active | waiting_for_input -> archived      (POST .../transitions archive)
+         *     archived                   -> active        (POST .../transitions unarchive)
          *     ```
          *
          *     `failed` is deliberately **not** here: a failure belongs to a run, and the
          *     session stays `active` so the user can retry.
          * @enum {string}
          */
-        SessionStatus: "active" | "waiting_for_input" | "released" | "published" | "review_requested" | "discarded" | "archived";
+        SessionStatus: "active" | "waiting_for_input" | "archived";
+        /**
+         * PlanStatus
+         * @description Lifecycle of a plan (since `1.0.0-rc.4`):
+         *
+         *     ```
+         *     drafting -> proposed -> accepted -> running -> done -> released -> published
+         *                    |  ^                                       |  ^      review_requested
+         *                    |  +-- adjusted (version + 1)              |  +-- reopen
+         *                    +-> superseded                             v
+         *     any open status ---------------------------------------> discarded
+         *     ```
+         *
+         *     | Status | Meaning |
+         *     |---|---|
+         *     | `drafting` | The session agent chose a workflow for new work; the module's proposing run reads and plans with every write withheld. |
+         *     | `proposed` | A plan version waits for the user. |
+         *     | `accepted` | The user accepted a version, as proposed or adjusted; only the user's own message does this. |
+         *     | `running` | A run carries the plan out. |
+         *     | `done` | The run finished the plan's items; the `step_end` gates ran. A `plan` part naming it, without `items`, runs it again (`running`) within the accepted scope. |
+         *     | `released` | The `before_release` gates passed; the plan's pages wait to be published. |
+         *     | `published` / `review_requested` | Every publication of the plan went out, or at least one waits for approval and none failed. |
+         *     | `discarded` | Abandoned by the user; pages already written stay or are restored per the module's `plan_policy.on_discard`. |
+         *     | `superseded` | A newer proposal replaced it before it was accepted. |
+         *
+         *     Open: `drafting` to `released`. Executing: `accepted`, `running`. Closed: the rest.
+         *     A failed or cancelled run leaves its plan where it was (`accepted` after a failed
+         *     execute run, `drafting` after a failed proposing run); the user's next message
+         *     retries. A closed plan never changes again, with one exception: `reopen` makes a `published`
+         *     or `review_requested` plan `accepted` again, for corrections to the pages it wrote
+         *     (they stay online until the next `publish`). `discarded` and `superseded` are final.
+         *     At most one plan of a session executes at a time.
+         *
+         *     A plan whose module has no CMS write tool (`content_research`) needs no acceptance:
+         *     it goes from `drafting` to `running` at once, because reading is free. Every module
+         *     with a write tool needs the user's acceptance, as a proposal (`plan_approval: true`)
+         *     or as one confirmation of the drafted plan.
+         * @enum {string}
+         */
+        PlanStatus: "drafting" | "proposed" | "accepted" | "running" | "done" | "released" | "published" | "review_requested" | "discarded" | "superseded";
         /**
          * SessionBase
-         * @description The session fields themselves. `Session` is this, closed; `SessionCreated` is this plus the ids of the first message and its run. Nothing references `SessionBase` directly on the wire. Since `1.0.0-rc.2` `workflow_version`, `inputs` and `authorizations` are required, as every example already showed them; `intent` is present once the first message exists and `model` when the installation pins one.
+         * @description The session fields themselves. `Session` is this, closed; `SessionCreated` is this plus the ids of the first message and its run. Nothing references `SessionBase` directly on the wire. Since `1.0.0-rc.4` a session is a conversation that holds a sequence of plans: the workflow and its version belong to each plan (`Plan`), the session points at its open and its executing plan. `intent` is present once the first message exists and `model` when the installation pins one.
          */
         SessionBase: {
             /** Format: uuid */
             id: string;
             /** @description User-set, or derived from the first user message when the client sent none. */
             title?: string;
-            /**
-             * @description Workflow module id. Immutable after creation.
-             * @example content_create
-             */
-            workflow: string;
-            /**
-             * @description Version of the workflow module this session started under, recorded so the session keeps reporting against that revision after the installation upgrades.
-             * @example 1.2.0
-             */
-            workflow_version: string;
-            /** @description The module inputs this session was started with, validated against the module's `inputs_schema`. Assembled from `context`, the attached files and the first message; stored so a run can be reproduced and a fixture can be generated from it. */
+            /** @description The module inputs of the session's first plan, validated against that module's `inputs_schema` when the session was created with a `workflow`; every plan's own inputs are on its `PlanState.inputs` (since `1.0.0-rc.4`). Assembled from `context`, the attached files and the first message; stored so a run can be reproduced and a fixture can be generated from it. Empty for a session that started without a workflow. */
             inputs: {
                 [key: string]: unknown;
             };
+            /**
+             * Format: uuid
+             * @description The plan of this session that is open (`drafting` to `released`), or `null` (since `1.0.0-rc.4`). At most one plan is open unless its module's `plan_policy.concurrency` lets a new plan start while it waits for publishing.
+             */
+            open_plan_id: string | null;
+            /**
+             * Format: uuid
+             * @description The plan that is `accepted` or `running`, or `null` (since `1.0.0-rc.4`). At most one plan of a session executes at a time.
+             */
+            executing_plan_id: string | null;
+            /** @description Number of plans the session holds, open and closed (since `1.0.0-rc.4`). */
+            plan_count: number;
             status: components["schemas"]["SessionStatus"];
             /** @description The user's original request in their own words: the plain rendering of the first user message, the same string that message's `content` carries. Derived by GenAIx, never sent by a client. Absent or empty until the first message arrives, which is the normal state of a session created without one. Searched, with `title`, by the session list's `q`. */
             readonly intent?: string;
             context: components["schemas"]["SessionContext"];
-            /** @description The subject that owns the session, the opaque key from `X-GCMS-Subject`. GenAIx holds no name, login or id for it. */
+            /** @description The subject that owns the session, the opaque key `Me.user.subject` reports. GenAIx holds no name, login or id for it. */
             owner: {
                 /** @example sub_c3f1a07d9e5b4826 */
                 subject: string;
@@ -1933,17 +2326,27 @@ export interface components {
              * @description Present while a run is `queued`, `running`, `waiting_for_input` or `cancelling`. Its changes are implied by the run events (`run.started` sets it, the terminal run event clears it) and are not announced by a `session.updated` of their own (since `1.0.0-rc.2`); the closing `session.updated` before the terminal event lists it in `changed` together with `updated_at` and `last_activity_at`.
              */
             active_run_id?: string;
+            /**
+             * Format: uuid
+             * @description The read-only side run in progress while a plan executes, or `null` (since `1.0.0-rc.4`). A user message sent while `active_run_id` is a plan's run starts a side run of the session agent with read tools only; at most one at a time.
+             */
+            side_run_id?: string | null;
             /** @description Rolling one-paragraph summary of what the session achieved. */
             summary?: string;
-            /** @description CMS objects this session created or touched. */
+            /** @description CMS objects this session created or touched, over all its plans and reads. Each plan's own objects are on its `PlanState.cms_objects`. */
             cms_objects: components["schemas"]["CmsObjectRef"][];
             labels: string[];
             /** @description The MCP connections this session holds a credential for, in short form. Present on a session created with `authorizations` and on any session a client has registered one for. An empty array means the session has none of its own and falls back to the caller's standing authorizations. */
             authorizations: components["schemas"]["SessionAuthorizationSummary"][];
+            /**
+             * Format: uuid
+             * @description The earlier session this one follows up, as sent in `SessionCreate.continued_from` (since `1.0.0-rc.3`), or `null`. Immutable. The agent of this session sees that session's user messages, final assistant messages and `cms_objects` as read-only context and reaches it through `recall`; nothing else carries over. Since `1.0.0-rc.4` follow-up work inside one conversation is a further plan of the same session; `continued_from` links a new conversation to an earlier one.
+             */
+            readonly continued_from?: string | null;
         };
         /**
          * Session
-         * @description One user task.
+         * @description One conversation: its messages, context, files, credentials and the plans that carry its work out (since `1.0.0-rc.4`; in earlier versions one user task).
          */
         Session: components["schemas"]["SessionBase"];
         /**
@@ -2040,12 +2443,13 @@ export interface components {
          *     **Lifetime.** GenAIx stops using the credential and deletes the stored token when
          *     any of these happens first:
          *
-         *     - the session reaches `published`, `discarded` or `archived`;
+         *     - the session is archived or deleted;
          *     - the client calls `DELETE /sessions/{session_id}/authorizations/{connection_id}`;
          *     - `expires_at` passes.
          *
-         *     It is **kept** through `released` and `review_requested`, because publishing and
-         *     requesting review still act on the CMS.
+         *     A plan's status never ends it (since `1.0.0-rc.4`): the conversation's next plan acts
+         *     with the same credential. Before, it ended when the session was published or
+         *     discarded.
          *
          *     **Precedence.** When a session authorization and a standing per-user authorization
          *     both exist for the same connection, the session one is used. The standing one is
@@ -2115,11 +2519,8 @@ export interface components {
          *     message and is read-only.
          */
         SessionCreate: {
-            /**
-             * @description Workflow module id from `GET /workflows`. `422` with `unknown_workflow` when no module of that id is installed. Availability (`capabilities.workflows`, `Workflow.available`) is a hint for the client, not a creation rule (since `1.0.0-rc.2`): a session of a workflow the caller cannot yet act in is created, and its first run answers `auth.required` and fails with `424` `mcp_authorization_required` until a credential exists; a credential sent in `authorizations` on this call counts for this session at once.
-             * @default free_chat
-             */
-            workflow: string;
+            /** @description Optional since `1.0.0-rc.4`. Without it the session starts with the session agent, which reads, answers and proposes plans; this is the normal start of a Workspace conversation. With it (a CMS context action such as "Create page here"), the session's first plan is drafted under this workflow module from `GET /workflows`, and `message` goes to that plan's proposing run. `422` with `unknown_workflow` when no module of that id is installed. Availability (`capabilities.workflows`, `Workflow.available`) is a hint for the client, not a creation rule (since `1.0.0-rc.2`): a plan of a workflow the caller cannot yet act in is drafted, and its run answers `auth.required` and fails with `424` `mcp_authorization_required` until a credential exists; a credential sent in `authorizations` on this call counts for this session at once. */
+            workflow?: string;
             title?: string;
             context?: components["schemas"]["SessionContext"];
             /** @description Must be one of `capabilities.models`. */
@@ -2128,25 +2529,33 @@ export interface components {
             message?: components["schemas"]["MessageCreate"];
             /** @description Credentials to register on the new session, one per connection, verified before the session is created. Sending them here is what lets a client create the token on the target system, create the session and send the first message in a single round trip. */
             authorizations?: components["schemas"]["SessionAuthorizationCreate"][];
+            /**
+             * Format: uuid
+             * @description An earlier conversation this one builds on (since `1.0.0-rc.3`; since `1.0.0-rc.4` work that follows up inside the same conversation is a further plan of the same session, not a new session). Must be a session of the same installation and subject; otherwise `422` with pointer `/continued_from`, the same answer for an unknown and a foreign id. GenAIx gives the agent that session's user messages, final assistant messages and `cms_objects` as read-only context, and copies no files, authorizations, plan or workflow state. Returned as `Session.continued_from`; not patchable.
+             */
+            continued_from?: string;
         };
         /**
          * SessionPatch
-         * @description Partial update. Absent fields are left alone. `context` is replaced wholesale when present. `workflow`, `status` and every other field of `Session` are absent on purpose and `additionalProperties` is `false`, so sending one is a `422` validation error rather than a silent no-op. Status changes go through `POST /sessions/{session_id}/transitions`; the workflow is fixed at creation.
+         * @description Partial update. Absent fields are left alone. `context` is replaced wholesale when present. `workflow`, `status` and every other field of `Session` are absent on purpose and `additionalProperties` is `false`, so sending one is a `422` validation error rather than a silent no-op. Archiving goes through `POST /sessions/{session_id}/transitions`; a session has no workflow of its own, its plans do (since `1.0.0-rc.4`).
          */
         SessionPatch: {
             title?: string;
             context?: components["schemas"]["SessionContext"];
             labels?: string[];
         };
-        /** TransitionRequest */
+        /**
+         * TransitionRequest
+         * @description A transition of one plan, `POST /sessions/{session_id}/plans/{plan_id}/transitions` (since `1.0.0-rc.4`; in earlier versions the session's own transitions). `archive` is a session transition (`SessionTransitionRequest`).
+         */
         TransitionRequest: {
             /** @enum {string} */
-            action: "release" | "reopen" | "publish" | "request_review" | "discard" | "archive";
+            action: "release" | "reopen" | "publish" | "request_review" | "discard";
             /** @description Shown in the approval chain and stored as a system message in the session history. */
             comment?: string;
             /**
              * Format: date-time
-             * @description Only for `publish`: schedule the publication instead of publishing now. Passed through to the CMS publish-at timestamp.
+             * @description Only for `publish`: schedule the publication instead of publishing now. Passed through to the CMS publish-at timestamp of every page the call handles, and recorded as `publish_at` on each of their `Publication` entries.
              */
             at?: string;
             /**
@@ -2158,12 +2567,21 @@ export interface components {
             acknowledge_checks?: string[];
         };
         /**
+         * SessionTransitionRequest
+         * @description A transition of the session itself, `POST /sessions/{session_id}/transitions` (since `1.0.0-rc.4`). `archive` hides the conversation from the default list and ends its session credentials; `unarchive` brings it back. Neither touches a plan: an open plan stays as it is and is acted on after `unarchive`.
+         */
+        SessionTransitionRequest: {
+            /** @enum {string} */
+            action: "archive" | "unarchive";
+        };
+        /**
          * TransitionAccepted
-         * @description A transition that starts a run.
+         * @description A plan transition that starts a run (`publish`, `request_review`, and `discard` with `on_discard: restore`).
          */
         TransitionAccepted: {
             /** Format: uuid */
             run_id: string;
+            plan: components["schemas"]["Plan"];
             session: components["schemas"]["Session"];
         };
         /** SessionPage */
@@ -2196,6 +2614,24 @@ export interface components {
              * @enum {string}
              */
             trigger?: "message" | "transition" | "retry";
+            /**
+             * Format: uuid
+             * @description The plan this run works for, or `null` for a run of the session agent and for a side run (since `1.0.0-rc.4`).
+             */
+            plan_id?: string | null;
+            /**
+             * @description What the run does (since `1.0.0-rc.4`):
+             *
+             *     | Mode | Run |
+             *     |---|---|
+             *     | `session` | The session agent: reads, answers, drafts a plan. No CMS write tool. |
+             *     | `side` | A read-only run of the session agent while a plan executes. |
+             *     | `propose` | A plan's proposing run (`drafting`): reads and plans, every write withheld. |
+             *     | `execute` | A plan's run after the user accepted it: the only mode with CMS write tools. |
+             *     | `transition` | The run of a plan's `publish` or `request_review`. |
+             * @enum {string}
+             */
+            mode?: "session" | "side" | "propose" | "execute" | "transition";
             /**
              * Format: uuid
              * @description The user message that started the run, when `trigger` is `message`.
@@ -2391,7 +2827,7 @@ export interface components {
                 /** @description Overrides the session model for this run. Must be in `capabilities.models`. */
                 model?: string;
                 /**
-                 * @description `plan_only` makes the agent produce a plan and stop without writing to the CMS. `execute` lets it carry the plan out.
+                 * @description `plan_only` makes the agent produce a plan and stop without writing to the CMS, in any module. `execute` lets it carry the plan out. A plan is accepted only by an `execute` message carrying a `plan` part that names it (since `1.0.0-rc.4`; since `1.0.0-rc.3` any `execute` message after a proposal was the approval). A `plan` part with `plan_only` is `422`.
                  * @default execute
                  * @enum {string}
                  */
@@ -3115,7 +3551,7 @@ export interface components {
          *     the user said.
          * @enum {string}
          */
-        UserPartType: "text" | "verbatim" | "reference" | "file_ref" | "setting" | "filter";
+        UserPartType: "text" | "verbatim" | "reference" | "file_ref" | "setting" | "filter" | "plan";
         /**
          * UserMessagePart
          * @description One element of a user message, in the order the user composed it. `parts` is the
@@ -3131,7 +3567,7 @@ export interface components {
          *     Each schema below states how the part renders into `content` and what GenAIx does
          *     with it; the full rendering table is on the `postMessage` operation.
          */
-        UserMessagePart: components["schemas"]["UserTextPart"] | components["schemas"]["UserVerbatimPart"] | components["schemas"]["UserReferencePart"] | components["schemas"]["UserFileRefPart"] | components["schemas"]["UserSettingPart"] | components["schemas"]["UserFilterPart"];
+        UserMessagePart: components["schemas"]["UserTextPart"] | components["schemas"]["UserVerbatimPart"] | components["schemas"]["UserReferencePart"] | components["schemas"]["UserFileRefPart"] | components["schemas"]["UserSettingPart"] | components["schemas"]["UserFilterPart"] | components["schemas"]["UserPlanPart"];
         /**
          * UserTextPart
          * @description Plain text the user typed. It is the glue between the other parts and carries the spacing around them, because parts are concatenated with nothing inserted between them. Renders as the text itself, with `[` and `]` escaped.
@@ -3347,6 +3783,104 @@ export interface components {
             };
         };
         /**
+         * UserPlanPart
+         * @description A proposed plan as the user wants it executed (since `1.0.0-rc.3`): the proposed
+         *     plan, reordered, reworded, with steps added or removed. Sending it is the user's
+         *     acceptance of that plan, so it is accepted only on a message with
+         *     `options.mode: execute`, and at most once per message; otherwise `422` with
+         *     pointer `/parts/<i>`. Only this part accepts a plan (since `1.0.0-rc.4`; a plain
+         *     `execute` message accepted the proposal before): without `items` as proposed, with
+         *     `items` as adjusted. The agent never can.
+         *
+         *     `plan.plan_id` names the plan (since `1.0.0-rc.4`) and `plan.based_on_version` its
+         *     current `version`. Refused with `409` and `genaix_code`:
+         *
+         *     - `plan_outdated` when `based_on_version` is not the plan's current version;
+         *     - `plan_closed` when the plan is closed (published, review requested, discarded,
+         *       superseded) or does not belong to the session;
+         *     - `plan_not_proposed` when the plan is still `drafting` or already accepted (an
+         *       accepted plan changes only through the agent's `update_plan` with a `reason`).
+         *
+         *     The items in order are the order of work:
+         *
+         *     - an item whose `id` equals the id of a current plan item keeps that step, with its
+         *       `kind` and `target` unless the item sets them;
+         *     - an item without an `id`, or with one the current plan does not have, is a new step,
+         *       and GenAIx assigns its id;
+         *     - a current step the part does not list is removed.
+         *
+         *     The run that executes it starts with `plan.updated` at version current + 1, holding
+         *     exactly this plan with GenAIx's ids and `reason` `Adjusted by the user: ...`.
+         *
+         *     Renders as a numbered list, `1. label` per item, items separated by `\n`, with `[`
+         *     and `]` in a label escaped; without `items` (accepted as proposed) as
+         *     `Plan accepted as proposed.`
+         * @example {
+         *       "type": "plan",
+         *       "plan": {
+         *         "plan_id": "5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60",
+         *         "based_on_version": 2,
+         *         "items": [
+         *           {
+         *             "id": "p1",
+         *             "label": "Create page \"Neue Nutzungsbedingungen ab Q3\""
+         *           },
+         *           {
+         *             "id": "p3",
+         *             "label": "The three most important changes as a table"
+         *           },
+         *           {
+         *             "label": "FAQ block with the five most common questions",
+         *             "kind": "create"
+         *           }
+         *         ]
+         *       }
+         *     }
+         */
+        UserPlanPart: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "plan";
+            plan: components["schemas"]["UserPlan"];
+        };
+        /**
+         * UserPlan
+         * @description The plan carried by a `plan` part. Mirrors `Plan` without what only GenAIx sets: no item `status`, no `version` of its own, ids optional.
+         */
+        UserPlan: {
+            /**
+             * Format: uuid
+             * @description The plan the user accepts (since `1.0.0-rc.4`): the open proposed plan of the session, `Plan.id`.
+             */
+            plan_id: string;
+            /** @description The `plan.version` the user adjusted. Must be the plan's current one, else `409` `plan_outdated`. */
+            based_on_version: number;
+            /** @description The plan summary as the user wants it. Absent keeps the current one. */
+            summary?: string;
+            /** @description The steps in the order of work. Absent accepts the plan as proposed (since `1.0.0-rc.4`), or runs a `done` plan again within its accepted scope. */
+            items?: components["schemas"]["UserPlanItem"][];
+        };
+        /**
+         * UserPlanItem
+         * @description One step of an adjusted plan. With the `id` of a current plan item it keeps that step; without one, or with an id the plan does not have, it is a new step.
+         */
+        UserPlanItem: {
+            /**
+             * @description The id of a current plan item, to keep that step.
+             * @example p1
+             */
+            id?: string;
+            label: string;
+            /**
+             * @description Absent keeps the current item's `kind`; on a new step GenAIx chooses one.
+             * @enum {string}
+             */
+            kind?: "create" | "update" | "link" | "translate" | "publish" | "construct" | "report" | "other";
+            target?: components["schemas"]["ContextReference"];
+        };
+        /**
          * Workflow
          * @description One workflow **module** of the GenAIx harness. A module is a directory discovered at
          *     startup (`workflows/<id>/`) holding a manifest, prompts, agent skills, quality gate
@@ -3354,9 +3888,10 @@ export interface components {
          *     what the workflow is for, what it needs in order to run, the steps it will report,
          *     and the quality gates that will be enforced.
          *
-         *     Modules are **versioned**. `version` is recorded on every session as
-         *     `workflow_version`, so a session keeps reporting against the module revision it
-         *     started under even after the installation upgrades.
+         *     Modules are **versioned**. `version` is recorded on every plan as
+         *     `workflow_version` (on the session before `1.0.0-rc.4`), so a plan keeps reporting
+         *     against the module revision it was drafted under even after the installation
+         *     upgrades.
          *
          *     The manifest format itself is specified outside this document, in
          *     `schemas/workflow-manifest.schema.json` and `08-workflow-modules.md`. This schema is
@@ -3367,7 +3902,7 @@ export interface components {
             /** @example content_create */
             id: string;
             /**
-             * @description Module version from the manifest, semantic versioning. Recorded on the session as `workflow_version`.
+             * @description Module version from the manifest, semantic versioning. Recorded on every plan of this module as `workflow_version` (on the session before `1.0.0-rc.4`).
              * @example 1.2.0
              */
             version: string;
@@ -3389,6 +3924,40 @@ export interface components {
             steps_template: components["schemas"]["StepTemplate"][];
             /** @description Kinds of object a successful run of this workflow yields. */
             produces?: ("page" | "construct" | "report" | "user" | "file" | "none")[];
+            /**
+             * @description `true` when the module proposes its plan and waits for the user's approval before
+             *     it writes anything (since `1.0.0-rc.3`; the manifest flag of the same name). The
+             *     plan's proposing run ends without any CMS write, leaving the plan `proposed`. The
+             *     user's acceptance is a `plan` part naming the plan on a message in
+             *     `options.mode: execute`: without `items` it accepts the plan as proposed, with
+             *     `items` as the user adjusted it. That run starts with a `plan.updated` at
+             *     version current + 1 holding the plan it will execute, `reason` `Accepted as
+             *     proposed.` or `Adjusted by the user: ...`, and a later deviation is announced by a
+             *     further `plan.updated` whose `reason` says why.
+             *
+             *     `false` (since `1.0.0-rc.4`): the drafted plan is still proposed, and one user
+             *     confirmation (the card's accept, or answering the `confirm` interaction the plan
+             *     raises) accepts it without a separate proposing pass. Either way no module writes
+             *     before the user accepted its plan. `plan_only` on a message stops after the plan
+             *     in any module, whatever this flag says.
+             * @default false
+             */
+            plan_approval: boolean;
+            /** @description How the module's plans behave towards the session (since `1.0.0-rc.4`; the manifest block of the same name, without its `write_targets`, which only the harness uses). Absent means the defaults. */
+            plan_policy?: {
+                /**
+                 * @description `exclusive`: no new plan may be drafted in the session while this one is open. `allow_while_released`: once this plan is `released`, a new plan may be drafted and executed while it waits for publishing. Two plans never execute at once either way.
+                 * @default exclusive
+                 * @enum {string}
+                 */
+                concurrency: "exclusive" | "allow_while_released";
+                /**
+                 * @description What discarding an executed plan does to the pages it wrote: `keep` them as drafts, or `restore` each page's version from before the plan.
+                 * @default keep
+                 * @enum {string}
+                 */
+                on_discard: "keep" | "restore";
+            };
             /** @description JSON Schema (draft 2020-12) for what this module needs beyond a prompt, for instance a required folder or an uploaded source document. A client may render it as a start form; `POST /sessions` still takes the generic `context`, and the harness validates the assembled inputs against this schema when the first message starts a run. */
             inputs_schema?: {
                 [key: string]: unknown;
@@ -3540,8 +4109,9 @@ export interface components {
         };
         /**
          * GateResult
-         * @description What happened to one quality gate in this session. The declaration lives in
-         *     `Workflow.quality_gates`; this is the execution record.
+         * @description What happened to one quality gate in one plan (in the session before `1.0.0-rc.4`).
+         *     The declaration lives in `Workflow.quality_gates` of the plan's module; this is the
+         *     execution record.
          *
          *     `status` is the execution outcome and `verdict` the judgement, and they deliberately
          *     differ: a gate configured to downgrade its own errors ends as `status: error` with
@@ -3559,7 +4129,7 @@ export interface components {
          */
         GateResult: {
             /**
-             * @description Matches a `QualityGate.id` of the session's workflow module.
+             * @description Matches a `QualityGate.id` of the plan's workflow module.
              * @example verbatim_identical
              */
             gate_id: string;
@@ -3581,7 +4151,7 @@ export interface components {
              * @enum {string}
              */
             verdict?: "pass" | "warn" | "fail" | "error";
-            /** @description How many times this gate has run in this session, retries of an infrastructure failure included (since `1.0.0-rc.2`: every execution counts, the evidence file is written per execution as `gates/<gate>-<attempt>.json`, and the workflow view keeps the latest record per gate). A gate re-runs after the agent fixes what it reported, so a client can show "failed, then passed on the second attempt". 0 while `status` is `pending`. */
+            /** @description How many times this gate has run in this plan, retries of an infrastructure failure included (since `1.0.0-rc.2`: every execution counts, the evidence file is written per execution as `gates/<plan_id>/<gate>-<attempt>.json` since `1.0.0-rc.4`, `gates/<gate>-<attempt>.json` before, and the plan's view keeps the latest record per gate). A gate re-runs after the agent fixes what it reported, so a client can show "failed, then passed on the second attempt". 0 while `status` is `pending`. */
             attempt: number;
             /** Format: date-time */
             started_at?: string;
@@ -3595,76 +4165,169 @@ export interface components {
              * @description Session file holding the gate's raw evidence, with `artifact_type: gate_evidence`. Present for `script` and `subagent` gates, and the reason a script verdict can be re-derived rather than trusted.
              */
             evidence_file_id?: string;
-            /** @description The subject (the `X-GCMS-Subject` value) that accepted a non-blocking failure through `acknowledge_checks` on a transition. Never a login or user id. */
+            /** @description The subject (as `Me.user.subject` reports it) that accepted a non-blocking failure through `acknowledge_checks` on a transition. Never a login or user id. */
             acknowledged_by?: string;
             /**
              * Format: uuid
              * @description The run during which the gate last executed.
              */
             run_id?: string;
+            /**
+             * Format: uuid
+             * @description The plan this gate ran for (since `1.0.0-rc.4`).
+             */
+            plan_id?: string;
         };
         /**
          * WorkflowState
-         * @description The complete workflow state of a session. The snapshot counterpart of the `plan.updated`, `step.updated`, `check.updated`, `approval_chain.updated` and `derived_settings.updated` events.
+         * @deprecated
+         * @description Deprecated since `1.0.0-rc.4`: the state of one plan, `PlanState`, which `GET /sessions/{session_id}/workflow` still returns for the session's open or latest plan.
          */
-        WorkflowState: {
+        WorkflowState: components["schemas"]["PlanState"];
+        /**
+         * PlanState
+         * @description The complete state of one plan (since `1.0.0-rc.4`; until then the workflow state of a session, `WorkflowState`). The snapshot counterpart of the `plan.updated`, `step.updated`, `check.updated`, `approval_chain.updated`, `publications.updated`, `preview.updated` and `derived_settings.updated` events carrying this plan's `plan_id`.
+         */
+        PlanState: {
+            /** @description The workflow module carrying this plan out, as `Plan.workflow`. */
             workflow: string;
-            /** @description The module version this session runs under. */
+            /** @description The module inputs of this plan, validated against the module's `inputs_schema` when the plan was drafted (since `1.0.0-rc.4`): from `SessionCreate` for a session's first plan, otherwise from what the session agent passed to `draft_plan` (for `content_edit` the pages to edit as `references`). */
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** @description The module version this plan runs under. */
             workflow_version?: string;
-            /** @description `true` when the installation now has a different version of this module than the session started under. The session keeps running under its own version; this only tells a client that a newer one exists, which matters when a gate definition changed. */
+            /** @description `true` when the installation now has a different version of this module than the plan was drafted under. The plan keeps running under its own version; this only tells a client that a newer one exists, which matters when a gate definition changed. */
             workflow_version_drift?: boolean;
             /**
-             * @description Coarse phase of the workflow, derived from the session status and the run and
-             *     step states, never stored. A one-word summary of where the session stands. The
-             *     derivation, in order of precedence (since `1.0.0-rc.2`):
+             * @description Coarse phase of the plan, derived from `Plan.status` and the run and step states,
+             *     never stored. A one-word summary of where the plan stands. The derivation, in
+             *     order of precedence (since `1.0.0-rc.4`; from the session status before):
              *
              *     | Condition | `state` |
              *     |---|---|
-             *     | session `discarded` or `archived` | `discarded` |
-             *     | session `published` | `done` |
-             *     | session `released` or `review_requested` | `awaiting_approval` |
-             *     | session `waiting_for_input` | `awaiting_feedback` |
-             *     | a run is active and no plan exists yet | `planning` |
-             *     | a run is active and a plan exists | `executing` |
-             *     | no run has happened yet | `not_started` |
-             *     | the last run `failed` | `failed` |
-             *     | otherwise (the last run completed, the agent waits for the user) | `awaiting_feedback` |
+             *     | plan `discarded` or `superseded` | `discarded` |
+             *     | plan `published` | `done` |
+             *     | plan `released` or `review_requested` | `awaiting_approval` |
+             *     | the plan's run waits for an interaction | `awaiting_feedback` |
+             *     | the plan's last run `failed` and none is active | `failed` |
+             *     | plan `drafting` and no run has started yet | `not_started` |
+             *     | plan `drafting` | `planning` |
+             *     | plan `accepted` or `running` | `executing` |
+             *     | otherwise (`proposed`, `done`: the agent waits for the user) | `awaiting_feedback` |
              *
              *     `awaiting_feedback` therefore means "the agent has finished its turn and waits for
-             *     the user", not "executing".
+             *     the user", not "executing". That includes a `proposed` plan, which waits for the
+             *     user's acceptance, and a `done` one, which waits for `release`.
              * @enum {string}
              */
             state: "not_started" | "planning" | "executing" | "awaiting_feedback" | "awaiting_approval" | "done" | "failed" | "discarded";
             /** Format: date-time */
             updated_at?: string;
-            plan: components["schemas"]["Plan"] | null;
+            plan: components["schemas"]["Plan"];
             steps: components["schemas"]["Step"][];
             checks: components["schemas"]["Check"][];
-            /** @description One entry per quality gate the workflow module declares, in manifest order, with what happened to it in this session. A client can render the gate list before anything has run, because every declared gate appears here with `status: pending`. */
+            /** @description One entry per quality gate the plan's workflow module declares, in manifest order, with what happened to it in this plan. A client can render the gate list before anything has run, because every declared gate appears here with `status: pending`. */
             gates: components["schemas"]["GateResult"][];
+            /** @description The plan-level approval chain. Since `1.0.0-rc.3` it equals the chain of the first entry of `publications`, so it is unchanged for a one-page plan; the chain of every page is on its `Publication`. */
             approval_chain: components["schemas"]["ApprovalStep"][];
-            /** @description `null` for workflows that write nothing: a module whose `produces` is empty or holds only `report`, such as `content_research`. Any other module carries the card from the start, empty until the run fills it. */
+            /**
+             * @description One entry per page the plan created or changed (the pages of its `cms_objects` it
+             *     wrote with `operation` `created` or `updated`, kept when publishing later sets
+             *     `operation` to `published`), in the order of their first write, since
+             *     `1.0.0-rc.3` (per session before `1.0.0-rc.4`). Each entry is resolved from the
+             *     permissions on its own page's folder and stays `pending` until the plan's
+             *     `publish` or `request_review` handles it. Kept current by `publications.updated`
+             *     with this `plan_id`, which always carries the whole array. Present on every
+             *     module, empty while the plan has written no page.
+             */
+            publications?: components["schemas"]["Publication"][];
+            /** @description `null` for workflows that write nothing: a module whose `produces` is empty or holds only `report`, such as `content_research`. Also `null` for `content_edit` (since `1.0.0-rc.3`), whose every write targets an existing page with its node, folder, template and language already fixed. Any other module carries the card from the start, empty until the run fills it. */
             derived_settings?: components["schemas"]["DerivedSettings"] | null;
+            /** @description The CMS objects of this plan: what its runs created or changed, and the objects its items target. A write outside them is refused with `plan_scope_violation` (since `1.0.0-rc.4`). */
             cms_objects: components["schemas"]["CmsObjectRef"][];
+            /** @description The most recent preview of any page, as the last `preview.updated` said. */
             preview?: components["schemas"]["Preview"] | null;
-            /** @description The interaction the run is currently blocked on, so a reconnecting client can re-render the question without replaying the stream. */
+            /** @description The latest preview per page, in the order of `publications` (since `1.0.0-rc.3`), so a plan that wrote several pages can show each. Present on every module, empty while there is no preview. */
+            previews?: components["schemas"]["Preview"][];
+            /** @description The interaction this plan's run is currently blocked on, so a reconnecting client can re-render the question without replaying the stream. */
             pending_interaction?: components["schemas"]["Interaction"] | null;
-            /** @description The session's authorizations for the connections this module requires, so one snapshot call says whether the session can still act. A reconnecting client that finds an entry `expired` or `invalid`, or a required connection missing entirely, registers a fresh credential before sending the next message instead of waiting for the run to fail. */
+            /** @description The session's authorizations for the connections this plan's module requires, so one snapshot call says whether the plan can still act. A reconnecting client that finds an entry `expired` or `invalid`, or a required connection missing entirely, registers a fresh credential before sending the next message instead of waiting for the run to fail. */
             authorizations?: components["schemas"]["SessionAuthorizationSummary"][];
         };
         /**
          * Plan
-         * @description The visible work plan. Versioned: every change increments `version` and emits `plan.updated` with the whole plan, so clients never merge deltas.
+         * @description One unit of work of a session (since `1.0.0-rc.4`): the workflow module that carries it out, its lifecycle and the visible work plan. Versioned: every change increments `version` and emits `plan.updated` with the whole plan, so clients never merge deltas; a lifecycle change emits `plan.updated` too. Writes, checks, gates, previews and publications belong to exactly one plan, and a closed plan never changes again.
          */
         Plan: {
+            /**
+             * Format: uuid
+             * @description Stable across the plan's versions (since `1.0.0-rc.4`).
+             */
+            id: string;
+            /**
+             * @description The workflow module that carries the plan out, fixed when it is drafted.
+             * @example content_edit
+             */
+            workflow: string;
+            /**
+             * @description The module version the plan was drafted under.
+             * @example 1.0.0
+             */
+            workflow_version?: string;
+            status: components["schemas"]["PlanStatus"];
+            /** @description `0` while the plan is `drafting` and has no items yet; `1` for the first proposal; incremented by every change. */
             version: number;
+            /** @description The version the user accepted, or `null` before acceptance. */
+            accepted_version?: number | null;
+            /** @description The subject that accepted the plan (`Me.user.subject`), or `null`. Never a login or user id. */
+            accepted_by?: string | null;
+            /** Format: date-time */
+            accepted_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When the plan reached a closed status, or `null` while it is open.
+             */
+            closed_at?: string | null;
             /** @description One or two sentences the user can approve or correct. */
             summary: string;
             items: components["schemas"]["PlanItem"][];
             /** Format: date-time */
             created_at?: string;
-            /** @description Why the plan changed, for versions after the first. */
+            /** @description Why the plan changed, for versions after the first. The version an approved plan starts executing with says `Accepted as proposed.` or `Adjusted by the user: ...` (since `1.0.0-rc.3`), and a later deviation from it says why. */
             reason?: string;
+        };
+        /**
+         * PlanSummary
+         * @description One plan of a session in short, for `GET /sessions/{session_id}/plans` (since `1.0.0-rc.4`). The full state is `GET /sessions/{session_id}/plans/{plan_id}`.
+         */
+        PlanSummary: {
+            /** Format: uuid */
+            id: string;
+            workflow: string;
+            workflow_version?: string;
+            status: components["schemas"]["PlanStatus"];
+            version: number;
+            summary: string;
+            item_count?: number;
+            /** @description How many of the plan's publications are in each status. */
+            publication_counts?: {
+                pending?: number;
+                published?: number;
+                review_requested?: number;
+                failed?: number;
+            };
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            accepted_at?: string | null;
+            /** Format: date-time */
+            closed_at?: string | null;
+        };
+        /** PlanPage */
+        PlanPage: {
+            /** @description The session's plans, oldest first. */
+            items: components["schemas"]["PlanSummary"][];
         };
         /** PlanItem */
         PlanItem: {
@@ -3737,7 +4400,7 @@ export interface components {
             }[];
             verification?: components["schemas"]["Verification"];
             target?: components["schemas"]["ContextReference"];
-            /** @description The quality gate that produced this check, present when `source.type` is `gate`. Matches a `QualityGate.id` of the session's workflow module. */
+            /** @description The quality gate that produced this check, present when `source.type` is `gate`. Matches a `QualityGate.id` of the plan's workflow module. */
             gate_id?: string;
             /**
              * @description The gate kind that produced it, present when `source.type` is `gate`, and `prompt` for an agent self-report (`source.type` other than `gate`). A client may weigh a `script` verdict differently from a `prompt` self-check, and a `prompt` check is never blocking.
@@ -3760,12 +4423,17 @@ export interface components {
             evidence?: {
                 [key: string]: unknown;
             };
-            /** @description The subject (the `X-GCMS-Subject` value) that accepted this non-blocking failing check through `acknowledge_checks` on a transition. Never a login or user id, and never set on a blocking check, which cannot be acknowledged. */
+            /** @description The subject (as `Me.user.subject` reports it) that accepted this non-blocking failing check through `acknowledge_checks` on a transition. Never a login or user id, and never set on a blocking check, which cannot be acknowledged. */
             acknowledged_by?: string;
             /** Format: date-time */
             acknowledged_at?: string;
             /** Format: date-time */
             checked_at?: string;
+            /**
+             * Format: uuid
+             * @description The plan this check belongs to (since `1.0.0-rc.4`). Absent on a check that belongs to no plan, such as a reviewer's verdict on a session-agent answer.
+             */
+            plan_id?: string;
         };
         /**
          * Verification
@@ -3815,7 +4483,7 @@ export interface components {
         /**
          * ApprovalStep
          * @description One link of the approval chain, resolved server-side from the user's CMS
-         *     permissions on the target folder. This is what lets a client state whether
+         *     permissions on the target folder, per page since `1.0.0-rc.3` (`Publication`). This is what lets a client state whether
          *     publishing is direct or goes to review, and why, instead of relaying a flat message.
          *
          *     The chain is resolved twice (since `1.0.0-rc.2`): during a run, from the permission
@@ -3840,6 +4508,78 @@ export interface components {
             reason?: string;
             /** Format: date-time */
             at?: string;
+        };
+        /**
+         * Publication
+         * @description The publish outcome of one page a plan created or changed (since `1.0.0-rc.3`; per
+         *     session before `1.0.0-rc.4`). A plan publishes every such page, and each is resolved
+         *     on its own:
+         *     from the user's permissions on that page's folder, so one page may go out directly
+         *     while another goes to review.
+         *
+         *     - `pending`: not handled yet. Every entry starts here and stays until a `publish` or
+         *       `request_review` handles it.
+         *     - `published`: the CMS published the page, or scheduled it for `publish_at`.
+         *     - `review_requested`: the page waits for approval in the CMS, or, after a
+         *       `request_review` by a user who may publish it, for a later `publish`.
+         *     - `failed`: the CMS refused; `error` says why. A repeated `publish` retries it.
+         *
+         *     The plan's status follows from its entries (since `1.0.0-rc.4`; the session's
+         *     before): `published` when every one is `published`, `review_requested` when at least
+         *     one is `review_requested` and none `failed`, and `released`, with the run failed,
+         *     when any is `failed`. The session itself stays `active`.
+         * @example {
+         *       "cms_ref": {
+         *         "type": "page",
+         *         "id": 9142,
+         *         "node_id": 3,
+         *         "name": "Neue Nutzungsbedingungen ab Q3"
+         *       },
+         *       "status": "published",
+         *       "approval_chain": [
+         *         {
+         *           "id": "ap-1",
+         *           "label": "Author releases the draft",
+         *           "actor": {
+         *             "type": "user"
+         *           },
+         *           "status": "done"
+         *         },
+         *         {
+         *           "id": "ap-2",
+         *           "label": "Publish",
+         *           "actor": {
+         *             "type": "system",
+         *             "label": "CMS publish queue"
+         *           },
+         *           "status": "done"
+         *         }
+         *       ],
+         *       "at": "2026-10-07T09:43:09Z"
+         *     }
+         */
+        Publication: {
+            cms_ref: components["schemas"]["CmsObjectRef"];
+            /** @enum {string} */
+            status: "pending" | "published" | "review_requested" | "failed";
+            /** @description This page's approval chain, resolved from the permissions on its folder like the plan-level chain. */
+            approval_chain: components["schemas"]["ApprovalStep"][];
+            /**
+             * Format: date-time
+             * @description When the page is scheduled to go online, from the transition's `at`.
+             */
+            publish_at?: string;
+            /**
+             * Format: date-time
+             * @description When the current `status` was reached.
+             */
+            at?: string;
+            error?: components["schemas"]["Problem"];
+            /**
+             * Format: uuid
+             * @description The plan that wrote the page (since `1.0.0-rc.4`).
+             */
+            plan_id?: string;
         };
         /**
          * DerivedSettings
@@ -3869,7 +4609,9 @@ export interface components {
          *     the first write and appear in `missing` when they cannot be derived; `node` follows
          *     from the folder and `publish_at` matters only for `publish`, so both are reviewed
          *     only when they were read out of the text. A module that produces no page needs none
-         *     of them. `proposed[].source: default` names an installation default; no such
+         *     of them, and neither does `content_edit` (since `1.0.0-rc.3`): it writes only to
+         *     existing pages, whose node, folder, template and language are fixed, so the rule
+         *     does not apply and its `derived_settings` is `null`. `proposed[].source: default` names an installation default; no such
          *     default exists in Phase One, so the value is never produced and a client need not
          *     handle it.
          *
@@ -3900,7 +4642,7 @@ export interface components {
         };
         /**
          * Preview
-         * @description The CMS preview of the object the session produced. Pages only in Phase One; preview is rendered by the CMS, so preview equals production.
+         * @description The CMS preview of an object the session produced. Pages only in Phase One; preview is rendered by the CMS, so preview equals production.
          */
         Preview: {
             cms_ref: components["schemas"]["CmsObjectRef"];
@@ -4055,7 +4797,7 @@ export interface components {
          * @description Every event type defined in v1.0. A client **MUST** ignore a `type` outside this list and **MUST NOT** close the stream because of one. New types are additive and are not a breaking change.
          * @enum {string}
          */
-        EventType: "session.updated" | "run.started" | "run.completed" | "run.failed" | "run.cancelled" | "message.started" | "message.completed" | "part.started" | "part.delta" | "part.completed" | "status" | "tool.started" | "tool.completed" | "tool.failed" | "plan.updated" | "step.updated" | "check.updated" | "derived_settings.updated" | "approval_chain.updated" | "artifact.created" | "artifact.updated" | "preview.updated" | "interaction.requested" | "interaction.resolved" | "auth.required" | "heartbeat" | "error";
+        EventType: "session.updated" | "run.started" | "run.completed" | "run.failed" | "run.cancelled" | "message.started" | "message.completed" | "part.started" | "part.delta" | "part.completed" | "status" | "tool.started" | "tool.completed" | "tool.failed" | "plan.updated" | "step.updated" | "check.updated" | "derived_settings.updated" | "approval_chain.updated" | "artifact.created" | "artifact.updated" | "preview.updated" | "publications.updated" | "interaction.requested" | "interaction.resolved" | "auth.required" | "heartbeat" | "error";
         /**
          * BaseEvent
          * @description Fields every event carries. `seq` is the total order within the session and the value of the SSE `id:` field, so it is also what a client sends back as `after=` or `Last-Event-ID`.
@@ -4078,6 +4820,11 @@ export interface components {
              * @description The run this event belongs to. Absent or `null` for session-level events (`session.updated`, `heartbeat`, and `error` raised outside a run).
              */
             run_id?: string | null;
+            /**
+             * Format: uuid
+             * @description The plan this event belongs to (since `1.0.0-rc.4`). Required on the plan-scoped events (`plan.updated`, `step.updated`, `check.updated`, `derived_settings.updated`, `approval_chain.updated`, `preview.updated`, `publications.updated`) and on `interaction.requested`, where it is `null` for a question of the session agent; it may also appear on any other event of a plan's run (`run.started` carries the plan in `run.plan_id` instead). A client keys plan-scoped state on `plan_id` plus the object's own id. An event without it, replayed from a session older than `1.0.0-rc.4`, belongs to that session's only plan.
+             */
+            plan_id?: string | null;
             type: components["schemas"]["EventType"];
         } & {
             [key: string]: unknown;
@@ -4086,7 +4833,7 @@ export interface components {
          * Event
          * @description The `data:` payload of any SSE frame. `type` discriminates and matches the SSE `event:` field.
          */
-        Event: components["schemas"]["SessionUpdatedEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["MessageStartedEvent"] | components["schemas"]["MessageCompletedEvent"] | components["schemas"]["PartStartedEvent"] | components["schemas"]["PartDeltaEvent"] | components["schemas"]["PartCompletedEvent"] | components["schemas"]["StatusEvent"] | components["schemas"]["ToolStartedEvent"] | components["schemas"]["ToolCompletedEvent"] | components["schemas"]["ToolFailedEvent"] | components["schemas"]["PlanUpdatedEvent"] | components["schemas"]["StepUpdatedEvent"] | components["schemas"]["CheckUpdatedEvent"] | components["schemas"]["DerivedSettingsUpdatedEvent"] | components["schemas"]["ApprovalChainUpdatedEvent"] | components["schemas"]["ArtifactCreatedEvent"] | components["schemas"]["ArtifactUpdatedEvent"] | components["schemas"]["PreviewUpdatedEvent"] | components["schemas"]["InteractionRequestedEvent"] | components["schemas"]["InteractionResolvedEvent"] | components["schemas"]["AuthRequiredEvent"] | components["schemas"]["HeartbeatEvent"] | components["schemas"]["ErrorEvent"];
+        Event: components["schemas"]["SessionUpdatedEvent"] | components["schemas"]["RunStartedEvent"] | components["schemas"]["RunCompletedEvent"] | components["schemas"]["RunFailedEvent"] | components["schemas"]["RunCancelledEvent"] | components["schemas"]["MessageStartedEvent"] | components["schemas"]["MessageCompletedEvent"] | components["schemas"]["PartStartedEvent"] | components["schemas"]["PartDeltaEvent"] | components["schemas"]["PartCompletedEvent"] | components["schemas"]["StatusEvent"] | components["schemas"]["ToolStartedEvent"] | components["schemas"]["ToolCompletedEvent"] | components["schemas"]["ToolFailedEvent"] | components["schemas"]["PlanUpdatedEvent"] | components["schemas"]["StepUpdatedEvent"] | components["schemas"]["CheckUpdatedEvent"] | components["schemas"]["DerivedSettingsUpdatedEvent"] | components["schemas"]["ApprovalChainUpdatedEvent"] | components["schemas"]["ArtifactCreatedEvent"] | components["schemas"]["ArtifactUpdatedEvent"] | components["schemas"]["PreviewUpdatedEvent"] | components["schemas"]["PublicationsUpdatedEvent"] | components["schemas"]["InteractionRequestedEvent"] | components["schemas"]["InteractionResolvedEvent"] | components["schemas"]["AuthRequiredEvent"] | components["schemas"]["HeartbeatEvent"] | components["schemas"]["ErrorEvent"];
         /**
          * SessionUpdatedEvent
          * @description Status, title, context, labels or cms_objects of the session changed.
@@ -4278,8 +5025,11 @@ export interface components {
             type: "status";
             /** @example Reading page "Garantiebedingungen" */
             text: string;
-            /** @enum {string} */
-            kind: "thinking" | "reading" | "searching" | "writing" | "calling_cms" | "waiting";
+            /**
+             * @description `context_compacted` (since `1.0.0-rc.4`): older turns of the conversation were summarised for the agent's context at a turn boundary. Nothing was deleted; the messages, the plans and every user decision stay exact and the agent can recall them. A client may show it or ignore it.
+             * @enum {string}
+             */
+            kind: "thinking" | "reading" | "searching" | "writing" | "calling_cms" | "waiting" | "context_compacted";
             /** @description The step this status belongs to, when it belongs to one. */
             step_id?: string;
         } & {
@@ -4365,7 +5115,7 @@ export interface components {
         };
         /**
          * PlanUpdatedEvent
-         * @description The whole plan, every time. Never a delta.
+         * @description The whole plan, every time. Never a delta. Also emitted on every lifecycle change of the plan (`status`), so a plan card needs no other event (since `1.0.0-rc.4`). `plan_id` equals `plan.id`.
          */
         PlanUpdatedEvent: components["schemas"]["BaseEvent"] & {
             /** @constant */
@@ -4424,7 +5174,7 @@ export interface components {
         };
         /**
          * ApprovalChainUpdatedEvent
-         * @description The whole ordered chain, every time.
+         * @description The whole ordered plan-level chain, every time. With several pages it is the first page's chain (since `1.0.0-rc.3`); `publications.updated` carries every page's.
          */
         ApprovalChainUpdatedEvent: components["schemas"]["BaseEvent"] & {
             /** @constant */
@@ -4489,8 +5239,23 @@ export interface components {
             type: "preview.updated";
         };
         /**
+         * PublicationsUpdatedEvent
+         * @description The plan's whole `publications` array, every time, never a delta (since `1.0.0-rc.3`; the session's before `1.0.0-rc.4`). Emitted when a page is first written, which adds a `pending` entry, and whenever the plan's `publish` or `request_review` changes an entry's status or chain.
+         */
+        PublicationsUpdatedEvent: components["schemas"]["BaseEvent"] & {
+            /** @constant */
+            type: "publications.updated";
+            publications: components["schemas"]["Publication"][];
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "publications.updated";
+        };
+        /**
          * InteractionRequestedEvent
-         * @description The agent needs an answer. The run moves to `waiting_for_input` and the session to `waiting_for_input`. Answer through `POST /sessions/{id}/interactions/{interaction_id}` or through the next message's `reply_to_interaction`.
+         * @description The agent needs an answer. The run moves to `waiting_for_input` and the session to `waiting_for_input`. `plan_id` names the plan whose run asks, or is `null` for a question of the session agent (since `1.0.0-rc.4`). Answer through `POST /sessions/{id}/interactions/{interaction_id}` or through the next message's `reply_to_interaction`.
          *     `interaction.kind` selects the payload: `options` and `multi` for `choice`, `schema` for `form`, `proposed` and `missing` for `settings_review`. A `settings_review` is raised at most once per run and always before the first CMS write, so that no setting GenAIx inferred from the user's prose governs a write unconfirmed.
          */
         InteractionRequestedEvent: components["schemas"]["BaseEvent"] & {
@@ -4619,7 +5384,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description The installation token is missing, malformed, unknown or revoked, or the subject assertion in `X-GCMS-Subject` did not verify. */
+        /** @description The installation token is missing, malformed, unknown or revoked; or the CMS identity assertion did not verify, or the request's caller mode does not fit the installation (a proxied request to an installation with no CMS key, a direct request on a user route to one with a key). */
         Unauthorized: {
             headers: {
                 "X-GenAIx-Request-Id": components["headers"]["XGenAIxRequestId"];
@@ -4661,7 +5426,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description The request is valid but conflicts with the current state: a run is already active, the session is released, the interaction was already answered, or the workflow transition is not legal from here. */
+        /** @description The request is valid but conflicts with the current state: a run is already active, the session is archived, the interaction was already answered, a `plan` part names an outdated plan version, a closed plan or a plan that is not waiting for acceptance, or the plan transition is not legal from here. */
         Conflict: {
             headers: {
                 "X-GenAIx-Request-Id": components["headers"]["XGenAIxRequestId"];
@@ -4746,31 +5511,21 @@ export interface components {
     };
     parameters: {
         /**
-         * @description The **only** identity header, injected by the installation's trusted proxy and
-         *     **required on every user route** (everything except `GET /ping` and
-         *     `DELETE /subjects/{subject}`).
+         * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+         *     required on every user route, that is everything except `GET /ping`,
+         *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+         *     comes in `Authorization`.
          *
-         *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-         *     the owner key of sessions, files, connections and authorizations, and for nothing
-         *     else: a session is owned by (installation token, subject), so the same person keeps
-         *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-         *     login, display name or group list is ever sent, and none is stored.
-         *
-         *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-         *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-         *     may put more into that payload; GenAIx does not decode, use or store anything
-         *     beyond `sub`, `iss` and the timestamps.
-         *
-         *     - When the installation is configured with the signing key, GenAIx **verifies the
-         *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-         *       malformed, mis-issued or stale value with `401` and
-         *       `genaix_code: identity_invalid`.
-         *     - When no key is configured, the header is accepted as sent and used verbatim as
-         *       the subject.
-         *
-         *     GenAIx trusts the header in either case only because the installation token
-         *     authenticated the caller. Missing or empty is `400` with
+         *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+         *     the owner key of sessions, files, connections and authorizations: a session is owned
+         *     by (installation token, subject). GenAIx trusts it only because the installation
+         *     token authenticated the caller. Missing or empty on a direct request is `400` with
          *     `genaix_code: subject_missing`.
+         *
+         *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+         *       the subject comes from the CMS identity assertion.
+         *     - An installation with a CMS public key configured accepts no direct request on a
+         *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
          * @example sub_c3f1a07d9e5b4826
          */
         XGcmsSubject: string;
@@ -4784,6 +5539,11 @@ export interface components {
          * @example 9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13
          */
         SessionId: string;
+        /**
+         * @description Plan id, `Plan.id` (since `1.0.0-rc.4`).
+         * @example 5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60
+         */
+        PlanId: string;
         /**
          * @description Run id, unique within the session.
          * @example c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94
@@ -4809,6 +5569,11 @@ export interface components {
          * @example eyJhIjoiMjAyNi0xMC0wN1QwOToxNDoyMloiLCJpIjoiOWYxYjZlNGEifQ
          */
         Cursor: string;
+        /**
+         * @description Turns a `POST` into the `PATCH` of the same path, for callers that cannot send `PATCH`, such as one behind the CMS custom proxy (since `1.0.0-rc.3`). `PATCH` is the only accepted value; any other is `400` with `genaix_code: malformed_request`.
+         * @example PATCH
+         */
+        XHttpMethodOverride: "PATCH";
     };
     requestBodies: never;
     headers: {
@@ -4853,36 +5618,26 @@ export interface operations {
     getMe: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -4910,7 +5665,7 @@ export interface operations {
             header?: never;
             path: {
                 /**
-                 * @description The subject to erase, the same opaque value `X-GCMS-Subject` carries.
+                 * @description The subject to erase, as `Me.user.subject` reports it: the value GenAIx derived from the assertion's `sub`, or the `X-GCMS-Subject` value in direct mode.
                  * @example sub_c3f1a07d9e5b4826
                  */
                 subject: string;
@@ -4932,39 +5687,56 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
+    eraseSubject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubjectErasure"];
+            };
+        };
+        responses: {
+            /** @description Everything held for that subject is gone, or there was nothing. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
     listMcpConnectors: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -4997,36 +5769,26 @@ export interface operations {
                  */
                 connector?: string;
             };
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -5053,36 +5815,26 @@ export interface operations {
     createMcpConnection: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -5124,36 +5876,26 @@ export interface operations {
     getMcpConnection: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5182,39 +5924,90 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
-    deleteMcpConnection: {
+    updateMcpConnectionViaPost: {
         parameters: {
             query?: never;
             header: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description Turns a `POST` into the `PATCH` of the same path, for callers that cannot send `PATCH`, such as one behind the CMS custom proxy (since `1.0.0-rc.3`). `PATCH` is the only accepted value; any other is `400` with `genaix_code: malformed_request`.
+                 * @example PATCH
+                 */
+                "X-HTTP-Method-Override": components["parameters"]["XHttpMethodOverride"];
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+            };
+            path: {
+                /**
+                 * @description Id of one of the caller's MCP connections, as listed by `GET /mcp/connections`. A connection of another user, or an unknown id, is `404`.
+                 * @example c1d4e7b0-9a36-4f82-b5e1-0c8d3a7f2b69
+                 */
+                connection_id: components["parameters"]["McpConnectionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["McpConnectionPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated connection. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpConnection"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["McpConnectionNotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    deleteMcpConnection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
+                 *
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
+                 *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
+                 * @example sub_c3f1a07d9e5b4826
+                 */
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5244,36 +6037,26 @@ export interface operations {
     patchMcpConnection: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5310,36 +6093,26 @@ export interface operations {
     getMcpAuthorization: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5372,36 +6145,26 @@ export interface operations {
     putMcpAuthorization: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5448,36 +6211,26 @@ export interface operations {
     deleteMcpAuthorization: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5516,7 +6269,7 @@ export interface operations {
                  */
                 status?: components["schemas"]["SessionStatus"][];
                 /**
-                 * @description Filter by workflow id.
+                 * @description Only sessions with at least one plan under this workflow module (since `1.0.0-rc.4`; the session's own workflow before).
                  * @example [
                  *       "content_create"
                  *     ]
@@ -5528,6 +6281,26 @@ export interface operations {
                  */
                 q?: string;
                 /**
+                 * @description Only sessions carrying this label, matched exactly (since `1.0.0-rc.3`). Repeat the parameter to require several: a session must carry **all** of them. A client that groups sessions, such as the pages of one change set, can tag them with a label like `changeset:<uuid>` and list them with it.
+                 * @example [
+                 *       "changeset:5c2e9a17-4b30-4d6f-8e21-7a9c0b3d5f48"
+                 *     ]
+                 */
+                label?: string[];
+                /**
+                 * @description Only sessions whose `continued_from` is this session id: the follow-ups of one session (since `1.0.0-rc.3`).
+                 * @example 2d8c5f71-0e46-4b9a-9c13-5a7f8e2b6d40
+                 */
+                continued_from?: string;
+                /**
+                 * @description Only sessions whose open plan, or latest plan when none is open, has this status (since `1.0.0-rc.4`). Repeat the parameter to allow several. `released` and `review_requested` together are the Workspace's "needs your attention" list, the role `status=released` had before.
+                 * @example [
+                 *       "proposed",
+                 *       "released"
+                 *     ]
+                 */
+                plan_status?: components["schemas"]["PlanStatus"][];
+                /**
                  * @description Maximum number of items in the page.
                  * @example 25
                  */
@@ -5538,36 +6311,26 @@ export interface operations {
                  */
                 cursor?: components["parameters"]["Cursor"];
             };
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -5593,36 +6356,26 @@ export interface operations {
     createSession: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -5657,36 +6410,26 @@ export interface operations {
     getSession: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5716,39 +6459,92 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
-    archiveSession: {
+    updateSessionViaPost: {
         parameters: {
             query?: never;
             header: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description Turns a `POST` into the `PATCH` of the same path, for callers that cannot send `PATCH`, such as one behind the CMS custom proxy (since `1.0.0-rc.3`). `PATCH` is the only accepted value; any other is `400` with `genaix_code: malformed_request`.
+                 * @example PATCH
+                 */
+                "X-HTTP-Method-Override": components["parameters"]["XHttpMethodOverride"];
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+            };
+            path: {
+                /**
+                 * @description Session id.
+                 * @example 9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13
+                 */
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionPatch"];
+            };
+        };
+        responses: {
+            /** @description The updated session. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    archiveSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
+                 *
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
+                 *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
+                 * @example sub_c3f1a07d9e5b4826
+                 */
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5779,36 +6575,26 @@ export interface operations {
     patchSession: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5847,36 +6633,26 @@ export interface operations {
     transitionSession: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -5889,11 +6665,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TransitionRequest"];
+                "application/json": components["schemas"]["SessionTransitionRequest"];
             };
         };
         responses: {
-            /** @description Status changed synchronously (`release`, `reopen`, `discard`, `archive`). */
+            /** @description The session as it is now. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -5902,7 +6678,179 @@ export interface operations {
                     "application/json": components["schemas"]["Session"];
                 };
             };
-            /** @description A run was started (`publish`, `request_review`). Follow `run_id` on the event stream; the session status in the body is the status at acceptance time, not the final one. */
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listPlans: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
+                 *
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
+                 *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
+                 * @example sub_c3f1a07d9e5b4826
+                 */
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+            };
+            path: {
+                /**
+                 * @description Session id.
+                 * @example 9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13
+                 */
+                session_id: components["parameters"]["SessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session's plans. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getPlan: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
+                 *
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
+                 *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
+                 * @example sub_c3f1a07d9e5b4826
+                 */
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+            };
+            path: {
+                /**
+                 * @description Session id.
+                 * @example 9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13
+                 */
+                session_id: components["parameters"]["SessionId"];
+                /**
+                 * @description Plan id, `Plan.id` (since `1.0.0-rc.4`).
+                 * @example 5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60
+                 */
+                plan_id: components["parameters"]["PlanId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The plan's state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanState"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    transitionPlan: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
+                 *
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
+                 *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
+                 * @example sub_c3f1a07d9e5b4826
+                 */
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
+            };
+            path: {
+                /**
+                 * @description Session id.
+                 * @example 9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13
+                 */
+                session_id: components["parameters"]["SessionId"];
+                /**
+                 * @description Plan id, `Plan.id` (since `1.0.0-rc.4`).
+                 * @example 5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60
+                 */
+                plan_id: components["parameters"]["PlanId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransitionRequest"];
+            };
+        };
+        responses: {
+            /** @description Status changed synchronously (`release`, `reopen`, and `discard` with `on_discard: keep` or of a plan that wrote nothing). The plan as it is now. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Plan"];
+                };
+            };
+            /** @description A run was started (`publish`, `request_review`, and `discard` with `on_discard: restore`). Follow `run_id` on the event stream; the plan status in the body is the status at acceptance time (`released`), not the final one. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -5946,36 +6894,26 @@ export interface operations {
                  */
                 cursor?: components["parameters"]["Cursor"];
             };
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6008,36 +6946,26 @@ export interface operations {
     postMessage: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6093,36 +7021,26 @@ export interface operations {
     getRun: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6160,36 +7078,26 @@ export interface operations {
     cancelRun: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6250,36 +7158,26 @@ export interface operations {
                  */
                 types?: components["schemas"]["EventType"][];
             };
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
                 /**
                  * @description Standard SSE resume header, sent automatically by `EventSource`. Same meaning as `after`, and takes precedence over it.
                  * @example 42
@@ -6324,36 +7222,26 @@ export interface operations {
     answerInteraction: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6416,36 +7304,26 @@ export interface operations {
                  */
                 cursor?: components["parameters"]["Cursor"];
             };
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6478,36 +7356,26 @@ export interface operations {
     uploadSessionFile: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6570,36 +7438,26 @@ export interface operations {
     getSessionFile: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6637,36 +7495,26 @@ export interface operations {
     deleteSessionFile: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6712,36 +7560,26 @@ export interface operations {
     downloadSessionFile: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6782,39 +7620,69 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
+    getFileLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The signed token GenAIx minted for one session file. */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file bytes, with the file's stored `media_type` as the content type. */
+            200: {
+                headers: {
+                    /** @description The file's sha256, quoted. */
+                    ETag?: string;
+                    /** @description The file size in bytes. */
+                    "Content-Length"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                    "image/*": string;
+                    "application/pdf": string;
+                };
+            };
+            /** @description Unknown, expired or tampered token, or the file no longer exists. The cases are not distinguished. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
     listWorkflows: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path?: never;
             cookie?: never;
@@ -6841,36 +7709,26 @@ export interface operations {
     listSessionAuthorizations: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6903,36 +7761,26 @@ export interface operations {
     putSessionAuthorization: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -6976,36 +7824,26 @@ export interface operations {
     deleteSessionAuthorization: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**
@@ -7041,36 +7879,26 @@ export interface operations {
     getSessionWorkflow: {
         parameters: {
             query?: never;
-            header: {
+            header?: {
                 /**
-                 * @description The **only** identity header, injected by the installation's trusted proxy and
-                 *     **required on every user route** (everything except `GET /ping` and
-                 *     `DELETE /subjects/{subject}`).
+                 * @description The subject of a **direct** request (since `1.0.0-rc.3` the direct mode only):
+                 *     required on every user route, that is everything except `GET /ping`,
+                 *     `DELETE /subjects/{subject}` and `POST /subjects/erase`, when the installation token
+                 *     comes in `Authorization`.
                  *
-                 *     It is an **opaque, installation-scoped pseudonymous subject**. GenAIx uses it as
-                 *     the owner key of sessions, files, connections and authorizations, and for nothing
-                 *     else: a session is owned by (installation token, subject), so the same person keeps
-                 *     their sessions across sign-ins while GenAIx never learns who they are. No user id,
-                 *     login, display name or group list is ever sent, and none is stored.
-                 *
-                 *     The value may be a bare opaque string, or a compact JWS assertion carrying `sub`
-                 *     (the subject), `iss` (the installation), `iat` and a short `exp`. The producing side
-                 *     may put more into that payload; GenAIx does not decode, use or store anything
-                 *     beyond `sub`, `iss` and the timestamps.
-                 *
-                 *     - When the installation is configured with the signing key, GenAIx **verifies the
-                 *       signature and the expiry**, takes `sub` as the subject, and rejects an unsigned,
-                 *       malformed, mis-issued or stale value with `401` and
-                 *       `genaix_code: identity_invalid`.
-                 *     - When no key is configured, the header is accepted as sent and used verbatim as
-                 *       the subject.
-                 *
-                 *     GenAIx trusts the header in either case only because the installation token
-                 *     authenticated the caller. Missing or empty is `400` with
+                 *     It is an **opaque, installation-scoped pseudonymous subject**, used **verbatim** as
+                 *     the owner key of sessions, files, connections and authorizations: a session is owned
+                 *     by (installation token, subject). GenAIx trusts it only because the installation
+                 *     token authenticated the caller. Missing or empty on a direct request is `400` with
                  *     `genaix_code: subject_missing`.
+                 *
+                 *     - On a **proxied** request (`X-GenAIx-Installation` present) the header is ignored;
+                 *       the subject comes from the CMS identity assertion.
+                 *     - An installation with a CMS public key configured accepts no direct request on a
+                 *       user route: the header is rejected with `401` and `genaix_code: identity_invalid`.
                  * @example sub_c3f1a07d9e5b4826
                  */
-                "X-GCMS-Subject": components["parameters"]["XGcmsSubject"];
+                "X-GCMS-Subject"?: components["parameters"]["XGcmsSubject"];
             };
             path: {
                 /**

@@ -85,6 +85,10 @@ export default defineConfig(({ mode }) => {
     const genaixApiToken = env.GENAIX_API_TOKEN || 'sk_gnx_mock';
     const genaixSubject = env.GENAIX_SUBJECT || 'sub_workspace_dev';
     const cmsProxyTarget = env.CMS_PROXY_TARGET;
+    // Proxied mode: /rest/proxy/genaix goes to the custom proxy of the CMS at CMS_PROXY_TARGET, which
+    // adds the installation token and the identity assertion, as in production. Needed for a GenAIx
+    // installation with a CMS key, which refuses direct mode (09-integration-guide.md, section 3).
+    const genaixViaCms = !!cmsProxyTarget && env.GENAIX_VIA_CMS === 'true';
 
     return {
         // Relative asset URLs in the build, so the CMS can serve `dist/` under any path (for example
@@ -109,22 +113,29 @@ export default defineConfig(({ mode }) => {
 
         server: {
             proxy: {
-                // Stands in for the CMS proxy (09-integration-guide.md, section 3): forward all
-                // of /rest/proxy/genaix, drop the browser's credentials and identity, and set the
-                // installation token and X-GCMS-Subject server-side. Listed before /rest, so it
-                // wins over the CMS forward below.
-                '/rest/proxy/genaix/': {
-                    target: genaixApiUrl,
-                    changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/rest\/proxy\/genaix/, ''),
-                    configure: (proxy) => {
-                        proxy.on('proxyReq', (proxyReq) => {
-                            proxyReq.removeHeader('Cookie');
-                            proxyReq.setHeader('Authorization', `Bearer ${genaixApiToken}`);
-                            proxyReq.setHeader('X-GCMS-Subject', genaixSubject);
-                        });
-                    },
-                },
+                // Stands in for the CMS proxy in direct mode (09-integration-guide.md, section 3,
+                // "a development proxy in direct mode"): forward all of /rest/proxy/genaix, drop the
+                // browser's credentials and identity, and set the installation token and
+                // X-GCMS-Subject server-side. X-GenAIx-Installation is cleared, since it would switch
+                // the request into proxied mode. Listed before /rest, so it wins over the CMS forward below.
+                // With GENAIX_VIA_CMS it is left out, and the /rest forward sends it to the CMS proxy.
+                ...(genaixViaCms
+                    ? {}
+                    : {
+                        '/rest/proxy/genaix/': {
+                            target: genaixApiUrl,
+                            changeOrigin: true,
+                            rewrite: (path) => path.replace(/^\/rest\/proxy\/genaix/, ''),
+                            configure: (proxy) => {
+                                proxy.on('proxyReq', (proxyReq) => {
+                                    proxyReq.removeHeader('Cookie');
+                                    proxyReq.removeHeader('X-GenAIx-Installation');
+                                    proxyReq.setHeader('Authorization', `Bearer ${genaixApiToken}`);
+                                    proxyReq.setHeader('X-GCMS-Subject', genaixSubject);
+                                });
+                            },
+                        },
+                    }),
 
                 // In production the UI is served from the CMS host, so /rest is same-origin. In
                 // development the dev server forwards it to a CMS and keeps the CMS cookies on localhost.

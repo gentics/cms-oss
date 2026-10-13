@@ -6,9 +6,10 @@ import type { Session, SessionPage } from '@/services/apiService/genaix/types';
 export function sessionFixture(overrides: Partial<Session> & Pick<Session, 'id'>): Session {
     return {
         title: `Session ${overrides.id}`,
-        workflow: 'free_chat',
-        workflow_version: '1.0.0',
         inputs: {},
+        open_plan_id: null,
+        executing_plan_id: null,
+        plan_count: 0,
         status: 'active',
         context: { references: [], guidelines: [], connection_ids: [] },
         owner: { subject: 'sub_test' },

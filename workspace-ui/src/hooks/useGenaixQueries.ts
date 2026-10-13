@@ -1,8 +1,7 @@
 import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { referencedObjects, resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
-import { guessWorkflow, handOffWorkflow } from '@/helper/workflowGuess/workflowGuess';
 import {
     answerInteraction,
     archiveSession,
@@ -18,6 +17,7 @@ import {
     listWorkflows,
     postMessage,
     type SessionFilters,
+    transitionPlan,
     uploadSessionFile,
 } from '@/services/apiService/apiService';
 import type {
@@ -25,7 +25,7 @@ import type {
     InteractionAnswer,
     MessageCreateBody,
     Session,
-    SessionContext,
+    TransitionRequest,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
@@ -155,7 +155,7 @@ export interface StartSessionInput {
 // with files the session is created first, then the files are uploaded, then the message is posted
 // with a `file_ref` part per file (contract, `SessionCreate`). Either way the session is created with
 // its CMS credential (`newSessionCmsAuthorization`), which GenAIx verifies before creating anything,
-// and with the workflow its first message suggests (`guessWorkflow`, TEMPORARY).
+// and without a `workflow`: the session agent answers or drafts a plan under the module it picks (rc.4).
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
 async function uploadFileParts(sessionId: string, files: StartFile[], onFileProgress?: StartSessionInput['onFileProgress']): Promise<UserFileRefPart[]> {
@@ -170,14 +170,14 @@ async function uploadFileParts(sessionId: string, files: StartFile[], onFileProg
     return fileParts;
 }
 
-async function startSession({ parts, files, onFileProgress }: StartSessionInput, workflow = guessWorkflow(parts), context?: SessionContext): Promise<Session> {
+async function startSession({ parts, files, onFileProgress }: StartSessionInput): Promise<Session> {
     const authorizations = [await newSessionCmsAuthorization()];
 
     if (files.length === 0) {
-        return createSession({ workflow, context, message: { parts }, authorizations });
+        return createSession({ message: { parts }, authorizations });
     }
 
-    const session = await createSession({ workflow, context, authorizations });
+    const session = await createSession({ authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
 
@@ -198,38 +198,6 @@ export function useStartSession() {
         mutationFn: (input: StartSessionInput) => startSession(input),
         onSuccess: (session) => {
             queryClient.setQueryData(genaixKeys.session(session.id), session);
-        },
-        retry: false,
-    });
-}
-
-/** The first message of a session handed off from a read-only one, and where that one worked. */
-export interface HandOffSessionInput extends StartSessionInput {
-    /** The read-only session's `context.node_id`, which the new session works in too. */
-    nodeId?: number;
-}
-
-/**
- * Starts a session that acts on objects selected in a read-only session ("Edit these"): its
- * instruction as the first message, every object the message refers to in `context.references`, in
- * the read-only session's node, with a workflow that is not read-only (`handOffWorkflow`). Like
- * `useStartSession`, it puts the session into the cache and is never retried.
- */
-export function useHandOffSession() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: ({ nodeId, ...input }: HandOffSessionInput) => startSession(input, handOffWorkflow(input.parts), {
-            ...(nodeId !== undefined && { node_id: nodeId }),
-            references: referencedObjects(input.parts),
-            // Their contract defaults, the same as leaving them out; the generated type requires them.
-            guidelines: [],
-            connection_ids: [],
-        }),
-        onSuccess: (session) => {
-            queryClient.setQueryData(genaixKeys.session(session.id), session);
-            // The left column stays while the new session opens; it lists the new one too.
-            void queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
         },
         retry: false,
     });
@@ -266,6 +234,32 @@ export function useSendTurn(sessionId: string) {
                 ...(replyTo && { reply_to_interaction: replyTo }),
             });
         },
+        retry: false,
+    });
+}
+
+/** One plan transition: which plan, and the request (`action`, `acknowledge_checks`). */
+export interface TransitionPlanInput {
+    planId: string;
+    request: TransitionRequest;
+}
+
+/**
+ * POST /sessions/{session_id}/plans/{plan_id}/transitions, after making sure the session holds a CMS
+ * credential (`publish` acts through the session's CMS connection). The plan's new status arrives as
+ * `plan.updated` on the event stream; the session lists are refetched, since the to-dos filter on the
+ * plan's status. Never retried: a repeated `publish` would start a second run.
+ */
+export function useTransitionPlan(sessionId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ planId, request }: TransitionPlanInput) => {
+            await ensureSessionCmsAuthorization(sessionId);
+
+            return transitionPlan(sessionId, planId, request);
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
         retry: false,
     });
 }

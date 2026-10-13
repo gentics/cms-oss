@@ -1,13 +1,14 @@
-import { ArrowDownIcon, ArrowUpIcon, CheckCheckIcon, CheckIcon, type LucideIcon, MinusIcon, PencilIcon, PlusIcon, RouteIcon, XIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, CheckCheckIcon, CheckIcon, type LucideIcon, MinusIcon, PencilIcon, PlusIcon, XIcon } from 'lucide-react';
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PartCard } from '@/components/MessageParts/PartCard';
 import { RefToken } from '@/components/MessageParts/RefToken';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { planMessage, type PlanStepInput } from '@/helper/planMessage/planMessage';
+import { isStalePlanCode, reloadPlans } from '@/helper/planReload/planReload';
 import { useSendMessage } from '@/hooks/useGenaixQueries';
+import { GenaixApiError } from '@/services/apiService/apiService';
 import type { Plan, PlanItem } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 
@@ -30,7 +31,7 @@ interface Row extends PlanStepInput {
 }
 
 function rowsOf(items: PlanItem[]): Row[] {
-    return items.map(({ id, label, target }) => ({ key: id, label, target }));
+    return items.map(({ id, label, target }) => ({ key: id, id, label, target }));
 }
 
 // Whether the steps differ from the agent's plan: wording, order, a target, a step added or removed.
@@ -172,22 +173,28 @@ interface PlanCardProps {
 }
 
 /**
- * The agent's work plan (`plan.updated`) as a chat card (design.md §12 "Chat-Karte", "Plan-Schritte";
- * draft `partHTML` plan, `editPlan`): the summary, then each item with its number or state, its target
- * and its status word. While nothing of it has started and no run works, Adjust edits the steps in the
- * card and Accept plan sends the plan to the agent (`planMessage`): as proposed, or as adjusted. A later
- * version says why it changed (`reason`).
+ * The agent's work plan (`plan.updated`), shown in the plan bar above the composer while it is open
+ * (`PlanBar`; design.md §12 "Plan-Schritte"; draft `partHTML` plan, `editPlan`): the summary, then each
+ * item with its number or state, its target and its status word. While the plan is `proposed` and no
+ * run works, Adjust edits the steps in place and Accept plan sends the plan to the agent (`planMessage`):
+ * as proposed, or as adjusted. A later version says why it changed (`reason`). Refused because the plan
+ * moved on meanwhile (`409 plan_outdated`, `plan_closed`, `plan_not_proposed`), the plans are read again
+ * (`reloadPlans`).
  */
 export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
     const { t } = useTranslation();
     const sendMessage = useSendMessage(sessionId);
     const items = plan.items ?? [];
-    const [adjusted, setAdjusted] = useState<Row[]>();
+    const [adjustedRows, setAdjusted] = useState<Row[]>();
     // The steps while the user adjusts them; none while the plan is only shown.
     const [draft, setDraft] = useState<Row[]>();
     const [isAccepted, setIsAccepted] = useState(false);
-    const isPending = items.every((item) => statusOf(item) === 'pending');
-    const canAct = isPending && canAnswer && !isAccepted;
+    // Only a proposed plan can be accepted (contract: `409 plan_not_proposed` otherwise).
+    const isProposed = plan.status === 'proposed';
+    // The user's adjustment counts only while the plan waits for them: once it is accepted, the card
+    // shows the plan as GenAIx executes it.
+    const adjusted = isProposed ? adjustedRows : undefined;
+    const canAct = isProposed && canAnswer && !isAccepted;
 
     const isEditing = Boolean(draft) && canAct;
     const steps = stepsOf(draft ?? []);
@@ -201,14 +208,17 @@ export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
 
     function accept() {
         setIsAccepted(true);
-        sendMessage.mutateAsync(planMessage(adjusted, { acceptText: t('parts.plan.acceptText'), intro: t('parts.plan.adjustedIntro') })).catch((error: unknown) => {
+        sendMessage.mutateAsync(planMessage(plan, adjusted)).catch((error: unknown) => {
             setIsAccepted(false);
+
+            if (error instanceof GenaixApiError && isStalePlanCode(error.genaixCode)) {
+                reloadPlans(sessionId).catch((reloadError: unknown) => console.warn('Reading the plans again failed', reloadError));
+            }
+
             useErrorNotificationStore.getState().addError({ messageKey: 'chat.sendFailed', detailKey: errorMessageKey(error) });
         });
     }
 
-    // A version with a `reason` is the agent's answer to the user, no longer its proposal.
-    const title = adjusted ? t('parts.plan.adjusted') : t(isPending && !plan.reason ? 'parts.plan.proposed' : 'parts.plan.title');
     let footer;
 
     if (isEditing) {
@@ -237,39 +247,39 @@ export function PlanCard({ plan, sessionId, canAnswer }: PlanCardProps) {
             </>
         );
     } else if (plan.reason && !adjusted) {
+        // A version with a `reason` is the agent's answer to the user: why the plan changed.
         footer = <span className={styles.caption}>{plan.reason}</span>;
     }
 
-    // One card for showing and adjusting, so switching does not play its entrance again.
+    // One element for showing and adjusting, so switching keeps the plan bar's height steady.
     return (
         <div className={styles.plan}>
-            <PartCard icon={RouteIcon} title={title} footer={footer}>
-                {plan.summary && <p className={styles.summary}>{plan.summary}</p>}
-                {isEditing && draft
-                    ? <PlanEditor rows={draft} onChange={(update) => setDraft((current) => current && update(current))} onDone={handleDone} onCancel={() => setDraft(undefined)} />
-                    : (
-                        <ol className={styles.items}>
-                            {(adjusted ?? items).map((step, index) => {
-                                const status = 'status' in step ? statusOf(step) : 'pending';
-                                const Icon = ICONS[status];
+            {plan.summary && <p className={styles.summary}>{plan.summary}</p>}
+            {isEditing && draft
+                ? <PlanEditor rows={draft} onChange={(update) => setDraft((current) => current && update(current))} onDone={handleDone} onCancel={() => setDraft(undefined)} />
+                : (
+                    <ol className={styles.items}>
+                        {(adjusted ?? items).map((step, index) => {
+                            const status = 'status' in step ? statusOf(step) : 'pending';
+                            const Icon = ICONS[status];
 
-                                return (
-                                    <li key={'key' in step ? step.key : step.id} className={`${styles.item} ${styles[status]}`}>
-                                        <span className={styles.marker} aria-hidden>
-                                            {Icon ? <Icon size={11} strokeWidth={2.4} /> : index + 1}
-                                        </span>
-                                        <span className={styles.text}>
-                                            <span className={styles.label}>{step.label}</span>
-                                            {step.target && <span><RefToken value={step.target} /></span>}
-                                            {'detail' in step && step.detail && <span className={styles.detail}>{step.detail}</span>}
-                                        </span>
-                                        <span className={styles.status}>{t(`chat.steps.status.${status}`)}</span>
-                                    </li>
-                                );
-                            })}
-                        </ol>
-                    )}
-            </PartCard>
+                            return (
+                                <li key={'key' in step ? step.key : step.id} className={`${styles.item} ${styles[status]}`}>
+                                    <span className={styles.marker} aria-hidden>
+                                        {Icon ? <Icon size={11} strokeWidth={2.4} /> : index + 1}
+                                    </span>
+                                    <span className={styles.text}>
+                                        <span className={styles.label}>{step.label}</span>
+                                        {step.target && <span><RefToken value={step.target} /></span>}
+                                        {'detail' in step && step.detail && <span className={styles.detail}>{step.detail}</span>}
+                                    </span>
+                                    <span className={styles.status}>{t(`chat.steps.status.${status}`)}</span>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                )}
+            {footer && <div className={styles.foot}>{footer}</div>}
         </div>
     );
 }

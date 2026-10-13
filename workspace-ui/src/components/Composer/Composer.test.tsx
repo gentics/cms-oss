@@ -679,36 +679,27 @@ describe('Composer', () => {
         const first = { type: 'page' as const, id: '8871', node_id: 3, label: 'Garantiebedingungen' };
         const second = { type: 'page' as const, id: '8903', node_id: 3, label: 'Nutzungsbedingungen' };
 
-        it('adds them before the text, removes them again and reports the objects in the field', async () => {
+        it('adds them before the text', async () => {
             const user = userEvent.setup();
             const onSubmit = vi.fn();
-            const onReferencesChange = vi.fn();
             const ref = createRef<ComposerHandle>();
 
-            render(
-                <Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} ref={ref} onReferencesChange={onReferencesChange} notice="Starts a new session" />,
-                { wrapper: UiProvider },
-            );
+            render(<Composer variant="chat" onSubmit={onSubmit} isSubmitting={false} ref={ref} />, { wrapper: UiProvider });
 
             const field = screen.getByRole('textbox', { name: 'What should happen?' });
-
-            expect(screen.getByText('Starts a new session')).toBeInTheDocument();
 
             act(() => ref.current!.setText('publish'));
             act(() => ref.current!.addReferences([first, second]));
 
-            expect(field).toHaveTextContent('Garantiebedingungen Nutzungsbedingungen publish');
-            expect(onReferencesChange).toHaveBeenLastCalledWith([first, second]);
-
-            act(() => ref.current!.removeReferences([first]));
-
-            expect(field).toHaveTextContent('Nutzungsbedingungen publish');
-            expect(field).not.toHaveTextContent('Garantiebedingungen');
-            expect(onReferencesChange).toHaveBeenLastCalledWith([second]);
+            // The tokens are React node views: they show once React has rendered them.
+            await waitFor(() => expect(field).toHaveTextContent('Garantiebedingungen Nutzungsbedingungen publish'));
 
             await user.keyboard('{Enter}');
 
-            expect(onSubmit).toHaveBeenCalledWith({ parts: [{ type: 'reference', ref: second }, { type: 'text', text: ' publish' }], files: [] });
+            expect(onSubmit).toHaveBeenCalledWith({
+                parts: [{ type: 'reference', ref: first }, { type: 'text', text: ' ' }, { type: 'reference', ref: second }, { type: 'text', text: ' publish' }],
+                files: [],
+            });
         });
 
         it('puts the caret behind them, also when the field had no focus', async () => {

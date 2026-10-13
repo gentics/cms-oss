@@ -2,9 +2,9 @@
 
 ## Local GenAIx API
 
-The Workspace calls GenAIx only through the CMS proxy, at the same-origin path `/rest/proxy/genaix`. The proxy adds the installation token (`Authorization: Bearer sk_gnx_...`) and the user's `X-GCMS-Subject`, so the browser never holds either (`.claude/contracts/genaix-docs/09-integration-guide.md`, section 3).
+The Workspace calls GenAIx only through the CMS custom proxy, at the same-origin path `/rest/proxy/genaix`. In production the proxy calls GenAIx in proxied mode: it adds the installation token (`X-GenAIx-Installation: sk_gnx_...`) and the user's CMS identity assertion (`Authorization: Bearer <RS256 JWT>`), so the browser never holds either (`.claude/contracts/genaix-docs/09-integration-guide.md`, section 3).
 
-In development the Vite dev server plays the proxy (`server.proxy` in `vite.config.ts`). It forwards `/rest/proxy/genaix/*` to `GENAIX_API_URL`, removes the browser's `Cookie`, and overwrites `Authorization` and `X-GCMS-Subject`.
+In development the Vite dev server plays the proxy in direct mode (`server.proxy` in `vite.config.ts`), for a GenAIx installation without a CMS key such as the mock. It forwards `/rest/proxy/genaix/*` to `GENAIX_API_URL`, removes the browser's `Cookie` and `X-GenAIx-Installation` (which would switch the request into proxied mode), and overwrites `Authorization` with the installation token and `X-GCMS-Subject` with a fixed subject.
 
 1. Check out `git@git.gentics.com:psc/genaix/api-contract.git` next to `cmp`, so that it is at `../../../api-contract` from this folder.
 2. Start the GenAIx mock (Python 3.11+; creates `.venv` on first run): `npm run mock:genaix`. It serves `http://localhost:8123/api/v1`, the port of the hand-out's docker compose stack (`.claude/contracts/genaix-docs/deploy-README.md`), so either one can be used.
@@ -19,6 +19,8 @@ Configuration is read from `.env.local` (see `.env.example`); `.env.example` its
 | `GENAIX_API_TOKEN` | `sk_gnx_mock` | Installation token (mock fixture) |
 | `GENAIX_SUBJECT` | `sub_workspace_dev` | `X-GCMS-Subject` sent for every request |
 | `CMS_PROXY_TARGET` | none | CMS that `/rest` is forwarded to, e.g. `https://cms.example.com`. Without it the dev server answers the logged-in user (`GET /rest/user/me`, a fixed dev user, so there is no login) and the CMS API token request (`POST /rest/admin/token`, a test token) itself, so sessions start against the GenAIx mock; every other CMS call (e.g. the @-menu search) has no CMS |
+
+| `GENAIX_VIA_CMS` | none | `true`, together with `CMS_PROXY_TARGET`: `/rest/proxy/genaix` goes to the custom proxy of that CMS (proxied mode) instead of `GENAIX_API_URL`, and the three `GENAIX_` values above are not used. Needed for a GenAIx installation with a CMS key, which answers direct mode with `401` `identity_invalid`. The CMS needs a `custom_proxy` entry `genaix`, and GenAIx the public key of that CMS (`09-integration-guide.md`, section 3) |
 
 These variables have no `VITE_` prefix, so they stay on the dev server and are never bundled into the client.
 
@@ -37,7 +39,7 @@ The client side has one variable of its own, `VITE_GENAIX_API_BASE` (default `/r
 
 ### CMS credential of a session
 
-Every workflow except `free_chat` acts on the CMS through MCP, so GenAIx needs a CMS API token for it. Without one a run ends with `auth.required` and `run.failed` (`424` `mcp_authorization_required`). The Workspace registers one token per session, the integrated path of `.claude/contracts/genaix-docs/02-auth-and-context-flow.md` ("Session-scoped authorization"), in `src/helper/sessionAuthorization/sessionAuthorization.ts`:
+GenAIx acts on the CMS through MCP, the session agent with read tools and a plan's workflow module with write tools too, so GenAIx needs a CMS API token for a session. Without one a run ends with `auth.required` and `run.failed` (`424` `mcp_authorization_required`). The Workspace registers one token per session, the integrated path of `.claude/contracts/genaix-docs/02-auth-and-context-flow.md` ("Session-scoped authorization"), in `src/helper/sessionAuthorization/sessionAuthorization.ts`:
 
 - Starting a session: `POST /rest/admin/token` on the CMS (24 hours, `pruneOnExpiry`), then `POST /sessions` with the token in `authorizations`, for the user's default `cms` connection (`GET /mcp/connections`).
 - Every later turn: unless `session.authorizations` holds an `authorized` credential valid for more than 10 more minutes, a new token is created and registered with `PUT /sessions/{session_id}/authorizations/{connection_id}` before the message is posted.

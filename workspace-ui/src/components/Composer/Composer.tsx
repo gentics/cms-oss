@@ -1,5 +1,5 @@
 import { ArrowUpIcon, AtSignIcon, KeyboardIcon, PaperclipIcon, QuoteIcon, SquareIcon } from 'lucide-react';
-import { type DragEvent, type ReactNode, type Ref, useEffect, useImperativeHandle, useState } from 'react';
+import { type DragEvent, type Ref, useImperativeHandle, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -36,8 +36,6 @@ export interface ComposerHandle {
     reset: () => void;
     /** Puts a reference token for each of `refs` at the start of the field, the caret at the end. */
     addReferences: (refs: ContextReference[]) => void;
-    /** Removes the reference tokens of `refs` from the field. */
-    removeReferences: (refs: ContextReference[]) => void;
 }
 
 interface ComposerProps {
@@ -56,15 +54,16 @@ interface ComposerProps {
      * submitted meanwhile (a second message would be `409 run_already_active`).
      */
     isRunning?: boolean;
+    /**
+     * Chat, with `isRunning`: the run is a plan's, so a turn sent meanwhile is a read-only side run
+     * (rc.4). Stop then stands beside send instead of taking its place.
+     */
+    canSendMeanwhile?: boolean;
     /** Chat: Stop was pressed and the run is stopping; Stop is disabled. */
     isStopping?: boolean;
     onStop?: () => void;
     /** The session the chat composer sends to; its uploaded files are offered in the @-menu and as verbatim sources. */
     sessionId?: string;
-    /** Called with the objects the field's reference tokens point at, whenever they change. */
-    onReferencesChange?: (references: ContextReference[]) => void;
-    /** A line at the top of the box, e.g. where the next message goes. */
-    notice?: ReactNode;
     ref?: Ref<ComposerHandle>;
 }
 
@@ -79,9 +78,10 @@ const TEXT_KEYS = {
  * with passages locked as verbatim, files attached as a source or verbatim, and the send button.
  * Enter or the send button submits the message parts and the files; a dictation only fills the
  * field. On phones it puts voice first. Sending is the caller's. While a run is working
- * (`isRunning`), Stop replaces send and calls `onStop`.
+ * (`isRunning`), Stop replaces send and calls `onStop`; beside send while the run lets the user go on
+ * asking (`canSendMeanwhile`).
  */
-export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, isStopping = false, onStop, sessionId, onReferencesChange, notice, ref }: ComposerProps) {
+export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [], isRunning = false, canSendMeanwhile = false, isStopping = false, onStop, sessionId, ref }: ComposerProps) {
     const { t } = useTranslation();
     const {
         editor,
@@ -89,10 +89,8 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         isEmpty,
         hasSelection,
         attachments,
-        references,
         setText,
         addReferences,
-        removeReferences,
         readInput,
         reset,
         markSelectionVerbatim,
@@ -134,12 +132,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         },
         reset,
         addReferences,
-        removeReferences,
     }));
-
-    useEffect(() => {
-        onReferencesChange?.(references);
-    }, [references, onReferencesChange]);
 
     // One recognizer for the inline and the big mic; the words go into the field, nothing is sent.
     const dictation = useSpeechDictation({ onText: setText, onEnd: () => textInput().focus() });
@@ -149,10 +142,13 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         textInput().focus();
     }
 
+    // Nothing is submitted while a run holds the chat, only beside a plan's run.
+    const isHeld = isRunning && !canSendMeanwhile;
+
     function submit() {
         const input = readInput();
 
-        if (isSubmitting || isRunning || !input) {
+        if (isSubmitting || isHeld || !input) {
             return;
         }
 
@@ -174,7 +170,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
         attachments: attachments.map(({ id, file }) => ({ value: attachmentSource(id), label: file.name })),
         sessionId,
     };
-    const canSubmit = !isSubmitting && !isRunning && (!isEmpty || attachments.length > 0);
+    const canSubmit = !isSubmitting && !isHeld && (!isEmpty || attachments.length > 0);
     // Mobile, voice first: until the user types or dictates, only the big mic shows.
     const isVoiceFirst = dictation.isSupported && !isTyping && !dictation.isListening;
     // The submitted files are the attachments in their order: while sending they cannot be removed,
@@ -193,23 +189,28 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 <VoiceInput dictation={dictation} onCancel={cancelDictation} size={isChat ? 'sm' : 'md'} />
             </span>
 
-            {isRunning && onStop
-                ? (
-                    <IconButton variant="primary" size={isChat ? 'icon' : 'icon-lg'} label={t('chat.stop')} disabled={isStopping} onClick={onStop}>
-                        <SquareIcon size={isChat ? 14 : undefined} />
-                    </IconButton>
-                )
-                : (
-                    <IconButton
-                        variant="primary"
-                        size={isChat ? 'icon' : 'icon-lg'}
-                        label={t(texts.send)}
-                        disabled={!canSubmit}
-                        onClick={submit}
-                    >
-                        <ArrowUpIcon size={isChat ? 16 : undefined} />
-                    </IconButton>
-                )}
+            {isRunning && onStop && (
+                <IconButton
+                    variant={canSendMeanwhile ? 'secondary' : 'primary'}
+                    size={isChat ? 'icon' : 'icon-lg'}
+                    label={t('chat.stop')}
+                    disabled={isStopping}
+                    onClick={onStop}
+                >
+                    <SquareIcon size={isChat ? 14 : undefined} />
+                </IconButton>
+            )}
+            {(!isRunning || !onStop || canSendMeanwhile) && (
+                <IconButton
+                    variant="primary"
+                    size={isChat ? 'icon' : 'icon-lg'}
+                    label={t(texts.send)}
+                    disabled={!canSubmit}
+                    onClick={submit}
+                >
+                    <ArrowUpIcon size={isChat ? 16 : undefined} />
+                </IconButton>
+            )}
         </>
     );
 
@@ -303,8 +304,6 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                     dictation.isListening ? styles.listening : '',
                 ].filter(Boolean).join(' ')}
             >
-                {notice && <div className={styles.notice}>{notice}</div>}
-
                 <div className={styles.attachments}>
                     <AttachmentList
                         attachments={attachments}

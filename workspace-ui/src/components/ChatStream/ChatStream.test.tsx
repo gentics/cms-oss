@@ -34,7 +34,7 @@ function stubHistory(history: Message[]) {
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async () => Response.json({ items: history, next_cursor: null })));
 }
 
-// Answers by route: the session (of `workflow`), the workflow catalogue with that module's steps, the history.
+// Answers by route: the session, the workflow catalogue with the steps of the module `workflow`, the history.
 function stubSession(workflow: string, stepsTemplate: { id: string; label: string }[], history: Message[]) {
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
         const url = String(input);
@@ -44,7 +44,7 @@ function stubSession(workflow: string, stepsTemplate: { id: string; label: strin
         }
 
         if (url.endsWith(`/sessions/${SESSION}`)) {
-            return Response.json({ id: SESSION, workflow });
+            return Response.json({ id: SESSION });
         }
 
         return Response.json({ items: history, next_cursor: null });
@@ -72,6 +72,12 @@ function listChildren() {
 }
 
 const TEMPLATE = [{ id: 'st-1', label: 'Read source material' }, { id: 'st-2', label: 'Propose plan' }];
+
+// Since rc.4 the steps are those of a plan, under the plan's module: this one is drafted under
+// `workflow`, so it has no card of its own.
+function draftPlan(seq: number, workflow: string) {
+    apply(event(seq, 'plan.updated', { plan_id: 'p-1', plan: { id: 'p-1', workflow, status: 'drafting', version: 0, summary: '', items: [] } }));
+}
 
 function texts() {
     return screen.getAllByRole('listitem').map((item) => item.textContent);
@@ -285,6 +291,7 @@ describe('ChatStream', () => {
         it('shows the current step right under the agent\'s head in its latest block, and moves it down with it', async () => {
             stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
 
             const steps = await screen.findByRole('group', { name: 'Steps' });
 
@@ -292,10 +299,10 @@ describe('ChatStream', () => {
             expect(steps).toHaveTextContent('0 of 2 steps done');
 
             apply(
-                event(1, 'step.updated', { run_id: 'r-1', step: { id: 'st-1', label: 'Read source material', status: 'done' } }),
-                event(2, 'step.updated', { run_id: 'r-2', step: { id: 'st-2', label: 'Propose plan', status: 'running' } }),
-                event(3, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
-                event(4, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Here is the plan.' } }),
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'done' } }),
+                event(3, 'step.updated', { run_id: 'r-2', plan_id: 'p-1', step: { id: 'st-2', label: 'Propose plan', status: 'running' } }),
+                event(4, 'message.started', { run_id: 'r-2', message_id: 'm-4', role: 'assistant' }),
+                event(5, 'part.started', { run_id: 'r-2', message_id: 'm-4', part_index: 0, part: { type: 'text', format: 'plain', text: 'Here is the plan.' } }),
             );
             act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Go on' }] }));
 
@@ -316,6 +323,7 @@ describe('ChatStream', () => {
         it('shows the steps before the thinking indicator while the agent has not answered yet', async () => {
             stubSession('content_create', TEMPLATE, []);
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
 
             act(() => useWorkspaceEventStore.getState().addSentMessage(SESSION, 'local-1', { parts: [{ type: 'text', text: 'Create a landing page' }] }));
             await screen.findByRole('group', { name: 'Steps' });
@@ -326,6 +334,7 @@ describe('ChatStream', () => {
         it('opens the agent\'s next block with the steps once a sent turn is the last thing, before its run starts', async () => {
             stubSession('content_create', TEMPLATE, [message('m-1', 'user', 'Create a landing page', 'r-1'), message('m-2', 'assistant', 'I read the source.', 'r-1')]);
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_create');
 
             await screen.findByRole('group', { name: 'Steps' });
             act(() => {
@@ -338,9 +347,10 @@ describe('ChatStream', () => {
         });
 
         it('shows no steps for a workflow without any', async () => {
-            const fetchMock = stubSession('free_chat', [], [message('m-1', 'user', 'Hello', 'r-1'), message('m-2', 'assistant', 'Hi.', 'r-1')]);
+            const fetchMock = stubSession('content_research', [], [message('m-1', 'user', 'Hello', 'r-1'), message('m-2', 'assistant', 'Hi.', 'r-1')]);
 
             render(<ChatStream sessionId={SESSION} />, { wrapper: createWrapper() });
+            draftPlan(1, 'content_research');
 
             await screen.findByText('Hi.');
             await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain('/rest/proxy/genaix/workflows'));
@@ -364,27 +374,13 @@ describe('ChatStream', () => {
             }],
         };
 
-        it('can hand their objects off in a read-only session', async () => {
+        it('can hand their objects to the composer', async () => {
             stubSession('content_research', [], [message('m-1', 'user', 'Which pages mention the terms?', 'r-1'), answer]);
 
             renderWithProviders(<ChatStream sessionId={SESSION} />);
 
             expect(await screen.findByRole('checkbox', { name: 'Select Garantiebedingungen' })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: 'Edit these' })).toBeInTheDocument();
-        });
-
-        it('cannot in any other session', async () => {
-            const fetchMock = stubSession('content_edit', [], [message('m-1', 'user', 'Change these', 'r-1'), answer]);
-
-            renderWithProviders(<ChatStream sessionId={SESSION} />);
-
-            expect(await screen.findByText('Garantiebedingungen')).toBeInTheDocument();
-            await waitFor(() => expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain(`/rest/proxy/genaix/sessions/${SESSION}`));
-            // The session's answer is in, so its workflow has been read.
-            await act(async () => {});
-
-            expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-            expect(screen.queryByRole('button', { name: 'Edit these' })).not.toBeInTheDocument();
         });
     });
 });

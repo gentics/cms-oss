@@ -325,27 +325,36 @@ describe('useWorkspaceEventStore', () => {
     });
 
     describe('workflow steps', () => {
-        it('keeps each step.updated by step id, a later one replacing it', () => {
+        // Since rc.4 a step belongs to a plan: `step.updated` carries `plan_id`.
+        it('keeps each step.updated by plan and step id, a later one replacing it', () => {
             apply(
-                event(1, 'step.updated', { run_id: 'r-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }),
-                event(2, 'step.updated', { run_id: 'r-1', step: { id: 'st-2', label: 'Derive folder', status: 'pending' } }),
-                event(3, 'step.updated', { run_id: 'r-1', step: { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' } }),
+                event(1, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }),
+                event(2, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-2', label: 'Derive folder', status: 'pending' } }),
+                event(3, 'step.updated', { run_id: 'r-1', plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' } }),
+                event(4, 'step.updated', { run_id: 'r-2', plan_id: 'p-2', step: { id: 'st-1', label: 'Read pages', status: 'running' } }),
             );
 
             expect(session().steps).toEqual({
-                'st-1': { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' },
-                'st-2': { id: 'st-2', label: 'Derive folder', status: 'pending' },
+                'p-1': {
+                    'st-1': { id: 'st-1', label: 'Read source material', status: 'done', detail: '14 pages' },
+                    'st-2': { id: 'st-2', label: 'Derive folder', status: 'pending' },
+                },
+                'p-2': {
+                    'st-1': { id: 'st-1', label: 'Read pages', status: 'running' },
+                },
             });
         });
 
         it('ignores the update of a substep', () => {
-            apply(event(1, 'step.updated', { step: { id: 'st-2-2', label: 'Check templates', status: 'done' }, parent_step_id: 'st-2' }));
+            apply(event(1, 'step.updated', { plan_id: 'p-1', step: { id: 'st-2-2', label: 'Check templates', status: 'done' }, parent_step_id: 'st-2' }));
 
             expect(session().steps).toBeUndefined();
         });
 
         it('resetSession drops the steps', () => {
-            apply(event(1, 'step.updated', { step: { id: 'st-1', label: 'Read source material', status: 'running' } }));
+            apply(event(1, 'step.updated', { plan_id: 'p-1', step: { id: 'st-1', label: 'Read source material', status: 'running' } }));
+
+            expect(session().steps).toBeDefined();
 
             useWorkspaceEventStore.getState().resetSession(SESSION);
 

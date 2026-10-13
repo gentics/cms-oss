@@ -58,6 +58,7 @@ export type UserTextPart = GenaixSchema<'UserTextPart'>;
 export type UserVerbatimPart = GenaixSchema<'UserVerbatimPart'>;
 export type UserFileRefPart = GenaixSchema<'UserFileRefPart'>;
 export type UserSettingPart = GenaixSchema<'UserSettingPart'>;
+export type UserPlanItem = GenaixSchema<'UserPlanItem'>;
 // Prefixed so it does not shadow the DOM `Event` type.
 export type GenaixEvent = GenaixSchema<'Event'>;
 export type GenaixEventType = GenaixSchema<'EventType'>;
@@ -110,4 +111,16 @@ export type WorkflowState = GenaixSchema<'WorkflowState'>;
 export type Step = GenaixSchema<'Step'>;
 export type StepTemplate = GenaixSchema<'StepTemplate'>;
 export type Plan = GenaixSchema<'Plan'>;
+export type PlanStatus = GenaixSchema<'PlanStatus'>;
+
+// Plan reads (GET /sessions/{session_id}/plans, /plans/{plan_id})
+export type PlanState = GenaixSchema<'PlanState'>;
+export type PlanSummary = GenaixSchema<'PlanSummary'>;
+export type PlanPage = GenaixSchema<'PlanPage'>;
+
+// Plan transitions (POST /sessions/{session_id}/plans/{plan_id}/transitions) and their outcome
+export type TransitionRequest = GenaixSchema<'TransitionRequest'>;
+export type TransitionAccepted = GenaixSchema<'TransitionAccepted'>;
+export type Publication = GenaixSchema<'Publication'>;
+export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;

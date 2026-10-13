@@ -1,9 +1,8 @@
 import { Rows3Icon } from 'lucide-react';
-import { type ReactNode, useContext, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EditTheseButton } from '@/components/EditTheseButton/EditTheseButton';
-import { HandOffContext } from '@/components/EditTheseButton/handOffContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ContextReference, TablePart } from '@/services/apiService/genaix/types';
 
@@ -19,15 +18,14 @@ type Column = TablePart['columns'][number];
 /**
  * `table`: report rows (design.md §12 "Tabelle"), each cell by its column `type`. A value of a `ref`
  * column is a `ContextReference` and shows as its token; anything that is not a value is left empty
- * rather than dumped. In a read-only session (`HandOffContext`) the rows can be selected by the
- * object in their first `ref` column, and handed off to a new session ("Edit these"); the foot then
- * holds only the selection.
+ * rather than dumped. The rows can be selected by the object in their first `ref` column, and handed
+ * to the composer for the next message ("Edit these"); the foot then holds only the selection.
  */
 export function TablePartView({ part, sessionId }: PartViewProps<TablePart>) {
     const { t, i18n } = useTranslation();
     const columns = part.columns ?? [];
     const rows = part.rows ?? [];
-    const refColumn = useContext(HandOffContext) ? columns.find((column) => column.type === 'ref') : undefined;
+    const refColumn = columns.find((column) => column.type === 'ref');
     // The selected rows by their index: rows only ever come in at the end while the table streams.
     const [selected, setSelected] = useState<number[]>([]);
 

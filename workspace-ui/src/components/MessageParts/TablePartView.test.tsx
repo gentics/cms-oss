@@ -2,7 +2,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { HandOffContext } from '@/components/EditTheseButton/handOffContext';
 import { UiProvider } from '@/components/ui/provider';
 import i18n from '@/i18n';
 import type { TablePart } from '@/services/apiService/genaix/types';
@@ -28,22 +27,27 @@ const part: TablePart = {
     source: { tool: 'search_content', summary: '23 hits, permission-filtered.' },
 };
 
+// The same table without its `ref` column, so its rows cannot be selected.
+const withoutRefColumn: TablePart = { ...part, columns: part.columns.filter((column) => column.type !== 'ref') };
+
 describe('TablePartView', () => {
     afterEach(async () => {
         await i18n.changeLanguage('en');
     });
 
+    // The first cell of each row is its selection (the checkbox), since the table has a `ref` column.
     it('shows every cell by its column type', () => {
         render(<TablePartView part={part} sessionId="s-1" />, { wrapper: UiProvider });
 
         const [, first, second] = screen.getAllByRole('row');
 
-        expect(within(first!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['Garantiebedingungen', 'Richtlinien', 'Yes', 'Jun 14, 2023', '1,250']);
-        expect(within(second!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['Nutzungsbedingungen', '–', 'No', 'Feb 1, 2023', '3']);
+        expect(within(first!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['', 'Garantiebedingungen', 'Richtlinien', 'Yes', 'Jun 14, 2023', '1,250']);
+        expect(within(second!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['', 'Nutzungsbedingungen', '–', 'No', 'Feb 1, 2023', '3']);
     });
 
-    it('says when it shows only a page of the rows, and where they came from', () => {
-        render(<TablePartView part={part} sessionId="s-1" />, { wrapper: UiProvider });
+    // A selectable table's foot holds only the selection (tested below).
+    it('says when it shows only a page of the rows, and where they came from, without a selection', () => {
+        render(<TablePartView part={withoutRefColumn} sessionId="s-1" />, { wrapper: UiProvider });
 
         expect(screen.getByText('2 of 23')).toBeInTheDocument();
         expect(screen.getByText('23 hits, permission-filtered.')).toBeInTheDocument();
@@ -55,22 +59,13 @@ describe('TablePartView', () => {
 
         const [, first] = screen.getAllByRole('row');
 
-        expect(within(first!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['Garantiebedingungen', 'Richtlinien', 'Ja', '14.06.2023', '1.250']);
+        expect(within(first!).getAllByRole('cell').map((cell) => cell.textContent)).toEqual(['', 'Garantiebedingungen', 'Richtlinien', 'Ja', '14.06.2023', '1.250']);
     });
 
-    it('has no selection outside a read-only session', () => {
-        render(<TablePartView part={part} sessionId="s-1" />, { wrapper: UiProvider });
-
-        expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: 'Edit these' })).not.toBeInTheDocument();
-    });
-
-    describe('in a read-only session', () => {
+    describe('selection', () => {
         function renderSelectable(table: TablePart = part) {
             return renderWithProviders(
-                <HandOffContext value={{ nodeId: 3 }}>
-                    <TablePartView part={table} sessionId="s-1" />
-                </HandOffContext>,
+                <TablePartView part={table} sessionId="s-1" />,
             );
         }
 
@@ -114,7 +109,7 @@ describe('TablePartView', () => {
             expect(screen.getAllByRole('checkbox')).toHaveLength(3);
 
             unmount();
-            renderSelectable({ ...part, columns: part.columns.filter((column) => column.type !== 'ref') });
+            renderSelectable(withoutRefColumn);
 
             expect(await screen.findByRole('table')).toBeInTheDocument();
             expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();

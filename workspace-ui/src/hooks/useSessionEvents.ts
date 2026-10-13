@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
+import { reloadPlans } from '@/helper/planReload/planReload';
 import { genaixKeys } from '@/hooks/useGenaixQueries';
 import { connectSessionEvents } from '@/services/apiService/eventStream';
 import type { GenaixEvent } from '@/services/apiService/genaix/types';
@@ -9,8 +10,8 @@ import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/s
 /**
  * Follows the event stream of `sessionId` while mounted and applies it to `useWorkspaceEventStore`.
  * When a message completes, the session's message history is refetched and the live copies it now
- * contains are dropped. On `410 events_pruned` the live state is reset and the history refetched
- * before the stream starts again from `after=0`.
+ * contains are dropped. On `410 events_pruned` the live state is reset, and the history and the plans
+ * (`reloadPlans`) are read again before the stream starts again from `after=0`.
  *
  * Every call opens its own stream, so call it once per session, from the chat view. Other
  * components read the live state from `useWorkspaceEventStore` with `selectSession`.
@@ -76,7 +77,12 @@ export function useSessionEvents(sessionId: string | undefined, onEvent?: (event
             },
             onPruned: async () => {
                 store().resetSession(sessionId);
-                await queryClient.invalidateQueries({ queryKey: messagesKey });
+                // The plans are not in the history; without them the stream would bring back only the
+                // plans whose events are still kept. A failed read leaves those (contract, "Retention").
+                await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: messagesKey }),
+                    reloadPlans(sessionId).catch((error: unknown) => console.warn('Reading the plans again failed', error)),
+                ]);
             },
         });
 

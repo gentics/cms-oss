@@ -1158,7 +1158,7 @@ test.describe('Page Management', () => {
         await expect(buttons).toHaveAttribute('data-action', 'close');
     });
 
-    test('should put a page into the queue when no publish permission', {
+    test('publishing without publish permissions puts publish request into queue', {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19583',
@@ -1206,7 +1206,7 @@ test.describe('Page Management', () => {
         await expect(itemIndicator).toContainClass('indicator-in-queue');
     });
 
-    test('should put a published page into the queue when no publish permission', {
+    test('taking page offline without permissions puts take-offline request into queue', {
         annotation: [{
             type: 'ticket',
             description: 'SUP-19583',

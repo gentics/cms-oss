@@ -871,7 +871,7 @@
         "publish_pages_header_plural_variants": "{{some}} pages will be published",
         "publish_pages_header_singular_without_language": "One of {{count}} pages will not be published in {{language}}",
         "publish_pages_header_plural_without_language": "{{some}} of {{count}} pages will not be published in {{language}}",
-        "publish_pages_header_review_notice_without_language": "You have selected some pages which do not have a(n) {{language}} language variant to publish.<br/>mYou can choose from the available ones",
+        "publish_pages_header_review_notice_without_language": "You have selected some pages which do not have a(n) {{language}} language variant to publish.<br/>You can choose from the available ones",
         "publish_title": "Publish",
         "publish_queue_empty": "Publish queue is empty",
         "publish_queue_title": "Publish Queue",

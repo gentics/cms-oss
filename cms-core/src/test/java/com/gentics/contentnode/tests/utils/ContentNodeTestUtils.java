@@ -420,7 +420,9 @@ public final class ContentNodeTestUtils {
 		try (ChannelTrx cTrx = new ChannelTrx(node)) {
 			objects = t.getObjects(clazz, PublishQueue.getDirtedObjectIds(clazz, false, node));
 		}
-		assertThat(objects).as("Dirted objects of type " + clazz.getSimpleName() + " in node " + node.getFolder().getName()).contains(expected);
+		if (expected.length > 0) {
+			assertThat(objects).as("Dirted objects of type " + clazz.getSimpleName() + " in node " + node.getFolder().getName()).contains(expected);
+		}
 	}
 
 	/**

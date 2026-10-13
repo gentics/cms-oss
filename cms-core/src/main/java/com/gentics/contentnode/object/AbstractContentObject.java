@@ -250,7 +250,13 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable, R
 		Property prop = (Property) resolvableProperties.get(key);
 
 		if (prop != null) {
-			return prop.get(this, key);
+			Object value = prop.get(this, key);
+			// technical dependency on id and globalId. They cannot change for an object,
+			// but the object could be replaced with a channel variant, which would somehow "change" the id or globalId of the rendered object
+			if (List.of("id", "globalId").contains(key)) {
+				addDependency(key, value);
+			}
+			return value;
 		} else {
 			return null;
 		}

@@ -1406,9 +1406,11 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 					ActionLogger.logCmd(ActionLogger.MC_HIDE, objectType, id, channelId,
 							"inherited object overwritten by localized copy " + oId + " in channel " + channelId);
 					PublishQueue.dirtObject(objectToHide, Action.HIDE, channelId);
-					DependencyObject depObj = new DependencyObject(objectToHide);
-					objectToHide.triggerEvent(depObj, new String[]{"online"}, Events.UPDATE, 0, channelId);
 				}
+
+				// trigger all properties on the object to hide in all channels
+				DependencyObject depObj = new DependencyObject(objectToHide);
+				objectToHide.triggerEvent(depObj, null, Events.UPDATE, 0, 0);
 			}
 		}
 
@@ -1422,9 +1424,11 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 				ActionLogger.logCmd(ActionLogger.MC_HIDE, objectType, id, subChannel.getId(),
 						"inherited object overwritten by localized copy " + oId + " in channel " + channelId);
 				PublishQueue.dirtObject(objectToHide, Action.HIDE, ObjectTransformer.getInt(subChannel.getId(), 0));
-				DependencyObject depObj = new DependencyObject(objectToHide);
-				objectToHide.triggerEvent(depObj, new String[]{"online"}, Events.UPDATE, 0, channelId);
 			}
+
+			// trigger all properties on the object to hide in all channels
+			DependencyObject depObj = new DependencyObject(objectToHide);
+			objectToHide.triggerEvent(depObj, null, Events.UPDATE, 0, 0);
 		}
 	}
 

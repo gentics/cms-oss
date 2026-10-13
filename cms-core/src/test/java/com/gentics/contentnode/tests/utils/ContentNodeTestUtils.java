@@ -38,9 +38,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.client.WebTarget;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.json.JSONArray;
@@ -110,6 +107,9 @@ import com.gentics.testutils.database.SQLUtilsFactory;
 import com.gentics.testutils.database.TestDatabase;
 import com.gentics.testutils.database.pool.TestDatabaseRepository;
 import com.gentics.testutils.infrastructure.EnvironmentException;
+
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.client.WebTarget;
 
 /**
  * This class is an extension of the existing NodeTestUtils
@@ -376,6 +376,85 @@ public final class ContentNodeTestUtils {
 			objects = t.getObjects(clazz, PublishQueue.getDirtedObjectIds(clazz, false, node));
 		}
 		assertThat(objects).as("Dirted objects of type " + clazz.getSimpleName() + " in node " + node.getFolder().getName()).containsOnly(expected);
+	}
+
+	/**
+	 * Assert that exactly the given set of objects were dirted for the given node (across all object types, including
+	 * folders, pages, files and images)
+	 * @param node node
+	 * @param expected list of expected objects
+	 * @throws NodeException
+	 */
+	public static void assertDirtedObjects(Node node, NodeObject... expected) throws NodeException {
+		List<Folder> folders = new ArrayList<>();
+		List<Page> pages = new ArrayList<>();
+		List<com.gentics.contentnode.object.File> files = new ArrayList<>();
+
+		for (NodeObject o : expected) {
+			if (o instanceof Folder folder) {
+				folders.add(folder);
+			} else if (o instanceof Page page) {
+				pages.add(page);
+			} else if (o instanceof com.gentics.contentnode.object.File file) {
+				files.add(file);
+			}
+		}
+
+		assertDirtedObjects(Folder.class, node, folders.toArray(new Folder[folders.size()]));
+		assertDirtedObjects(Page.class, node, pages.toArray(new Page[pages.size()]));
+		assertDirtedObjects(com.gentics.contentnode.object.File.class, node,
+				files.toArray(new com.gentics.contentnode.object.File[files.size()]));
+	}
+
+	/**
+	 * Assert that at least the given set of object were dirted for the given node
+	 * @param clazz class of the objects to check
+	 * @param node node
+	 * @param expected list of expected objects
+	 * @throws NodeException
+	 */
+	@SafeVarargs
+	public static <T extends NodeObject> void assertDirtedObjectsNonStrict(final Class<T> clazz, Node node, T... expected) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		List<T> objects = null;
+		try (ChannelTrx cTrx = new ChannelTrx(node)) {
+			objects = t.getObjects(clazz, PublishQueue.getDirtedObjectIds(clazz, false, node));
+		}
+		assertThat(objects).as("Dirted objects of type " + clazz.getSimpleName() + " in node " + node.getFolder().getName()).contains(expected);
+	}
+
+	/**
+	 * Assert that at least the given set of objects were dirted for the given node (across all object types, including
+	 * folders, pages, files and images)
+	 * @param node node
+	 * @param expected list of expected objects
+	 * @throws NodeException
+	 */
+	public static void assertDirtedObjectsNonStrict(Node node, NodeObject... expected) throws NodeException {
+		List<Folder> folders = new ArrayList<>();
+		List<Page> pages = new ArrayList<>();
+		List<com.gentics.contentnode.object.File> files = new ArrayList<>();
+
+		for (NodeObject o : expected) {
+			if (o instanceof Folder folder) {
+				folders.add(folder);
+			} else if (o instanceof Page page) {
+				pages.add(page);
+			} else if (o instanceof com.gentics.contentnode.object.File file) {
+				files.add(file);
+			}
+		}
+
+		if (!folders.isEmpty()) {
+			assertDirtedObjectsNonStrict(Folder.class, node, folders.toArray(new Folder[folders.size()]));
+		}
+		if (!pages.isEmpty()) {
+			assertDirtedObjectsNonStrict(Page.class, node, pages.toArray(new Page[pages.size()]));
+		}
+		if (!files.isEmpty()) {
+			assertDirtedObjectsNonStrict(com.gentics.contentnode.object.File.class, node,
+					files.toArray(new com.gentics.contentnode.object.File[files.size()]));
+		}
 	}
 
 	/**

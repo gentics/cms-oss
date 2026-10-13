@@ -216,7 +216,7 @@ public class MCWastebinTest {
 		Folder subChannelFolder = Trx.supply(() -> ContentNodeTestDataUtils.localize(channelFolder, subChannel));
 
 		// delete the folder
-		Trx.operate(() -> masterFolder.delete());
+		Trx.operate(() -> masterFolder.reload().delete());
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -302,7 +302,7 @@ public class MCWastebinTest {
 		File subChannelFile = Trx.supply(() -> ContentNodeTestDataUtils.localize(channelFile, subChannel));
 
 		// delete the file
-		Trx.operate(() -> masterFile.delete());
+		Trx.operate(() -> masterFile.reload().delete());
 
 		Trx.operate(() -> {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -562,8 +562,8 @@ public class MCWastebinTest {
 		Page inSubChannel = Trx.supply(() -> ContentNodeTestDataUtils.localize(page, subChannel));
 
 		// delete localized copies
-		Trx.operate(() -> inChannel.delete());
-		Trx.operate(() -> inSubChannel.delete());
+		Trx.operate(() -> inChannel.reload().delete());
+		Trx.operate(() -> inSubChannel.reload().delete());
 
 		// move the master into another folder
 		Trx.operate(() -> {
@@ -646,8 +646,8 @@ public class MCWastebinTest {
 		File inSubChannel = Trx.supply(() -> ContentNodeTestDataUtils.localize(file, subChannel));
 
 		// delete localized copies
-		Trx.operate(() -> inChannel.delete());
-		Trx.operate(() -> inSubChannel.delete());
+		Trx.operate(() -> inChannel.reload().delete());
+		Trx.operate(() -> inSubChannel.reload().delete());
 
 		// move the master into the channel
 		Trx.operate(() -> {

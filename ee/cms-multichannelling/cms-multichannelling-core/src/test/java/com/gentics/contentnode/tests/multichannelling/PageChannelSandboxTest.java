@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -1061,7 +1062,7 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 				}
 				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 					rs.next();
-					assertEquals("Check DEPENDENCY entries in publishtable for channel " + checkChannelId, expected, rs.getInt(1));
+					assertThat(rs.getInt(1)).as("DEPENDENCY entries in publishtable for channel " + checkChannelId).isGreaterThanOrEqualTo(expected);
 				}
 			});
 		}

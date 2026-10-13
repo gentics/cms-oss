@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -228,6 +227,7 @@ import com.gentics.mesh.rest.client.MeshRestClientMessageException;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
 import com.gentics.mesh.util.UUIDUtil;
+import com.gentics.mesh.util.VersionUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
@@ -5362,8 +5362,9 @@ public class MeshPublisher implements AutoCloseable {
 			for (BranchSchemaInfo schemaInfo : schemaInfoList.getSchemas()) {
 				SchemaResponse schema = schemaMap.get(schemaInfo.getName());
 				if (schema != null) {
-					if (!StringUtils.isEqual(schema.getVersion(), schemaInfo.getVersion())) {
-						// schema version not equal
+					int diffVersion = VersionUtil.compareVersions(schema.getVersion(), schemaInfo.getVersion());
+					if (diffVersion > 0) {
+						// schema is not yet updated
 						if (repair) {
 							info(String.format("Updating schema version of schema %s to %s in branch %s", schema.getName(), schema.getVersion(), branchName));
 							updateList.add(new SchemaReferenceImpl().setUuid(schema.getUuid()).setVersion(schema.getVersion()));
@@ -5372,6 +5373,12 @@ public class MeshPublisher implements AutoCloseable {
 									schemaInfo.getVersion(), schema.getName(), schema.getVersion()));
 							success.set(false);
 						}
+					} else if (diffVersion < 0) {
+						// schema is already updated
+						info(String.format("Branch %s already has newer version %s of schema %s assigned, comparing to the expected %s", branchName, schemaInfo.getVersion(), schema.getName(), schema.getVersion()));
+					} else {
+						// schema needs no update
+						debug(String.format("Branch %s already has the target version %s of schema %s assigned", branchName, schemaInfo.getVersion(), schema.getName()));
 					}
 				}
 			}

@@ -69,6 +69,32 @@ pages, because the web tier reads those from disk per request. A change to `open
 to `examples/`, to `mcp/tools.json` or to a mock's source needs the restart, because each
 mock loads the contracts once at startup.
 
+## The previous contract version under /rc3/
+
+The root URLs serve the current contract, `1.0.0-rc.4` (agreed 2026-10-12). The previous
+release candidate, `1.0.0-rc.3`, stays available under a path prefix: `/rc3/` (`/rc3/docs/`,
+`/rc3/html/`, `/rc3/client/`, `/rc3/openapi.yaml`, and its own API mock at `/rc3/api/v1`).
+Every HTML page carries a small **Contract** dropdown in its bottom right corner that switches
+to the same page in the other version. Absolute links of the second version's landing page and
+`llms.txt` are rewritten to stay under the prefix; the CMS MCP mock (`/mcp`) is shared and
+follows the root version.
+
+Sync it from a checkout of that version. The tag `contract-1.0.0-rc.3` predates the slot
+support of `sync.sh`; use the last rc.3 commit of `main`, `8bb6a39`, which carries both:
+
+```bash
+git worktree add /tmp/contract-rc3 8bb6a39
+/tmp/contract-rc3/stage1/deploy/openshift/sync.sh --slot rc3
+```
+
+It copies the checkout to `/data/rc3/stage1`, builds `/data/rc3/site` and the
+`genaix-rc3` virtualenv, and restarts only the `genaix-mock-rc3` container, so the root
+version stays up. That container has no readiness probe and waits until the slot is
+synced, so the root version is in service whether or not `/rc3/` exists. The dropdown
+appears once `/data/rc3/site` has been built. The web tier's switches are the
+`HANDOUT_SLOT*` variables of the `web` container; an empty `HANDOUT_SLOT` turns the
+second version off.
+
 ## Logs and state
 
 ```bash
@@ -121,10 +147,19 @@ Fixture credentials only. Nothing here authenticates against anything real.
 | Where | Value |
 |---|---|
 | GenAIx API, `Authorization` | `Bearer sk_gnx_mock` |
-| GenAIx API, `X-GCMS-Subject` | any opaque subject string, for example `sub_c3f1a07d9e5b4826`; required on every route except `GET /ping` |
+| GenAIx API, `X-GCMS-Subject` | any opaque subject string, for example `sub_c3f1a07d9e5b4826`; required on every route except `GET /ping`, `DELETE /subjects/{subject}` and `POST /subjects/erase` |
 | The CMS connection's credential | any string; a `invalid_`, `mismatch_`, `unreachable_`, `expired_` or `revoked_` prefix selects a failure branch |
 | MCP endpoint, `Authorization` | `Bearer cc-demo-token`, `chiefcc-demo-token` or `admin-demo-token`, one per showcase role |
 | Token provisioning, `Cookie` | the three `GCN_SESSION_SECRET` values in `mocks/cms-mcp-mock/fixtures/tokens.json` |
+
+The hosted mock is called in **direct mode**: the installation token as the bearer and
+`X-GCMS-Subject` used verbatim, which the contract allows only for an installation
+without a CMS key, as here. The proxy in front of the mocks only puts them on one origin;
+it is not the CMS custom proxy and adds no identity or installation header. In production the Workspace calls
+GenAIx in **proxied mode** through the CMS custom proxy (`/rest/proxy/genaix/...`),
+which sends `X-GenAIx-Installation` and a CMS-signed identity assertion as
+`Authorization: Bearer` instead; see `02-auth-and-context-flow.md` and section 3 of
+`09-integration-guide.md`.
 
 A session from the command line, against the deployed origin:
 

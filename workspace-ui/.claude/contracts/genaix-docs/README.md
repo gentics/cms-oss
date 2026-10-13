@@ -13,12 +13,12 @@ reference client that let it be tried out end to end.
 |---|---|---|
 | 01 | `01-architecture.md` | The architecture of the GenAIx/CMP9 integration: what GenAIx does, how it connects to the CMS, and the contracts the Workspace UI and the CMS team build against |
 | 02 | `02-auth-and-context-flow.md` | Identity, authentication and context propagation in full: actors, headers, sequence diagrams, failure modes, the external-agent path |
-| 03 | `03-genaix-api.md` | Narrative guide to `openapi.yaml`: resources, session lifecycle, the event model, the message-part registry, the workflow view, errors, and scenario walkthroughs |
+| 03 | `03-genaix-api.md` | Narrative guide to `openapi.yaml`: resources, the session as a conversation and its plans, the plan lifecycle, the event model, the message-part registry, the plan view, errors, and scenario walkthroughs |
 | 04 | `04-mcp-scope.md` | The CMS MCP server: tool groups, per-tool purpose/input/output/REST mapping/role, scenario coverage, what is explicitly excluded |
 | 05 | `05-content-rag-contract.md` | The `search_content` tool family, the search endpoint it wraps, and example questions through to answers |
 | 06 | `06-construct-devtools-requirements.md` | Construct (tag type) creation through the CMS REST API: the REST call sequence, validation and similarity checks, what remains filesystem-only |
 | 08 | `08-workflow-modules.md` | Workflows as versioned modules with quality gates: module layout, the manifest and verdict schemas, the four gate kinds, the gate catalogue per scenario, security boundaries |
-| 09 | `09-integration-guide.md` | How the API contract and the MCP specification are wired together: credential provisioning, the streaming proxy's requirements, header forwarding, timeouts |
+| 09 | `09-integration-guide.md` | How the API contract and the MCP specification are wired together: the CMS custom proxy configuration and the two caller modes, credential provisioning, header forwarding, streaming, plan cards (propose, adjust, accept), several plans in one conversation, multi-page edits and per-page publishing from the Workspace |
 
 Read 01 first regardless of role. A Workspace UI developer then wants 03, 08 and the
 `examples/` directory; a CMS integrator wants 02, 04, 05, 06 and 09.
@@ -38,9 +38,11 @@ These are normative: where a prose document and one of these disagree, the artif
 - **`mcp/tools.json`** (with `mcp/README.md`) — the machine-readable CMS MCP tool specification:
   every tool's name, input/output schema and REST mapping. What `04-mcp-scope.md` narrates.
 - **`examples/`** — `requests.http` (every GenAIx API operation as a runnable request, in
-  lifecycle order), five `.sse` transcripts (one per core scenario, plus a failure-and-recovery
-  transcript for the error and credential-recovery events, each a complete schema-valid event
-  stream), and `session-lifecycle.md` (the same ground as `03-genaix-api.md`, ordered as a
+  lifecycle order, in direct mode, with a commented proxied-mode example), `.sse` transcripts
+  (one per core scenario, a failure-and-recovery transcript for the error and
+  credential-recovery events, `s6-content-edit.sse` for a three-page `content_edit` plan, and
+  `s7-continuous-session.sse` for one conversation with three plans (since `1.0.0-rc.4`), each
+  a complete schema-valid event stream), and `session-lifecycle.md` (the same ground as `03-genaix-api.md`, ordered as a
   client's call sequence).
 
 ## Mocks and reference client
@@ -80,7 +82,9 @@ to rebuild after a contract change.
 ## Contract versions
 
 The GenAIx API (`openapi.yaml`) and the CMS MCP tool specification (`mcp/tools.json`) share the
-same version, currently `1.0.0-rc.2`: the contract is agreed by all parties and frozen for development. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
+same version line. `openapi.yaml` and `mcp/tools.json` carry `1.0.0-rc.4`, **agreed by all
+parties on 2026-10-12** and frozen for development: implementations build against it as it
+stands. A change from here is made by agreement, recorded in the changelogs, and a breaking change only where no additive form exists. A revision that touches only one of the two leaves the other at its previous number. Both files carry their own changelog; the summary below
 omits detail already there.
 
 - **`1.0.0-draft.1`** — first contract: sessions, messages, runs, the SSE event model, message
@@ -152,3 +156,41 @@ omits detail already there.
   S2 and S3 transcripts were re-recorded to the same rules (bare tool names, every declared
   step gate reported, no type 43 part in a draft, an anonymous user actor in the approval
   chain), and both mocks follow.
+- **`1.0.0-rc.3`** (agreed 2026-10-08) — GenAIx API only, no change to the MCP tool
+  specification. **Identity from the existing CMS custom proxy**: in production the proxy
+  (`/rest/proxy/{key}`, `custom_proxy` configuration, no CMS code change) sends the installation
+  token as `X-GenAIx-Installation` and a per-request RS256 identity assertion as
+  `Authorization: Bearer`; GenAIx verifies it against the CMS public key, derives the subject
+  from `sub` itself and discards the assertion, so it keeps nothing that names the person.
+  `X-GCMS-Subject` stays only as the direct mode for development, mocks and tooling on an
+  installation without a CMS key, and its signed variant is removed. `POST /subjects/erase`
+  takes the CMS login (`cms_sub`) or the subject; `PATCH` routes accept `POST` with
+  `X-HTTP-Method-Override: PATCH`, since the proxy forwards no `PATCH`. **The Workspace
+  workarounds as standard**: a typed `plan` part executes an edited plan (`409 plan_outdated`
+  when it is stale), and `content_create` and `content_edit` wait for plan approval before
+  writing; `content_edit` is an official module for one to twenty existing pages, with a
+  follow-up session linked by `continued_from`; a session publishes every page it created or
+  changed, reported per page in `WorkflowState.publications` and `publications.updated`;
+  `GET /sessions` filters by `label` and `continued_from`. Switching workflows inside one
+  session remains open.
+- **`1.0.0-rc.4`** (agreed 2026-10-12, drafted 2026-10-09) — **the session is the conversation, the plan is the
+  unit of work.** A session no longer has one workflow: it starts with the session agent, which
+  reads and answers freely and drafts plans (`draft_plan`), and each plan runs under its own
+  workflow module with its own steps, checks, gates, publications and lifecycle (`drafting`,
+  `proposed`, `accepted`, `running`, `done`, `released`, `published`, `review_requested`,
+  `discarded`, `superseded`). Only the user's own message accepts a plan (a `plan` part now
+  names its `plan_id`); at most one plan executes at a time; a CMS write outside the executing
+  plan is refused (`plan_scope_violation`); reading needs no plan, and a message sent while a
+  plan runs gets a read-only side run. Release, publish, request review, reopen and discard are
+  plan transitions (`POST /sessions/{session_id}/plans/{plan_id}/transitions`); the session
+  keeps `archive` and gains `unarchive`; `SessionStatus` is `active`, `waiting_for_input`,
+  `archived`; session credentials live until archive, deletion or expiry. New routes
+  `GET /sessions/{session_id}/plans` and `.../plans/{plan_id}`; `plan_id` on the plan-scoped
+  events; `Workflow.plan_policy`; `GET .../workflow` deprecated; `free_chat` replaced by the
+  session agent. The agent's context leads with the current plan and an uncompacted record of
+  closed plans and decisions, and `recall` returns history exactly. `mcp/tools.json` lists the
+  new GenAIx-side tools `draft_plan`, `recall`, `load_skill` and `upload_session_file`, the new CMS tool
+  `create_folder` and the normative URL source of `upload_file`; `GET /file-links/{token}` serves
+  that URL. New
+  transcript `s7-continuous-session.sse`; S1 to S6 carry the rc.4 shapes. The genaix-mock and
+  the reference client follow.

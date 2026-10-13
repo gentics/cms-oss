@@ -1,6 +1,6 @@
 # CMS MCP layer scope (cms-mcp)
 
-Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.2`), reading guide in
+Companion machine-readable specification: `mcp/tools.json` (version `1.0.0-rc.4`), reading guide in
 `mcp/README.md`. This document describes the CMS MCP server: the tools it exposes, its transport,
 authentication, error mapping and the requirements its implementation has to meet. How a particular client
 stores credentials or drives a workflow is integration, covered in `09-integration-guide.md`.
@@ -344,7 +344,8 @@ can pass a ref back unchanged.
 | `size` on list tools | default 25, max 200 | |
 | `depth` on `get_folder_tree` | default 2, max 5 | a 5-level tree of a real site already exceeds a sane context budget |
 | `maxChars` on `render_preview` HTML | default 200000 | above that the tool returns `previewUrl` only and `truncated: true` |
-| Base64 payload in `upload_file` | 5 MB hard | MCP has no binary channel; see §4.4 |
+| Base64 payload in `upload_file` | 5 MB hard (decoded) | MCP has no binary channel; see §4.4 |
+| URL source in `upload_file` | 25 MB hard; connect 10 s, total 60 s | the server fetches the file itself; see §4.4 (`1.0.0-rc.4`) |
 | Tag values in `update_page_tags` | 100 tags, 200 KB total | |
 
 Exceeding a limit is a validation error (`invalid-data`), never a silent truncation, except where a
@@ -472,7 +473,7 @@ the agent avoids asserting something it only saw in a snippet.
 | `get_template` | Learn which tags a template offers and which of them a page may fill — the precondition for building page content (S1) | `{ id, nodeId? }` | `{ template: {ref, description, markupLanguage, source?, templateTags: [{ name, constructId, constructKeyword, editableInPage, mandatory }] } }` | `GET /template/load/{id}`, `GET /template/{id}/tag` | R | any |
 | `get_file` | Inspect a file: metadata, size, mime type, online state, URL | `{ id, nodeId? }` | `{ file: {ref, fileName, description, size, mimeType, online, niceUrl, url} }` | `GET /file/load/{id}` | R | any |
 | `get_image` | Inspect an image, including dimensions, for picking a hero image (S1) | `{ id, nodeId? }` | `{ image: {ref, fileName, description, size, mimeType, width, height, online, url} }` | `GET /image/load/{id}` | R | any |
-| `get_page_versions` | Version history with editor and timestamp, for "what changed", "who changed it", and to pick a version to restore (S2) | `{ id, nodeId?, size? }` | `{ ref, currentVersion?, publishedVersion?, versions: [{ number, timestamp, editor: {id, login}, published? }] }` | `GET /page/load/{id}?versioninfo=true` | R | any |
+| `get_page_versions` | Version history with editor and timestamp, for "what changed", "who changed it", and to pick a version to restore (S2); the base version of a page `content_edit` changes | `{ id, nodeId?, size? }` | `{ ref, currentVersion?, publishedVersion?, versions: [{ number, timestamp, editor: {id, login}, published? }] }` | `GET /page/load/{id}?versioninfo=true` | R | any |
 | `render_preview` | Render the page the way the CMS will publish it, or produce a URL a client can iframe (S1 preview, S3 construct preview) | `{ pageId, nodeId?, mode?: view\|edit, version?, maxChars? }` | `{ previewUrl, html?, truncated, tags?: [{name, constructKeyword}], renderedAt }` | `GET /page/render/{id}` (`edit`, `version`, `nodeId`, `links`), `GET /devtools/preview/page/{id}` for raw HTML | R | any |
 
 Notes.
@@ -499,6 +500,7 @@ target folder; the CMS decides per object.
 | Tool | Purpose | Input (summary) | Output (summary) | CMS endpoint(s) | R/W | Roles |
 | --- | --- | --- | --- | --- | --- | --- |
 | `create_page` | Create an **offline draft** page in a folder from a template (S1 step "create unpublished draft") | `{ folderId, templateId, name, language, nodeId?, fileName?, description?, niceUrl?, failOnDuplicate?: true, idempotencyKey? }` | `{ page: {...as get_page...}, created: true }` | `POST /page/create` (`PageCreateRequest {folderId, templateId, pageName, language, nodeId, fileName, description, niceUrl, failOnDuplicate}`) | **W** | CC |
+| `create_folder` | Create a folder below a parent folder, in the parent's node, when the user asks for one that does not exist yet (S1: a folder for the new pages or files). Since `1.0.0-rc.4` | `{ parentFolderId, name, publishDir?, description?, idempotencyKey? }` | `{ folder: {ref, parentFolderId, publishDir, description}, created: true }` | `POST /folder/create` (`FolderCreateRequest {motherId, nodeId, name, publishDir, description, failOnDuplicate: true}`) | **W** | CC |
 | `update_page_tags` | Fill or change the content blocks of a page in one call: load with lock, set the named parts, save, unlock | `{ pageId, nodeId?, tags: {tagName: {constructKeyword?, properties: {partKeyword: value}}}, createMissing?: true, deleteTags?: [name], createVersion?: true, idempotencyKey? }` | `{ page, changedTags: [name], createdTags: [name], deletedTags: [name] }` | `GET /page/load/{id}?update=true` then `POST /page/save/{id}` (`PageSaveRequest {page, unlock: true, createVersion, delete}`) | **W** | CC |
 | `add_page_tag` | Add one new content block of a given construct to a page, returning its generated tag name | `{ pageId, constructKeyword?, constructId?, tagName?, copyFrom?: {pageId, tagName}, idempotencyKey? }` | `{ tag: {name, constructId, constructKeyword, properties}, pageRef }` | `POST /page/newtag/{id}?constructId=\|keyword=` (`ContentTagCreateRequest`), `POST /page/newtags/{id}` for several | **W** | CC |
 | `update_page_properties` | Change page metadata without touching content: name, filename, description, nice URL, priority, template | `{ pageId, nodeId?, name?, fileName?, description?, niceUrl?, priority?, templateId?, deriveFileName?, idempotencyKey? }` | `{ page }` | `GET /page/load/{id}?update=true` then `POST /page/save/{id}` | **W** | CC |
@@ -525,9 +527,24 @@ Notes.
   reading the page back with `get_page`.
 - `publish_page` reads the resulting state back and reports the branch that happened, because the CMS decides
   between direct publish and the approval workflow and the agent cannot predict it.
-- `upload_file`: MCP carries no binary channel, so `source.kind: "base64"` is capped at **5 MB** and
-  `source.kind: "url"` has `cms-mcp` fetch the file server-side, which needs a host allowlist, HTTPS only, a
-  25 MB cap and no redirects (§11).
+- `create_folder` (`1.0.0-rc.4`) requires the folder permission `create` on the parent folder and always sends
+  `failOnDuplicate: true`, so a folder of the same name in the parent is refused as `invalid-data` naming
+  `name` instead of a second folder being created; `publishDir` defaults to a name the CMS derives. A missing
+  or invisible parent is `not-found`, a missing permission `permission-denied` naming `create`, and a channel
+  is refused like every other write. The tool exists so an agent can follow "put it in a new folder" without a
+  human detour; node creation stays excluded (§7).
+- `upload_file`: MCP carries no binary channel, so `source.kind: "base64"` is capped at **5 MB** decoded, and
+  `source.kind: "url"` has `cms-mcp` fetch the file itself. The URL source is normative since `1.0.0-rc.4`:
+  `https` only (plain `http` only for `localhost` or `127.0.0.1` in development); the host must be on the
+  installation's allowlist, CMS configuration `mcp.upload_url_hosts` (environment `MCP_UPLOAD_URL_HOSTS`),
+  comma-separated host names with an optional `:port`, and an empty allowlist refuses every URL source; no
+  redirects are followed; connect timeout 10 s, total 60 s; at most **25 MB**, enforced on `Content-Length`
+  and by a bounded read; an `expiresAt` in the past is refused without fetching. A refused or failed URL
+  source is a tool error whose message starts with `URL source refused: <reason>` (not allowlisted, not
+  https, expired, too large, fetch failed with status N), after which a client may retry with base64. The
+  fetched bytes take the same path as base64 (`createSimple`) and the result is unchanged. GenAIx passes a
+  short-lived signed link to a session file (`03-genaix-api.md` §10), so its host is what an administrator
+  allowlists (`09-integration-guide.md` §4).
 - `delete_page` maps to `POST /page/delete/{id}`, which moves the page to the wastebin. The hard-delete route
   is not exposed.
 
@@ -635,55 +652,58 @@ Notes.
 ## 5. Scenario coverage matrix
 
 Every tool traces to a scenario and every scenario is covered end to end. S1 content creation from source
-material, S2 content research and reporting, S3 construct creation, S4 optional administration.
+material, S2 content research and reporting, S3 construct creation, S4 optional administration. The **Edit**
+column is the `content_edit` workflow module (`1.0.0-rc.3`), which edits existing pages and has no showcase
+scenario of its own; it uses only tools the scenarios already need, so the tool set is unchanged.
 
-| Group | Tool | S1 | S2 | S3 | S4 |
-| --- | --- | :-: | :-: | :-: | :-: |
-| identity | `whoami` | x | x | x | x |
-| identity | `get_permissions` | x | x | x | x |
-| identity | `list_nodes` | x | x | x | x |
-| search | `search_content` | x | x | x | |
-| search | `find_similar` | x | x | x | |
-| search | `get_related` | x | x | | |
-| search | `count_content` | | x | | |
-| content_read | `get_folder_tree` | x | x | | |
-| content_read | `list_folder_items` | x | x | | |
-| content_read | `get_page` | x | x | | |
-| content_read | `get_page_tags` | x | x | | |
-| content_read | `get_template` | x | | x | |
-| content_read | `get_file` | x | x | | |
-| content_read | `get_image` | x | | | |
-| content_read | `get_page_versions` | | x | | |
-| content_read | `render_preview` | x | | x | |
-| content_write | `create_page` | x | | x | |
-| content_write | `update_page_tags` | x | | x | |
-| content_write | `add_page_tag` | x | | x | |
-| content_write | `update_page_properties` | x | | | |
-| content_write | `publish_page` | x | | | |
-| content_write | `take_offline` | | x | | |
-| content_write | `delete_page` | | x | | |
-| content_write | `translate_page` | x | | | |
-| content_write | `restore_page_version` | | x | | |
-| content_write | `upload_file` | x | | | |
-| constructs | `list_constructs` | x | | x | |
-| constructs | `get_construct` | x | | x | |
-| constructs | `create_construct` | | | x | |
-| constructs | `update_construct` | | | x | |
-| constructs | `ensure_construct_category` | | | x | |
-| constructs | `list_construct_categories` | | | x | |
-| constructs | `assign_construct_to_nodes` | | | x | |
-| constructs | `add_construct_to_package` | | | x | |
-| constructs | `list_packages` | | | x | |
-| constructs | `list_part_types` | | | x | |
-| constructs | `list_datasources` | | | x | |
-| constructs | `get_datasource` | | | x | |
-| admin | `list_users` | | | | x |
-| admin | `list_groups` | | | | x |
-| admin | `get_group_permissions` | | | | x |
-| admin | `create_user` | | | | x |
-| admin | `assign_user_to_group` | | | | x |
-| admin | `remove_user_from_group` | | | | x |
-| admin | `preview_permission_impact` | | | | x |
+| Group | Tool | S1 | S2 | S3 | S4 | Edit |
+| --- | --- | :-: | :-: | :-: | :-: | :-: |
+| identity | `whoami` | x | x | x | x | x |
+| identity | `get_permissions` | x | x | x | x | x |
+| identity | `list_nodes` | x | x | x | x | x |
+| search | `search_content` | x | x | x | | x |
+| search | `find_similar` | x | x | x | | |
+| search | `get_related` | x | x | | | |
+| search | `count_content` | | x | | | |
+| content_read | `get_folder_tree` | x | x | | | |
+| content_read | `list_folder_items` | x | x | | | |
+| content_read | `get_page` | x | x | | | x |
+| content_read | `get_page_tags` | x | x | | | x |
+| content_read | `get_template` | x | | x | | x |
+| content_read | `get_file` | x | x | | | |
+| content_read | `get_image` | x | | | | |
+| content_read | `get_page_versions` | | x | | | x |
+| content_read | `render_preview` | x | | x | | x |
+| content_write | `create_page` | x | | x | | |
+| content_write | `create_folder` | x | | | | |
+| content_write | `update_page_tags` | x | | x | | x |
+| content_write | `add_page_tag` | x | | x | | x |
+| content_write | `update_page_properties` | x | | | | x |
+| content_write | `publish_page` | x | | | | x |
+| content_write | `take_offline` | | x | | | |
+| content_write | `delete_page` | | x | | | |
+| content_write | `translate_page` | x | | | | |
+| content_write | `restore_page_version` | | x | | | |
+| content_write | `upload_file` | x | | | | |
+| constructs | `list_constructs` | x | | x | | x |
+| constructs | `get_construct` | x | | x | | x |
+| constructs | `create_construct` | | | x | | |
+| constructs | `update_construct` | | | x | | |
+| constructs | `ensure_construct_category` | | | x | | |
+| constructs | `list_construct_categories` | | | x | | |
+| constructs | `assign_construct_to_nodes` | | | x | | |
+| constructs | `add_construct_to_package` | | | x | | |
+| constructs | `list_packages` | | | x | | |
+| constructs | `list_part_types` | | | x | | |
+| constructs | `list_datasources` | | | x | | |
+| constructs | `get_datasource` | | | x | | |
+| admin | `list_users` | | | | x | |
+| admin | `list_groups` | | | | x | |
+| admin | `get_group_permissions` | | | | x | |
+| admin | `create_user` | | | | x | |
+| admin | `assign_user_to_group` | | | | x | |
+| admin | `remove_user_from_group` | | | | x | |
+| admin | `preview_permission_impact` | | | | x | |
 
 Read per column to check sufficiency. **S1** identifies the user and their nodes, avoids duplicates, derives
 folder, template and language, restricts itself to constructs allowed in the target node, creates an offline
@@ -695,6 +715,13 @@ select part should use (`list_part_types`, `list_datasources`, `get_datasource`)
 its template, parts and node assignment, proves it renders through a scratch page, and promotes it into a
 package. **S4** checks the user does not exist,
 finds the group carrying the role, previews the impact, creates the user in the group and verifies afterwards.
+**Edit** reads each page with `get_page` and `get_page_tags` and records its base version with
+`get_page_versions`, may look for related content with `search_content`, checks constructs against the template
+and the node's catalogue (`get_template`, `list_constructs`, `get_construct`), applies the approved plan with
+`update_page_tags`, `add_page_tag` and `update_page_properties`, previews each page with `render_preview`, and
+publishes each page with `publish_page`, which reports per page whether it was published or queued for approval.
+Its release gate `base_version_current` calls `get_page_versions` again to refuse a release over another
+user's newer version.
 
 Two scenario steps have no CMS tool by design. The steps that are not CMS operations at all (showing a plan,
 asking for feedback, checking editorial guidelines, proving verbatim text, compiling a Handlebars template)
@@ -749,7 +776,7 @@ agent's toolbox small enough to behave.
 | **Bulk and batch writes** | One object per write call, so the audit trail and the failure mode stay legible (§3.4). |
 | **Permission bit writes** (`POST /perm/...`, `POST /group/{id}/perms/...`) | Role grants via group membership are reversible and legible; editing permission bits is neither (§4.6). |
 | **Page and template migration** (`/migration/*`) | Bulk re-pointing of pages between constructs has site-wide effect and no undo. |
-| **Hard delete, wastebin purge, node and folder creation** | Destructive or structural. `delete_page` moves to the wastebin and stops there. The agent picks an existing folder, which is what a content team expects anyway. |
+| **Hard delete, wastebin purge, node creation** | Destructive or structural. `delete_page` moves to the wastebin and stops there. Folder creation is in scope since `1.0.0-rc.4` through `create_folder` (§4.4), one folder per call with duplicates refused; folder deletion and moves stay out. |
 | **Publishing another user's queued page** (`POST /page/pubqueue/approve`) | Approval is the human gate the showcase demonstrates, not automates. |
 | **MCP prompts** | No server-side prompt templates. Prompting belongs to the client; a CMS-authored prompt would be a second, invisible place where agent behaviour is defined. |
 
@@ -870,9 +897,11 @@ and `com.networknt:json-schema-validator`.
 The remaining Phase One tools are conveniences whose data is reachable through the minimum set:
 `find_similar` and `get_related` can be approximated with `search_content`, `get_page_tags`, `get_file`,
 `get_image` and `get_page_versions` through `get_page` and `search_content`, `upload_file` is needed only for
-a hero image, `list_datasources` and `get_datasource` only if the demo construct has a select part, and
+a hero image, `create_folder` only when the user asks for a folder that does not exist yet (`1.0.0-rc.4`), `list_datasources` and `get_datasource` only if the demo construct has a select part, and
 `translate_page`, `update_page_properties`, `add_construct_to_package` and `list_packages` serve steps
-outside the core story.
+outside the core story. The `content_edit` module (`1.0.0-rc.3`) runs on the minimum surface plus
+`get_page_tags`, `get_page_versions` and `update_page_properties`; without the latter it can change content
+but not page metadata.
 
 **Full surface** adds per-user dynamic `tools/list`, the `admin` group and S4, those conveniences, MCP
 resources (`cms://page/{id}` and siblings) for clients that prefer resources to tools, the `idempotencyKey`
@@ -934,13 +963,13 @@ exist to prove the showcase scenarios are covered. The CMS generates neither.
 ### 10.1 Two kinds of tool, one mechanism
 
 **Generated tools** carry the annotation on an existing REST resource method and are a one-to-one mapping. No
-new code, no separate schema to maintain: the tool exists because the method does. 31 of the 53 tools are
+new code, no separate schema to maintain: the tool exists because the method does. 31 of the 54 tools are
 this kind.
 
 **Composite tools** are ordinary methods in the `cms-mcp` module carrying the same annotation, whose body
 calls two or three resource implementations inside one transaction, with the user context taken from the
 bearer token. They exist where a single REST call cannot express what an agent needs to do safely, and there
-are 22 of them.
+are 23 of them.
 
 ```java
 @McpTool(name = "update_page_tags", group = "content_write", access = WRITE,
@@ -1016,7 +1045,8 @@ orchestration that matters most belongs in composites rather than in each client
 | `update_page_tags` | Load with lock, optional tag creation, save with unlock, read-back — one transaction |
 | `update_page_properties` | Load with lock, field merge, save with unlock — one transaction |
 | `publish_page` | `POST /page/publish/{id}` plus the state read-back that tells published from queued for approval |
-| `upload_file` | Base64 decode or server-side fetch, then the multipart create call |
+| `create_folder` | Check `create` on the parent folder, `POST /folder/create` with `failOnDuplicate: true`, then read the folder back — one transaction (`1.0.0-rc.4`) |
+| `upload_file` | Base64 decode or server-side fetch from an allowlisted host, then the multipart create call |
 | `create_construct` | Synthesises the whole `Construct` body, including the Handlebars part at `typeId` 43, and links the nodes in the same call |
 | `update_construct` | Read, merge the caller's changes over the current construct, then full replacement `PUT` |
 | `ensure_construct_category` | Category lookup by name, then create when absent |
@@ -1058,7 +1088,7 @@ are needed for individual tools or scenarios.
    model depends on, because without it every expired session leaves a dead token row for someone to clean up.
    `GET /rest/admin/token` should expose the token name, so a client can find and replace a token of its own
    name after an interrupted run.
-6. **Make token creation cheap enough to do often.** One token per workflow session means creation is a
+6. **Make token creation cheap enough to do often.** One token per session means creation is a
    routine call on the hot path of starting work, not an administrative act: no unnecessary write
    amplification, no full-table scan, no cost that grows with the number of tokens a user has accumulated.
 7. **Keep token lookup a hash lookup.** Resolving a bearer token to a user on every MCP request must stay a
@@ -1078,8 +1108,10 @@ are needed for individual tools or scenarios.
     `icon` field; the REST `Construct` and `Part` schemas do not.
 13. **Confirm `/devtools/preview/page/{id}` for a non-Editor-UI client**, and define the lifetime and
     authentication model of a `previewUrl` a client will put in an iframe (§4.3).
-14. **Decide on the outbound fetch for `upload_file`**: a configured host allowlist, HTTPS only, a 25 MB cap
-    and no redirects (§4.4).
+14. **Implement the outbound fetch for `upload_file`** — decided in `1.0.0-rc.4`: the allowlist
+    `mcp.upload_url_hosts` (environment `MCP_UPLOAD_URL_HOSTS`, empty by default), HTTPS only, no redirects,
+    10 s connect and 60 s total timeouts, a 25 MB cap, `expiresAt` honoured, and `URL source refused:` errors
+    (§4.4).
 15. **Provide a signal for the publish branch**, so `publish_page` can report online versus queued for
     approval more cheaply than `GET /page/load/{id}?workflow=true` plus `GET /page/pubqueue`.
 16. **Decide whether a permission simulation endpoint is worth adding.** `preview_permission_impact` composes

@@ -3,10 +3,18 @@
 How a client drives the GenAIx API v1 from start-up to a published page. Read this
 next to `requests.http`, which contains the same sequence as runnable requests, and
 `s1-content-create.sse`, which is the event stream the middle of this sequence
-produces.
+produces. Section 11 continues past the first page: accepting a plan, a second plan in the
+same conversation that edits pages, and publishing them per plan (`s7-continuous-session.sse`,
+`s6-content-edit.sse`).
+
+This describes `1.0.0-rc.4` (agreed 2026-10-12). Its one idea: **a session is one conversation, and the work it carries
+out is a sequence of plans.** Each plan runs under one workflow module and has its own steps,
+checks, gates, derived settings, previews, publications and lifecycle. A session has no
+workflow of its own any more; it starts with the **session agent**, which reads and answers
+freely and drafts a plan when the user asks for a change.
 
 Sections 1 and 1b cover identity and MCP connections. The caller is a pseudonymous
-**subject**, the CMS is one **connector type**, a subject holds **connections** of that type
+**subject**, derived from a CMS-signed assertion in production, the CMS is one **connector type**, a subject holds **connections** of that type
 with URLs the client supplies, and the client registers each connection's credential.
 
 Integration specifics, such as how a particular client obtains a credential from the CMS and
@@ -22,57 +30,89 @@ the client's decision.
 
 ## 1. Who the caller is
 
-Two things identify a request, and there is nothing else.
+Two things identify a request, the installation and the user, and there is nothing else. How
+they travel depends on the **caller mode** (`1.0.0-rc.3`), told apart by whether
+`X-GenAIx-Installation` is present.
 
-`Authorization: Bearer sk_gnx_...` is the **installation token**. It identifies one GenAIx
-installation, not a person.
+**Direct mode**, which this walkthrough uses, is for development, the mocks, tooling and the
+conformance suite:
 
-`X-GCMS-Subject` is the **only** identity header, required on every user route. Its value is
-an opaque, installation-scoped pseudonymous subject: the owner key of every session, file,
-connection and authorization, and nothing GenAIx can resolve to a person. No user id, login,
-display name or group list is sent, and none is stored. `GET /me` therefore answers
-`user: {subject}` and nothing more, and a client that wants to show who is signed in already
-knows.
+- `Authorization: Bearer sk_gnx_...` is the **installation token**. It identifies one GenAIx
+  installation, not a person.
+- `X-GCMS-Subject` carries the **subject**, required on every user route and used verbatim:
+  an opaque, installation-scoped pseudonym, the owner key of every session, file, connection
+  and authorization.
 
-The value may instead be a compact JWS assertion carrying `sub`, `iss`, `iat` and a short
-`exp`, and the producing side may put more into that payload. GenAIx does not decode
-anything beyond those claims. An installation configured with the signing key has GenAIx
-verify the signature and expiry and reject an unsigned, mis-issued or stale value with `401`
-and `genaix_code: identity_invalid`; an installation with no key takes the header as sent.
-Either way GenAIx trusts it only because the installation token authenticated the caller.
+Direct mode is accepted only by an installation **without** a CMS key configured. An
+installation with one answers a direct request on a user route with `401` and
+`genaix_code: identity_invalid`.
+
+**Proxied mode** is production, the path the Workspace UI takes. The browser calls the CMS's
+existing custom proxy, which adds two headers of its own and replaces any the browser sent
+under those names:
+
+- `X-GenAIx-Installation: sk_gnx_...`, the installation token, a static header in the proxy
+  configuration;
+- `Authorization: Bearer <CMS identity assertion>`, an RS256 JWT the CMS signs per request.
+
+GenAIx verifies the assertion against the installation's configured CMS public keys (`iss`
+must be the expected issuer, `iat` within 60 seconds, `exp` and `nbf` honoured when present)
+and derives the subject from its `sub` claim with a keyed one-way hash under a secret only
+GenAIx holds. The same login therefore is the same subject from any device. The assertion
+lives for the request only: never stored, logged, emitted or passed to the model. Of its
+claims GenAIx uses `sub` alone, and it keeps nothing that names the person. `X-GCMS-Subject`
+is ignored on a proxied request. A proxied request on a user route without an assertion is
+`400 subject_missing`; an assertion that fails verification, or a proxied request to an
+installation without a CMS key, is `401 identity_invalid`.
+
+Everything after this section looks the same in both modes: only the headers differ. No user
+id, login, display name or group list reaches the API's responses, and none is stored.
+`GET /me` therefore answers `user: {subject}` and nothing more, and a client that wants to show
+who is signed in already knows.
+
+The proxy forwards only `DELETE`, `GET`, `HEAD`, `OPTIONS`, `POST` and `PUT`. Every `PATCH`
+route therefore also accepts `POST` with `X-HTTP-Method-Override: PATCH`, with the same
+meaning; this walkthrough writes `PATCH`, and a proxied client sends the override instead.
 
 Sessions are owned by (installation token, subject). An unknown or foreign-installation
 session id is `404`; a session of another subject under the same installation is `403`.
 
-`DELETE /subjects/{subject}` erases every session, message, event, file, connection and
-authorization of one subject. The installation calls it when the person behind that subject
-is removed, which is the only way it can start: GenAIx cannot map a person to a subject. It
-takes the installation token alone and no identity header, because the subject is in the
-path.
+`DELETE /subjects/{subject}` and `POST /subjects/erase` erase every session, message, event,
+file, connection and authorization of one subject. The installation calls one of them when it
+deletes the user behind that subject, which is the only way erasure can start: GenAIx cannot
+map a person to a subject. Both are installation-level: they take the installation token in
+either header and no identity. `POST /subjects/erase` takes `{"cms_sub": "<login as in the
+assertion's sub>"}` or `{"subject": "..."}`, so the CMS can erase by login without putting it
+in a URL.
 
 ## 1a. Start-up: three calls before any session exists
 
-1. `GET /ping` with the installation bearer token only, to check that the token works. It is
-   the only user-facing route that does not need `X-GCMS-Subject`.
-2. `GET /me` with the installation token plus the subject header. The answer decides
+1. `GET /ping` with the installation token only, to check that the token works. Like the two
+   erasure routes it is installation-level and needs no identity.
+2. `GET /me` with the installation token plus the identity (the subject header here, the
+   assertion when proxied). The answer decides
    what a client can offer:
-   - `capabilities.workflows` - which workflows the caller may start. The narrowing is
+   - `capabilities.workflows` - which workflows a plan of the caller may run under. The narrowing is
      server-side and combines whether an `authorized` connection covers each required
      connector, the module's own rules and the installation config. Group membership plays
      no part: GenAIx is not told which groups the caller is in, and the target system
      enforces permission on every tool call anyway. A client cannot recompute the list and
      must offer exactly these ids. Re-read them after registering a credential, because a
-     connector that starts working widens the list.
+     connector that starts working widens the list. The session agent is never in it: it is
+     not a catalogue entry, and it is always there (since `1.0.0-rc.4`; `free_chat` was its
+     predecessor and is gone). Without an authorized `cms` connection it answers, but cannot
+     read the CMS.
    - `capabilities.upload_max_bytes` and `upload_media_types` - what an upload may be,
      so the client rejects an oversized file before sending 40 MB.
    - `mcp_connections` - one line per connection this user holds, with its
      `authorization_status`. `authorized` means the agent can act through it. Anything else
      (`unauthorized`, `pending`, `invalid`, `expired`) means it cannot, until a credential
      is registered. An empty list is normal for a new subject. See section 1b.
-3. `GET /workflows` once, cached. Each entry is a workflow **module**: its `version`, the
-   `inputs_schema` it expects, the `required_connectors` it binds, the
+3. `GET /workflows` once, cached. Each entry is a workflow **module** a plan can run under:
+   its `version`, the `inputs_schema` it expects, the `required_connectors` it binds, the
    `tool_groups` it may use, the `steps_template` to show before the agent reports
-   anything, and the `quality_gates` that will be enforced.
+   anything, the `quality_gates` that will be enforced, `plan_approval` and `plan_policy`
+   (section 11). No client picks one before a conversation starts.
 
 ## 1b. MCP connections: how GenAIx comes to act as the user
 
@@ -106,9 +146,10 @@ authorization resource as `{"auth_type": "bearer", "token": "...", "token_name":
 
 GenAIx verifies the credential against the connection's URL **before** storing it, so a wrong
 or foreign token is `422` with `mcp_authorization_rejected` and a previously working
-credential is left alone. Read the authorization back afterwards: `identity` carries the
-target system's own answer to "who am I", which is the only reliable confirmation that the
-credential belongs to the user you think it does, on the instance you think it is.
+credential is left alone. GenAIx verifies with the server's `whoami` and keeps the answer to
+itself (since `1.0.0-rc.2`); a client that wants to confirm the credential belongs to the user
+it thinks, on the instance it thinks, asks the target system itself with that token before
+registering it.
 
 ### URL rules and reachability
 
@@ -127,15 +168,15 @@ or `default` keeps it.
 ### Which connection a session uses
 
 `context.connection_ids` names them. Omitted, a session uses the user's `default` connection
-of each connector type the workflow requires. Either way a session **binds one connection per
-required type**.
+of each connector type its plans' workflows require. Either way a session **binds one connection
+per required type**.
 
 `Workflow.required_connectors` is a list of `{type, optional}` objects, the same shape the
 module manifest uses (`schemas/workflow-manifest.schema.json`). A type with `optional: true`
 is used when an authorized connection exists and skipped when it does not, so the workflow
-still runs; that is how `free_chat` can reach the CMS without requiring it. A type that is not
-optional must be covered by an authorized connection, or the workflow is absent from
-`capabilities.workflows`.
+still runs. A type that is not optional must be covered by an authorized connection, or the
+workflow is absent from `capabilities.workflows`. The session agent needs no entry here: it
+reads through the session's `cms` connection when that one is authorized.
 
 `CmsObjectRef.connection_id` records which connection an object came from, so an object stays
 unambiguous when a user is connected to several instances.
@@ -147,18 +188,20 @@ obtains the token from the target system and registers it.
 
 **Per session** is the integrated path, at
 `PUT /sessions/{id}/authorizations/{connection_id}`. The client creates one token per
-workflow session, names it after the session, gives it the installation's session
+session, names it after the session, gives it the installation's session
 authorization lifetime (24 hours by default) and asks the target system to delete the token
 row when it expires; the token request fields are `{name, expires, pruneOnExpiry}`. GenAIx
 verifies it live, stores it encrypted and bound to the session, and uses it only for that
-session's runs. Sending it on `POST /sessions` as `authorizations[]`, next to `message`,
-makes the whole start one round trip.
+session's runs, whatever plan they work for. Sending it on `POST /sessions` as
+`authorizations[]`, next to `message`, makes the whole start one round trip.
 
-The credential dies with the task. GenAIx stops using it and deletes it when the session
-reaches `published`, `discarded` or `archived`, when the client deletes it, or when
-`expires_at` passes. It is kept through `released` and `review_requested`, because
-publishing and requesting review still act on the CMS. Nothing long-lived is therefore
-stored, and a GenAIx-side incident reaches only the sessions open at the time.
+The credential lives as long as the conversation. GenAIx stops using it and deletes it when
+the session is archived or deleted, when the client deletes it, or when `expires_at` passes
+(since `1.0.0-rc.4`; before, also when the session was `published` or `discarded`). A plan's
+transitions never touch it: the next plan of the conversation acts with the same credential,
+and a conversation that outlives the token's lifetime registers a fresh one. Nothing
+long-lived is therefore stored, and a GenAIx-side incident reaches only the sessions open at
+the time.
 
 **Standing, per user**, at `PUT /mcp/connections/{id}/authorization`, is optional and stays
 for the non-integrated GenAIx UI and for tooling, where nothing mints a token per task. It
@@ -185,8 +228,17 @@ credential. `resource`, `authorization_servers` and `scopes_supported` on a conn
 
 ## 2. Create the session
 
-`POST /sessions` with `workflow`, `title` and `context`. The workflow id is immutable
-afterwards. There are two flows and both are supported.
+`POST /sessions` with `title` and `context`, and usually nothing else: without `workflow`
+the session starts with the session agent, which reads, answers, and drafts a plan when the
+user asks for a change. That is the normal start of a conversation (since `1.0.0-rc.4`).
+`workflow` is **optional** and meant for a CMS context action such as "Create page here": with
+it, the session's first plan is drafted at once under that module and the first message goes
+to that plan's proposing run. Either way the session holds no workflow of its own afterwards;
+each plan names its module in `Plan.workflow`, and a `PATCH` carrying `workflow` is `422`.
+
+Optional `labels` tag the session for the client's own grouping, and an optional
+`continued_from` names an earlier conversation this one builds on (section 11.4). There are
+two flows and both are supported.
 
 ### One call, when the turn has no attachments
 
@@ -234,7 +286,7 @@ tools instead of guessing from a string.
 ### The user turn is a list of typed parts
 
 `parts` is the canonical structure of a user message: the elements the user composed, in
-order. Six types, and the registry is closed.
+order. Seven types, and the registry is closed.
 
 | Part | Carries | Renders as | What GenAIx does with it |
 |---|---|---|---|
@@ -244,6 +296,7 @@ order. Six types, and the registry is closed.
 | `file_ref` | `file_id`, `mode` | `[[file name]]` | attaches the session file; `mode: verbatim` puts it under the same gate |
 | `setting` | `key`, `value`, `label` | `#[key: value]` | makes it a constraint on the run, reflected in `derived_settings` |
 | `filter` | `label`, `criteria` | `#[label]` | passes `criteria` into the search tool inputs |
+| `plan` | `plan` (`plan_id`, `based_on_version`, `items?`) | a numbered list of the item labels, or `Plan accepted as proposed.` without `items` | the only way to accept a plan: without `items` as proposed, with `items` as the user adjusted it (section 11) |
 
 `content` is the plain rendering of the parts: they are concatenated in order with
 nothing inserted between them, and a literal `[` or `]` inside a label, a key, a value, a
@@ -280,14 +333,41 @@ Two ways:
 | Several concurrent clients | one stream serves all of them | one stream each |
 | Recommended for | long-lived interactive clients | command-line clients, the reference client |
 
-Only one run may be active per session. A second message while a run is going is `409`
-with `genaix_code: run_already_active`; cancel first with
-`POST /sessions/{id}/runs/{run_id}/cancel`, which is idempotent. A message whose
-`reply_to_interaction` names the waiting run's pending interaction is the exception: it is
-accepted and joins the run it unblocks.
+### Who answers, and runs side by side
 
-`options.mode: plan_only` makes the agent produce a plan and stop without writing to
-the CMS. This is the "show me the plan first" path from the showcase scenarios.
+A message goes to the **session agent** unless it accepts a plan or answers a plan run's
+interaction (since `1.0.0-rc.4`). The session agent reads and answers; when the user asks for
+a change it drafts a plan, and that plan's module proposes it in a run of its own. `Run.mode`
+says which kind of run a run is, and `Run.plan_id` which plan it works for:
+
+| `mode` | Run | `plan_id` |
+|---|---|---|
+| `session` | the session agent: reads, answers, drafts a plan; no CMS write tool | `null` |
+| `side` | the session agent, read-only, while a plan's run is active | `null` |
+| `propose` | a plan's proposing run: reads and plans, every write withheld | the plan |
+| `execute` | a plan's run after the user accepted it: the only mode with CMS write tools | the plan |
+| `transition` | the run of a plan's `publish` or `request_review` | the plan |
+
+**Reading never waits for a plan.** While a plan's run is active, a message starts a **side
+run**: the session agent with read tools and `recall` only, named by `Session.side_run_id`
+next to the plan's `active_run_id`, so the user can keep asking while long work runs. At most
+one side run at a time. A message that accepts a plan, or answers the plan run's interaction,
+is never a side run.
+
+`409` with `genaix_code: run_already_active` is left for three cases: a message while the
+session agent's own run is going, a second side run, and a message that accepts a plan while a
+plan's run is active (at most one plan executes). Wait, or cancel with
+`POST /sessions/{id}/runs/{run_id}/cancel`, which is idempotent. A message whose
+`reply_to_interaction` names the waiting run's pending interaction is always accepted and joins
+the run it unblocks. A plan's status never blocks a message; an archived session does, with
+`409` and `session_archived`.
+
+`options.mode: plan_only` makes the agent produce a plan and stop without writing to the CMS,
+for any workflow. A module with **plan approval** (`content_create`, `content_edit`;
+`1.0.0-rc.3`) does that on its own: its proposing run ends at the proposed plan, and only the
+user's `plan` part accepts it, as proposed (without `items`) or adjusted. A module
+without a CMS write tool (`content_research`) needs no acceptance at all, because reading is
+free. Section 11 walks through it.
 
 ## 4. Follow the stream
 
@@ -299,16 +379,33 @@ the CMS. This is the "show me the plan first" path from the showcase scenarios.
 - Reconnect with `?after=<last seq>` or `Last-Event-ID`. The server replays the
   persisted events you missed and then follows live. `after=0` replays everything.
 - `410` with `events_pruned` means the replay window has moved past your position.
-  Re-hydrate from `GET /sessions/{id}/messages` and `GET /sessions/{id}/workflow`, then
-  reconnect with `after=0`. In Phase One this cannot happen: events are kept for the life
-  of the session and never pruned, and the status code is reserved so pruning can be added
-  later without a breaking change. An implementation that prunes must keep at least seven
-  days and must publish its window as `capabilities.events_retention_hours` in `GET /me`.
-  An absent field means no pruning.
+  Re-hydrate from `GET /sessions/{id}/messages`, `GET /sessions/{id}/plans` and the plan
+  snapshots, then reconnect with `after=0`. In Phase One this cannot happen: events are kept
+  for the life of the session and never pruned, and the status code is reserved so pruning
+  can be added later without a breaking change. An implementation that prunes must keep at
+  least seven days and must publish its window as `capabilities.events_retention_hours` in
+  `GET /me`. An absent field means no pruning.
+- Event retention is about replaying the stream, not about what the agent remembers. The
+  record of every plan and every user decision (acceptances and adjustments, confirmed
+  settings, interaction answers, transitions with their comments) is GenAIx's **ledger**:
+  written as it happens, kept for the session's lifetime, never compacted and never shortened
+  by event retention (since `1.0.0-rc.4`). The plans themselves stay readable through
+  `GET /sessions/{id}/plans` however old the session is.
 - A `heartbeat` arrives every 15 seconds of silence. Heartbeats consume a `seq` and are
   persisted, so there is no special case in the `after` arithmetic.
 - By default the stream stays open across runs, so the UI holds one connection per open
-  task. `?follow=false` closes it after the current run's terminal event.
+  conversation, whatever plans it goes through. `?follow=false` closes it after the current
+  run's terminal event.
+- Plan-scoped events carry `plan_id` (since `1.0.0-rc.4`): `plan.updated`, `step.updated`,
+  `check.updated`, `derived_settings.updated`, `approval_chain.updated`, `preview.updated`,
+  `publications.updated`, and `interaction.requested`, where `null` means a question of the
+  session agent. Keep plan state per plan, keyed by `plan_id` plus the object's own id: step
+  `st-1` of one plan is not step `st-1` of the next. An event without `plan_id`, replayed from
+  a session older than `1.0.0-rc.4`, belongs to that session's only plan.
+- `status` with `kind: context_compacted` says that older turns were summarised for the
+  agent's context at a turn boundary (never while a plan executes). Nothing was deleted: the
+  messages, the plans and the ledger stay exact, and the agent's `recall` tool returns them
+  exactly. A client may show it or ignore it.
 
 Five rules, normative. A client that breaks them is not conformant, and the server is
 free to add types without further notice.
@@ -319,9 +416,9 @@ free to add types without further notice.
    field when present, otherwise skip the part silently. It **MUST NOT** fail the
    message, drop the surrounding parts, or show raw JSON to the end user.
 3. A client **MUST** treat `plan.updated`, `step.updated`, `check.updated`,
-   `derived_settings.updated` and `approval_chain.updated` as **idempotent full
-   replacements** keyed by id, never as deltas. Applying the same event twice **MUST**
-   be a no-op.
+   `derived_settings.updated`, `approval_chain.updated` and `publications.updated` as
+   **idempotent full replacements** keyed by `plan_id` and id, never as deltas. Applying the
+   same event twice **MUST** be a no-op.
 4. A client **MUST** apply `part.delta` in `seq` order and **MUST** treat
    `part.completed` as authoritative over its accumulated copy, so a client that missed
    deltas still ends up correct.
@@ -367,14 +464,31 @@ means it expired and the agent has already been told the question timed out; sen
 message instead of retrying. A review that expires or is cancelled ends the run with no
 write having happened.
 
-## 6. The workflow state
+## 6. The plans and their state
 
-`GET /sessions/{id}/workflow` is the snapshot counterpart of the workflow events.
-Hydrate from it once after a reconnect and keep it current from the stream afterwards.
-It carries:
+Two reads, both since `1.0.0-rc.4`:
 
-- `plan` - the visible work plan, versioned. Every change bumps `version` and resends
-  the whole plan.
+- `GET /sessions/{id}/plans` - every plan of the session, oldest first, in short
+  (`PlanSummary`: `id`, `workflow`, `workflow_version`, `status`, `version`, `summary`,
+  `item_count`, `publication_counts`, `created_at`, `accepted_at`, `closed_at`). These are the
+  plan cards of the conversation and the record of its closed work.
+- `GET /sessions/{id}/plans/{plan_id}` - the `PlanState` of one plan, the snapshot counterpart
+  of the events carrying its `plan_id`; `404` with `plan_not_found` for a plan the session
+  does not have. Hydrate from it once after a reconnect and keep it current from the stream
+  afterwards.
+
+`GET /sessions/{id}/workflow` is **deprecated**: it returns the `PlanState` of the open plan,
+else of the latest one, else `404`, so a client written for one workflow per session keeps
+working on a session with a single plan. `Session.open_plan_id` and `executing_plan_id` say
+which plans matter now.
+
+A `PlanState` is what `rc.3` called the session's `WorkflowState`, scoped to one plan. It
+carries:
+
+- `plan` - the visible work plan, versioned, with its `id`, `workflow`, `status` and the
+  acceptance fields (`accepted_version`, `accepted_by`, `accepted_at`, `closed_at`). A change
+  of the items bumps `version`; a change of `status` alone keeps it. Either way `plan.updated`
+  resends the whole plan.
 - `steps` - the steps of the workflow, with `substeps` one level deep.
   `status: waiting` means blocked on a user interaction, not on the model.
 - `checks` - findings, whether the agent's own or a quality gate's. `blocking` is a
@@ -382,21 +496,33 @@ It carries:
   may block. Verbatim proof lives in `check.verification`. A check with
   `source.type: gate` carries `gate_id`, the gate `kind` and the `evidence` the gate
   produced.
-- `gates` - one entry per quality gate the workflow module declares, with what happened to
-  it here. Every declared gate appears, so the list is renderable before anything has run
-  (`status: pending`). Gates have no event of their own: a gate publishes a `Check`, so
-  `check.updated` keeps this current.
+- `gates` - one entry per quality gate the plan's workflow module declares, with what
+  happened to it in this plan; `attempt` counts per plan, and a gate's evidence is stored as
+  `gates/<plan_id>/<gate>-<attempt>.json`. Every declared gate appears, so the list is
+  renderable before anything has run (`status: pending`). Gates have no event of their own: a
+  gate publishes a `Check`, so `check.updated` keeps this current.
 - `approval_chain` - ordered actor/status/reason steps, resolved server-side from the
   user's CMS permissions on the target folder at call time. This is what lets a client
   state whether publishing is direct or goes to review, and why, instead of relaying a
-  flat message.
-- `workflow_version` - the module revision this session started under. A session keeps
-  reporting against it after the installation upgrades the module.
+  flat message. With several pages it is the first page's chain.
+- `publications` - one entry per page the plan created or changed, each with its own
+  `status` (`pending`, `published`, `review_requested`, `failed`) and its own approval
+  chain, resolved from the permissions on that page's folder (`1.0.0-rc.3`; per plan since
+  `1.0.0-rc.4`). Pages another plan wrote are not in it.
+- `workflow` and `workflow_version` - the module and the revision this plan was drafted
+  under. A plan keeps reporting against it after the installation upgrades the module, and
+  `workflow_version_drift` says when a newer one exists.
 - `derived_settings` - the folder, template, language and filename the agent derived,
   every one of them correctable, with `permission_used` for the audit trail and
   `corrected_by_user` naming the fields the user decided rather than the agent: those
-  sent as `setting` parts, and those confirmed through a settings review.
-- `cms_objects` and `preview` - what was touched, and the CMS preview URL.
+  sent as `setting` parts, and those confirmed through a settings review. `null` for a
+  workflow that writes nothing, and for `content_edit`, whose pages already have their
+  folder, template and language.
+- `cms_objects`, `preview` and `previews` - what the plan touched and targets, the most
+  recent CMS preview, and the latest preview of each page. A write outside `cms_objects` is
+  refused (section 11.1).
+- `pending_interaction` and `authorizations` - the question the plan's run is blocked on, and
+  whether the session's credentials can still act for this plan's module.
 
 A user correction goes through `PATCH /sessions/{id}` with a complete `context` object.
 The agent sees the change on the next turn and stops re-deriving the fields listed in
@@ -439,34 +565,78 @@ in `s1-content-create.sse`.
 
 ## 8. Release, review, publish
 
-`POST /sessions/{id}/transitions` is the single route for every status change.
+Since `1.0.0-rc.4` there are two status machines: the session's, which is about the
+conversation, and each plan's, which is about one piece of work. Releasing, publishing,
+requesting review, reopening and discarding move a **plan**; the session stays `active`
+throughout.
+
+The session (`SessionStatus`), through `POST /sessions/{id}/transitions` with
+`archive` or `unarchive` and nothing else:
 
 ```
 active <-> waiting_for_input
-active  -> released            (release: runs the gates, then cancels the run)
-released -> published | review_requested | active | discarded
-any      -> archived
+active | waiting_for_input -> archived     (archive: cancels a run, deletes the session credentials)
+archived                   -> active       (unarchive: register a credential before the next turn)
 ```
 
-`release`, `reopen`, `discard` and `archive` are synchronous and return the updated
-`Session`; a repeated `discard` or `archive` is `200` with no new event. `publish` and
-`request_review` start a run and return `202` with a `run_id` and the session as it is at
-that moment (`released`), because the write goes through the session's CMS connection;
-`request_review` calls the CMS only for a user who cannot publish directly, since the CMS
-queues a page for approval through `publish_page` and has no review-request call of its
-own. Whether the page is published
-directly or only submitted for review is **not** a client decision and not a cached
-flag: the server resolves it from the user's permissions on the target folder and
-reports the outcome in the approval chain. A `publish` that the CMS converts into a
-review request still returns `202`; the final session status is `review_requested`.
+Each plan (`PlanStatus`), through `POST /sessions/{id}/plans/{plan_id}/transitions`, except
+where the harness or the user's message moves it:
+
+```
+drafting -> proposed -> accepted -> running -> done -> released -> published
+               |  ^                                       |  ^      review_requested
+               |  +-- adjusted (version + 1)              |  +-- reopen
+               +-> superseded                             v
+any open status ---------------------------------------> discarded
+```
+
+| Move | Made by | Route or event |
+|---|---|---|
+| `drafting` | the session agent's `draft_plan`, or `POST /sessions` with `workflow` | `plan.updated`, `version: 0` |
+| `drafting` -> `proposed` | the harness, when the proposing run ends | `plan.updated`, `version: 1` |
+| `drafting` -> `running` | the harness, for a module without a CMS write tool (no acceptance needed) | `plan.updated` |
+| `proposed` -> `accepted` -> `running` | the user's message: an `execute` message with a `plan` part naming the plan | `POST .../messages`; the execute run's first `plan.updated` |
+| `proposed` -> `superseded` | the harness, when a newer proposal replaces an unaccepted plan | `plan.updated` |
+| `running` -> `done` | the harness, when the run finished the items and the `step_end` gates ran | `plan.updated` |
+| `done` (or `running`, which stops it) -> `released` | the user: `release`, after the `before_release` gates | `200` with the `Plan` |
+| `released` -> `published` / `review_requested` | the user: `publish` or `request_review`, after the `before_publish` gates | `202` with `run_id`, `plan`, `session` |
+| `released`, `review_requested`, `published` -> `accepted` | the user: `reopen` | `200` with the `Plan` |
+| any open status -> `discarded` | the user: `discard`, following `plan_policy.on_discard` | `200` with the `Plan` |
+
+Open is `drafting` to `released`; executing is `accepted` and `running`; the rest is closed,
+and a closed plan never changes again: any transition on one except `reopen` of a `published`
+or `review_requested` plan is `409` with `plan_closed`. **At most one plan executes** at a
+time (`Session.executing_plan_id`). Whether a new plan may be drafted while another is open is
+the module's `plan_policy.concurrency`: `exclusive` (the default) allows none, and
+`allow_while_released` allows one once the open plan is `released`. A repeated `discard` is
+`200` with no new event; every real change emits `plan.updated` with the new `status`.
+
+`publish` and `request_review` start a run (`mode: transition`) and return `202` with a
+`run_id`, the plan as it is at that moment (`released`) and the session, because the write
+goes through the session's CMS connection; `request_review` calls the CMS only for a page the
+user cannot publish directly, since the CMS queues a page for approval through `publish_page`
+and has no review-request call of its own. A plan publishes **every page it created or
+changed**, and none another plan wrote. Whether each page is published directly or only
+submitted for review is **not** a client decision and not a cached flag: the server resolves
+it per page from the user's permissions on that page's folder and reports each outcome in the
+plan's `publications`. A `publish` that the CMS converts into a review request still returns
+`202`. The plan ends `published` when every page is published, `review_requested` when at
+least one went to review and none failed; a page that failed fails the run and leaves the
+plan `released`, and a repeated `publish` retries only the pages still `pending` or `failed`.
+Section 11 shows a mixed outcome.
+
+`discard` follows the module's `plan_policy.on_discard`: `keep` (the default) leaves pages
+the plan already wrote as drafts in the CMS, `restore` restores each page's version from
+before the plan. The session credential is untouched by every plan transition.
 
 `at` on a `publish` schedules it, which is the "publish on 1 January at midnight, when
 the update comes into force" case.
 
 **Quality gates guard the transition.** Before `release`, `publish` and `request_review`
-the harness runs the module's gates for that moment and re-checks the earlier ones. The
-transition is refused with `409` and `genaix_code: quality_gate_failed` while **any**
-gate-sourced check is failing, blocking or not. The two kinds clear differently:
+the harness runs the gates of the plan's module for that moment and re-checks the earlier
+ones. The transition is refused with `409` and `genaix_code: quality_gate_failed` while
+**any** gate-sourced check of that plan is failing, blocking or not. The two kinds clear
+differently:
 
 - **Blocking** cannot be overridden. Fix the finding, or have the agent fix it; the gate
   re-runs and the transition is then allowed. Listing a blocking check in
@@ -498,8 +668,9 @@ verdict shape is `schemas/gate-verdict.schema.json`, and the manifest behind a m
 `schemas/workflow-manifest.schema.json`; both are standalone files next to the three the
 API generates.
 
-`failed` is not a session status. A failed run leaves the session `active` so the user
-can retry; the failure lives on the `Run` and in the `run.failed` event.
+`failed` is neither a session nor a plan status. A failed run leaves the session `active`
+and the plan where it was, so the user can retry; the failure lives on the `Run` and in the
+`run.failed` event.
 
 ## 9. Errors
 
@@ -508,15 +679,15 @@ Every error is an RFC 9457 `application/problem+json` document. Branch on
 
 | Status | When | Typical `genaix_code` |
 |---|---|---|
-| 400 | malformed request, or the subject header is missing | `malformed_request`, `invalid_cursor`, `subject_missing` |
-| 401 | the subject assertion is unsigned, stale or fails verification | `identity_invalid` |
+| 400 | malformed request (including an `X-HTTP-Method-Override` other than `PATCH`), or no identity: no subject header (direct), no assertion (proxied) | `malformed_request`, `invalid_cursor`, `subject_missing` |
+| 401 | the CMS assertion fails verification, a proxied request reaches an installation without a CMS key, or a direct request reaches one with a key | `identity_invalid` |
 | 401 | installation token missing, unknown or revoked | `invalid_installation_token` |
 | 403 | exists, but belongs to another subject | `session_forbidden` |
-| 404 | unknown id, or an id of another installation or user | `session_not_found`, `mcp_connection_not_found` |
-| 409 | state conflict, a blocking gate, or too many connections | `run_already_active`, `session_released`, `workflow_transition_invalid`, `quality_gate_failed`, `mcp_connection_limit` |
+| 404 | unknown id, or an id of another installation or user; a plan the session does not have | `session_not_found`, `plan_not_found`, `mcp_connection_not_found` |
+| 409 | state conflict, an archived session, a blocking gate, too many connections, a transition on a closed plan, or a `plan` part naming a plan that has since changed, is closed, or is not waiting for acceptance | `run_already_active`, `session_archived`, `workflow_transition_invalid`, `quality_gate_failed`, `mcp_connection_limit`, `plan_outdated`, `plan_closed`, `plan_not_proposed` |
 | 410 | gone | `interaction_expired`, `events_pruned` |
 | 413 | upload over the limit | `file_too_large` |
-| 422 | body failed validation, or a server refused a credential | `validation_failed`, `unsupported_media_type`, `mcp_authorization_rejected` |
+| 422 | body failed validation (a `plan` part without `execute` mode, a `continued_from` that is not one of your sessions, an unknown `workflow`), or a server refused a credential; on the stream only, in `tool.failed`, a write outside the executing plan | `validation_failed`, `unknown_workflow`, `unsupported_media_type`, `mcp_authorization_rejected`, `plan_scope_violation` |
 | 423 | CMS object locked by someone else | `cms_object_locked` |
 | 424 | an MCP connection is unusable, or a CMS call failed | `mcp_authorization_required`, `mcp_unreachable`, `cms_request_failed` |
 | 429 | rate limited | `rate_limited` |
@@ -531,6 +702,16 @@ Mid-run failures arrive as events rather than status codes. `tool.failed` is usu
 recoverable - the agent sees the error and may take another route. `error` with
 `recoverable: false` is followed immediately by `run.failed`, whose `error` is the same
 Problem document the REST API would have returned.
+
+`session_released` is gone (since `1.0.0-rc.4`): a session is no longer released, its plans
+are, and a plan's status never blocks a message, an upload or a credential. What does is an
+archived session, `409` with `session_archived`; `unarchive` it first.
+
+`plan_scope_violation` never answers a request. A write tool call whose target is not an
+object of the executing plan (an item's target, or an object the plan created) is refused by
+the harness before it reaches the CMS: `tool.failed` with a `422` problem
+`plan_scope_violation`, then `error` with `recoverable: true`. The run goes on, and the agent
+tells the user the change would need a different plan. S7 shows it.
 
 `auth.required` is the credential case and deserves its own note. It names the
 `connection_id` and `connector` the run could not use and a `reason` of `unauthorized`,
@@ -556,32 +737,247 @@ history, so re-sending continues rather than restarting.
 A client that lost its connection, or a second client opening the same session, does
 exactly this:
 
-1. `GET /sessions/{id}` - status, and `active_run_id` to know whether to expect live
-   events.
+1. `GET /sessions/{id}` - status, `active_run_id` and `side_run_id` to know whether to
+   expect live events, and `open_plan_id` and `executing_plan_id` to know which plans matter
+   now.
 2. `GET /sessions/{id}/messages` - history: assistant turns as the same parts the stream
    sent, user turns as the same parts the client sent.
-3. `GET /sessions/{id}/workflow` - plan, steps, checks, approvals, derived settings,
-   preview, `pending_interaction` if the run is blocked on a question, and
-   `authorizations` to see whether the session can still act.
-4. `GET /sessions/{id}/events?after=<highest seq you have>` - or `after=0` when you
+3. `GET /sessions/{id}/plans` - every plan in short, oldest first: the cards to draw
+   (since `1.0.0-rc.4`).
+4. `GET /sessions/{id}/plans/{plan_id}` for the open plan and the executing one - plan,
+   steps, checks, gates, approvals, publications, derived settings, previews,
+   `pending_interaction` if its run is blocked on a question, and `authorizations` to see
+   whether the session can still act for it. A closed plan only when the user opens its card.
+5. `GET /sessions/{id}/events?after=<highest seq you have>` - or `after=0` when you
    have none.
-5. If an `authorizations` entry is `expired` or `invalid`, or a required connection has no
+6. If an `authorizations` entry is `expired` or `invalid`, or a required connection has no
    entry and no standing authorization, register a fresh credential with
    `PUT /sessions/{id}/authorizations/{connection_id}` before sending the next turn. A
    session credential can have run out while the client was away.
+
+## 11. Beyond one page: plans in one conversation
+
+`1.0.0-rc.3` added plan approval, the `content_edit` module and per-page publishing;
+`1.0.0-rc.4` puts them into one conversation, where each piece of work is a plan of its own.
+This section continues the S1 plan from section 3 (11.1), then follows
+`s7-continuous-session.sse`, one session that answers a question, edits the pages it found,
+publishes them and starts a second plan (11.2), and closes with publishing per plan, using the
+mixed outcome of `s6-content-edit.sse` (11.3).
+
+### 11.1 Accept or adjust the plan
+
+The S1 plan `5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60` runs under `content_create`, which has plan
+approval. Its proposing run (`run.mode: propose`) therefore reads, confirms the settings,
+searches and proposes the plan as `plan.updated` with `status: proposed` and version 1 (six
+items, `p1` to `p6`), then ends with `run.completed`. Nothing has been written; the plan's
+`state` is `awaiting_feedback`. No interaction is pending, so the user's answer is simply the
+next message, and **only that message can accept the plan**: the model never does.
+
+To accept as proposed, the plan card sends a `plan` part naming the plan and the version the
+user saw, without `items`. Only the `plan` part accepts (since `1.0.0-rc.4`): a plain message,
+for example "Passt so.", goes to the session agent, because `execute` is the default mode and the
+user may as well be asking for something else.
+
+To adjust, send the plan as the user wants it carried out. Here the user drops the webinar form
+(`p5`) and adds a FAQ section before the cross-reference:
+
+```json
+{
+  "options": {"mode": "execute"},
+  "parts": [
+    {"type": "text", "text": "Ohne Webinar-Formular, dafuer ein kurzer FAQ-Abschnitt.\n"},
+    {"type": "plan", "plan": {"plan_id": "5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60", "based_on_version": 1, "items": [
+      {"id": "p1", "label": "Seite \"Neue Nutzungsbedingungen ab Q3\" anlegen"},
+      {"id": "p2", "label": "Hero-Bereich"},
+      {"id": "p3", "label": "Die drei wichtigsten Aenderungen"},
+      {"id": "p4", "label": "Widerrufsbelehrung Absatz 1 (wortgleich)"},
+      {"label": "FAQ-Abschnitt", "kind": "create"},
+      {"id": "p6", "label": "Querverweis von \"Garantiebedingungen\""}
+    ]}}
+  ]
+}
+```
+
+The rules are few. `plan_id` must name the session's open proposed plan (since
+`1.0.0-rc.4`). Items in order are the order of work. An item whose `id` is a current step
+keeps that step, with its `kind` and `target` unless the item sets them, so `p1` keeps its
+target folder and `p6` its target page. An item without an `id` is a new step and GenAIx
+assigns one. A step left out, `p5` here, is removed. At most one `plan` part per message, and
+only in `execute` mode. Its plain rendering is the numbered list of the labels, so `content`
+and the history read like what the user saw:
+
+```
+Ohne Webinar-Formular, dafuer ein kurzer FAQ-Abschnitt.
+1. Seite "Neue Nutzungsbedingungen ab Q3" anlegen
+2. Hero-Bereich
+...
+```
+
+The execute run (`run.mode: execute`) opens with `plan.updated` version 2: the plan it is about
+to carry out, with `accepted_version`, `accepted_by` and `accepted_at` set and `reason`
+"Adjusted by the user: 5 kept, 1 added, 1 removed." (for a plan accepted unchanged, "Accepted
+as proposed."). Only then does it write. If the agent has to deviate from that plan, merging,
+splitting or dropping a step, it says so in a further `plan.updated` and its `reason`; a
+client therefore never has to diff the plan it sent against the plan being executed. A write
+outside the plan's objects never reaches the CMS (section 9, `plan_scope_violation`).
+
+Three refusals guard the acceptance, each `409` with no run started:
+
+- `plan_outdated` - the plan moved to a newer version while the user was editing. Re-read
+  `GET /sessions/{id}/plans/{plan_id}`, show the user the current plan, and let them apply the
+  edit again.
+- `plan_closed` - the plan was superseded or discarded meanwhile, or is not a plan of this
+  session. Re-read `GET /sessions/{id}/plans` and redraw the cards.
+- `plan_not_proposed` - the plan is still drafting, or was already accepted (a second tab).
+- And `run_already_active` when another plan's run is still going: at most one plan executes.
+
+A numbered list typed as text is just text. The only contract for an accepted plan is the
+`plan` part.
+
+Not every module waits like this. A module with `plan_approval: false` but a CMS write tool
+(`construct_create`, `admin_user`) is accepted by one confirmation, the card's accept or the
+answer to the `confirm` interaction its plan raises (S3). A module without any CMS write tool
+(`content_research`) needs no acceptance: its plan goes from `drafting` to `running` at once,
+because reading is free (S2).
+
+A plan the user no longer wants is discarded, from any open status:
+`POST /sessions/{id}/plans/{plan_id}/transitions {"action": "discard"}`. The conversation goes
+on.
+
+### 11.2 A second plan in the same conversation
+
+Follow-up work is a further plan of the same session (since `1.0.0-rc.4`; `rc.3` needed a
+second session for it). `s7-continuous-session.sse` is one session, created without a
+`workflow`, in which the user asks, edits, publishes and starts again:
+
+| seq | Event | What happens |
+|---|---|---|
+| 1-10 | `run.started` `mode: session` ... `run.completed` | "Welche Seiten nennen noch die Versandkostenfrei-Grenze von 35 Euro?" The session agent searches and answers with three pages. No plan, so no plan event. |
+| 11-15 | `tool.started` `draft_plan`, `plan.updated` | "Setze auf diesen drei Seiten die Grenze auf 50 Euro." The session agent drafts plan `a3f5c8e1-...` under `content_edit`: `status: drafting`, `version: 0`, no items. |
+| 16-31 | `run.started` `mode: propose`, `plan.updated` | The module reads the three pages and their versions and proposes one item per page, each with its page as `target`: `proposed`, version 1. No settings review; `derived_settings` stays `null`. |
+| 32-33 | `run.started` `mode: execute`, `plan.updated` | The user took Serviceinformationen out in the card and accepted with a `plan` part (below). Version 2, `running`, "Adjusted by the user: 2 kept, 0 added, 1 removed." |
+| 37, 50 | `publications.updated` | Each page joins the plan's publish set when it is first written, `pending`. |
+| 39-47 | `run.started` `mode: side` ... `run.completed` | Meanwhile the user asks "Wie viele FAQ-Seiten gibt es?". A side run of the session agent, `plan_id: null`, read tools only, answers; the execute run goes on. |
+| 51-53 | `tool.started`, `tool.failed`, `error` | The agent tries to write Serviceinformationen as well. Refused before the CMS: `422` `plan_scope_violation`, then `error` with `recoverable: true`. |
+| 56 | `plan.updated` | `done`. The execute run ends. |
+| 63-64 | `check.updated`, `plan.updated` | `release`: the gate `base_version_current` passes, the plan is `released`. No run; the session stays `active`. |
+| 65-73 | `run.started` `mode: transition` ... `plan.updated` | `publish`: both pages go out, the plan is `published` and closed. |
+| 74-81 | `mode: session`, then `mode: propose` | "Erstelle jetzt eine FAQ-Seite dazu." The agent's context starts with the record of plan `a3f5c8e1-...`. It drafts plan `b6d2e9f4-...` under `content_create`, which is proposed. |
+| 82-90 | `plan.updated` twice, then `mode: propose` | "Mach daraus lieber eine News-Meldung." before accepting: `b6d2e9f4-...` closes as `superseded`, nothing written for it, and plan `c9e7a1d3-...` is drafted and proposed. |
+| 91 | `session.updated` | `plan_count: 3`, `open_plan_id` the news plan, `executing_plan_id: null`. |
+
+The acceptance of the first plan, as the card sends it:
+
+```json
+{
+  "options": {"mode": "execute"},
+  "parts": [
+    {"type": "plan", "plan": {"plan_id": "a3f5c8e1-2b47-4d96-8e05-1c7b9d4f6a23", "based_on_version": 1, "items": [
+      {"id": "p1", "label": "Versand und Lieferung: Grenze von 35 auf 50 Euro"},
+      {"id": "p2", "label": "Garantiebedingungen: Grenze von 35 auf 50 Euro"}
+    ]}}
+  ]
+}
+```
+
+What the client takes from it:
+
+- **One card per `plan_id`**, replaced by every `plan.updated` with that id. After seq 91 the
+  conversation shows three: a published edit, a superseded proposal (greyed, not removed) and
+  the open news proposal. `GET /sessions/{id}/plans` returns the same three, oldest first.
+- **The run's `mode`** decides where its output goes: `session` and `side` answers belong in the
+  conversation, `propose`, `execute` and `transition` runs to their plan's card.
+- **Plans never mix.** Every write, check, publication and preview of the first plan carries
+  its `plan_id`; the second plan starts with none of them. Pages the first plan wrote are not
+  in the second one's `publications`.
+- **The agent keeps the thread.** Its context leads with the open plan and a record of every
+  closed plan and user decision, which is why "eine FAQ-Seite dazu" knows which pages changed.
+  Older chat may be summarised (`status` with `kind: context_compacted`), but the record and
+  the messages stay exact.
+- **One credential.** The session's CMS token registered on `POST /sessions` serves every plan;
+  publishing the first plan does not end it.
+
+`content_edit` itself works as in `rc.3`. Its pages are the items' targets: in a conversation
+the session agent drafts them from what the user named or the earlier answer found, and in a
+session started from a CMS context action with `workflow: content_edit` they are the
+`type: page` entries of `context.references`, 1 to 20, in order (S6). The proposing run reads
+each page and its version history, which fixes each page's **base version**. There is no
+settings review: the pages already have their folder, template and language. The execute run
+applies the changes page by page, verifies them, and previews each page; one `preview.updated`
+arrives per page, and the plan's `previews` holds the latest of each.
+
+### 11.3 Release and publish: one plan, one outcome per page
+
+`release` and `publish` are transitions of one plan,
+`POST /sessions/{id}/plans/{plan_id}/transitions`, and the session stays `active`.
+
+`release` runs the plan's gates as usual. `content_edit` adds `base_version_current`, which
+blocks the release when any page has a version newer than its base version that this plan did
+not write, that is, when someone else edited the page after the agent read it. The refusal
+names the page.
+
+`publish` returns `202` and runs. Each page of the plan is published directly or sent to review
+according to the permissions on **its own** folder. In S6 the plan changed three pages, and the
+user may publish in `Richtlinien` but not in `Publikationen`, so the run ends with:
+
+```
+"publications": [
+  {"cms_ref": {"type": "page", "id": 8644, "node_id": 3}, "status": "published", "at": "2026-10-07T11:23:35Z", "approval_chain": [...]},
+  {"cms_ref": {"type": "page", "id": 9011, "node_id": 3}, "status": "review_requested", "at": "2026-10-07T11:23:39Z", "approval_chain": [...]},
+  {"cms_ref": {"type": "page", "id": 8871, "node_id": 3}, "status": "published", "at": "2026-10-07T11:23:43Z", "approval_chain": [...]}
+]
+```
+
+The plan ends `review_requested`, because one page went to review and none failed, and is
+closed; the conversation goes on with the next plan. Had every page been published it would be
+`published`, as in S7. Had a page failed, the run would fail, the plan would stay `released`
+with the other pages still `published` or `review_requested`, and a repeated `publish` would
+retry only the failed page. The plan-level `approval_chain` is the first page's chain, so a
+one-page client keeps working unchanged.
+
+There is no way to leave one page out of a publish. A page the user does not want changed is
+taken out of the work earlier, by deleting its item from the plan before accepting it, as the
+user did in S7. Pages of another plan of the same session are never part of this publish.
+
+### 11.4 Finding related sessions
+
+A new conversation that builds on an earlier one names it in `continued_from`
+(`1.0.0-rc.3`): it must be one of the caller's own sessions, otherwise `422` pointing at
+`/continued_from`, whether the id is unknown or someone else's. It is returned as
+`Session.continued_from` and cannot be changed. The agent gets the earlier session's user
+messages, final assistant messages and `cms_objects` as read-only context, and `recall` reaches
+it. Nothing else carries over: no files, no plan, and no credential, so the new session needs
+its own session authorization like any other (section 1b). S6 is such a session, building on
+the research conversation of S2. Inside one conversation, follow-up work needs none of this:
+it is a further plan (11.2).
+
+`GET /sessions?continued_from=2d8c5f71-0e46-4b9a-9c13-5a7f8e2b6d40` lists the follow-ups of the
+S2 conversation, so a client can show "continued in" next to "continued from".
+
+`GET /sessions?label=changeset:5c2e9a17-4b30-4d6f-8e21-7a9c0b3d5f48` lists every session
+carrying that label. `label` is matched exactly and may be repeated; a session must carry all
+of the given labels. The label is the client's own convention for grouping; since one plan
+publishes all its pages, no group is needed for publishing.
+
+`GET /sessions?workflow=content_edit` lists the sessions with at least one plan under that
+module, and `plan_status` (since `1.0.0-rc.4`, repeatable) filters on the open plan, else the
+latest: `?plan_status=proposed&plan_status=released` is a list of conversations waiting for
+the user.
 
 ## Files in this directory
 
 | File | What it is |
 |---|---|
 | `requests.http` | Every operation as a runnable request, in lifecycle order |
-| `s1-content-create.sse` | S1, content creation from source material. 90 events: plan, steps with substeps, CMS writes, a streamed `page_structure` part, the verbatim proof, a `settings_review` interaction confirming folder, language and template, previews, an artifact |
-| `s2-content-research.sse` | S2, research and reporting. 43 events: search calls, a streamed `table` part, citations, no CMS writes |
-| `s3-construct-create.sse` | S3, construct creation. 56 events: catalogue check, a streamed `construct_draft` part, Handlebars validation, a `confirm` interaction, `create_construct`, an `api_call_log` part, preview |
-| `s4-admin-user.sse` | S4, optional. 39 events: group lookup, a `form` interaction, permission impact simulation, user creation, group assignment |
-| `s5-failure-and-recovery.sse` | Not a showcase scenario, the unhappy paths. 51 events across two runs on one stream: `tool.failed` on a locked page, a recoverable `error`, `artifact.created`, `tool.failed` plus `auth.required` plus `run.failed` on a dead connection credential, then after re-registering it a second run with `artifact.updated` and `run.cancelled` |
+| `s1-content-create.sse` | S1, content creation from source material: the execute run of one `content_create` plan. 92 events: plan, steps with substeps, CMS writes, a streamed `page_structure` part, the verbatim proof, a `settings_review` interaction confirming folder, language and template, previews, an artifact |
+| `s2-content-research.sse` | S2, research and reporting: a read-only `content_research` plan that runs without acceptance. 51 events: search calls, a streamed `table` part, citations, no CMS writes |
+| `s3-construct-create.sse` | S3, construct creation. 61 events: catalogue check, a streamed `construct_draft` part, Handlebars validation, the `confirm` interaction that is the user's acceptance (the plan is `proposed` until then), `create_construct`, an `api_call_log` part, preview |
+| `s4-admin-user.sse` | S4, optional. 43 events: group lookup, a `form` interaction, permission impact simulation, the `confirm` that accepts the plan, user creation, group assignment |
+| `s5-failure-and-recovery.sse` | Not a showcase scenario, the unhappy paths. 53 events across two execute runs of one `content_edit` plan on one stream, the plan back to `accepted` after each: `tool.failed` on a locked page, a recoverable `error`, `artifact.created`, `tool.failed` plus `auth.required` plus `run.failed` on a dead connection credential, then after re-registering it a second run with `artifact.updated` and `run.cancelled` |
+| `s6-content-edit.sse` | `content_edit` (`1.0.0-rc.3`), no showcase scenario. 114 events. A session started with `workflow: content_edit` and `continued_from` the S2 conversation, over three pages in two folders: the proposing run that stops at the plan, the execute run with per-page previews, and a publish with two pages published and one sent to review |
+| `s7-continuous-session.sse` | One continuous session (`1.0.0-rc.4`), no showcase scenario. 91 events, three plans: a question answered by the session agent, a `content_edit` plan adjusted and accepted in the card, a side run while it executes, a `plan_scope_violation`, release and publish, then a `content_create` plan superseded by a newer proposal (section 11.2) |
 | `session-lifecycle.md` | This file |
 
-Every `data:` payload in the five transcripts validates against
+Every `data:` payload in the seven transcripts validates against
 `../schemas/events.schema.json`, every nested timestamp is at or before the envelope `ts`
 of the event carrying it, and `seq` runs gapless from 1 in each file.

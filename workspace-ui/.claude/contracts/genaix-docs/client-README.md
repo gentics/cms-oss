@@ -4,7 +4,38 @@ A tiny client that consumes the stage 1 GenAIx API v1 contract end to end: a cha
 interface, a part-aware composer, structured message-part rendering, the live event
 stream, interactions, MCP connections, quality gates and the session lifecycle.
 
-Tracks `1.0.0-rc.2`.
+Tracks `1.0.0-rc.4`. Its identity handling is the direct mode, which rc.3 introduced and
+rc.4 keeps. A session is one conversation and its work a sequence of plans: the client keys its
+state on `plan_id`, draws a card per plan, accepts a proposed plan with a `plan` part, and calls the
+plan transitions; the session itself only archives and unarchives. Editing a plan's items before
+accepting it and starting `content_edit` with `continued_from` are not implemented here.
+
+## Plans (1.0.0-rc.4)
+
+`lib/state.js` keeps one bucket per plan (`state.plans`, in `state.plan_order`): its plan, steps,
+checks, gates, derived settings, approval chain, publications and previews. Every plan-scoped event
+lands in the bucket its `plan_id` names. `state.plan`, `state.steps` and the other top-level fields
+are a view of one bucket: the plan the user picked on its card, else the current plan, which is the
+session's `open_plan_id`, else the most recently touched open plan, else the latest plan. The
+renderers written for one plan per session therefore draw the plan the user looks at, and plans never
+mix. `state.run` is the latest run that is not a side run; `state.side_run` the latest side run.
+
+The plans column starts with the plan cards (`renderPlanCards`), oldest first, each with its status,
+module, version and publication counts, a Show button and the actions its status allows:
+
+| Plan status | Actions |
+|---|---|
+| `drafting`, `accepted` | Discard |
+| `proposed` | Accept (a message with the `plan` part naming the plan, as proposed), Discard |
+| `running` | Release (stops the run), Discard |
+| `done` | Release, Run again (the `plan` part without items), Discard |
+| `released` | Publish, Request review, Reopen, Discard |
+| `published`, `review_requested` | Reopen |
+
+Opening a session lists `GET /sessions/{id}/plans` into cards and loads the `PlanState` of every
+open plan from `GET /sessions/{id}/plans/{plan_id}`; that is also where the gate records come from.
+A message the user types goes to the session agent unless it accepts a plan, so the composer needs
+no workflow and the new-session form's workflow is optional (none is the normal start).
 
 **This is not the Agentic Workspace.** Gentics builds that UI, and it is still being
 prototyped. This client exists to prove that the contract in `../openapi.yaml`,
@@ -33,29 +64,35 @@ Open <http://localhost:8081/client/>. In the connection panel set:
 | Installation token | `sk_gnx_mock` |
 | Subject | any opaque string, for example `sub_c3f1a07d9e5b4826` |
 
-Two headers are the whole contract: `Authorization: Bearer <installation token>` and
-`X-GCMS-Subject`. There is no `X-GCMS-User-Id`, no `X-GCMS-User-Login`, no
-`X-GCMS-User-Groups`, no `X-GCMS-SID`, no `X-GCMS-User-Token` and no
-`X-GCMS-Session-Secret`.
+The client calls GenAIx in **direct mode**: `Authorization: Bearer <installation token>`
+and `X-GCMS-Subject`, the subject used verbatim. There is no `X-GCMS-User-Id`, no
+`X-GCMS-User-Login`, no `X-GCMS-User-Groups`, no `X-GCMS-SID`, no `X-GCMS-User-Token` and
+no `X-GCMS-Session-Secret`.
 
-### The subject is a pseudonym
+### Direct mode and proxied mode
 
-`X-GCMS-Subject` is an opaque, installation-scoped key the CMS derives from the
-signed-in user, for instance an HMAC of the user id under a secret only the CMS holds.
-It may also be a compact JWS carrying `sub`, `iss`, `iat` and a short `exp`, which
-GenAIx verifies when the installation configures the signing key.
+The contract has two caller modes (`1.0.0-rc.3`). **Direct mode** is for development,
+mocks, tooling and conformance, and only against an installation without a CMS key: the
+installation token is the bearer, and `X-GCMS-Subject` is an opaque string GenAIx uses
+as the owner key exactly as sent. The mock has no CMS key, so this is what the client
+speaks, and the subject field in the panel is that string.
 
-**GenAIx never learns the person behind a subject.** It uses the value as the owner key
-of sessions, files, connections and authorizations and for nothing else. No user id,
-login, display name or group list is sent, and none is stored, so the same person keeps
-their sessions across sign-ins while GenAIx holds no identifying data about them. The
-CMS alone can map a subject back to a person.
+**Proxied mode** is production: the Workspace UI calls the CMS custom proxy
+(`/rest/proxy/genaix/...`) with its CMS session, and the proxy adds
+`X-GenAIx-Installation: <installation token>` and `Authorization: Bearer <CMS identity
+assertion>`, an RS256 JWT signed by the CMS. GenAIx verifies the assertion, derives the
+subject from its `sub` and discards it, so it keeps nothing that names the person, although
+the assertion carries the user's login, name, email and groups while the request is in
+flight. A browser client in that mode sends neither header itself. The rules are in
+`../02-auth-and-context-flow.md`, the proxy configuration in `../09-integration-guide.md`
+section 3.
 
-Two consequences a client has to live with. `GET /me` returns `user: {subject}` and
-nothing else, so the identity card here shows the subject and no name: a real UI already
-knows who is signed in and shows that from its own session. And erasure has to be driven
-from the CMS side, through `DELETE /subjects/{subject}`, because GenAIx cannot resolve a
-person to a subject. `lib/api.js` has `deleteSubject` for completeness; no UI calls it.
+Two consequences a client has to live with in either mode. `GET /me` returns
+`user: {subject}` and nothing else, so the identity card here shows the subject and no
+name: a real UI already knows who is signed in and shows that from its own session. And
+erasure has to be driven from the CMS side, through `DELETE /subjects/{subject}` or
+`POST /subjects/erase`, because GenAIx cannot resolve a person to a subject. `lib/api.js`
+has `deleteSubject` for completeness; no UI calls it.
 
 Over `http(s)` the Base URL field starts at `<this origin>/api/v1`, which is what the
 docker compose stack in `../deploy/` serves, and over `file://` at
@@ -116,10 +153,11 @@ only polls. No Phase One connector uses this.
 
 ### Replay mode, with no server at all
 
-Pick one of the five recorded transcripts in the app bar, choose a speed and press
-**Replay**. `s5-failure-and-recovery.sse` is the one worth watching: a locked CMS
-object, a recoverable error, an MCP server that refuses its credential, a failed
-run, a re-sent message and a cancel. The transcript is fed through exactly the same SSE parser, part reducer,
+Pick one of the seven recorded transcripts in the app bar, choose a speed and press
+**Replay**. `s7-continuous-session.sse` shows rc.4 whole: three plans in one conversation,
+the cards changing status, a side run and a refused write. `s5-failure-and-recovery.sse` is
+the one for the unhappy paths: a locked CMS object, a recoverable error, an MCP server that
+refuses its credential, a failed run, a re-sent message and a cancel. The transcript is fed through exactly the same SSE parser, part reducer,
 state reducer and renderers that the live stream uses, so the full event model is
 demonstrable before the mock runs.
 
@@ -132,9 +170,15 @@ pick a `.sse` file from `stage1/examples/` instead; everything else works.
 cd stage1/client && node tests/parse-transcripts.mjs
 ```
 
-It replays all five transcripts through the real modules under node, and exercises
+It replays all seven transcripts through the real modules under node, and exercises
 the composer's parts builder, the plain rendering and the request bodies as pure
-functions. 701 assertions, covering:
+functions. 1084 assertions, covering:
+
+- rc.4: one bucket per plan with the plans of each transcript in order, their final
+  status and version; every run's mode; `plan_id` on every plan-scoped event and none
+  in a side run; the view following the open plan and a selected card; the plan part
+  (accept as proposed, adjusted items, its plain rendering and validation); the plan
+  cards offering only the actions a status allows
 
 - every `data:` frame parses, and the SSE `id:` and `event:` fields agree with the
   payload's `seq` and `type`
@@ -173,9 +217,9 @@ functions. 701 assertions, covering:
 - a message body carries `parts` and never `content`, `references` or `files`, and a
   session-create body carries the first message in `message`, never an `intent`,
   drops empty context fields, and refuses a `file_ref` on that first message
-- the header contract is exactly two headers, the installation token and
-  `X-GCMS-Subject`, with the removed ones absent, no subject on `GET /ping`, and a
-  signed assertion passed through verbatim rather than decoded
+- a direct-mode request carries the installation token and `X-GCMS-Subject`, with
+  the removed headers absent, no subject on `GET /ping`, and a subject that looks like
+  a JWS passed through verbatim rather than decoded
 - a session credential defaults to a 24 hour expiry, is refused locally when the token
   is under the API's minimum length or the expiry is in the past, rides along with the
   create call, and names the connection only where there is no path segment for it
@@ -495,7 +539,7 @@ panel therefore shows a gate's `status` (did it run) and its `verdict` (what it
 judged) as two separate badges, because they deliberately differ: a gate can be
 `failed` and still only `warn`.
 
-Gate execution records exist **only** in `GET /sessions/{id}/workflow`. No event
+Gate execution records exist **only** in the plan snapshot, `GET /sessions/{id}/plans/{plan_id}`. No event
 carries a `GateResult`. What the stream does carry is `check.updated`, and in
 draft.2 onward a check names the gate that produced it (`gate_id`), the gate's `kind` and
 machine-readable `evidence`. So the client hydrates `gates` from the snapshot and
@@ -511,9 +555,9 @@ the evidence fields inline behind a disclosure, the artifact as a download link
 
 ### Acknowledging a non-blocking finding
 
-The transitions bar lists every non-blocking `warn` or `fail` check that is not
-already acknowledged, each with a tick box. Ticking one and pressing a transition
-sends its id in `acknowledge_checks`, which records that the user saw and accepted
+The transitions bar lists every non-blocking `warn` or `fail` check of the plan shown that is not
+already acknowledged, each with a tick box. Ticking one and pressing a transition on that plan's
+card sends its id in `acknowledge_checks`, which records that the user saw and accepted
 it. A blocking check is never given a box, even if the server lists it in
 `acknowledgeable_checks`, because a blocking failure cannot be waived.
 
@@ -530,14 +574,15 @@ Every operation in `openapi.yaml` has a method in `lib/api.js`. The UI drives:
 |---|---|
 | Start-up | `GET /ping`, `GET /me`, `GET /workflows` |
 | MCP | `GET /mcp/connectors`; `GET`, `POST /mcp/connections`; `GET`, `PATCH`, `DELETE /mcp/connections/{id}`; `GET`, `PUT`, `DELETE /mcp/connections/{id}/authorization` |
-| Sessions | `POST /sessions`, `GET /sessions`, `GET /sessions/{id}`, `PATCH /sessions/{id}`, `POST /sessions/{id}/transitions` with `acknowledge_checks` |
+| Sessions | `POST /sessions` (with or without `workflow`), `GET /sessions` with `status`, `workflow` and `plan_status`, `GET /sessions/{id}`, `PATCH /sessions/{id}`, `POST /sessions/{id}/transitions` (`archive`, `unarchive`) |
+| Plans | `GET /sessions/{id}/plans`, `GET /sessions/{id}/plans/{plan_id}`, `POST /sessions/{id}/plans/{plan_id}/transitions` with `acknowledge_checks`, and the `plan` part on a message |
 | Turns | `POST /sessions/{id}/messages`, `GET /sessions/{id}/messages`, `POST /sessions/{id}/runs/{run_id}/cancel` |
 | Stream | `GET /sessions/{id}/events` with `after`, `Last-Event-ID` and reconnect |
 | Interactions | `POST /sessions/{id}/interactions/{interaction_id}`, and `reply_to_interaction` on a message |
 | Files | `POST /sessions/{id}/files` with `mode`, `GET /sessions/{id}/files`, `GET .../content` |
-| Workflow | `GET /sessions/{id}/workflow` |
+| Workflow | `GET /workflows`; `GET /sessions/{id}/workflow` is deprecated and only in `lib/api.js` |
 
-All 27 event types are handled. `auth.required` raises a banner that names the
+All 28 event types are handled. `auth.required` raises a banner that names the
 connection by label, its `connector` type and its `connection_id`, shows the reason
 and offers to jump to that connection's card, except for `unreachable`, where it
 says plainly that no credential will help. The banner is keyed by `connection_id`,
@@ -553,10 +598,10 @@ and enums from the interaction's JSON schema, and a settings editor for
 answer. A pending `ask_user` question also turns the composer into its answer box,
 through `reply_to_interaction`.
 
-The session list and the session header show `workflow` with its
-`workflow_version`, the new-session form disables a workflow whose `available` is
-false and shows its `reason`, and the workflow column raises a badge on
-`workflow_version_drift`. The session header also lists the connections the session
+The session list and the session header show the session's plan count, the session
+header the current run's mode and a side run while one works, the new-session form
+disables a workflow whose `available` is false and shows its `reason`, and the plans
+column raises a badge on `workflow_version_drift` of the plan shown. The session header also lists the connections the session
 works against, from `context.connection_ids`.
 
 The new-session form offers a connection picker per entry in the workflow's
@@ -567,7 +612,7 @@ the workflow column, a CMS object that carries a `connection_id` is labelled wit
 that connection, because with two CMS connections "page 9142" alone is ambiguous.
 
 Opening a session follows the reconnect checklist in order: `GET /sessions/{id}`,
-then the message history, then the workflow snapshot, then the event stream. It then
+then the message history, then the plans and the open plans' snapshots, then the event stream. It then
 connects with `after=0` rather than the highest seq it holds, because the message
 history carries no `seq` and because replaying the whole session fills the event log.
 That is safe precisely because the reducer is idempotent: the replayed parts converge
@@ -620,16 +665,20 @@ silence, which is longer than the 15-second heartbeat interval.
 - **The preview iframe will often be blank.** A CMS preview URL points at a host that
   normally sets `X-Frame-Options` or a frame-ancestors policy. The panel always shows
   the URL and an "Open" link so the contract is still checkable.
-- **The installation token lives in `localStorage`.** In production the CMS proxy
-  holds it server-side and a browser never sees it. This client talks to GenAIx
-  directly, which is why it has the field at all. Use a mock token.
+- **The installation token lives in `localStorage`.** In production the CMS custom
+  proxy holds it server-side as `X-GenAIx-Installation` and a browser never sees it.
+  This client talks to GenAIx directly, in direct mode, which is why it has the field
+  at all. Use a mock token.
+- **No proxied mode.** The client never sends `X-GenAIx-Installation` or a CMS
+  assertion, and has no `X-HTTP-Method-Override` fallback for `PATCH`, since it does not
+  go through the custom proxy.
 - **`window.prompt` for three inputs**: adding a context reference, correcting the
   session context, and entering a transition comment.
 - **No retry of a failed message.** After `auth.required` and a successful
   registration, the contract says to re-send the message that failed. This client
   clears the banner and leaves the re-send to the user.
 - **Gates are as fresh as the last snapshot fetch.** They are not in the event
-  stream, so the client re-fetches `GET /sessions/{id}/workflow` when a gate-backed
+  stream, so the client re-fetches the shown plan's snapshot when a gate-backed
   check arrives, debounced by 600 ms. A gate whose result produces no check is not
   noticed until the next transition or reopen.
 - **The OAuth2 flow is only started, never completed here.** `action: start` and the
@@ -654,5 +703,8 @@ silence, which is longer than the 15-second heartbeat interval.
   form defaults to that and lets the user change it.
 - **Expiry is not watched.** A credential that expires while a session is open is
   noticed when a run fails or the list is re-read, not by a timer.
-- **Replay mode is read-only.** The composer, the transitions and the interaction
-  cards are disabled, because there is no server to post to.
+- **Replay mode is read-only.** The composer, the transitions, the plan actions and the
+  interaction cards are disabled, because there is no server to post to.
+- **A plan is accepted as proposed only.** The `plan` part with adjusted items is built and
+  validated by `lib/compose.js` (`buildPlanPart`), but no editor for the items exists here.
+- **A side run cannot be cancelled from the UI.** Cancel targets the main run.

@@ -46,13 +46,22 @@ Fixture credentials only. Nothing here authenticates against anything real.
 | Where | Value |
 |---|---|
 | GenAIx API, `Authorization` | `Bearer sk_gnx_mock` |
-| GenAIx API, `X-GCMS-Subject` | any opaque subject string, for example `sub_c3f1a07d9e5b4826`; required on every route except `GET /ping` |
+| GenAIx API, `X-GCMS-Subject` | any opaque subject string, for example `sub_c3f1a07d9e5b4826`; required on every route except `GET /ping`, `DELETE /subjects/{subject}` and `POST /subjects/erase` |
 | The CMS connection's credential | any string; a `invalid_`, `mismatch_`, `unreachable_`, `expired_` or `revoked_` prefix selects a failure branch |
 | MCP endpoint, `Authorization` | `Bearer cc-demo-token`, `chiefcc-demo-token` or `admin-demo-token`, one per showcase role |
 | Token provisioning, `Cookie` | `GCN_SESSION_SECRET=jdoe-session-secret`, `mmueller-session-secret` or `asmith-session-secret` |
 
+The hosted mock is called in **direct mode**: the installation token as the bearer and
+`X-GCMS-Subject` used verbatim, which the contract allows only for an installation
+without a CMS key, as here. The proxy in front of the mocks only puts them on one origin;
+it is not the CMS custom proxy and adds no identity or installation header. In production the Workspace calls
+GenAIx in **proxied mode** through the CMS custom proxy (`/rest/proxy/genaix/...`),
+which sends `X-GenAIx-Installation` and a CMS-signed identity assertion as
+`Authorization: Bearer` instead; see `02-auth-and-context-flow.md` and section 3 of
+`09-integration-guide.md`.
+
 In the client's connection panel the Base URL already defaults to this origin's
-`/api/v1`; fill in the token and a user id and press **Test connection**. A full run needs
+`/api/v1`; fill in the token and a subject and press **Test connection**. A full run needs
 a credential registered on the CMS connection first, which the connection card does.
 
 A session from the command line:

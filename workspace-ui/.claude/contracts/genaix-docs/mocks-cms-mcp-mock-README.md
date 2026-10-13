@@ -24,6 +24,7 @@ overrides:
 | `CMS_MCP_PORT` | `8765` | Bind port |
 | `CMS_MCP_AUDIT_LOG` | `./audit.log` | Path to the JSON-lines audit log |
 | `CMS_MCP_TOOLS_JSON` | `../../mcp/tools.json` | Path to the contract file |
+| `CMS_MCP_UPLOAD_URL_HOSTS` | empty | Hosts `upload_file` may fetch a `source.kind: "url"` from, comma-separated host names with an optional `:port` (the mock's name for the CMS setting `mcp.upload_url_hosts`, `MCP_UPLOAD_URL_HOSTS`). Empty refuses every URL source, as the real CMS does by default |
 
 `GET /healthz` returns `{"status": "ok", ...}` once the server is ready.
 
@@ -154,6 +155,17 @@ Real, and worth relying on for client development:
   `inputSchema`'s `allOf` (so that specific mistake never reaches the handler), existence of the
   referenced datasource is checked here. Handlebars stays the only template engine.
 - The `publishpages`-permission branch on `publish_page` (published vs queued_for_approval).
+- `create_folder` (`1.0.0-rc.4`) creates a folder below an existing parent in the parent's node,
+  refuses a duplicate name in the parent with `invalid-data` naming `name` and an unknown parent with
+  `not-found`; the new folder is in the same store `get_folder_tree`, `list_folder_items` and
+  `create_page` read, and inherits the parent's template list.
+- `upload_file` with `source.kind: "url"` (`1.0.0-rc.4`) fetches the URL for real, by the contract's
+  rules: `https` only (plain `http` only for `localhost` or `127.0.0.1`), the host on
+  `CMS_MCP_UPLOAD_URL_HOSTS`, no redirects, 10 s connect and 60 s total timeouts, at most 25 MB, an
+  `expiresAt` in the past refused without fetching. A refusal is an `invalid-data` problem whose
+  `detail` starts with `URL source refused:` (`not allowlisted`, `not https`, `expired`, `too large`,
+  `fetch failed with status N`). To let a local GenAIx upload through its file links:
+  `CMS_MCP_UPLOAD_URL_HOSTS=localhost:8080 ./run.sh`.
 - `search_content`/`count_content`'s trimmed shape (design brief §16): only `query`, `types`,
   `nodeId`, `folderId`, `recursive`, `languages`, `filters: {online, templateIds,
   editedAfter}`, `size`/`from`, `rawQuery` on `search_content`; highlighting is always on and a
@@ -173,15 +185,16 @@ Mocked, and not representative of the real CMS:
 - **Page version history has no per-version content snapshots.** `restore_page_version` updates
   the audit trail (a new version entry, `edited`/`editor` bumped) but does not literally revert
   tag content, because the fixture does not retain historical values.
-- **`upload_file` never performs the outbound fetch** for `source.kind: "url"`; it records a
-  zero-byte placeholder. The 5&nbsp;MB base64 path does decode and size the payload for real.
+- **`upload_file` keeps no bytes.** Both sources are decoded or fetched and sized for real, but the
+  mock stores only the metadata, and an image always reports 800 x 600.
 - **`translate_page`'s new page is not linked as a language variant** the way the S1/S2
   `languageVariants` field expects for fixture pages (which pair by adjacent id, `100`↔`101`
   etc.); a translated page is a plain new page with the requested language.
 - **`preview_permission_impact` and `get_group_permissions`** compose from the three fixture
   groups' flat permission lists, not real per-node/per-language role inheritance.
 - **No object-level permission checks** beyond the role-gated tool visibility: any caller whose
-  role can see a write tool can act on any fixture object regardless of node/folder scope.
+  role can see a write tool can act on any fixture object regardless of node/folder scope
+  (`create_folder` does not check the folder permission `create` on the parent).
 - **`nodeIds` scoping is trivial**: there is exactly one node (id `1`, "Acme GmbH"), so
   cross-node behaviour cannot be exercised here.
 
@@ -194,7 +207,7 @@ only in memory. To add content:
    `folders.json`, `files.json`, `images.json`, `users.json`, `groups.json`, `tokens.json`,
    `part_types.json`, `datasources.json`). Keep ids stable and below the `next_*_id()` starting
    counters in `state.py` (pages start at 200, constructs at 100, categories at 100, users at
-   100, files/images at 100) so runtime creates never collide with fixture ids.
+   100, files/images at 100, folders at 100) so runtime creates never collide with fixture ids.
 2. A page's `tags` map must use tag names that exist in its template's `templateTags`, and each
    tag's `constructId`/`constructKeyword` must resolve in `constructs.json`. A construct part
    with `typeId` 29/30 needs a `datasourceId` that resolves in `datasources.json`; adding a

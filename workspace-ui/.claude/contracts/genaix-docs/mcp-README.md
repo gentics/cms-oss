@@ -4,7 +4,9 @@
 contract the CMS team hosts in the cms-mcp module, ioflair implements as tools inside it, and any MCP client consumes. The prose companion, with rationale, scenario coverage,
 exclusions and the requirements towards the CMS implementation, is `../04-mcp-scope.md`.
 
-Current version: `1.0.0-rc.2`, agreed and frozen for development, aligned with `../openapi.yaml`. The
+Current version: `1.0.0-rc.4` (`create_folder`, the normative URL source of `upload_file`, and the
+GenAIx-side tools), aligned with `../openapi.yaml`, agreed by all parties on 2026-10-12 and frozen for
+development. The
 `changelog` array records what moved between drafts. Specification owner ioflair, implementation owner
 Gentics.
 
@@ -41,7 +43,7 @@ Each entry in `groups[].tools[]`:
 | `implementation` | `{"kind": "generated"}` when the tool is a one-to-one mapping of an annotated REST resource method, or `{"kind": "composite", "composes": [...], "transaction": "single"}` when a method in the `cms-mcp` module calls several resource implementations in one transaction. `search_content` also carries `"never_exposed_unwrapped": true`, because the raw Elasticsearch passthrough must never become a tool of its own. |
 | `permissions` | The CMS permission requirements the annotation declares, as `{type, perms, scope?}` entries in the CMS permission vocabulary. Checked twice: `tools/list` hides a tool the user's effective permissions can never satisfy — per tool, not per group, so a content creator sees the read tools of `constructs` (`1.0.0-rc.2`) — and every call re-checks against the concrete target object. An entry with `"confirm": false` names the type and permission expected rather than one read off the CMS source. |
 
-31 of the 53 tools are generated and 22 are composite; `implementation_model` explains why the split falls
+31 of the 54 tools are generated and 23 are composite; `implementation_model` explains why the split falls
 where it does. A `group`'s `roles` summarise its tools' roles and are not a filter; the tool's own `roles` and
 `permissions` decide what a user sees.
 
@@ -59,7 +61,7 @@ Three conventions that are easy to miss:
       return [deref(v, defs) for v in node] if isinstance(node, list) else node
   ```
 - **A tool with `"phase": "future"` is specified but not implemented.** It exists so the extension has a
-  defined shape. Seven of the 53 tools are `future` (`list_templates` became phase one in `1.0.0-rc.2`).
+  defined shape. Seven of the 54 tools are `future` (`list_templates` became phase one in `1.0.0-rc.2`).
 - **`cms.notes` is normative where it contradicts an intuition about the CMS API.** Several tools wrap more
   than one endpoint, and `cms.notes` says in what order and inside what transaction.
 
@@ -85,11 +87,11 @@ EOF
 | --- | --- | --- | --- |
 | `identity` | 3 | 3 | Who the user is, which nodes they see, what they may do. |
 | `search` | 4 | 4 | Permission-filtered retrieval over the CMS Elasticsearch indices, plus relational reverse lookups. |
-| `content_read` | 10 | 9 | Reading the tree and individual objects; page preview. |
-| `content_write` | 10 | 10 | The only mutation path for content. One object per call. |
+| `content_read` | 11 | 10 | Reading the tree and individual objects; page preview. |
+| `content_write` | 11 | 11 | The only mutation path for content. One object per call. |
 | `constructs` | 13 | 12 | Tier 1 Handlebars construct authoring, part type and datasource discovery, and devtools package membership. |
 | `admin` | 7 | 7 | Users, groups and the permission impact preview. Scenario S4, optional. |
-| `design` | 6 | 0 | Design Studio placeholders: templates and render diff. |
+| `design` | 5 | 0 | Design Studio placeholders: templates and render diff. |
 
 `tools/list` is computed per user, and whole groups disappear when the user's type-level permissions rule
 them out. A client must tolerate the list changing between calls.
@@ -150,7 +152,7 @@ The creation request is `{name, expires, pruneOnExpiry}`. `expires` is a Unix ti
 the token stops working, `0` means never, a past value is rejected, and the token is valid only while
 `expires > now`. `pruneOnExpiry: true` makes the CMS delete the token row when it expires. A developer token
 like the one above is the long-lived case; an agent host does the opposite and creates one short-lived token
-per workflow session, named `genaix-<session id>`, with `pruneOnExpiry: true`, so `cms-mcp` sees many
+per session (one conversation), named `genaix-<session id>`, with `pruneOnExpiry: true`, so `cms-mcp` sees many
 short-lived tokens per user rather than one standing credential (`../04-mcp-scope.md` §2.2).
 
 `GET /rest/admin/token` lists your tokens and `DELETE /rest/admin/token/{id}` revokes one; both act on the

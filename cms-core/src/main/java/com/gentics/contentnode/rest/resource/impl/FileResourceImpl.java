@@ -69,6 +69,8 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.mcp.McpTool;
+import com.gentics.contentnode.rest.mcp.McpToolParam;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.Tag;
@@ -1895,10 +1897,22 @@ public class FileResourceImpl implements FileResource {
 	@Override
 	@GET
 	@Path("/usage/file")
-	public FileUsageListResponse getFileUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
-			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
-			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
-			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnFiles) throws NodeException {
+	@McpTool(description = "Get the files using one or more of the given files.")
+	public FileUsageListResponse getFileUsageInfo(
+			@QueryParam("skipCount") @DefaultValue("0")
+			@McpToolParam(name = "skipCount", description = "Number of items to skip.", required = false) Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1")
+			@McpToolParam(name = "maxItems", description = "Maximum number of items to return. -1 returns all matching items.", required = false) Integer maxItems,
+			@QueryParam("sortby") @DefaultValue("name")
+			@McpToolParam(name = "sortBy", description = "Attribute to sort by.", required = false) String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc")
+			@McpToolParam(name = "sortOrder", description = "Sort order.", required = false) String sortOrder,
+			@QueryParam("id")
+			@McpToolParam(name = "fileId", description = "IDs of the files to get the usage for.", required = false) List<Integer> fileId,
+			@QueryParam("nodeId")
+			@McpToolParam(name = "nodeId", description = "ID of the node to restrict the search to.", required = false) Integer nodeId,
+			@QueryParam("files") @DefaultValue("true")
+			@McpToolParam(name = "returnFiles", description = "True to include the using files in the response.", required = false) boolean returnFiles) throws NodeException {
 		if (ObjectTransformer.isEmpty(fileId)) {
 			return new FileUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 files"), null, 0, 0);
 		}

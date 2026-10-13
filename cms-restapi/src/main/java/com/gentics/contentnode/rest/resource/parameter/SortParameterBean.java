@@ -3,6 +3,8 @@ package com.gentics.contentnode.rest.resource.parameter;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.QueryParam;
 
+import com.gentics.contentnode.rest.mcp.McpToolParam;
+
 /**
  * Parameter bean for sort parameters
  */
@@ -13,6 +15,8 @@ public class SortParameterBean {
 	 */
 	@QueryParam("sort")
 	@DefaultValue("name")
+	@McpToolParam(description = "Comma separated list of attributes to sort by. Prefix an attribute with + for "
+			+ "ascending order or - for descending order.", required = false)
 	public String sort = "name";
 
 	public SortParameterBean setSort(String sort) {

@@ -59,6 +59,7 @@ import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.filters.Authenticated;
 import com.gentics.contentnode.rest.filters.RequiredPerm;
+import com.gentics.contentnode.rest.mcp.McpTool;
 import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.ObjectProperty;
 import com.gentics.contentnode.rest.model.ObjectPropertyCategory;
@@ -105,6 +106,7 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 
 	@GET
 	@Override
+	@McpTool(description = "Get the list of object properties, optionally filtered by object type, sorted, paged and/or embedded.")
 	public ObjectPropertyListResponse list(@BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
 			@BeanParam PagingParameterBean paging, @BeanParam ObjectPropertyParameterBean typeFilter, @BeanParam EmbedParameterBean embed) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {

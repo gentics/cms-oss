@@ -62,8 +62,8 @@ public interface StagedReferencedObject<T extends NodeObject> {
 		}
 
 		if (!matches) {
-			ContentStagingResourceImpl.logger.warn(String.format("Implementation hash mismatch for %s: Expected: %s, Actual: %s", this, reference.getHash(), computedHash));
-			ContentStagingResourceImpl.logger.warn(String.format("Implementation hash for %s is %s, computed from:\n-- begin --\n%s\n-- end --", this, computedHash, representation));
+			ContentStagingResourceImpl.logger.error(String.format("Implementation hash mismatch for %s: Expected: %s, Actual: %s", this, reference.getHash(), computedHash));
+			ContentStagingResourceImpl.logger.error(String.format("Implementation hash for %s is %s, computed from:\n-- begin --\n%s\n-- end --", this, computedHash, representation));
 		} else if (ContentStagingResourceImpl.logger.isDebugEnabled()) {
 			ContentStagingResourceImpl.logger.debug(String.format("Implementation hash for %s is %s, computed from:\n-- begin --\n%s\n-- end --", this, computedHash, representation));
 		}

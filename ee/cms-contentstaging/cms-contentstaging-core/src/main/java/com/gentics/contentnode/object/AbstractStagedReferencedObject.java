@@ -86,4 +86,14 @@ public abstract class AbstractStagedReferencedObject<T extends NodeObject> imple
 	public GlobalId getGlobalId() {
 		return wrapped.getGlobalId();
 	}
+
+	@Override
+	public String toString() {
+		String id = getGlobalId().toString();
+		if (this.wrapped != null) {
+			return String.format("StagedReference {%s, %s}", id, this.wrapped.toString());
+		} else {
+			return String.format("StagedReference {%s}", id);
+		}
+	}
 }

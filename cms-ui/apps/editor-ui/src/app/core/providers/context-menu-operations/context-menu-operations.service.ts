@@ -533,7 +533,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         const timeManagedPages: Page[] = [];
         const nonTimeManagedPages: Page[] = [];
         pages.forEach((page) => {
-            if (PublishableStateUtil.statePlannedOnline(page) || PublishableStateUtil.stateInQueue(page)) {
+            if (
+                PublishableStateUtil.statePlannedOnline(page)
+                // Only if the page is queued for publishing in the future
+                || (PublishableStateUtil.stateInQueue(page) && page.timeManagement?.queuedPublish?.at > 0)
+            ) {
                 timeManagedPages.push(page);
             } else {
                 nonTimeManagedPages.push(page);

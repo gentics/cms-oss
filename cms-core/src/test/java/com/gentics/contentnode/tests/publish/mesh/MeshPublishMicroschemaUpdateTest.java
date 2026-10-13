@@ -5,6 +5,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMe
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.crResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.jobs;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.microschemas;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.newJobs;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
@@ -13,8 +14,14 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,6 +43,7 @@ import com.gentics.contentnode.object.TagmapEntry.AttributeType;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.Job;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
@@ -45,7 +53,14 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.core.rest.job.JobResponse;
+import com.gentics.mesh.core.rest.branch.BranchResponse;
+import com.gentics.mesh.core.rest.branch.info.BranchMicroschemaInfo;
 import com.gentics.mesh.core.rest.job.JobType;
+import com.gentics.mesh.core.rest.microschema.impl.MicroschemaResponse;
+import com.gentics.mesh.core.rest.microschema.impl.MicroschemaUpdateRequest;
+import com.gentics.mesh.core.rest.schema.FieldSchema;
+import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
+import com.gentics.mesh.rest.client.MeshRestClient;
 
 @GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.INSTANT_CR_PUBLISHING })
 @Category(MeshTest.class)
@@ -139,5 +154,65 @@ public class MeshPublishMicroschemaUpdateTest {
 		// repair again
 		ContentNodeRESTUtils.assertResponseOK(crResource.repair(Integer.toString(crId), 0));
 		assertNewJobs(mesh.client(), initialJobs, new Job(JobType.microschema, SCHEMA_PREFIX + "_construct", projectName, "1.0", "2.0"));
+	}
+
+	/**
+	 * Test that checking the CR does not try to downgrade the version of a microschema, when the microschema is updated
+	 * by another client (and the new version is assigned to the branch) while the check is running
+	 * @throws Exception
+	 */
+	@Test
+	public void testMicroschemaUpdatedDuringCheck() throws Exception {
+		String microschemaName = SCHEMA_PREFIX + "_construct";
+
+		// repair CR (which will generate the microschema and the project)
+		ContentNodeRESTUtils.assertResponseOK(crResource.repair(Integer.toString(crId), 0));
+
+		MicroschemaResponse microschema = microschemas(mesh.client())
+				.filter(m -> StringUtils.equals(m.getName(), microschemaName)).blockingFirst();
+		BranchResponse branch = mesh.client().findBranches(projectName).blockingGet().getData().stream()
+				.filter(b -> StringUtils.equals(b.getName(), projectName)).findFirst().orElseThrow();
+		assertThat(microschemaVersion(branch, microschemaName)).as("Microschema version in branch").isEqualTo("1.0");
+
+		ContentRepository cr = Trx.supply(t -> t.getObject(ContentRepository.class, crId));
+		try (Trx trx = new Trx(); MeshPublisher mp = new MeshPublisher(cr)) {
+			// let the microschema be updated (and the new version assigned to the branches),
+			// after the publisher read the microschemas, but before it reads the microschema versions of the branch
+			Field clientField = MeshPublisher.class.getDeclaredField("client");
+			clientField.setAccessible(true);
+			MeshRestClient realClient = (MeshRestClient) clientField.get(mp);
+			AtomicBoolean microschemaUpdated = new AtomicBoolean();
+			MeshRestClient client = (MeshRestClient) Proxy.newProxyInstance(MeshRestClient.class.getClassLoader(),
+					new Class<?>[] { MeshRestClient.class }, (proxy, method, args) -> {
+						if ("getBranchMicroschemaVersions".equals(method.getName()) && microschemaUpdated.compareAndSet(false, true)) {
+							List<FieldSchema> fields = new ArrayList<>(microschema.getFields());
+							fields.add(new StringFieldSchemaImpl().setName("additional"));
+							mesh.client().updateMicroschema(microschema.getUuid(), new MicroschemaUpdateRequest().setName(microschemaName).setFields(fields))
+									.blockingAwait();
+						}
+						try {
+							return method.invoke(realClient, args);
+						} catch (InvocationTargetException e) {
+							throw e.getCause();
+						}
+					});
+			clientField.set(mp, client);
+
+			assertThat(mp.checkSchemasAndProjects(true, true)).as("Check result").isTrue();
+			assertThat(microschemaUpdated.get()).as("Microschema updated during check").isTrue();
+		}
+
+		assertThat(microschemaVersion(branch, microschemaName)).as("Microschema version in branch").isEqualTo("2.0");
+	}
+
+	/**
+	 * Get the version of the microschema assigned to the branch
+	 * @param branch branch
+	 * @param microschemaName microschema name
+	 * @return assigned version
+	 */
+	protected String microschemaVersion(BranchResponse branch, String microschemaName) {
+		return microschemas(mesh.client(), projectName, branch.getUuid()).filter(info -> StringUtils.equals(info.getName(), microschemaName))
+				.map(BranchMicroschemaInfo::getVersion).blockingFirst();
 	}
 }

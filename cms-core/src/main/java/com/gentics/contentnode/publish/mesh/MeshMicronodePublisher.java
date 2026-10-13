@@ -77,6 +77,7 @@ import com.gentics.mesh.core.rest.schema.impl.NumberFieldSchemaImpl;
 import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
 import com.gentics.mesh.json.JsonUtil;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
+import com.gentics.mesh.util.VersionUtil;
 
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
@@ -431,11 +432,9 @@ public class MeshMicronodePublisher {
 		return Observable.zip(expected, assigned.cache().repeat(), (microschema, map) -> {
 			if (map.containsKey(microschema.getUuid())) {
 				BranchMicroschemaInfo info = map.get(microschema.getUuid());
-				if (StringUtils.equals(info.getVersion(), microschema.getVersion())) {
-					Observable<BranchMicroschemaInfo> empty = Observable.empty();
-					return empty;
-				} else {
-					publisher.info("Branch %s has version %s of microschema %s assigned, but latest schema version is %s", branchName, info.getVersion(),
+				int diffVersion = VersionUtil.compareVersions(microschema.getVersion(), info.getVersion());
+				if (diffVersion > 0) {
+					publisher.info("Branch %s has version %s of microschema %s assigned, but latest schema version to update to is %s", branchName, info.getVersion(),
 							microschema.getName(), microschema.getVersion());
 					if (repair) {
 						MicroschemaReference ref = new MicroschemaReferenceImpl().setName(microschema.getName()).setUuid(microschema.getUuid())
@@ -447,6 +446,13 @@ public class MeshMicronodePublisher {
 						Observable<BranchMicroschemaInfo> empty = Observable.empty();
 						return empty;
 					}
+				} else {
+					if (diffVersion < 0) {
+						publisher.debug("Branch %s has version %s of microschema %s assigned, but latest schema version is already %s", branchName, info.getVersion(),
+								microschema.getName(), microschema.getVersion());
+					}
+					Observable<BranchMicroschemaInfo> empty = Observable.empty();
+					return empty;
 				}
 			} else {
 				Observable<BranchMicroschemaInfo> empty = Observable.empty();

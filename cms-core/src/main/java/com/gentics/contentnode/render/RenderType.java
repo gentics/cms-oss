@@ -1526,19 +1526,27 @@ public class RenderType implements RenderInfo {
 		if (!compilationUnitsPerNode.containsKey(node)) {
 			CompilerConfiguration config = new CompilerConfiguration();
 
-			ClassLoader baseClassLoader;
-			if (Synchronizer.getStatus() == Status.UP) {
-				baseClassLoader = Synchronizer.getGroovyClassLoader(node);
-			} else {
-				baseClassLoader = RenderType.class.getClassLoader();
-			}
-
-			GroovyClassLoader gcl = new GroovyClassLoader(baseClassLoader, config);
+			GroovyClassLoader gcl = new GroovyClassLoader(getGroovyBaseClassLoader(node), config);
 			CompilationUnit unit = new CompilationUnit(config, null, gcl);
 			compilationUnitsPerNode.put(node, unit);
 		}
 
 		return compilationUnitsPerNode.get(node);
+	}
+
+	/**
+	 * Get the base classloader for compiling groovy scripts for the given node. If the {@link Synchronizer} is running,
+	 * this is the classloader containing the scripts of all devtool packages assigned to the node.
+	 * @param node node (may be null)
+	 * @return base classloader
+	 * @throws NodeException
+	 */
+	public static ClassLoader getGroovyBaseClassLoader(Node node) throws NodeException {
+		if (node != null && Synchronizer.getStatus() == Status.UP) {
+			return Synchronizer.getGroovyClassLoader(node);
+		} else {
+			return RenderType.class.getClassLoader();
+		}
 	}
 
 	/**

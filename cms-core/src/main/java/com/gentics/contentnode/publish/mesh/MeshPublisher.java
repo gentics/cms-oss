@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -4468,7 +4467,6 @@ public class MeshPublisher implements AutoCloseable {
 		if (focalPoint == null) {
 			return true;
 		}
-
 		return Float.compare(image.getFpX(), focalPoint.getX()) != 0 || Float.compare(image.getFpY(), focalPoint.getY()) != 0;
 	}
 

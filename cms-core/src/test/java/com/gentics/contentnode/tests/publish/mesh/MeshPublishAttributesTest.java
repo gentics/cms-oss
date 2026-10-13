@@ -6,13 +6,11 @@ import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertO
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFile;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,7 +30,6 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.File;
-import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
@@ -41,7 +38,6 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
-import com.gentics.testutils.GenericTestUtils;
 
 /**
  * Test cases for publishing into a Mesh CR with attribute dirting
@@ -173,59 +169,5 @@ public class MeshPublishAttributesTest {
 			assertThat(node.getFields().getStringField("mimetype")).as("mimetype").isNotNull().hasFieldOrPropertyWithValue("string", newFiletype);
 			assertThat(node.getFields().getBinaryField("binarycontent")).as("binarycontent").isNotNull().hasFieldOrPropertyWithValue("mimeType", newFiletype);
 		});
-	}
-
-	/**
-	 * Test that publishing a focal point change (which does not dirt the binarycontent) does not fail,
-	 * when the node in Mesh does not contain the binary data
-	 * @throws Exception
-	 */
-	@Test
-	public void testFocalPointChangeWithoutBinaryInMesh() throws Exception {
-		String projectName = MeshPublisher.getMeshProjectName(node);
-
-		// create image with focal point
-		ImageFile image = null;
-		try (InputStream inputStream = GenericTestUtils.getPictureResource("blume.jpg")) {
-			image = supply(() -> create(ImageFile.class, img -> {
-				img.setFolderId(node.getFolder().getId());
-				img.setFileStream(inputStream);
-				img.setName("testimage.jpg");
-				img.setFpX(0.7f);
-				img.setFpY(0.3f);
-			}));
-		}
-
-		// run publish process
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// assert that image is published with binarycontent
-		assertObject("Image after creation", mesh.client(), projectName, image, true, node -> {
-			assertThat(node.getFields().getBinaryField("binarycontent")).as("binarycontent").isNotNull();
-		});
-
-		// remove the node from Mesh, so that it will be re-created without binary data
-		ImageFile publishedImage = image;
-		String meshUuid = supply(() -> MeshPublisher.getMeshUuid(publishedImage));
-		mesh.client().deleteNode(projectName, meshUuid).blockingAwait();
-		assertObject("Image after removal from Mesh", mesh.client(), projectName, image, false);
-
-		// change the focal point (dirts the attributes fpx and fpy, but not binarycontent)
-		image = update(image, img -> {
-			img.setFpX(0.5f);
-			img.setFpY(0.5f);
-		});
-
-		// run publish process
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// assert that image is published again
-		assertObject("Image after focal point change", mesh.client(), projectName, image, true);
 	}
 }

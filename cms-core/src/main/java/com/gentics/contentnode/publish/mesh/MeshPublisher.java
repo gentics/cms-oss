@@ -4467,6 +4467,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (focalPoint == null) {
 			return true;
 		}
+
 		return Float.compare(image.getFpX(), focalPoint.getX()) != 0 || Float.compare(image.getFpY(), focalPoint.getY()) != 0;
 	}
 

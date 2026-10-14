@@ -12,6 +12,7 @@ export interface PermissionsTrableLoaderOptions {
     parentId?: number;
     parentType?: AccessControlledType;
     excludedParentType?: AccessControlledType;
+    ignoreChildrenType?: AccessControlledType[];
     channelId?: number;
     parentName?: string;
     parentHasChildren?: boolean;
@@ -93,8 +94,9 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
         options?: PermissionsTrableLoaderOptions,
     ): TrableRow<PermissionsSetBO> {
         const row = super.mapToTrableRow(entity, parent, options);
-        row.hasChildren = entity.children;
-        row.loaded = !entity.children;
+        const canDisplayChildren = !(options?.ignoreChildrenType || []).includes(entity.type);
+        row.hasChildren = canDisplayChildren && entity.children;
+        row.loaded = !canDisplayChildren || !entity.children;
 
         return row;
     }

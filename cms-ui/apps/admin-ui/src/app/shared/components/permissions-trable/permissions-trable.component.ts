@@ -19,21 +19,31 @@ export class PermissionsTrableComponent
     extends BaseEntityTrableComponent<PermissionsSet, PermissionsSetBO, PermissionsTrableLoaderOptions>
     implements OnInit, OnChanges {
 
+    /** The group to get permissions from */
     @Input()
     public group: Group;
 
+    /** The parent-id of the permission object (only if it is an instance permission) */
     @Input()
     public parentId: number;
 
+    /** The type of the object to load permissions from */
     @Input()
     public parentType: AccessControlledType;
 
+    /** Root element types which should not be displayed */
     @Input()
     public excludedParentType: AccessControlledType;
 
+    /** Element types which may have children, but should never display them */
+    @Input()
+    public ignoreChildrenType: AccessControlledType[] = [];
+
+    /** Name of the parent object */
     @Input()
     public parentName: string;
 
+    /** If the parent object has children */
     @Input()
     public parentHasChildren: boolean;
 
@@ -89,6 +99,7 @@ export class PermissionsTrableComponent
             parentId: this.parentId,
             parentType: this.parentType,
             excludedParentType: this.excludedParentType,
+            ignoreChildrenType: this.ignoreChildrenType,
             parentName: this.parentName,
             parentHasChildren: this.parentHasChildren,
             categorizer: this.categorizer,

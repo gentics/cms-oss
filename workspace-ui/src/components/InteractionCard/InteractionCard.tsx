@@ -6,13 +6,15 @@ import { PartCard } from '@/components/MessageParts/PartCard';
 import { SelectableList } from '@/components/MessageParts/SelectableList';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useAnswerInteraction } from '@/hooks/useGenaixQueries';
 import { lockAfterFailure, useInteractionLock } from '@/hooks/useInteractionLock';
 import type { Interaction, InteractionAnswer, UserSettingPart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
+
+import { type Option, OptionSelect } from './OptionSelect';
+import { SettingField, type SettingRow } from './SettingField';
 
 import styles from './InteractionCard.module.css';
 
@@ -30,28 +32,6 @@ interface KindProps {
     interaction: Interaction;
     onSubmit: Submit;
     disabled: boolean;
-}
-
-interface Option {
-    value: string;
-    label: string;
-}
-
-/** A layer `Select` over `options`, labelled by `id`'s `<label>`. */
-function OptionSelect({ id, options, value, onChange, disabled }: { id: string; options: Option[]; value: string; onChange: (value: string) => void; disabled: boolean }) {
-    const { t } = useTranslation();
-    const items = Object.fromEntries(options.map((option) => [option.value, option.label]));
-
-    return (
-        <Select items={items} value={value || null} onValueChange={(next) => onChange(next === null ? '' : String(next))} disabled={disabled}>
-            <SelectTrigger id={id}>
-                <SelectValue placeholder={t('chat.interaction.choose')} />
-            </SelectTrigger>
-            <SelectContent>
-                {options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-            </SelectContent>
-        </Select>
-    );
 }
 
 // `ask_user`: free text, at most 4000 characters (contract `TextAnswer`).
@@ -230,19 +210,10 @@ function Form({ interaction, onSubmit, disabled }: KindProps) {
     );
 }
 
-interface SettingRow {
-    key: string;
-    /** The setting's own name, for a `missing` one. */
-    name?: string;
-    options?: Option[];
-    source?: string;
-    evidence?: string;
-    /** The proposed value and its wording, prefilled. */
-    proposed?: Option;
-}
-
-// `settings_review` (contract §9.1): every `proposed` setting prefilled and every `missing` one to
-// fill, answered with one `setting` part per key.
+// `settings_review` (contract §9.1): every `proposed` setting prefilled, every `missing` one to fill or
+// preselected with what GenAIx recommends, answered with one `setting` part per key. Each setting is
+// chosen in its own field (`SettingField`). A different folder keeps the chosen template; its field then
+// offers the new folder's templates beside it.
 function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
     const { t } = useTranslation();
     const rows = useMemo((): SettingRow[] => [
@@ -251,13 +222,25 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
             options: item.options,
             source: item.source,
             evidence: item.evidence,
-            proposed: { value: item.value, label: item.label },
+            proposed: { value: item.value, label: item.label, ref: item.ref },
+            canChooseOther: true,
         })),
-        ...(interaction.missing ?? []).map((item) => ({ key: item.key, name: item.label, options: item.options })),
+        ...(interaction.missing ?? []).map((item) => ({
+            key: item.key,
+            name: item.label,
+            options: item.options,
+            recommended: item.options?.find((option) => option.value === item.recommended),
+            reason: item.reason,
+            canChooseOther: item.other_allowed ?? false,
+        })),
     ], [interaction]);
-    // The chosen value per key, and for free text what was typed (value and wording at once).
+    // The chosen value per key: the CMS id or code with its wording, and for a folder the folder (`ref`).
     const [values, setValues] = useState<Record<string, Option>>(() => Object.fromEntries(
-        rows.flatMap((row) => (row.proposed ? [[row.key, row.proposed]] : [])),
+        rows.flatMap((row) => {
+            const initial = row.proposed ?? row.recommended;
+
+            return initial ? [[row.key, { value: initial.value, label: initial.label, ref: initial.ref }]] : [];
+        }),
     ));
 
     const isComplete = rows.every((row) => (values[row.key]?.value ?? '') !== '');
@@ -267,10 +250,8 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
 
     useDraft(interaction.id, isComplete ? answer : undefined);
 
-    function choose(row: SettingRow, value: string) {
-        const option = row.options?.find((item) => item.value === value);
-
-        setValues((current) => ({ ...current, [row.key]: { value, label: option?.label ?? value } }));
+    function choose(row: SettingRow, option: Option) {
+        setValues((current) => ({ ...current, [row.key]: option }));
     }
 
     function handleSubmit(event: FormEvent) {
@@ -282,7 +263,6 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
         <form onSubmit={handleSubmit} className={styles.fields}>
             {rows.map((row) => {
                 const id = `interaction-${interaction.id}-${row.key}`;
-                const value = values[row.key];
 
                 return (
                     <div key={row.key} className={styles.field}>
@@ -290,23 +270,22 @@ function SettingsReview({ interaction, onSubmit, disabled }: KindProps) {
                             {row.name || t(`chat.interaction.setting.${row.key}`, { defaultValue: row.key })}
                             {!row.proposed && <span className={styles.required} aria-hidden>*</span>}
                         </label>
-                        {row.options?.length
-                            ? <OptionSelect id={id} options={row.options} value={value?.value ?? ''} onChange={(next) => choose(row, next)} disabled={disabled} />
-                            : (
-                                <input
-                                    id={id}
-                                    className={styles.input}
-                                    value={value?.label ?? ''}
-                                    onChange={(event) => setValues((current) => ({ ...current, [row.key]: { value: event.target.value, label: event.target.value } }))}
-                                    disabled={disabled}
-                                />
-                            )}
-                        {row.source && (
+                        <SettingField
+                            id={id}
+                            row={row}
+                            value={values[row.key]}
+                            onChange={(option) => choose(row, option)}
+                            disabled={disabled}
+                            folder={values.folder}
+                        />
+                        {/* Where a value came from and why GenAIx recommends it, only while it is still that value. */}
+                        {row.source && values[row.key]?.value === row.proposed?.value && (
                             <span className={styles.hint}>
                                 {t(`chat.interaction.source.${row.source}`)}
                                 {row.evidence && ` · „${row.evidence}“`}
                             </span>
                         )}
+                        {row.reason && values[row.key]?.value === row.recommended?.value && <span className={styles.hint}>{row.reason}</span>}
                     </div>
                 );
             })}

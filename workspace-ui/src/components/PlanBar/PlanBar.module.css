@@ -32,8 +32,11 @@
   display: none;
 }
 
+/* Wraps when the actions do not fit beside the status: they move to a line of their own, on the
+   right, and wrap among themselves when even that is too narrow (e.g. four on the review panel). */
 .head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 6px 6px 6px 12px;
@@ -60,7 +63,7 @@
 }
 
 .text {
-  flex: 1;
+  flex: 1 1 120px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -74,100 +77,33 @@
 
 .actions {
   display: flex;
-  flex: none;
-  gap: 6px;
-}
-
-/* A transition the quality gates refused (`GateRefusal`), in place on the review page's panel: title,
-   hint, the failing checks (scrolling when there are many) and its buttons. */
-.refusal {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 50vh;
-  min-height: 0;
-}
-
-.refusalTitle {
-  margin: 0;
-  color: var(--error);
-  font-size: var(--font-size-base);
-  font-weight: 500;
-}
-
-.refusalHint {
-  margin: 0;
-  color: var(--fg-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.refusal .checks {
-  overflow-y: auto;
-}
-
-.refusalActions {
-  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
+  margin-left: auto;
 }
 
-/* The checks the quality gates refused a transition with (`GateRefusal`): a row per check, a
-   3 px left edge in its colour (§3.3 "Prüfzeile"). */
-.checks {
+/* A transition the quality gates refused (`PlanHead` on the review page's panel): one line above the
+   head, icon and text in the colour of what failed (§3.3); the checks themselves are in the checklist. */
+.refusal {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.check {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-subtle);
-  border-left-width: 3px;
-  border-radius: var(--corner-lg);
-}
-
-.check.blocking {
-  border-color: rgba(var(--error-rgb), 0.3);
-  border-left-color: var(--error);
-}
-
-.check.warning {
-  border-left-color: var(--warning);
-}
-
-.checkHead {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
 }
 
-.blocking .checkHead {
+.refusalIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.refusal[data-kind="blocking"] .refusalIcon {
   color: var(--error);
 }
 
-.warning .checkHead {
+.refusal[data-kind="warning"] .refusalIcon {
   color: var(--warning);
-}
-
-.checkLabel {
-  flex: 1;
-  min-width: 0;
-  color: var(--fg-primary);
-  font-weight: 500;
-}
-
-.checkKind {
-  flex: none;
-  font-size: var(--font-size-xs);
-}
-
-.checkMessage {
-  color: var(--fg-secondary);
-  font-size: var(--font-size-sm);
 }

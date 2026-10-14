@@ -1,12 +1,14 @@
-import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useInfiniteQuery, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import {
     answerInteraction,
     archiveSession,
     cancelRun,
     createSession,
+    GenaixApiError,
     genaixRetry,
     genaixRetryDelay,
     getMe,
@@ -19,17 +21,20 @@ import {
     postMessage,
     type SessionFilters,
     transitionPlan,
+    unarchiveSession,
     uploadSessionFile,
 } from '@/services/apiService/apiService';
 import type {
     FileMode,
     InteractionAnswer,
     MessageCreateBody,
+    Problem,
     Session,
     TransitionRequest,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /** Query keys of the GenAIx server state. */
@@ -44,6 +49,8 @@ export const genaixKeys = {
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
     uploads: (sessionId: string) => ['genaix', 'sessions', sessionId, 'uploads'] as const,
     plan: (sessionId: string, planId: string) => ['genaix', 'sessions', sessionId, 'plans', planId] as const,
+    /** Mutation key of every plan transition of a session (`useTransitionPlan`, `usePlanTransition`). */
+    transitions: (sessionId: string) => ['genaix', 'sessions', sessionId, 'transitions'] as const,
 };
 
 // Retries only what is worth retrying (`isRetryableGenaixError`), honouring `Retry-After`.
@@ -107,6 +114,20 @@ export function useArchiveSession() {
     });
 }
 
+/**
+ * POST /sessions/{session_id}/transitions `unarchive`: the archived session is active again, then every
+ * session list is refetched, which holds it again. Retried like a query: the call is idempotent.
+ */
+export function useUnarchiveSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (sessionId: string) => unarchiveSession(sessionId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
+        ...retryOptions,
+    });
+}
+
 /** GET /sessions/{session_id}/messages, oldest first; `fetchNextPage` follows `next_cursor`. */
 export function useSessionMessages(sessionId: string) {
     return useInfiniteQuery({
@@ -121,7 +142,8 @@ export function useSessionMessages(sessionId: string) {
 /**
  * POST /sessions/{session_id}/messages, after making sure the session holds a CMS credential
  * (`ensureSessionCmsAuthorization`). The turn appears in `useWorkspaceEventStore` at once as
- * `sending`, then `sent` or `send_failed`. Never retried: a repeat would send the turn twice.
+ * `sending`, then `sent` or `send_failed`; once sent, the run it started is awaited (`awaitRun`).
+ * Never retried: a repeat would send the turn twice.
  */
 export function useSendMessage(sessionId: string) {
     return useMutation({
@@ -139,6 +161,7 @@ export function useSendMessage(sessionId: string) {
         },
         onSuccess: (accepted, _body, context) => {
             useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id);
+            useWorkspaceEventStore.getState().awaitRun(sessionId, accepted.run_id);
         },
         onError: (error, _body, context) => {
             if (context) {
@@ -167,6 +190,7 @@ export interface StartSessionInput {
 // with a `file_ref` part per file (contract, `SessionCreate`). Either way the session is created with
 // its CMS credential (`newSessionCmsAuthorization`), which GenAIx verifies before creating anything,
 // and without a `workflow`: the session agent answers or drafts a plan under the module it picks (rc.4).
+// The run the first message started is awaited (`awaitRun`), so the session view shows it working.
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
 async function uploadFileParts(sessionId: string, files: StartFile[], onFileProgress?: StartSessionInput['onFileProgress']): Promise<UserFileRefPart[]> {
@@ -185,14 +209,21 @@ async function startSession({ parts, files, onFileProgress }: StartSessionInput)
     const authorizations = [await newSessionCmsAuthorization()];
 
     if (files.length === 0) {
-        return createSession({ message: { parts }, authorizations });
+        const created = await createSession({ message: { parts }, authorizations });
+
+        if (created.run_id) {
+            useWorkspaceEventStore.getState().awaitRun(created.id, created.run_id);
+        }
+
+        return created;
     }
 
     const session = await createSession({ authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
+    const accepted = await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
 
-    await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
+    useWorkspaceEventStore.getState().awaitRun(session.id, accepted.run_id);
 
     return session;
 }
@@ -253,26 +284,81 @@ export function useSendTurn(sessionId: string) {
 export interface TransitionPlanInput {
     planId: string;
     request: TransitionRequest;
+    /**
+     * Sent to have the quality gates check the plan rather than as the user's own decision: the release
+     * "Review & release" sends on the way and "Check again". Only these show the check in progress
+     * (`ReviewPanel`); the request is the same.
+     */
+    isCheck?: boolean;
+}
+
+/** The `409 quality_gate_failed` problem a transition was refused with, or `undefined` for any other outcome. */
+export function gateRefusalOf(error: unknown): Problem | undefined {
+    return error instanceof GenaixApiError && error.genaixCode === 'quality_gate_failed' ? error.problem : undefined;
 }
 
 /**
  * POST /sessions/{session_id}/plans/{plan_id}/transitions, after making sure the session holds a CMS
  * credential (`publish` acts through the session's CMS connection). The plan's new status arrives as
  * `plan.updated` on the event stream; the session lists are refetched, since the to-dos filter on the
- * plan's status. Never retried: a repeated `publish` would start a second run.
+ * plan's status. A transition that runs (`202`) awaits that run (`awaitRun`). Never retried: a
+ * repeated `publish` would start a second run.
+ *
+ * Every transition is kept under `genaixKeys.transitions`, so that its outcome is seen where the plan
+ * is shown (`usePlanTransition`), also when it was sent elsewhere, e.g. the release that "Review &
+ * release" sends on its way to the review page. A refusal by the quality gates is shown there
+ * (`PlanHead`); any other failure is an error notification, also once the sender is gone.
  */
 export function useTransitionPlan(sessionId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
+        mutationKey: genaixKeys.transitions(sessionId),
         mutationFn: async ({ planId, request }: TransitionPlanInput) => {
             await ensureSessionCmsAuthorization(sessionId);
 
             return transitionPlan(sessionId, planId, request);
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
+        onSuccess: (result) => {
+            // `publish`, `request_review` and a restoring `discard` answer `202` with the run that does it.
+            if ('run_id' in result) {
+                useWorkspaceEventStore.getState().awaitRun(sessionId, result.run_id);
+            }
+
+            return queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
+        },
+        onError: (error) => {
+            if (!gateRefusalOf(error)) {
+                useErrorNotificationStore.getState().addError({ messageKey: 'planBar.transitionFailed', detailKey: errorMessageKey(error) });
+            }
+        },
         retry: false,
     });
+}
+
+function isTransitionInput(variables: unknown): variables is TransitionPlanInput {
+    return typeof variables === 'object' && variables !== null && 'planId' in variables && 'request' in variables;
+}
+
+/** Where the transitions of one plan stand. */
+export interface PlanTransition {
+    /** The transition on its way, if any. */
+    pending?: TransitionPlanInput;
+    /** The latest one: what it asked for, when, and how it ended (`status`, `error`). */
+    latest?: { input: TransitionPlanInput; status: 'idle' | 'pending' | 'success' | 'error'; error: unknown; submittedAt: number };
+}
+
+/** The transitions of `planId`, from whichever component sent them (`useTransitionPlan`). */
+export function usePlanTransition(sessionId: string, planId: string): PlanTransition {
+    const states = useMutationState({
+        filters: { mutationKey: genaixKeys.transitions(sessionId) },
+        select: ({ state }) => state,
+    });
+    const own = states.flatMap(({ variables, status, error, submittedAt }) => (
+        isTransitionInput(variables) && variables.planId === planId ? [{ input: variables, status, error, submittedAt }] : []
+    ));
+
+    return { pending: own.find(({ status }) => status === 'pending')?.input, latest: own.at(-1) };
 }
 
 /**

@@ -398,6 +398,20 @@ export async function listCmsTemplates(folderId: number, nodeId?: number, signal
     return templates ?? [];
 }
 
+/** A language of a node (`rest/model/ContentLanguage.java`): `code` is what a `language` setting carries. */
+export interface CmsLanguage {
+    id: number;
+    code: string;
+    name: string;
+}
+
+/** The languages of the node `nodeId`, in the node's order: `GET /rest/node/{id}/languages`. */
+export async function listCmsLanguages(nodeId: number, signal?: AbortSignal): Promise<CmsLanguage[]> {
+    const { items } = await httpRequest<{ items?: CmsLanguage[] }>(`/rest/node/${nodeId}/languages`, { ...CMS_GET, signal });
+
+    return items ?? [];
+}
+
 /** Where the CMS serves the image `imageId` of `nodeId` itself: `GET /rest/file/content/load/{id}`, with the user's CMS session. */
 export function cmsImageUrl(nodeId: number, imageId: number): string {
     return `/rest/file/content/load/${imageId}?${new URLSearchParams({ nodeId: String(nodeId) })}`;

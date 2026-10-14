@@ -27,18 +27,25 @@ export function sessionFixture(overrides: Partial<Session> & Pick<Session, 'id'>
 
 /**
  * Stubs `fetch` as the GenAIx session routes: `GET /sessions` answers with `listSessions(url)`,
- * `DELETE /sessions/{id}` with `archive(id)` (default `204`). Returns the mock to inspect the calls.
+ * `DELETE /sessions/{id}` with `archive(id)` (default `204`), `POST /sessions/{id}/transitions` with
+ * `unarchive(id)` (default `200` with the session). Returns the mock to inspect the calls.
  */
 export function stubSessionRoutes(
     listSessions: (url: URL) => SessionPage,
     archive: (sessionId: string) => Response = () => new Response(null, { status: 204 }),
+    unarchive: (sessionId: string) => Response = (sessionId) => Response.json(sessionFixture({ id: sessionId })),
 ) {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
         const url = new URL(String(input), 'http://localhost');
         const sessionId = /^\/rest\/proxy\/genaix\/sessions\/([^/]+)$/.exec(url.pathname)?.[1];
+        const transitionsOf = /^\/rest\/proxy\/genaix\/sessions\/([^/]+)\/transitions$/.exec(url.pathname)?.[1];
 
         if (init?.method === 'DELETE' && sessionId) {
             return archive(decodeURIComponent(sessionId));
+        }
+
+        if (init?.method === 'POST' && transitionsOf) {
+            return unarchive(decodeURIComponent(transitionsOf));
         }
 
         if (url.pathname === '/rest/proxy/genaix/sessions') {
@@ -81,4 +88,11 @@ export function archivedIds(fetchMock: ReturnType<typeof stubSessionRoutes>): st
     return fetchMock.mock.calls
         .filter(([, init]) => init?.method === 'DELETE')
         .map(([input]) => decodeURIComponent(String(input).split('/').pop()!));
+}
+
+/** The ids `fetchMock` sent `POST /sessions/{id}/transitions` (`unarchive`) for. */
+export function unarchivedIds(fetchMock: ReturnType<typeof stubSessionRoutes>): string[] {
+    return fetchMock.mock.calls
+        .filter(([input, init]) => init?.method === 'POST' && String(input).endsWith('/transitions'))
+        .map(([input]) => decodeURIComponent(String(input).split('/').at(-2)!));
 }

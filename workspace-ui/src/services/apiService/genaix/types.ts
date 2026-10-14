@@ -125,3 +125,4 @@ export type Publication = GenaixSchema<'Publication'>;
 export type ApprovalStep = GenaixSchema<'ApprovalStep'>;
 export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;
+export type DerivedSettings = GenaixSchema<'DerivedSettings'>;

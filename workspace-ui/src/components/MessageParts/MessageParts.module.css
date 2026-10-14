@@ -128,6 +128,14 @@
   color: var(--interactive);
 }
 
+/* A Markdown table (`.table`, below), scrolling sideways when wider than the bubble. Words are not
+   broken anywhere here, or every column would shrink to a letter instead of scrolling. */
+.proseTable {
+  margin: 0 0 6px;
+  overflow-x: auto;
+  overflow-wrap: normal;
+}
+
 .plain {
   white-space: pre-wrap;
 }

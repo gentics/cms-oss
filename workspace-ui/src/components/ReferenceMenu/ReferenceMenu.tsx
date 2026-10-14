@@ -1,26 +1,35 @@
 import type { Editor, JSONContent, Range } from '@tiptap/core';
 import { exitSuggestion } from '@tiptap/suggestion';
-import { AtSignIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, ImageIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
+import { AtSignIcon, FileTextIcon, FolderIcon, FolderTreeIcon, GlobeIcon, HashIcon, ImageIcon, LanguagesIcon, LayoutTemplateIcon, type LucideIcon, PaperclipIcon, XIcon } from 'lucide-react';
 import { type ReactNode, type RefObject, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-import { followReferenceTrigger, type ReferenceTrigger, referenceTriggerKey, reopenReferenceMenu } from '@/components/ComposerTextInput/composerExtensions';
+import { followReferenceTrigger, followSettingTrigger, type ReferenceTrigger, referenceTriggerKey, reopenReferenceMenu, settingTriggerKey } from '@/components/ComposerTextInput/composerExtensions';
 import { FolderSearchDialog } from '@/components/FolderSearchDialog/FolderSearchDialog';
+import { withPath } from '@/components/InteractionCard/withPath';
 import { Button } from '@/components/ui/button';
-import { FILE_REF_NODE, REFERENCE_NODE } from '@/helper/composerParts/composerParts';
+import { FILE_REF_NODE, REFERENCE_NODE, SETTING_NODE } from '@/helper/composerParts/composerParts';
 import { formatMegabytes } from '@/helper/uploadLimits/uploadLimits';
-import { useCmsNodes, useCmsSearch } from '@/hooks/useCmsQueries';
+import { useCmsLanguages, useCmsNodes, useCmsSearch, useCmsTemplates } from '@/hooks/useCmsQueries';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useSessionUploads } from '@/hooks/useGenaixQueries';
 import { CMS_ITEM_TYPES, type CmsFolder, type CmsItemType, type CmsNode } from '@/services/cmsApiService/cmsApiService';
 
 import styles from './ReferenceMenu.module.css';
 
-/** The groups of the menu, in the order shown (draft `GROUPS`, without guidelines). */
+/** The groups of the @-menu, in the order shown (draft `GROUPS`, without guidelines). */
 const GROUPS = ['page', 'folder', 'image', 'file', 'project'] as const;
 
-type Group = typeof GROUPS[number];
+/** The groups of the #-menu: the settings a chip can set, in the order shown. */
+const SETTING_GROUPS = ['folder', 'template', 'language'] as const;
+
+type Group = typeof GROUPS[number] | typeof SETTING_GROUPS[number];
+
+/** What the menu inserts: references (`@`) or setting chips (`#`, contract `UserSettingPart`). */
+export type ReferenceMenuMode = 'reference' | 'setting';
+
+const MODE_GROUPS: Record<ReferenceMenuMode, readonly Group[]> = { reference: GROUPS, setting: SETTING_GROUPS };
 
 const GROUP_ICONS: Record<Group, LucideIcon> = {
     page: FileTextIcon,
@@ -28,6 +37,8 @@ const GROUP_ICONS: Record<Group, LucideIcon> = {
     image: ImageIcon,
     file: PaperclipIcon,
     project: GlobeIcon,
+    template: LayoutTemplateIcon,
+    language: LanguagesIcon,
 };
 
 // The prefixes that narrow the menu to one group, typed as `@page:…` (draft `SCOPEMAP`).
@@ -44,6 +55,11 @@ const SCOPE_PREFIXES: Record<string, Group> = {
     project: 'project',
     node: 'project',
     nodes: 'project',
+    template: 'template',
+    templates: 'template',
+    language: 'language',
+    languages: 'language',
+    lang: 'language',
 };
 
 // How long the query has to stay the same before the CMS is searched, as in `SessionSearch`.
@@ -58,22 +74,38 @@ interface MenuItem {
     token: JSONContent;
 }
 
-// The query after `@`: a group prefix (`page:`), if any, and the text to search for.
-function parseQuery(query: string): { scope: Group | null; text: string; prefixLength: number } {
+// The query after `@` or `#`: a prefix of one of `groups` (`page:`), if any, and the text to search for.
+function parseQuery(query: string, groups: readonly Group[]): { scope: Group | null; text: string; prefixLength: number } {
     const [, prefix = '', rest = ''] = /^([a-z]+):(.*)$/i.exec(query) ?? [];
     const scope = SCOPE_PREFIXES[prefix.toLowerCase()];
 
-    return scope ? { scope, text: rest, prefixLength: prefix.length + 1 } : { scope: null, text: query, prefixLength: 0 };
+    return scope && groups.includes(scope) ? { scope, text: rest, prefixLength: prefix.length + 1 } : { scope: null, text: query, prefixLength: 0 };
 }
 
-// The CMS object types searched within `scope`: all of them without one, none for a group that
-// is not in the CMS search (session files, projects).
-function searchedTypes(scope: Group | null): readonly CmsItemType[] {
-    if (scope === null) {
-        return CMS_ITEM_TYPES;
-    }
+// The CMS object types searched within `scope`: all of them without one (only folders for setting
+// chips), none for a group that is not in the CMS search (session files, projects, templates, languages).
+function searchedTypes(scope: Group | null, mode: ReferenceMenuMode): readonly CmsItemType[] {
+    const types = mode === 'setting' ? CMS_ITEM_TYPES.filter((type) => type === 'folder') : CMS_ITEM_TYPES;
 
-    return CMS_ITEM_TYPES.filter((type) => type === scope);
+    return scope === null ? types : types.filter((type) => type === scope);
+}
+
+// A setting chip (`#[key: value]`): the value the agent needs (an id or a language code) and the wording shown.
+function settingToken(key: string, value: string, label: string): JSONContent {
+    return { type: SETTING_NODE, attrs: { key, value, label } };
+}
+
+// The folder of the field's `#[folder: …]` chip, if there is one: its templates are the ones to offer.
+function chosenFolderId(editor: Editor): number | undefined {
+    let folderId: number | undefined;
+
+    editor.state.doc.descendants((node) => {
+        if (node.type.name === SETTING_NODE && node.attrs.key === 'folder') {
+            folderId = Number(node.attrs.value);
+        }
+    });
+
+    return folderId !== undefined && Number.isInteger(folderId) ? folderId : undefined;
 }
 
 // Whether `name` contains `text`, ignoring case; every name contains the empty text.
@@ -102,6 +134,8 @@ interface ReferenceMenuProps {
     editor: Editor;
     /** The session whose uploaded files the menu offers; without one there is no Files group. */
     sessionId?: string;
+    /** `setting` for the #-menu of setting chips; the @-menu of references by default. */
+    mode?: ReferenceMenuMode;
 }
 
 /**
@@ -114,8 +148,15 @@ interface ReferenceMenuProps {
  * (`ReferenceTriggerExtension`). Narrowed to folders, its last entry opens the advanced folder search
  * (`FolderSearchDialog`) with the typed text; the folder chosen there replaces `@query`, and Cancel
  * goes back to the menu.
+ *
+ * With `mode="setting"` it is the #-menu (`SettingTriggerExtension`): the groups folder, template and
+ * language, and what it inserts are setting chips with the CMS id or language code as their value, which
+ * GenAIx takes as the user's decision and asks no more about (contract `UserSettingPart`). Templates are
+ * those of the folder chip already in the field.
  */
-export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
+export function ReferenceMenu({ editor, sessionId, mode = 'reference' }: ReferenceMenuProps) {
+    const triggerKey = mode === 'setting' ? settingTriggerKey : referenceTriggerKey;
+
     // The open menu as the editor reports it (query, where `@query` sits, the element to render
     // into), `null` while it is closed.
     const [openMenu, setOpenMenu] = useState<ReferenceTrigger | null>(null);
@@ -127,7 +168,7 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
     const [reopenScope, setReopenScope] = useState<Group | null>(null);
 
     // Follows the editor's @-trigger while mounted (`ReferenceTriggerExtension`).
-    useEffect(() => followReferenceTrigger(editor, {
+    useEffect(() => (mode === 'setting' ? followSettingTrigger : followReferenceTrigger)(editor, {
         onChange: (trigger) => {
             setOpenMenu(trigger);
 
@@ -136,7 +177,7 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
             }
         },
         onKeyDown: (event) => listKeyHandlerRef.current?.(event) ?? false,
-    }), [editor]);
+    }), [editor, mode]);
 
     // Closes the menu for the folder search; `@query` stays in the field until a folder is chosen.
     function openAdvanced(query: string) {
@@ -145,7 +186,7 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
         }
 
         setAdvanced({ range: openMenu.range, query });
-        exitSuggestion(editor.view, referenceTriggerKey);
+        exitSuggestion(editor.view, triggerKey);
     }
 
     // Replaces `@query` with the folder's token and a space to go on typing.
@@ -154,10 +195,11 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
             return;
         }
 
-        const ref = { type: 'folder', id: String(folder.id), node_id: node.id, label: folder.name };
+        const ref = { type: 'folder' as const, id: String(folder.id), node_id: node.id, label: folder.name, ...(folder.path && { path: folder.path }) };
+        const token = mode === 'setting' ? settingToken('folder', ref.id, withPath(folder.name, ref)) : { type: REFERENCE_NODE, attrs: { ref } };
 
         setAdvanced(null);
-        editor.chain().focus().insertContentAt(advanced.range, [{ type: REFERENCE_NODE, attrs: { ref } }, { type: 'text', text: ' ' }]).run();
+        editor.chain().focus().insertContentAt(advanced.range, [token, { type: 'text', text: ' ' }]).run();
     }
 
     // Back to the menu, narrowed to folders, with the caret at the end of `@query`.
@@ -180,6 +222,7 @@ export function ReferenceMenu({ editor, sessionId }: ReferenceMenuProps) {
                     editor={editor}
                     openMenu={openMenu}
                     sessionId={sessionId}
+                    mode={mode}
                     initialScope={reopenScope}
                     listKeyHandlerRef={listKeyHandlerRef}
                     onAdvancedSearch={openAdvanced}
@@ -195,6 +238,7 @@ interface MenuListProps {
     editor: Editor;
     openMenu: ReferenceTrigger;
     sessionId?: string;
+    mode: ReferenceMenuMode;
     /** The group the menu starts narrowed to, if any. */
     initialScope: Group | null;
     /** Set to the list's key handling while it is shown. */
@@ -203,7 +247,7 @@ interface MenuListProps {
     onAdvancedSearch: (query: string) => void;
 }
 
-function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef, onAdvancedSearch }: MenuListProps) {
+function MenuList({ editor, openMenu, sessionId, mode, initialScope, listKeyHandlerRef, onAdvancedSearch }: MenuListProps) {
     const { t, i18n } = useTranslation();
     const listId = useId();
     const [active, setActive] = useState(0);
@@ -212,31 +256,42 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
     const followsKeyboardRef = useRef(false);
     // The group chosen with Tab; a prefix typed in the query wins over it.
     const [tabScope, setTabScope] = useState<Group | null>(initialScope);
-    const typed = parseQuery(openMenu.query);
+    const modeGroups = MODE_GROUPS[mode];
+    const typed = parseQuery(openMenu.query, modeGroups);
     const scope = typed.scope ?? tabScope;
     const text = typed.text.trim();
     const searchText = useDebouncedValue(text, SEARCH_DELAY_MS);
     // Without text, the nodes' root levels: loaded with the bare `@`, so a group chosen next shows
     // them at once. Text is searched once it has stayed the same for a moment.
     const query = text === '' ? '' : searchText;
-    const types = searchedTypes(scope);
+    const types = searchedTypes(scope, mode);
     const nodes = useCmsNodes();
     const search = useCmsSearch(nodes.data ?? [], query, types);
-    const uploads = useSessionUploads(sessionId);
-    // A bare `@` offers the groups to narrow to first; the Files group only in a session.
+    const isSetting = mode === 'setting';
+    const uploads = useSessionUploads(isSetting ? undefined : sessionId);
+    // Setting chips: the templates of the folder chip in the field, the languages of every node.
+    const folderId = isSetting ? chosenFolderId(editor) : undefined;
+    const templates = useCmsTemplates(folderId, undefined);
+    const languages = useCmsLanguages(isSetting ? (nodes.data ?? []).map((node) => node.id) : []);
+    // A bare `@` or `#` offers the groups to narrow to first; the Files group only in a session.
     const isChoosingGroup = scope === null && text === '';
-    const groupChoices = GROUPS.filter((group) => group !== 'file' || sessionId !== undefined);
+    const groupChoices = modeGroups.filter((group) => group !== 'file' || sessionId !== undefined);
     // CMS objects found for other text than typed: narrowed to the typed text until the answer.
     const isStale = text !== query || search.isStale;
 
     const items: MenuItem[] = [
-        ...search.results.flatMap(({ node, items: found }) => found.filter((item) => !isStale || contains(item.name, text)).map((item): MenuItem => ({
-            key: `${node.id}-${item.type}-${item.id}`,
-            group: item.type,
-            name: item.name,
-            detail: item.path ?? node.name,
-            token: { type: REFERENCE_NODE, attrs: { ref: { type: item.type, id: String(item.id), node_id: node.id, label: item.name } } },
-        }))),
+        ...search.results.flatMap(({ node, items: found }) => found.filter((item) => !isStale || contains(item.name, text)).map((item): MenuItem => {
+            // `path` tells same-named objects apart for GenAIx too (contract `ContextReference.path`).
+            const ref = { type: item.type, id: String(item.id), node_id: node.id, label: item.name, ...(item.path && { path: item.path }) };
+
+            return {
+                key: `${node.id}-${item.type}-${item.id}`,
+                group: item.type,
+                name: item.name,
+                detail: item.path ?? node.name,
+                token: isSetting ? settingToken('folder', ref.id, withPath(item.name, ref)) : { type: REFERENCE_NODE, attrs: { ref } },
+            };
+        })),
         ...(uploads.data ?? []).filter((file) => contains(file.name, text)).map((file): MenuItem => ({
             key: `file-${file.id}`,
             group: 'file',
@@ -244,15 +299,29 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
             detail: `${t(`composer.attachment.${file.mode}`)} · ${formatMegabytes(file.size, i18n.language)}`,
             token: { type: FILE_REF_NODE, attrs: { fileId: file.id, mode: file.mode, name: file.name } },
         })),
-        ...(nodes.data ?? []).filter((node) => contains(node.name, text)).map((node): MenuItem => ({
+        ...(isSetting ? [] : nodes.data ?? []).filter((node) => contains(node.name, text)).map((node): MenuItem => ({
             key: `node-${node.id}`,
             group: 'project',
             name: node.name,
             detail: '',
             token: { type: REFERENCE_NODE, attrs: { ref: { type: 'node', id: String(node.id), node_id: node.id, label: node.name } } },
         })),
+        ...(templates.data ?? []).filter((template) => contains(template.name, text)).map((template): MenuItem => ({
+            key: `template-${template.id}`,
+            group: 'template',
+            name: template.name,
+            detail: '',
+            token: settingToken('template', String(template.id), template.name),
+        })),
+        ...languages.languages.filter((language) => contains(language.name, text) || contains(language.code, text)).map((language): MenuItem => ({
+            key: `language-${language.code}`,
+            group: 'language',
+            name: language.name,
+            detail: language.code,
+            token: settingToken('language', language.code, language.name),
+        })),
     ];
-    const groups = GROUPS
+    const groups = modeGroups
         .filter((group) => scope === null || group === scope)
         .map((group) => ({ group, items: items.filter((item) => item.group === group) }))
         .filter(({ items: inGroup }) => inGroup.length > 0);
@@ -269,7 +338,9 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
     // Searching from the first key on: also while the text waits out the delay, so that the menu
     // does not say "nothing found" before the CMS was asked.
     const isSearching = types.length > 0 && (text !== query || search.isLoading);
-    const isLoading = nodes.isLoading || isSearching || uploads.isLoading;
+    const isLoading = nodes.isLoading || isSearching || uploads.isLoading || templates.isLoading || (isSetting && languages.isPending);
+    // Narrowed to templates without a folder chip: there is no folder to take them from yet.
+    const needsFolder = scope === 'template' && folderId === undefined;
 
     // Replaces `@query` with the entry's token and a space to go on typing.
     function pick(item: MenuItem) {
@@ -278,7 +349,7 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
 
     // Closes the menu; the typed `@query` stays as text.
     function keepAsText() {
-        exitSuggestion(editor.view, referenceTriggerKey);
+        exitSuggestion(editor.view, isSetting ? settingTriggerKey : referenceTriggerKey);
         editor.commands.focus();
     }
 
@@ -440,7 +511,7 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
     return (
         <div className={styles.menu}>
             <div className={styles.head}>
-                <AtSignIcon size={14} aria-hidden />
+                {isSetting ? <HashIcon size={14} aria-hidden /> : <AtSignIcon size={14} aria-hidden />}
                 {scope && (
                     <span className={styles.scope}>
                         {t(`composer.mention.groups.${scope}`)}
@@ -463,7 +534,7 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
                 ref={listRef}
                 id={listId}
                 role="listbox"
-                aria-label={t('composer.mention.label')}
+                aria-label={t(isSetting ? 'composer.setting.label' : 'composer.mention.label')}
                 // The advanced folder search below the states of the search belongs to the list.
                 aria-owns={offersAdvanced ? optionId(shown.length) : undefined}
                 className={styles.list}
@@ -542,7 +613,7 @@ function MenuList({ editor, openMenu, sessionId, initialScope, listKeyHandlerRef
 
             {!isChoosingGroup && !isLoading && shown.length === 0 && (
                 <div className={styles.empty}>
-                    <p>{text ? t('composer.mention.empty', { query: text }) : t('composer.mention.emptyNoQuery')}</p>
+                    <p>{needsFolder ? t('composer.setting.chooseFolderFirst') : text ? t('composer.mention.empty', { query: text }) : t('composer.mention.emptyNoQuery')}</p>
                     {text && (
                         <Button variant="secondary" size="sm" onMouseDown={(event) => event.preventDefault()} onClick={keepAsText}>
                             {t('composer.mention.asText', { query: openMenu.query })}

@@ -18,6 +18,7 @@ Changelog Folder: changelog
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Vite dev server; proxies `/rest/proxy/genaix` and adds the GenAIx headers (README, "Local GenAIx API"), and `/rest` to `CMS_PROXY_TARGET` when set (`.env.example`) |
+| `npm run dev:debug` | Same as `npm run dev` in Vite mode `debug`: the session page shows the stream's events beside the chat (`EventLog`, `useEventLogStore`) |
 | `npm run catalogue` | Component catalogue on its own Vite dev server, `:5174` (`vite.catalogue.config.ts`); not part of `npm run dev` or `npm run build` |
 | `npm run mock:genaix` | GenAIx mock on `:8123` from `../../api-contract` (`GENAIX_MOCK_PORT=8123`, the port of its docker compose stack) |
 | `npm run typecheck` | `tsc -b` |

@@ -1,5 +1,4 @@
-import { Link } from '@tanstack/react-router';
-import { ChevronDownIcon, ChevronUpIcon, ClipboardCheckIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +8,7 @@ import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PlanHead } from './PlanHead';
+import { ReviewButton } from './ReviewButton';
 
 import styles from './PlanBar.module.css';
 
@@ -36,8 +36,9 @@ interface PlanBarProps {
  * on the toggle holds until the plan's waiting changes.
  *
  * While the plan has something to review (`REVIEWABLE`), "Review & release" next to the toggle opens
- * the review page, where the plan's preview, checks and pages are shown together; release, publish and
- * request review are made there, not here (`PlanHead` without `withGatedActions`).
+ * the review page, where the plan's preview, checks and pages are shown together, and releases a done
+ * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
+ * without `withGatedActions`).
  */
 export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
     const { t } = useTranslation();
@@ -79,12 +80,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
                     <PlanCard plan={plan} sessionId={sessionId} canAnswer={!isWorking} />
                 </div>
                 <PlanHead sessionId={sessionId} plan={plan}>
-                    {REVIEWABLE.has(plan.status) && (
-                        <Button variant="secondary" size="sm" nativeButton={false} role={undefined} render={<Link to="/sessions/$id/review" params={{ id: sessionId }} search={{ plan: plan.id }} />}>
-                            <ClipboardCheckIcon size={14} aria-hidden />
-                            {t('planBar.review')}
-                        </Button>
-                    )}
+                    {REVIEWABLE.has(plan.status) && <ReviewButton sessionId={sessionId} plan={plan} />}
                     <Button
                         variant="ghost"
                         size="icon"

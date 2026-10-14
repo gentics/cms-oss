@@ -279,6 +279,18 @@ export function archiveSession(sessionId: string): Promise<void> {
     return genaixRequest<void>(`/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' });
 }
 
+// POST /sessions/{session_id}/transitions `{action: "unarchive"}` (rc.4): an archived session is active
+// again (`200 Session`); `unarchive` of an active one is `200` too. What `archive` did stays done: a run
+// it cancelled stays cancelled, and the session credentials it deleted are registered anew on the next
+// turn (`ensureSessionCmsAuthorization`).
+export function unarchiveSession(sessionId: string): Promise<Session> {
+    return genaixRequest<Session>(`/sessions/${encodeURIComponent(sessionId)}/transitions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unarchive' }),
+    });
+}
+
 // GET /sessions/{session_id}/messages: oldest first, paged by `next_cursor`.
 export function listMessages(sessionId: string, page: PageParams = {}): Promise<MessagePage> {
     return genaixRequest<MessagePage>(`/sessions/${encodeURIComponent(sessionId)}/messages${queryString({ ...page })}`);

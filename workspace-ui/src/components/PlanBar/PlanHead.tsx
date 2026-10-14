@@ -1,18 +1,13 @@
-import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RocketIcon, RouteIcon, Undo2Icon, XIcon } from 'lucide-react';
+import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, RefreshCwIcon, RocketIcon, RouteIcon, TriangleAlertIcon, Undo2Icon, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { planActions } from '@/helper/planActions/planActions';
-import { useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
-import { GenaixApiError } from '@/services/apiService/apiService';
-import type { Plan, Problem, Publication, TransitionRequest } from '@/services/apiService/genaix/types';
-import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { gateRefusalOf, usePlanTransition, useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
+import type { Plan, Publication, TransitionRequest } from '@/services/apiService/genaix/types';
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
-
-import { GateRefusal } from './GateRefusal';
 
 import styles from './PlanBar.module.css';
 
@@ -53,8 +48,8 @@ interface PlanHeadProps {
     /** In a chat card's foot (`ChatPlanCard`) rather than the plan bar: no padding of its own. */
     isInCard?: boolean;
     /**
-     * On the review page's panel: also offers the gated transitions (`GATED_ACTIONS` in `planActions`), and shows a
-     * transition the gates refuse in place (`GateRefusal`). Elsewhere only discard and reopen.
+     * On the review page's panel: also offers the gated transitions (`GATED_ACTIONS` in `planActions`), and what
+     * to do about a transition the gates refused. Elsewhere only discard and reopen.
      */
     withGatedActions?: boolean;
     /** Controls after the actions, such as the plan bar's toggle. */
@@ -65,8 +60,19 @@ interface PlanHeadProps {
  * Where one plan is: its status, the publish outcome of the pages it wrote (`publications.updated`,
  * "2 published, 1 in review") and the transitions its status allows (`ACTIONS`, POST
  * …/plans/{plan_id}/transitions): release also while the plan's run works, which stops it once the
- * gates passed, the others only while no run is active. The new status arrives as `plan.updated`. A
- * transition the quality gates refuse is shown above the head (`GateRefusal`). The gated transitions
+ * gates passed, the others only while no run is active, and none while a transition of the plan is on
+ * its way, wherever it was sent (`usePlanTransition`). The new status arrives as `plan.updated`.
+ *
+ * With `withGatedActions`, when the quality gates refused the plan's latest transition
+ * (`409 quality_gate_failed`), its button gives way to what can be done about it: "Check again", which
+ * repeats it so the gates run again, and with warnings only (`failing_gates` empty) "Release anyway"
+ * (or publish, request review), which repeats it with `acknowledgeable_checks` as `acknowledge_checks`
+ * (contract, `TransitionRequest.acknowledge_checks`). A blocking check cannot be acknowledged, so then
+ * only "Check again". A line above the head says which of the two it is; the failing checks themselves
+ * are in the checklist above (`ReviewPanel`), so they are not listed again. This holds until another
+ * transition is sent or the plan no longer offers that one.
+ *
+ * The gated transitions
  * (release, publish, request review) only with `withGatedActions`, on the review page, so that a user
  * releases or publishes there, with the checks in view. Discard asks first, saying what
  * happens to the pages by the module's `plan_policy.on_discard`. Stopping a plan's run is the
@@ -75,29 +81,22 @@ interface PlanHeadProps {
 export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions = false, children }: PlanHeadProps) {
     const { t } = useTranslation();
     const transitionPlan = useTransitionPlan(sessionId);
+    const { pending, latest } = usePlanTransition(sessionId, plan.id);
     const publications = useWorkspaceEventStore((state) => selectSession(sessionId)(state).publications?.[plan.id]);
     const hasRun = useWorkspaceEventStore((state) => Boolean(selectSession(sessionId)(state).run));
-    // The refused transition, while its dialog is open.
-    const [refusal, setRefusal] = useState<{ action: Action; problem: Problem }>();
     const [isDiscardOpen, setIsDiscardOpen] = useState(false);
     const onDiscard = useWorkflows().data?.find(({ id }) => id === plan.workflow)?.plan_policy?.on_discard ?? 'keep';
 
-    function transition(action: Action, acknowledgeChecks?: string[]) {
+    // `isCheck` for "Check again", which has the gates check the plan rather than release it at the user's word.
+    function transition(action: Action, { acknowledgeChecks, isCheck }: { acknowledgeChecks?: string[]; isCheck?: boolean } = {}) {
+        if (pending) {
+            return;
+        }
+
         const request: TransitionRequest = { action, ...(acknowledgeChecks && { acknowledge_checks: acknowledgeChecks }) };
 
-        transitionPlan.mutateAsync({ planId: plan.id, request }).then(
-            () => setRefusal(undefined),
-            (error: unknown) => {
-                if (error instanceof GenaixApiError && error.genaixCode === 'quality_gate_failed' && error.problem) {
-                    setRefusal({ action, problem: error.problem });
-
-                    return;
-                }
-
-                setRefusal(undefined);
-                useErrorNotificationStore.getState().addError({ messageKey: 'planBar.transitionFailed', detailKey: errorMessageKey(error) });
-            },
-        );
+        // A refusal or any other failure is handled where every transition is (`useTransitionPlan`).
+        transitionPlan.mutate({ planId: plan.id, request, isCheck });
     }
 
     const counts = countByStatus(publications ?? []);
@@ -110,17 +109,55 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
     const tone = counts.failed ? styles.bad : isUnderWay || isClosed ? undefined : styles.ok;
     const Icon = counts.failed ? CircleAlertIcon : isUnderWay || isClosed ? RouteIcon : CircleCheckIcon;
     const actions = planActions(plan.status, withGatedActions);
+    const refusedAction = latest?.input.request.action;
+    const refusal = withGatedActions && latest?.status === 'error' && refusedAction && actions.includes(refusedAction)
+        ? gateRefusalOf(latest.error)
+        : undefined;
+    const acknowledgeable = refusal?.acknowledgeable_checks ?? [];
+    const canAcknowledge = Boolean(refusal) && (refusal?.failing_gates ?? []).length === 0 && acknowledgeable.length > 0;
+
+    // The buttons of one action: as offered, or for the refused one what can be done about it.
+    function actionButtons(action: Action) {
+        const ActionIcon = ACTION_ICONS[action];
+
+        if (refusal && action === refusedAction) {
+            return [
+                <Button key={`${action}-retry`} variant={canAcknowledge ? 'secondary' : 'primary'} size="sm" disabled={Boolean(pending)} onClick={() => transition(action, { isCheck: true })}>
+                    <RefreshCwIcon size={14} />
+                    {t('planBar.gate.retry')}
+                </Button>,
+                canAcknowledge && (
+                    <Button key={`${action}-anyway`} variant="primary" size="sm" disabled={Boolean(pending)} onClick={() => transition(action, { acknowledgeChecks: acknowledgeable })}>
+                        <ActionIcon size={14} />
+                        {t(`planBar.gate.anyway.${action}`)}
+                    </Button>
+                ),
+            ];
+        }
+
+        return [
+            <Button
+                key={action}
+                variant={PRIMARY_ACTIONS.has(action) ? 'primary' : 'secondary'}
+                size="sm"
+                disabled={Boolean(pending) || (hasRun && action !== 'release')}
+                onClick={() => (action === 'discard' ? setIsDiscardOpen(true) : transition(action))}
+            >
+                <ActionIcon size={14} />
+                {t(`planBar.actions.${action}`)}
+            </Button>,
+        ];
+    }
+
+    const RefusalIcon = canAcknowledge ? TriangleAlertIcon : CircleAlertIcon;
 
     return (
         <>
             {refusal && (
-                <GateRefusal
-                    action={refusal.action}
-                    problem={refusal.problem}
-                    isPending={transitionPlan.isPending}
-                    onAcknowledge={(checkIds) => transition(refusal.action, checkIds)}
-                    onClose={() => setRefusal(undefined)}
-                />
+                <p className={styles.refusal} data-kind={canAcknowledge ? 'warning' : 'blocking'} role="status">
+                    <RefusalIcon size={14} aria-hidden className={styles.refusalIcon} />
+                    {t(canAcknowledge ? 'planBar.gate.acknowledgeHint' : 'planBar.gate.blockingHint')}
+                </p>
             )}
             <div className={[styles.head, isInCard && styles.inCard, tone].filter(Boolean).join(' ')}>
                 <Icon size={16} className={styles.icon} aria-hidden />
@@ -129,22 +166,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                     {summary && ` · ${summary}`}
                 </span>
                 <span className={styles.actions}>
-                    {actions.map((action) => {
-                        const ActionIcon = ACTION_ICONS[action];
-
-                        return (
-                            <Button
-                                key={action}
-                                variant={PRIMARY_ACTIONS.has(action) ? 'primary' : 'secondary'}
-                                size="sm"
-                                disabled={transitionPlan.isPending || (hasRun && action !== 'release')}
-                                onClick={() => (action === 'discard' ? setIsDiscardOpen(true) : transition(action))}
-                            >
-                                <ActionIcon size={14} />
-                                {t(`planBar.actions.${action}`)}
-                            </Button>
-                        );
-                    })}
+                    {actions.flatMap(actionButtons)}
                     {children}
                 </span>
                 <Dialog open={isDiscardOpen} onOpenChange={setIsDiscardOpen}>
@@ -160,7 +182,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, withGatedActions =
                             <Button
                                 variant="danger"
                                 size="sm"
-                                disabled={transitionPlan.isPending}
+                                disabled={Boolean(pending)}
                                 onClick={() => {
                                     setIsDiscardOpen(false);
                                     transition('discard');

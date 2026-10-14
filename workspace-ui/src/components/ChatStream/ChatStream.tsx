@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
@@ -11,7 +12,7 @@ import { useSessionMessages } from '@/hooks/useGenaixQueries';
 import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useWorkflowSteps } from '@/hooks/useWorkflowSteps';
 import type { MessagePart, MessageRole, UserMessagePart, UserSettingPart } from '@/services/apiService/genaix/types';
-import { isSessionWorking, type LiveMessage, type LivePlan, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { isSessionWorking, type LiveMessage, messageKey, type ReceivedMessage, type RunNotice as Notice, selectSession, type StreamAnchor, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import styles from './ChatStream.module.css';
 
@@ -149,7 +150,7 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
 
 // Where a plan shows: after the message it first came after (`after`), else before its run's first
 // agent message (`before`), else at the end (-1 for both).
-function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { after: number; before: number } {
+function planPlace(entries: Entry[], { runId, afterMessageId }: Pick<StreamAnchor, 'afterMessageId'> & { runId?: string }): { after: number; before: number } {
     const after = afterMessageId ? entries.findIndex((entry) => entry.key === afterMessageId) : -1;
 
     if (after >= 0 || !runId) {
@@ -173,16 +174,21 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { aft
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
  * its steps, plans and thinking. Follows new content while scrolled to the end. The open plan is in the
  * plan bar above the composer (`PlanBar`, `useOpenPlan`), not in the conversation.
+ *
+ * While the history loads, or while `isLoading` (the session is loaded whole first, `useSessionEvents`),
+ * skeletons stand where the conversation will, so it appears at once rather than piece by piece.
  */
-export function ChatStream({ sessionId }: { sessionId: string }) {
+export function ChatStream({ sessionId, isLoading = false }: { sessionId: string; isLoading?: boolean }) {
+    const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
     const openPlan = useOpenPlan(sessionId);
-    const { messages, run, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
+    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
         return {
             messages: session.messages,
             run: session.run,
+            awaitedRunIds: session.awaitedRunIds,
             notices: session.notices,
             interactions: session.interactions,
             plans: session.plans,
@@ -266,14 +272,15 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
             afterPart: livePlan.afterPart,
             item: { key: `plan-${livePlan.plan.id}`, node: <ChatPlanCard plan={livePlan.plan} sessionId={sessionId} /> },
         }));
-    const cutsAfter = (index: number): Cut[] => [...placedPlans, ...confirmationCuts].filter(({ after }) => after === index);
+    const placedCards = placedPlans;
+    const cutsAfter = (index: number): Cut[] => [...placedCards, ...confirmationCuts].filter(({ after }) => after === index);
 
     // Each notice after the last message of its run, else at the end.
     const placed: Item[] = [];
     const unplaced: Notice[] = [...(notices ?? [])];
 
     entries.forEach((entry, index) => {
-        placedPlans.filter(({ before }) => before === index).forEach(({ item }) => placed.push(item));
+        placedCards.filter(({ before }) => before === index).forEach(({ item }) => placed.push(item));
         placed.push(...splitMessage(entry, cutsAfter(index), sessionId));
 
         if (entry.runId && !entries.slice(index + 1).some((next) => next.runId === entry.runId)) {
@@ -283,7 +290,7 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         }
     });
 
-    placedPlans.filter(({ after, before }) => after < 0 && before < 0).forEach(({ item }) => placed.push(item));
+    placedCards.filter(({ after, before }) => after < 0 && before < 0).forEach(({ item }) => placed.push(item));
 
     const anchoredRuns = new Set(entries.map((entry) => entry.runId).filter(Boolean));
 
@@ -296,7 +303,7 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
     }));
 
-    if (isSessionWorking({ run, messages })) {
+    if (isSessionWorking({ run, messages, awaitedRunIds })) {
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 
@@ -329,9 +336,23 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
 
     return (
         <div ref={scrollRef} className={styles.stream} onScroll={handleScroll}>
-            <ol className={styles.list}>
-                {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
-            </ol>
+            {isLoading || history.isPending
+                ? (
+                    <div className={styles.loading} role="status" aria-label={t('chat.loading')}>
+                        <span className={styles.skeletonUser} />
+                        <span className={styles.skeletonAgent}>
+                            <span className={styles.skeletonAvatar} />
+                            <span className={styles.skeletonLine} />
+                            <span className={styles.skeletonLine} />
+                            <span className={styles.skeletonLine} />
+                        </span>
+                    </div>
+                )
+                : (
+                    <ol className={styles.list}>
+                        {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
+                    </ol>
+                )}
         </div>
     );
 }

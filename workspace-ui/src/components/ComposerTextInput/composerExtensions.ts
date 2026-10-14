@@ -109,18 +109,26 @@ function token(name: string, defaults: Record<string, unknown>) {
 /** The plugin of the @-menu's trigger; `exitSuggestion(view, referenceTriggerKey)` closes the menu. */
 export const referenceTriggerKey = new PluginKey<{ active: boolean }>('referenceTrigger');
 
+/** The plugin of the #-menu's trigger (setting chips); `exitSuggestion(view, settingTriggerKey)` closes it. */
+export const settingTriggerKey = new PluginKey<{ active: boolean }>('settingTrigger');
+
 /** Whether the @-menu is open in the editor with `state`; it then takes Enter and the arrow keys. */
 export function isReferenceMenuOpen(state: EditorState): boolean {
     return referenceTriggerKey.getState(state)?.active === true;
 }
 
-// The meta of a transaction that opens a closed @-menu again (`reopenReferenceMenu`).
+/** Whether the #-menu is open in the editor with `state`; it then takes Enter and the arrow keys. */
+export function isSettingMenuOpen(state: EditorState): boolean {
+    return settingTriggerKey.getState(state)?.active === true;
+}
+
+// The meta of a transaction that opens a closed menu again (`reopenReferenceMenu`).
 const REOPEN_META = 'referenceTriggerReopen';
 
 /**
- * Opens the @-menu again at the `@query` that ends at `position`, after it was closed there: puts
- * the caret there and focuses the field. Without this the plugin keeps a menu closed that was closed
- * at the same `@` (`@tiptap/suggestion`, `shouldKeepDismissed`).
+ * Opens the @- or #-menu again at the `@query` or `#query` that ends at `position`, after it was closed
+ * there: puts the caret there and focuses the field. Without this the plugin keeps a menu closed that was
+ * closed at the same trigger character (`@tiptap/suggestion`, `shouldKeepDismissed`).
  */
 export function reopenReferenceMenu(editor: Editor, position: number) {
     editor.chain().focus().command(({ tr }) => {
@@ -130,14 +138,14 @@ export function reopenReferenceMenu(editor: Editor, position: number) {
     }).run();
 }
 
-/** An open @-menu: what follows the `@`, where `@query` sits, and the element the menu renders into. */
+/** An open @- or #-menu: what follows the trigger, where `@query` sits, and the element the menu renders into. */
 export interface ReferenceTrigger {
     query: string;
     range: Range;
     host: HTMLElement;
 }
 
-/** Who follows the @-menu of one editor (`ReferenceMenu`). */
+/** Who follows the @- or #-menu of one editor (`ReferenceMenu`). */
 export interface ReferenceTriggerListener {
     /** The menu opened or its query changed; `null` once it closed. */
     onChange: (trigger: ReferenceTrigger | null) => void;
@@ -145,19 +153,20 @@ export interface ReferenceTriggerListener {
     onKeyDown: (event: KeyboardEvent) => boolean;
 }
 
+interface TriggerStorage {
+    listener: ReferenceTriggerListener | null;
+}
+
 declare module '@tiptap/core' {
     interface Storage {
-        referenceTrigger: { listener: ReferenceTriggerListener | null };
+        referenceTrigger: TriggerStorage;
+        settingTrigger: TriggerStorage;
     }
 }
 
-/**
- * Makes `listener` the one that follows the @-menu of `editor`. Returns a
- * function that undoes it, unless another listener took over meanwhile.
- */
-export function followReferenceTrigger(editor: Editor, listener: ReferenceTriggerListener): () => void {
-    const storage = editor.storage.referenceTrigger;
-
+// Makes `listener` the one that follows the menu of `storage`; the returned function undoes it, unless
+// another listener took over meanwhile.
+function follow(storage: TriggerStorage, listener: ReferenceTriggerListener): () => void {
     storage.listener = listener;
 
     return () => {
@@ -168,55 +177,76 @@ export function followReferenceTrigger(editor: Editor, listener: ReferenceTrigge
 }
 
 /**
- * Opens the @-menu: `@` at the start, after a space, a line break or a token, and the text up to the
- * next space as its query (`@tiptap/suggestion`). The plugin places the menu's element at the `@`
+ * Makes `listener` the one that follows the @-menu of `editor`. Returns a
+ * function that undoes it, unless another listener took over meanwhile.
+ */
+export function followReferenceTrigger(editor: Editor, listener: ReferenceTriggerListener): () => void {
+    return follow(editor.storage.referenceTrigger, listener);
+}
+
+/** Makes `listener` the one that follows the #-menu of `editor`, as `followReferenceTrigger`. */
+export function followSettingTrigger(editor: Editor, listener: ReferenceTriggerListener): () => void {
+    return follow(editor.storage.settingTrigger, listener);
+}
+
+/**
+ * Opens a menu at `char`: at the start, after a space, a line break or a token, with the text up to the
+ * next space as its query (`@tiptap/suggestion`). The plugin places the menu's element at the character
  * and closes it on Esc or a click elsewhere; what the menu shows is React's (`ReferenceMenu`).
  */
-const ReferenceTriggerExtension = Extension.create<object, { listener: ReferenceTriggerListener | null }>({
-    name: 'referenceTrigger',
+function triggerExtension(name: 'referenceTrigger' | 'settingTrigger', char: string, pluginKey: PluginKey) {
+    return Extension.create<object, TriggerStorage>({
+        name,
 
-    addStorage() {
-        return { listener: null };
-    },
+        addStorage() {
+            return { listener: null };
+        },
 
-    addProseMirrorPlugins() {
-        const { storage } = this;
+        addProseMirrorPlugins() {
+            const { storage } = this;
 
-        return [Suggestion({
-            editor: this.editor,
-            pluginKey: referenceTriggerKey,
-            char: '@',
-            placement: 'top-start',
-            shouldResetDismissed: ({ transaction }) => transaction.getMeta(REOPEN_META) === true,
-            render: () => {
-                let host: HTMLElement | null = null;
-                let unmount: (() => void) | null = null;
+            return [Suggestion({
+                editor: this.editor,
+                pluginKey,
+                char,
+                placement: 'top-start',
+                shouldResetDismissed: ({ transaction }) => transaction.getMeta(REOPEN_META) === true,
+                render: () => {
+                    let host: HTMLElement | null = null;
+                    let unmount: (() => void) | null = null;
 
-                function change({ query, range }: SuggestionProps) {
-                    if (host) {
-                        storage.listener?.onChange({ query, range, host });
+                    function change({ query, range }: SuggestionProps) {
+                        if (host) {
+                            storage.listener?.onChange({ query, range, host });
+                        }
                     }
-                }
 
-                return {
-                    onStart: (props) => {
-                        host = document.createElement('div');
-                        unmount = props.mount(host);
-                        change(props);
-                    },
-                    onUpdate: change,
-                    onExit: () => {
-                        storage.listener?.onChange(null);
-                        unmount?.();
-                        host = null;
-                        unmount = null;
-                    },
-                    onKeyDown: ({ event }) => storage.listener?.onKeyDown(event) ?? false,
-                };
-            },
-        })];
-    },
-});
+                    return {
+                        onStart: (props) => {
+                            host = document.createElement('div');
+                            unmount = props.mount(host);
+                            change(props);
+                        },
+                        onUpdate: change,
+                        onExit: () => {
+                            storage.listener?.onChange(null);
+                            unmount?.();
+                            host = null;
+                            unmount = null;
+                        },
+                        onKeyDown: ({ event }) => storage.listener?.onKeyDown(event) ?? false,
+                    };
+                },
+            })];
+        },
+    });
+}
+
+/** The @-menu's trigger: references (`ReferenceMenu`). */
+const ReferenceTriggerExtension = triggerExtension('referenceTrigger', '@', referenceTriggerKey);
+
+/** The #-menu's trigger: setting chips (`ReferenceMenu` with `mode="setting"`). */
+const SettingTriggerExtension = triggerExtension('settingTrigger', '#', settingTriggerKey);
 
 const Reference = token(REFERENCE_NODE, { ref: null });
 const Setting = token(SETTING_NODE, { key: '', value: '', label: '' });
@@ -225,7 +255,7 @@ const PageElement = token(PAGE_ELEMENT_NODE, { page: null, tagName: '', construc
 
 /**
  * The extensions of the field: inline content only (text sits in the field itself, no paragraphs),
- * line breaks, undo, locked verbatim passages, tokens and the @-menu's trigger. One array for every
- * editor, so `useEditor` sees the same extensions on each render.
+ * line breaks, undo, locked verbatim passages, tokens and the triggers of the @- and #-menus. One
+ * array for every editor, so `useEditor` sees the same extensions on each render.
  */
-export const composerExtensions = [Document.extend({ content: 'inline*' }), Text, HardBreak, UndoRedo, Verbatim, Reference, Setting, FileRef, PageElement, ReferenceTriggerExtension];
+export const composerExtensions = [Document.extend({ content: 'inline*' }), Text, HardBreak, UndoRedo, Verbatim, Reference, Setting, FileRef, PageElement, ReferenceTriggerExtension, SettingTriggerExtension];

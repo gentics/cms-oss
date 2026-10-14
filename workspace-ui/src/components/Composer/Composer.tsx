@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 import { AttachmentList } from '@/components/AttachmentList/AttachmentList';
-import { isReferenceMenuOpen } from '@/components/ComposerTextInput/composerExtensions';
+import { isReferenceMenuOpen, isSettingMenuOpen } from '@/components/ComposerTextInput/composerExtensions';
 import { ComposerTextInput } from '@/components/ComposerTextInput/ComposerTextInput';
 import { type VerbatimSources, VerbatimSourcesContext } from '@/components/ComposerTextInput/verbatimSources';
 import { IconButton } from '@/components/IconButton/IconButton';
@@ -156,9 +156,9 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
     }
 
     // Enter sends; while dictating, `VoiceInput` takes Enter and Esc before the field sees them, and
-    // while the @-menu is open, Enter is the menu's.
+    // while the @- or #-menu is open, Enter is the menu's.
     function handleKeyDown(event: KeyboardEvent) {
-        if (event.key === 'Enter' && !event.shiftKey && !isReferenceMenuOpen(editor.state)) {
+        if (event.key === 'Enter' && !event.shiftKey && !isReferenceMenuOpen(editor.state) && !isSettingMenuOpen(editor.state)) {
             event.preventDefault();
             submit();
         }
@@ -331,6 +331,7 @@ export function Composer({ variant, onSubmit, isSubmitting, uploadProgress = [],
                 </div>
 
                 <ReferenceMenu editor={editor} sessionId={sessionId} />
+                <ReferenceMenu editor={editor} sessionId={sessionId} mode="setting" />
 
                 {/* In the chat the actions sit inside the box; on the dashboard below the prompt. */}
                 {isChat && actions}

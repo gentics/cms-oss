@@ -6,6 +6,7 @@ import {
     type CmsNode,
     isCmsFeatureActive,
     listCmsFolders,
+    listCmsLanguages,
     listCmsNodes,
     listCmsTemplates,
     loadCmsPage,
@@ -23,6 +24,7 @@ export const cmsKeys = {
     images: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'images', query] as const,
     page: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId] as const,
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
+    languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
 };
 
 /**
@@ -36,6 +38,26 @@ export function useCmsFeature(name: string) {
 /** The CMS nodes the user can see (`listCmsNodes`); they rarely change, so 5 minutes fresh. */
 export function useCmsNodes() {
     return useQuery({ queryKey: cmsKeys.nodes(), queryFn: listCmsNodes, staleTime: 5 * 60 * 1000 });
+}
+
+/**
+ * The languages of the nodes `nodeIds` (`listCmsLanguages`), each code once, in the order the nodes list
+ * them; like the nodes, 5 minutes fresh. `isPending` while any node's list is still loading.
+ */
+export function useCmsLanguages(nodeIds: number[]) {
+    return useQueries({
+        queries: nodeIds.map((nodeId) => ({
+            queryKey: cmsKeys.languages(nodeId),
+            queryFn: ({ signal }: { signal: AbortSignal }) => listCmsLanguages(nodeId, signal),
+            staleTime: 5 * 60 * 1000,
+        })),
+        combine: (results) => ({
+            languages: results
+                .flatMap((result) => result.data ?? [])
+                .filter((language, index, all) => all.findIndex(({ code }) => code === language.code) === index),
+            isPending: results.some((result) => result.isPending),
+        }),
+    });
 }
 
 /** One node's search result: the node and what it found. */

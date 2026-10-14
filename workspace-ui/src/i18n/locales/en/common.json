@@ -116,6 +116,10 @@
         "verbatimHasToken": "The selection contains a reference — mark plain text only.",
         "removeToken": "Remove {{label}}",
         "context": "Context",
+        "setting": {
+            "label": "Settings",
+            "chooseFolderFirst": "Set a folder chip first, then its templates show here"
+        },
         "mention": {
             "label": "Context",
             "search": "Search context…",
@@ -124,7 +128,9 @@
                 "folder": "Folders",
                 "image": "Images",
                 "file": "Files",
-                "project": "Project"
+                "project": "Project",
+                "template": "Templates",
+                "language": "Languages"
             },
             "clearScope": "Remove filter",
             "loading": "Searching",
@@ -169,6 +175,7 @@
             "system": "System"
         },
         "thinking": "Thinking",
+        "loading": "Loading the conversation…",
         "stop": "Stop",
         "stopFailed": "The run could not be stopped",
         "steps": {
@@ -208,6 +215,11 @@
             "answer": "Your answer",
             "comment": "Comment",
             "choose": "Choose…",
+            "chooseFolder": "Choose folder…",
+            "otherFolder": "Other folder…",
+            "noFolderChosen": "No folder chosen",
+            "chooseFolderFirst": "Choose a folder first",
+            "loadingOptions": "Loading…",
             "send": "Send",
             "confirm": "Confirm",
             "confirmed": "Confirmed",
@@ -243,6 +255,13 @@
             "request_review": "Request review",
             "discard": "Discard"
         },
+        "pending": {
+            "release": "Releasing…",
+            "publish": "Publishing…",
+            "request_review": "Requesting review…",
+            "reopen": "Reopening…",
+            "discard": "Discarding…"
+        },
         "count": {
             "pending_one": "{{count}} page to publish",
             "pending_other": "{{count}} pages to publish",
@@ -254,12 +273,9 @@
             "failed_other": "{{count}} failed"
         },
         "gate": {
-            "title": "Checks failed",
-            "blocking": "Blocking",
-            "warning": "Warning",
-            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then try again.",
-            "acknowledgeHint": "Confirm these warnings to go on.",
-            "close": "Close",
+            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then check again.",
+            "acknowledgeHint": "Some checks have warnings. Confirm them to go on.",
+            "retry": "Check again",
             "anyway": {
                 "release": "Release anyway",
                 "publish": "Publish anyway",
@@ -398,7 +414,8 @@
         "delete": "Delete “{{title}}”",
         "deleted": "“{{title}}” deleted",
         "undo": "Undo",
-        "archiveFailed": "Deleting the session failed"
+        "archiveFailed": "Deleting the session failed",
+        "restoreFailed": "Restoring the session failed"
     },
     "review": {
         "title": "Review",
@@ -410,6 +427,7 @@
         "noPreview": "No preview yet.",
         "checklist": "Checklist",
         "noChecks": "No checks yet.",
+        "checking": "Checking the checklist…",
         "blocking": "blocking",
         "acknowledged": "acknowledged",
         "approvalChain": "Approval",
@@ -739,5 +757,12 @@
         "pick": "Pick a folder",
         "cancel": "Cancel",
         "use": "Use folder"
+    },
+    "eventLog": {
+        "title": "Events",
+        "empty": "No events yet.",
+        "copy": "Copy the JSON of event {{seq}} ({{type}})",
+        "copied": "Event {{seq}} copied",
+        "copyFailed": "The event could not be copied."
     }
 }

@@ -116,6 +116,10 @@
         "verbatimHasToken": "Die Auswahl enthält einen Verweis – markieren Sie nur Text.",
         "removeToken": "{{label}} entfernen",
         "context": "Kontext",
+        "setting": {
+            "label": "Einstellungen",
+            "chooseFolderFirst": "Zuerst einen Ordner als Chip setzen, dann erscheinen hier seine Templates"
+        },
         "mention": {
             "label": "Kontext",
             "search": "Kontext suchen…",
@@ -124,7 +128,9 @@
                 "folder": "Ordner",
                 "image": "Bilder",
                 "file": "Dateien",
-                "project": "Projekt"
+                "project": "Projekt",
+                "template": "Templates",
+                "language": "Sprachen"
             },
             "clearScope": "Filter entfernen",
             "loading": "Suche läuft",
@@ -169,6 +175,7 @@
             "system": "System"
         },
         "thinking": "Denkt nach",
+        "loading": "Unterhaltung wird geladen…",
         "stop": "Stoppen",
         "stopFailed": "Der Lauf konnte nicht gestoppt werden",
         "steps": {
@@ -208,6 +215,11 @@
             "answer": "Ihre Antwort",
             "comment": "Kommentar",
             "choose": "Auswählen…",
+            "chooseFolder": "Ordner wählen…",
+            "otherFolder": "Anderer Ordner…",
+            "noFolderChosen": "Kein Ordner gewählt",
+            "chooseFolderFirst": "Zuerst einen Ordner wählen",
+            "loadingOptions": "Wird geladen…",
             "send": "Senden",
             "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
@@ -243,6 +255,13 @@
             "request_review": "Prüfung anfordern",
             "discard": "Verwerfen"
         },
+        "pending": {
+            "release": "Wird freigegeben…",
+            "publish": "Wird veröffentlicht…",
+            "request_review": "Prüfung wird angefordert…",
+            "reopen": "Wird wieder geöffnet…",
+            "discard": "Wird verworfen…"
+        },
         "count": {
             "pending_one": "{{count}} Seite zu veröffentlichen",
             "pending_other": "{{count}} Seiten zu veröffentlichen",
@@ -254,12 +273,9 @@
             "failed_other": "{{count}} fehlgeschlagen"
         },
         "gate": {
-            "title": "Prüfungen nicht bestanden",
-            "blocking": "Blockierend",
-            "warning": "Warnung",
-            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Versuchen Sie es dann erneut.",
-            "acknowledgeHint": "Bestätigen Sie diese Warnungen, um fortzufahren.",
-            "close": "Schließen",
+            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Prüfen Sie dann erneut.",
+            "acknowledgeHint": "Einige Prüfungen haben Warnungen. Bestätigen Sie sie, um fortzufahren.",
+            "retry": "Erneut prüfen",
             "anyway": {
                 "release": "Trotzdem freigeben",
                 "publish": "Trotzdem veröffentlichen",
@@ -398,7 +414,8 @@
         "delete": "„{{title}}“ löschen",
         "deleted": "„{{title}}“ gelöscht",
         "undo": "Rückgängig",
-        "archiveFailed": "Die Sitzung konnte nicht gelöscht werden"
+        "archiveFailed": "Die Sitzung konnte nicht gelöscht werden",
+        "restoreFailed": "Die Sitzung konnte nicht wiederhergestellt werden"
     },
     "review": {
         "title": "Prüfung",
@@ -410,6 +427,7 @@
         "noPreview": "Noch keine Vorschau.",
         "checklist": "Checkliste",
         "noChecks": "Noch keine Prüfungen.",
+        "checking": "Checkliste wird geprüft…",
         "blocking": "blockierend",
         "acknowledged": "bestätigt",
         "approvalChain": "Freigabe",
@@ -739,5 +757,12 @@
         "pick": "Ordner auswählen",
         "cancel": "Abbrechen",
         "use": "Ordner verwenden"
+    },
+    "eventLog": {
+        "title": "Events",
+        "empty": "Noch keine Events.",
+        "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
+        "copied": "Event {{seq}} kopiert",
+        "copyFailed": "Das Event konnte nicht kopiert werden."
     }
 }

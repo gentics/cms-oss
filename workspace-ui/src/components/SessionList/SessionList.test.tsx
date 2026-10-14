@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useSessions } from '@/hooks/useGenaixQueries';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useSessionArchiveStore } from '@/store/useSessionArchiveStore';
-import { archivedIds, listQueries, sessionFixture, stubSessionRoutes } from '@/test/genaixSessions';
+import { archivedIds, listQueries, sessionFixture, stubSessionRoutes, unarchivedIds } from '@/test/genaixSessions';
 import { renderWithProviders } from '@/test/renderWithProviders';
 
 import { SessionList } from './SessionList';
@@ -119,7 +119,7 @@ describe('SessionList', () => {
     });
 
     describe('deleting', () => {
-        it('hides the row at once and brings it back on "Undo", without archiving', async () => {
+        it('hides the row and archives the session at once, and brings it back on "Undo" by unarchiving it', async () => {
             const user = userEvent.setup();
             const fetchMock = stubSessionRoutes(() => ({ items: [landingPage, careers], next_cursor: null }));
 
@@ -129,15 +129,16 @@ describe('SessionList', () => {
 
             expect(screen.queryByRole('link', { name: /Landing page/ })).not.toBeInTheDocument();
             expect(screen.getByText('“Landing page” deleted')).toBeInTheDocument();
+            await waitFor(() => expect(archivedIds(fetchMock)).toEqual(['s-1']));
 
             await user.click(screen.getByRole('button', { name: 'Undo' }));
 
             expect(await screen.findByRole('link', { name: /Landing page/ })).toBeInTheDocument();
             await waitFor(() => expect(screen.queryByText('“Landing page” deleted')).not.toBeInTheDocument());
-            expect(archivedIds(fetchMock)).toEqual([]);
+            expect(unarchivedIds(fetchMock)).toEqual(['s-1']);
         });
 
-        it('archives the session once the toast closes without an undo, and the row stays away', async () => {
+        it('archives the session at once, and the row stays away when the toast closes', async () => {
             const user = userEvent.setup();
             let archived = false;
             const fetchMock = stubSessionRoutes(
@@ -153,15 +154,15 @@ describe('SessionList', () => {
 
             await user.click(await screen.findByRole('button', { name: 'Delete “Landing page”' }));
 
-            expect(archivedIds(fetchMock)).toEqual([]);
-
-            await user.click(toastCloseButton('“Landing page” deleted'));
-
             await waitFor(() => expect(archivedIds(fetchMock)).toEqual(['s-1']));
             // The lists are refetched after the archive.
             await waitFor(() => expect(listQueries(fetchMock)).toEqual(['', '']));
+
+            await user.click(toastCloseButton('“Landing page” deleted'));
+
             expect(screen.queryByRole('link', { name: /Landing page/ })).not.toBeInTheDocument();
             expect(screen.getByRole('link', { name: /Careers page/ })).toBeInTheDocument();
+            expect(unarchivedIds(fetchMock)).toEqual([]);
         });
 
         it('brings the row back with an error notification when the archive fails', async () => {
@@ -175,12 +176,12 @@ describe('SessionList', () => {
             renderWithProviders(<AllSessions />);
 
             await user.click(await screen.findByRole('button', { name: 'Delete “Landing page”' }));
-            await user.click(toastCloseButton('“Landing page” deleted'));
 
             expect(await screen.findByRole('link', { name: /Landing page/ })).toBeInTheDocument();
             expect(useErrorNotificationStore.getState().errors).toMatchObject([
                 { messageKey: 'sessions.archiveFailed', detailKey: 'errors.genaix.session_forbidden' },
             ]);
+            await waitFor(() => expect(screen.queryByText('“Landing page” deleted')).not.toBeInTheDocument());
         });
     });
 });

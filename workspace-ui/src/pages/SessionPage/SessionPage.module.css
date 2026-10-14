@@ -8,6 +8,17 @@
   min-height: 0;
 }
 
+/* `npm run dev:debug` only: the chat and the event log (`EventLog`) side by side in the middle column. */
+.debugRow {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.debugRow > .chat {
+  min-width: 0;
+}
+
 .dock {
   position: absolute;
   right: 0;

@@ -2,6 +2,9 @@ import { create } from 'zustand';
 
 import type { EventStreamStatus } from '@/services/apiService/eventStream';
 import type {
+    ApprovalStep,
+    Check,
+    DerivedSettings,
     GenaixEvent,
     Interaction,
     MessageCreateBody,
@@ -114,6 +117,13 @@ export interface SessionLiveState {
     runs?: LiveRun[];
     /** The active run, the latest of `runs`; absent or `null` while none runs. */
     run?: LiveRun | null;
+    /**
+     * Runs the server accepted (`run_id` of `MessageAccepted`, `SessionCreated`, `TransitionAccepted`)
+     * that the stream has not told about yet (`awaitRun`).
+     */
+    awaitedRunIds?: string[];
+    /** Every run the stream has told about, so a run whose events came before its `202` is not awaited. */
+    seenRunIds?: string[];
     notices?: RunNotice[];
     /** Interactions waiting for an answer (`interaction.requested`, not resolved yet). */
     interactions?: Interaction[];
@@ -130,10 +140,23 @@ export interface SessionLiveState {
     confirmations?: LiveConfirmation[];
     /** By plan id: the publish outcome of each page the plan wrote, as `publications.updated` last sent it. */
     publications?: Record<string, Publication[]>;
+    /** By plan id, then by check id: each check as `check.updated` last reported it (rc.4: per plan). */
+    checks?: Record<string, Record<string, Check>>;
+    /** By plan id: what the agent decided about where and how the content goes, as `derived_settings.updated` last sent it. */
+    derivedSettings?: Record<string, DerivedSettings | null>;
+    /** By plan id: the approval chain of its pages, as `approval_chain.updated` last sent it. */
+    approvalChains?: Record<string, ApprovalStep[]>;
     /** By plan id: the `seq` of the latest event carrying that `plan_id`, so `hydratePlans` keeps what is newer. */
     planSeqs?: Record<string, number>;
     /** The CMS preview; absent until the first `preview.updated`. */
     preview?: LivePreview;
+    /**
+     * The session's open plan (`drafting` to `released`) and its executing one (`accepted`, `running`), as
+     * the last `session.updated` said (rc.4 `Session.open_plan_id`, `executing_plan_id`); `null` for none,
+     * absent until a `session.updated` came.
+     */
+    openPlanId?: string | null;
+    executingPlanId?: string | null;
 }
 
 interface WorkspaceEventState {
@@ -147,6 +170,11 @@ interface WorkspaceEventState {
      */
     applyEvent: (sessionId: string, event: GenaixEvent) => void;
     setConnection: (sessionId: string, connection: EventStreamStatus) => void;
+    /**
+     * After the server accepted a call that starts or joins a run: the session counts as working
+     * (`isSessionWorking`) until the stream tells about that run. A run it told about already is not awaited.
+     */
+    awaitRun: (sessionId: string, runId: string) => void;
     /** After `POST …/runs/{run_id}/cancel` was accepted: the run is `cancelling` until `run.cancelled`. */
     markRunCancelling: (sessionId: string, runId: string) => void;
     /** Drops the given messages (`persistedMessageKeys`), once the refetched history contains them. */
@@ -155,7 +183,8 @@ interface WorkspaceEventState {
     resetSession: (sessionId: string) => void;
     /**
      * Puts plan snapshots (`GET …/plans/{plan_id}`, `reloadPlans`) into the live state: each plan, its
-     * main steps, its publications, the question its run waits on and, while there is none, the preview.
+     * main steps, its publications, checks, derived settings and approval chain, the question its run
+     * waits on and, while there is none, the preview.
      * A plan an event told about after `sinceSeq` (`planSeqs`) is left as the stream has it: the
      * snapshot was asked for after `sinceSeq`, so those events are at least as new as it is.
      */
@@ -173,10 +202,14 @@ export function selectSession(sessionId: string) {
 }
 
 /**
- * Whether the session's agent is at work: a run that does not wait for the user, or a turn on its way
- * before its run has started.
+ * Whether the session's agent is at work: a run that does not wait for the user, a turn on its way,
+ * or a run the server accepted that the stream has not told about yet (`awaitedRunIds`).
  */
-export function isSessionWorking({ run, messages }: Pick<SessionLiveState, 'run' | 'messages'>): boolean {
+export function isSessionWorking({ run, messages, awaitedRunIds }: Pick<SessionLiveState, 'run' | 'messages' | 'awaitedRunIds'>): boolean {
+    if (awaitedRunIds?.length) {
+        return true;
+    }
+
     if (run) {
         return run.status !== 'waiting_for_input';
     }
@@ -423,6 +456,26 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         next.interactionPlans = { ...session.interactionPlans, [event.interaction.id]: event.plan_id };
     }
 
+    // A plan's checks, derived settings and approval chain: each a full replacement, keyed by the plan
+    // (and a check by its id), never merged (contract §6.1, rule 3).
+    if (event.type === 'check.updated' && event.plan_id) {
+        next.checks = { ...session.checks, [event.plan_id]: { ...session.checks?.[event.plan_id], [event.check.id]: event.check } };
+    }
+
+    if (event.type === 'derived_settings.updated' && event.plan_id) {
+        next.derivedSettings = { ...session.derivedSettings, [event.plan_id]: event.derived_settings };
+    }
+
+    if (event.type === 'approval_chain.updated' && event.plan_id) {
+        next.approvalChains = { ...session.approvalChains, [event.plan_id]: event.approval_chain };
+    }
+
+    // `session.updated` carries the whole session: which plan is open and which executes (rc.4).
+    if (event.type === 'session.updated') {
+        next.openPlanId = event.session.open_plan_id ?? null;
+        next.executingPlanId = event.session.executing_plan_id ?? null;
+    }
+
     // `publications.updated` carries the plan's whole array every time (rc.4: per plan).
     if (event.type === 'publications.updated' && event.plan_id) {
         next.publications = { ...session.publications, [event.plan_id]: event.publications };
@@ -446,6 +499,16 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
     if (runs !== (session.runs ?? NO_RUNS)) {
         next.runs = runs;
         next.run = runs.at(-1) ?? null;
+    }
+
+    // The stream told about this run: it is not awaited any more (`awaitRun`).
+    const eventRunId = event.type === 'run.started' || event.type === 'run.completed' || event.type === 'run.failed' || event.type === 'run.cancelled'
+        ? event.run.id
+        : event.run_id;
+
+    if (eventRunId && !session.seenRunIds?.includes(eventRunId)) {
+        next.seenRunIds = [...(session.seenRunIds ?? []), eventRunId];
+        next.awaitedRunIds = session.awaitedRunIds?.filter((id) => id !== eventRunId);
     }
 
     if (notice) {
@@ -475,13 +538,19 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
     let { interactions, interactionPlans } = session;
     const steps = { ...session.steps };
     const publications = { ...session.publications };
+    const checks = { ...session.checks };
+    const derivedSettings = { ...session.derivedSettings };
+    const approvalChains = { ...session.approvalChains };
 
-    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending } of fresh) {
+    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending, ...state } of fresh) {
         plans = plans.some((live) => live.plan.id === plan.id)
             ? plans.map((live) => (live.plan.id === plan.id ? { ...live, plan } : live))
             : [...plans, { seq: 0, plan }];
         steps[plan.id] = Object.fromEntries(planSteps.map((step) => [step.id, step]));
         publications[plan.id] = planPublications ?? [];
+        checks[plan.id] = Object.fromEntries(state.checks.map((check) => [check.id, check]));
+        derivedSettings[plan.id] = state.derived_settings ?? null;
+        approvalChains[plan.id] = state.approval_chain;
 
         if (pending && !interactions?.some(({ id }) => id === pending.id)) {
             interactions = [...(interactions ?? []), pending];
@@ -495,7 +564,7 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
         ? { seq: 0, cms_ref: latest.cms_ref, preview_url: latest.preview_url, mode: latest.mode, changed_elements: latest.changed_elements }
         : session.preview;
 
-    return { ...session, plans, steps, publications, interactions, interactionPlans, preview };
+    return { ...session, plans, steps, publications, checks, derivedSettings, approvalChains, interactions, interactionPlans, preview };
 }
 
 export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
@@ -531,6 +600,12 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         connection,
     }))),
 
+    awaitRun: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => (
+        session.seenRunIds?.includes(runId) || session.awaitedRunIds?.includes(runId)
+            ? session
+            : { ...session, awaitedRunIds: [...(session.awaitedRunIds ?? []), runId] }
+    ))),
+
     markRunCancelling: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => {
         if (!session.runs?.some(({ id }) => id === runId)) {
             return session;
@@ -560,6 +635,11 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         publications: undefined,
         planSeqs: undefined,
         preview: undefined,
+        openPlanId: undefined,
+        executingPlanId: undefined,
+        checks: undefined,
+        derivedSettings: undefined,
+        approvalChains: undefined,
         messages: session.messages.filter((message) => message.kind === 'sent' && message.status !== 'sent'),
     }))),
 

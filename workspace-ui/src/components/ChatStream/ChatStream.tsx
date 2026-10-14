@@ -5,7 +5,6 @@ import { useShallow } from 'zustand/react/shallow';
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
 import { ChatPlanCard } from '@/components/ChatPlanCard/ChatPlanCard';
 import { ConfirmedSettingsCard, InteractionCard } from '@/components/InteractionCard/InteractionCard';
-import { FileRefPartView } from '@/components/MessageParts/FileRefPartView';
 import { RunNotice } from '@/components/RunNotice/RunNotice';
 import { ThinkingIndicator } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { WorkflowSteps } from '@/components/WorkflowSteps/WorkflowSteps';
@@ -149,8 +148,8 @@ function confirmationEntry(id: string, runId: string | undefined, parts: Parts):
     return { key: id, runId, node: <ConfirmedSettingsCard settings={settings} /> };
 }
 
-// Where a plan or an artifact shows: after the message it first came after (`after`), else before its
-// run's first agent message (`before`), else at the end (-1 for both).
+// Where a plan shows: after the message it first came after (`after`), else before its run's first
+// agent message (`before`), else at the end (-1 for both).
 function planPlace(entries: Entry[], { runId, afterMessageId }: Pick<StreamAnchor, 'afterMessageId'> & { runId?: string }): { after: number; before: number } {
     const after = afterMessageId ? entries.findIndex((entry) => entry.key === afterMessageId) : -1;
 
@@ -168,9 +167,8 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: Pick<StreamAncho
  * refetched history replaces it (`useSessionEvents`). Where the agent is in its workflow
  * (`WorkflowSteps`) stands first in the agent's latest block, right under its avatar and name. Every
  * plan but the open one (`ChatPlanCard`) stands where its first `plan.updated` came, and a confirmed
- * settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came, a file the agent
- * wrote (`FileRefPartView`) where its `artifact.created` came; an agent message that went on streaming
- * after them is shown split there (`splitMessage`).
+ * settings review (`ConfirmedSettingsCard`) where its `interaction.resolved` came; an agent message that
+ * went on streaming after them is shown split there (`splitMessage`).
  * How a run ended (`RunNotice`) follows the last message of that run. At the end: the pending
  * interaction to answer and, while the agent works, the thinking indicator with its latest status.
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
@@ -184,7 +182,7 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
     const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
     const openPlan = useOpenPlan(sessionId);
-    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations, artifacts } = useWorkspaceEventStore(useShallow((state) => {
+    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
         return {
@@ -195,7 +193,6 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
             interactions: session.interactions,
             plans: session.plans,
             confirmations: session.confirmations,
-            artifacts: session.artifacts,
         };
     }));
     const steps = useWorkflowSteps(sessionId);
@@ -275,17 +272,7 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
             afterPart: livePlan.afterPart,
             item: { key: `plan-${livePlan.plan.id}`, node: <ChatPlanCard plan={livePlan.plan} sessionId={sessionId} /> },
         }));
-    // Each file the agent wrote, as a download, where its `artifact.created` came, like a plan; not the raw
-    // output of a quality gate (`gate_evidence`), which is evidence for the checks, not a result.
-    const placedArtifacts = (artifacts ?? [])
-        .filter(({ file }) => file.artifact_type !== 'gate_evidence')
-        .map((artifact) => ({
-            ...planPlace(entries, artifact),
-            seq: artifact.seq,
-            afterPart: artifact.afterPart,
-            item: { key: `artifact-${artifact.file.id}`, node: <FileRefPartView part={{ type: 'file_ref', file_id: artifact.file.id, name: artifact.file.name }} sessionId={sessionId} /> },
-        }));
-    const placedCards = [...placedPlans, ...placedArtifacts];
+    const placedCards = placedPlans;
     const cutsAfter = (index: number): Cut[] => [...placedCards, ...confirmationCuts].filter(({ after }) => after === index);
 
     // Each notice after the last message of its run, else at the end.

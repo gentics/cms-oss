@@ -125,38 +125,6 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
                         </div>
                     ))}
                 </section>
-
-                {approvalChain.length > 0 && (
-                    <section className={styles.section} aria-label={t('review.approvalChain')}>
-                        <h3 className={styles.overline}>{t('review.approvalChain')}</h3>
-                        <ApprovalSteps steps={approvalChain} />
-                    </section>
-                )}
-
-                {publications.length > 0 && (
-                    <section className={styles.section} aria-label={t('review.publications')}>
-                        <h3 className={styles.overline}>{t('review.publications')}</h3>
-                        <ul className={styles.list}>
-                            {publications.map((publication) => {
-                                const Icon = PUBLICATION_ICONS[publication.status] ?? CircleDashedIcon;
-
-                                return (
-                                    <li key={`${publication.cms_ref.type}-${publication.cms_ref.id}`} className={styles.publication} data-status={publication.status}>
-                                        <div className={styles.publicationHead}>
-                                            <span className={styles.checkLabel}>{publication.cms_ref.name ?? `${publication.cms_ref.type} ${publication.cms_ref.id}`}</span>
-                                            <span className={styles.publicationStatus}>
-                                                <Icon size={13} aria-hidden />
-                                                {t(`review.publication.${publication.status}`)}
-                                            </span>
-                                        </div>
-                                        {publication.status === 'failed' && publication.error?.detail && <span className={styles.error}>{publication.error.detail}</span>}
-                                        {publication.approval_chain.length > 0 && <ApprovalSteps steps={publication.approval_chain} />}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </section>
-                )}
             </div>
 
             <footer className={styles.foot}>

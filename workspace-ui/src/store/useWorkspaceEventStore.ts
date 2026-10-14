@@ -15,7 +15,6 @@ import type {
     Problem,
     Publication,
     RunStatus,
-    SessionFile,
     Step,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
@@ -99,16 +98,6 @@ export interface LiveConfirmation extends StreamAnchor {
     messageId: string;
 }
 
-/**
- * A file the agent wrote into the session (`artifact.created`), as the last `artifact.updated` of it
- * sent it, and the `seq`, run and place in the stream it first came with.
- */
-export interface LiveArtifact extends StreamAnchor {
-    seq: number;
-    file: SessionFile;
-    runId?: string;
-}
-
 /** The CMS preview of the page the session produced, as the last `preview.updated` sent it. */
 export type LivePreview = Pick<Extract<GenaixEvent, { type: 'preview.updated' }>, 'seq' | 'cms_ref' | 'preview_url' | 'mode' | 'changed_elements'>;
 
@@ -157,8 +146,6 @@ export interface SessionLiveState {
     derivedSettings?: Record<string, DerivedSettings | null>;
     /** By plan id: the approval chain of its pages, as `approval_chain.updated` last sent it. */
     approvalChains?: Record<string, ApprovalStep[]>;
-    /** Every file the agent wrote, in the order they first came; a later `artifact.updated` replaces one in place. */
-    artifacts?: LiveArtifact[];
     /** By plan id: the `seq` of the latest event carrying that `plan_id`, so `hydratePlans` keeps what is newer. */
     planSeqs?: Record<string, number>;
     /** The CMS preview; absent until the first `preview.updated`. */
@@ -448,16 +435,6 @@ function anchorIn(messages: LiveMessage[], runId: string | undefined): StreamAnc
     return after ? { afterMessageId: after.id, afterPart: after.parts.length } : {};
 }
 
-// `artifact.created` adds the file where it came; `artifact.updated` replaces it in place (a new `sha256`),
-// or adds it when its creation is not known.
-function applyToArtifacts(artifacts: LiveArtifact[] = [], { seq, file, run_id: runId }: Extract<GenaixEvent, { type: 'artifact.created' | 'artifact.updated' }>, messages: LiveMessage[]): LiveArtifact[] {
-    if (artifacts.some((live) => live.file.id === file.id)) {
-        return artifacts.map((live) => (live.file.id === file.id ? { ...live, file } : live));
-    }
-
-    return [...artifacts, { seq, file, ...(runId && { runId }), ...anchorIn(messages, runId ?? undefined) }];
-}
-
 function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionLiveState {
     const next: SessionLiveState = { ...session, lastSeq: event.seq, messages: applyToMessages(session.messages, event) };
     const runs = applyToRuns(session.runs ?? NO_RUNS, event);
@@ -491,10 +468,6 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
 
     if (event.type === 'approval_chain.updated' && event.plan_id) {
         next.approvalChains = { ...session.approvalChains, [event.plan_id]: event.approval_chain };
-    }
-
-    if (event.type === 'artifact.created' || event.type === 'artifact.updated') {
-        next.artifacts = applyToArtifacts(session.artifacts, event, session.messages);
     }
 
     // `session.updated` carries the whole session: which plan is open and which executes (rc.4).
@@ -667,7 +640,6 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         checks: undefined,
         derivedSettings: undefined,
         approvalChains: undefined,
-        artifacts: undefined,
         messages: session.messages.filter((message) => message.kind === 'sent' && message.status !== 'sent'),
     }))),
 

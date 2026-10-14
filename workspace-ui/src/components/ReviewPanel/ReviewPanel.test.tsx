@@ -1,9 +1,10 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ensureSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
-import type { Check, PlanState, PlanStatus, Problem, Publication } from '@/services/apiService/genaix/types';
+import type { Check, CmsObjectRef, GenaixEvent, PlanState, PlanStatus, Problem, Publication } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 import { renderWithProviders } from '@/test/renderWithProviders';
@@ -75,17 +76,35 @@ function problem(genaixCode: string, extra: Partial<Problem> = {}) {
     return Response.json({ type: 't', title: 't', status: 409, genaix_code: genaixCode, ...extra }, { status: 409 });
 }
 
+// A page the plan wrote, as `PlanState.cms_objects` lists it.
+function writtenPage(id: number, operation: CmsObjectRef['operation'] = 'created'): CmsObjectRef {
+    return { type: 'page', id, node_id: 3, operation };
+}
+
 /**
  * Stubs the routes the panel calls: the transitions answer with `transition(body)` (default `200`
- * with the plan), `/workflows` with a module that keeps or restores on discard, messages with `202`.
- * Returns the bodies sent to the transitions route.
+ * with the plan), `/workflows` with a module that keeps or restores on discard, messages with `202`,
+ * the CMS publish permission of a page with `permissions[page id]`. Returns the bodies sent to the
+ * transitions route and the CMS permission URLs asked.
  */
-function stubRoutes({ transition, onDiscard = 'keep' }: { transition?: (body: Record<string, unknown>) => Response; onDiscard?: 'keep' | 'restore' } = {}) {
+function stubRoutes({ transition, onDiscard = 'keep', permissions = {} }: {
+    transition?: (body: Record<string, unknown>) => Response;
+    onDiscard?: 'keep' | 'restore';
+    permissions?: Record<number, boolean>;
+} = {}) {
     const sent: Record<string, unknown>[] = [];
     const messages: unknown[] = [];
+    const permissionUrls: string[] = [];
 
     vi.stubGlobal('fetch', vi.fn<typeof fetch>(async (input, init) => {
         const url = new URL(String(input), 'http://localhost').pathname;
+        const permission = /^\/rest\/perm\/publish\/page\/(\d+)$/.exec(url);
+
+        if (permission) {
+            permissionUrls.push(String(input));
+
+            return Response.json({ granted: permissions[Number(permission[1])] ?? false });
+        }
 
         if (url === TRANSITIONS) {
             const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -108,7 +127,7 @@ function stubRoutes({ transition, onDiscard = 'keep' }: { transition?: (body: Re
         return Response.json({ items: [], next_cursor: null });
     }));
 
-    return { sent, messages };
+    return { sent, messages, permissionUrls };
 }
 
 async function renderPanel(state: PlanState) {
@@ -117,6 +136,44 @@ async function renderPanel(state: PlanState) {
     await screen.findByRole('heading', { name: 'Review' });
 
     return result;
+}
+
+/**
+ * Renders the panel with `initial`; the returned `setState` replaces the plan's state, as the review page
+ * does when it reads the plan again after a plan event.
+ */
+async function renderLivePanel(initial: PlanState) {
+    let setState: (state: PlanState) => void = () => {};
+
+    function LivePanel() {
+        const [state, set] = useState(initial);
+
+        setState = set;
+
+        return <ReviewPanel sessionId={SESSION} state={state} />;
+    }
+
+    renderWithProviders(<LivePanel />, { path: `/sessions/${SESSION}/review` });
+    await screen.findByRole('heading', { name: 'Review' });
+
+    return { setState: (state: PlanState) => act(() => setState(state)) };
+}
+
+// A plan event of the session's stream, `seq` above the ones applied before.
+function applyEvent(seq: number, type: string, payload: Record<string, unknown>) {
+    const event = { seq, ts: '2026-10-14T09:00:00Z', session_id: SESSION, type, ...payload } as GenaixEvent;
+
+    act(() => useWorkspaceEventStore.getState().applyEvent(SESSION, event));
+}
+
+// `publications.updated` of the plan: the publish outcome of each of its pages.
+function announce(seq: number, publications: Publication[]) {
+    applyEvent(seq, 'publications.updated', { plan_id: PLAN_ID, publications });
+}
+
+// The `202` of a transition that a run carries out (`publish`, `request_review`).
+function accepted(runId: string) {
+    return Response.json({ run_id: runId, plan: planState('released').plan, session: { id: SESSION } }, { status: 202 });
 }
 
 function actionNames() {
@@ -184,7 +241,234 @@ describe('ReviewPanel', () => {
 
         await renderPanel(planState('released'));
         await user.click(screen.getByRole('button', { name: 'Publish' }));
+        await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
         await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'publish' }]));
+    });
+
+    describe('publish permission in the CMS', () => {
+        it('offers no Publish when the user may not publish the plan\'s page, only a review request', async () => {
+            const { permissionUrls } = stubRoutes({ permissions: { 9142: false } });
+
+            await renderPanel(planState('released', { cms_objects: [writtenPage(9142)] }));
+
+            await waitFor(() => expect(permissionUrls).toEqual(['/rest/perm/publish/page/9142?nodeId=3']));
+            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+        });
+
+        it('offers no Publish when the user may publish only some of the plan\'s pages', async () => {
+            const { permissionUrls } = stubRoutes({ permissions: { 9142: true, 9143: false } });
+
+            await renderPanel(planState('released', { cms_objects: [writtenPage(9142), writtenPage(9143, 'updated')] }));
+
+            await waitFor(() => expect(permissionUrls).toHaveLength(2));
+            expect(actionNames()).toEqual(['Discard', 'Reopen', 'Request review']);
+        });
+
+        it('offers Publish when the user may publish every page the plan wrote, and does not ask for pages it only read', async () => {
+            const { permissionUrls } = stubRoutes({ permissions: { 9142: true, 9143: true } });
+
+            await renderPanel(planState('released', { cms_objects: [writtenPage(9142), writtenPage(9143, 'published'), writtenPage(77, 'read')] }));
+
+            expect(await screen.findByRole('button', { name: 'Publish' })).toBeInTheDocument();
+            expect(permissionUrls).toEqual(['/rest/perm/publish/page/9142?nodeId=3', '/rest/perm/publish/page/9143?nodeId=3']);
+        });
+    });
+
+    describe('publishing, confirmed in a dialog', () => {
+        const pending: Publication = { cms_ref: { type: 'page', id: 9142, name: 'Neue Nutzungsbedingungen' }, status: 'pending', approval_chain: [] };
+
+        it('asks first and sends nothing until confirmed; cancelling closes the dialog', async () => {
+            const user = userEvent.setup();
+            const { sent } = stubRoutes();
+
+            await renderPanel(planState('released', { publications: [pending] }));
+            announce(1, [pending]);
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+
+            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
+
+            expect(dialog).toHaveTextContent('1 page goes online.');
+            expect(sent).toEqual([]);
+
+            await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            expect(sent).toEqual([]);
+        });
+
+        it('closes with Escape before it is confirmed', async () => {
+            const user = userEvent.setup();
+
+            stubRoutes();
+            await renderPanel(planState('released'));
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await screen.findByRole('dialog', { name: 'Publish this plan?' });
+
+            await user.keyboard('{Escape}');
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        });
+
+        it('publishes once confirmed, shows that it is under way and cannot be closed meanwhile, then says what went out', async () => {
+            const user = userEvent.setup();
+            const { sent } = stubRoutes({ transition: () => accepted('r-9') });
+            const { setState } = await renderLivePanel(planState('released', { publications: [pending] }));
+
+            announce(1, [pending]);
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'publish' }]));
+            const dialog = screen.getByRole('dialog');
+
+            expect(within(dialog).getByRole('status')).toHaveTextContent('Publishing');
+            expect(within(dialog).queryByRole('button')).not.toBeInTheDocument();
+
+            await user.keyboard('{Escape}');
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+            announce(2, [{ ...pending, status: 'published' }]);
+            await setState(planState('published', { publications: [{ ...pending, status: 'published' }] }));
+
+            expect(await within(dialog).findByText('Published')).toBeInTheDocument();
+            expect(dialog).toHaveTextContent('1 published');
+            await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        });
+
+        it('counts pages sent to review as done, and says so', async () => {
+            const user = userEvent.setup();
+
+            stubRoutes({ transition: () => accepted('r-9') });
+            const second: Publication = { ...pending, cms_ref: { type: 'page', id: 9143, name: 'Garantiebedingungen' } };
+            const { setState } = await renderLivePanel(planState('released', { publications: [pending, second] }));
+
+            announce(1, [pending, second]);
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+            await screen.findByRole('status');
+
+            announce(2, [{ ...pending, status: 'published' }, { ...second, status: 'review_requested' }]);
+            await setState(planState('review_requested', { publications: [{ ...pending, status: 'published' }, { ...second, status: 'review_requested' }] }));
+
+            const dialog = screen.getByRole('dialog');
+
+            expect(await within(dialog).findByText('Done')).toBeInTheDocument();
+            expect(dialog).toHaveTextContent('1 published, 1 in review');
+        });
+
+        it('shows why publishing failed when its run fails, and can then be closed', async () => {
+            const user = userEvent.setup();
+
+            stubRoutes({ transition: () => accepted('r-9') });
+            await renderPanel(planState('released', { publications: [pending] }));
+            announce(1, [pending]);
+
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+            await screen.findByRole('status');
+
+            const error = { type: 't', title: 'Locked', status: 423, genaix_code: 'cms_object_locked' as const, detail: 'The page is locked by A. Kern.' };
+
+            // The plan stays released: only the failed page and the failed run tell (contract).
+            announce(2, [{ ...pending, status: 'failed', error }]);
+            applyEvent(3, 'run.failed', { run_id: 'r-9', run: { id: 'r-9', status: 'failed' }, error });
+
+            const dialog = screen.getByRole('dialog');
+
+            expect(await within(dialog).findByText('Publishing failed')).toBeInTheDocument();
+            expect(dialog).toHaveTextContent('Neue Nutzungsbedingungen');
+            expect(dialog).toHaveTextContent('The page is locked by A. Kern.');
+            await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        });
+
+        it('shows a refused request in the dialog, beside the notification every failed transition gets', async () => {
+            const user = userEvent.setup();
+
+            stubRoutes({ transition: () => problem('plan_closed') });
+            await renderPanel(planState('released'));
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+
+            const dialog = screen.getByRole('dialog');
+
+            expect(await within(dialog).findByText('Publishing failed')).toBeInTheDocument();
+            expect(dialog).toHaveTextContent('This plan is closed');
+            expect(useErrorNotificationStore.getState().errors).toMatchObject([
+                { messageKey: 'planBar.transitionFailed', detailKey: 'errors.genaix.plan_closed' },
+            ]);
+        });
+
+        // Refuses `publish` with a warning until it is acknowledged; `release` is refused the same way.
+        function refuseUntilAcknowledged() {
+            return stubRoutes({
+                transition: (body) => (body.acknowledge_checks
+                    ? accepted('r-9')
+                    : problem('quality_gate_failed', { failing_checks: [altText], failing_gates: [], acknowledgeable_checks: ['chk-alt-text'] })),
+            });
+        }
+
+        // Publish, confirmed, and refused by the gates: the dialog closes and the plan head says so.
+        async function publishRefused(user: ReturnType<typeof userEvent.setup>) {
+            await renderPanel(planState('released'));
+            await user.click(screen.getByRole('button', { name: 'Publish' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            expect(await screen.findByText('Some checks have warnings. Confirm them to go on.')).toBeInTheDocument();
+        }
+
+        it('leaves a refusal by the quality gates to the panel, and asks again before publishing anyway', async () => {
+            const user = userEvent.setup();
+            const { sent } = refuseUntilAcknowledged();
+
+            await publishRefused(user);
+            await user.click(await screen.findByRole('button', { name: 'Publish anyway' }));
+
+            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
+
+            expect(sent).toEqual([{ action: 'publish' }]);
+            await user.click(within(dialog).getByRole('button', { name: 'Publish' }));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'publish' }, { action: 'publish', acknowledge_checks: ['chk-alt-text'] }]));
+            expect(within(screen.getByRole('dialog')).getByRole('status')).toHaveTextContent('Publishing');
+        });
+
+        it('asks again before "Check again" after a refused publish, which publishes if the checks pass now', async () => {
+            const user = userEvent.setup();
+            const { sent } = refuseUntilAcknowledged();
+
+            await publishRefused(user);
+            await user.click(screen.getByRole('button', { name: 'Check again' }));
+
+            const dialog = await screen.findByRole('dialog', { name: 'Publish this plan?' });
+
+            expect(sent).toEqual([{ action: 'publish' }]);
+            await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            expect(sent).toEqual([{ action: 'publish' }]);
+
+            await user.click(screen.getByRole('button', { name: 'Check again' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Publish' }));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'publish' }, { action: 'publish' }]));
+        });
+
+        it('does not ask before "Check again" after a refused release, which puts nothing online', async () => {
+            const user = userEvent.setup();
+            const { sent } = refuseUntilAcknowledged();
+
+            await renderPanel(planState('done'));
+            await user.click(screen.getByRole('button', { name: 'Release' }));
+            await user.click(await screen.findByRole('button', { name: 'Check again' }));
+
+            await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release' }]));
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
     });
 
     it('requests a review of a released plan', async () => {
@@ -290,7 +574,8 @@ describe('ReviewPanel', () => {
 
         stubRoutes({ transition: () => problem('plan_closed') });
         await renderPanel(planState('released'));
-        await user.click(screen.getByRole('button', { name: 'Publish' }));
+        // Not Publish, whose refusals its dialog shows ('publishing, confirmed in a dialog').
+        await user.click(screen.getByRole('button', { name: 'Request review' }));
 
         await waitFor(() => expect(useErrorNotificationStore.getState().errors).toMatchObject([
             { messageKey: 'planBar.transitionFailed', detailKey: 'errors.genaix.plan_closed' },

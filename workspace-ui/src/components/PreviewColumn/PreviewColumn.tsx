@@ -29,17 +29,25 @@ const READ_ONLY_PARAMS = { mode: 'view', real: 'view', tagmarkers: 'true' } as c
 // CMS feature `copy_tags`; a CMS that does not know it ignores it, and the page has no markers then.
 // A parameter that is missing or has another value is set; everything else stays. A URL that already
 // has all of them is returned unchanged.
+// On the dev server (`npm run dev`, `npm run dev:debug`; `DEV`, but not Vitest's mode `test`) the URL is
+// loaded from the dev server's own origin, which forwards
+// `/alohapage` to the CMS (`vite.config.ts`): the CMS authenticates it only by its session cookie
+// (`SessionToken`), which the /rest login left on the dev server's host, so `preview_url` pointing at
+// the CMS host would answer "Invalid session ID".
 function readOnlyPreviewUrl(url: string): string {
     const parsed = new URL(url, window.location.href);
     const entries = Object.entries(READ_ONLY_PARAMS);
+    const viaDevServer = import.meta.env.DEV && import.meta.env.MODE !== 'test' && parsed.origin !== window.location.origin;
 
-    if (entries.every(([key, value]) => parsed.searchParams.get(key) === value)) {
+    if (!viaDevServer && entries.every(([key, value]) => parsed.searchParams.get(key) === value)) {
         return url;
     }
 
     entries.forEach(([key, value]) => parsed.searchParams.set(key, value));
 
-    return parsed.toString();
+    return viaDevServer
+        ? new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, window.location.origin).toString()
+        : parsed.toString();
 }
 
 // Where a box sits over the page, as inline style.

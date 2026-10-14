@@ -10,6 +10,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
  * a login, and `POST /rest/auth/logout` with an empty success. It answers `POST /rest/admin/token`
  * with a fixed test token, so a session can be started against the GenAIx mock, which accepts any
  * token (except the prefixes `invalid_`, `mismatch_` and `unreachable_`, which test its error cases).
+ * It grants `GET /rest/perm/publish/page/{id}`, so the dev user may publish every page.
  * Every other `/rest` call still has no CMS behind it.
  */
 function devCmsStub(): Plugin {
@@ -33,6 +34,18 @@ function devCmsStub(): Plugin {
 
             answer('/rest/user/me', 'GET', { user: { id: 0, login: 'dev', firstName: 'Dev', lastName: 'User' } });
             answer('/rest/auth/logout', 'POST', { responseInfo: { responseCode: 'OK' } });
+
+            server.middlewares.use('/rest/perm/publish/page', (req, res, next) => {
+                // Mounted on the path, so `req.url` is `/{id}` and the query.
+                if (req.method !== 'GET' || !/^\/\d+$/.test((req.url ?? '/').split('?')[0]!)) {
+                    next();
+
+                    return;
+                }
+
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ granted: true }));
+            });
 
             server.middlewares.use('/rest/admin/token', (req, res, next) => {
                 // Mounted on the path, so `req.url` is what follows it: only the exact path is answered.
@@ -145,6 +158,12 @@ export default defineConfig(({ mode }) => {
                             target: cmsProxyTarget,
                             changeOrigin: true,
                             cookieDomainRewrite: '',
+                        },
+                        // The page preview (`PreviewColumn` loads it from this origin), with the CMS
+                        // session cookie the /rest login left on localhost.
+                        '/alohapage': {
+                            target: cmsProxyTarget,
+                            changeOrigin: true,
                         },
                     }
                     : {}),

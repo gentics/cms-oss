@@ -1,6 +1,7 @@
 import { keepPreviousData, type QueryClient, skipToken, useInfiniteQuery, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+    canPublishCmsPage,
     type CmsItem,
     type CmsItemType,
     type CmsNode,
@@ -23,6 +24,7 @@ export const cmsKeys = {
     folderSearch: (nodeId: number, folderId: number, query: string) => ['cms', 'nodes', nodeId, 'folder-search', folderId, query] as const,
     images: (node: CmsNode | undefined, query: string) => ['cms', 'nodes', node?.id, 'images', query] as const,
     page: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId] as const,
+    publishPermission: (id: number, nodeId: number | undefined) => ['cms', 'pages', id, nodeId, 'perm', 'publish'] as const,
     templates: (folderId: number | undefined, nodeId: number | undefined) => ['cms', 'folders', folderId, 'templates', nodeId] as const,
     languages: (nodeId: number) => ['cms', 'nodes', nodeId, 'languages'] as const,
 };
@@ -173,6 +175,21 @@ export function useCmsPage(id: number, nodeId: number | undefined) {
     return useQuery({
         queryKey: cmsKeys.page(id, nodeId),
         queryFn: ({ signal }) => loadCmsPage(id, nodeId, signal),
+    });
+}
+
+/**
+ * Whether the current CMS user may publish every one of `pages` (`canPublishCmsPage`, one query per
+ * page). `false` while a permission is still loading or could not be read, so nothing is offered that
+ * the user may not do; `true` for no pages.
+ */
+export function useCanPublishCmsPages(pages: readonly { id: number; node_id?: number }[]): boolean {
+    return useQueries({
+        queries: pages.map(({ id, node_id: nodeId }) => ({
+            queryKey: cmsKeys.publishPermission(id, nodeId),
+            queryFn: ({ signal }: { signal: AbortSignal }) => canPublishCmsPage(id, nodeId, signal),
+        })),
+        combine: (results) => results.every(({ data }) => data === true),
     });
 }
 

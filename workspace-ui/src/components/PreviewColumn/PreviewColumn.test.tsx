@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { UiProvider } from '@/components/ui/provider';
 import type { LivePreview } from '@/store/useWorkspaceEventStore';
@@ -70,6 +70,19 @@ describe('PreviewColumn', () => {
 
         it('turns an edit preview into a read-only one', () => {
             expect(loadedUrl(`${BASE}&mode=edit&real=edit`)).toBe(`${BASE}&mode=view&real=view&tagmarkers=true`);
+        });
+
+        describe('on the dev server', () => {
+            afterEach(() => {
+                vi.unstubAllEnvs();
+            });
+
+            // `npm run dev` and `npm run dev:debug`.
+            it.each(['development', 'debug'])('loads the preview from the dev server\'s origin, which forwards it to the CMS with the session cookie (mode %s)', (mode) => {
+                vi.stubEnv('MODE', mode);
+
+                expect(loadedUrl(BASE)).toBe(`${window.location.origin}/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true`);
+            });
         });
 
         it('keeps the other parameters, the path and the fragment', () => {

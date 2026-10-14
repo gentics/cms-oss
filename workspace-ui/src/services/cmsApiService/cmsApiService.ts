@@ -384,6 +384,19 @@ export async function loadCmsPage(id: number, nodeId?: number, signal?: AbortSig
     return page;
 }
 
+/**
+ * Whether the current CMS user may publish the page `id`: `GET /rest/perm/publish/page/{id}`, in
+ * `nodeId` if given. The CMS checks `publishpages` on the page's folder and the role permission for its
+ * language (`PermHandler.canPublish`), the permission that decides between publishing a page and
+ * sending it to review.
+ */
+export async function canPublishCmsPage(id: number, nodeId?: number, signal?: AbortSignal): Promise<boolean> {
+    const params = nodeId === undefined ? '' : `?${new URLSearchParams({ nodeId: String(nodeId) })}`;
+    const { granted } = await httpRequest<{ granted?: boolean }>(`/rest/perm/publish/page/${id}${params}`, { ...CMS_GET, signal });
+
+    return granted === true;
+}
+
 /** A template (`rest/model/Template.java`), as far as the page settings need it. */
 export interface CmsTemplate {
     id: number;

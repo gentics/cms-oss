@@ -1,15 +1,14 @@
-import { Link } from '@tanstack/react-router';
-import { ChevronDownIcon, ChevronUpIcon, ClipboardCheckIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanCard } from '@/components/PlanCard/PlanCard';
-import { PlanDetails } from '@/components/PlanDetails/PlanDetails';
 import { Button } from '@/components/ui/button';
 import type { Plan, PlanStatus } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 import { PlanHead } from './PlanHead';
+import { ReviewButton } from './ReviewButton';
 
 import styles from './PlanBar.module.css';
 
@@ -32,13 +31,14 @@ interface PlanBarProps {
  * plan is, the publish outcome of its pages and the transitions its status allows.
  *
  * Expanded, the plan itself shows above the head (`PlanCard`): its steps, and Adjust and Accept while it
- * is proposed; below them its checks, derived settings and approval chain (`PlanDetails`). It expands by itself while the plan waits for the user, proposed or with a question of
+ * is proposed. It expands by itself while the plan waits for the user, proposed or with a question of
  * its own open (`interaction.requested` with its `plan_id`), and collapses once that is done. A click
  * on the toggle holds until the plan's waiting changes.
  *
  * While the plan has something to review (`REVIEWABLE`), "Review & release" next to the toggle opens
- * the review page, where the plan's preview, checks and pages are shown together; release, publish and
- * request review are made there, not here (`PlanHead` without `withGatedActions`).
+ * the review page, where the plan's preview, checks and pages are shown together, and releases a done
+ * plan on the way (`ReviewButton`); publish and request review are made there, not here (`PlanHead`
+ * without `withGatedActions`).
  */
 export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
     const { t } = useTranslation();
@@ -78,15 +78,9 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
             <section className={styles.bar} aria-label={t('planBar.label')}>
                 <div id={panelId} className={styles.panel} hidden={!isExpanded}>
                     <PlanCard plan={plan} sessionId={sessionId} canAnswer={!isWorking} />
-                    <PlanDetails sessionId={sessionId} planId={plan.id} />
                 </div>
                 <PlanHead sessionId={sessionId} plan={plan}>
-                    {REVIEWABLE.has(plan.status) && (
-                        <Button variant="secondary" size="sm" nativeButton={false} role={undefined} render={<Link to="/sessions/$id/review" params={{ id: sessionId }} search={{ plan: plan.id }} />}>
-                            <ClipboardCheckIcon size={14} aria-hidden />
-                            {t('planBar.review')}
-                        </Button>
-                    )}
+                    {REVIEWABLE.has(plan.status) && <ReviewButton sessionId={sessionId} plan={plan} />}
                     <Button
                         variant="ghost"
                         size="icon"

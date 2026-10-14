@@ -4,8 +4,9 @@ import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanHead } from '@/components/PlanBar/PlanHead';
+import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
-import { useSendMessage } from '@/hooks/useGenaixQueries';
+import { usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
 import type { ApprovalStep, Check, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPanel.module.css';
@@ -65,8 +66,11 @@ interface ReviewPanelProps {
  * and the outcome per page (`publications`), and at the bottom the plan's head (`PlanHead`, the same as
  * in the chat's plan bar): its status and the transitions it allows, release first, then publish or
  * request review, a refusal by the quality gates shown in place above them, and the confirmation before
- * discarding. The gated transitions are only offered here, not in the chat. A failing check's
- * suggested fix is sent to the agent, and the chat opens to follow it; a closed plan offers no fixes.
+ * discarding. The gated transitions are only offered here, not in the chat. While the quality gates
+ * check the plan, on the release "Review & release" sent on the way here (`ReviewButton`) or on "Check
+ * again" (`isCheck`), the checklist says so; their checks arrive as `check.updated` and the plan is
+ * read again. A release the user makes with its own button shows no check in progress. A failing check's suggested fix is sent to the agent, and the chat opens to follow it; a
+ * closed plan offers no fixes.
  */
 export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
     const { t } = useTranslation();
@@ -75,6 +79,7 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
     const { plan, checks, approval_chain: approvalChain, publications = [] } = state;
     const sendMessage = useSendMessage(sessionId);
     const isClosed = CLOSED.includes(plan.status);
+    const isChecking = Boolean(usePlanTransition(sessionId, plan.id).pending?.isCheck);
 
     // A suggested fix is a message to the agent; the chat shows how it goes.
     function fix(prompt: string) {
@@ -93,7 +98,13 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
 
                 <section className={styles.section} aria-label={t('review.checklist')}>
                     <h3 className={styles.overline}>{t('review.checklist')}</h3>
-                    {checks.length === 0 && <p className={styles.empty}>{t('review.noChecks')}</p>}
+                    {isChecking && (
+                        <p className={styles.checking} role="status">
+                            <ThinkingDots />
+                            {t('review.checking')}
+                        </p>
+                    )}
+                    {checks.length === 0 && !isChecking && <p className={styles.empty}>{t('review.noChecks')}</p>}
                     {groupChecks(checks).map(([name, group]) => (
                         <div key={name} className={styles.checkGroup} role="group" aria-label={name}>
                             <div className={styles.checkGroupHead}>{name}</div>

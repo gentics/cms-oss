@@ -1,12 +1,14 @@
-import { skipToken, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useInfiniteQuery, useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { resolvePendingFileSources } from '@/helper/composerParts/composerParts';
+import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { ensureSessionCmsAuthorization, newSessionCmsAuthorization } from '@/helper/sessionAuthorization/sessionAuthorization';
 import {
     answerInteraction,
     archiveSession,
     cancelRun,
     createSession,
+    GenaixApiError,
     genaixRetry,
     genaixRetryDelay,
     getMe,
@@ -26,11 +28,13 @@ import type {
     FileMode,
     InteractionAnswer,
     MessageCreateBody,
+    Problem,
     Session,
     TransitionRequest,
     UserFileRefPart,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
+import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
 import { useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
 /** Query keys of the GenAIx server state. */
@@ -45,6 +49,8 @@ export const genaixKeys = {
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
     uploads: (sessionId: string) => ['genaix', 'sessions', sessionId, 'uploads'] as const,
     plan: (sessionId: string, planId: string) => ['genaix', 'sessions', sessionId, 'plans', planId] as const,
+    /** Mutation key of every plan transition of a session (`useTransitionPlan`, `usePlanTransition`). */
+    transitions: (sessionId: string) => ['genaix', 'sessions', sessionId, 'transitions'] as const,
 };
 
 // Retries only what is worth retrying (`isRetryableGenaixError`), honouring `Retry-After`.
@@ -278,6 +284,17 @@ export function useSendTurn(sessionId: string) {
 export interface TransitionPlanInput {
     planId: string;
     request: TransitionRequest;
+    /**
+     * Sent to have the quality gates check the plan rather than as the user's own decision: the release
+     * "Review & release" sends on the way and "Check again". Only these show the check in progress
+     * (`ReviewPanel`); the request is the same.
+     */
+    isCheck?: boolean;
+}
+
+/** The `409 quality_gate_failed` problem a transition was refused with, or `undefined` for any other outcome. */
+export function gateRefusalOf(error: unknown): Problem | undefined {
+    return error instanceof GenaixApiError && error.genaixCode === 'quality_gate_failed' ? error.problem : undefined;
 }
 
 /**
@@ -286,11 +303,17 @@ export interface TransitionPlanInput {
  * `plan.updated` on the event stream; the session lists are refetched, since the to-dos filter on the
  * plan's status. A transition that runs (`202`) awaits that run (`awaitRun`). Never retried: a
  * repeated `publish` would start a second run.
+ *
+ * Every transition is kept under `genaixKeys.transitions`, so that its outcome is seen where the plan
+ * is shown (`usePlanTransition`), also when it was sent elsewhere, e.g. the release that "Review &
+ * release" sends on its way to the review page. A refusal by the quality gates is shown there
+ * (`PlanHead`); any other failure is an error notification, also once the sender is gone.
  */
 export function useTransitionPlan(sessionId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
+        mutationKey: genaixKeys.transitions(sessionId),
         mutationFn: async ({ planId, request }: TransitionPlanInput) => {
             await ensureSessionCmsAuthorization(sessionId);
 
@@ -304,8 +327,38 @@ export function useTransitionPlan(sessionId: string) {
 
             return queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
         },
+        onError: (error) => {
+            if (!gateRefusalOf(error)) {
+                useErrorNotificationStore.getState().addError({ messageKey: 'planBar.transitionFailed', detailKey: errorMessageKey(error) });
+            }
+        },
         retry: false,
     });
+}
+
+function isTransitionInput(variables: unknown): variables is TransitionPlanInput {
+    return typeof variables === 'object' && variables !== null && 'planId' in variables && 'request' in variables;
+}
+
+/** Where the transitions of one plan stand. */
+export interface PlanTransition {
+    /** The transition on its way, if any. */
+    pending?: TransitionPlanInput;
+    /** The latest one: what it asked for, when, and how it ended (`status`, `error`). */
+    latest?: { input: TransitionPlanInput; status: 'idle' | 'pending' | 'success' | 'error'; error: unknown; submittedAt: number };
+}
+
+/** The transitions of `planId`, from whichever component sent them (`useTransitionPlan`). */
+export function usePlanTransition(sessionId: string, planId: string): PlanTransition {
+    const states = useMutationState({
+        filters: { mutationKey: genaixKeys.transitions(sessionId) },
+        select: ({ state }) => state,
+    });
+    const own = states.flatMap(({ variables, status, error, submittedAt }) => (
+        isTransitionInput(variables) && variables.planId === planId ? [{ input: variables, status, error, submittedAt }] : []
+    ));
+
+    return { pending: own.find(({ status }) => status === 'pending')?.input, latest: own.at(-1) };
 }
 
 /**

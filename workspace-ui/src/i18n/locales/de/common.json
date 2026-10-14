@@ -273,12 +273,9 @@
             "failed_other": "{{count}} fehlgeschlagen"
         },
         "gate": {
-            "title": "Prüfungen nicht bestanden",
-            "blocking": "Blockierend",
-            "warning": "Warnung",
-            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Versuchen Sie es dann erneut.",
-            "acknowledgeHint": "Bestätigen Sie diese Warnungen, um fortzufahren.",
-            "close": "Schließen",
+            "blockingHint": "Beheben Sie zuerst die blockierenden Prüfungen oder lassen Sie den Agenten das tun. Prüfen Sie dann erneut.",
+            "acknowledgeHint": "Einige Prüfungen haben Warnungen. Bestätigen Sie sie, um fortzufahren.",
+            "retry": "Erneut prüfen",
             "anyway": {
                 "release": "Trotzdem freigeben",
                 "publish": "Trotzdem veröffentlichen",
@@ -430,6 +427,7 @@
         "noPreview": "Noch keine Vorschau.",
         "checklist": "Checkliste",
         "noChecks": "Noch keine Prüfungen.",
+        "checking": "Checkliste wird geprüft…",
         "blocking": "blockierend",
         "acknowledged": "bestätigt",
         "approvalChain": "Freigabe",
@@ -766,29 +764,5 @@
         "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
         "copied": "Event {{seq}} kopiert",
         "copyFailed": "Das Event konnte nicht kopiert werden."
-    },
-    "planDetails": {
-        "checks": "Prüfungen",
-        "settings": "Einstellungen",
-        "approval": "Freigabe",
-        "blocking": "Blockiert",
-        "severity": {
-            "pass": "Bestanden",
-            "info": "Hinweis",
-            "warn": "Warnung",
-            "fail": "Fehlgeschlagen"
-        },
-        "approvalStatus": {
-            "pending": "Offen",
-            "done": "Erledigt",
-            "not_required": "Nicht nötig",
-            "rejected": "Abgelehnt"
-        },
-        "actor": {
-            "user": "Sie",
-            "group": "CMS-Gruppe",
-            "workflow": "CMS-Workflow",
-            "system": "System"
-        }
     }
 }

@@ -273,12 +273,9 @@
             "failed_other": "{{count}} failed"
         },
         "gate": {
-            "title": "Checks failed",
-            "blocking": "Blocking",
-            "warning": "Warning",
-            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then try again.",
-            "acknowledgeHint": "Confirm these warnings to go on.",
-            "close": "Close",
+            "blockingHint": "Fix the blocking checks first, or ask the agent to. Then check again.",
+            "acknowledgeHint": "Some checks have warnings. Confirm them to go on.",
+            "retry": "Check again",
             "anyway": {
                 "release": "Release anyway",
                 "publish": "Publish anyway",
@@ -430,6 +427,7 @@
         "noPreview": "No preview yet.",
         "checklist": "Checklist",
         "noChecks": "No checks yet.",
+        "checking": "Checking the checklist…",
         "blocking": "blocking",
         "acknowledged": "acknowledged",
         "approvalChain": "Approval",
@@ -766,29 +764,5 @@
         "copy": "Copy the JSON of event {{seq}} ({{type}})",
         "copied": "Event {{seq}} copied",
         "copyFailed": "The event could not be copied."
-    },
-    "planDetails": {
-        "checks": "Checks",
-        "settings": "Settings",
-        "approval": "Approval",
-        "blocking": "Blocking",
-        "severity": {
-            "pass": "Passed",
-            "info": "Note",
-            "warn": "Warning",
-            "fail": "Failed"
-        },
-        "approvalStatus": {
-            "pending": "Pending",
-            "done": "Done",
-            "not_required": "Not required",
-            "rejected": "Rejected"
-        },
-        "actor": {
-            "user": "You",
-            "group": "CMS group",
-            "workflow": "CMS workflow",
-            "system": "System"
-        }
     }
 }

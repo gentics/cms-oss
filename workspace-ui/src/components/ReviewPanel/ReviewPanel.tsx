@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { BanIcon, CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, CircleXIcon, InfoIcon, type LucideIcon, MinusIcon, SendIcon } from 'lucide-react';
+import { BanIcon, CircleAlertIcon, CircleCheckIcon, InfoIcon, type LucideIcon } from 'lucide-react';
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,17 +7,13 @@ import { PlanHead } from '@/components/PlanBar/PlanHead';
 import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
 import { usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
-import type { ApprovalStep, Check, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
+import type { Check, PlanState, PlanStatus } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPanel.module.css';
 
 const CLOSED: PlanStatus[] = ['published', 'review_requested', 'discarded', 'superseded'];
 
 const SEVERITY_ICONS: Record<Check['severity'], LucideIcon> = { pass: CircleCheckIcon, info: InfoIcon, warn: CircleAlertIcon, fail: CircleAlertIcon };
-
-const PUBLICATION_ICONS: Record<Publication['status'], LucideIcon> = { pending: CircleDashedIcon, published: CircleCheckIcon, review_requested: SendIcon, failed: CircleAlertIcon };
-
-const APPROVAL_ICONS: Record<ApprovalStep['status'], LucideIcon> = { pending: CircleDashedIcon, done: CircleCheckIcon, not_required: MinusIcon, rejected: CircleXIcon };
 
 // The checks grouped by where they come from (a guideline, a requirement, a gate), in their order.
 function groupChecks(checks: Check[]): [string, Check[]][] {
@@ -34,26 +30,6 @@ function groupChecks(checks: Check[]): [string, Check[]][] {
 
 function isFailing(check: Check): boolean {
     return check.severity === 'warn' || check.severity === 'fail';
-}
-
-function ApprovalSteps({ steps }: { steps: ApprovalStep[] }) {
-    const { t } = useTranslation();
-
-    return (
-        <ol className={styles.approval}>
-            {steps.map((step) => {
-                const Icon = APPROVAL_ICONS[step.status] ?? CircleDashedIcon;
-
-                return (
-                    <li key={step.id} className={styles.approvalStep} data-status={step.status}>
-                        <Icon size={13} aria-hidden />
-                        <span className={styles.approvalLabel}>{step.label}</span>
-                        <span className={styles.meta}>{t(`review.approval.${step.status}`)}</span>
-                    </li>
-                );
-            })}
-        </ol>
-    );
 }
 
 interface ReviewPanelProps {
@@ -76,7 +52,7 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const titleId = useId();
-    const { plan, checks, approval_chain: approvalChain, publications = [] } = state;
+    const { plan, checks } = state;
     const sendMessage = useSendMessage(sessionId);
     const isClosed = CLOSED.includes(plan.status);
     const isChecking = Boolean(usePlanTransition(sessionId, plan.id).pending?.isCheck);

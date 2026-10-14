@@ -197,41 +197,6 @@ describe('ReviewPanel', () => {
         await waitFor(() => expect(sent).toEqual([{ action: 'request_review' }]));
     });
 
-    it('shows the labels of the approval chain', async () => {
-        stubRoutes();
-        await renderPanel(planState('released'));
-
-        const approval = screen.getByRole('region', { name: 'Approval' });
-
-        expect(approval).toHaveTextContent('Author releases the draftPending');
-        expect(approval).toHaveTextContent('Group Marketing has publish permission on RichtlinienNot required');
-    });
-
-    it('shows the outcome per page, with its approval labels and the error of a failed one', async () => {
-        stubRoutes();
-        await renderPanel(planState('released', {
-            publications: [
-                page,
-                {
-                    cms_ref: { type: 'page', id: 8871, name: 'Garantiebedingungen' },
-                    status: 'failed',
-                    approval_chain: [],
-                    error: { type: 't', title: 'Locked', status: 423, genaix_code: 'cms_object_locked', detail: 'The page is locked by A. Kern.' },
-                },
-            ],
-        }));
-
-        // One entry per page: the direct items of the list (their approval steps are a list of their own).
-        const [published, failed] = [...within(screen.getByRole('region', { name: 'Pages' })).getAllByRole('list')[0]!.children];
-
-        expect(published).toHaveTextContent('Neue NutzungsbedingungenPublished');
-        expect(published).toHaveTextContent('Author releases the draftDone');
-        expect(failed).toHaveTextContent('GarantiebedingungenFailed');
-        expect(failed).toHaveTextContent('The page is locked by A. Kern.');
-        // A failed page is published again with the same action.
-        expect(screen.getByRole('button', { name: 'Publish' })).toBeInTheDocument();
-    });
-
     it('asks before discarding, and says that kept pages stay as drafts', async () => {
         const user = userEvent.setup();
         const { sent } = stubRoutes();
@@ -283,7 +248,7 @@ describe('ReviewPanel', () => {
         expect(screen.queryByRole('button', { name: 'Add alt text' })).not.toBeInTheDocument();
     });
 
-    it('lists what a refused release failed on, and releases anyway with the warnings acknowledged', async () => {
+    it('offers to check again or release anyway when the gates refuse a release with warnings only', async () => {
         const user = userEvent.setup();
         const { sent } = stubRoutes({
             transition: (body) => (body.acknowledge_checks
@@ -294,33 +259,30 @@ describe('ReviewPanel', () => {
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        // In the panel itself, not in a dialog.
-        const refusal = await within(screen.getByRole('region', { name: 'Review' })).findByRole('region', { name: 'Checks failed' });
-
+        // In the panel's foot, not in a dialog; the failing checks are in the checklist above.
+        expect(await screen.findByText('Some checks have warnings. Confirm them to go on.')).toBeInTheDocument();
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-        expect(refusal).toHaveTextContent('Images have alt textWarning');
-        await user.click(within(refusal).getByRole('button', { name: 'Release anyway' }));
+        expect(actionNames()).toEqual(['Discard', 'Check again', 'Release anyway']);
+
+        await user.click(screen.getByRole('button', { name: 'Release anyway' }));
 
         await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }]));
-        await waitFor(() => expect(screen.queryByRole('region', { name: 'Checks failed' })).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByText('Some checks have warnings. Confirm them to go on.')).not.toBeInTheDocument());
     });
 
-    it('offers no way past a blocking check, only to close', async () => {
+    it('offers no way past a blocking check, only to check again', async () => {
         const user = userEvent.setup();
+        const { sent } = stubRoutes({ transition: () => problem('quality_gate_failed', { failing_checks: [brokenLink, altText], failing_gates: [{ gate_id: 'links', label: 'Links', kind: 'script', blocking: true, when: 'before_release', status: 'failed', attempt: 1, check_ids: ['chk-links'] }], acknowledgeable_checks: ['chk-alt-text'] }) });
 
-        stubRoutes({ transition: () => problem('quality_gate_failed', { failing_checks: [brokenLink, altText], failing_gates: [{ gate_id: 'links', label: 'Links', kind: 'script', blocking: true, when: 'before_release', status: 'failed', attempt: 1, check_ids: ['chk-links'] }], acknowledgeable_checks: ['chk-alt-text'] }) });
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        const refusal = await within(screen.getByRole('region', { name: 'Review' })).findByRole('region', { name: 'Checks failed' });
+        expect(await screen.findByText('Fix the blocking checks first, or ask the agent to. Then check again.')).toBeInTheDocument();
+        expect(actionNames()).toEqual(['Discard', 'Check again']);
 
-        expect(refusal).toHaveTextContent('Links resolveBlocking');
-        expect(within(refusal).queryByRole('button', { name: 'Release anyway' })).not.toBeInTheDocument();
-        expect(within(refusal).getAllByRole('button', { name: 'Close' }).length).toBeGreaterThan(0);
+        await user.click(screen.getByRole('button', { name: 'Check again' }));
 
-        await user.click(within(refusal).getByRole('button', { name: 'Close' }));
-
-        expect(screen.queryByRole('region', { name: 'Checks failed' })).not.toBeInTheDocument();
+        await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release' }]));
     });
 
     it('reports any other refusal as an error, e.g. a closed plan', async () => {

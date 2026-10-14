@@ -348,7 +348,7 @@ describe('SessionPage', () => {
         }));
 
         expect(screen.getByRole('button', { name: 'Hide the right column' })).toBeInTheDocument();
-        expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view');
+        expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view&real=view&tagmarkers=true');
     });
 
     describe('answering the question the run waits on', () => {

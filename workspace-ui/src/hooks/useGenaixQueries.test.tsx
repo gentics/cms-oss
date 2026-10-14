@@ -13,6 +13,7 @@ import { useAnswerInteraction,
     useArchiveSession,
     useCancelRun,
     useMe,
+    usePlanState,
     useSendMessage,
     useSendTurn,
     useSession,
@@ -462,5 +463,20 @@ describe('GenAIx query hooks', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1');
         expect(result.current.data).toEqual({ id: 's-1', status: 'review_requested' });
+    });
+    describe('usePlanState', () => {
+        it('loads the state of one plan, and nothing without a plan', async () => {
+            const fetchMock = stubFetch(Response.json({ workflow: 'content_create', plan: { id: 'pl-1', status: 'done' }, checks: [] }));
+            const { result, rerender } = renderHook(({ planId }: { planId?: string }) => usePlanState('s-1', planId), { wrapper, initialProps: {} });
+
+            expect(result.current.fetchStatus).toBe('idle');
+            expect(fetchMock).not.toHaveBeenCalled();
+
+            rerender({ planId: 'pl-1' });
+
+            await waitFor(() => expect(result.current.isSuccess).toBe(true));
+            expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1');
+            expect(result.current.data).toMatchObject({ plan: { id: 'pl-1' } });
+        });
     });
 });

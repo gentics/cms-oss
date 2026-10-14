@@ -78,7 +78,40 @@
   gap: 6px;
 }
 
-/* The checks the quality gates refused a transition with (`GateRefusalDialog`): a row per check, a
+/* A transition the quality gates refused (`GateRefusal`), in place on the review page's panel: title,
+   hint, the failing checks (scrolling when there are many) and its buttons. */
+.refusal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 50vh;
+  min-height: 0;
+}
+
+.refusalTitle {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+}
+
+.refusalHint {
+  margin: 0;
+  color: var(--fg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.refusal .checks {
+  overflow-y: auto;
+}
+
+.refusalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* The checks the quality gates refused a transition with (`GateRefusal`): a row per check, a
    3 px left edge in its colour (§3.3 "Prüfzeile"). */
 .checks {
   display: flex;

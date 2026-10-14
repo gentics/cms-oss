@@ -20,12 +20,15 @@ import type { LivePreview } from '@/store/useWorkspaceEventStore';
 import styles from './PreviewColumn.module.css';
 
 // The query parameters of a read-only CMS preview, each with the value it must have.
-const READ_ONLY_PARAMS = { mode: 'view', real: 'view' } as const;
+const READ_ONLY_PARAMS = { mode: 'view', real: 'view', tagmarkers: 'true' } as const;
 
 // `url` (`preview_url` of `preview.updated`) as a read-only preview: `mode=view` as in the contract
 // example, and `real=view`, which is what the CMS's `/alohapage` reads (`AlohaPageServlet`; without
-// it, it renders for editing and locks the page). A parameter that is missing or has another value
-// is set; everything else stays. A URL that already has both is returned unchanged.
+// it, it renders for editing and locks the page). `tagmarkers=true` makes that read-only render mark
+// the page's tags (`data-gcn-*`), which the part selection needs (`usePreviewElements`), without the
+// CMS feature `copy_tags`; a CMS that does not know it ignores it, and the page has no markers then.
+// A parameter that is missing or has another value is set; everything else stays. A URL that already
+// has all of them is returned unchanged.
 function readOnlyPreviewUrl(url: string): string {
     const parsed = new URL(url, window.location.href);
     const entries = Object.entries(READ_ONLY_PARAMS);
@@ -67,8 +70,7 @@ function dimBands({ top, left, width, height }: ElementBox): CSSProperties[] {
 }
 
 /** What the preview hands on for a part: the page and the part, to reference in the chat, to send feedback on, to give new text or another image. */
-export interface PreviewColumnProps {
-    preview: LivePreview;
+export interface PreviewActions {
     /** Adds the part to the chat composer, followed by `text` if given. */
     onReferenceInChat: (element: PageElementInput, text?: string) => void;
     /** Sends feedback on the part as a turn; rejects when it was not sent, so the card stays open. */
@@ -82,6 +84,9 @@ export interface PreviewColumnProps {
     /** Whether a turn can be sent now (feedback, new text, an image or page settings): not while a run is working or waiting. */
     canSendFeedback: boolean;
 }
+
+/** The preview, with all of `PreviewActions` (the session's chat) or none of them (only showing the page, as on the review page). */
+export type PreviewColumnProps = { preview: LivePreview } & (PreviewActions | { [K in keyof PreviewActions]?: undefined });
 
 /**
  * The right column: the CMS preview of the page the session produced, framed on the preview stage
@@ -113,8 +118,14 @@ export interface PreviewColumnProps {
  * For a page, "Page settings" in the header drops the page settings over the preview (`PageSettings`,
  * final_draft.html "PAGE SETTINGS"); Apply sends the changed ones (`onSendSettings`), Escape or the
  * button closes them.
+ *
+ * Without `PreviewActions` the preview only shows the page: no part is selected, outlined or offered a
+ * menu, and there are no page settings; the changed parts are still tinted.
  */
-export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSendEdit, onSendImage, onSendSettings, canSendFeedback }: PreviewColumnProps) {
+export function PreviewColumn(props: PreviewColumnProps) {
+    const { preview } = props;
+    const actions: PreviewActions | undefined = props.onReferenceInChat ? props : undefined;
+    const canSendFeedback = actions?.canSendFeedback ?? false;
     const { t } = useTranslation();
     const titleId = useId();
     const url = readOnlyPreviewUrl(preview.preview_url);
@@ -151,7 +162,11 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
     const settingsRef = useRef<HTMLElement>(null);
     const settingsButtonRef = useRef<HTMLButtonElement>(null);
     const { onFrameLoad, hovered, selectedBox, changedBoxes, textOf, hasImage } = usePreviewElements(frameRef, selected?.tagName ?? null, (element) => {
-        // A click on a part selects it and opens its menu; Escape clears both.
+        // A click on a part selects it and opens its menu; Escape clears both. Only with actions to offer.
+        if (!actions) {
+            return;
+        }
+
         setSelected(element);
         setIsMenuOpen(element !== null);
         setIsFeedbackOpen(false);
@@ -193,7 +208,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
 
     function referenceInChat(element: PreviewElement, text?: string) {
         hasMovedFocusRef.current = true;
-        onReferenceInChat(pageElementOf(element), text);
+        actions?.onReferenceInChat(pageElementOf(element), text);
         toast.add({ title: t('preview.selection.referenced') });
     }
 
@@ -232,7 +247,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
         setIsSending(true);
 
         try {
-            await onSendImage(pageElementOf(element), { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
+            await actions?.onSendImage(pageElementOf(element), { type: 'image', id: String(pickedImage.id), node_id: nodeId, label: pickedImage.name });
             setIsImageOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and the pick stay for another try.
@@ -257,7 +272,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
         setIsSending(true);
 
         try {
-            await onSendEdit(pageElementOf(element), editText);
+            await actions?.onSendEdit(pageElementOf(element), editText);
             setIsEditOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and its text stay for another try.
@@ -287,7 +302,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
         setIsSending(true);
 
         try {
-            await onSendFeedback(pageElementOf(element), feedback.trim());
+            await actions?.onSendFeedback(pageElementOf(element), feedback.trim());
             setIsFeedbackOpen(false);
         } catch {
             // Not sent: the caller has said why; the card and its text stay for another try.
@@ -310,7 +325,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
     }
 
     async function applySettings(changes: PageSettingsChange[]) {
-        await onSendSettings(pageRef(), changes);
+        await actions?.onSendSettings(pageRef(), changes);
         closeSettings();
     }
 
@@ -362,7 +377,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
                         </Button>
                     </span>
                 )}
-                {preview.cms_ref.type === 'page' && (
+                {actions && preview.cms_ref.type === 'page' && (
                     <Button ref={settingsButtonRef} variant="secondary" size="sm" aria-expanded={isSettingsOpen} onClick={() => setIsSettingsOpen((open) => !open)}>
                         <SlidersHorizontalIcon size={14} />
                         {t('preview.settings.open')}
@@ -397,7 +412,7 @@ export function PreviewColumn({ preview, onReferenceInChat, onSendFeedback, onSe
                         {isFeedbackOpen && selectedBox && dimBands(selectedBox).map((band, index) => <div key={index} className={styles.dim} style={band} data-dim="" />)}
                         {changedBoxes.map(({ tagName, box }) => <div key={tagName} className={styles.changed} style={boxStyle(box)} data-changed-part={tagName} />)}
                         {selectedBox && <div ref={selectedBoxRef} className={`${styles.selected} ${isEditOpen || isImageOpen ? styles.editing : ''}`} style={boxStyle(selectedBox)} />}
-                        {hovered && hovered.element.tagName !== selected?.tagName && (
+                        {actions && hovered && hovered.element.tagName !== selected?.tagName && (
                             <div className={styles.hovered} style={boxStyle(hovered.box)}>
                                 <span className={styles.label}>{hovered.element.constructName || hovered.element.tagName}</span>
                             </div>

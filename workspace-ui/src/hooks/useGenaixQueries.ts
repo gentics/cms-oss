@@ -10,6 +10,7 @@ import {
     genaixRetry,
     genaixRetryDelay,
     getMe,
+    getPlanState,
     getSession,
     listMessages,
     listSessions,
@@ -43,6 +44,7 @@ export const genaixKeys = {
     session: (sessionId: string) => ['genaix', 'sessions', sessionId] as const,
     messages: (sessionId: string) => ['genaix', 'sessions', sessionId, 'messages'] as const,
     uploads: (sessionId: string) => ['genaix', 'sessions', sessionId, 'uploads'] as const,
+    plan: (sessionId: string, planId: string) => ['genaix', 'sessions', sessionId, 'plans', planId] as const,
 };
 
 // Retries only what is worth retrying (`isRetryableGenaixError`), honouring `Retry-After`.
@@ -81,6 +83,15 @@ export function useSessions(filters: SessionFilters = {}) {
 /** GET /sessions/{session_id}: the session, its `status` included. */
 export function useSession(sessionId: string) {
     return useQuery({ queryKey: genaixKeys.session(sessionId), queryFn: () => getSession(sessionId), ...retryOptions });
+}
+
+/** GET /sessions/{session_id}/plans/{plan_id}: the plan's state; off without a plan. */
+export function usePlanState(sessionId: string, planId: string | undefined) {
+    return useQuery({
+        queryKey: genaixKeys.plan(sessionId, planId ?? ''),
+        queryFn: planId === undefined ? skipToken : () => getPlanState(sessionId, planId),
+        ...retryOptions,
+    });
 }
 
 /**

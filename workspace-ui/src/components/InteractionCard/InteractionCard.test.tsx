@@ -30,11 +30,14 @@ function stubAnswer(response: () => Response = () => Response.json({ id: 'i-1', 
     return fetchMock;
 }
 
-// The `answer` of the one POST the card sent.
+// The `answer` of the one POST the card sent. Reads of the CMS lists a field offers (e.g. `GET /rest/node`
+// for the languages) are left out.
 async function sentAnswer(fetchMock: ReturnType<typeof stubAnswer>) {
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const posts = () => fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST');
 
-    const [url, init] = fetchMock.mock.calls[0]!;
+    await waitFor(() => expect(posts()).toHaveLength(1));
+
+    const [url, init] = posts()[0]!;
 
     expect(url).toBe('/rest/proxy/genaix/sessions/s-1/interactions/i-1');
     expect(init?.method).toBe('POST');

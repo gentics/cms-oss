@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 interface SessionArchiveState {
     /**
-     * Sessions the user deleted in this tab: waiting for the undo toast to close, or archived.
+     * Sessions the user deleted in this tab: being archived, or archived (`useDeleteSession`).
      * Every session list hides them, so a row disappears at once and does not come back from a
      * cached page. A failed archive or an undo shows the row again.
      */

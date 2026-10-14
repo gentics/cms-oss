@@ -1,11 +1,17 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { reloadPlans } from '@/helper/planReload/planReload';
 import { genaixKeys } from '@/hooks/useGenaixQueries';
-import { connectSessionEvents } from '@/services/apiService/eventStream';
+import { getSession } from '@/services/apiService/apiService';
+import { connectSessionEvents, replaySessionEvents } from '@/services/apiService/eventStream';
 import type { GenaixEvent } from '@/services/apiService/genaix/types';
-import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+import { persistedMessageKeys, selectSession, type SessionLiveState, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
+
+// A session this tab holds no live state of and waits for no run of: opening it replays the whole session.
+function isUnloaded(session: SessionLiveState): boolean {
+    return session.lastSeq === 0 && !session.awaitedRunIds?.length;
+}
 
 /**
  * Follows the event stream of `sessionId` while mounted and applies it to `useWorkspaceEventStore`.
@@ -18,10 +24,20 @@ import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/s
  *
  * `onEvent` gets every event as parsed from the stream, after it was applied. A new callback on
  * each render does not reconnect.
+ *
+ * With `loadFirst`, a session this tab has no live state of is loaded before it is followed, so the chat
+ * shows it whole instead of replaying it: when `GET /sessions/{session_id}` reports no active run, the
+ * history is read with `follow=false`, which ends right after the replay (contract §6.1), applied in one
+ * go, and only then followed live after its last `seq`. While a run is active the end of the replay is
+ * not known, so the stream is followed at once, as without the option; likewise when either read fails.
+ * Returns whether the session is being loaded so.
  */
-export function useSessionEvents(sessionId: string | undefined, onEvent?: (event: GenaixEvent) => void) {
+export function useSessionEvents(sessionId: string | undefined, onEvent?: (event: GenaixEvent) => void, { loadFirst = false }: { loadFirst?: boolean } = {}): boolean {
     const queryClient = useQueryClient();
     const onEventRef = useRef(onEvent);
+    // The session whose loading has ended, either way.
+    const [loadedSessionId, setLoadedSessionId] = useState<string>();
+    const isUnloadedSession = useWorkspaceEventStore((state) => Boolean(sessionId) && isUnloaded(selectSession(sessionId ?? '')(state)));
 
     useEffect(() => {
         onEventRef.current = onEvent;
@@ -61,14 +77,38 @@ export function useSessionEvents(sessionId: string | undefined, onEvent?: (event
             refetching = false;
         }
 
-        void connectSessionEvents({
-            sessionId,
-            lastSeq: selectSession(sessionId)(store()).lastSeq,
-            signal: controller.signal,
-            onStatus: (status) => store().setConnection(sessionId, status),
-            onEvent: (event) => {
-                store().applyEvent(sessionId, event);
-                onEventRef.current?.(event);
+        // The events that came since the last flush. A replay (`after=0` for a session this tab has no
+        // live state of) brings the whole session at once: applied one by one, the chat would render
+        // each step of it, the history partly replaced by half-replayed messages and runs that ended
+        // long ago thinking again, and the page would hang meanwhile. So everything that arrives before
+        // the next frame is applied together then, and React renders once. A tab in the background
+        // draws no frames: its events wait until it is shown again.
+        const pending: GenaixEvent[] = [];
+
+        function flush() {
+            const events = pending.splice(0);
+
+            if (controller.signal.aborted) {
+                return;
+            }
+
+            events.forEach((event) => store().applyEvent(sessionId!, event));
+            events.forEach((event) => onEventRef.current?.(event));
+
+            if (events.some((event) => event.type === 'message.completed')) {
+                persistedMessageKeys(selectSession(sessionId!)(store())).forEach((key) => toClear.add(key));
+                void refetchAndClear();
+            }
+        }
+
+        function follow() {
+            void connectSessionEvents({
+                sessionId: sessionId!,
+                lastSeq: selectSession(sessionId!)(store()).lastSeq,
+                signal: controller.signal,
+                onStatus: (status) => store().setConnection(sessionId!, status),
+                onEvent: (event) => {
+                    pending.push(event);
 
                 if (event.type === 'message.completed') {
                     persistedMessageKeys(selectSession(sessionId)(store())).forEach((key) => toClear.add(key));
@@ -87,5 +127,7 @@ export function useSessionEvents(sessionId: string | undefined, onEvent?: (event
         });
 
         return () => controller.abort();
-    }, [sessionId, queryClient]);
+    }, [sessionId, queryClient, loadFirst]);
+
+    return loadFirst && isUnloadedSession && loadedSessionId !== sessionId;
 }

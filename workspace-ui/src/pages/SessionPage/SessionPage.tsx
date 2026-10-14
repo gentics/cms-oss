@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AppShell } from '@/components/AppShell/AppShell';
 import { ChatStream } from '@/components/ChatStream/ChatStream';
 import { Composer, type ComposerHandle } from '@/components/Composer/Composer';
+import { EventLog } from '@/components/EventLog/EventLog';
 import { HistoryColumn } from '@/components/HistoryColumn/HistoryColumn';
 import { PlanBar } from '@/components/PlanBar/PlanBar';
 import { PreviewColumn } from '@/components/PreviewColumn/PreviewColumn';

@@ -20,3 +20,70 @@
      one shows (`--plan-bar-space`, set by SessionPage). */
   padding: 16px 20px calc(140px + var(--plan-bar-space, 0px));
 }
+
+/* While the conversation loads (design.md §8 "Lädt"): skeletons in the shape of a user turn and the
+   agent's answer, under a shimmer, where the list will stand. */
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 20px;
+}
+
+.skeletonUser,
+.skeletonAvatar,
+.skeletonLine {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--fg-primary-rgb), .05) 0%,
+    rgba(var(--fg-primary-rgb), .11) 50%,
+    rgba(var(--fg-primary-rgb), .05) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--duration-skeleton) linear infinite;
+}
+
+.skeletonUser {
+  align-self: flex-end;
+  width: 42%;
+  height: 40px;
+  border-radius: var(--corner-2xl);
+}
+
+.skeletonAgent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--corner-full);
+}
+
+.skeletonLine {
+  width: 88%;
+  height: 10px;
+  border-radius: var(--corner-xs);
+
+  &:nth-child(3) {
+    width: 72%;
+  }
+
+  &:nth-child(4) {
+    width: 46%;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}

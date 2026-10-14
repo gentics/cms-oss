@@ -169,6 +169,7 @@
             "system": "System"
         },
         "thinking": "Denkt nach",
+        "loading": "Unterhaltung wird geladen…",
         "stop": "Stoppen",
         "stopFailed": "Der Lauf konnte nicht gestoppt werden",
         "steps": {
@@ -391,7 +392,8 @@
         "delete": "„{{title}}“ löschen",
         "deleted": "„{{title}}“ gelöscht",
         "undo": "Rückgängig",
-        "archiveFailed": "Die Sitzung konnte nicht gelöscht werden"
+        "archiveFailed": "Die Sitzung konnte nicht gelöscht werden",
+        "restoreFailed": "Die Sitzung konnte nicht wiederhergestellt werden"
     },
     "todos": {
         "title": "Offene To-dos",

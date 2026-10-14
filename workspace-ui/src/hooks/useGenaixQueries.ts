@@ -96,6 +96,20 @@ export function useArchiveSession() {
     });
 }
 
+/**
+ * POST /sessions/{session_id}/transitions `unarchive`: the archived session is active again, then every
+ * session list is refetched, which holds it again. Retried like a query: the call is idempotent.
+ */
+export function useUnarchiveSession() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (sessionId: string) => unarchiveSession(sessionId),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
+        ...retryOptions,
+    });
+}
+
 /** GET /sessions/{session_id}/messages, oldest first; `fetchNextPage` follows `next_cursor`. */
 export function useSessionMessages(sessionId: string) {
     return useInfiniteQuery({
@@ -110,7 +124,8 @@ export function useSessionMessages(sessionId: string) {
 /**
  * POST /sessions/{session_id}/messages, after making sure the session holds a CMS credential
  * (`ensureSessionCmsAuthorization`). The turn appears in `useWorkspaceEventStore` at once as
- * `sending`, then `sent` or `send_failed`. Never retried: a repeat would send the turn twice.
+ * `sending`, then `sent` or `send_failed`; once sent, the run it started is awaited (`awaitRun`).
+ * Never retried: a repeat would send the turn twice.
  */
 export function useSendMessage(sessionId: string) {
     return useMutation({
@@ -128,6 +143,7 @@ export function useSendMessage(sessionId: string) {
         },
         onSuccess: (accepted, _body, context) => {
             useWorkspaceEventStore.getState().markMessageSent(sessionId, context.localId, accepted.message_id);
+            useWorkspaceEventStore.getState().awaitRun(sessionId, accepted.run_id);
         },
         onError: (error, _body, context) => {
             if (context) {
@@ -180,8 +196,9 @@ async function startSession({ parts, files, onFileProgress }: StartSessionInput)
     const session = await createSession({ authorizations });
     const fileParts = await uploadFileParts(session.id, files, onFileProgress);
     const fileIds = fileParts.map((part) => part.file_id);
+    const accepted = await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
 
-    await postMessage(session.id, { parts: [...resolvePendingFileSources(parts, fileIds), ...fileParts] });
+    useWorkspaceEventStore.getState().awaitRun(session.id, accepted.run_id);
 
     return session;
 }

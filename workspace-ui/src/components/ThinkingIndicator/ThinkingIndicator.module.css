@@ -22,6 +22,11 @@
   animation: bob var(--duration-attention) infinite;
 }
 
+/* On a surface in `--interactive-fill` (a primary button) the dots take the text colour. */
+.inherit > i {
+  background: currentColor;
+}
+
 .dots > i:nth-child(2) {
   animation-delay: calc(var(--duration-attention) * 0.14);
 }

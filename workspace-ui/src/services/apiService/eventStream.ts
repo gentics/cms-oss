@@ -234,3 +234,67 @@ export async function connectSessionEvents(options: SessionEventStreamOptions): 
 
     onStatus?.('closed');
 }
+
+/**
+ * Reads the whole event history of a session once: `GET /sessions/{session_id}/events?after=0&follow=false`,
+ * which the server closes right after the replay when no run is active (contract §6.1, "Lifetime").
+ * While a run is active it stays open until that run ends, so call it only for a session without one.
+ * Resolves with the events in `seq` order; rejects when the server refuses, the connection breaks,
+ * `HEARTBEAT_TIMEOUT_MS` pass without a frame, or `signal` aborts. Nothing is retried.
+ */
+export async function replaySessionEvents({ sessionId, signal }: { sessionId: string; signal: AbortSignal }): Promise<GenaixEvent[]> {
+    const connection = new AbortController();
+    const abortConnection = () => connection.abort();
+    let watchdog: ReturnType<typeof setTimeout> | undefined;
+
+    const resetWatchdog = () => {
+        clearTimeout(watchdog);
+        watchdog = setTimeout(abortConnection, HEARTBEAT_TIMEOUT_MS);
+    };
+
+    signal.addEventListener('abort', abortConnection, { once: true });
+
+    try {
+        resetWatchdog();
+
+        const url = `${GENAIX_API_BASE}/sessions/${encodeURIComponent(sessionId)}/events?after=0&follow=false`;
+        const response = await fetch(url, {
+            headers: { Accept: 'text/event-stream' },
+            credentials: 'same-origin',
+            cache: 'no-store',
+            signal: connection.signal,
+        });
+
+        if (!response.ok) {
+            throw await toGenaixApiError(url, response);
+        }
+
+        if (!response.body) {
+            throw new TypeError('The event stream response has no body');
+        }
+
+        const events: GenaixEvent[] = [];
+
+        for await (const frame of parseSse(response.body)) {
+            resetWatchdog();
+
+            let event: unknown;
+
+            try {
+                event = JSON.parse(frame.data);
+            } catch {
+                // Not an event payload, as in `connectSessionEvents`.
+                continue;
+            }
+
+            if (isGenaixEvent(event) && event.seq > (events.at(-1)?.seq ?? 0)) {
+                events.push(event);
+            }
+        }
+
+        return events;
+    } finally {
+        clearTimeout(watchdog);
+        signal.removeEventListener('abort', abortConnection);
+    }
+}

@@ -147,6 +147,11 @@ interface WorkspaceEventState {
      */
     applyEvent: (sessionId: string, event: GenaixEvent) => void;
     setConnection: (sessionId: string, connection: EventStreamStatus) => void;
+    /**
+     * After the server accepted a call that starts or joins a run: the session counts as working
+     * (`isSessionWorking`) until the stream tells about that run. A run it told about already is not awaited.
+     */
+    awaitRun: (sessionId: string, runId: string) => void;
     /** After `POST …/runs/{run_id}/cancel` was accepted: the run is `cancelling` until `run.cancelled`. */
     markRunCancelling: (sessionId: string, runId: string) => void;
     /** Drops the given messages (`persistedMessageKeys`), once the refetched history contains them. */

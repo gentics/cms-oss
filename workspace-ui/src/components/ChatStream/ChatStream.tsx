@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AgentSender, ChatMessage } from '@/components/ChatMessage/ChatMessage';
@@ -174,7 +175,8 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { aft
  * its steps, plans and thinking. Follows new content while scrolled to the end. The open plan is in the
  * plan bar above the composer (`PlanBar`, `useOpenPlan`), not in the conversation.
  */
-export function ChatStream({ sessionId }: { sessionId: string }) {
+export function ChatStream({ sessionId, isLoading = false }: { sessionId: string; isLoading?: boolean }) {
+    const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
     const openPlan = useOpenPlan(sessionId);
     const { messages, run, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
@@ -183,6 +185,7 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
         return {
             messages: session.messages,
             run: session.run,
+            awaitedRunIds: session.awaitedRunIds,
             notices: session.notices,
             interactions: session.interactions,
             plans: session.plans,
@@ -329,9 +332,23 @@ export function ChatStream({ sessionId }: { sessionId: string }) {
 
     return (
         <div ref={scrollRef} className={styles.stream} onScroll={handleScroll}>
-            <ol className={styles.list}>
-                {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
-            </ol>
+            {isLoading || history.isPending
+                ? (
+                    <div className={styles.loading} role="status" aria-label={t('chat.loading')}>
+                        <span className={styles.skeletonUser} />
+                        <span className={styles.skeletonAgent}>
+                            <span className={styles.skeletonAvatar} />
+                            <span className={styles.skeletonLine} />
+                            <span className={styles.skeletonLine} />
+                            <span className={styles.skeletonLine} />
+                        </span>
+                    </div>
+                )
+                : (
+                    <ol className={styles.list}>
+                        {withAgentSenders(placed).map(({ key, isDecorative, node }) => <li key={key} aria-hidden={isDecorative || undefined}>{node}</li>)}
+                    </ol>
+                )}
         </div>
     );
 }

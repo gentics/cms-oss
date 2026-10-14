@@ -169,6 +169,7 @@
             "system": "System"
         },
         "thinking": "Thinking",
+        "loading": "Loading the conversation…",
         "stop": "Stop",
         "stopFailed": "The run could not be stopped",
         "steps": {
@@ -391,7 +392,8 @@
         "delete": "Delete “{{title}}”",
         "deleted": "“{{title}}” deleted",
         "undo": "Undo",
-        "archiveFailed": "Deleting the session failed"
+        "archiveFailed": "Deleting the session failed",
+        "restoreFailed": "Restoring the session failed"
     },
     "todos": {
         "title": "Open to-dos",

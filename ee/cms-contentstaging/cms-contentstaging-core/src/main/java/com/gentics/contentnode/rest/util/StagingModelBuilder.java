@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.util;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1345,6 +1344,19 @@ public class StagingModelBuilder {
 		}
 
 		if (!StringUtils.isBlank(restModel.getExternalId())) {
+			// load all existing forms with the same external ID
+			List<Form> otherForms = MiscUtils.loadAllFormsWithExternalId(restModel.getExternalId());
+
+			for (Form other : otherForms) {
+				if (other.getOwningNode().equals(form.getOwningNode()) && !Objects.equals(other.getGlobalId(), new GlobalId(restModel.getId()))) {
+					String error = I18NHelper.get("content.staging.import.form.external_id", restModel.getName(), restModel.getExternalId(), I18NHelper.getPath(other));
+					StagingError stagingError = new StagingError(restModel.getId(), formPath.toString(), error,
+							StagingErrorKind.DUPLICATION);
+					stagingError.setRecommendation(I18NHelper.get("content.staging.recommendation.duplication"));
+					mismatches.add(stagingError);
+				}
+			}
+
 			form.setExternalId(restModel.getExternalId());
 		}
 		if (!StringUtils.isBlank(restModel.getExternalHash())) {

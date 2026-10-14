@@ -3,8 +3,9 @@ import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
-import { useTransitionPlan } from '@/hooks/useGenaixQueries';
+import { useTransitionPlan, useWorkflows } from '@/hooks/useGenaixQueries';
 import { GenaixApiError } from '@/services/apiService/apiService';
 import type { Plan, PlanStatus, Problem, Publication, TransitionRequest } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
@@ -71,7 +72,8 @@ interface PlanHeadProps {
  * "2 published, 1 in review") and the transitions its status allows (`ACTIONS`, POST
  * …/plans/{plan_id}/transitions): release also while the plan's run works, which stops it once the
  * gates passed, the others only while no run is active. The new status arrives as `plan.updated`. A
- * transition the quality gates refuse opens `GateRefusalDialog`. Stopping a plan's run is the
+ * transition the quality gates refuse opens `GateRefusalDialog`. Discard asks first, saying what
+ * happens to the pages by the module's `plan_policy.on_discard`. Stopping a plan's run is the
  * composer's (`SessionComposer`).
  */
 export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHeadProps) {
@@ -81,6 +83,8 @@ export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHe
     const hasRun = useWorkspaceEventStore((state) => Boolean(selectSession(sessionId)(state).run));
     // The refused transition, while its dialog is open.
     const [refusal, setRefusal] = useState<{ action: Action; problem: Problem }>();
+    const [isDiscardOpen, setIsDiscardOpen] = useState(false);
+    const onDiscard = useWorkflows().data?.find(({ id }) => id === plan.workflow)?.plan_policy?.on_discard ?? 'keep';
 
     function transition(action: Action, acknowledgeChecks?: string[]) {
         const request: TransitionRequest = { action, ...(acknowledgeChecks && { acknowledge_checks: acknowledgeChecks }) };
@@ -127,7 +131,7 @@ export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHe
                             variant={PRIMARY_ACTIONS.has(action) ? 'primary' : 'secondary'}
                             size="sm"
                             disabled={transitionPlan.isPending || (hasRun && action !== 'release')}
-                            onClick={() => transition(action)}
+                            onClick={() => (action === 'discard' ? setIsDiscardOpen(true) : transition(action))}
                         >
                             <ActionIcon size={14} />
                             {t(`planBar.actions.${action}`)}
@@ -136,6 +140,31 @@ export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHe
                 })}
                 {children}
             </span>
+            <Dialog open={isDiscardOpen} onOpenChange={setIsDiscardOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('planBar.discard.title')}</DialogTitle>
+                    </DialogHeader>
+                    <DialogBody>
+                        <DialogDescription>{t(`planBar.discard.${onDiscard}`)}</DialogDescription>
+                    </DialogBody>
+                    <DialogFooter>
+                        <Button variant="secondary" size="sm" onClick={() => setIsDiscardOpen(false)}>{t('planBar.discard.cancel')}</Button>
+                        <Button
+                            variant="danger"
+                            size="sm"
+                            disabled={transitionPlan.isPending}
+                            onClick={() => {
+                                setIsDiscardOpen(false);
+                                transition('discard');
+                            }}
+                        >
+                            <XIcon size={14} />
+                            {t('planBar.actions.discard')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             {refusal && (
                 <GateRefusalDialog
                     action={refusal.action}

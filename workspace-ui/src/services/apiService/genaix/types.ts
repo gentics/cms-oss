@@ -122,5 +122,6 @@ export type PlanPage = GenaixSchema<'PlanPage'>;
 export type TransitionRequest = GenaixSchema<'TransitionRequest'>;
 export type TransitionAccepted = GenaixSchema<'TransitionAccepted'>;
 export type Publication = GenaixSchema<'Publication'>;
+export type ApprovalStep = GenaixSchema<'ApprovalStep'>;
 export type Check = GenaixSchema<'Check'>;
 export type PlanItem = GenaixSchema<'PlanItem'>;

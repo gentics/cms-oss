@@ -176,7 +176,9 @@ describe('ChatStream', () => {
     });
 
     describe('the agent\'s head', () => {
-        const plan = { version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        // The open plan is in the plan bar, not in the chat (`useOpenPlan`); a superseded one keeps its card
+        // where its first `plan.updated` came.
+        const plan = { id: 'p-1', workflow: 'page_create', status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
 
         it('shows first, before a plan and the thinking indicator, while the agent has not written yet', async () => {
             stubHistory([]);
@@ -209,7 +211,9 @@ describe('ChatStream', () => {
     });
 
     describe('stream order', () => {
-        const plan = { version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        // The open plan is in the plan bar, not in the chat (`useOpenPlan`); a superseded one keeps its card
+        // where its first `plan.updated` came.
+        const plan = { id: 'p-1', workflow: 'page_create', status: 'superseded', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
         const settings = [{ type: 'setting', key: 'template', value: '17', label: 'Kampagnen-Landingpage' }];
 
         it('splits an agent message where a confirmation and a plan came while it was streaming', async () => {

@@ -7,6 +7,10 @@ import { connectSessionEvents } from '@/services/apiService/eventStream';
 import type { GenaixEvent } from '@/services/apiService/genaix/types';
 import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
+// The events that change a plan's state (`PlanState`): its plan, checks, publications, approval
+// chain and previews. Gate results arrive with no event of their own; a gate-backed check stands in.
+const PLAN_EVENTS = new Set<string>(['plan.updated', 'check.updated', 'publications.updated', 'approval_chain.updated', 'preview.updated']);
+
 /**
  * Follows the event stream of `sessionId` while mounted and applies it to `useWorkspaceEventStore`.
  * When a message completes, the session's message history is refetched and the live copies it now
@@ -15,6 +19,8 @@ import { persistedMessageKeys, selectSession, useWorkspaceEventStore } from '@/s
  *
  * Every call opens its own stream, so call it once per session, from the chat view. Other
  * components read the live state from `useWorkspaceEventStore` with `selectSession`.
+ *
+ * Events that change a plan refetch its full state (`genaixKeys.plan`, the review page's `usePlanState`).
  *
  * `onEvent` gets every event as parsed from the stream, after it was applied. A new callback on
  * each render does not reconnect.
@@ -74,6 +80,13 @@ export function useSessionEvents(sessionId: string | undefined, onEvent?: (event
                     persistedMessageKeys(selectSession(sessionId)(store())).forEach((key) => toClear.add(key));
                     void refetchAndClear();
                 }
+
+                // A plan's state (`GET …/plans/{plan_id}`) is read again when an event changes it;
+                // a refetch already running is kept, so a burst of events shares it.
+                if (event.plan_id && PLAN_EVENTS.has(event.type)) {
+                    void queryClient.invalidateQueries({ queryKey: genaixKeys.plan(sessionId, event.plan_id) }, { cancelRefetch: false });
+                }
+
             },
             onPruned: async () => {
                 store().resetSession(sessionId);

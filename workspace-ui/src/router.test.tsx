@@ -44,17 +44,17 @@ describe('router', () => {
         expect(await screen.findByRole('textbox', { name: 'What would you like to do?' })).toBeInTheDocument();
     });
 
-    // For now the review route shows the session page too.
     it('shows the session page with its chat composer at /sessions/:id', async () => {
         renderAt('/sessions/abc');
 
         expect(await screen.findByRole('textbox', { name: 'What should happen?' })).toBeInTheDocument();
     });
 
-    it('shows the session page at /sessions/:id/review', async () => {
+    it('shows the review page at /sessions/:id/review', async () => {
         renderAt('/sessions/abc/review');
 
-        expect(await screen.findByRole('textbox', { name: 'What should happen?' })).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { level: 1, name: 'Review & release' })).toBeInTheDocument();
+        expect(screen.queryByRole('textbox', { name: 'What should happen?' })).not.toBeInTheDocument();
     });
 
     // The CMS serves the app under a path of its own, for example /tools/workspace/.

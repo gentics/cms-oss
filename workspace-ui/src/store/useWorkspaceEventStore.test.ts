@@ -290,20 +290,32 @@ describe('useWorkspaceEventStore', () => {
     });
 
     describe('plans', () => {
-        const plan = { version: 1, summary: 'Create the page in Richtlinien.', items: [] };
+        const plan = { id: 'p-1', workflow: 'page_create', status: 'proposed', version: 1, summary: 'Create the page in Richtlinien.', items: [] };
 
-        it('keeps each plan.updated with the agent message and the number of its parts it came after', () => {
+        it('keeps each plan with the agent message and the number of its parts it first came after', () => {
             apply(
-                event(1, 'plan.updated', { run_id: 'r-1', plan }),
+                event(1, 'plan.updated', { run_id: 'r-1', plan_id: 'p-1', plan }),
                 event(2, 'message.started', { run_id: 'r-1', message_id: 'm-1', role: 'assistant' }),
                 event(3, 'part.completed', { run_id: 'r-1', message_id: 'm-1', part_index: 0, part: text('Here is the plan.') }),
-                event(4, 'plan.updated', { run_id: 'r-1', plan: { ...plan, version: 2 } }),
+                event(4, 'plan.updated', { run_id: 'r-1', plan_id: 'p-2', plan: { ...plan, id: 'p-2' } }),
             );
 
             expect(session().plans).toEqual([
                 { seq: 1, plan, runId: 'r-1' },
-                { seq: 4, plan: { ...plan, version: 2 }, runId: 'r-1', afterMessageId: 'm-1', afterPart: 1 },
+                { seq: 4, plan: { ...plan, id: 'p-2' }, runId: 'r-1', afterMessageId: 'm-1', afterPart: 1 },
             ]);
+        });
+
+        // rc.4: `plan.updated` carries the whole plan each time; the later one replaces it where it first came.
+        it('replaces a plan by a later plan.updated of the same plan, in its place', () => {
+            apply(
+                event(1, 'plan.updated', { run_id: 'r-1', plan_id: 'p-1', plan }),
+                event(2, 'message.started', { run_id: 'r-1', message_id: 'm-1', role: 'assistant' }),
+                event(3, 'part.completed', { run_id: 'r-1', message_id: 'm-1', part_index: 0, part: text('Here is the plan.') }),
+                event(4, 'plan.updated', { run_id: 'r-1', plan_id: 'p-1', plan: { ...plan, version: 2 } }),
+            );
+
+            expect(session().plans).toEqual([{ seq: 1, plan: { ...plan, version: 2 }, runId: 'r-1' }]);
         });
 
         it('resetSession drops the plans and the confirmations', () => {

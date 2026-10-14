@@ -165,6 +165,29 @@ describe('SessionList', () => {
             expect(unarchivedIds(fetchMock)).toEqual([]);
         });
 
+        it.each(['/sessions/s-1', '/sessions/s-1/review'])('goes to the dashboard when the open session is deleted, from %s', async (path) => {
+            const user = userEvent.setup();
+
+            stubSessionRoutes(() => ({ items: [landingPage, careers], next_cursor: null }));
+            const { router } = renderWithProviders(<AllSessions />, { path });
+
+            await user.click(await screen.findByRole('button', { name: 'Delete “Landing page”' }));
+
+            await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+        });
+
+        it('stays on the open session when another one is deleted', async () => {
+            const user = userEvent.setup();
+
+            stubSessionRoutes(() => ({ items: [landingPage, careers], next_cursor: null }));
+            const { router } = renderWithProviders(<AllSessions />, { path: '/sessions/s-2' });
+
+            await user.click(await screen.findByRole('button', { name: 'Delete “Landing page”' }));
+
+            expect(screen.queryByRole('link', { name: /Landing page/ })).not.toBeInTheDocument();
+            expect(router.state.location.pathname).toBe('/sessions/s-2');
+        });
+
         it('brings the row back with an error notification when the archive fails', async () => {
             const user = userEvent.setup();
 

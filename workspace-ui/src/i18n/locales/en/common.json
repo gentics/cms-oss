@@ -289,6 +289,20 @@
             "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
             "restore": "The plan is closed and the pages it changed go back to their version from before it.",
             "cancel": "Cancel"
+        },
+        "publishDialog": {
+            "title": "Publish this plan?",
+            "text_one": "{{count}} page goes online.",
+            "text_other": "{{count}} pages go online.",
+            "textPages": "The plan's pages go online.",
+            "cancel": "Cancel",
+            "confirm": "Publish",
+            "publishing": "Publishing…",
+            "published": "Published",
+            "done": "Done",
+            "failed": "Publishing failed",
+            "cancelled": "Publishing was stopped.",
+            "close": "Close"
         }
     },
     "handOff": {

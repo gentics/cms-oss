@@ -97,6 +97,12 @@ test.describe('Review & release', () => {
         await expect(panel.getByRole('button', { name: 'Publish' })).toBeVisible();
 
         await panel.getByRole('button', { name: 'Publish' }).click();
+        // The final approval: confirmed in its dialog, which then says what went out.
+        const dialog = page.getByRole('dialog', { name: 'Publish this plan?' });
+
+        await dialog.getByRole('button', { name: 'Publish' }).click();
+        await expect(page.getByRole('dialog')).toContainText('Published');
+        await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
         await expect(panel.getByRole('region', { name: 'Pages' })).toContainText('Published');
         await expect(panel.getByRole('button', { name: 'Reopen' })).toBeVisible();
 

@@ -6,8 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { PlanHead } from '@/components/PlanBar/PlanHead';
 import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
+import { useCanPublishCmsPages } from '@/hooks/useCmsQueries';
 import { usePlanTransition, useSendMessage } from '@/hooks/useGenaixQueries';
-import type { ApprovalStep, Check, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
+import type { ApprovalStep, Check, CmsObjectRef, PlanState, PlanStatus, Publication } from '@/services/apiService/genaix/types';
 
 import styles from './ReviewPanel.module.css';
 
@@ -18,6 +19,10 @@ const SEVERITY_ICONS: Record<Check['severity'], LucideIcon> = { pass: CircleChec
 const PUBLICATION_ICONS: Record<Publication['status'], LucideIcon> = { pending: CircleDashedIcon, published: CircleCheckIcon, review_requested: SendIcon, failed: CircleAlertIcon };
 
 const APPROVAL_ICONS: Record<ApprovalStep['status'], LucideIcon> = { pending: CircleDashedIcon, done: CircleCheckIcon, not_required: MinusIcon, rejected: CircleXIcon };
+
+// The operations of a page the plan wrote, the pages `publish` acts on (contract, plan transitions route:
+// `created` or `updated`, and `published`, which replaces them once the page went out).
+const WRITTEN: ReadonlySet<CmsObjectRef['operation']> = new Set(['created', 'updated', 'published']);
 
 // The checks grouped by where they come from (a guideline, a requirement, a gate), in their order.
 function groupChecks(checks: Check[]): [string, Check[]][] {
@@ -66,7 +71,8 @@ interface ReviewPanelProps {
  * and the outcome per page (`publications`), and at the bottom the plan's head (`PlanHead`, the same as
  * in the chat's plan bar): its status and the transitions it allows, release first, then publish or
  * request review, a refusal by the quality gates shown in place above them, and the confirmation before
- * discarding. The gated transitions are only offered here, not in the chat. While the quality gates
+ * discarding. The gated transitions are only offered here, not in the chat; publish only to a user the CMS
+ * lets publish every page the plan wrote (`useCanPublishCmsPages`), asked while the plan is released. While the quality gates
  * check the plan, on the release "Review & release" sent on the way here (`ReviewButton`) or on "Check
  * again" (`isCheck`), the checklist says so; their checks arrive as `check.updated` and the plan is
  * read again. A release the user makes with its own button shows no check in progress. A failing check's suggested fix is sent to the agent, and the chat opens to follow it; a
@@ -80,6 +86,8 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
     const sendMessage = useSendMessage(sessionId);
     const isClosed = CLOSED.includes(plan.status);
     const isChecking = Boolean(usePlanTransition(sessionId, plan.id).pending?.isCheck);
+    const writtenPages = plan.status === 'released' ? state.cms_objects.filter(({ type, operation }) => type === 'page' && WRITTEN.has(operation)) : [];
+    const canPublish = useCanPublishCmsPages(writtenPages);
 
     // A suggested fix is a message to the agent; the chat shows how it goes.
     function fix(prompt: string) {
@@ -139,7 +147,7 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
             </div>
 
             <footer className={styles.foot}>
-                <PlanHead sessionId={sessionId} plan={plan} isInCard withGatedActions />
+                <PlanHead sessionId={sessionId} plan={plan} isInCard withGatedActions canPublish={canPublish} />
             </footer>
         </section>
     );

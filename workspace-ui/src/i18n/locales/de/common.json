@@ -289,6 +289,20 @@
             "keep": "Der Plan wird geschlossen. Seiten, die er schon geändert hat, bleiben als Entwurf im CMS.",
             "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
             "cancel": "Abbrechen"
+        },
+        "publishDialog": {
+            "title": "Diesen Plan veröffentlichen?",
+            "text_one": "{{count}} Seite geht online.",
+            "text_other": "{{count}} Seiten gehen online.",
+            "textPages": "Die Seiten des Plans gehen online.",
+            "cancel": "Abbrechen",
+            "confirm": "Veröffentlichen",
+            "publishing": "Wird veröffentlicht …",
+            "published": "Veröffentlicht",
+            "done": "Erledigt",
+            "failed": "Veröffentlichen fehlgeschlagen",
+            "cancelled": "Das Veröffentlichen wurde abgebrochen.",
+            "close": "Schließen"
         }
     },
     "handOff": {

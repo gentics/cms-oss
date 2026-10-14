@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HttpError } from '@/services/httpService/httpService';
 
 import {
+    canPublishCmsPage,
     CMS_SEARCH_MAX_ITEMS,
     cmsImageUrl,
     CmsLoginError,
@@ -242,6 +243,26 @@ describe('loadCmsPage', () => {
 
         await loadCmsPage(9142);
         expect(fetchMock.mock.calls[0]![0]).toBe('/rest/page/load/9142');
+    });
+});
+
+describe('canPublishCmsPage', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it.each([true, false])('answers whether the CMS grants publishing the page of the node: %s', async (granted) => {
+        const fetchMock = stubFetchSequence(Response.json({ granted }));
+
+        await expect(canPublishCmsPage(9142, 3)).resolves.toBe(granted);
+        expect(fetchMock).toHaveBeenCalledWith('/rest/perm/publish/page/9142?nodeId=3', expect.objectContaining({ credentials: 'same-origin' }));
+    });
+
+    it('asks without a node when none is known, and takes a missing answer as not granted', async () => {
+        const fetchMock = stubFetchSequence(Response.json({}));
+
+        await expect(canPublishCmsPage(9142)).resolves.toBe(false);
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/perm/publish/page/9142');
     });
 });
 

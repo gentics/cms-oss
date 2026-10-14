@@ -143,6 +143,20 @@ h4. Import Errors
 
 To better solve import errors, a import check can be performed in the content staging module of the administrator user interface.
 
+!images/gcn_dialogs/staging/admin_check_valid.png!
+
+# Click on the content-package to open the details
+# Go to the "Import Errors" tab
+# Use the "Trigger Check" Button to perform a new check for the content-package
+# Here you can see the latest check result
+
+When errors have been found, they will be displayed in a table in the following way
+
+!images/gcn_dialogs/staging/admin_check_errors.png!
+
+# The type of the error - See table below for further information
+# The path of the object that caused the error
+
 h5. Error Types
 
 All errors that would occurs when doing the actual import are listed and can be inspected. The errors are categorized in different error classes.

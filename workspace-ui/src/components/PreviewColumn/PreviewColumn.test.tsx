@@ -11,7 +11,7 @@ import '@/i18n';
 
 const URL_9142 = 'https://cms.example.com/alohapage?realid=9142&nodeid=3&mode=view';
 // What the column loads: the same preview, read-only for the CMS too (`readOnlyPreviewUrl`).
-const READ_ONLY_9142 = `${URL_9142}&real=view`;
+const READ_ONLY_9142 = `${URL_9142}&real=view&tagmarkers=true`;
 
 function preview(seq: number, previewUrl = URL_9142): LivePreview {
     return { seq, cms_ref: { type: 'page', id: 9142, node_id: 3 }, preview_url: previewUrl, mode: 'view' };
@@ -58,18 +58,18 @@ describe('PreviewColumn', () => {
     describe('read-only URL', () => {
         const BASE = 'https://cms.example.com/alohapage?realid=9142&nodeid=3';
 
-        it('adds mode=view and real=view when both are missing', () => {
-            expect(loadedUrl(BASE)).toBe(`${BASE}&mode=view&real=view`);
+        it('adds mode=view, real=view and tagmarkers=true when they are missing', () => {
+            expect(loadedUrl(BASE)).toBe(`${BASE}&mode=view&real=view&tagmarkers=true`);
         });
 
-        it('returns a URL that already has both unchanged', () => {
-            const url = `${BASE}&real=view&mode=view`;
+        it('returns a URL that already has all of them unchanged', () => {
+            const url = `${BASE}&real=view&tagmarkers=true&mode=view`;
 
             expect(loadedUrl(url)).toBe(url);
         });
 
         it('turns an edit preview into a read-only one', () => {
-            expect(loadedUrl(`${BASE}&mode=edit&real=edit`)).toBe(`${BASE}&mode=view&real=view`);
+            expect(loadedUrl(`${BASE}&mode=edit&real=edit`)).toBe(`${BASE}&mode=view&real=view&tagmarkers=true`);
         });
 
         it('keeps the other parameters, the path and the fragment', () => {
@@ -77,7 +77,7 @@ describe('PreviewColumn', () => {
 
             expect(url.pathname).toBe('/prefix/alohapage');
             expect(url.hash).toBe('#top');
-            expect(Object.fromEntries(url.searchParams)).toEqual({ realid: '1', links: 'frontend', mode: 'view', real: 'view' });
+            expect(Object.fromEntries(url.searchParams)).toEqual({ realid: '1', links: 'frontend', mode: 'view', real: 'view', tagmarkers: 'true' });
         });
     });
 

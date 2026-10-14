@@ -282,6 +282,13 @@ public class AlohaRenderer implements TemplateRenderer {
 	public final static String MARK_TAG = "aloha_block_marked";
 
 	/**
+	 * Name of the rendertype parameter, which (if set to true) lets the readonly mode annotate the tags
+	 * of the page (data-gcn-* attributes on the tag's root element) like the feature copy_tags does,
+	 * without the feature being active (e.g. for a preview that needs to find the tags in the page)
+	 */
+	public final static String TAG_MARKERS = "tagmarkers";
+
+	/**
 	 * The last action that was performed before this page has loaded
 	 */
 	public final static String LAST_ACTION = null;
@@ -1384,6 +1391,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		}
 
 		// render the tag as block if either aloha edit mode or aloha readonly (preview) and the feature copy_tags is on
+		// or the tag markers are requested (rendertype parameter TAG_MARKERS)
 		if (parserTag instanceof ContentTag) {
 			ContentTag tag = (ContentTag) parserTag;
 			Content content = (Content) tag.getContainer();
@@ -1508,7 +1516,8 @@ public class AlohaRenderer implements TemplateRenderer {
 
 				// finally restore the plinks
 				code = restorePLinks(code, savedPLinks);
-			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY && prefs.isFeature(Feature.COPY_TAGS, node))) {
+			} else if (tag.isLocalizable() || (editMode == RenderType.EM_ALOHA_READONLY
+					&& (prefs.isFeature(Feature.COPY_TAGS, node) || Boolean.TRUE.equals(renderType.getParameter(TAG_MARKERS))))) {
 				var needWrapper = tag.isLocalizable() && editMode != RenderType.EM_PUBLISH && editMode != RenderType.EM_PREVIEW;
 				Matcher matcher = rootTagPattern.matcher(code);
 

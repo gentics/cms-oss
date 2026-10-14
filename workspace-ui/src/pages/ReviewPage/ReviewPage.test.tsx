@@ -40,13 +40,17 @@ function planUpdated(...plans: [id: string, status: PlanStatus][]) {
     } as GenaixEvent));
 }
 
-// Answers the state of plan pl-2.
+// Answers the state of plan pl-2, and of the older plan pl-1.
 function stubRoutes() {
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
         const path = new URL(String(input), 'http://localhost').pathname;
 
         if (path.endsWith(`/sessions/${SESSION}/plans/pl-2`)) {
             return Response.json(state);
+        }
+
+        if (path.endsWith(`/sessions/${SESSION}/plans/pl-1`)) {
+            return Response.json({ ...state, plan: { ...state.plan, id: 'pl-1', status: 'released', summary: 'Older terms page.' } });
         }
 
         return Response.json({ items: [], next_cursor: null });
@@ -57,8 +61,8 @@ function stubRoutes() {
     return fetchMock;
 }
 
-function renderReview() {
-    const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: [`/sessions/${SESSION}/review`] }) });
+function renderReview(path = `/sessions/${SESSION}/review`) {
+    const router = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: [path] }) });
 
     render(
         <QueryClientProvider client={new QueryClient()}>
@@ -91,6 +95,31 @@ describe('ReviewPage', () => {
         expect(within(panel).getByText('New terms page in Richtlinien.')).toBeInTheDocument();
         expect(screen.getByTitle('Preview of the page in the CMS')).toHaveAttribute('src', expect.stringContaining('/alohapage?realid=9142'));
         // The newest plan, not the earlier one.
+        expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain(`/rest/proxy/genaix/sessions/${SESSION}/plans/pl-2`);
+    });
+
+    it('opens the plan ?plan= names, an older one, instead of the newest', async () => {
+        const fetchMock = stubRoutes();
+
+        planUpdated(['pl-1', 'released'], ['pl-2', 'done']);
+
+        renderReview(`/sessions/${SESSION}/review?plan=pl-1`);
+
+        const panel = await screen.findByRole('region', { name: 'Review' });
+
+        expect(await within(panel).findByText('Older terms page.')).toBeInTheDocument();
+        expect(within(panel).getByRole('button', { name: 'Publish' })).toBeInTheDocument();
+        expect(fetchMock.mock.calls.map(([input]) => String(input))).not.toContain(`/rest/proxy/genaix/sessions/${SESSION}/plans/pl-2`);
+    });
+
+    it('shows the newest plan for an empty ?plan=', async () => {
+        const fetchMock = stubRoutes();
+
+        planUpdated(['pl-1', 'released'], ['pl-2', 'done']);
+
+        renderReview(`/sessions/${SESSION}/review?plan=`);
+
+        expect(await screen.findByText('New terms page in Richtlinien.')).toBeInTheDocument();
         expect(fetchMock.mock.calls.map(([input]) => String(input))).toContain(`/rest/proxy/genaix/sessions/${SESSION}/plans/pl-2`);
     });
 

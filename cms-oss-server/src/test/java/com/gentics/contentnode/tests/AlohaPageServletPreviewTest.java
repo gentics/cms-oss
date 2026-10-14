@@ -72,6 +72,11 @@ public class AlohaPageServletPreviewTest {
 
 	private static String pageId;
 
+	/**
+	 * Page only rendered read-only, so that no other test case locks it
+	 */
+	private static String readOnlyPageId;
+
 	private static ObjectMapper mapper = new ObjectMapper();
 
 	private OkHttpClient client;
@@ -94,6 +99,12 @@ public class AlohaPageServletPreviewTest {
 			p.setName("Page");
 		}).unlock().build();
 		pageId = Integer.toString(page.getId());
+		Page readOnlyPage = create(Page.class, p -> {
+			p.setFolder(node, node.getFolder());
+			p.setTemplateId(template.getId());
+			p.setName("Read only page");
+		}).unlock().build();
+		readOnlyPageId = Integer.toString(readOnlyPage.getId());
 
 		UserGroup nodeGroup = supply(t -> t.getObject(UserGroup.class, SYSTEM_GROUP_ID));
 		supply(() -> createSystemUser("Tester", "Tester", null, "tester", "tester", Arrays.asList(nodeGroup)));
@@ -152,6 +163,21 @@ public class AlohaPageServletPreviewTest {
 	public void testPreviewModeExcludesAlohaScripts() throws Exception {
 		String content = renderPage("newview");
 		assertThat(content).as("Rendered page in preview mode").doesNotContain(ALOHA_SCRIPT_MARKER);
+	}
+
+	/**
+	 * When rendering the page read-only with the tag markers requested ({@code tagmarkers=true}), the page must
+	 * still be rendered read-only: without the Aloha Editor scripts and without being locked. (That the tags are
+	 * annotated is tested in AlohaBlockRendererTest.)
+	 * @throws Exception
+	 */
+	@Test
+	public void testPreviewModeWithTagMarkersDoesNotLock() throws Exception {
+		String content = get(String.class, "/alohapage", entry("real", "view"), entry("realid", readOnlyPageId), entry("tagmarkers", "true"));
+		assertThat(content).as("Rendered page in preview mode with tag markers").doesNotContain(ALOHA_SCRIPT_MARKER);
+
+		boolean locked = supply(t -> t.getObject(Page.class, Integer.parseInt(readOnlyPageId)).getContent().isLocked());
+		assertThat(locked).as("Page locked after rendering it in preview mode with tag markers").isFalse();
 	}
 
 	/**

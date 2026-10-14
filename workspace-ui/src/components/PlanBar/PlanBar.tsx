@@ -12,9 +12,10 @@ import { PlanHead } from './PlanHead';
 
 import styles from './PlanBar.module.css';
 
-// The statuses with something to review on the review page: a done plan to release, a released one to
-// publish, the outcome of one sent out.
-const REVIEWABLE: ReadonlySet<PlanStatus> = new Set(['done', 'released', 'published', 'review_requested']);
+// The statuses with something to do or see on the review page: every status with a gated transition
+// (release while accepted, running or done; publish or request review once released), which is made
+// only there, and the outcome of one sent out.
+const REVIEWABLE: ReadonlySet<PlanStatus> = new Set(['accepted', 'running', 'done', 'released', 'published', 'review_requested']);
 
 interface PlanBarProps {
     sessionId: string;
@@ -35,7 +36,8 @@ interface PlanBarProps {
  * on the toggle holds until the plan's waiting changes.
  *
  * While the plan has something to review (`REVIEWABLE`), "Review & release" next to the toggle opens
- * the review page, where the plan's preview, checks and pages are shown together.
+ * the review page, where the plan's preview, checks and pages are shown together; release, publish and
+ * request review are made there, not here (`PlanHead` without `withGatedActions`).
  */
 export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
     const { t } = useTranslation();
@@ -78,7 +80,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
                 </div>
                 <PlanHead sessionId={sessionId} plan={plan}>
                     {REVIEWABLE.has(plan.status) && (
-                        <Button variant="secondary" size="sm" nativeButton={false} role={undefined} render={<Link to="/sessions/$id/review" params={{ id: sessionId }} />}>
+                        <Button variant="secondary" size="sm" nativeButton={false} role={undefined} render={<Link to="/sessions/$id/review" params={{ id: sessionId }} search={{ plan: plan.id }} />}>
                             <ClipboardCheckIcon size={14} aria-hidden />
                             {t('planBar.review')}
                         </Button>

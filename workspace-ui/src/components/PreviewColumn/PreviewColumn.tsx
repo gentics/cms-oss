@@ -20,12 +20,15 @@ import type { LivePreview } from '@/store/useWorkspaceEventStore';
 import styles from './PreviewColumn.module.css';
 
 // The query parameters of a read-only CMS preview, each with the value it must have.
-const READ_ONLY_PARAMS = { mode: 'view', real: 'view' } as const;
+const READ_ONLY_PARAMS = { mode: 'view', real: 'view', tagmarkers: 'true' } as const;
 
 // `url` (`preview_url` of `preview.updated`) as a read-only preview: `mode=view` as in the contract
 // example, and `real=view`, which is what the CMS's `/alohapage` reads (`AlohaPageServlet`; without
-// it, it renders for editing and locks the page). A parameter that is missing or has another value
-// is set; everything else stays. A URL that already has both is returned unchanged.
+// it, it renders for editing and locks the page). `tagmarkers=true` makes that read-only render mark
+// the page's tags (`data-gcn-*`), which the part selection needs (`usePreviewElements`), without the
+// CMS feature `copy_tags`; a CMS that does not know it ignores it, and the page has no markers then.
+// A parameter that is missing or has another value is set; everything else stays. A URL that already
+// has all of them is returned unchanged.
 function readOnlyPreviewUrl(url: string): string {
     const parsed = new URL(url, window.location.href);
     const entries = Object.entries(READ_ONLY_PARAMS);

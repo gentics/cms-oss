@@ -64,7 +64,8 @@ interface ReviewPanelProps {
  * The right panel of the review page (design.md §11 "Review"): the plan's checklist, its approval chain
  * and the outcome per page (`publications`), and at the bottom the plan's head (`PlanHead`, the same as
  * in the chat's plan bar): its status and the transitions it allows, release first, then publish or
- * request review, with the gate dialog and the confirmation before discarding. A failing check's
+ * request review, a refusal by the quality gates shown in place above them, and the confirmation before
+ * discarding. The gated transitions are only offered here, not in the chat. A failing check's
  * suggested fix is sent to the agent, and the chat opens to follow it; a closed plan offers no fixes.
  */
 export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
@@ -159,7 +160,7 @@ export function ReviewPanel({ sessionId, state }: ReviewPanelProps) {
             </div>
 
             <footer className={styles.foot}>
-                <PlanHead sessionId={sessionId} plan={plan} isInCard />
+                <PlanHead sessionId={sessionId} plan={plan} isInCard withGatedActions />
             </footer>
         </section>
     );

@@ -1,4 +1,4 @@
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useParams, useSearch } from '@tanstack/react-router';
 import { ArrowLeftIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,8 +21,9 @@ function previewOf(state: PlanState | undefined): LivePreview | undefined {
 }
 
 /**
- * The review page (`/sessions/$id/review`, design.md §11 "Review"): the session's newest plan, the one
- * `plan.updated` reported last (also a closed one, shown read-only), with its page preview on the left
+ * The review page (`/sessions/$id/review`, design.md §11 "Review"): the plan `?plan=` names (an older
+ * one, from its chat card), else the session's newest plan, the one `plan.updated` reported last (also
+ * a closed one, shown read-only), with its page preview on the left
  * and the review panel on the right, the checklist and the actions that release and publish it
  * (`ReviewPanel`). It follows the session's event stream, which also replays the plans, so a live
  * `preview.updated` replaces the plan's stored preview and the plan is read again as it changes. The
@@ -34,8 +35,10 @@ export function ReviewPage() {
 
     useSessionEvents(id || undefined);
 
-    const plan = useWorkspaceEventStore((store) => selectSession(id)(store).plans?.at(-1)?.plan);
-    const state = usePlanState(id, plan?.id);
+    const { plan: planId } = useSearch({ strict: false });
+    const newestPlanId = useWorkspaceEventStore((store) => selectSession(id)(store).plans?.at(-1)?.plan.id);
+    // The router keeps a search value as given, so an empty `?plan=` arrives as `''`: the newest plan then.
+    const state = usePlanState(id, planId || newestPlanId);
     const livePreview = useWorkspaceEventStore((store) => selectSession(id)(store).preview);
     const preview = livePreview ?? previewOf(state.data);
 
@@ -51,7 +54,7 @@ export function ReviewPage() {
     } else if (state.data) {
         panel = <ReviewPanel sessionId={id} state={state.data} />;
     } else {
-        panel = <p className={styles.state} role="status">{t(plan || !id ? 'review.loading' : 'review.noPlan')}</p>;
+        panel = <p className={styles.state} role="status">{t(planId || newestPlanId || !id ? 'review.loading' : 'review.noPlan')}</p>;
     }
 
     return (

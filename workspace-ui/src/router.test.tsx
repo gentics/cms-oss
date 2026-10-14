@@ -57,6 +57,14 @@ describe('router', () => {
         expect(screen.queryByRole('textbox', { name: 'What should happen?' })).not.toBeInTheDocument();
     });
 
+    it('keeps the plan the review page is asked for in its search', async () => {
+        const reviewRouter = createRouter({ routeTree, history: createMemoryHistory({ initialEntries: ['/sessions/abc/review?plan=pl-1'] }) });
+
+        await reviewRouter.load();
+
+        expect(reviewRouter.state.matches.at(-1)?.search).toEqual({ plan: 'pl-1' });
+    });
+
     // The CMS serves the app under a path of its own, for example /tools/workspace/.
     it('keeps the route in the URL hash and leaves the page path alone', async () => {
         const pathname = window.location.pathname;

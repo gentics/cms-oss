@@ -294,13 +294,15 @@ describe('ReviewPanel', () => {
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        const dialog = await screen.findByRole('dialog', { name: 'Checks failed' });
+        // In the panel itself, not in a dialog.
+        const refusal = await within(screen.getByRole('region', { name: 'Review' })).findByRole('region', { name: 'Checks failed' });
 
-        expect(dialog).toHaveTextContent('Images have alt textWarning');
-        await user.click(within(dialog).getByRole('button', { name: 'Release anyway' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(refusal).toHaveTextContent('Images have alt textWarning');
+        await user.click(within(refusal).getByRole('button', { name: 'Release anyway' }));
 
         await waitFor(() => expect(sent).toEqual([{ action: 'release' }, { action: 'release', acknowledge_checks: ['chk-alt-text'] }]));
-        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.queryByRole('region', { name: 'Checks failed' })).not.toBeInTheDocument());
     });
 
     it('offers no way past a blocking check, only to close', async () => {
@@ -310,11 +312,15 @@ describe('ReviewPanel', () => {
         await renderPanel(planState('done'));
         await user.click(screen.getByRole('button', { name: 'Release' }));
 
-        const dialog = await screen.findByRole('dialog', { name: 'Checks failed' });
+        const refusal = await within(screen.getByRole('region', { name: 'Review' })).findByRole('region', { name: 'Checks failed' });
 
-        expect(dialog).toHaveTextContent('Links resolveBlocking');
-        expect(within(dialog).queryByRole('button', { name: 'Release anyway' })).not.toBeInTheDocument();
-        expect(within(dialog).getAllByRole('button', { name: 'Close' }).length).toBeGreaterThan(0);
+        expect(refusal).toHaveTextContent('Links resolveBlocking');
+        expect(within(refusal).queryByRole('button', { name: 'Release anyway' })).not.toBeInTheDocument();
+        expect(within(refusal).getAllByRole('button', { name: 'Close' }).length).toBeGreaterThan(0);
+
+        await user.click(within(refusal).getByRole('button', { name: 'Close' }));
+
+        expect(screen.queryByRole('region', { name: 'Checks failed' })).not.toBeInTheDocument();
     });
 
     it('reports any other refusal as an error, e.g. a closed plan', async () => {

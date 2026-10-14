@@ -11,6 +11,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertRes
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertDirtedObjects;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertDirtedObjectsNonStrict;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -130,7 +131,7 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 
 		expectAllDirted(channel, localizedObject);
 		expectAllDirted(subChannel, localizedObject);
-		assertObjectsAreDirted();
+		assertObjectsAreDirted(false);
 	}
 
 	/**
@@ -673,7 +674,20 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 	 * @throws NodeException
 	 */
 	protected void assertObjectsAreDirted() throws NodeException {
-		assertObjectsAreDirted(Arrays.asList(node, sideChannel, channel, subChannel));
+		assertObjectsAreDirted(true);
+	}
+
+	/**
+	 * Assert that the objects, which were passed into
+	 * {@link #expectAllDirted(Node, NodeObject...)} or
+	 * {@link #expectDirted(Node, NodeObject)} are dirted for the node and all
+	 * channels
+	 * 
+	 * @param strict true for strict test (exactly the objects are dirted)
+	 * @throws NodeException
+	 */
+	protected void assertObjectsAreDirted(boolean strict) throws NodeException {
+		assertObjectsAreDirted(Arrays.asList(node, sideChannel, channel, subChannel), strict);
 	}
 
 	/**
@@ -685,16 +699,41 @@ public abstract class AbstractMultichannellingContentStagingTest<T extends Stage
 	 * @throws NodeException
 	 */
 	protected void assertObjectsAreDirted(List<Node> nodes) throws NodeException {
+		assertObjectsAreDirted(nodes, true);
+	}
+
+	/**
+	 * Assert that the objects, which were passed into
+	 * {@link #expectAllDirted(Node, NodeObject...)} or
+	 * {@link #expectDirted(Node, NodeObject)} are dirted for the given list of nodes/channels
+	 *
+	 * @param nodes checked nodes/channels
+	 * @param strict true for strict test (exactly the objects are dirted)
+	 * @throws NodeException
+	 */
+	protected void assertObjectsAreDirted(List<Node> nodes, boolean strict) throws NodeException {
 		operate(() -> {
 			for (Node dirtNode : nodes) {
 				Set<Folder> folderSet = expectedDirtedFolders.getOrDefault(dirtNode, Collections.emptySet());
-				assertDirtedObjects(Folder.class, dirtNode, (Folder[]) folderSet.toArray(new Folder[folderSet.size()]));
+				if (strict) {
+					assertDirtedObjects(Folder.class, dirtNode, (Folder[]) folderSet.toArray(new Folder[folderSet.size()]));
+				} else {
+					assertDirtedObjectsNonStrict(Folder.class, dirtNode, (Folder[]) folderSet.toArray(new Folder[folderSet.size()]));
+				}
 
 				Set<Page> pageSet = expectedDirtedPages.getOrDefault(dirtNode, Collections.emptySet());
-				assertDirtedObjects(Page.class, dirtNode, (Page[]) pageSet.toArray(new Page[pageSet.size()]));
+				if (strict) {
+					assertDirtedObjects(Page.class, dirtNode, (Page[]) pageSet.toArray(new Page[pageSet.size()]));
+				} else {
+					assertDirtedObjectsNonStrict(Page.class, dirtNode, (Page[]) pageSet.toArray(new Page[pageSet.size()]));
+				}
 
 				Set<File> fileSet = expectedDirtedFiles.getOrDefault(dirtNode, Collections.emptySet());
-				assertDirtedObjects(File.class, dirtNode, (File[]) fileSet.toArray(new File[fileSet.size()]));
+				if (strict) {
+					assertDirtedObjects(File.class, dirtNode, (File[]) fileSet.toArray(new File[fileSet.size()]));
+				} else {
+					assertDirtedObjectsNonStrict(File.class, dirtNode, (File[]) fileSet.toArray(new File[fileSet.size()]));
+				}
 			}
 		});
 	}

@@ -1397,6 +1397,84 @@ test.describe('Page Editing', () => {
                 await expect(tableTab).toContainClass('active');
             });
 
+            test('should apply alignments to selected table cells only', {
+                annotation: [{
+                    type: 'ticket',
+                    description: 'SUP-19751',
+                }],
+            }, async ({ page }) => {
+                const SLOT_ALIGN = 'alignMenu';
+                const COLUMN_INDEX = 0;
+                const ROW_INDEX = 1;
+                const CELL_ROW_INDEX = 2;
+                const CELL_COLUMN_INDEX = 0;
+
+                // Matrix of the expected `text-align` value for each cell (`[row][column]`)
+                const expected: string[][] = Array.from({ length: ROW_COUNT }, () => Array.from({ length: COLUMN_COUNT }, () => ''));
+
+                await addTemporaryAlohaPlugin(page, ['common/table', 'common/align']);
+                await editPageAndCreateTable(page);
+
+                const table = mainEditable.locator('table');
+                await expect(table).toBeVisible();
+
+                const rows = table.locator('tr:not(.aloha-table-selectcolumn)');
+                await expect(rows).toHaveCount(ROW_COUNT);
+
+                function findCell(row: number, column: number): Locator {
+                    return rows.nth(row).locator('td:not(.aloha-table-selectrow)').nth(column);
+                }
+
+                async function applyAlignment(alignment: string): Promise<void> {
+                    await selectEditorTab(page, 'formatting');
+                    await findAlohaComponent(page, { slot: SLOT_ALIGN }).click();
+                    await findDynamicDropdown(page, SLOT_ALIGN).locator(`.select-menu-entry[data-id="${alignment}"]`).click();
+                }
+
+                async function verifyAlignments(): Promise<void> {
+                    for (let row = 0; row < ROW_COUNT; row++) {
+                        for (let column = 0; column < COLUMN_COUNT; column++) {
+                            const cell = findCell(row, column);
+                            // Check the inline style, as the computed `text-align` would be inherited by the content
+                            await expect.poll(
+                                () => cell.evaluate((el: HTMLElement) => el.style.textAlign),
+                                { message: `text-align of cell [${row}, ${column}]` },
+                            ).toBe(expected[row][column]);
+                            // The alignment has to be applied to the cell itself, not to the content
+                            await expect(cell.locator('[style*="text-align"]')).toHaveCount(0);
+                        }
+                    }
+                }
+
+                await test.step('Align a column', async () => {
+                    await table.locator('.aloha-table-selectcolumn td').nth(COLUMN_INDEX + 1).click();
+                    await applyAlignment('center');
+
+                    for (let row = 0; row < ROW_COUNT; row++) {
+                        expected[row][COLUMN_INDEX] = 'center';
+                    }
+                    await verifyAlignments();
+                });
+
+                await test.step('Align a row', async () => {
+                    await rows.nth(ROW_INDEX).locator('.aloha-table-selectrow').click();
+                    await applyAlignment('right');
+
+                    for (let column = 0; column < COLUMN_COUNT; column++) {
+                        expected[ROW_INDEX][column] = 'right';
+                    }
+                    await verifyAlignments();
+                });
+
+                await test.step('Align a single cell', async () => {
+                    await findCell(CELL_ROW_INDEX, CELL_COLUMN_INDEX).locator('.aloha-table-cell-editable').click();
+                    await applyAlignment('justify');
+
+                    expected[CELL_ROW_INDEX][CELL_COLUMN_INDEX] = 'justify';
+                    await verifyAlignments();
+                });
+            });
+
             async function editPageAndCreateTable(page) {
                 editingPage = IMPORTER.get(PAGE_ONE);
 

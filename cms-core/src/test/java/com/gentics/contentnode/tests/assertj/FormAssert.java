@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Form;
 
@@ -20,6 +21,11 @@ public class FormAssert extends PublishableNodeObjectAssert<FormAssert, Form> {
 		super(actual, FormAssert.class);
 	}
 
+	public FormAssert hasName(String name) {
+		assertThat(actual.getName()).as(descriptionText() + " name").isEqualTo(name);
+		return this;
+	}
+
 	public FormAssert isDeleted() throws NodeException {
 		assertThat(actual.isDeleted()).as(descriptionText() + " deleted").isTrue();
 		return this;
@@ -28,6 +34,16 @@ public class FormAssert extends PublishableNodeObjectAssert<FormAssert, Form> {
 	public FormAssert isNotDeleted() throws NodeException {
 		assertThat(actual.isDeleted()).as(descriptionText() + " deleted").isFalse();
 		return this;
+	}
+
+	public FormAssert isLocked() throws NodeException {
+		assertThat(actual.isLocked()).as(descriptionText() + " locked").isTrue();
+		return myself;
+	}
+
+	public FormAssert isNotLocked() throws NodeException {
+		assertThat(actual.isLocked()).as(descriptionText() + " locked").isFalse();
+		return myself;
 	}
 
 	public FormAssert hasFormType(String formType) throws NodeException {
@@ -49,7 +65,14 @@ public class FormAssert extends PublishableNodeObjectAssert<FormAssert, Form> {
 	}
 
 	public FormAssert hasFormData(JsonNode formData) throws NodeException {
-		assertThat(actual.getData()).as(descriptionText() + " form data").isEqualTo(formData);
+		// if the actual form data is an ObjectNode (which it should be), we
+		// remove the old-ui-schema from it, because we do not want to compare it
+		JsonNode actualFormData = actual.getData();
+		if (actualFormData instanceof ObjectNode actualFormDataAsObjectNode) {
+			actualFormData = actualFormDataAsObjectNode.without("old-ui-schema");
+		}
+
+		assertThat(actualFormData).as(descriptionText() + " form data").isEqualTo(formData);
 		return this;
 	}
 }

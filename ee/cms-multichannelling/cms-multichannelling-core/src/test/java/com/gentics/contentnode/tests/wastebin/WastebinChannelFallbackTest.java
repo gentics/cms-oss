@@ -124,7 +124,7 @@ public class WastebinChannelFallbackTest {
 		// delete the object in the tested channel
 		switch (channel) {
 		case MASTER:
-			masterObject.delete();
+			masterObject.reload().delete();
 			t.commit(false);
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				masterObject = t.getObject(masterObject);
@@ -137,7 +137,7 @@ public class WastebinChannelFallbackTest {
 			objectMap.put(structure.getNode(Channel.SIDECHANNEL), null);
 			break;
 		case CHANNEL:
-			channelObject.delete();
+			channelObject.reload().delete();
 			t.commit(false);
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				channelObject = t.getObject(channelObject);
@@ -147,7 +147,7 @@ public class WastebinChannelFallbackTest {
 			objectMap.put(structure.getNode(Channel.CHANNEL), masterObject);
 			break;
 		case SUBCHANNEL:
-			subChannelObject.delete();
+			subChannelObject.reload().delete();
 			t.commit(false);
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				subChannelObject = t.getObject(subChannelObject);
@@ -157,7 +157,7 @@ public class WastebinChannelFallbackTest {
 			objectMap.put(structure.getNode(Channel.SUBCHANNEL), channelObject);
 			break;
 		case SIDECHANNEL:
-			sideChannelObject.delete();
+			sideChannelObject.reload().delete();
 			t.commit(false);
 			try (WastebinFilter filter = Wastebin.INCLUDE.set()) {
 				sideChannelObject = t.getObject(sideChannelObject);

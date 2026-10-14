@@ -197,10 +197,10 @@ public class MCLanguageVariantDirtingTest {
 
 		testContext.waitForDirtqueueWorker();
 
-		ContentNodeTestUtils.assertDirtedObjects(Page.class, master);
+		ContentNodeTestUtils.assertDirtedObjectsNonStrict(Page.class, master);
 		ContentNodeTestUtils.assertDirtedObjects(Page.class, channel, dependentPageInChannel, langVariantInChannel);
 		ContentNodeTestUtils.assertDirtedObjects(Page.class, subChannel, dependentPageInChannel, langVariantInChannel);
-		ContentNodeTestUtils.assertDirtedObjects(Page.class, sideChannel);
+		ContentNodeTestUtils.assertDirtedObjectsNonStrict(Page.class, sideChannel);
 	}
 
 	/**

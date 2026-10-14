@@ -446,7 +446,7 @@ public class LinkCheckerResourceImpl implements LinkCheckerResource {
 			@QueryParam("wait") @DefaultValue("0") long waitMs, ReplaceExternalLinkRequest request)
 			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			GenericResponse resp = Operator.execute(I18NHelper.get("linkchecker.link.update"), waitMs, () -> {
+			GenericResponse resp = Operator.executeRethrowing(I18NHelper.get("linkchecker.link.update"), waitMs, () -> {
 				// load page and check view and edit permission
 				Page page = load(Page.class, pageId, ObjectPermission.edit);
 				require(Feature.LINK_CHECKER);

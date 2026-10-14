@@ -1,36 +1,16 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertError;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
-import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;	
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
-import org.mockito.Mockito;
-
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.exception.TranslationException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.InvalidRequestException;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
@@ -40,7 +20,6 @@ import com.gentics.contentnode.rest.model.Page;
 import com.gentics.contentnode.rest.model.request.MultiTagCreateRequest;
 import com.gentics.contentnode.rest.model.request.PageCreateRequest;
 import com.gentics.contentnode.rest.model.request.TagCreateRequest;
-import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.Auth;
@@ -48,6 +27,26 @@ import com.gentics.contentnode.tests.utils.Auth.AuthType;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import jakarta.ws.rs.core.Response.Status;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.mockito.Mockito;
+
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertSuccess;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @RunWith(Parameterized.class)
 @GCNFeature(set = {Feature.AUTOMATIC_TRANSLATION})
@@ -134,9 +133,18 @@ public class TranslationResourceImplTest {
 		userAuth.withAuth(authType, () -> {
 			createTags(pageToTranslate);
 
-			assertError(() -> translationResource.translate(pageToTranslate.getId(), targetLanguage, true, 0, 0),
-					TranslationException.class, ResponseCode.FAILURE, msg,
-					new Message().setType(Message.Type.CRITICAL).setMessage(msg));
+			Throwable thrown = catchThrowable(() -> translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,
+					true, 0, 0));
+			assertThat(thrown).as("Thrown exception").isInstanceOf(RestMappedException.class);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);
+			var response = ((RestMappedException) thrown).getRestResponse();
+
+			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
+			final var expectedMessage = "The page could not be translated because the markup of the translated page is invalid";
+			final var actualMessage = response.getResponseInfo().getResponseMessage();
+
+			assertThat(actualMessage).contains(expectedMessage);
 		});
 	}
 
@@ -155,9 +163,16 @@ public class TranslationResourceImplTest {
 		userAuth.withAuth(authType, () -> {
 			createTags(pageToTranslate);
 
-			assertError(() -> translationResource.translate(pageToTranslate.getId(), targetLanguage, true, 0, 0),
-					InvalidRequestException.class, ResponseCode.FAILURE, msg,
-					new Message().setType(Message.Type.CRITICAL).setMessage(msg));
+			Throwable thrown = catchThrowable(() -> translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,true, 0, 0));
+			assertThat(thrown).as("Thrown exception").isInstanceOf(InvalidRequestException.class);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.BAD_REQUEST);
+			var response = ((RestMappedException) thrown).getRestResponse();
+
+			final var expectedMessage = "Error while translating page: invalid language code";
+			final var actualMessage = response.getResponseInfo().getResponseMessage();
+
+			assertThat(actualMessage).contains(expectedMessage);
 		});
 	}
 

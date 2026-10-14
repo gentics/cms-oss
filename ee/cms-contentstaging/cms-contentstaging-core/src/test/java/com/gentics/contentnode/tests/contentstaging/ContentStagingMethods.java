@@ -5,6 +5,8 @@ import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Node;
@@ -31,6 +34,8 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.staging.StagedContentPackage;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.runtime.ConfigurationValue;
+
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Collection of help methods for all sorts of content staging tests
@@ -126,14 +131,21 @@ public interface ContentStagingMethods {
 	/**
 	 * Import the content package with given name to the CMS, assert that this fails with the given error
 	 * @param name name
+	 * @param status expected HTTP response status
 	 * @param responseCode expected response code
 	 * @param responseMessage expected response message
 	 * @param userMessages expected user messages
 	 * @throws NodeException
 	 */
-	default void tryImportContentPackage(String name, ResponseCode responseCode, String responseMessage, Message... userMessages) throws NodeException {
-		GenericResponse response = new ContentStagingResourceImpl().importIntoCms(name, 0, false);
-		assertResponse(response, responseCode, responseMessage, userMessages);
+	default void tryImportContentPackage(String name, Status status, ResponseCode responseCode, String responseMessage, Message... userMessages) throws NodeException {
+		try {
+			new ContentStagingResourceImpl().importIntoCms(name, 0, false);
+			fail("Import of content package " + name + " was expected to fail");
+		} catch (RestMappedException e) {
+			assertThat(e.getStatus()).as("Response status").isEqualTo(status);
+			// the response must be generated within a transaction, so that the messages are translated into the user's language
+			assertResponse(supply(() -> e.getRestResponse()), responseCode, responseMessage, userMessages);
+		}
 	}
 
 	/**

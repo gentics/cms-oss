@@ -386,7 +386,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 						+ "folder's node is not master node of the specified channel"));
 			}
 
-			return Operator.executeLocked(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
+			return Operator.executeLockedRethrowing(new CNI18nString("localizejob").toString(), AbstractContentNodeResource.getJobForegroundTime(request.getForegroundTime()) * 1000,
 					Operator.lock(LockType.channelSet, folder.getChannelSetId()), new LocalizeFolderCallable(id, request.getChannelId(), false), Function.identity());
 		}
 	}
@@ -530,7 +530,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 	public GenericResponse disinherit(final @PathParam("id") String id, final @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("wait") @DefaultValue("0") long waitMs, final DisinheritRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return Operator.execute(new CNI18nString("inheritance.change").toString(), waitMs, new Callable<GenericResponse>() {
+			return Operator.executeRethrowing(new CNI18nString("inheritance.change").toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (ChannelTrx trx = new ChannelTrx(TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId));
@@ -573,7 +573,7 @@ public class MCFolderResourceImpl implements MCFolderResource {
 	public GenericResponse disinherit(final @QueryParam("id") List<String> ids, final @QueryParam("nodeId") Integer nodeId,
 			@QueryParam("wait") @DefaultValue("0") long waitMs, final DisinheritRequest request) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return Operator.execute(new CNI18nString("inheritance.change").toString(), waitMs, new Callable<GenericResponse>() {
+			return Operator.executeRethrowing(new CNI18nString("inheritance.change").toString(), waitMs, new Callable<GenericResponse>() {
 				@Override
 				public GenericResponse call() throws Exception {
 					try (ChannelTrx trx = new ChannelTrx(TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId));

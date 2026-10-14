@@ -872,7 +872,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			if (existingImport.isPresent()) {
 				return existingImport.get();
 			} else {
-				return Operator.executeLocked(
+				return Operator.executeLockedRethrowing(
 						I18NHelper.get("content.staging.import", sanitizedName),
 						waitMs,
 						Operator.lock(LockType.contentPackage, sanitizedName),
@@ -904,7 +904,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			String sanitizedName = sanitizeCheck(name, false);
 			Path packagePath = pathRoot.resolve(sanitizedName);
 
-			return Operator.executeLocked(I18NHelper.get("content.staging.export", sanitizedName), waitMs, Operator.lock(LockType.contentPackage, sanitizedName), () -> {
+			return Operator.executeLockedRethrowing(I18NHelper.get("content.staging.export", sanitizedName), waitMs, Operator.lock(LockType.contentPackage, sanitizedName), () -> {
 				Set<Path> deferDeleting = new HashSet<>();
 				try {
 					Files.walk(packagePath).forEach(i -> {

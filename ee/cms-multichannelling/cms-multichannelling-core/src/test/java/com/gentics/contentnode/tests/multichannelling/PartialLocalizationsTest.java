@@ -427,7 +427,7 @@ public class PartialLocalizationsTest {
 		operate(() -> testContext.waitForDirtqueueWorker());
 
 		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, node)))
-				.as("Dirted page IDs for node").isEmpty();
+				.as("Dirted page IDs for node").containsOnly(page.getId());
 		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, channel)))
 				.as("Dirted page IDs for channel").containsOnly(localizedPage.getId());
 		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Page.class, false, subChannel)))

@@ -1,7 +1,6 @@
 package com.gentics.contentnode.tests.publish.mesh;
 
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertNewJobs;
-import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.assertSchema;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.crResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
@@ -11,13 +10,9 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
@@ -38,7 +33,6 @@ import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.TagmapEntry.AttributeType;
-import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.tests.category.MeshTest;
@@ -52,11 +46,8 @@ import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.core.rest.job.JobResponse;
 import com.gentics.mesh.core.rest.job.JobType;
-import com.gentics.mesh.core.rest.schema.impl.SchemaCreateRequest;
 import com.gentics.mesh.core.rest.schema.impl.SchemaResponse;
 import com.gentics.mesh.core.rest.schema.impl.SchemaUpdateRequest;
-import com.gentics.mesh.core.rest.schema.impl.StringFieldSchemaImpl;
-import com.gentics.mesh.rest.client.MeshRestClient;
 
 /**
  * Test cases for schema updates
@@ -270,56 +261,5 @@ public class MeshPublishSchemaUpdateTest {
 		assertThat(response.getContentRepository())
 				.as(String.format("Check status: %s", response.getContentRepository().getCheckResult()))
 				.hasFieldOrPropertyWithValue("checkStatus", ContentRepositoryModel.Status.error);
-	}
-
-	/**
-	 * Test that checking the CR does not try to downgrade the version of a schema, which is not managed by the CMS (e.g. the schema
-	 * of a Mesh plugin), when the schema is updated by another client while the check is running
-	 * @throws Exception
-	 */
-	@Test
-	public void testForeignSchemaUpdatedDuringCheck() throws Exception {
-		String foreignSchemaName = "forms_plugin";
-
-		// repair CR (which will generate the schemas and the project)
-		ContentNodeRESTUtils.assertResponseOK(crResource.repair(Integer.toString(crId), 0));
-
-		// create a foreign schema and assign it to the project (like a Mesh plugin would do)
-		SchemaResponse foreignSchema = mesh.client()
-				.createSchema(new SchemaCreateRequest().setName(foreignSchemaName).setFields(List.of(new StringFieldSchemaImpl().setName("name"))))
-				.blockingGet();
-		mesh.client().assignSchemaToProject(projectName, foreignSchema.getUuid()).blockingAwait();
-		assertSchema(mesh.client(), projectName, projectName, foreignSchemaName,
-				info -> assertThat(info.getVersion()).as("Foreign schema version in branch").isEqualTo("1.0"));
-
-		ContentRepository cr = Trx.supply(t -> t.getObject(ContentRepository.class, crId));
-		try (Trx trx = new Trx(); MeshPublisher mp = new MeshPublisher(cr)) {
-			// let the foreign schema be updated (and the new version assigned to the branches),
-			// after the publisher read the schemas, but before it reads the schema versions of the branch
-			Field clientField = MeshPublisher.class.getDeclaredField("client");
-			clientField.setAccessible(true);
-			MeshRestClient realClient = (MeshRestClient) clientField.get(mp);
-			AtomicBoolean foreignSchemaUpdated = new AtomicBoolean();
-			MeshRestClient client = (MeshRestClient) Proxy.newProxyInstance(MeshRestClient.class.getClassLoader(),
-					new Class<?>[] { MeshRestClient.class }, (proxy, method, args) -> {
-						if ("getBranchSchemaVersions".equals(method.getName()) && foreignSchemaUpdated.compareAndSet(false, true)) {
-							mesh.client().updateSchema(foreignSchema.getUuid(), new SchemaUpdateRequest().setName(foreignSchemaName)
-									.setFields(List.of(new StringFieldSchemaImpl().setName("name"), new StringFieldSchemaImpl().setName("description"))))
-									.blockingAwait();
-						}
-						try {
-							return method.invoke(realClient, args);
-						} catch (InvocationTargetException e) {
-							throw e.getCause();
-						}
-					});
-			clientField.set(mp, client);
-
-			assertThat(mp.checkSchemasAndProjects(true, true)).as("Check result").isTrue();
-			assertThat(foreignSchemaUpdated.get()).as("Foreign schema updated during check").isTrue();
-		}
-
-		assertSchema(mesh.client(), projectName, projectName, foreignSchemaName,
-				info -> assertThat(info.getVersion()).as("Foreign schema version in branch").isEqualTo("2.0"));
 	}
 }

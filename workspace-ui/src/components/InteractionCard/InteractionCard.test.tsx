@@ -68,7 +68,7 @@ describe('InteractionCard', () => {
                 { key: 'folder', value: '42', label: 'Richtlinien', source: 'context' },
                 { key: 'language', value: 'de', label: 'Deutsch', source: 'text', evidence: 'auf Deutsch' },
             ],
-            missing: [{ key: 'template', label: 'Template', options: [{ value: '17', label: 'Kampagnen-Landingpage' }, { value: '21', label: 'Themenseite' }] }],
+            missing: [{ key: 'template', label: 'Template', other_allowed: false, options: [{ value: '17', label: 'Kampagnen-Landingpage' }, { value: '21', label: 'Themenseite' }] }],
         }));
 
         expect(screen.getByText('Ich habe diese Einstellungen abgeleitet.')).toBeInTheDocument();

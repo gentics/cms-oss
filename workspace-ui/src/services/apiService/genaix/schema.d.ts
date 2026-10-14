@@ -1223,7 +1223,8 @@ export interface paths {
          *     `settings_review`, `422` with `errors[].pointer` `/answer/settings` and detail
          *     `No setting part for '<key>'.` when a raised key is missing, and with a pointer
          *     ending in `/value` and `code: not_an_option` when a `missing` key's value is not
-         *     one of its `options`.
+         *     one of its `options` (unless the entry has `other_allowed: true`; a `proposed`
+         *     entry's `options` never restrict the answer).
          *
          *     This route replaces the current `POST /responses/{response_id}/ask-user-answer`,
          *     which stays available for one release as a deprecated alias.
@@ -2134,6 +2135,8 @@ export interface components {
             node_id?: number;
             /** @description The CMS global id when known, for stable cross-installation reference. */
             global_id?: string;
+            /** @description The object's path in the CMS when known, for display: a folder's own path (`/Manual/Guides/`), a page's folder path. Informational, like `label`: it tells apart two objects of the same name, `id` alone identifies the object. Since `1.0.0-rc.4` (2026-10-14); GenAIx fills it on the folders a `settings_review` shows, a client may send it on a reference. */
+            path?: string;
         };
         /**
          * CmsObjectRef
@@ -3727,7 +3730,7 @@ export interface components {
              */
             key: string;
             /**
-             * @description The machine value, as a string whatever its domain: a CMS id, a language code, a timestamp, `true`.
+             * @description The machine value, as a string whatever its domain: a CMS id, a language code, a timestamp, `true`. For `node`, `folder` and `template` it is the CMS id (`"42"`), never the object's name; the name goes in `label`. A `settings_review` answer naming one of them by name is `422 validation_failed`.
              * @example de
              */
             value: string;
@@ -4709,11 +4712,15 @@ export interface components {
                 source: "text" | "context" | "default";
                 /** @description The quoted fragment of the user's text the inference rests on. Present only for `source: text`. */
                 evidence?: string;
-                /** @description The alternatives, when a choice exists - two templates that both fit, for example. The proposed `value` is one of them. */
+                /** @description The CMS object the value names, for `node`, `folder` and `template`: its type, id, node and, for a folder, `path`, so a client shows `Manual · /Manual/` rather than a bare name. Since `1.0.0-rc.4` (2026-10-14). */
+                ref?: components["schemas"]["ContextReference"];
+                /** @description The alternatives, when a choice exists - two templates that both fit, or the folder the user referenced and the one the agent read the request as, each with its `reason`. The proposed `value` is one of them. They are a shortcut, not a limit: the answer may name any other object of the key's kind. */
                 options?: {
                     value: string;
                     label: string;
                     ref?: components["schemas"]["ContextReference"];
+                    /** @description Why GenAIx offers this option, in the user's words where it can: the agent's reading of the request, or the reference the user sent. Since `1.0.0-rc.4` (2026-10-14). */
+                    reason?: string;
                 }[];
             }[];
             /** @description For `settings_review`: the settings this run needs, could not derive, and asks the user to provide. A client renders them as empty chips waiting for a value. */
@@ -4722,11 +4729,22 @@ export interface components {
                 key: string;
                 /** @description The wording to show for the setting itself. */
                 label: string;
-                /** @description The values to choose from, when the set of them is known. */
+                /** @description The `value` of the option GenAIx recommends (the agent's choice after it read the CMS, such as the one template of a folder that fits the page). A client preselects it; the user still confirms or changes it, so it never decides a write on its own. Present only together with `options`, and always one of their values. Since `1.0.0-rc.4` (2026-10-14). */
+                recommended?: string;
+                /** @description Why GenAIx recommends `recommended`, for display under the field. Since `1.0.0-rc.4` (2026-10-14). */
+                reason?: string;
+                /**
+                 * @description `true` when `options` are suggestions rather than the complete set (a few candidate folders out of the whole node): the answer may then name any other object of the key's kind, and a client offers its own picker next to them. `false` (the default) keeps the rule that the answer is one of `options`. Since `1.0.0-rc.4` (2026-10-14).
+                 * @default false
+                 */
+                other_allowed: boolean;
+                /** @description The values to choose from, when the set of them is known (or, with `other_allowed`, the ones GenAIx suggests). */
                 options?: {
                     value: string;
                     label: string;
                     ref?: components["schemas"]["ContextReference"];
+                    /** @description Why GenAIx offers this option, in the user's words where it can: the agent's reading of the request, or the reference the user sent. Since `1.0.0-rc.4` (2026-10-14). */
+                    reason?: string;
                 }[];
             }[];
             /**

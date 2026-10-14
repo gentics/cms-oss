@@ -203,6 +203,22 @@ info:
 
     ## Changelog
 
+    **1.0.0-rc.4 addition** (2026-10-14, optional members only; a client that ignores them
+    keeps working). A `settings_review` says what GenAIx recommends, machine-readably: a
+    `missing` entry may carry `recommended` (one of its `options`) and `reason`, and
+    `other_allowed: true` when its `options` are suggestions rather than the complete set;
+    every option may carry a `reason`; a `proposed` entry may carry `ref`, the CMS object it
+    names. `ContextReference` gains `path`, so two folders of the same name can be told
+    apart. When the agent read the request differently from a reference the user sent, the
+    proposed entry offers both as `options`, each with its `reason`. Only a `missing`
+    entry's `options` restrict the answer, as the answer route always said.
+
+    **1.0.0-rc.4 clarification** (2026-10-13, no change to the wire). A `settings_review`
+    answer gives `node`, `folder` and `template` as the CMS id, never the name (`422
+    validation_failed` otherwise); a value off an entry's `options` carries `code:
+    not_an_option`. A `reference` part to a node, folder or template is proposed in the
+    review with `source: text`, and a known folder brings its templates as `options`.
+
     **1.0.0-rc.4** (agreed 2026-10-12, drafted 2026-10-09). **The session is the conversation,
     the plan is the unit of work.** A session no longer has one workflow: it starts with the
     session agent, which reads and answers freely and drafts plans, and every plan runs under
@@ -4101,7 +4117,7 @@ paths:
                   value: |
                     id: 31
                     event: interaction.requested
-                    data: {"seq":31,"ts":"2026-10-07T09:23:16Z","session_id":"9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13","run_id":"c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94","plan_id":"5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60","type":"interaction.requested","interaction":{"id":"e3f7b1a9-2c64-4d08-95b7-1a8e0c5d7f36","kind":"settings_review","prompt":"Ich habe diese Einstellungen abgeleitet - bitte bestaetigen oder korrigieren. Das Template konnte ich nicht ableiten: die Landingpage braucht ein Anmeldeformular fuer das Webinar, und nur die Kampagnen-Landingpage erlaubt den Baustein form_embed. Bei der Themenseite wuerde die Anmeldung nur ein Link werden.","proposed":[{"key":"folder","value":"42","label":"Richtlinien","source":"context"},{"key":"language","value":"de","label":"Deutsch","source":"text","evidence":"auf Deutsch"}],"missing":[{"key":"template","label":"Template","options":[{"value":"17","label":"Kampagnen-Landingpage","ref":{"type":"template","id":"17","node_id":3}},{"value":"21","label":"Themenseite","ref":{"type":"template","id":"21","node_id":3}}]}],"blocking":true,"requested_at":"2026-10-07T09:23:16Z","expires_at":"2026-10-07T09:33:16Z","status":"pending","run_id":"c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94","step_id":"st-2"}}
+                    data: {"seq":31,"ts":"2026-10-07T09:23:16Z","session_id":"9f1b6e4a-3c2d-4f7a-8b51-0d6e2a9c4f13","run_id":"c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94","plan_id":"5b0e7c2a-91d4-4f6b-8a3e-2c7d9f1e4a60","type":"interaction.requested","interaction":{"id":"e3f7b1a9-2c64-4d08-95b7-1a8e0c5d7f36","kind":"settings_review","prompt":"Ich habe diese Einstellungen abgeleitet - bitte bestaetigen oder korrigieren. Das Template konnte ich nicht ableiten: die Landingpage braucht ein Anmeldeformular fuer das Webinar, und nur die Kampagnen-Landingpage erlaubt den Baustein form_embed. Bei der Themenseite wuerde die Anmeldung nur ein Link werden.","proposed":[{"key":"folder","value":"42","label":"Richtlinien","source":"context","ref":{"type":"folder","id":"42","label":"Richtlinien","node_id":3,"path":"/Richtlinien/"}},{"key":"language","value":"de","label":"Deutsch","source":"text","evidence":"auf Deutsch"}],"missing":[{"key":"template","label":"Template","recommended":"17","reason":"Nur die Kampagnen-Landingpage erlaubt den Baustein form_embed, den das Anmeldeformular braucht.","options":[{"value":"17","label":"Kampagnen-Landingpage","ref":{"type":"template","id":"17","node_id":3}},{"value":"21","label":"Themenseite","ref":{"type":"template","id":"21","node_id":3}}]}],"blocking":true,"requested_at":"2026-10-07T09:23:16Z","expires_at":"2026-10-07T09:33:16Z","status":"pending","run_id":"c4e7a2b1-9d3f-4a86-b0c5-7e1f8d2a6b94","step_id":"st-2"}}
 
                     id: 34
                     event: interaction.resolved
@@ -4177,7 +4193,8 @@ paths:
         `settings_review`, `422` with `errors[].pointer` `/answer/settings` and detail
         `No setting part for '<key>'.` when a raised key is missing, and with a pointer
         ending in `/value` and `code: not_an_option` when a `missing` key's value is not
-        one of its `options`.
+        one of its `options` (unless the entry has `other_allowed: true`; a `proposed`
+        entry's `options` never restrict the answer).
 
         This route replaces the current `POST /responses/{response_id}/ask-user-answer`,
         which stays available for one release as a deprecated alias.
@@ -8289,6 +8306,15 @@ components:
         global_id:
           type: string
           description: The CMS global id when known, for stable cross-installation reference.
+        path:
+          type: string
+          maxLength: 1024
+          description: >-
+            The object's path in the CMS when known, for display: a folder's own path
+            (`/Manual/Guides/`), a page's folder path. Informational, like `label`: it tells
+            apart two objects of the same name, `id` alone identifies the object. Since
+            `1.0.0-rc.4` (2026-10-14); GenAIx fills it on the folders a `settings_review`
+            shows, a client may send it on a reference.
       additionalProperties: false
       examples:
         - type: page
@@ -10545,7 +10571,9 @@ components:
           maxLength: 512
           description: >-
             The machine value, as a string whatever its domain: a CMS id, a language code,
-            a timestamp, `true`.
+            a timestamp, `true`. For `node`, `folder` and `template` it is the CMS id
+            (`"42"`), never the object's name; the name goes in `label`. A
+            `settings_review` answer naming one of them by name is `422 validation_failed`.
           examples:
             - de
         label:
@@ -11990,11 +12018,19 @@ components:
                 description: >-
                   The quoted fragment of the user's text the inference rests on. Present
                   only for `source: text`.
+              ref:
+                $ref: '#/components/schemas/ContextReference'
+                description: >-
+                  The CMS object the value names, for `node`, `folder` and `template`: its
+                  type, id, node and, for a folder, `path`, so a client shows `Manual ·
+                  /Manual/` rather than a bare name. Since `1.0.0-rc.4` (2026-10-14).
               options:
                 type: array
                 description: >-
-                  The alternatives, when a choice exists - two templates that both fit, for
-                  example. The proposed `value` is one of them.
+                  The alternatives, when a choice exists - two templates that both fit, or the
+                  folder the user referenced and the one the agent read the request as, each
+                  with its `reason`. The proposed `value` is one of them. They are a shortcut,
+                  not a limit: the answer may name any other object of the key's kind.
                 items:
                   type: object
                   required: [value, label]
@@ -12007,6 +12043,13 @@ components:
                       maxLength: 200
                     ref:
                       $ref: '#/components/schemas/ContextReference'
+                    reason:
+                      type: string
+                      maxLength: 500
+                      description: >-
+                        Why GenAIx offers this option, in the user's words where it can: the
+                        agent's reading of the request, or the reference the user sent. Since
+                        `1.0.0-rc.4` (2026-10-14).
                   additionalProperties: false
             additionalProperties: false
         missing:
@@ -12027,9 +12070,35 @@ components:
                 type: string
                 maxLength: 200
                 description: The wording to show for the setting itself.
+              recommended:
+                type: string
+                maxLength: 512
+                description: >-
+                  The `value` of the option GenAIx recommends (the agent's choice after it read
+                  the CMS, such as the one template of a folder that fits the page). A client
+                  preselects it; the user still confirms or changes it, so it never decides a
+                  write on its own. Present only together with `options`, and always one of
+                  their values. Since `1.0.0-rc.4` (2026-10-14).
+              reason:
+                type: string
+                maxLength: 500
+                description: >-
+                  Why GenAIx recommends `recommended`, for display under the field. Since
+                  `1.0.0-rc.4` (2026-10-14).
+              other_allowed:
+                type: boolean
+                default: false
+                description: >-
+                  `true` when `options` are suggestions rather than the complete set (a few
+                  candidate folders out of the whole node): the answer may then name any other
+                  object of the key's kind, and a client offers its own picker next to them.
+                  `false` (the default) keeps the rule that the answer is one of `options`.
+                  Since `1.0.0-rc.4` (2026-10-14).
               options:
                 type: array
-                description: The values to choose from, when the set of them is known.
+                description: >-
+                  The values to choose from, when the set of them is known (or, with
+                  `other_allowed`, the ones GenAIx suggests).
                 items:
                   type: object
                   required: [value, label]
@@ -12042,6 +12111,13 @@ components:
                       maxLength: 200
                     ref:
                       $ref: '#/components/schemas/ContextReference'
+                    reason:
+                      type: string
+                      maxLength: 500
+                      description: >-
+                        Why GenAIx offers this option, in the user's words where it can: the
+                        agent's reading of the request, or the reference the user sent. Since
+                        `1.0.0-rc.4` (2026-10-14).
                   additionalProperties: false
             additionalProperties: false
         expires_at:

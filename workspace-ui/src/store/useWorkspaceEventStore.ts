@@ -2,6 +2,9 @@ import { create } from 'zustand';
 
 import type { EventStreamStatus } from '@/services/apiService/eventStream';
 import type {
+    ApprovalStep,
+    Check,
+    DerivedSettings,
     GenaixEvent,
     Interaction,
     MessageCreateBody,
@@ -12,6 +15,7 @@ import type {
     Problem,
     Publication,
     RunStatus,
+    SessionFile,
     Step,
     UserMessagePart,
 } from '@/services/apiService/genaix/types';
@@ -95,6 +99,16 @@ export interface LiveConfirmation extends StreamAnchor {
     messageId: string;
 }
 
+/**
+ * A file the agent wrote into the session (`artifact.created`), as the last `artifact.updated` of it
+ * sent it, and the `seq`, run and place in the stream it first came with.
+ */
+export interface LiveArtifact extends StreamAnchor {
+    seq: number;
+    file: SessionFile;
+    runId?: string;
+}
+
 /** The CMS preview of the page the session produced, as the last `preview.updated` sent it. */
 export type LivePreview = Pick<Extract<GenaixEvent, { type: 'preview.updated' }>, 'seq' | 'cms_ref' | 'preview_url' | 'mode' | 'changed_elements'>;
 
@@ -137,10 +151,25 @@ export interface SessionLiveState {
     confirmations?: LiveConfirmation[];
     /** By plan id: the publish outcome of each page the plan wrote, as `publications.updated` last sent it. */
     publications?: Record<string, Publication[]>;
+    /** By plan id, then by check id: each check as `check.updated` last reported it (rc.4: per plan). */
+    checks?: Record<string, Record<string, Check>>;
+    /** By plan id: what the agent decided about where and how the content goes, as `derived_settings.updated` last sent it. */
+    derivedSettings?: Record<string, DerivedSettings | null>;
+    /** By plan id: the approval chain of its pages, as `approval_chain.updated` last sent it. */
+    approvalChains?: Record<string, ApprovalStep[]>;
+    /** Every file the agent wrote, in the order they first came; a later `artifact.updated` replaces one in place. */
+    artifacts?: LiveArtifact[];
     /** By plan id: the `seq` of the latest event carrying that `plan_id`, so `hydratePlans` keeps what is newer. */
     planSeqs?: Record<string, number>;
     /** The CMS preview; absent until the first `preview.updated`. */
     preview?: LivePreview;
+    /**
+     * The session's open plan (`drafting` to `released`) and its executing one (`accepted`, `running`), as
+     * the last `session.updated` said (rc.4 `Session.open_plan_id`, `executing_plan_id`); `null` for none,
+     * absent until a `session.updated` came.
+     */
+    openPlanId?: string | null;
+    executingPlanId?: string | null;
 }
 
 interface WorkspaceEventState {
@@ -167,7 +196,8 @@ interface WorkspaceEventState {
     resetSession: (sessionId: string) => void;
     /**
      * Puts plan snapshots (`GET …/plans/{plan_id}`, `reloadPlans`) into the live state: each plan, its
-     * main steps, its publications, the question its run waits on and, while there is none, the preview.
+     * main steps, its publications, checks, derived settings and approval chain, the question its run
+     * waits on and, while there is none, the preview.
      * A plan an event told about after `sinceSeq` (`planSeqs`) is left as the stream has it: the
      * snapshot was asked for after `sinceSeq`, so those events are at least as new as it is.
      */
@@ -418,6 +448,16 @@ function anchorIn(messages: LiveMessage[], runId: string | undefined): StreamAnc
     return after ? { afterMessageId: after.id, afterPart: after.parts.length } : {};
 }
 
+// `artifact.created` adds the file where it came; `artifact.updated` replaces it in place (a new `sha256`),
+// or adds it when its creation is not known.
+function applyToArtifacts(artifacts: LiveArtifact[] = [], { seq, file, run_id: runId }: Extract<GenaixEvent, { type: 'artifact.created' | 'artifact.updated' }>, messages: LiveMessage[]): LiveArtifact[] {
+    if (artifacts.some((live) => live.file.id === file.id)) {
+        return artifacts.map((live) => (live.file.id === file.id ? { ...live, file } : live));
+    }
+
+    return [...artifacts, { seq, file, ...(runId && { runId }), ...anchorIn(messages, runId ?? undefined) }];
+}
+
 function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionLiveState {
     const next: SessionLiveState = { ...session, lastSeq: event.seq, messages: applyToMessages(session.messages, event) };
     const runs = applyToRuns(session.runs ?? NO_RUNS, event);
@@ -437,6 +477,30 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
 
     if (event.type === 'interaction.requested' && event.plan_id) {
         next.interactionPlans = { ...session.interactionPlans, [event.interaction.id]: event.plan_id };
+    }
+
+    // A plan's checks, derived settings and approval chain: each a full replacement, keyed by the plan
+    // (and a check by its id), never merged (contract §6.1, rule 3).
+    if (event.type === 'check.updated' && event.plan_id) {
+        next.checks = { ...session.checks, [event.plan_id]: { ...session.checks?.[event.plan_id], [event.check.id]: event.check } };
+    }
+
+    if (event.type === 'derived_settings.updated' && event.plan_id) {
+        next.derivedSettings = { ...session.derivedSettings, [event.plan_id]: event.derived_settings };
+    }
+
+    if (event.type === 'approval_chain.updated' && event.plan_id) {
+        next.approvalChains = { ...session.approvalChains, [event.plan_id]: event.approval_chain };
+    }
+
+    if (event.type === 'artifact.created' || event.type === 'artifact.updated') {
+        next.artifacts = applyToArtifacts(session.artifacts, event, session.messages);
+    }
+
+    // `session.updated` carries the whole session: which plan is open and which executes (rc.4).
+    if (event.type === 'session.updated') {
+        next.openPlanId = event.session.open_plan_id ?? null;
+        next.executingPlanId = event.session.executing_plan_id ?? null;
     }
 
     // `publications.updated` carries the plan's whole array every time (rc.4: per plan).
@@ -501,13 +565,19 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
     let { interactions, interactionPlans } = session;
     const steps = { ...session.steps };
     const publications = { ...session.publications };
+    const checks = { ...session.checks };
+    const derivedSettings = { ...session.derivedSettings };
+    const approvalChains = { ...session.approvalChains };
 
-    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending } of fresh) {
+    for (const { plan, steps: planSteps, publications: planPublications, pending_interaction: pending, ...state } of fresh) {
         plans = plans.some((live) => live.plan.id === plan.id)
             ? plans.map((live) => (live.plan.id === plan.id ? { ...live, plan } : live))
             : [...plans, { seq: 0, plan }];
         steps[plan.id] = Object.fromEntries(planSteps.map((step) => [step.id, step]));
         publications[plan.id] = planPublications ?? [];
+        checks[plan.id] = Object.fromEntries(state.checks.map((check) => [check.id, check]));
+        derivedSettings[plan.id] = state.derived_settings ?? null;
+        approvalChains[plan.id] = state.approval_chain;
 
         if (pending && !interactions?.some(({ id }) => id === pending.id)) {
             interactions = [...(interactions ?? []), pending];
@@ -521,7 +591,7 @@ function hydrateSession(session: SessionLiveState, states: PlanState[], sinceSeq
         ? { seq: 0, cms_ref: latest.cms_ref, preview_url: latest.preview_url, mode: latest.mode, changed_elements: latest.changed_elements }
         : session.preview;
 
-    return { ...session, plans, steps, publications, interactions, interactionPlans, preview };
+    return { ...session, plans, steps, publications, checks, derivedSettings, approvalChains, interactions, interactionPlans, preview };
 }
 
 export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
@@ -592,6 +662,12 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         publications: undefined,
         planSeqs: undefined,
         preview: undefined,
+        openPlanId: undefined,
+        executingPlanId: undefined,
+        checks: undefined,
+        derivedSettings: undefined,
+        approvalChains: undefined,
+        artifacts: undefined,
         messages: session.messages.filter((message) => message.kind === 'sent' && message.status !== 'sent'),
     }))),
 

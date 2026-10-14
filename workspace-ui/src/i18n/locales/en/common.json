@@ -116,6 +116,10 @@
         "verbatimHasToken": "The selection contains a reference — mark plain text only.",
         "removeToken": "Remove {{label}}",
         "context": "Context",
+        "setting": {
+            "label": "Settings",
+            "chooseFolderFirst": "Set a folder chip first, then its templates show here"
+        },
         "mention": {
             "label": "Context",
             "search": "Search context…",
@@ -124,7 +128,9 @@
                 "folder": "Folders",
                 "image": "Images",
                 "file": "Files",
-                "project": "Project"
+                "project": "Project",
+                "template": "Templates",
+                "language": "Languages"
             },
             "clearScope": "Remove filter",
             "loading": "Searching",
@@ -209,6 +215,11 @@
             "answer": "Your answer",
             "comment": "Comment",
             "choose": "Choose…",
+            "chooseFolder": "Choose folder…",
+            "otherFolder": "Other folder…",
+            "noFolderChosen": "No folder chosen",
+            "chooseFolderFirst": "Choose a folder first",
+            "loadingOptions": "Loading…",
             "send": "Send",
             "confirm": "Confirm",
             "confirmed": "Confirmed",
@@ -681,5 +692,29 @@
         "copy": "Copy the JSON of event {{seq}} ({{type}})",
         "copied": "Event {{seq}} copied",
         "copyFailed": "The event could not be copied."
+    },
+    "planDetails": {
+        "checks": "Checks",
+        "settings": "Settings",
+        "approval": "Approval",
+        "blocking": "Blocking",
+        "severity": {
+            "pass": "Passed",
+            "info": "Note",
+            "warn": "Warning",
+            "fail": "Failed"
+        },
+        "approvalStatus": {
+            "pending": "Pending",
+            "done": "Done",
+            "not_required": "Not required",
+            "rejected": "Rejected"
+        },
+        "actor": {
+            "user": "You",
+            "group": "CMS group",
+            "workflow": "CMS workflow",
+            "system": "System"
+        }
     }
 }

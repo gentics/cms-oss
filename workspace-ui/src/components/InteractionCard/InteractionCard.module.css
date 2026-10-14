@@ -68,6 +68,34 @@ textarea.input {
   font-size: var(--font-size-xs);
 }
 
+/* A setting chosen with a picker (`SettingField`): the field, then the button that opens it. */
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  & > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* The chosen folder, read-only (design.md §8 "Nur lesen"): it is changed with the picker only. */
+.picked {
+  border-color: var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+  cursor: pointer;
+}
+
+/* Why GenAIx offers a `settings_review` option, under its name in the list. */
+.optionReason {
+  display: block;
+  color: var(--fg-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+}
+
 .checkboxField {
   display: flex;
   align-items: center;

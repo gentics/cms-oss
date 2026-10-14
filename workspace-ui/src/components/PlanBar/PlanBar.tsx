@@ -3,6 +3,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlanCard } from '@/components/PlanCard/PlanCard';
+import { PlanDetails } from '@/components/PlanDetails/PlanDetails';
 import { Button } from '@/components/ui/button';
 import type { Plan } from '@/services/apiService/genaix/types';
 import { isSessionWorking, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -25,7 +26,7 @@ interface PlanBarProps {
  * plan is, the publish outcome of its pages and the transitions its status allows.
  *
  * Expanded, the plan itself shows above the head (`PlanCard`): its steps, and Adjust and Accept while it
- * is proposed. It expands by itself while the plan waits for the user, proposed or with a question of
+ * is proposed; below them its checks, derived settings and approval chain (`PlanDetails`). It expands by itself while the plan waits for the user, proposed or with a question of
  * its own open (`interaction.requested` with its `plan_id`), and collapses once that is done. A click
  * on the toggle holds until the plan's waiting changes.
  */
@@ -67,6 +68,7 @@ export function PlanBar({ sessionId, plan, onHeightChange }: PlanBarProps) {
             <section className={styles.bar} aria-label={t('planBar.label')}>
                 <div id={panelId} className={styles.panel} hidden={!isExpanded}>
                     <PlanCard plan={plan} sessionId={sessionId} canAnswer={!isWorking} />
+                    <PlanDetails sessionId={sessionId} planId={plan.id} />
                 </div>
                 <PlanHead sessionId={sessionId} plan={plan}>
                     <Button

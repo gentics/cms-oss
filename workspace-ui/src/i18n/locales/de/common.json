@@ -116,6 +116,10 @@
         "verbatimHasToken": "Die Auswahl enthält einen Verweis – markieren Sie nur Text.",
         "removeToken": "{{label}} entfernen",
         "context": "Kontext",
+        "setting": {
+            "label": "Einstellungen",
+            "chooseFolderFirst": "Zuerst einen Ordner als Chip setzen, dann erscheinen hier seine Templates"
+        },
         "mention": {
             "label": "Kontext",
             "search": "Kontext suchen…",
@@ -124,7 +128,9 @@
                 "folder": "Ordner",
                 "image": "Bilder",
                 "file": "Dateien",
-                "project": "Projekt"
+                "project": "Projekt",
+                "template": "Templates",
+                "language": "Sprachen"
             },
             "clearScope": "Filter entfernen",
             "loading": "Suche läuft",
@@ -209,6 +215,11 @@
             "answer": "Ihre Antwort",
             "comment": "Kommentar",
             "choose": "Auswählen…",
+            "chooseFolder": "Ordner wählen…",
+            "otherFolder": "Anderer Ordner…",
+            "noFolderChosen": "Kein Ordner gewählt",
+            "chooseFolderFirst": "Zuerst einen Ordner wählen",
+            "loadingOptions": "Wird geladen…",
             "send": "Senden",
             "confirm": "Bestätigen",
             "confirmed": "Bestätigt",
@@ -681,5 +692,29 @@
         "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
         "copied": "Event {{seq}} kopiert",
         "copyFailed": "Das Event konnte nicht kopiert werden."
+    },
+    "planDetails": {
+        "checks": "Prüfungen",
+        "settings": "Einstellungen",
+        "approval": "Freigabe",
+        "blocking": "Blockiert",
+        "severity": {
+            "pass": "Bestanden",
+            "info": "Hinweis",
+            "warn": "Warnung",
+            "fail": "Fehlgeschlagen"
+        },
+        "approvalStatus": {
+            "pending": "Offen",
+            "done": "Erledigt",
+            "not_required": "Nicht nötig",
+            "rejected": "Abgelehnt"
+        },
+        "actor": {
+            "user": "Sie",
+            "group": "CMS-Gruppe",
+            "workflow": "CMS-Workflow",
+            "system": "System"
+        }
     }
 }

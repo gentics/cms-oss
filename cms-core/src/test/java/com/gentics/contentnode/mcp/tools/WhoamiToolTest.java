@@ -79,7 +79,8 @@ public class WhoamiToolTest {
 	public void testFullResultMatchesOutputSchema() {
 		WhoamiTool.Result result = new WhoamiTool.Result(
 				new WhoamiUser(42, "editor", "Edith", "Editor", "e@example.com"),
-				List.of(ObjectRef.forGroup(group(7, "Editors"))));
+				List.of(ObjectRef.forGroup(group(7, "Editors"))),
+				new WhoamiTool.Cms("https://cms.example.com", "6.6.3"));
 
 		assertValid(result);
 	}
@@ -87,11 +88,22 @@ public class WhoamiToolTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testMinimalResultMatchesOutputSchema() {
-		WhoamiTool.Result result = new WhoamiTool.Result(new WhoamiUser(42, "editor", null, null, null), null);
+		WhoamiTool.Result result = new WhoamiTool.Result(new WhoamiUser(42, "editor", null, null, null), null,
+				null);
 
 		Map<String, Object> json = assertValid(result);
 		assertThat(json).containsOnlyKeys("user");
 		assertThat((Map<String, Object>) json.get("user")).containsOnlyKeys("id", "login");
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testCmsWithoutBaseUrl() {
+		WhoamiTool.Result result = new WhoamiTool.Result(new WhoamiUser(42, "editor", null, null, null), null,
+				new WhoamiTool.Cms(null, "6.6.3"));
+
+		Map<String, Object> json = assertValid(result);
+		assertThat((Map<String, Object>) json.get("cms")).containsOnlyKeys("version");
 	}
 
 	@SuppressWarnings("unchecked")

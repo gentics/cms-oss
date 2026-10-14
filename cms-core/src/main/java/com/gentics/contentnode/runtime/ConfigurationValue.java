@@ -234,7 +234,14 @@ public enum ConfigurationValue {
 	 * port of the scheme) or {@code host:port}. Empty (the default) refuses URL sources.
 	 */
 	MCP_UPLOAD_URL_HOSTS("MCP_UPLOAD_URL_HOSTS", "com.gentics.contentnode.mcp.uploadUrlHosts", "mcp.upload_url_hosts",
-			() -> "")
+			() -> ""),
+
+	/**
+	 * Base URL of the CMS as its users open it (e.g. {@code https://cms.example.com}), which the MCP tool
+	 * {@code whoami} returns as {@code cms.baseUrl}, so that a client can make the CMS's relative URLs absolute. Empty
+	 * (the default) omits it.
+	 */
+	MCP_BASE_URL("MCP_BASE_URL", "com.gentics.contentnode.mcp.baseUrl", "mcp.base_url", () -> "")
 
 	;
 

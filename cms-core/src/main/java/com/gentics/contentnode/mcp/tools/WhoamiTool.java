@@ -16,6 +16,8 @@ import com.gentics.contentnode.rest.model.Group;
 import com.gentics.contentnode.rest.model.response.UserLoadResponse;
 import com.gentics.contentnode.rest.resource.UserResource;
 import com.gentics.contentnode.rest.resource.impl.UserResourceImpl;
+import com.gentics.contentnode.rest.version.Main;
+import com.gentics.contentnode.runtime.ConfigurationValue;
 
 import io.modelcontextprotocol.spec.McpSchema.JsonSchema;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
@@ -41,7 +43,24 @@ public class WhoamiTool extends AbstractMcpTool {
 	 * @param groups the user's groups, unless they were not requested
 	 */
 	@JsonInclude(Include.NON_NULL)
-	public record Result(WhoamiUser user, List<ObjectRef> groups) {
+	public record Result(WhoamiUser user, List<ObjectRef> groups, Cms cms) {
+	}
+
+	/**
+	 * The CMS installation
+	 * @param baseUrl base URL of the CMS as its users open it, if configured
+	 * @param version version of the CMS, if known
+	 */
+	@JsonInclude(Include.NON_NULL)
+	public record Cms(String baseUrl, String version) {
+		/**
+		 * Get the CMS installation from the configuration and the version of the running CMS
+		 * @return CMS installation
+		 */
+		static Cms current() {
+			return new Cms(nullIfBlank(ConfigurationValue.MCP_BASE_URL.get()),
+					nullIfBlank(Main.getImplementationVersion()));
+		}
 	}
 
 	@Override
@@ -50,10 +69,11 @@ public class WhoamiTool extends AbstractMcpTool {
 		properties.put(ARG_INCLUDE_GROUPS, schema("boolean", "Whether to include the user's groups.", "default", true));
 
 		return Tool.builder().name("whoami").title("Who am I")
-				.description("Returns the CMS user this session acts as, with their groups. Call this once at the "
-						+ "start of any task so you can address the user correctly and know which groups bound your "
-						+ "permissions. Do NOT use it to decide whether an action is allowed: group membership does "
-						+ "not tell you object permissions, use get_permissions for that.")
+				.description("Returns the CMS user this session acts as, with their groups, and the CMS version and "
+						+ "base URL. Call this once at the start of any task so you can address the user correctly "
+						+ "and know which groups bound your permissions. Do NOT use it to decide whether an action is "
+						+ "allowed: group membership does not tell you object permissions, use get_permissions for "
+						+ "that.")
 				.inputSchema(JsonSchema.builder().type("object").properties(properties).required(List.of())
 						.additionalProperties(false).build())
 				.outputSchema(outputSchema())
@@ -72,7 +92,7 @@ public class WhoamiTool extends AbstractMcpTool {
 			List<Group> restGroups = response.getUser().getGroups();
 			groups = restGroups == null ? List.of() : restGroups.stream().map(ObjectRef::forGroup).toList();
 		}
-		return new Result(WhoamiUser.of(response.getUser()), groups);
+		return new Result(WhoamiUser.of(response.getUser()), groups, Cms.current());
 	}
 
 	/**
@@ -83,6 +103,10 @@ public class WhoamiTool extends AbstractMcpTool {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put("user", WhoamiUser.jsonSchema());
 		properties.put("groups", schema("array", "The user's groups.", "items", ObjectRef.jsonSchema(null)));
+		Map<String, Object> cms = new LinkedHashMap<>();
+		cms.put("baseUrl", schema("string", "Base URL of the CMS as its users open it, if configured."));
+		cms.put("version", schema("string", "Version of the CMS."));
+		properties.put("cms", schema("object", "The CMS installation.", "properties", cms));
 		return schema("object", null, "properties", properties, "required", List.of("user"));
 	}
 }

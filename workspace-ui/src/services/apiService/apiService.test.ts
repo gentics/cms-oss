@@ -12,15 +12,18 @@ import {
     genaixRetry,
     genaixRetryDelay,
     getMe,
+    getPlanState,
     getSession,
     isRetryableGenaixError,
     listMcpConnections,
     listMessages,
+    listPlans,
     listSessions,
     listWorkflows,
     postMessage,
     putSessionAuthorization,
     sessionFileContentUrl,
+    transitionPlan,
     uploadSessionFile,
 } from './apiService';
 
@@ -311,6 +314,50 @@ describe('routes', () => {
         stubFetch(problemResponse(410, { type: 't', title: 'Expired', status: 410, genaix_code: 'interaction_expired' }));
 
         await expect(answerInteraction('s-1', 'i-1', { text: 'Yes' })).rejects.toMatchObject({ status: 410, genaixCode: 'interaction_expired' });
+    });
+
+    it('listSessions sends plan_status as a filter of its own', async () => {
+        const fetchMock = stubFetch(Response.json({ items: [], next_cursor: null }));
+
+        await listSessions({ plan_status: ['released', 'review_requested'] });
+
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions?plan_status=released&plan_status=review_requested');
+    });
+
+    it('listPlans returns the page of GET /sessions/{session_id}/plans', async () => {
+        const plan = { id: 'pl-1', workflow: 'content_create', status: 'done', version: 1, summary: '', created_at: '2026-10-13T09:00:00Z' };
+        const fetchMock = stubFetch(Response.json({ items: [plan] }));
+
+        await expect(listPlans('s-1')).resolves.toEqual({ items: [plan] });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans');
+    });
+
+    it('getPlanState loads the state of one plan', async () => {
+        const fetchMock = stubFetch(Response.json({ workflow: 'content_create', plan: { id: 'pl-1' } }));
+
+        await expect(getPlanState('s-1', 'pl-1')).resolves.toMatchObject({ plan: { id: 'pl-1' } });
+        expect(fetchMock.mock.calls[0]![0]).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1');
+    });
+
+    it('transitionPlan posts the action as JSON to the plan\'s transitions', async () => {
+        const fetchMock = stubFetch(Response.json({ run_id: 'r-1', plan: { id: 'pl-1', status: 'released' }, session: { id: 's-1' } }, { status: 202 }));
+
+        await expect(transitionPlan('s-1', 'pl-1', { action: 'publish', acknowledge_checks: ['chk-1'] })).resolves.toMatchObject({ run_id: 'r-1' });
+
+        const [url, init] = fetchMock.mock.calls[0]!;
+
+        expect(url).toBe('/rest/proxy/genaix/sessions/s-1/plans/pl-1/transitions');
+        expect(init?.method).toBe('POST');
+        expect(JSON.parse(init?.body as string)).toEqual({ action: 'publish', acknowledge_checks: ['chk-1'] });
+    });
+
+    it('transitionPlan throws a gate refusal as GenaixApiError with its checks', async () => {
+        stubFetch(Response.json({ type: 't', title: 't', status: 409, genaix_code: 'quality_gate_failed', acknowledgeable_checks: ['chk-1'] }, { status: 409 }));
+
+        await expect(transitionPlan('s-1', 'pl-1', { action: 'release' })).rejects.toMatchObject({
+            genaixCode: 'quality_gate_failed',
+            problem: { acknowledgeable_checks: ['chk-1'] },
+        });
     });
 
     it('sessionFileContentUrl points at the content route of a session file', () => {

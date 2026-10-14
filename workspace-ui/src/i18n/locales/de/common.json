@@ -266,7 +266,14 @@
                 "request_review": "Trotzdem Prüfung anfordern"
             }
         },
-        "transitionFailed": "Der Plan konnte nicht geändert werden"
+        "transitionFailed": "Der Plan konnte nicht geändert werden",
+        "review": "Prüfen & freigeben",
+        "discard": {
+            "title": "Diesen Plan verwerfen?",
+            "keep": "Der Plan wird geschlossen. Seiten, die er schon geändert hat, bleiben als Entwurf im CMS.",
+            "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
+            "cancel": "Abbrechen"
+        }
     },
     "handOff": {
         "editThese": "Diese bearbeiten"
@@ -392,6 +399,73 @@
         "deleted": "„{{title}}“ gelöscht",
         "undo": "Rückgängig",
         "archiveFailed": "Die Sitzung konnte nicht gelöscht werden"
+    },
+    "review": {
+        "title": "Prüfung",
+        "pageTitle": "Prüfen & freigeben",
+        "back": "Zurück zum Chat",
+        "open": "Prüfen & freigeben",
+        "loading": "Der Plan wird geladen…",
+        "noPlan": "Diese Sitzung hat noch keinen Plan zum Prüfen.",
+        "noPreview": "Noch keine Vorschau.",
+        "checklist": "Checkliste",
+        "noChecks": "Noch keine Prüfungen.",
+        "blocking": "blockierend",
+        "acknowledged": "bestätigt",
+        "approvalChain": "Freigabe",
+        "publications": "Seiten",
+        "closed": "Dieser Plan ist abgeschlossen und kann nicht mehr geändert werden.",
+        "closedReopen": "Öffnen Sie den Plan wieder, um Korrekturen vorzunehmen.",
+        "actionFailed": "Die Aktion konnte nicht ausgeführt werden",
+        "status": {
+            "drafting": "Im Entwurf",
+            "proposed": "Vorgeschlagen",
+            "accepted": "Angenommen",
+            "running": "Läuft",
+            "done": "Fertig",
+            "released": "Freigegeben",
+            "published": "Veröffentlicht",
+            "review_requested": "In Prüfung",
+            "discarded": "Verworfen",
+            "superseded": "Ersetzt"
+        },
+        "severity": {
+            "pass": "Bestanden",
+            "info": "Info",
+            "warn": "Warnung",
+            "fail": "Nicht bestanden"
+        },
+        "approval": {
+            "pending": "Ausstehend",
+            "done": "Erledigt",
+            "not_required": "Nicht nötig",
+            "rejected": "Abgelehnt"
+        },
+        "publication": {
+            "pending": "Nicht veröffentlicht",
+            "published": "Veröffentlicht",
+            "review_requested": "Prüfung angefordert",
+            "failed": "Fehlgeschlagen"
+        },
+        "actions": {
+            "release": "Freigeben",
+            "publish": "Veröffentlichen",
+            "publishRemaining": "Rest veröffentlichen",
+            "request_review": "Prüfung anfordern",
+            "reopen": "Wieder öffnen",
+            "discard": "Verwerfen"
+        },
+        "gate": {
+            "title": "Noch nicht bestanden",
+            "acknowledgeAnd": "Bestätigen und {{action}}"
+        },
+        "discard": {
+            "title": "Diesen Plan verwerfen?",
+            "keep": "Der Plan wird geschlossen. Seiten, die er schon geändert hat, bleiben als Entwurf im CMS.",
+            "restore": "Der Plan wird geschlossen und die Seiten, die er geändert hat, gehen auf ihre Version von vorher zurück.",
+            "cancel": "Abbrechen",
+            "confirm": "Verwerfen"
+        }
     },
     "todos": {
         "title": "Offene To-dos",

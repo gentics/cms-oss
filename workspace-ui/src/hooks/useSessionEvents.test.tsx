@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
 
-import { useSessionMessages } from './useGenaixQueries';
+import { usePlanState, useSessionMessages } from './useGenaixQueries';
 import { useSessionEvents } from './useSessionEvents';
 
 const SESSION = 's-1';
@@ -24,14 +24,19 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 /**
- * Routes `/messages` to `messages` and `/events` to the next of `eventResponses`; when those are used
- * up, an event stream that stays open until aborted. `push` feeds the last opened stream.
+ * Routes `/messages` to an empty history, `/plans/…` to a plan, and `/events` to the next of
+ * `eventResponses`; when those are used up, an event stream that stays open until aborted. `push` feeds
+ * the last opened stream.
  */
 function stubGenaix(eventResponses: (() => Response)[] = []) {
     let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((url, init) => {
         if (String(url).includes('/messages')) {
             return Promise.resolve(Response.json({ items: [], next_cursor: null }));
+        }
+
+        if (String(url).includes('/plans/')) {
+            return Promise.resolve(Response.json({ workflow: 'content_create', plan: { id: 'pl-1' } }));
         }
 
         const next = eventResponses.shift();
@@ -99,6 +104,25 @@ describe('useSessionEvents', () => {
         await waitFor(() => expect(session().messages).toEqual([]));
         expect(genaix.calls('/messages')).toHaveLength(2);
         expect(session().lastSeq).toBe(4);
+    });
+
+    it('reads a plan again when an event changes it, and only that plan', async () => {
+        const genaix = stubGenaix();
+
+        renderHook(() => {
+            usePlanState(SESSION, 'pl-1');
+            useSessionEvents(SESSION);
+        }, { wrapper });
+
+        await waitFor(() => expect(session().connection).toBe('open'));
+        await waitFor(() => expect(genaix.calls('/plans/pl-1')).toHaveLength(1));
+
+        genaix.push(frame(1, 'check.updated', { plan_id: 'pl-1', check: { id: 'chk-1' } }));
+        await waitFor(() => expect(genaix.calls('/plans/pl-1')).toHaveLength(2));
+
+        genaix.push(frame(2, 'publications.updated', { plan_id: 'pl-9', publications: [] }) + frame(3, 'heartbeat'));
+        await waitFor(() => expect(session().lastSeq).toBe(3));
+        expect(genaix.calls('/plans/pl-1')).toHaveLength(2);
     });
 
     it('resumes from the stored lastSeq', async () => {

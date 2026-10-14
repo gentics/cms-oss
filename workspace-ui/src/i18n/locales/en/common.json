@@ -266,7 +266,14 @@
                 "request_review": "Request review anyway"
             }
         },
-        "transitionFailed": "The plan could not be changed"
+        "transitionFailed": "The plan could not be changed",
+        "review": "Review & release",
+        "discard": {
+            "title": "Discard this plan?",
+            "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
+            "restore": "The plan is closed and the pages it changed go back to their version from before it.",
+            "cancel": "Cancel"
+        }
     },
     "handOff": {
         "editThese": "Edit these"
@@ -392,6 +399,73 @@
         "deleted": "“{{title}}” deleted",
         "undo": "Undo",
         "archiveFailed": "Deleting the session failed"
+    },
+    "review": {
+        "title": "Review",
+        "pageTitle": "Review & release",
+        "back": "Back to the chat",
+        "open": "Review & release",
+        "loading": "Loading the plan…",
+        "noPlan": "This session has no plan to review yet.",
+        "noPreview": "No preview yet.",
+        "checklist": "Checklist",
+        "noChecks": "No checks yet.",
+        "blocking": "blocking",
+        "acknowledged": "acknowledged",
+        "approvalChain": "Approval",
+        "publications": "Pages",
+        "closed": "This plan is closed and can no longer be changed.",
+        "closedReopen": "Reopen the plan to make corrections.",
+        "actionFailed": "The action could not be carried out",
+        "status": {
+            "drafting": "Drafting",
+            "proposed": "Proposed",
+            "accepted": "Accepted",
+            "running": "Running",
+            "done": "Done",
+            "released": "Released",
+            "published": "Published",
+            "review_requested": "In review",
+            "discarded": "Discarded",
+            "superseded": "Superseded"
+        },
+        "severity": {
+            "pass": "Passed",
+            "info": "Info",
+            "warn": "Warning",
+            "fail": "Failed"
+        },
+        "approval": {
+            "pending": "Pending",
+            "done": "Done",
+            "not_required": "Not required",
+            "rejected": "Rejected"
+        },
+        "publication": {
+            "pending": "Not published",
+            "published": "Published",
+            "review_requested": "Review requested",
+            "failed": "Failed"
+        },
+        "actions": {
+            "release": "Release",
+            "publish": "Publish",
+            "publishRemaining": "Publish remaining",
+            "request_review": "Request review",
+            "reopen": "Reopen",
+            "discard": "Discard"
+        },
+        "gate": {
+            "title": "Not passed yet",
+            "acknowledgeAnd": "Acknowledge and {{action}}"
+        },
+        "discard": {
+            "title": "Discard this plan?",
+            "keep": "The plan is closed. Pages it already changed stay as drafts in the CMS.",
+            "restore": "The plan is closed and the pages it changed go back to their version from before it.",
+            "cancel": "Cancel",
+            "confirm": "Discard"
+        }
     },
     "todos": {
         "title": "Open to-dos",

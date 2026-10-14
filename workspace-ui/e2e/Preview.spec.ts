@@ -71,14 +71,14 @@ test.describe('Preview of an S1 session', () => {
         const frame = page.getByTitle('Preview of the page in the CMS');
 
         await expect(page.getByRole('region', { name: 'Preview' })).toBeVisible();
-        await expect(frame).toHaveAttribute('src', `${PREVIEW_URL}&real=view`);
+        await expect(frame).toHaveAttribute('src', `${PREVIEW_URL}&real=view&tagmarkers=true`);
         await expect(page.frameLocator('iframe[title="Preview of the page in the CMS"]').getByText('Neue Nutzungsbedingungen ab Q3')).toBeVisible();
-        expect(loadedUrls).toEqual([`${PREVIEW_URL}&real=view`]);
+        expect(loadedUrls).toEqual([`${PREVIEW_URL}&real=view&tagmarkers=true`]);
 
         sendNextUpdate();
 
         await expect.poll(() => loadedUrls.length).toBe(2);
-        expect(loadedUrls[1]).toBe(`${PREVIEW_URL}&real=view`);
+        expect(loadedUrls[1]).toBe(`${PREVIEW_URL}&real=view&tagmarkers=true`);
     });
 });
 

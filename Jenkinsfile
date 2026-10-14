@@ -352,7 +352,7 @@ spec:
                     sh "cd cms-velocity ; docker build --network=host -t ${vtlImageNameWithTag} --build-arg CMS_BASE_IMAGE=${imageNameWithTag} . ; cd .."
 
                     if (!params.omitScan) {
-                        scanImage image: imageNameWithTag, exitCode: 1
+                        scanImage image: imageNameWithTag, exitCode: 1, dockerParams: "-v ${env.WORKSPACE}/build/trivyignore:/tmp/trivyignore", params: "--ignorefile /tmp/trivyignore"
                     }
                     // Push released image
                     if (tagName != null) {

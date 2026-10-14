@@ -89,15 +89,20 @@ function SharedSelectRenderer({
 
   // Render radio or checkbox options when the field is configured for radio mode.
   if (props.formGridOptions?.radio) {
-    const radioOptions = props.formState.isFormgridPreview
+    let radioOptions = props.formState.isFormgridPreview
       ? getMockRadioOptions()
       : props.possibleValues || [];
+
     const type = props.isList ? 'checkbox' : 'radio';
     const currentSelectedValues: any[] = props.value
       ? Array.isArray(props.value)
         ? [...props.value]
         : [props.value]
       : [];
+
+    if(radioOptions.length <= 0 && !props.editable){
+      radioOptions = currentSelectedValues;
+    }
 
     // Toggle the clicked option and delegate the resulting value to the wrapper.
     const handleChangeRadio = (selectedOption: any) => {

@@ -460,6 +460,9 @@ public class MiscUtils {
 	 * @throws NodeException
 	 */
 	public static List<Form> loadAllFormsWithExternalId(String externalId) throws NodeException {
+		if (StringUtils.isBlank(externalId)) {
+			return Collections.emptyList();
+		}
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		// try loading the form with external ID in the given node

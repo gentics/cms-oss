@@ -33,6 +33,7 @@ import com.gentics.contentnode.etc.FormConfigProvider;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FormFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.object.NodeObject;
@@ -44,6 +45,8 @@ import com.gentics.contentnode.rest.model.formtype.Controls;
 import com.gentics.contentnode.rest.model.formtype.PublishAsType;
 import com.gentics.contentnode.rest.model.formtype.ReferenceSetting;
 import com.gentics.contentnode.rest.model.formtype.ReferenceType;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.StagingResponse;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
@@ -65,6 +68,8 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.FORMS, Feature.MULTICHANNELLING, Feature.NICE_URLS, Feature.WASTEBIN })
 @ConfigBy(FormStagingTest.class)
 public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> implements ConfigModifier {
+	public final static String EXTERNAL_FORM_ID = "this-is-an-external-id";
+
 	protected ObjectNode originalData;
 
 	protected ObjectNode modifiedData;
@@ -180,6 +185,75 @@ public class FormStagingTest extends AbstractVersionedContentStagingTest<Form> i
 	@Test
 	@Ignore("Test ignored, because there is no legacy method to get forms")
 	public void testLegacyStagingInfo() throws NodeException {
+	}
+
+	@Test
+	public void testImportWithExternalId() throws NodeException {
+		// create object
+		Form stagedObject = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setFolderId(nodeRootFolder.getId());
+			f.setName("External form");
+			f.setExternalId(EXTERNAL_FORM_ID);
+		}).unlock().build();
+		String objectGlobalId = execute(f -> f.getGlobalId().toString(), stagedObject);
+
+		// create package and add object
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		new ContentStagingResourceImpl().add(packageName, type, objectGlobalId, false);
+
+		// delete object in CMS
+		consume(f -> f.delete(true), stagedObject);
+		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
+		assertThat(stagedObject).as("Deleted object").isNull();
+
+		// import the package
+		new ContentStagingResourceImpl().importIntoCms(packageName, 0, false);
+
+		// reload and assert
+		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
+
+		consume(form -> {
+			assertThat(form).as("Staged object").isNotNull().hasFieldOrPropertyWithValue("externalId", EXTERNAL_FORM_ID);
+		}, stagedObject);
+	}
+
+	@Test
+	public void testImportTwiceWithExternalId() throws NodeException {
+		// create object
+		Form stagedObject = create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setFolderId(nodeRootFolder.getId());
+			f.setName("External form");
+			f.setExternalId(EXTERNAL_FORM_ID);
+		}).unlock().build();
+		String objectGlobalId = execute(f -> f.getGlobalId().toString(), stagedObject);
+
+		// create package and add object
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		new ContentStagingResourceImpl().add(packageName, type, objectGlobalId, false);
+
+		// delete object in CMS
+		consume(f -> f.delete(true), stagedObject);
+		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
+		assertThat(stagedObject).as("Deleted object").isNull();
+
+		// create another object with the same external ID
+		create(Form.class, f -> {
+			f.setFormType(FormTypeConfigurationModifier.GENERIC_TYPE);
+			f.setFolderId(nodeRootFolder.getId());
+			f.setName("Second External form");
+			f.setExternalId(EXTERNAL_FORM_ID);
+		}).unlock().build();
+
+		// import the package (should fail)
+		String message = supply(() -> {
+			return I18NHelper.get("content.staging.import.errors", packageName, "1");
+		});
+
+		tryImportContentPackage(packageName, ResponseCode.FAILURE, null, new Message(Message.Type.CRITICAL, message));
 	}
 
 	@Override

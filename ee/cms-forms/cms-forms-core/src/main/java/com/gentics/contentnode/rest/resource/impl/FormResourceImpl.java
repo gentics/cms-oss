@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import static com.gentics.contentnode.rest.util.MiscUtils.NEW_FIELD_CHECKER;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
+import static com.gentics.contentnode.rest.util.MiscUtils.loadAllFormsWithExternalId;
 import static com.gentics.contentnode.rest.util.MiscUtils.loadForm;
 import static com.gentics.contentnode.rest.util.MiscUtils.loadFormWithoutPermissionCheck;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
@@ -356,6 +357,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			Node node = folder.getOwningNode();
 			require(Feature.FORMS, node);
+			nodeId = Integer.toString(node.getId());
 
 			// when an external ID is give, we will try to find the form with the external ID
 			Form toUpdate = null;
@@ -365,30 +367,28 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			if (toUpdate != null) {
 				// when we found the form with external ID, we do an update instead of create
-				Form update = load(Form.class, Integer.toString(toUpdate.getId()), ObjectPermission.edit);
+				Form addressedForm = load(Form.class, Integer.toString(toUpdate.getId()), ObjectPermission.edit);
 
-				if (form.getLanguages() != null) {
-					// check whether the languages are all activated for the node
-					checkLanguages(node, update.getFormType(), form.getLanguages());
+				List<Form> allFormsToUpdate = loadAllFormsWithExternalId(form.getExternalId());
+
+				for (Form update : allFormsToUpdate) {
+					if (form.getLanguages() != null) {
+						// check whether the languages are all activated for the node
+						checkLanguages(node, update.getFormType(), form.getLanguages());
+					}
+
+					update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+					FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+					handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+					update.save();
 				}
 
-				update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
-				FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
-				handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
-				update.save();
-
-				FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
+				FormResponse response = new FormResponse(TRANSFORM2REST.apply(addressedForm.reload()),
 						ResponseInfo.ok("Successfully updated form"));
 
 				trx.success();
 				return response;
 			} else {
-				// copy the ui-schema over to the old-ui-schema
-				JsonNode data = form.getData();
-				if (data instanceof ObjectNode dataObject) {
-					dataObject.set(FormDataUtils.OLD_UI_SCHEMA, dataObject.path(FormDataUtils.UI_SCHEMA));
-				}
-
 				// try to create the form
 				if (!t.getPermHandler().canCreate(folder, Form.class, null)) {
 					throw new InsufficientPrivilegesException(I18NHelper.get("form.nopermission"), null, null,
@@ -413,6 +413,29 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 				// check whether the languages are all activated for the node
 				checkLanguages(node, form.getFormType(),form.getLanguages());
+
+				// update all other forms with the same external ID
+				if (StringUtils.isNotBlank(form.getExternalId())) {
+					List<Form> allFormsToUpdate = loadAllFormsWithExternalId(form.getExternalId());
+					for (Form update : allFormsToUpdate) {
+						if (form.getLanguages() != null) {
+							// check whether the languages are all activated for the node
+							checkLanguages(update.getOwningNode(), update.getFormType(), form.getLanguages());
+						}
+
+						update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
+						FormTypeConfiguration config = getFormTypeConfiguration(form.getFormType());
+						handleUiSchemaMerge(update, FormTransformer.transformToInternalLanguageCodes(config, form.getData().deepCopy()));
+						update.save();
+						update.unlock();
+					}
+				}
+
+				// copy the ui-schema over to the old-ui-schema
+				JsonNode data = form.getData();
+				if (data instanceof ObjectNode dataObject) {
+					dataObject.set(FormDataUtils.OLD_UI_SCHEMA, dataObject.path(FormDataUtils.UI_SCHEMA));
+				}
 
 				Form nodeForm = REST2NODE.apply(form, t.createObject(Form.class));
 				nodeForm.setFolderId(folder.getId());
@@ -471,6 +494,20 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			update = REST2NODE.apply(form, t.getObject(update, true));
 			update.save();
 
+			// load other forms with the same external ID
+			if (StringUtils.isNotBlank(update.getExternalId())) {
+				List<Form> allFormsToUpdate = loadAllFormsWithExternalId(update.getExternalId());
+				for (Form otherFormToUpdate : allFormsToUpdate) {
+					if (otherFormToUpdate.equals(update)) {
+						continue;
+					}
+
+					otherFormToUpdate = REST2NODE.apply(form, t.getObject(otherFormToUpdate, true));
+					otherFormToUpdate.save();
+					otherFormToUpdate.unlock();
+				}
+			}
+
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
 					ResponseInfo.ok("Successfully updated form"));
 
@@ -506,7 +543,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toPublish = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toPublish.getFolder().getOwningNode());
 
-			t.getObject(toPublish, true).publish(at, keepVersion);
+			if (StringUtils.isNotBlank(toPublish.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(toPublish.getExternalId())) {
+					t.getObject(f, true).publish(at, keepVersion);
+				}
+			} else {
+				t.getObject(toPublish, true).publish(at, keepVersion);
+			}
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toPublish.reload()),
 					ResponseInfo.ok("Successfully published form"));
@@ -526,7 +569,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toTakeOffline = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toTakeOffline.getFolder().getOwningNode());
 
-			t.getObject(toTakeOffline, true).takeOffline(at);
+			if (StringUtils.isNotBlank(toTakeOffline.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					t.getObject(f, true).takeOffline(at);
+				}
+			} else {
+				t.getObject(toTakeOffline, true).takeOffline(at);
+			}
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toTakeOffline.reload()),
 					ResponseInfo.ok("Successfully taken form offline"));
@@ -544,7 +593,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
-			toChangeTimemanagement.clearTimePub();
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					f.clearTimePub();
+				}
+			} else {
+				toChangeTimemanagement.clearTimePub();
+			}
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toChangeTimemanagement.reload()),
 					ResponseInfo.ok("Successfully taken form offline"));
@@ -562,7 +617,13 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
-			toChangeTimemanagement.clearTimeOff();
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
+				for (Form f : loadAllFormsWithExternalId(formId)) {
+					f.clearTimeOff();
+				}
+			} else {
+				toChangeTimemanagement.clearTimeOff();
+			}
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(toChangeTimemanagement.reload()),
 					ResponseInfo.ok("Successfully taken form offline"));

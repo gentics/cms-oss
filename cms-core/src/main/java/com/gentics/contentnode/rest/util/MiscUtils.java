@@ -454,6 +454,25 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Load all forms with the given external ID
+	 * @param externalId external ID
+	 * @return list of forms with the external ID
+	 * @throws NodeException
+	 */
+	public static List<Form> loadAllFormsWithExternalId(String externalId) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		// try loading the form with external ID in the given node
+		List<Integer> formIds = DBUtils.select(
+				"SELECT form.id FROM form LEFT JOIN folder ON form.folder_id = folder.id WHERE form.external_id = ? " + Wastebin.EXCLUDE.filterClause("form"),
+				pst -> {
+					pst.setString(1, externalId);
+				}, DBUtils.IDLIST);
+
+		return t.getObjects(Form.class, formIds);
+	}
+
+	/**
 	 * Load a form with internal or external id and check the view permission (and other optional permissions)
 	 * When the object is not found, an {@link EntityNotFoundException} is thrown (if flag expectExistence is true), or null will be returned.
 	 * When the transaction does not provide sufficient permissions an {@link InsufficientPrivilegesException} is thrown.

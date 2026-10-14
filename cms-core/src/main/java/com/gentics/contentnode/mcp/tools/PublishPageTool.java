@@ -74,8 +74,9 @@ public class PublishPageTool extends AbstractMcpTool {
 	public Tool tool() {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 		properties.put(ARG_AT, schema("integer", "Unix timestamp in seconds to publish at. Omit to publish now.",
 				"minimum", 0));
 		properties.put(ARG_ALL_LANGUAGES, schema("boolean", "Also publish the other language variants.", "default",
@@ -103,8 +104,9 @@ public class PublishPageTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		int id = Args.id(arguments, ARG_PAGE_ID);
+		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
 		int at = intArg(arguments, ARG_AT, 0, Integer.MAX_VALUE, 0);
 		PagePublishRequest request = new PagePublishRequest();
 		request.setAt(at);
@@ -114,10 +116,10 @@ public class PublishPageTool extends AbstractMcpTool {
 		Writes.logIdempotencyKey(NAME, id, arguments);
 
 		PageResource pageResource = RestPermissions.guard(PageResource.class, new PageResourceImpl());
-		GenericResponse response = pageResource.publish(Integer.toString(id), null, request);
+		GenericResponse response = pageResource.publish(Integer.toString(id), nodeId, request);
 		requireOk(response, "Page %d was not published".formatted(id));
 
-		return result(Writes.readBack(pageResource, id), at, messages(response));
+		return result(Writes.readBack(pageResource, id, nodeId), at, messages(response));
 	}
 
 	/**

@@ -116,8 +116,9 @@ public class AddPageTagTool extends AbstractMcpTool {
 
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 		properties.put(ARG_CONSTRUCT_KEYWORD, schema("string", "Keyword of the construct.", "maxLength", 100));
 		properties.put(ARG_CONSTRUCT_ID, schema("integer", "ID of the construct.", "minimum", 1));
 		properties.put(ARG_TAG_NAME, schema("string",
@@ -145,7 +146,7 @@ public class AddPageTagTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		Request request = Request.of(arguments);
 		Writes.logIdempotencyKey(NAME, request.pageId(), arguments);
 

@@ -53,8 +53,9 @@ public class TakeOfflineTool extends AbstractMcpTool {
 	public Tool tool() {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 		properties.put(ARG_AT, schema("integer", "Unix timestamp in seconds to take the page offline at. Omit for now.",
 				"minimum", 0));
 		properties.put(ARG_ALL_LANGUAGES, schema("boolean", "Also take the other language variants offline.",
@@ -77,7 +78,7 @@ public class TakeOfflineTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		int id = Args.id(arguments, ARG_PAGE_ID);
 		int at = intArg(arguments, ARG_AT, 0, Integer.MAX_VALUE, 0);
 		PageOfflineRequest request = new PageOfflineRequest();
@@ -89,7 +90,7 @@ public class TakeOfflineTool extends AbstractMcpTool {
 		requireOk(pageResource.takeOffline(Integer.toString(id), request),
 				"Page %d was not taken offline".formatted(id));
 
-		return result(Writes.readBack(pageResource, id), at);
+		return result(Writes.readBack(pageResource, id, intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE)), at);
 	}
 
 	/**

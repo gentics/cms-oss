@@ -50,8 +50,9 @@ public class RestorePageVersionTool extends AbstractMcpTool {
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
 		properties.put(ARG_VERSION, schema("integer", "Version timestamp, as returned by get_page_versions.", "minimum",
 				1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 		properties.put(Writes.ARG_IDEMPOTENCY_KEY, schema("string",
 				"Optional client-supplied key for correlating retries. Logged only, calls are not de-duplicated.",
 				"maxLength", Writes.MAX_IDEMPOTENCY_KEY_LENGTH));
@@ -69,7 +70,7 @@ public class RestorePageVersionTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		int id = Args.id(arguments, ARG_PAGE_ID);
 		int version = Args.id(arguments, ARG_VERSION);
 		Writes.logIdempotencyKey(NAME, id, arguments);
@@ -91,7 +92,8 @@ public class RestorePageVersionTool extends AbstractMcpTool {
 			releaseLock(Page.class, Integer.toString(id));
 		}
 
-		return new Result(PageInfo.of(Writes.readBack(pageResource, id)), VersionInfo.of(restored));
+		return new Result(PageInfo.of(Writes.readBack(pageResource, id,
+				intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE))), VersionInfo.of(restored));
 	}
 
 	/**

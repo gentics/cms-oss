@@ -113,8 +113,8 @@ public class UploadFileTool extends AbstractMcpTool {
 
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_FOLDER_ID, schema("integer", "ID of the folder.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to create the file in, as a local file. "
+				+ "Default: the folder's node.", "minimum", 1));
 		properties.put(ARG_NAME, schema("string", "Filename, with extension.", "minLength", 1, "maxLength", 255));
 		properties.put(ARG_MEDIA_TYPE, schema("string",
 				"IANA media type, e.g. image/jpeg. Only used to add an extension to a name without one.", "maxLength",
@@ -147,8 +147,8 @@ public class UploadFileTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
 		int folderId = Args.id(arguments, ARG_FOLDER_ID);
+		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
 		String name = stringArg(arguments, ARG_NAME, 1, 255);
 		if (name == null) {
 			throw new IllegalArgumentException("Missing required argument '%s'".formatted(ARG_NAME));
@@ -162,13 +162,17 @@ public class UploadFileTool extends AbstractMcpTool {
 		byte[] data = url == null ? decode(source) : null;
 		Writes.logIdempotencyKey(NAME, folderId, arguments);
 
+		if (nodeId != null) {
+			Writes.folderInNode(folderId, nodeId);
+		}
 		boolean exists = checkFolder(folderId, fileName, overwrite);
 		if (url != null) {
 			data = UrlSources.fetch(url);
 		}
 
 		FileUploadResponse response = RestPermissions.guard(FileResource.class, new FileResourceImpl())
-				.createSimple(request(data), folderId, 0, null, fileName, description, overwrite);
+				.createSimple(request(data), folderId, nodeId != null ? nodeId : 0, null, fileName, description,
+						overwrite);
 		requireOk(response, "The file was not uploaded to folder %d".formatted(folderId));
 
 		com.gentics.contentnode.rest.model.File file = response.getFile();
@@ -180,7 +184,7 @@ public class UploadFileTool extends AbstractMcpTool {
 			requireOk(image, "The image %d could not be loaded".formatted(file.getId()));
 			file = image.getImage();
 		}
-		return new Result(new UploadedFile(FileInfo.of(file, null), isImage), !exists);
+		return new Result(new UploadedFile(FileInfo.of(file, nodeId), isImage), !exists);
 	}
 
 	/**

@@ -47,8 +47,9 @@ public class DeletePageTool extends AbstractMcpTool {
 	public Tool tool() {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 
 		return Tool.builder().name(NAME).title("Delete page")
 				.description("Moves a page to the wastebin, where it remains restorable by a human in the CMS. It is "
@@ -63,18 +64,23 @@ public class DeletePageTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		int id = Args.id(arguments, ARG_PAGE_ID);
+		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
 
 		PageResource pageResource = RestPermissions.guard(PageResource.class, new PageResourceImpl());
 		// the ref is taken before the delete, and the load checks that the caller can view the page
 		PageLoadResponse loaded = pageResource.load(Integer.toString(id), false, false, true, false, false, false,
-				false, false, false, false, null, null);
+				false, false, false, false, nodeId, null);
 		requireOk(loaded, "The page %d could not be loaded".formatted(id));
 		ObjectRef ref = ObjectRef.forPage(loaded.getPage());
 
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Page page = trx.getTransaction().getObject(Page.class, id);
+			if (!page.isMaster()) {
+				throw new IllegalArgumentException("Page %d is a localized copy, which the CMS cannot delete. "
+						.formatted(id) + "Have it unlocalized in the CMS instead.");
+			}
 			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.WASTEBIN, page.getOwningNode())) {
 				throw new IllegalArgumentException("The node of page %d has no wastebin, so the page would be deleted "
 						.formatted(id) + "permanently. delete_page only moves pages to the wastebin.");
@@ -82,7 +88,7 @@ public class DeletePageTool extends AbstractMcpTool {
 			trx.success();
 		}
 
-		requireOk(pageResource.delete(Integer.toString(id), null, null), "Page %d was not deleted".formatted(id));
+		requireOk(pageResource.delete(Integer.toString(id), nodeId, null), "Page %d was not deleted".formatted(id));
 		return new Result(ref, true, true);
 	}
 

@@ -37,9 +37,9 @@ public class TakeOfflineToolTest {
 	}
 
 	@Test
-	public void testRejectsChannel() {
-		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 4711, "nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("support nodeId");
+	public void testRejectsInvalidNodeId() {
+		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 4711, "nodeId", 0), Optional.empty()))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
 	}
 
 	@Test

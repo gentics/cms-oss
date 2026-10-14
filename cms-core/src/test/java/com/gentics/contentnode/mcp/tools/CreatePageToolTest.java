@@ -44,10 +44,9 @@ public class CreatePageToolTest {
 	}
 
 	@Test
-	public void testRejectsChannel() {
-		assertThatThrownBy(() -> tool.invoke(with("nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("create_page does not yet support nodeId");
+	public void testRejectsInvalidNodeId() {
+		assertThatThrownBy(() -> tool.invoke(with("nodeId", 0), Optional.empty()))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
 	}
 
 	@Test

@@ -10,6 +10,7 @@ import com.gentics.contentnode.mcp.AbstractMcpTool;
 import com.gentics.contentnode.mcp.model.PageInfo;
 import com.gentics.contentnode.mcp.util.ChangedFields;
 import com.gentics.contentnode.mcp.util.RestPermissions;
+import com.gentics.contentnode.mcp.util.Writes;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.rest.model.request.PageSaveRequest;
 import com.gentics.contentnode.rest.resource.PageResource;
@@ -85,12 +86,6 @@ public class UpdatePagePropertiesTool extends AbstractMcpTool {
 	public static final int MAX_IDEMPOTENCY_KEY_LENGTH = 128;
 
 	/**
-	 * Error message for a call with {@link #ARG_NODE_ID}
-	 */
-	static final String NODE_ID_NOT_SUPPORTED = "update_page_properties does not yet support nodeId "
-			+ "(multichannelling); call it without nodeId, or wait for that support to be added.";
-
-	/**
 	 * The fields this tool can change, named like the arguments that change them, for computing
 	 * {@code changedFields}
 	 */
@@ -109,7 +104,8 @@ public class UpdatePagePropertiesTool extends AbstractMcpTool {
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page to update.", "minimum", 1));
 		properties.put(ARG_NODE_ID, schema("integer",
-				"ID of the node/channel to update the page in. Not supported yet: calls that set it are rejected.",
+				"ID of the node/channel to update the page in: the page as that node sees it, its localized copy if "
+						+ "the node has one. A page the node only inherits is refused.",
 				"minimum", 1));
 		properties.put(ARG_NAME, schema("string", "New name of the page.", "minLength", 1, "maxLength",
 				MAX_NAME_LENGTH));
@@ -148,11 +144,7 @@ public class UpdatePagePropertiesTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		if (arguments.containsKey(ARG_NODE_ID)) {
-			// rejected rather than ignored: silently ignoring an explicit channel on a write could edit
-			// the wrong page variant
-			throw new IllegalArgumentException(NODE_ID_NOT_SUPPORTED);
-		}
+		arguments = Writes.pageInNode("update_page_properties", arguments, ARG_PAGE_ID);
 
 		// validate all arguments before the page is loaded (and locked)
 		UpdateRequest update = UpdateRequest.of(arguments);
@@ -182,7 +174,8 @@ public class UpdatePagePropertiesTool extends AbstractMcpTool {
 
 		// step 3: reload, save() does not return the page
 		com.gentics.contentnode.rest.model.Page after = pageResource
-				.load(id, false, false, true, true, false, false, true, true, false, false, null, null).getPage();
+				.load(id, false, false, true, true, false, false, true, true, false, false,
+						intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE), null).getPage();
 
 		return new UpdatePagePropertiesResult(PageInfo.of(after), before.diff(after));
 	}

@@ -41,12 +41,6 @@ public class CreateFolderToolTest {
 		assertRejected(tool, with("motherId", 57));
 	}
 
-	@Test
-	public void testRejectsChannel() {
-		assertThatThrownBy(() -> tool.invoke(with("nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("create_folder does not yet support nodeId");
-	}
 
 	@Test
 	public void testRejectsCallWithoutCredentials() {

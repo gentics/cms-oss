@@ -74,8 +74,8 @@ public class CreatePageTool extends AbstractMcpTool {
 		properties.put(ARG_NAME, schema("string", "Name of the page.", "minLength", 1, "maxLength", 255));
 		properties.put(ARG_LANGUAGE, schema("string", "Language code, one of the node's languages.", "minLength", 2,
 				"maxLength", 10));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to create the page in, as a local page. "
+				+ "Default: the folder's node.", "minimum", 1));
 		properties.put(ARG_FILE_NAME, schema("string",
 				"Filename. The template's extension is appended if missing, unless forceExtension.", "maxLength", 255));
 		properties.put(ARG_DESCRIPTION, schema("string", "Description.", "maxLength", 4000));
@@ -104,9 +104,11 @@ public class CreatePageTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
 		PageCreateRequest request = request(arguments);
 		int folderId = Integer.parseInt(request.getFolderId());
+		if (request.getNodeId() != null) {
+			Writes.folderInNode(folderId, request.getNodeId());
+		}
 		Writes.logIdempotencyKey(NAME, folderId, arguments);
 
 		checkLanguageAndTemplate(folderId, request.getLanguage(), request.getTemplateId());
@@ -118,7 +120,7 @@ public class CreatePageTool extends AbstractMcpTool {
 		int id = response.getPage().getId();
 		releaseLock(Page.class, Integer.toString(id));
 
-		return new Result(PageInfo.of(Writes.readBack(pageResource, id)), true);
+		return new Result(PageInfo.of(Writes.readBack(pageResource, id, request.getNodeId())), true);
 	}
 
 	/**
@@ -138,6 +140,7 @@ public class CreatePageTool extends AbstractMcpTool {
 		request.setTemplateId(templateId);
 		request.setPageName(name);
 		request.setLanguage(language);
+		request.setNodeId(intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE));
 		request.setFileName(stringArg(arguments, ARG_FILE_NAME, 0, 255));
 		request.setDescription(stringArg(arguments, ARG_DESCRIPTION, 0, 4000));
 		request.setNiceUrl(stringArg(arguments, ARG_NICE_URL, 0, 500));

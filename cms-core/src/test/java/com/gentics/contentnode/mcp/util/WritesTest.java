@@ -23,22 +23,17 @@ import com.gentics.contentnode.rest.resource.PageResource;
  */
 public class WritesTest {
 	@Test
-	public void testRejectNodeId() {
-		assertThatThrownBy(() -> Writes.rejectChannel("create_page", Map.of("nodeId", 2)))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage("create_page does not yet support nodeId (multichannelling); call it without nodeId, "
-						+ "or wait for that support to be added.");
+	public void testPageInNodeWithoutNodeId() throws Exception {
+		Map<String, Object> arguments = Map.of("pageId", 4711);
+		assertThat(Writes.pageInNode("publish_page", arguments, "pageId")).isSameAs(arguments);
 	}
 
 	@Test
-	public void testRejectChannelId() {
-		assertThatThrownBy(() -> Writes.rejectChannel("translate_page", Map.of("channelId", 2)))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("support channelId");
-	}
-
-	@Test
-	public void testNoChannel() {
-		assertThatCode(() -> Writes.rejectChannel("create_page", Map.of("folderId", 2))).doesNotThrowAnyException();
+	public void testPageInNodeRejectsInvalidNodeId() {
+		assertThatThrownBy(() -> Writes.pageInNode("publish_page", Map.of("pageId", 4711, "nodeId", 0), "pageId"))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
+		assertThatThrownBy(() -> Writes.pageInNode("publish_page", Map.of("pageId", 0, "nodeId", 1), "pageId"))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("pageId");
 	}
 
 	@Test
@@ -60,7 +55,7 @@ public class WritesTest {
 					return new PageLoadResponse(null, new ResponseInfo(ResponseCode.OK, ""), page);
 				});
 
-		assertThat(Writes.readBack(resource, 7)).isSameAs(page);
+		assertThat(Writes.readBack(resource, 7, null)).isSameAs(page);
 		// id, update, template, folder, langvars, pagevars, workflow, translationstatus, versioninfo, disinherited,
 		// construct, nodeId, package
 		assertThat(args).containsExactly("7", false, false, true, true, false, true, true, true, false, false, null,
@@ -74,6 +69,6 @@ public class WritesTest {
 				(proxy, method, methodArgs) -> new PageLoadResponse(null,
 						new ResponseInfo(ResponseCode.NOTFOUND, ""), null));
 
-		assertThatThrownBy(() -> Writes.readBack(resource, 7)).hasMessageContaining("Page 7");
+		assertThatThrownBy(() -> Writes.readBack(resource, 7, null)).hasMessageContaining("Page 7");
 	}
 }

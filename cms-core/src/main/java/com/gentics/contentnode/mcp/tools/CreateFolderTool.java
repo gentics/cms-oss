@@ -97,7 +97,6 @@ public class CreateFolderTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
 		FolderCreateRequest request = request(arguments);
 		int parentFolderId = Integer.parseInt(request.getMotherId());
 		Writes.logIdempotencyKey(NAME, parentFolderId, arguments);

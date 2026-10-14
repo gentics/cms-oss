@@ -58,10 +58,10 @@ public class TranslatePageTool extends AbstractMcpTool {
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the source page.", "minimum", 1));
 		properties.put(ARG_LANGUAGE, schema("string", "Code of the target language, one of the node's languages.",
 				"minLength", 2, "maxLength", 10));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
-		properties.put(ARG_CHANNEL_ID, schema("integer", "Not supported yet: calls that set it are rejected.",
-				"minimum", 1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to read the source page in: the page as that "
+				+ "node sees it, its localized copy if the node has one.", "minimum", 1));
+		properties.put(ARG_CHANNEL_ID, schema("integer", "Channel to create the variant in, as a local page. Default: "
+				+ "nodeId.", "minimum", 1));
 		properties.put(ARG_LOCKED, schema("boolean",
 				"Ignored: the variant is always returned unlocked, update_page_tags takes the lock itself.", "default",
 				true));
@@ -83,8 +83,12 @@ public class TranslatePageTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
 		int id = Args.id(arguments, ARG_PAGE_ID);
+		Integer nodeId = intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE);
+		Integer channelId = intArg(arguments, ARG_CHANNEL_ID, 1, Integer.MAX_VALUE);
+		if (channelId == null) {
+			channelId = nodeId;
+		}
 		String language = stringArg(arguments, ARG_LANGUAGE, 2, 10);
 		if (language == null) {
 			throw new IllegalArgumentException("Missing required argument '%s'".formatted(ARG_LANGUAGE));
@@ -92,18 +96,22 @@ public class TranslatePageTool extends AbstractMcpTool {
 		// validated, but ignored
 		booleanArg(arguments, ARG_LOCKED, true);
 		Writes.logIdempotencyKey(NAME, id, arguments);
+		if (nodeId != null) {
+			// the source is only read, so a page the node inherits is fine
+			id = Writes.pageInNode(NAME, id, nodeId, true);
+		}
 
 		PageResource pageResource = RestPermissions.guard(PageResource.class, new PageResourceImpl());
 		PageLoadResponse source = pageResource.load(Integer.toString(id), false, false, true, true, false, false,
-				false, false, false, false, null, null);
+				false, false, false, false, channelId, null);
 		requireOk(source, "The page %d could not be loaded".formatted(id));
 
 		checkLanguage(id, language);
 
-		PageLoadResponse translated = pageResource.translate(id, language, false, 0);
+		PageLoadResponse translated = pageResource.translate(id, language, false, channelId != null ? channelId : 0);
 		requireOk(translated, "Page %d was not translated into '%s'".formatted(id, language));
 
-		return new Result(PageInfo.of(Writes.readBack(pageResource, translated.getPage().getId())),
+		return new Result(PageInfo.of(Writes.readBack(pageResource, translated.getPage().getId(), channelId)),
 				ObjectRef.forPage(source.getPage()), !hasVariant(source.getPage(), language));
 	}
 

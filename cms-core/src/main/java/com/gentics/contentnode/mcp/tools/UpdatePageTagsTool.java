@@ -206,8 +206,9 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 
 		Map<String, Object> properties = new LinkedHashMap<>();
 		properties.put(ARG_PAGE_ID, schema("integer", "ID of the page.", "minimum", 1));
-		properties.put(ARG_NODE_ID, schema("integer", "Not supported yet: calls that set it are rejected.", "minimum",
-				1));
+		properties.put(ARG_NODE_ID, schema("integer", "Node (channel) to change the page in: the page as that node "
+				+ "sees it, its localized copy if the node has one. A page the node only inherits is refused.",
+				"minimum", 1));
 		properties.put(ARG_TAGS, schema("object", "Keyed by tag name (CMS Tag.name), e.g. content or genaix_hero_1.",
 				"minProperties", 1, "maxProperties", MAX_ITEMS, "additionalProperties",
 				schema("object", null, "properties", tagProperties, "required", List.of("properties"),
@@ -239,7 +240,7 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 
 	@Override
 	protected Object invoke(Map<String, Object> arguments, Optional<Session> session) throws Exception {
-		Writes.rejectChannel(NAME, arguments);
+		arguments = Writes.pageInNode(NAME, arguments, ARG_PAGE_ID);
 		Request request = Request.of(arguments);
 		Writes.logIdempotencyKey(NAME, request.pageId(), arguments);
 		String id = Integer.toString(request.pageId());
@@ -265,7 +266,8 @@ public class UpdatePageTagsTool extends AbstractMcpTool {
 			return pageResource.save(id, save);
 		});
 
-		Page after = Writes.readBack(pageResource, request.pageId());
+		Page after = Writes.readBack(pageResource, request.pageId(),
+				intArg(arguments, ARG_NODE_ID, 1, Integer.MAX_VALUE));
 		List<String> differences = differences(request.tags(), tags(after));
 		if (!differences.isEmpty()) {
 			throw new IllegalStateException("Page %s was saved, but these values read back differently: %s"

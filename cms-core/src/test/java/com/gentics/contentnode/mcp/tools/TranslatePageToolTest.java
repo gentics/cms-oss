@@ -37,12 +37,9 @@ public class TranslatePageToolTest {
 	}
 
 	@Test
-	public void testRejectsChannel() {
-		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 4711, "language", "en", "nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("support nodeId");
-		assertThatThrownBy(
-				() -> tool.invoke(Map.of("pageId", 4711, "language", "en", "channelId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("support channelId");
+	public void testRejectsInvalidNodeId() {
+		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 4711, "language", "en", "nodeId", 0), Optional.empty()))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
 	}
 
 	@Test

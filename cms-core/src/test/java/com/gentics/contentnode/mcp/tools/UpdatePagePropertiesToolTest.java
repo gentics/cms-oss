@@ -143,17 +143,12 @@ public class UpdatePagePropertiesToolTest {
 
 	/**
 	 * No transaction or session exists here, so any attempt to load the page would fail with a
-	 * different error. Getting the nodeId message (even with an otherwise invalid pageId) shows the
-	 * call is rejected before anything else happens.
+	 * different error. Getting the nodeId message shows the call is rejected before anything else happens.
 	 */
 	@Test
-	public void testRejectsNodeIdBeforeTouchingTheCms() {
-		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 1, "nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage(UpdatePagePropertiesTool.NODE_ID_NOT_SUPPORTED);
-		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", -5, "nodeId", 2), Optional.empty()))
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessage(UpdatePagePropertiesTool.NODE_ID_NOT_SUPPORTED);
+	public void testRejectsInvalidNodeIdBeforeTouchingTheCms() {
+		assertThatThrownBy(() -> tool.invoke(Map.of("pageId", 1, "nodeId", 0), Optional.empty()))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
 	}
 
 	@Test

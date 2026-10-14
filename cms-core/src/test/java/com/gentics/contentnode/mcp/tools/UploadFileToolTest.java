@@ -44,10 +44,10 @@ public class UploadFileToolTest {
 	}
 
 	@Test
-	public void testRejectsChannel() {
-		assertThatThrownBy(() -> tool.invoke(Map.of("folderId", 7, "nodeId", 2, "name", "a.txt", "source",
-				Map.of("kind", "base64", "data", DATA)), Optional.empty())).isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("support nodeId");
+	public void testRejectsInvalidNodeId() {
+		assertThatThrownBy(() -> tool.invoke(Map.of("folderId", 7, "nodeId", 0, "name", "a.txt", "source",
+				Map.of("kind", "base64", "data", DATA)), Optional.empty()))
+				.isInstanceOf(IllegalArgumentException.class).hasMessageContaining("nodeId");
 	}
 
 	@Test

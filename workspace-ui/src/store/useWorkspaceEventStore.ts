@@ -114,6 +114,13 @@ export interface SessionLiveState {
     runs?: LiveRun[];
     /** The active run, the latest of `runs`; absent or `null` while none runs. */
     run?: LiveRun | null;
+    /**
+     * Runs the server accepted (`run_id` of `MessageAccepted`, `SessionCreated`, `TransitionAccepted`)
+     * that the stream has not told about yet (`awaitRun`).
+     */
+    awaitedRunIds?: string[];
+    /** Every run the stream has told about, so a run whose events came before its `202` is not awaited. */
+    seenRunIds?: string[];
     notices?: RunNotice[];
     /** Interactions waiting for an answer (`interaction.requested`, not resolved yet). */
     interactions?: Interaction[];
@@ -178,10 +185,14 @@ export function selectSession(sessionId: string) {
 }
 
 /**
- * Whether the session's agent is at work: a run that does not wait for the user, or a turn on its way
- * before its run has started.
+ * Whether the session's agent is at work: a run that does not wait for the user, a turn on its way,
+ * or a run the server accepted that the stream has not told about yet (`awaitedRunIds`).
  */
-export function isSessionWorking({ run, messages }: Pick<SessionLiveState, 'run' | 'messages'>): boolean {
+export function isSessionWorking({ run, messages, awaitedRunIds }: Pick<SessionLiveState, 'run' | 'messages' | 'awaitedRunIds'>): boolean {
+    if (awaitedRunIds?.length) {
+        return true;
+    }
+
     if (run) {
         return run.status !== 'waiting_for_input';
     }
@@ -453,6 +464,16 @@ function applyToSession(session: SessionLiveState, event: GenaixEvent): SessionL
         next.run = runs.at(-1) ?? null;
     }
 
+    // The stream told about this run: it is not awaited any more (`awaitRun`).
+    const eventRunId = event.type === 'run.started' || event.type === 'run.completed' || event.type === 'run.failed' || event.type === 'run.cancelled'
+        ? event.run.id
+        : event.run_id;
+
+    if (eventRunId && !session.seenRunIds?.includes(eventRunId)) {
+        next.seenRunIds = [...(session.seenRunIds ?? []), eventRunId];
+        next.awaitedRunIds = session.awaitedRunIds?.filter((id) => id !== eventRunId);
+    }
+
     if (notice) {
         next.notices = [...(session.notices ?? []), notice];
     }
@@ -535,6 +556,12 @@ export const useWorkspaceEventStore = create<WorkspaceEventState>((set) => ({
         ...session,
         connection,
     }))),
+
+    awaitRun: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => (
+        session.seenRunIds?.includes(runId) || session.awaitedRunIds?.includes(runId)
+            ? session
+            : { ...session, awaitedRunIds: [...(session.awaitedRunIds ?? []), runId] }
+    ))),
 
     markRunCancelling: (sessionId, runId) => set((state) => updateSession(state.sessions, sessionId, (session) => {
         if (!session.runs?.some(({ id }) => id === runId)) {

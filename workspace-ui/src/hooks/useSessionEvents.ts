@@ -110,21 +110,53 @@ export function useSessionEvents(sessionId: string | undefined, onEvent?: (event
                 onEvent: (event) => {
                     pending.push(event);
 
-                if (event.type === 'message.completed') {
-                    persistedMessageKeys(selectSession(sessionId)(store())).forEach((key) => toClear.add(key));
-                    void refetchAndClear();
+                    if (pending.length === 1) {
+                        requestAnimationFrame(flush);
+                    }
+                },
+                onPruned: async () => {
+                    // What the previous connection brought goes first, so it cannot land after the reset.
+                    flush();
+                    store().resetSession(sessionId!);
+                    // The plans are not in the history; without them the stream would bring back only the
+                    // plans whose events are still kept. A failed read leaves those (contract, "Retention").
+                    await Promise.all([
+                        queryClient.invalidateQueries({ queryKey: messagesKey }),
+                        reloadPlans(sessionId!).catch((error: unknown) => console.warn('Reading the plans again failed', error)),
+                    ]);
+                },
+            });
+        }
+
+        // The whole session at once, then live after it (see above).
+        async function loadThenFollow() {
+            try {
+                const { active_run_id: activeRunId, side_run_id: sideRunId } = await getSession(sessionId!);
+
+                if (!activeRunId && !sideRunId) {
+                    const events = await replaySessionEvents({ sessionId: sessionId!, signal: controller.signal });
+
+                    // One by one rather than spread: a long session has more events than a call takes arguments.
+                    events.forEach((event) => pending.push(event));
+                    flush();
                 }
-            },
-            onPruned: async () => {
-                store().resetSession(sessionId);
-                // The plans are not in the history; without them the stream would bring back only the
-                // plans whose events are still kept. A failed read leaves those (contract, "Retention").
-                await Promise.all([
-                    queryClient.invalidateQueries({ queryKey: messagesKey }),
-                    reloadPlans(sessionId).catch((error: unknown) => console.warn('Reading the plans again failed', error)),
-                ]);
-            },
-        });
+            } catch (error) {
+                if (!controller.signal.aborted) {
+                    console.warn('Loading the session at once failed; following its stream instead', error);
+                }
+            }
+
+            if (!controller.signal.aborted) {
+                setLoadedSessionId(sessionId);
+                follow();
+            }
+        }
+
+        if (loadFirst && isUnloaded(selectSession(sessionId)(store()))) {
+            void loadThenFollow();
+        } else {
+            follow();
+        }
 
         return () => controller.abort();
     }, [sessionId, queryClient, loadFirst]);

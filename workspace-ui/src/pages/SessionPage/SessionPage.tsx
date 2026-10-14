@@ -17,6 +17,7 @@ import { useOpenPlan } from '@/hooks/useOpenPlan';
 import { useSessionEvents } from '@/hooks/useSessionEvents';
 import type { InteractionAnswer, UserMessagePart } from '@/services/apiService/genaix/types';
 import { useErrorNotificationStore } from '@/store/useErrorNotificationStore';
+import { isEventLogEnabled, useEventLogStore } from '@/store/useEventLogStore';
 import { useHandOffStore } from '@/store/useHandOffStore';
 import { useInteractionDraftStore } from '@/store/useInteractionDraftStore';
 import { type LivePreview, selectSession, useWorkspaceEventStore } from '@/store/useWorkspaceEventStore';
@@ -201,8 +202,10 @@ function SessionPreview({ sessionId, preview, composerRef }: { sessionId: string
 export function SessionPage() {
     const { id } = useParams({ strict: false });
 
-    // The chat view is the one consumer of the stream (other components read the store).
-    useSessionEvents(id);
+    // The chat view is the one consumer of the stream (other components read the store). With
+    // `npm run dev:debug` every event also goes to the event log beside the chat. A session opened
+    // without live state is loaded whole first (`loadFirst`), so the chat does not replay it.
+    const isLoading = useSessionEvents(id, isEventLogEnabled && id ? (event) => useEventLogStore.getState().add(id, event) : undefined, { loadFirst: true });
     // The chat composer, for the preview to add a part of the page to it.
     const composerRef = useRef<ComposerHandle>(null);
     const preview = useWorkspaceEventStore((state) => (id ? selectSession(id)(state).preview : undefined));
@@ -217,7 +220,7 @@ export function SessionPage() {
     // composer that sends renders only with one.
     const chat = (
         <div className={styles.chat} style={chatStyle}>
-            {id && <ChatStream key={id} sessionId={id} />}
+            {id && <ChatStream key={id} sessionId={id} isLoading={isLoading} />}
             {id && (
                 <div className={styles.dock}>
                     {openPlan && <PlanBar key={openPlan.id} sessionId={id} plan={openPlan} onHeightChange={setPlanBarHeight} />}
@@ -232,7 +235,14 @@ export function SessionPage() {
     return (
         <AppShell
             left={<HistoryColumn />}
-            center={chat}
+            center={isEventLogEnabled && id
+                ? (
+                    <div className={styles.debugRow}>
+                        {chat}
+                        <EventLog key={id} sessionId={id} />
+                    </div>
+                )
+                : chat}
             right={id && preview && <SessionPreview key={id} sessionId={id} preview={preview} composerRef={composerRef} />}
             isRightColumnVisible={Boolean(preview)}
         />

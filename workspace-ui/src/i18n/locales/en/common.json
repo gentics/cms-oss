@@ -244,6 +244,13 @@
             "request_review": "Request review",
             "discard": "Discard"
         },
+        "pending": {
+            "release": "Releasing…",
+            "publish": "Publishing…",
+            "request_review": "Requesting review…",
+            "reopen": "Reopening…",
+            "discard": "Discarding…"
+        },
         "count": {
             "pending_one": "{{count}} page to publish",
             "pending_other": "{{count}} pages to publish",
@@ -667,5 +674,12 @@
         "pick": "Pick a folder",
         "cancel": "Cancel",
         "use": "Use folder"
+    },
+    "eventLog": {
+        "title": "Events",
+        "empty": "No events yet.",
+        "copy": "Copy the JSON of event {{seq}} ({{type}})",
+        "copied": "Event {{seq}} copied",
+        "copyFailed": "The event could not be copied."
     }
 }

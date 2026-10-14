@@ -244,6 +244,13 @@
             "request_review": "Prüfung anfordern",
             "discard": "Verwerfen"
         },
+        "pending": {
+            "release": "Wird freigegeben…",
+            "publish": "Wird veröffentlicht…",
+            "request_review": "Prüfung wird angefordert…",
+            "reopen": "Wird wieder geöffnet…",
+            "discard": "Wird verworfen…"
+        },
         "count": {
             "pending_one": "{{count}} Seite zu veröffentlichen",
             "pending_other": "{{count}} Seiten zu veröffentlichen",
@@ -667,5 +674,12 @@
         "pick": "Ordner auswählen",
         "cancel": "Abbrechen",
         "use": "Ordner verwenden"
+    },
+    "eventLog": {
+        "title": "Events",
+        "empty": "Noch keine Events.",
+        "copy": "JSON von Event {{seq}} ({{type}}) kopieren",
+        "copied": "Event {{seq}} kopiert",
+        "copyFailed": "Das Event konnte nicht kopiert werden."
     }
 }

@@ -18,6 +18,7 @@ import {
     postMessage,
     type SessionFilters,
     transitionPlan,
+    unarchiveSession,
     uploadSessionFile,
 } from '@/services/apiService/apiService';
 import type {
@@ -172,6 +173,7 @@ export interface StartSessionInput {
 // with a `file_ref` part per file (contract, `SessionCreate`). Either way the session is created with
 // its CMS credential (`newSessionCmsAuthorization`), which GenAIx verifies before creating anything,
 // and without a `workflow`: the session agent answers or drafts a plan under the module it picks (rc.4).
+// The run the first message started is awaited (`awaitRun`), so the session view shows it working.
 // Uploads the files into the session, one after the other, and returns a `file_ref` part per file
 // for the message that refers to them.
 async function uploadFileParts(sessionId: string, files: StartFile[], onFileProgress?: StartSessionInput['onFileProgress']): Promise<UserFileRefPart[]> {
@@ -190,7 +192,13 @@ async function startSession({ parts, files, onFileProgress }: StartSessionInput)
     const authorizations = [await newSessionCmsAuthorization()];
 
     if (files.length === 0) {
-        return createSession({ message: { parts }, authorizations });
+        const created = await createSession({ message: { parts }, authorizations });
+
+        if (created.run_id) {
+            useWorkspaceEventStore.getState().awaitRun(created.id, created.run_id);
+        }
+
+        return created;
     }
 
     const session = await createSession({ authorizations });
@@ -265,7 +273,8 @@ export interface TransitionPlanInput {
  * POST /sessions/{session_id}/plans/{plan_id}/transitions, after making sure the session holds a CMS
  * credential (`publish` acts through the session's CMS connection). The plan's new status arrives as
  * `plan.updated` on the event stream; the session lists are refetched, since the to-dos filter on the
- * plan's status. Never retried: a repeated `publish` would start a second run.
+ * plan's status. A transition that runs (`202`) awaits that run (`awaitRun`). Never retried: a
+ * repeated `publish` would start a second run.
  */
 export function useTransitionPlan(sessionId: string) {
     const queryClient = useQueryClient();
@@ -276,7 +285,14 @@ export function useTransitionPlan(sessionId: string) {
 
             return transitionPlan(sessionId, planId, request);
         },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() }),
+        onSuccess: (result) => {
+            // `publish`, `request_review` and a restoring `discard` answer `202` with the run that does it.
+            if ('run_id' in result) {
+                useWorkspaceEventStore.getState().awaitRun(sessionId, result.run_id);
+            }
+
+            return queryClient.invalidateQueries({ queryKey: genaixKeys.sessionLists() });
+        },
         retry: false,
     });
 }

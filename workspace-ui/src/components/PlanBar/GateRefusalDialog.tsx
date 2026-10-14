@@ -1,6 +1,7 @@
 import { CircleAlertIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Problem, TransitionRequest } from '@/services/apiService/genaix/types';
@@ -23,7 +24,8 @@ interface GateRefusalDialogProps {
  * its message, blocking or a warning. A blocking check must be fixed first, so the dialog only closes.
  * With warnings only (`failing_gates` empty), the user can go on anyway: the transition is repeated
  * with `acknowledgeable_checks` as `acknowledge_checks`, which records that they saw them (contract,
- * `TransitionRequest.acknowledge_checks`).
+ * `TransitionRequest.acknowledge_checks`). While that is on its way, the button shows the thinking dots
+ * and what it does ("Releasing…"); a click then is ignored (`PlanHead`).
  */
 export function GateRefusalDialog({ action, problem, isPending, onAcknowledge, onClose }: GateRefusalDialogProps) {
     const { t } = useTranslation();
@@ -59,8 +61,9 @@ export function GateRefusalDialog({ action, problem, isPending, onAcknowledge, o
                 <DialogFooter>
                     <Button variant="secondary" onClick={onClose}>{t('planBar.gate.close')}</Button>
                     {canAcknowledge && (
-                        <Button variant="primary" disabled={isPending} onClick={() => onAcknowledge(acknowledgeable)}>
-                            {t(`planBar.gate.anyway.${action}`)}
+                        <Button variant="primary" aria-busy={isPending || undefined} onClick={() => onAcknowledge(acknowledgeable)}>
+                            {isPending && <ThinkingDots inheritsColor />}
+                            {t(isPending ? `planBar.pending.${action}` : `planBar.gate.anyway.${action}`)}
                         </Button>
                     )}
                 </DialogFooter>

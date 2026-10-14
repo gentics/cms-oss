@@ -174,12 +174,15 @@ function planPlace(entries: Entry[], { runId, afterMessageId }: LivePlan): { aft
  * The agent's avatar and name head each of its blocks (`AgentSender`), so they show first, before
  * its steps, plans and thinking. Follows new content while scrolled to the end. The open plan is in the
  * plan bar above the composer (`PlanBar`, `useOpenPlan`), not in the conversation.
+ *
+ * While the history loads, or while `isLoading` (the session is loaded whole first, `useSessionEvents`),
+ * skeletons stand where the conversation will, so it appears at once rather than piece by piece.
  */
 export function ChatStream({ sessionId, isLoading = false }: { sessionId: string; isLoading?: boolean }) {
     const { t } = useTranslation();
     const history = useSessionMessages(sessionId);
     const openPlan = useOpenPlan(sessionId);
-    const { messages, run, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
+    const { messages, run, awaitedRunIds, notices, interactions, plans, confirmations } = useWorkspaceEventStore(useShallow((state) => {
         const session = selectSession(sessionId)(state);
 
         return {
@@ -299,7 +302,7 @@ export function ChatStream({ sessionId, isLoading = false }: { sessionId: string
         node: <InteractionCard interaction={interaction} sessionId={sessionId} />,
     }));
 
-    if (isSessionWorking({ run, messages })) {
+    if (isSessionWorking({ run, messages, awaitedRunIds })) {
         placed.push({ key: 'thinking', node: <ThinkingIndicator text={run?.statusText} /> });
     }
 

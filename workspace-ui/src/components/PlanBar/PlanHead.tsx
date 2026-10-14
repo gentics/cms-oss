@@ -2,6 +2,7 @@ import { CircleAlertIcon, CircleCheckIcon, EyeIcon, GlobeIcon, type LucideIcon, 
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ThinkingDots } from '@/components/ThinkingIndicator/ThinkingIndicator';
 import { Button } from '@/components/ui/button';
 import { errorMessageKey } from '@/helper/errorMapper/errorMapper';
 import { useTransitionPlan } from '@/hooks/useGenaixQueries';
@@ -71,8 +72,9 @@ interface PlanHeadProps {
  * "2 published, 1 in review") and the transitions its status allows (`ACTIONS`, POST
  * …/plans/{plan_id}/transitions): release also while the plan's run works, which stops it once the
  * gates passed, the others only while no run is active. The new status arrives as `plan.updated`. A
- * transition the quality gates refuse opens `GateRefusalDialog`. Stopping a plan's run is the
- * composer's (`SessionComposer`).
+ * transition the quality gates refuse opens `GateRefusalDialog`. While a transition is on its way (a
+ * `release` waits for the `before_release` gates), its button shows the thinking dots and what it
+ * does ("Releasing…"), the others are disabled. Stopping a plan's run is the composer's (`SessionComposer`).
  */
 export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHeadProps) {
     const { t } = useTranslation();
@@ -82,7 +84,14 @@ export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHe
     // The refused transition, while its dialog is open.
     const [refusal, setRefusal] = useState<{ action: Action; problem: Problem }>();
 
+    // The action whose transition is on its way.
+    const pendingAction = transitionPlan.isPending ? transitionPlan.variables?.request.action : undefined;
+
     function transition(action: Action, acknowledgeChecks?: string[]) {
+        if (transitionPlan.isPending) {
+            return;
+        }
+
         const request: TransitionRequest = { action, ...(acknowledgeChecks && { acknowledge_checks: acknowledgeChecks }) };
 
         transitionPlan.mutateAsync({ planId: plan.id, request }).then(
@@ -120,17 +129,21 @@ export function PlanHead({ sessionId, plan, isInCard = false, children }: PlanHe
             <span className={styles.actions}>
                 {(ACTIONS[plan.status] ?? []).map((action) => {
                     const ActionIcon = ACTION_ICONS[action];
+                    const isPrimary = PRIMARY_ACTIONS.has(action);
+                    // Not disabled, so it does not fade while it shows that it works; `transition` ignores a click.
+                    const isPendingAction = action === pendingAction;
 
                     return (
                         <Button
                             key={action}
-                            variant={PRIMARY_ACTIONS.has(action) ? 'primary' : 'secondary'}
+                            variant={isPrimary ? 'primary' : 'secondary'}
                             size="sm"
-                            disabled={transitionPlan.isPending || (hasRun && action !== 'release')}
+                            disabled={!isPendingAction && (transitionPlan.isPending || (hasRun && action !== 'release'))}
+                            aria-busy={isPendingAction || undefined}
                             onClick={() => transition(action)}
                         >
-                            <ActionIcon size={14} />
-                            {t(`planBar.actions.${action}`)}
+                            {isPendingAction ? <ThinkingDots inheritsColor={isPrimary} /> : <ActionIcon size={14} />}
+                            {t(isPendingAction ? `planBar.pending.${action}` : `planBar.actions.${action}`)}
                         </Button>
                     );
                 })}

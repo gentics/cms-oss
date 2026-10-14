@@ -725,9 +725,9 @@ public class Publisher implements Runnable {
 				if (!prefs.getFeature("override_publish_errors")) {
 					try {
 						logger.error("Error during publish run. Rolling back transaction.", e);
-						renderResult.error(Publisher.class, "Publish run failed. Exiting.", e);
 						myPublishInfo.setReturnCode(PublishInfo.RETURN_CODE_ERROR);
 						myPublishInfo.setError(e);
+						renderResult.error(Publisher.class, "Publish run failed. Exiting.", e);
 					} finally {
 						// rollback also dependencymap2 transaction (this is
 						// important, without this dependencymap2 table will stay

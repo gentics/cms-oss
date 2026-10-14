@@ -420,7 +420,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 					for (Form update : allFormsToUpdate) {
 						if (form.getLanguages() != null) {
 							// check whether the languages are all activated for the node
-							checkLanguages(node, update.getFormType(), form.getLanguages());
+							checkLanguages(update.getOwningNode(), update.getFormType(), form.getLanguages());
 						}
 
 						update = REST2NODE_BASEDATA.apply(form, t.getObject(update, true));
@@ -495,15 +495,17 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			update.save();
 
 			// load other forms with the same external ID
-			List<Form> allFormsToUpdate = loadAllFormsWithExternalId(update.getExternalId());
-			for (Form otherFormToUpdate : allFormsToUpdate) {
-				if (otherFormToUpdate.equals(update)) {
-					continue;
-				}
+			if (StringUtils.isNotBlank(update.getExternalId())) {
+				List<Form> allFormsToUpdate = loadAllFormsWithExternalId(update.getExternalId());
+				for (Form otherFormToUpdate : allFormsToUpdate) {
+					if (otherFormToUpdate.equals(update)) {
+						continue;
+					}
 
-				otherFormToUpdate = REST2NODE.apply(form, t.getObject(otherFormToUpdate, true));
-				otherFormToUpdate.save();
-				otherFormToUpdate.unlock();
+					otherFormToUpdate = REST2NODE.apply(form, t.getObject(otherFormToUpdate, true));
+					otherFormToUpdate.save();
+					otherFormToUpdate.unlock();
+				}
 			}
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(update.reload()),
@@ -567,8 +569,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toTakeOffline = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toTakeOffline.getFolder().getOwningNode());
 
-			// when the given formId is the external ID of the form, we will get all forms with the same
-			if (Strings.CS.equals(formId, toTakeOffline.getExternalId())) {
+			if (StringUtils.isNotBlank(toTakeOffline.getExternalId())) {
 				for (Form f : loadAllFormsWithExternalId(formId)) {
 					t.getObject(f, true).takeOffline(at);
 				}
@@ -592,8 +593,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
-			// when the given formId is the external ID of the form, we will get all forms with the same
-			if (Strings.CS.equals(formId, toChangeTimemanagement.getExternalId())) {
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
 				for (Form f : loadAllFormsWithExternalId(formId)) {
 					f.clearTimePub();
 				}
@@ -617,8 +617,7 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 			Form toChangeTimemanagement = loadForm(formId, nodeId, ObjectPermission.publish);
 			require(Feature.FORMS, toChangeTimemanagement.getFolder().getOwningNode());
 
-			// when the given formId is the external ID of the form, we will get all forms with the same
-			if (Strings.CS.equals(formId, toChangeTimemanagement.getExternalId())) {
+			if (StringUtils.isNotBlank(toChangeTimemanagement.getExternalId())) {
 				for (Form f : loadAllFormsWithExternalId(formId)) {
 					f.clearTimeOff();
 				}

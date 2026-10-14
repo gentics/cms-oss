@@ -7,12 +7,14 @@ import {
     expandTrableRow,
     findTableRowById,
     findTrableRowById,
+    findTrableRowByText,
     GroupImportData,
     IMPORT_ID,
     IMPORT_TYPE,
     IMPORT_TYPE_GROUP,
     loginWithForm,
     navigateToApp,
+    NODE_MINIMAL,
     selectTab,
     TestSize,
     waitForResponseFrom,
@@ -154,7 +156,7 @@ test.describe('Group Module', () => {
             groupId = IMPORTER.get(TEST_GROUP).id;
         });
 
-        async function openAdminPermissions(page: Page): Promise<Locator> {
+        async function openGroupEditor(page: Page): Promise<Locator> {
             const master = await navigateToModule(page, 'groups');
             const row = await findTableRowById(master.locator('gtx-group-table'), groupId);
             await clickTableRow(row);
@@ -162,11 +164,20 @@ test.describe('Group Module', () => {
             const editor = page.locator('gtx-group-detail');
             await expect(editor).toBeVisible();
 
-            const tab = await selectTab(editor.locator('.gtx-entity-detail > gtx-tabs'), 'admin-permissions');
+            return editor;
+        }
+
+        async function openPermissionsTab(editor: Locator, tabId: string): Promise<Locator> {
+            const tab = await selectTab(editor.locator('.gtx-entity-detail > gtx-tabs'), tabId);
             const trable = tab.locator('gtx-permissions-trable');
             await expect(trable).toBeVisible();
 
             return trable;
+        }
+
+        async function openAdminPermissions(page: Page): Promise<Locator> {
+            const editor = await openGroupEditor(page);
+            return openPermissionsTab(editor, 'admin-permissions');
         }
 
         async function getTypePermissions(type: AccessControlledType): Promise<Partial<Record<GcmsPermission, boolean>>> {
@@ -310,6 +321,38 @@ test.describe('Group Module', () => {
                         [GcmsPermission.SET_PERMISSION]: false,
                     });
                 }
+            });
+        });
+
+        test('should display the content row without children in the admin permissions, and keep the content permissions', {
+            annotation: [{
+                type: 'ticket',
+                description: 'SUP-19752',
+            }],
+        }, async ({ page }) => {
+            const editor = await openGroupEditor(page);
+
+            await test.step('Admin permissions contain the content row without children', async () => {
+                const trable = await openPermissionsTab(editor, 'admin-permissions');
+                const contentRow = findTrableRowById(trable, AccessControlledType.CONTENT);
+
+                await expect(contentRow).toBeVisible();
+                await expect(contentRow).not.toContainClass('has-children');
+                await expect(contentRow).not.toContainClass('expandable');
+                await expect(contentRow.locator('.row-expansion icon')).toHaveCount(0);
+
+                // Attempting to expand the row must not do anything
+                await expandTrableRow(contentRow);
+                await expect(contentRow).not.toContainClass('expanded');
+                await expect(trable.locator('gtx-trable .data-row.row-level-1')).toHaveCount(0);
+            });
+
+            await test.step('Content permissions are still displayed', async () => {
+                const trable = await openPermissionsTab(editor, 'content-permissions');
+                const nodeRow = findTrableRowByText(trable, IMPORTER.get(NODE_MINIMAL).name);
+
+                await expect(nodeRow).toBeVisible();
+                await expect(nodeRow).toContainClass('expandable');
             });
         });
     });

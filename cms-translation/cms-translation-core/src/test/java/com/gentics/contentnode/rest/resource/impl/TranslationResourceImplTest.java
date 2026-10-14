@@ -6,6 +6,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,8 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.api.translation.TranslationService;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.InvalidRequestException;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.SystemUser;
@@ -28,6 +31,7 @@ import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.BeforeClass;
@@ -111,9 +115,12 @@ public class TranslationResourceImplTest {
 		try (Trx trx = new Trx(user)) {
 			createTags(pageToTranslate);
 
-			var response = translationResource.translate(pageToTranslate.getId(),
+			Throwable thrown = catchThrowable(() -> translationResource.translate(pageToTranslate.getId(),
 					targetLanguage,
-					true, 0, 0);
+					true, 0, 0));
+			assertThat(thrown).as("Thrown exception").isInstanceOf(RestMappedException.class);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);
+			var response = ((RestMappedException) thrown).getRestResponse();
 
 			assertThat(response.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.FAILURE) ;
 			final var expectedMessage = "The page could not be translated because the markup of the translated page is invalid";
@@ -136,8 +143,11 @@ public class TranslationResourceImplTest {
 		try (Trx trx = new Trx(user)) {
 			createTags(pageToTranslate);
 
-			var response = translationResource.translate(pageToTranslate.getId(),
-					targetLanguage,true, 0, 0);
+			Throwable thrown = catchThrowable(() -> translationResource.translate(pageToTranslate.getId(),
+					targetLanguage,true, 0, 0));
+			assertThat(thrown).as("Thrown exception").isInstanceOf(InvalidRequestException.class);
+			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.BAD_REQUEST);
+			var response = ((RestMappedException) thrown).getRestResponse();
 
 			final var expectedMessage = "Error while translating page: invalid language code";
 			final var actualMessage = response.getResponseInfo().getResponseMessage();

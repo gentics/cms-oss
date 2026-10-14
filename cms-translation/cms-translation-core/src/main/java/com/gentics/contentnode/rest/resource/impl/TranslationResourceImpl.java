@@ -110,7 +110,7 @@ public class TranslationResourceImpl implements TranslationResource {
 		}
 
 		try (Trx trx = ContentNodeHelper.trx()) {
-			return Operator.executeLocked(new CNI18nString("feature.automatic_translation").toString(), waitMs, null, () -> {
+			return Operator.executeLockedRethrowing(new CNI18nString("feature.automatic_translation").toString(), waitMs, null, () -> {
 				final var languageVariantService = new LanguageVariantService();
 				final var loadedPage = languageVariantService.getPage(pageId.toString(), true);
 				final var sourceLanguage = loadedPage.getLanguage();

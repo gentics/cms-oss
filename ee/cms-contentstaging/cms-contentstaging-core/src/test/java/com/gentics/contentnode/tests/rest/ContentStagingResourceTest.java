@@ -2,10 +2,13 @@ package com.gentics.contentnode.tests.rest;
 
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.Builder.update;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponse;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createSession;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createformDataBodyPart;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
@@ -50,6 +53,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.factory.object.SystemUserFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Folder;
@@ -57,6 +61,8 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.SystemUser;
+import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.perm.PermHandler;
@@ -73,6 +79,7 @@ import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ImageLoadResponse;
+import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.StagingStatusResponse;
@@ -89,11 +96,14 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.staging.StagingErrorKind;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.GCNFeature;
+import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
 
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.StreamingOutput;
 
 @GCNFeature(set = { Feature.CONTENT_STAGING, Feature.MULTICHANNELLING })
@@ -657,83 +667,90 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 
 	@Test
 	public void testManageForm() throws Exception {
-		operate(() -> {
-			Transaction t = TransactionManager.getCurrentTransaction();
-			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-			prefs.setFeature(Feature.FORMS.toString().toLowerCase(), true);
-			node1.activateFeature(Feature.FORMS);
-		});
-		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
-		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
-		String packageName = response.getContentPackage().getName();
-		Integer timestamp = response.getContentPackage().getTimestamp();
-//		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
-//		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
-//		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
-		String form1Id = supply(() -> form1.getGlobalId().toString());
-		Folder folder1 = supply(() -> form1.getFolder());
+		boolean formsActivatedBefore = supply(t -> t.getNodeConfig().getDefaultPreferences().isFeature(Feature.FORMS));
+		boolean formsActivatedForNodeBefore = supply(() -> node1.getFeatures().contains(Feature.FORMS));
 
-		// Add form
-		response = assertRequiredPermissions(group, "tester", "tester", restContext, 
-				target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("form").path(form1Id).request().put(Entity.json(StringUtils.EMPTY), ContentPackageLoadResponse.class), 
-				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
-				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
-				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW),
-				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT),
-				ContentNodeTestUtils.perm(folder1, PermType.read),
-				ContentNodeTestUtils.perm(folder1, PermType.viewform));
-
-//		response = supply(() -> {
-//			return new ContentStagingResourceImpl().add(packageName, "page", page11Id, false);
-//		});
-		assertResponseOK(response);
-		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
-		assertThat(response.getContentPackage().getFolders()).isEqualTo(1);
-		assertThat(response.getContentPackage().getPages()).isEqualTo(0);
-		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
-		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
-		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
-		timestamp = response.getContentPackage().getTimestamp();
-
-		// Staging status
-		{
-			FormResponse pageLoad = supply(() -> {
-				return new FormResourceImpl().get(form1Id, packageName);
+		try {
+			operate(() -> {
+				Transaction t = TransactionManager.getCurrentTransaction();
+				NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+				prefs.setFeature(Feature.FORMS.toString().toLowerCase(), true);
+				node1.activateFeature(Feature.FORMS);
 			});
-			assertResponseOK(pageLoad);
-			assertThat(pageLoad.getStagingStatus()).isNotNull();
-			assertThat(pageLoad.getStagingStatus().isIncluded()).isTrue();
-			//assertThat(pageLoad.getStagingStatus().isRecent()).isTrue();
-		}
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+			String packageName = response.getContentPackage().getName();
+			Integer timestamp = response.getContentPackage().getTimestamp();
+	//		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page1.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+	//		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
+	//		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node1.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+			String form1Id = supply(() -> form1.getGlobalId().toString());
+			Folder folder1 = supply(() -> form1.getFolder());
 
-		// Remove form
-		response = assertRequiredPermissions(group, "tester", "tester", restContext, 
-				target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("form").path(form1Id).request().delete(ContentPackageLoadResponse.class), 
-				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
-				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
-				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW),
-				Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT),
-				ContentNodeTestUtils.perm(folder1, PermType.read),
-				ContentNodeTestUtils.perm(folder1, PermType.viewform));
-		assertResponseOK(response);
-		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
-		assertThat(response.getContentPackage().getFolders()).isEqualTo(1);
-		assertThat(response.getContentPackage().getPages()).isEqualTo(0);
-		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
-		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
-		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
-		assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
-		timestamp = response.getContentPackage().getTimestamp();
+			// Add form
+			response = assertRequiredPermissions(group, "tester", "tester", restContext, 
+					target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("form").path(form1Id).request().put(Entity.json(StringUtils.EMPTY), ContentPackageLoadResponse.class), 
+					Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW),
+					Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT),
+					ContentNodeTestUtils.perm(folder1, PermType.read),
+					ContentNodeTestUtils.perm(folder1, PermType.viewform));
 
-		// Staging status again
-		{
-			FormResponse pageLoad = supply(() -> {
-				return new FormResourceImpl().get(form1Id, packageName);
-			});
-			assertResponseOK(pageLoad);
-			assertThat(pageLoad.getStagingStatus()).isNotNull();
-			assertThat(pageLoad.getStagingStatus().isIncluded()).isFalse();
+	//		response = supply(() -> {
+	//			return new ContentStagingResourceImpl().add(packageName, "page", page11Id, false);
+	//		});
+			assertResponseOK(response);
+			assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+			assertThat(response.getContentPackage().getFolders()).isEqualTo(1);
+			assertThat(response.getContentPackage().getPages()).isEqualTo(0);
+			assertThat(response.getContentPackage().getImages()).isEqualTo(0);
+			assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
+			assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+			assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
+			timestamp = response.getContentPackage().getTimestamp();
+
+			// Staging status
+			{
+				FormResponse pageLoad = supply(() -> {
+					return new FormResourceImpl().get(form1Id, packageName);
+				});
+				assertResponseOK(pageLoad);
+				assertThat(pageLoad.getStagingStatus()).isNotNull();
+				assertThat(pageLoad.getStagingStatus().isIncluded()).isTrue();
+				//assertThat(pageLoad.getStagingStatus().isRecent()).isTrue();
+			}
+
+			// Remove form
+			response = assertRequiredPermissions(group, "tester", "tester", restContext, 
+					target -> target.path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("form").path(form1Id).request().delete(ContentPackageLoadResponse.class), 
+					Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
+					Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_VIEW),
+					Triple.of(PermHandler.TYPE_CONTENTSTAGING, 1, PermHandler.PERM_CONTENTPACKAGE_MODIFYCONTENT),
+					ContentNodeTestUtils.perm(folder1, PermType.read),
+					ContentNodeTestUtils.perm(folder1, PermType.viewform));
+			assertResponseOK(response);
+			assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+			assertThat(response.getContentPackage().getFolders()).isEqualTo(1);
+			assertThat(response.getContentPackage().getPages()).isEqualTo(0);
+			assertThat(response.getContentPackage().getImages()).isEqualTo(0);
+			assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
+			assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+			assertThat(response.getContentPackage().getTimestamp()).isGreaterThanOrEqualTo(timestamp);
+			timestamp = response.getContentPackage().getTimestamp();
+
+			// Staging status again
+			{
+				FormResponse pageLoad = supply(() -> {
+					return new FormResourceImpl().get(form1Id, packageName);
+				});
+				assertResponseOK(pageLoad);
+				assertThat(pageLoad.getStagingStatus()).isNotNull();
+				assertThat(pageLoad.getStagingStatus().isIncluded()).isFalse();
+			}
+		} finally {
+			restoreFormsFeature(formsActivatedBefore, formsActivatedForNodeBefore);
 		}
 	}
 
@@ -796,6 +813,115 @@ public class ContentStagingResourceTest extends AbstractContentStagingTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+	}
+
+	/**
+	 * Test that a failing import responds with an HTTP error status, and that the response contains the cause.
+	 * The package contains a node with activated feature "forms", which is generally deactivated, when the package is imported.
+	 * @throws Exception
+	 */
+	@Test
+	public void testFailingImportRespondsWithErrorStatus() throws Exception {
+		boolean formsActivatedBefore = supply(t -> t.getNodeConfig().getDefaultPreferences().isFeature(Feature.FORMS));
+		boolean formsActivatedForNodeBefore = supply(() -> node1.getFeatures().contains(Feature.FORMS));
+
+		try {
+			operate(t -> {
+				t.getNodeConfig().getDefaultPreferences().setFeature(Feature.FORMS, true);
+				node1.activateFeature(Feature.FORMS);
+			});
+
+			String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+			String packageName = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION).getContentPackage().getName();
+			String node1Id = supply(() -> node1.getGlobalId().toString());
+			assertResponseOK(supply(() -> new ContentStagingResourceImpl().add(packageName, "node", node1Id, false)));
+			assertResponseOK(new ContentStagingResourceImpl().exportFromCms(packageName, 0));
+
+			operate(t -> t.getNodeConfig().getDefaultPreferences().setFeature(Feature.FORMS, false));
+
+			try (LoggedInClient client = systemClient()) {
+				Response response = client.get().base().path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("import")
+						.request().post(Entity.json(StringUtils.EMPTY));
+				assertThat(response.getStatusInfo().toEnum()).as("Response status").isEqualTo(Status.INTERNAL_SERVER_ERROR);
+
+				GenericResponse importResponse = response.readEntity(GenericResponse.class);
+				assertThat(importResponse.getResponseInfo().getResponseCode()).as("Response code").isEqualTo(ResponseCode.FAILURE);
+				assertThat(importResponse.getResponseInfo().getResponseMessage()).as("Response message")
+						.contains("Cannot activate feature forms", "feature is not available");
+			}
+		} finally {
+			restoreFormsFeature(formsActivatedBefore, formsActivatedForNodeBefore);
+		}
+	}
+
+	/**
+	 * Test that an import, which fails because a referenced object does not exist, responds with HTTP status 404
+	 * The package contains a page, which uses a template that is deleted, before the package is imported.
+	 * @throws Exception
+	 */
+	@Test
+	public void testImportMissingReferenceRespondsWithNotFound() throws Exception {
+		Template testedTemplate = supply(() -> createTemplate(node1.getFolder(), "Tested Template"));
+		Page stagedPage = supply(() -> create(Page.class, p -> {
+			p.setFolderId(node1.getFolder().getId());
+			p.setTemplateId(testedTemplate.getId());
+			p.setName("Staged Page");
+		}));
+		String templateId = supply(() -> testedTemplate.getGlobalId().toString());
+
+		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+		String packageName = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION).getContentPackage().getName();
+		String stagedPageId = supply(() -> stagedPage.getGlobalId().toString());
+		assertResponseOK(supply(() -> new ContentStagingResourceImpl().add(packageName, "page", stagedPageId, false)));
+
+		// delete the staged page and the template
+		operate(t -> t.getObject(Page.class, stagedPage.getId()).delete(true));
+		operate(t -> t.getObject(Template.class, testedTemplate.getId()).delete(true));
+
+		try (LoggedInClient client = systemClient()) {
+			Response response = client.get().base().path(CONTENT_ROOT).path(PACKAGE_SUBROOT).path(packageName).path("import")
+					.request().post(Entity.json(StringUtils.EMPTY));
+			assertThat(response.getStatusInfo().toEnum()).as("Response status").isEqualTo(Status.NOT_FOUND);
+
+			GenericResponse importResponse = response.readEntity(GenericResponse.class);
+			String responseMessage = String.format("Could not find template with id %s", templateId);
+			String message = supply(() -> I18NHelper.get("template.notfound", templateId));
+			assertResponse(importResponse, ResponseCode.NOTFOUND, responseMessage, new Message(Message.Type.WARNING, message));
+			assertThat(importResponse.getResponseInfo().getResponseMessage()).as("Response message").isEqualTo(responseMessage);
+		}
+	}
+
+	/**
+	 * Set the password of the system user and get a client, which is logged in as system user
+	 * @return logged in client
+	 * @throws Exception
+	 */
+	protected LoggedInClient systemClient() throws Exception {
+		SystemUser systemUser = supply(t -> t.getObject(SystemUser.class, 1));
+		update(systemUser, upd -> {
+			upd.setPassword(SystemUserFactory.hashPassword("system", upd.getId()));
+		}).build();
+		return restContext.client("system", "system");
+	}
+
+	/**
+	 * Restore the activation state of the feature "forms" (generally and for node1)
+	 * @param activated true, if the feature shall be generally activated
+	 * @param activatedForNode true, if the feature shall be activated for node1
+	 * @throws NodeException
+	 */
+	protected void restoreFormsFeature(boolean activated, boolean activatedForNode) throws NodeException {
+		operate(t -> {
+			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+			// the feature must be generally activated, before it can be (de)activated for the node
+			prefs.setFeature(Feature.FORMS, true);
+			if (activatedForNode) {
+				node1.activateFeature(Feature.FORMS);
+			} else {
+				node1.deactivateFeature(Feature.FORMS);
+			}
+			prefs.setFeature(Feature.FORMS, activated);
+		});
 	}
 
 	@Test

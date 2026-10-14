@@ -10,6 +10,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLa
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -47,10 +48,14 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.SingleSelectPartType;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * Test cases for checking the implementation entities for equality during an import
@@ -711,7 +716,7 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 		String message = execute(obj -> {
 			return I18NHelper.get("content.staging.import.errors", PACKAGE_NAME, "1");
 		}, testedEntity);
-		tryImportContentPackage(PACKAGE_NAME, ResponseCode.FAILURE, "Error while importing", new Message(Message.Type.CRITICAL, message));
+		tryImportContentPackage(PACKAGE_NAME, Status.INTERNAL_SERVER_ERROR, ResponseCode.FAILURE, "Error while importing", new Message(Message.Type.CRITICAL, message));
 		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
 		assertThat(stagedObject).as("Staged object").isNull();
 
@@ -766,6 +771,9 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 		String message = supply(() -> {
 			return I18NHelper.get(String.format("%s.notfound", entityTable), globalEntityId.toString());
 		});
-		tryImportContentPackage(PACKAGE_NAME, ResponseCode.NOTFOUND, responseMessage, new Message(Message.Type.CRITICAL, message));
+		// the EntityNotFoundException is mapped to a response with status 404 and response code NOTFOUND
+		Throwable thrown = catchThrowable(() -> new ContentStagingResourceImpl().importIntoCms(PACKAGE_NAME, 0, false));
+		assertThat(thrown).as("Import error").isInstanceOf(EntityNotFoundException.class).hasMessage(responseMessage);
+		assertThat(supply(() -> thrown.getLocalizedMessage())).as("Localized import error").isEqualTo(message);
 	}
 }

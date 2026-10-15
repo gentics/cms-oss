@@ -1,5 +1,6 @@
 /* The review page (design.md §11 "Review"): the preview on the left, flexible, on the preview stage;
-   the panel on the right, 400 px (340 px below 1180 px). On a phone they stack. */
+   the panel on the right, 400 px (340 px below 1180 px). A plan with several pages lists them left of
+   the preview (`ReviewPages`). On a phone they stack. */
 .page {
   display: flex;
   flex-direction: column;

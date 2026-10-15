@@ -483,6 +483,12 @@
             "review_requested": "Review requested",
             "failed": "Failed"
         },
+        "page": {
+            "issues_one": "{{count}} open issue",
+            "issues_other": "{{count}} open issues",
+            "canPublish": "You may publish this page.",
+            "needsReview": "Needs a review: you may not publish this page."
+        },
         "actions": {
             "release": "Release",
             "publish": "Publish",

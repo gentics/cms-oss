@@ -4,6 +4,7 @@ import type { EventStreamStatus } from '@/services/apiService/eventStream';
 import type {
     ApprovalStep,
     Check,
+    CmsObjectRef,
     DerivedSettings,
     GenaixEvent,
     Interaction,
@@ -107,9 +108,14 @@ export function livePreviewOf({ cms_ref, preview_url, mode, changed_elements }: 
     return { seq: 0, cms_ref, preview_url, mode, changed_elements };
 }
 
-/** The page a preview shows, as one string: its CMS object, with the connection that reached it (`CmsObjectRef.connection_id`). */
-export function previewKey({ cms_ref: { connection_id: connectionId, type, id } }: LivePreview): string {
+/** A CMS object as one string, with the connection that reached it (`CmsObjectRef.connection_id`). */
+export function cmsRefKey({ connection_id: connectionId, type, id }: CmsObjectRef): string {
     return `${connectionId ?? ''}:${type}:${id}`;
+}
+
+/** The page a preview shows, as one string (`cmsRefKey`). */
+export function previewKey({ cms_ref: cmsRef }: LivePreview): string {
+    return cmsRefKey(cmsRef);
 }
 
 // `previews` with `preview` as its page's latest: in place of the page's entry, or added after the others.

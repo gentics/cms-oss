@@ -204,6 +204,14 @@
   gap: 8px;
 }
 
+.pageName {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .publicationStatus {
   display: inline-flex;
   flex: none;

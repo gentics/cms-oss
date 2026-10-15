@@ -1,14 +1,5 @@
 package com.gentics.contentnode.tests.rest.util;
 
-import static com.gentics.contentnode.db.DBUtils.update;
-import static com.gentics.contentnode.factory.Trx.consume;
-import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -17,10 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
@@ -41,11 +28,21 @@ import com.gentics.contentnode.rest.util.Operator.QueueBuilder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.lib.i18n.CNI18nString;
-
 import de.jkeylockmanager.manager.KeyLockManager;
 import de.jkeylockmanager.manager.KeyLockManagers;
 import de.jkeylockmanager.manager.exception.KeyLockManagerTimeoutException;
 import jakarta.ws.rs.core.Response.Status;
+import org.junit.After;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+import static com.gentics.contentnode.db.DBUtils.update;
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for processing callable queues
@@ -356,7 +353,7 @@ public class OperatorTest {
 		Trx.operate(() -> {
 			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
 				throw cause;
-			}));
+			}, Function.identity()));
 			assertWrapped(thrown, cause);
 		});
 	}
@@ -371,7 +368,7 @@ public class OperatorTest {
 		Trx.operate(() -> {
 			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
 				throw cause;
-			}));
+			}, Function.identity()));
 			assertWrapped(thrown, cause);
 		});
 	}
@@ -386,7 +383,7 @@ public class OperatorTest {
 		Trx.operate(() -> {
 			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
 				throw cause;
-			}));
+			}, Function.identity()));
 			assertThat(thrown).as("Thrown exception").isSameAs(cause);
 		});
 	}
@@ -401,7 +398,7 @@ public class OperatorTest {
 		Trx.operate(() -> {
 			Throwable thrown = catchThrowable(() -> Operator.executeRethrowing("Job", 0, () -> {
 				throw cause;
-			}));
+			}, Function.identity()));
 			assertThat(thrown).as("Thrown exception").isSameAs(cause);
 			assertThat(((RestMappedException) thrown).getStatus()).as("Response status").isEqualTo(Status.CONFLICT);
 		});

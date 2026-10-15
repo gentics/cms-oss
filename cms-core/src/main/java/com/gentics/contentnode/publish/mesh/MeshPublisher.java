@@ -5358,10 +5358,11 @@ public class MeshPublisher implements AutoCloseable {
 			// check schema versions
 			BranchInfoSchemaList schemaInfoList = client.getBranchSchemaVersions(currentProjectName, branchUuid)
 					.toSingle().retry(RETRY_HANDLER).blockingGet();
+			Set<String> mySchemaNames = schemaNames.entrySet().stream().map(e -> getSchemaName(e.getKey())).collect(Collectors.toSet());
 			BranchInfoSchemaList updateList = new BranchInfoSchemaList();
 			for (BranchSchemaInfo schemaInfo : schemaInfoList.getSchemas()) {
 				SchemaResponse schema = schemaMap.get(schemaInfo.getName());
-				if (schema != null) {
+				if (schema != null && mySchemaNames.contains(schema.getName())) {
 					if (!StringUtils.isEqual(schema.getVersion(), schemaInfo.getVersion())) {
 						// schema version not equal
 						if (repair) {

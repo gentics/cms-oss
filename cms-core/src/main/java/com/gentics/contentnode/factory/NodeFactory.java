@@ -586,7 +586,7 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove a given object and all its versions from the cache.
+	 * remove the current version of a given object from the cache.
 	 * @param clazz class of the nodeobject.
 	 * @param id id of the object to remove.
 	 */
@@ -599,7 +599,7 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove a given object and all its versions from the cache.
+	 * remove the current version of a given object from the local cache.
 	 * @param clazz class of the nodeobject.
 	 * @param id id of the object to remove.
 	 */
@@ -618,9 +618,9 @@ public class NodeFactory {
 	}
 
 	/**
-	 * remove a given object and all its versions from the cache.
+	 * remove the given object and all its versions from the cache.
 	 * @param clazz class of the nodeobject.
-	 * @param id id of the object to remove.
+	 * @param ids id of the object to remove.
 	 */
 	public void clear(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
 		clearLocal(clazz, ids);
@@ -633,7 +633,7 @@ public class NodeFactory {
 	/**
 	 * remove a given object and all its versions from the cache.
 	 * @param clazz class of the nodeobject.
-	 * @param id id of the object to remove.
+	 * @param ids id of the object to remove.
 	 */
 	public void clearLocal(Class<? extends NodeObject> clazz, Set<Integer> ids) throws NodeException {
 		PortalCache cache = getCache(clazz);
@@ -643,6 +643,27 @@ public class NodeFactory {
 				for (Integer id : ids) {
 					Object cacheKey = createCacheKey(clazz, id, -1);
 					cache.removeFromGroup(cacheGroupName, cacheKey);
+				}
+			} catch (PortalCacheException e) {
+				throw new NodeException("Error while clearing the factory caches", e);
+			}
+		}
+	}
+
+	/**
+	 * Remove the given versions of an object from the local cache. The current version of the object is not removed.
+	 * @param clazz class of the nodeobject
+	 * @param id id of the object
+	 * @param versionTimestamps version timestamps of the versions to remove
+	 * @throws NodeException
+	 */
+	public void clearVersionsLocal(Class<? extends NodeObject> clazz, Integer id, Collection<Integer> versionTimestamps) throws NodeException {
+		PortalCache cache = getCache(clazz);
+		if (cache != null && clazz != null && id != null && !CollectionUtils.isEmpty(versionTimestamps)) {
+			try {
+				String cacheGroupName = normalizeClass(clazz).getName();
+				for (Integer versionTimestamp : versionTimestamps) {
+					cache.removeFromGroup(cacheGroupName, createCacheKey(clazz, id, versionTimestamp));
 				}
 			} catch (PortalCacheException e) {
 				throw new NodeException("Error while clearing the factory caches", e);

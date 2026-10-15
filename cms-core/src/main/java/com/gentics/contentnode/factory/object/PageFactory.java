@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import com.gentics.lib.genericexceptions.IllegalUsageException;
@@ -56,6 +57,7 @@ import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
+import com.gentics.contentnode.factory.AbstractTransactional;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.ChannelTreeSegment;
 import com.gentics.contentnode.factory.ChannelTrx;
@@ -146,6 +148,24 @@ public class PageFactory extends AbstractFactory {
 	 * Name of the transaction attribute, that stored contents that are locked by this transaction
 	 */
 	protected final static String LOCKED_CONTENTS_IN_TRX = "PageFactory.lockedContentInTrx";
+
+	/**
+	 * Name of the transaction attribute, that stores the ids of page versions (nodeversion entries), which were made the published version
+	 * in this transaction (and are not yet committed)
+	 */
+	protected final static String PUBLISHED_VERSIONS_IN_TRX = "PageFactory.publishedVersionsInTrx";
+
+	/**
+	 * Name of the transaction attribute, that stores the ids of contents, for which the pages are locked for creating page versions
+	 * in this transaction. The values are true, if the snapshot of the transaction was stale (i.e. did not contain all page versions
+	 * created by other transactions), when the lock was acquired.
+	 */
+	protected final static String VERSIONING_LOCKS_IN_TRX = "PageFactory.versioningLocksInTrx";
+
+	/**
+	 * Name of the transaction attribute, that stores the ids of contents, which were created in this transaction (and are not yet committed)
+	 */
+	protected final static String CREATED_CONTENTS_IN_TRX = "PageFactory.createdContentsInTrx";
 
 	/**
 	 * Logcmd Info when pages are put into the wastebin
@@ -1167,6 +1187,13 @@ public class PageFactory extends AbstractFactory {
 
 			// dirt the content cache
 			t.dirtObjectCache(Content.class, contentId, false);
+
+			// dirting the content does not remove the versioned contents (used by the page versions) from the cache, so we do it here
+			List<Integer> versionTimestamps = Stream.of(getVersions())
+				.map(version -> version.getDate().getIntTimestamp())
+				.collect(Collectors.toList());
+
+			getObjectInfo().getFactory().clearVersionsLocal(Content.class, contentId, versionTimestamps);
 		}
 
 		/* (non-Javadoc)
@@ -5336,6 +5363,11 @@ public class PageFactory extends AbstractFactory {
 				synchronizeGlobalId(content);
 
 				setContentLocked(keys.get(0));
+
+				// remember that the content was created in this transaction (no other transaction can create page versions for it)
+				Set<Integer> createdContents = getTransactionScopedAttribute(CREATED_CONTENTS_IN_TRX, new HashSet<>());
+
+				createdContents.add(keys.get(0));
 			} else {
 				throw new NodeException("Error while inserting new content, could not get the insertion id");
 			}
@@ -5653,7 +5685,12 @@ public class PageFactory extends AbstractFactory {
 			user = ObjectTransformer.getString(page.getEditor().getId(), user);
 		}
 
-		NodeObjectVersion[] pageVersions = page.getVersions();
+		// lock the pages of the content for creating versions (lockingReads is true, if the snapshot is stale and the
+		// versioned data must be read with locking reads)
+		boolean lockingReads = lockForVersioning(contentId.intValue());
+		// the page versions are always read with a locking read (which reads the latest committed versions), because
+		// the staleness check only detects new versioned records.
+		NodeObjectVersion[] pageVersions = loadPageVersions(pageId.intValue(), true);
 
 		// get an instance of the page version number generator
 		// TODO make this configurable
@@ -5662,13 +5699,28 @@ public class PageFactory extends AbstractFactory {
 
 		if (!ObjectTransformer.isEmpty(pageVersions)) {
 			lastVersion = pageVersions[0];
-			// ensure that the new version does not have an older timestamp than the last version
-			versionTimestamp = Math.max(versionTimestamp, lastVersion.getDate().getIntTimestamp());
+			int lastVersionTimestamp = lastVersion.getDate().getIntTimestamp();
+
+			if (lastVersion.isPublished() && !isVersionPublishedInTransaction(lastVersion.getId())) {
+				// the published version must not be modified (unless it was published in this transaction, so nobody else can see it yet),
+				// so the new version must be newer than the published version
+				versionTimestamp = Math.max(versionTimestamp, lastVersionTimestamp + 1);
+			} else {
+				// ensure that the new version does not have an older timestamp than the last version
+				versionTimestamp = Math.max(versionTimestamp, lastVersionTimestamp);
+			}
 		}
 
 		// get the table version instances
 		TableVersion pageVersion = getPageTableVersion();
+
+		pageVersion.setLockingReads(lockingReads);
+
 		List<TableVersion> contentIdBasedVersions = getContentIdBasedTableVersions(false);
+
+		for (TableVersion version : contentIdBasedVersions) {
+			version.setLockingReads(lockingReads);
+		}
 
 		// create the versions
 		boolean versionCreated = false;
@@ -5679,6 +5731,7 @@ public class PageFactory extends AbstractFactory {
 		}
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			TableVersion niceUrlVersion = getAlternateUrlTableVersion();
+			niceUrlVersion.setLockingReads(lockingReads);
 			versionCreated = niceUrlVersion.createVersion2(pageId, versionTimestamp, user) || versionCreated;
 		}
 
@@ -5771,14 +5824,21 @@ public class PageFactory extends AbstractFactory {
 
 				st.setString(6, nextVersionNumber);
 				st.executeUpdate();
+				res = st.getGeneratedKeys();
+
+				if (!res.next()) {
+					throw new NodeException("Error while adding new page version: could not get the id of the new version");
+				}
+
+				int newVersionId = res.getInt(1);
 
 				ActionLogger.logCmd(majorVersion ? ActionLogger.MAJORVERSION : ActionLogger.VERSION, Page.TYPE_PAGE, page.getId(), 0,
 						"created version " + nextVersionNumber);
 
 				// if the created nodeversion shall be the published one, mark all others as "not published"
 				if (publishedVersion) {
-					DBUtils.updateWithPK("nodeversion", "id", "published = ?", new Object[] { 0 }, "o_type = ? AND o_id = ? AND timestamp != ?",
-							new Object[] { Page.TYPE_PAGE, pageId, versionTimestamp });
+					unpublishOtherVersions(pageId, newVersionId, lockingReads);
+					setVersionPublishedInTransaction(newVersionId);
 				}
 			} catch (SQLException e) {
 				throw new NodeException("Error while adding new page version", e);
@@ -5791,8 +5851,7 @@ public class PageFactory extends AbstractFactory {
 				// generate next major version
 				String nextVersionNumber = gen.makePublishedVersion(lastVersion.getNumber());
 
-				DBUtils.updateWithPK("nodeversion", "id", "nodeversion = ?", new Object[] { nextVersionNumber },
-						"o_type = ? AND o_id = ? AND timestamp = ?", new Object[] { Page.TYPE_PAGE, pageId, lastVersion.getDate().getIntTimestamp() });
+				DBUtils.update("UPDATE nodeversion SET nodeversion = ? WHERE id = ?", nextVersionNumber, lastVersion.getId());
 
 				ActionLogger.logCmd(ActionLogger.MAJORVERSION, Page.TYPE_PAGE, page.getId(), 0,
 						"updated version " + lastVersion.getNumber() + " to " + nextVersionNumber);
@@ -5801,12 +5860,11 @@ public class PageFactory extends AbstractFactory {
 			}
 			if (publishedVersion && lastVersion != null && !lastVersion.isPublished()) {
 				// mark version as published
-				DBUtils.updateWithPK("nodeversion", "id", "published = ?", new Object[] { 1 },
-						"o_type = ? AND o_id = ? AND timestamp = ?", new Object[] { Page.TYPE_PAGE, pageId, lastVersion.getDate().getIntTimestamp() });
+				DBUtils.update("UPDATE nodeversion SET published = ? WHERE id = ?", 1, lastVersion.getId());
 
 				// mark all other versions to not be the published one
-				DBUtils.updateWithPK("nodeversion", "id", "published = ?", new Object[] { 0 }, "o_type = ? AND o_id = ? AND timestamp != ?",
-						new Object[] { Page.TYPE_PAGE, pageId, lastVersion.getDate().getIntTimestamp() });
+				unpublishOtherVersions(pageId, lastVersion.getId(), lockingReads);
+				setVersionPublishedInTransaction(lastVersion.getId());
 
 				versionCreated = true;
 			}
@@ -6204,6 +6262,202 @@ public class PageFactory extends AbstractFactory {
 	}
 
 	/**
+	 * Remember that the page version with given id was made the published version in the current transaction.
+	 * The information is removed when the transaction is committed or rolled back.
+	 * @param versionId id of the page version (nodeversion entry)
+	 * @throws NodeException
+	 */
+	private static void setVersionPublishedInTransaction(int versionId) throws NodeException {
+		var versionIds = getTransactionScopedAttribute(PUBLISHED_VERSIONS_IN_TRX, new HashSet<Integer>());
+
+		versionIds.add(versionId);
+	}
+
+	/**
+	 * Get the transaction attribute with given name. If the attribute is not set, it is set to the given initial value.
+	 * The attribute is removed, when the transaction is committed or rolled back.
+	 * @param name attribute name
+	 * @param initialValue initial value
+	 * @return attribute value
+	 * @throws NodeException
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> T getTransactionScopedAttribute(String name, T initialValue) throws NodeException {
+		var t = TransactionManager.getCurrentTransaction();
+		var attributes = t.getAttributes();
+		var value = attributes.get(name);
+
+		if (value == null) {
+			value = initialValue;
+			attributes.put(name, value);
+
+			t.addTransactional(new AbstractTransactional() {
+				@Override
+				public void onDBCommit(Transaction t) throws NodeException {
+				}
+
+				@Override
+				public boolean onTransactionCommit(Transaction t) {
+					t.getAttributes().remove(name);
+					return false;
+				}
+
+				@Override
+				public void onTransactionRollback(Transaction t) {
+					t.getAttributes().remove(name);
+				}
+			});
+		}
+
+		return (T) value;
+	}
+
+	/**
+	 * Lock the pages of the given content for creating page versions (until the transaction is committed or rolled back), so that
+	 * page versions of the content are created by only one transaction at a time. The pages (all page variants share the same content) are locked
+	 * by their primary key in ascending order (which avoids deadlocks between transactions acquiring the same lock).
+	 * When the lock is acquired, the snapshot of the transaction is checked: if another transaction created page versions for the content,
+	 * which are not visible in the snapshot of this transaction (with isolation level REPEATABLE READ), the snapshot is stale and
+	 * page versions must be created with locking reads.
+	 * @param contentId content id
+	 * @return true iff the snapshot of the transaction is stale
+	 * @throws NodeException
+	 */
+	private static boolean lockForVersioning(int contentId) throws NodeException {
+		var versioningLocks = getTransactionScopedAttribute(VERSIONING_LOCKS_IN_TRX, new HashMap<Integer, Boolean>());
+		var stale = versioningLocks.get(contentId);
+
+		if (stale == null) {
+			var createdContents = getTransactionScopedAttribute(CREATED_CONTENTS_IN_TRX, new HashSet<>());
+
+			if (createdContents.contains(contentId)) {
+				// the content was created in this transaction, so no other transaction can create page versions for it
+				versioningLocks.put(contentId, false);
+
+				return false;
+			}
+
+			var pageIds = DBUtils.select("SELECT id FROM page WHERE content_id = ? ORDER BY id", ps -> ps.setInt(1, contentId), DBUtils.IDLIST);
+
+			for (int pageId: pageIds) {
+				DBUtils.select("SELECT id FROM page WHERE id = ? FOR UPDATE", ps -> ps.setInt(1, pageId), DBUtils.IDLIST);
+			}
+
+			// compare the markers seen in the snapshot of this transaction with the markers seen by a new transaction
+			var markers = getVersioningMarkers(pageIds, contentId);
+			var currentMarkers = TransactionManager.execute(() -> getVersioningMarkers(pageIds, contentId));
+
+			stale = !markers.equals(currentMarkers);
+
+			if (stale) {
+				logger.info("Page versions of content %d were modified by another transaction, will create page versions with locking reads".formatted(contentId));
+			}
+
+			versioningLocks.put(contentId, stale);
+		}
+
+		return stale;
+	}
+
+	/**
+	 * Get markers for the page versions of the given pages and content: the maximum ids of the nodeversion entries and the maximum auto_ids
+	 * of the versioned records. When another transaction creates page versions, at least one of the markers changes.
+	 * @param pageIds ids of the pages (which share the content)
+	 * @param contentId content id
+	 * @return list of markers
+	 * @throws NodeException
+	 */
+	private static List<Integer> getVersioningMarkers(List<Integer> pageIds, int contentId) throws NodeException {
+		var subQueries = new ArrayList<String>();
+		var params = new ArrayList<Integer>();
+
+		if (!pageIds.isEmpty()) {
+			subQueries.add("SELECT MAX(id) FROM nodeversion WHERE o_type = ? AND o_id IN (" + StringUtils.repeat("?", pageIds.size(), ",") + ")");
+			params.add(Page.TYPE_PAGE);
+			params.addAll(pageIds);
+		}
+
+		var pageVersion = getPageTableVersion();
+		var niceUrlVersion = NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS) ? getAlternateUrlTableVersion() : null;
+
+		for (int pageId: pageIds) {
+			subQueries.add(pageVersion.getMaxAutoIdSQL());
+			params.add(pageId);
+
+			if (niceUrlVersion != null) {
+				subQueries.add(niceUrlVersion.getMaxAutoIdSQL());
+				params.add(pageId);
+			}
+		}
+
+		for (TableVersion version: getContentIdBasedTableVersions(false)) {
+			subQueries.add(version.getMaxAutoIdSQL());
+			params.add(contentId);
+		}
+
+		var sql = new StringBuilder("SELECT ");
+
+		for (int i = 0; i < subQueries.size(); i++) {
+			if (i > 0) {
+				sql.append(", ");
+			}
+
+			sql.append("(").append(subQueries.get(i)).append(") m").append(i);
+		}
+
+		return DBUtils.select(sql.toString(), ps -> {
+			int paramCounter = 1;
+
+			for (var param: params) {
+				ps.setInt(paramCounter++, param);
+			}
+		}, rs -> {
+			var markers = new ArrayList<Integer>();
+
+			if (rs.next()) {
+				for (var i = 0; i < subQueries.size(); i++) {
+					markers.add(rs.getInt("m" + i));
+				}
+			}
+
+			return markers;
+		});
+	}
+
+	/**
+	 * Mark all versions of the page except the given one as "not published"
+	 * @param pageId page id
+	 * @param publishedVersionId id of the published version
+	 * @param lockingReads true to update the versions directly (without first selecting them from the possibly stale snapshot)
+	 * @throws NodeException
+	 */
+	private static void unpublishOtherVersions(Long pageId, int publishedVersionId, boolean lockingReads) throws NodeException {
+		if (lockingReads) {
+			DBUtils.update("UPDATE nodeversion SET published = ? WHERE o_type = ? AND o_id = ? AND id != ?",
+				0,
+				Page.TYPE_PAGE,
+				pageId,
+				publishedVersionId);
+		} else {
+			DBUtils.updateWithPK("nodeversion", "id", "published = ?",
+				new Object[] { 0 },
+				"o_type = ? AND o_id = ? AND id != ?",
+				new Object[] { Page.TYPE_PAGE, pageId, publishedVersionId });
+		}
+	}
+
+	/**
+	 * Check whether the page version with given id was made the published version in the current transaction
+	 * @param versionId id of the page version (nodeversion entry)
+	 * @return true, iff the version was made the published version in the current transaction
+	 * @throws NodeException
+	 */
+	private static boolean isVersionPublishedInTransaction(int versionId) throws NodeException {
+		Object data = TransactionManager.getCurrentTransaction().getAttributes().get(PUBLISHED_VERSIONS_IN_TRX);
+		return data instanceof Set && ((Set<?>) data).contains(versionId);
+	}
+
+	/**
 	 * Get the list of locked content ids
 	 * @return list of locked content ids
 	 * @throws NodeException
@@ -6277,11 +6531,24 @@ public class PageFactory extends AbstractFactory {
 	 * @throws NodeException
 	 */
 	public static NodeObjectVersion[] loadPageVersions(final int pageId) throws NodeException {
+		return loadPageVersions(pageId, false);
+	}
+
+	/**
+	 * Load the page versions of the given page
+	 * @param pageId page id
+	 * @param lockingRead true to read the versions with a locking read (SELECT ... FOR UPDATE), which reads the latest committed versions
+	 * instead of the versions in the snapshot of the transaction
+	 * @return page versions (latest version first)
+	 * @throws NodeException
+	 */
+	public static NodeObjectVersion[] loadPageVersions(final int pageId, boolean lockingRead) throws NodeException {
 		final List<NodeObjectVersion> pageVersionList = new ArrayList<NodeObjectVersion>();
 
 		// first load all versions
 		DBUtils.executeStatement(
-				"SELECT id, timestamp, user_id, published, nodeversion FROM nodeversion WHERE o_type = ? AND o_id = ? ORDER BY timestamp ASC",
+				"SELECT id, timestamp, user_id, published, nodeversion FROM nodeversion WHERE o_type = ? AND o_id = ? ORDER BY timestamp ASC"
+						+ (lockingRead ? " FOR UPDATE" : ""),
 				new SQLExecutor() {
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
 				stmt.setInt(1, Page.TYPE_PAGE);

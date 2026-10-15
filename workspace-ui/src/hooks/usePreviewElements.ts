@@ -1,9 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-/**
- * The selector of the parts of a CMS page: the CMS marks them in read-only mode with `tagmarkers=true` (`AlohaRenderer`).
- * A part may be several sibling elements, each marked with the same tag.
- */
+/** The selector of the parts of a CMS page: the CMS marks them with `tagmarkers=true` (edit mode without Aloha Editor, `AlohaPageServlet`). */
 const MARKED = '[data-gcn-tagid]';
 
 /** A marked part of the previewed page, as the CMS annotated it. */
@@ -54,23 +51,14 @@ export function isImagePart(element: Element): boolean {
     return element.matches('img') || element.querySelector('img') !== null;
 }
 
-/** The box around all elements of a part. */
-function boxOf(elements: Element[]): ElementBox {
-    const rects = elements.map((element) => element.getBoundingClientRect());
-    const top = Math.min(...rects.map((rect) => rect.top));
-    const left = Math.min(...rects.map((rect) => rect.left));
+function boxOf(element: Element): ElementBox {
+    const { top, left, width, height } = element.getBoundingClientRect();
 
-    return {
-        top,
-        left,
-        width: Math.max(...rects.map((rect) => rect.right)) - left,
-        height: Math.max(...rects.map((rect) => rect.bottom)) - top,
-    };
+    return { top, left, width, height };
 }
 
-/** The elements of the part `tagName`; none when the page lacks it. */
-function findParts(doc: Document, tagName: string): Element[] {
-    return [...doc.querySelectorAll(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`)];
+function findPart(doc: Document, tagName: string): Element | null {
+    return doc.querySelector(`${MARKED}[data-gcn-tagname="${CSS.escape(tagName)}"]`);
 }
 
 /**
@@ -179,24 +167,17 @@ export function usePreviewElements(
         let frameRequest = 0;
 
         function measure() {
-            const selectedParts = selected ? findParts(doc!, selected) : [];
+            const selectedNode = selected ? findPart(doc!, selected) : null;
 
-            if (hoveredNode?.isConnected) {
-                const element = previewElementOf(hoveredNode);
-                const parts = element.tagName ? findParts(doc!, element.tagName) : [];
-
-                setHovered({ element, box: boxOf(parts.length ? parts : [hoveredNode]) });
-            } else {
-                setHovered(null);
-            }
-            setSelectedBox(selectedParts.length ? boxOf(selectedParts) : null);
+            setHovered(hoveredNode?.isConnected ? { element: previewElementOf(hoveredNode), box: boxOf(hoveredNode) } : null);
+            setSelectedBox(selectedNode ? boxOf(selectedNode) : null);
             setChangedBoxes(changedKey.split('\n').flatMap((tagName) => {
-                const parts = tagName ? findParts(doc!, tagName) : [];
+                const node = tagName ? findPart(doc!, tagName) : null;
 
-                return parts.length ? [{ tagName, box: boxOf(parts) }] : [];
+                return node ? [{ tagName, box: boxOf(node) }] : [];
             }));
 
-            if (selected && !selectedParts.length) {
+            if (selected && !selectedNode) {
                 callbacks.current.onSelectedGone();
             }
         }
@@ -225,19 +206,18 @@ export function usePreviewElements(
         };
     }, [doc, frameRef, hoveredNode, selected, changedKey]);
 
-    // The current text of a part, read from the page as it is now (the texts of its elements, one per line); empty when
-    // the page lacks it.
+    // The current text of a part, read from the page as it is now; empty when the page lacks it.
     const textOf = useCallback((tagName: string) => {
-        const parts = doc ? findParts(doc, tagName) : [];
+        const node = doc ? findPart(doc, tagName) : null;
 
-        return parts.map(partTextOf).filter(Boolean).join('\n');
+        return node ? partTextOf(node) : '';
     }, [doc]);
 
-    // Whether a part shows an image (`isImagePart`) in any of its elements, on the page as it is now.
+    // Whether a part shows an image (`isImagePart`), on the page as it is now.
     const hasImage = useCallback((tagName: string) => {
-        const parts = doc ? findParts(doc, tagName) : [];
+        const node = doc ? findPart(doc, tagName) : null;
 
-        return parts.some(isImagePart);
+        return node ? isImagePart(node) : false;
     }, [doc]);
 
     return { onFrameLoad, isFrameReadable: Boolean(doc), hovered, selectedBox, changedBoxes, textOf, hasImage };

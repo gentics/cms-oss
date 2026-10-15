@@ -82,7 +82,7 @@ test.describe('Preview of an S1 session', () => {
     });
 });
 
-// A page as the CMS renders it read-only with tagmarkers=true: marked parts (a text inside a section) and
+// A page as the CMS renders it with tagmarkers=true: marked parts (a text inside a section) and
 // unmarked structure around them. `withText` false leaves the text part out, as after the AI removed it.
 function markedPage(withText = true): string {
     const text = withText
@@ -94,16 +94,6 @@ function markedPage(withText = true): string {
         <div data-gcn-pageid="9142" data-gcn-tagid="11" data-gcn-tagname="content_1" data-gcn-i18n-constructname="Section" style="padding:30px">
             ${text}<p>Ohne Markierung</p>
         </div></body>`;
-}
-
-// A page with a part the CMS marked as two sibling elements (a tag that renders two paragraphs), each with
-// the same tag; `second` is the second element.
-function siblingsPage(second = '<p data-gcn-pageid="9142" data-gcn-tagid="15" data-gcn-tagname="content_5" data-gcn-i18n-constructname="Text">Zweiter Absatz</p>'): string {
-    return `<!doctype html><body style="margin:0;font:16px sans-serif">
-        <header style="padding:20px">Kopfzeile</header>
-        <p data-gcn-pageid="9142" data-gcn-tagid="15" data-gcn-tagname="content_5" data-gcn-i18n-constructname="Text" style="margin:0 40px">Erster Absatz</p>
-        ${second}
-        <p>Ohne Markierung</p></body>`;
 }
 
 test.describe('Selecting a part in the preview', () => {
@@ -133,24 +123,6 @@ test.describe('Selecting a part in the preview', () => {
         await page.frameLocator(frameSelector).getByText('Ohne Markierung').hover();
         await expect(page.getByText('Section', { exact: true })).toBeVisible();
         await expect(label).toBeHidden();
-    });
-
-    test('outlines all elements of a part, when the mouse is over one of them', async ({ page }) => {
-        await stubS1Session(page, [siblingsPage()]);
-        await page.goto(`#/sessions/${SESSION}`);
-
-        await page.frameLocator(frameSelector).getByText('Zweiter Absatz').hover();
-
-        const label = page.getByText('Text', { exact: true });
-
-        await expect(label).toBeVisible();
-
-        // The outline starts at the first element's top left (the label sits there), not at the hovered one.
-        const firstBox = (await page.frameLocator(frameSelector).getByText('Erster Absatz').boundingBox())!;
-        const labelBox = (await label.boundingBox())!;
-
-        expect(Math.abs(labelBox.x - firstBox.x)).toBeLessThan(2);
-        expect(Math.abs(labelBox.y - firstBox.y)).toBeLessThan(2);
     });
 
     test('selects a part by clicking it, without following a link in it, and clears it with Escape', async ({ page }) => {
@@ -407,15 +379,6 @@ test.describe('Writing a part yourself', () => {
         await expect(card).toBeHidden();
     });
 
-    test('starts from the text of all elements of a part', async ({ page }) => {
-        await stubS1Session(page, [siblingsPage()]);
-        await page.goto(`#/sessions/${SESSION}`);
-        await page.frameLocator(frameSelector).getByText('Erster Absatz').click();
-        await page.getByRole('menuitem', { name: 'Write it yourself' }).click();
-
-        await expect(page.getByRole('dialog', { name: 'Text' }).getByRole('textbox', { name: 'New text' })).toHaveValue('Erster Absatz\nZweiter Absatz');
-    });
-
     test('sends nothing for an unchanged text and says so', async ({ page }) => {
         await stubS1Session(page, [markedPage()]);
         const posted = await stubSending(page);
@@ -516,16 +479,6 @@ test.describe('Swapping an image', () => {
             ],
         });
         await expect(card).toBeHidden();
-    });
-
-    test('offers another image for a part whose image is in another of its elements', async ({ page }) => {
-        await stubS1Session(page, [siblingsPage('<img data-gcn-pageid="9142" data-gcn-tagid="15" data-gcn-tagname="content_5" data-gcn-i18n-constructname="Text" src="/hero.png" alt="Hero" style="width:300px;height:120px">')]);
-        await stubCmsImages(page);
-
-        await page.goto(`#/sessions/${SESSION}`);
-        await page.frameLocator(frameSelector).getByText('Erster Absatz').click();
-
-        await expect(page.getByRole('menuitem', { name: 'Swap the image' })).toBeVisible();
     });
 
     test('closes the image card with its cancel button, without sending', async ({ page }) => {

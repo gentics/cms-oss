@@ -1,5 +1,5 @@
 /* The review panel (design.md §11 "Review", §12 "Checkliste / Guidelines"): head, a scrolling body with
-   checklist, approval chain and publications, the actions at the bottom. */
+   the shown page's outcome and the checklist, the actions at the bottom. */
 .panel {
   display: flex;
   flex-direction: column;
@@ -150,37 +150,6 @@
 
 .fix {
   margin-top: 4px;
-}
-
-.approval {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.approvalStep {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--fg-secondary);
-  font-size: var(--font-size-sm);
-
-  &[data-status="done"] {
-    color: var(--success);
-  }
-
-  &[data-status="rejected"] {
-    color: var(--error);
-  }
-}
-
-.approvalLabel {
-  flex: 1;
-  min-width: 0;
-  color: var(--fg-primary);
 }
 
 .publication {

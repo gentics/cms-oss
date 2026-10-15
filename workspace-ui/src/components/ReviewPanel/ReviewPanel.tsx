@@ -71,8 +71,7 @@ function PageOutcome({ page }: { page: Publication }) {
 }
 
 /**
- * The right panel of the review page (design.md §11 "Review"): the plan's checklist, its approval chain
- * and the outcome per page (`publications`), and at the bottom the plan's head (`PlanHead`, the same as
+ * The right panel of the review page (design.md §11 "Review"): the plan's checklist, and at the bottom the plan's head (`PlanHead`, the same as
  * in the chat's plan bar): its status and the transitions it allows, release first, then publish or
  * request review, a refusal by the quality gates shown in place above them, and the confirmation before
  * discarding. The gated transitions are only offered here, not in the chat; publish only to a user the CMS
